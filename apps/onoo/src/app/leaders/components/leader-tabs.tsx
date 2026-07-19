@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRight, GripVertical, Medal, Scale, Trophy } from "lucide-react";
+import { ArrowLeftRight, ArrowRight, GripVertical, Medal, Scale, Trophy } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@zuiio/ui";
@@ -33,6 +34,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState, useEffect } from "react";
+import { DraggablePlayerCard } from "./draggable-player-card";
+import { DragCompareZone } from "./drag-compare-zone";
 import { cn } from "@/lib/utils";
 import { PublicEmptyState } from "../../components/public-empty-state";
 import type { LeaderRow } from "../../lib/shared";
@@ -141,6 +144,10 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
     CATEGORIES.map((c) => c.key),
   );
   const [activeTab, setActiveTab] = useState(categoryOrder[0]);
+  const [compareMode, setCompareMode] = useState(false);
+  const [comparePlayers, setComparePlayers] = useState<string[]>([]);
+  const [isDraggingPlayer, setIsDraggingPlayer] = useState(false);
+  const router = useRouter();
 
   // Load saved order from localStorage
   useEffect(() => {
@@ -228,6 +235,42 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
           </div>
         </SortableContext>
       </DndContext>
+      {/* Compare mode controls */}
+      <div className="flex items-center gap-2">
+        <Button
+          variant={compareMode ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            setCompareMode(!compareMode);
+            setComparePlayers([]);
+          }}
+        >
+          <ArrowLeftRight className="mr-2 size-4" />
+          {compareMode ? "Цуцлах" : "Харьцуулах"}
+        </Button>
+        {compareMode && comparePlayers.length > 0 && (
+          <span className="text-sm text-muted-foreground">
+            {comparePlayers.length}/2 тоглогч сонгогдлоо
+          </span>
+        )}
+        {comparePlayers.length === 2 && (
+          <Button
+            size="sm"
+            onClick={() => {
+              router.push(
+                `/players/compare?players=${comparePlayers.join(",")}`,
+              );
+            }}
+          >
+            Харьцуулах →
+          </Button>
+        )}
+      </div>
+
+      <DragCompareZone
+        players={comparePlayers}
+        isDragging={isDraggingPlayer}
+      />
 
       {/* Tab content */}
       {orderedCategories.map((category) => {
@@ -241,62 +284,83 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
             {/* Podium */}
             <div className="grid gap-4 md:grid-cols-3">
               {podium.map((leader, index) => (
-                <Link
+                <DraggablePlayerCard
                   key={`${category.key}-${leader.player_id}-${leader.competition_id}`}
-                  href={`/players/${leader.player_id}`}
-                  className="group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  playerId={leader.player_id}
                 >
-                  <Card
+                  <Link
+                    href={compareMode ? "#" : `/players/${leader.player_id}`}
                     className={cn(
-                      "h-full overflow-hidden shadow-none transition-[box-shadow,transform] group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none",
-                      index === 0 ? "bg-sidebar text-sidebar-foreground" : "",
+                      "group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      compareMode && "pointer-events-none",
                     )}
+                    onClick={(e) => {
+                      if (compareMode) {
+                        e.preventDefault();
+                        setComparePlayers((prev) => {
+                          if (prev.includes(leader.player_id)) {
+                            return prev.filter((id) => id !== leader.player_id);
+                          }
+                          if (prev.length >= 2) return prev;
+                          return [...prev, leader.player_id];
+                        });
+                      }
+                    }}
                   >
-                    <CardHeader>
-                      <Badge variant={index === 0 ? "secondary" : "outline"}>
-                        <Medal data-icon="inline-start" aria-hidden="true" />#
-                        {index + 1}
-                      </Badge>
-                      <CardAction>
-                        <span className="stat-number text-3xl">
-                          {category.getValue(leader).toFixed(1)}
-                        </span>
-                      </CardAction>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center gap-3 sm:flex-row sm:items-end sm:gap-4">
-                      <PlayerAvatar
-                        photoUrl={leader.player_photo_url}
-                        name={leader.player_name}
-                        primaryColor={leader.team_primary_color}
-                        size="xl"
-                      />
-                      <div className="min-w-0 flex-1 pb-1">
-                        <CardTitle className="truncate text-lg sm:text-xl">
-                          {leader.player_name}
-                        </CardTitle>
-                        <CardDescription
-                          className={cn(
-                            "mt-2 flex items-center gap-2",
-                            index === 0 && "text-sidebar-foreground/70",
-                          )}
-                        >
-                          <TeamLogo
-                            logoUrl={leader.team_logo_url}
-                            shortCode={leader.team_short_code}
-                            primaryColor={leader.team_primary_color}
-                            size="sm"
-                          />
-                          <span className="truncate">{leader.team_name}</span>
-                        </CardDescription>
-                        <QualificationBadge
-                          qualified={leader.qualified}
-                          teamGamesPlayed={leader.team_games_played}
-                          gamesPlayed={leader.gp}
+                    <Card
+                      className={cn(
+                        "h-full overflow-hidden shadow-none transition-[box-shadow,transform] group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none",
+                        index === 0 ? "bg-sidebar text-sidebar-foreground" : "",
+                        compareMode && "cursor-pointer",
+                        comparePlayers.includes(leader.player_id) && "ring-2 ring-[var(--brand-sports)]",
+                      )}
+                    >
+                      <CardHeader>
+                        <Badge variant={index === 0 ? "secondary" : "outline"}>
+                          <Medal data-icon="inline-start" aria-hidden="true" />#
+                          {index + 1}
+                        </Badge>
+                        <CardAction>
+                          <span className="stat-number text-3xl">
+                            {category.getValue(leader).toFixed(1)}
+                          </span>
+                        </CardAction>
+                      </CardHeader>
+                      <CardContent className="flex flex-col items-center gap-3 sm:flex-row sm:items-end sm:gap-4">
+                        <PlayerAvatar
+                          photoUrl={leader.player_photo_url}
+                          name={leader.player_name}
+                          primaryColor={leader.team_primary_color}
+                          size="xl"
                         />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                        <div className="min-w-0 flex-1 pb-1">
+                          <CardTitle className="truncate text-lg sm:text-xl">
+                            {leader.player_name}
+                          </CardTitle>
+                          <CardDescription
+                            className={cn(
+                              "mt-2 flex items-center gap-2",
+                              index === 0 && "text-sidebar-foreground/70",
+                            )}
+                          >
+                            <TeamLogo
+                              logoUrl={leader.team_logo_url}
+                              shortCode={leader.team_short_code}
+                              primaryColor={leader.team_primary_color}
+                              size="sm"
+                            />
+                            <span className="truncate">{leader.team_name}</span>
+                          </CardDescription>
+                          <QualificationBadge
+                            qualified={leader.qualified}
+                            teamGamesPlayed={leader.team_games_played}
+                            gamesPlayed={leader.gp}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </DraggablePlayerCard>
               ))}
             </div>
 
@@ -315,45 +379,73 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                       <li
                         key={`${category.key}-${leader.player_id}-${leader.competition_id}`}
                       >
-                        <div className="grid grid-cols-12 items-center gap-3 rounded-lg p-3 transition-colors hover:bg-accent/50">
-                          <span className="col-span-1 text-sm font-black tabular-nums text-muted-foreground">
-                            {index + 4}
-                          </span>
-                          <Link
-                            href={`/players/${leader.player_id}`}
-                            className="col-span-9 sm:col-span-7 flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        <DraggablePlayerCard playerId={leader.player_id}>
+                          <div
+                            className={cn(
+                              "grid grid-cols-12 items-center gap-3 rounded-lg p-3 transition-colors hover:bg-accent/50",
+                              compareMode && "cursor-pointer",
+                              comparePlayers.includes(leader.player_id) && "ring-2 ring-[var(--brand-sports)]",
+                            )}
+                            onClick={() => {
+                              if (compareMode) {
+                                setComparePlayers((prev) => {
+                                  if (prev.includes(leader.player_id)) {
+                                    return prev.filter((id) => id !== leader.player_id);
+                                  }
+                                  if (prev.length >= 2) return prev;
+                                  return [...prev, leader.player_id];
+                                });
+                              }
+                            }}
                           >
-                            <PlayerAvatar
-                              photoUrl={leader.player_photo_url}
-                              name={leader.player_name}
-                              primaryColor={leader.team_primary_color}
-                            />
-                            <span className="min-w-0">
-                              <span className="block truncate font-semibold">
-                                {leader.player_name}
-                              </span>
-                              <span className="block truncate text-xs text-muted-foreground">
-                                {leader.team_name} · {leader.gp} тоглолт
-                              </span>
+                            <span className="col-span-1 text-sm font-black tabular-nums text-muted-foreground">
+                              {index + 4}
                             </span>
-                          </Link>
-                          <span className="col-span-2 sm:col-span-2 text-right text-base sm:text-xl font-black tabular-nums">
-                            {category.getValue(leader).toFixed(1)}
-                          </span>
-                          <Button
-                            asChild
-                            variant="ghost"
-                            size="icon-sm"
-                            className="col-span-2 justify-self-end hidden sm:block"
-                          >
                             <Link
-                              href={`/players/compare?players=${leader.player_id}`}
-                              aria-label={`${leader.player_name} тоглогчийг харьцуулах`}
+                              href={compareMode ? "#" : `/players/${leader.player_id}`}
+                              className={cn(
+                                "col-span-9 sm:col-span-7 flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                compareMode && "pointer-events-none",
+                              )}
+                              onClick={(e) => {
+                                if (compareMode) e.preventDefault();
+                              }}
                             >
-                              <Scale aria-hidden="true" />
+                              <PlayerAvatar
+                                photoUrl={leader.player_photo_url}
+                                name={leader.player_name}
+                                primaryColor={leader.team_primary_color}
+                              />
+                              <span className="min-w-0">
+                                <span className="block truncate font-semibold">
+                                  {leader.player_name}
+                                </span>
+                                <span className="block truncate text-xs text-muted-foreground">
+                                  {leader.team_name} · {leader.gp} тоглолт
+                                </span>
+                              </span>
                             </Link>
-                          </Button>
-                        </div>
+                            <span className="col-span-2 sm:col-span-2 text-right text-base sm:text-xl font-black tabular-nums">
+                              {category.getValue(leader).toFixed(1)}
+                            </span>
+                            <Button
+                              asChild
+                              variant="ghost"
+                              size="icon-sm"
+                              className="col-span-2 justify-self-end hidden sm:block"
+                            >
+                              <Link
+                                href={compareMode ? "#" : `/players/compare?players=${leader.player_id}`}
+                                aria-label={`${leader.player_name} тоглогчийг харьцуулах`}
+                                onClick={(e) => {
+                                  if (compareMode) e.preventDefault();
+                                }}
+                              >
+                                <Scale aria-hidden="true" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </DraggablePlayerCard>
                       </li>
                     ))}
                   </ol>
