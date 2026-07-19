@@ -195,9 +195,9 @@ test.describe("PO Barcode Receive (Mocked)", () => {
         await route.fulfill({
           status: 400,
           contentType: "application/json",
-          body: JSON.stringify({
-            error: { message: "No part found with barcode: 000" },
-          }),
+            body: JSON.stringify({
+              error: { message: "No part found with barcode: 000" },
+            }),
         });
       },
     );
@@ -205,8 +205,8 @@ test.describe("PO Barcode Receive (Mocked)", () => {
     await page.getByRole("button", { name: "Receive Item" }).click();
 
     // Inline error message appears
-    await expect(page.getByText(/No part found with barcode/)).toBeVisible({
-      timeout: 10_000,
-    });
+    await expect(
+      page.getByText(/No part found with barcode/),
+    ).toBeVisible({ timeout: 10_000 });
   });
 });

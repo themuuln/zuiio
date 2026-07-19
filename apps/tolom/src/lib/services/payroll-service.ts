@@ -269,10 +269,7 @@ export async function calculateMonthlyPayroll(
     .in("mechanic_id", mechanicIds)
     .eq("period_start", periodStart);
 
-  const existingMap = new Map<
-    string,
-    { id: string; status: string; paid_at: string | null }
-  >();
+  const existingMap = new Map<string, { id: string; status: string; paid_at: string | null }>();
   for (const rec of existingRecords ?? []) {
     existingMap.set(rec.mechanic_id, rec);
   }

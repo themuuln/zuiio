@@ -58,13 +58,11 @@ export async function DashboardFetcher({
   const hasSuppliers = org.has_suppliers !== false;
   const hasHr = false;
 
-  const _hasCheckoutCustomer = posSettings?.has_checkout_customer !== false;
-  const _hasCheckoutQuickAmounts =
-    posSettings?.has_checkout_quick_amounts !== false;
-  const _hasReceiptDrawer = posSettings?.has_receipt_drawer !== false;
-  const _hasTrackStock = posSettings?.has_track_stock !== false;
-  const _shopDefaultPaymentMethod =
-    posSettings?.shop_default_payment_method ?? "cash";
+  const hasCheckoutCustomer = posSettings?.has_checkout_customer !== false;
+  const hasCheckoutQuickAmounts = posSettings?.has_checkout_quick_amounts !== false;
+  const hasReceiptDrawer = posSettings?.has_receipt_drawer !== false;
+  const hasTrackStock = posSettings?.has_track_stock !== false;
+  const shopDefaultPaymentMethod = posSettings?.shop_default_payment_method ?? "cash";
 
   const allFeatures =
     enabledFeatures.length > 0

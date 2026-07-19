@@ -406,7 +406,6 @@ function PlayerResultCard({
   return (
     <Link
       href={`/players/${player.player_id}`}
-      prefetch={false}
       data-result-index={dataResultIndex}
       role="listitem"
       className={cn(
@@ -462,7 +461,6 @@ function TeamResultCard({
   return (
     <Link
       href={`/teams/${team.team_slug}`}
-      prefetch={false}
       data-result-index={dataResultIndex}
       role="listitem"
       className={cn(
@@ -506,7 +504,6 @@ function GameResultCard({
 }: GameResultCardProps) {
   return (
     <Link
-      prefetch={false}
       href={`/games/${game.id}`}
       data-result-index={dataResultIndex}
       role="listitem"

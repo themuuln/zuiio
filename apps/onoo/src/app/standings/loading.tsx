@@ -1,95 +1,110 @@
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
 
 export default function StandingsLoading() {
-  const raceCards = ["rank-1", "rank-2", "rank-3"];
-  const tableRows = Array.from({ length: 8 }, (_, i) => `row-${i}`);
-
   return (
     <main
-      className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10"
+      className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10"
       aria-label="Шалгуур ачаалж байна"
       aria-busy="true"
     >
-      {/* Header */}
-      <header className="flex flex-col gap-4" aria-hidden="true">
-        <div>
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="mt-3 h-12 w-48" />
-          <Skeleton className="mt-3 h-5 w-full max-w-lg" />
+      {/* Header skeleton */}
+      <header className="grid gap-5 lg:grid-cols-12 lg:items-end">
+        <div className="lg:col-span-7 flex flex-col gap-3" aria-hidden="true">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="h-12 w-48" />
+          <Skeleton className="h-5 w-80" />
         </div>
       </header>
 
-      {/* Top 3 race cards */}
-      <section
-        className="rounded-xl bg-[var(--surface-1)] p-6 sm:p-8"
-        aria-hidden="true"
-      >
-        <div className="flex items-end justify-between gap-4 mb-6">
-          <div>
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="mt-2 h-7 w-40" />
-          </div>
-          <Skeleton className="h-5 w-16" />
+      {/* Race cards skeleton */}
+      <section aria-hidden="true" className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-7 w-40" />
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          {raceCards.map((key) => (
-            <Card key={key} className="shadow-none">
+          {[1, 2, 3].map((i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: skeleton
+            <Card key={i} className="shadow-none">
               <CardHeader>
                 <Skeleton className="h-5 w-8" />
                 <div className="mt-3 flex items-center gap-3">
                   <Skeleton className="size-12 rounded-full" />
-                  <div className="flex-1 flex-col gap-2">
-                    <Skeleton className="h-6 w-24" />
-                    <Skeleton className="h-4 w-20" />
+                  <div className="flex flex-col gap-2">
+                    <Skeleton className="h-5 w-28" />
+                    <Skeleton className="h-3 w-20" />
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="grid grid-cols-3 gap-3">
-                <Skeleton className="h-12" />
-                <Skeleton className="h-12" />
-                <Skeleton className="h-12" />
+                <Skeleton className="h-14 rounded-lg" />
+                <Skeleton className="h-14 rounded-lg" />
+                <Skeleton className="h-14 rounded-lg" />
               </CardContent>
             </Card>
           ))}
         </div>
       </section>
 
-      {/* Full standings table */}
-      <section aria-hidden="true">
-        <Skeleton className="h-7 w-32 mb-4" />
-        <Card className="shadow-none">
-          <CardContent className="p-0 space-y-0">
-            {/* Header row */}
-            <div className="flex items-center gap-4 px-4 py-3 border-b">
-              <Skeleton className="h-4 w-8" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-8" />
-              <Skeleton className="h-4 w-8" />
-              <Skeleton className="h-4 w-8" />
-              <Skeleton className="h-4 w-8" />
-              <Skeleton className="h-4 w-8" />
-            </div>
-            {tableRows.map((key) => (
+      {/* Table skeleton */}
+      <section aria-hidden="true" className="flex flex-col gap-4">
+        <div className="flex items-end justify-between gap-3">
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-7 w-28" />
+          </div>
+          <Skeleton className="h-6 w-16" />
+        </div>
+        <div className="flex flex-col gap-0 rounded-xl border">
+          {/* Table header */}
+          <div className="grid grid-cols-9 gap-4 border-b px-4 py-3">
+            {[32, 80, 32, 32, 48, 32, 56, 64, 48].map((w, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: skeleton
               <div
-                key={key}
-                className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0"
+                key={i}
+                className="flex justify-center first:justify-start last:justify-end"
               >
-                <Skeleton className="h-4 w-8" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-8" />
-                <Skeleton className="h-4 w-8" />
-                <Skeleton className="h-4 w-8" />
-                <Skeleton className="h-4 w-8" />
-                <Skeleton className="h-4 w-8" />
+                <Skeleton className="h-4" style={{ width: w }} />
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+          {/* Table rows */}
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((row) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: skeleton
+            <div
+              key={row}
+              className="grid grid-cols-9 gap-4 border-b last:border-b-0 px-4 py-3"
+            >
+              <Skeleton className="h-4 w-5" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-8 rounded-full" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-4 w-5" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-4 w-5" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-4 w-10" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-4 w-5" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-5 w-12 rounded-md" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-4 w-8" />
+              </div>
+              <div className="flex justify-end">
+                <Skeleton className="h-4 w-8" />
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
     </main>
   );

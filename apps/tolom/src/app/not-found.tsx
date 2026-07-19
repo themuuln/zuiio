@@ -1,6 +1,7 @@
+import { Suspense } from "react";
+
 import { cookies, headers } from "next/headers";
 import Link from "next/link";
-import { Suspense } from "react";
 import { Typography } from "@/components/ui/typography";
 
 async function NotFoundContent() {

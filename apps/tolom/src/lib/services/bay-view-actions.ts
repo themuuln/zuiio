@@ -239,9 +239,7 @@ export async function lookupVehicleByPlate(
       "lookupVehicleByPlate:owner",
       supabase
         .from("vehicle_owners")
-        .select(
-          "customer_id, customers!inner(id, first_name, last_name, phone)",
-        )
+        .select("customer_id, customers!inner(id, first_name, last_name, phone)")
         .eq("organization_id", orgId)
         .eq("vehicle_id", vehicle.id)
         .is("owned_until", null)

@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getTeamBySlug } from "../../lib/data";
 
+export const runtime = "edge";
 export const alt = "Оноо — Багийн мэдээлэл";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

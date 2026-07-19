@@ -43,7 +43,7 @@ export async function createSale(
 
   // Validate cross-org salesperson override
   if (salespersonId !== userId) {
-    const { data: _salesperson, error: salespersonError } = await supabase
+    const { data: salesperson, error: salespersonError } = await supabase
       .from("profiles")
       .select("id")
       .eq("id", salespersonId)

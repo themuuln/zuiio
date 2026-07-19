@@ -27,7 +27,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useForm } from "@/lib/hooks/use-form";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { ServiceCatalog } from "@/lib/types";

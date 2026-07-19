@@ -8,7 +8,7 @@ export default function postcssFixParent() {
     postcssPlugin: "postcss-fix-parent",
     OnceExit(root) {
       root.walkRules((rule) => {
-        if (rule.selector?.includes(":parent")) {
+        if (rule.selector && rule.selector.includes(":parent")) {
           rule.selector = rule.selector.replace(
             /:parent(?=[\s>~+:[#.])/g,
             ":has(*)",

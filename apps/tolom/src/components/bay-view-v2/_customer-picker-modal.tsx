@@ -106,7 +106,7 @@ export function CustomerPickerModal({
     if (!name) return "\u2014";
     const parts = name.split(" ");
     return parts.length >= 2
-      ? `${parts[0]?.[0]}${parts[1]?.[0]}`
+      ? `${parts[0]![0]}${parts[1]![0]}`
       : name.slice(0, 2);
   };
 

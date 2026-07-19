@@ -59,33 +59,14 @@ export default async function globalSetup(_config: FullConfig) {
     // Auth file doesn't exist — fall through to full login below
   }
 
-  // Fast-path: reuse a fresh auth file — but only if it actually holds the
-  // Supabase session tokens the new cookie contract needs. Stale auth files
-  // from older formats lack them; fall through to a full login instead of
-  // throwing and blocking every spec.
   if (authFileFresh) {
-    let hasSessionTokens = false;
-    try {
-      const raw = readFileSync(authFile, "utf8");
-      hasSessionTokens = raw.includes("sb-access-token");
-    } catch {
-      hasSessionTokens = false;
-    }
-
-    if (hasSessionTokens) {
-      process.stdout.write(
-        "✓ Auth state is fresh, refreshing session cookie\n",
-      );
-      const browser = await chromium.launch();
-      const context = await browser.newContext({ baseURL: BASE_URL });
-      await addSupabaseSessionCookie(context);
-      await context.storageState({ path: authFile });
-      await browser.close();
-      return;
-    }
-    process.stdout.write(
-      "⚠ Auth file is fresh but missing session tokens — performing full login\n",
-    );
+    process.stdout.write("✓ Auth state is fresh, refreshing session cookie\n");
+    const browser = await chromium.launch();
+    const context = await browser.newContext({ baseURL: BASE_URL });
+    await addSupabaseSessionCookie(context);
+    await context.storageState({ path: authFile });
+    await browser.close();
+    return;
   }
 
   // Skip seeding for remote Supabase — only seed local instances

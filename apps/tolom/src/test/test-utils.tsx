@@ -13,7 +13,7 @@ function createTestQueryClient() {
 }
 
 interface WrapperOptions {
-  locale?: "en" | "mn";
+  locale?: string;
   messages?: Record<string, string>;
 }
 

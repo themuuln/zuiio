@@ -3,8 +3,8 @@
  * Fix broken Typography imports that were inserted in the middle of multi-line imports.
  * Strategy: Remove ALL Typography imports, then add them back correctly after the last complete import.
  */
-import fs from "node:fs";
-import path from "node:path";
+import fs from "fs";
+import path from "path";
 
 const SRC = path.resolve("src");
 const SKIP_DIRS = new Set(["components/ui", "node_modules"]);
@@ -101,9 +101,11 @@ function processFile(filePath) {
 }
 
 const files = findTsxFiles(SRC);
-let _changed = 0;
+let changed = 0;
 for (const file of files) {
   if (processFile(file)) {
-    _changed++;
+    changed++;
+    console.log(`✓ ${path.relative(process.cwd(), file)}`);
   }
 }
+console.log(`\nDone: ${changed} files fixed`);

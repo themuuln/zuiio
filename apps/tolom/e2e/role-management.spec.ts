@@ -18,48 +18,12 @@ function ok(body: unknown) {
 const ORG_ID = SEED.orgId;
 
 const samplePermissions = [
-  {
-    id: "perm-1",
-    name: "work_orders.read",
-    resource: "work_orders",
-    action: "read",
-    description: "View work orders",
-  },
-  {
-    id: "perm-2",
-    name: "work_orders.create",
-    resource: "work_orders",
-    action: "create",
-    description: "Create work orders",
-  },
-  {
-    id: "perm-3",
-    name: "reports.read",
-    resource: "reports",
-    action: "read",
-    description: "View reports",
-  },
-  {
-    id: "perm-4",
-    name: "inventory.read",
-    resource: "inventory",
-    action: "read",
-    description: "View inventory",
-  },
-  {
-    id: "perm-5",
-    name: "customers.read",
-    resource: "customers",
-    action: "read",
-    description: "View customers",
-  },
-  {
-    id: "perm-6",
-    name: "invoices.read",
-    resource: "invoices",
-    action: "read",
-    description: "View invoices",
-  },
+  { id: "perm-1", name: "work_orders.read", resource: "work_orders", action: "read", description: "View work orders" },
+  { id: "perm-2", name: "work_orders.create", resource: "work_orders", action: "create", description: "Create work orders" },
+  { id: "perm-3", name: "reports.read", resource: "reports", action: "read", description: "View reports" },
+  { id: "perm-4", name: "inventory.read", resource: "inventory", action: "read", description: "View inventory" },
+  { id: "perm-5", name: "customers.read", resource: "customers", action: "read", description: "View customers" },
+  { id: "perm-6", name: "invoices.read", resource: "invoices", action: "read", description: "View invoices" },
 ];
 
 const systemRoles = [
@@ -107,10 +71,7 @@ const customRole = {
   permissions: [samplePermissions[0], samplePermissions[1]],
 };
 
-async function mockRoles(
-  page: import("@playwright/test").Page,
-  roles?: typeof systemRoles,
-) {
+async function mockRoles(page: import("@playwright/test").Page, roles?: typeof systemRoles) {
   await page.route(`**/api/organizations/${ORG_ID}/roles`, (route) => {
     return route.fulfill(ok(roles ?? systemRoles));
   });
@@ -135,12 +96,7 @@ async function mockRolesMutations(page: import("@playwright/test").Page) {
       return route.fulfill({
         status: 201,
         contentType: "application/json",
-        body: JSON.stringify({
-          id: customRoleId,
-          name: "Junior Mechanic",
-          description: "Limited mechanic access",
-          is_system: false,
-        }),
+        body: JSON.stringify({ id: customRoleId, name: "Junior Mechanic", description: "Limited mechanic access", is_system: false }),
       });
     }
     return route.continue();
@@ -163,9 +119,7 @@ test.describe("Role Management (Mocked)", () => {
     await page.goto("/dashboard/organization/roles");
 
     // Wait for the page to render role cards
-    const roleCards = page
-      .locator('[class*="border"][class*="rounded"]')
-      .filter({ hasText: /Org Owner|Manager|Mechanic|Guest/ });
+    const roleCards = page.locator('[class*="border"][class*="rounded"]').filter({ hasText: /Org Owner|Manager|Mechanic|Guest/ });
     await expect(roleCards.first()).toBeVisible({ timeout: 10_000 });
 
     // Verify system role names are visible
@@ -175,9 +129,7 @@ test.describe("Role Management (Mocked)", () => {
     await expect(page.getByText("Guest")).toBeVisible();
   });
 
-  test("opens drawer, fills form, submits, and shows success toast", async ({
-    page,
-  }) => {
+  test("opens drawer, fills form, submits, and shows success toast", async ({ page }) => {
     await page.goto("/dashboard/organization/roles");
 
     // Wait for page to load
@@ -212,37 +164,23 @@ test.describe("Role Management (Mocked)", () => {
     }
 
     // Submit the form
-    const saveButton = page.getByRole("button", {
-      name: /save|submit|create/i,
-    });
+    const saveButton = page.getByRole("button", { name: /save|submit|create/i });
     await saveButton.click();
 
     // Should show a success toast
-    await expect(page.getByText(/success|created|saved/i)).toBeVisible({
-      timeout: 5_000,
-    });
+    await expect(page.getByText(/success|created|saved/i)).toBeVisible({ timeout: 5_000 });
   });
 
-  test("opens drawer with pre-filled values, changes name, and saves", async ({
-    page,
-  }) => {
+  test("opens drawer with pre-filled values, changes name, and saves", async ({ page }) => {
     // Include a custom role in the mock
     await mockRoles(page, [...systemRoles, customRole]);
     await page.goto("/dashboard/organization/roles");
 
-    await expect(page.getByText("Junior Mechanic")).toBeVisible({
-      timeout: 10_000,
-    });
+    await expect(page.getByText("Junior Mechanic")).toBeVisible({ timeout: 10_000 });
 
     // Click edit button on the custom role card
-    const customCard = page
-      .locator("div")
-      .filter({ hasText: "Junior Mechanic" })
-      .first();
-    const editButton = customCard
-      .getByRole("button")
-      .filter({ has: page.locator("svg") })
-      .first();
+    const customCard = page.locator("div").filter({ hasText: "Junior Mechanic" }).first();
+    const editButton = customCard.getByRole("button").filter({ has: page.locator("svg") }).first();
     await editButton.click();
 
     // Drawer should open with pre-filled values
@@ -259,30 +197,18 @@ test.describe("Role Management (Mocked)", () => {
     await saveButton.click();
 
     // Success toast
-    await expect(page.getByText(/success|updated|saved/i)).toBeVisible({
-      timeout: 5_000,
-    });
+    await expect(page.getByText(/success|updated|saved/i)).toBeVisible({ timeout: 5_000 });
   });
 
-  test("opens edit drawer for custom role, clicks Delete, and confirms removal", async ({
-    page,
-  }) => {
+  test("opens edit drawer for custom role, clicks Delete, and confirms removal", async ({ page }) => {
     await mockRoles(page, [...systemRoles, customRole]);
     await page.goto("/dashboard/organization/roles");
 
-    await expect(page.getByText("Junior Mechanic")).toBeVisible({
-      timeout: 10_000,
-    });
+    await expect(page.getByText("Junior Mechanic")).toBeVisible({ timeout: 10_000 });
 
     // Open edit drawer for custom role
-    const customCard = page
-      .locator("div")
-      .filter({ hasText: "Junior Mechanic" })
-      .first();
-    const editButton = customCard
-      .getByRole("button")
-      .filter({ has: page.locator("svg") })
-      .first();
+    const customCard = page.locator("div").filter({ hasText: "Junior Mechanic" }).first();
+    const editButton = customCard.getByRole("button").filter({ has: page.locator("svg") }).first();
     await editButton.click();
 
     // Find and click Delete button
@@ -291,9 +217,7 @@ test.describe("Role Management (Mocked)", () => {
     await deleteButton.click();
 
     // Success toast
-    await expect(page.getByText(/success|deleted|removed/i)).toBeVisible({
-      timeout: 5_000,
-    });
+    await expect(page.getByText(/success|deleted|removed/i)).toBeVisible({ timeout: 5_000 });
   });
 
   test("system role drawer has no Delete button", async ({ page }) => {
@@ -302,20 +226,12 @@ test.describe("Role Management (Mocked)", () => {
     await expect(page.getByText("Org Owner")).toBeVisible({ timeout: 10_000 });
 
     // Click edit on the Org Owner system role
-    const ownerCard = page
-      .locator("div")
-      .filter({ hasText: "Org Owner" })
-      .first();
-    const editButton = ownerCard
-      .getByRole("button")
-      .filter({ has: page.locator("svg") })
-      .first();
+    const ownerCard = page.locator("div").filter({ hasText: "Org Owner" }).first();
+    const editButton = ownerCard.getByRole("button").filter({ has: page.locator("svg") }).first();
     await editButton.click();
 
     // Drawer should open
-    await expect(page.getByRole("textbox", { name: /name/i })).toBeVisible({
-      timeout: 5_000,
-    });
+    await expect(page.getByRole("textbox", { name: /name/i })).toBeVisible({ timeout: 5_000 });
 
     // Delete button should NOT be visible for system roles
     const deleteButton = page.getByRole("button", { name: /delete|remove/i });
@@ -326,9 +242,7 @@ test.describe("Role Management (Mocked)", () => {
 // ── Sidebar Permission Gating ────────────────────────────────────────────
 
 test.describe("Sidebar Permission Gating (Mocked)", () => {
-  test("non-owner without reports.read cannot see Reports but can see Work Orders", async ({
-    page,
-  }) => {
+  test("non-owner without reports.read cannot see Reports but can see Work Orders", async ({ page }) => {
     await setEnglishLocale(page);
     await mockSupabaseREST(page);
 
@@ -359,13 +273,7 @@ test.describe("Sidebar Permission Gating (Mocked)", () => {
     // Mock dashboard endpoints with minimal data
     await page.route("**/api/organizations/*/dashboard*", (route) => {
       return route.fulfill(
-        ok({
-          total_bays: 3,
-          occupied_bays: 0,
-          empty_bays: 3,
-          utilization_percent: 0,
-          bays: [],
-        }),
+        ok({ total_bays: 3, occupied_bays: 0, empty_bays: 3, utilization_percent: 0, bays: [] }),
       );
     });
 
@@ -380,13 +288,9 @@ test.describe("Sidebar Permission Gating (Mocked)", () => {
     await expect(sidebar.first()).toBeVisible({ timeout: 10_000 });
 
     // Reports should NOT be visible (mechanic lacks reports.read)
-    await expect(
-      page.getByRole("link", { name: /reports/i }),
-    ).not.toBeVisible();
+    await expect(page.getByRole("link", { name: /reports/i })).not.toBeVisible();
 
     // Work Orders SHOULD be visible (mechanic has work_orders.read)
-    await expect(
-      page.getByRole("link", { name: /work orders/i }),
-    ).toBeVisible();
+    await expect(page.getByRole("link", { name: /work orders/i })).toBeVisible();
   });
 });

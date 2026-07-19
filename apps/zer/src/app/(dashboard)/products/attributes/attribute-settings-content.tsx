@@ -8,7 +8,6 @@ import {
   Warning,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { capture } from "@zuiio/capture";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -550,8 +549,8 @@ function CategoryLinkDrawer({
         if (!cancelled) {
           setSelectedCats(new Set(links.map((l) => l.category_id)));
         }
-      } catch {
-        capture("Failed to load attribute category links");
+      } catch (err) {
+        console.error("Failed to load attribute category links", err);
       }
     })();
     return () => {

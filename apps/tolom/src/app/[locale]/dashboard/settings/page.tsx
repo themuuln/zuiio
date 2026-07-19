@@ -1,13 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { generateBrandCSS, resolveBrandConfig } from "@zuiio/branding";
 import { useOrgMutation } from "@zuiio/query";
 import { Building2, Search, Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { generateBrandCSS, resolveBrandConfig } from "@zuiio/branding";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,7 @@ import { Typography } from "@/components/ui/typography";
 import { createOrgQuery } from "@/lib/queries/factory";
 import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { reportServerError } from "@/lib/sentry-report-server";
 import type { Organization } from "@/lib/types";
 import { setCookie } from "@/lib/utils";
 import { AppearanceCustomization } from "./_appearance-customization";

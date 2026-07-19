@@ -349,10 +349,7 @@ export function DrawerContentPanel({
                           : "Нэмэгдсэн Өртөгт Татвар"}
                       </span>
                     </div>
-                    <Switch
-                      checked={nuatEnabled}
-                      onCheckedChange={onNuatToggle}
-                    />
+                    <Switch checked={nuatEnabled} onCheckedChange={onNuatToggle} />
                   </div>
                   <TotalsSummary
                     servicesTotal={servicesTotal}

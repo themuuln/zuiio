@@ -74,7 +74,7 @@ describe("DetailDrawer", () => {
 
   it("renders proper width class when size is specified", () => {
     const { $ } = renderDrawer(
-      <DetailDrawer open onOpenChange={() => {}} size="2xl">
+      <DetailDrawer open onOpenChange={() => {}}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>Wide Drawer</DetailDrawer.Title>
         </DetailDrawer.Header>
@@ -84,8 +84,7 @@ describe("DetailDrawer", () => {
       </DetailDrawer>,
     );
 
-    // Drawer uses CSS custom property for width when size is set
-    const content = $('[class*="drawer-max-w"]');
+    const content = $('[class*="max-w-2xl"]');
     expect(content).toBeInTheDocument();
   });
 

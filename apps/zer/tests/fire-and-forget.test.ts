@@ -41,7 +41,6 @@ test("returns warning string when function throws", () => {
     throw new Error("db connection lost");
   });
   assert.ok(result, "should return a warning");
-  // biome-ignore lint/style/noNonNullAssertion: assert.ok narrows, TS doesn't track it
   assert.match(result!, /journal_post/);
   assert.match(result!, /алдаа гарлаа/);
 });
@@ -95,7 +94,6 @@ test("async variant works the same way", async () => {
     throw new Error("network error");
   });
   assert.ok(fail);
-  // biome-ignore lint/style/noNonNullAssertion: assert.ok narrows
   assert.match(fail!, /async_fail/);
 });
 
@@ -105,6 +103,5 @@ test("original error is not exposed to the caller", () => {
   });
   // Caller gets a user-friendly Mongolian string, not the raw error
   assert.ok(result);
-  // biome-ignore lint/style/noNonNullAssertion: assert.ok narrows
   assert.doesNotMatch(result!, /credentials/);
 });

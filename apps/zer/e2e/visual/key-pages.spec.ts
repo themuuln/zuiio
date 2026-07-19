@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 /**
  * Visual regression tests using Playwright's built-in toHaveScreenshot().

@@ -108,11 +108,7 @@ export function CurrencyInput({
     }
   }, [value]);
 
-  const displayText = editing
-    ? editText
-    : value != null
-      ? formatCurrency(value)
-      : "";
+  const displayText = editing ? editText : value != null ? formatCurrency(value) : "";
 
   const handleFocus = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {

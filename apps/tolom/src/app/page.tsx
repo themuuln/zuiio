@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "@/lib/i18n/navigation";
 
 // Route renders user-specific content — legitimate cache opt-out.

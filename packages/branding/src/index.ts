@@ -521,10 +521,11 @@ export function contrastForeground(cssColor: string): string | undefined {
 
   // Oklch — L value directly represents perceived lightness
   const oklchMatch = cssColor.match(/^oklch\(([\d.]+)\s/);
-  if (oklchMatch?.[1]) {
+  if (oklchMatch) {
     const l = parseFloat(oklchMatch[1]);
     return l > 0.5 ? "oklch(0.15 0.02 0)" : "oklch(0.98 0.01 0)";
   }
+
   return undefined;
 }
 

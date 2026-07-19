@@ -84,7 +84,9 @@ function extractPlaceholders(str) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 let hasErrors = false;
-let _warningCount = 0;
+let warningCount = 0;
+
+console.log("🔍 Checking translation files...\n");
 
 // Load both locales
 const messages = {};
@@ -96,6 +98,9 @@ for (const locale of LOCALES) {
     process.exit(1);
   }
 }
+
+// 1. Recursive key parity
+console.log("── Key Parity ──");
 const enPaths = new Set(collectLeafPaths(messages.en));
 const mnPaths = new Set(collectLeafPaths(messages.mn));
 
@@ -109,6 +114,7 @@ if (missingInMn.length) {
   );
   for (const p of missingInMn) console.error(`     ${p}`);
 } else {
+  console.log("  ✅ All en.json keys present in mn.json");
 }
 
 if (extraInMn.length) {
@@ -118,7 +124,11 @@ if (extraInMn.length) {
   );
   for (const p of extraInMn) console.error(`     ${p}`);
 } else {
+  console.log("  ✅ No extra keys in mn.json");
 }
+
+// 2. Duplicate keys (raw file scan)
+console.log("\n── Duplicate Keys ──");
 for (const locale of LOCALES) {
   const filePath = resolve(MESSAGES_DIR, `${locale}.json`);
   const dupes = findDuplicateKeys(filePath);
@@ -128,8 +138,12 @@ for (const locale of LOCALES) {
       console.error(`  ❌ ${locale}.json:${d.line} — duplicate key "${d.key}"`);
     }
   } else {
+    console.log(`  ✅ ${locale}.json — no duplicates`);
   }
 }
+
+// 3. English-looking values in mn.json
+console.log("\n── English Values in mn.json ──");
 const mnPaths2 = collectLeafPaths(messages.mn);
 let englishCount = 0;
 for (const path of mnPaths2) {
@@ -137,7 +151,7 @@ for (const path of mnPaths2) {
   let val = messages.mn;
   for (const p of parts) val = val?.[p];
   if (looksEnglish(val)) {
-    _warningCount++;
+    warningCount++;
     englishCount++;
     if (englishCount <= 20) {
       console.warn(`  ⚠️  ${path} = "${val}"`);
@@ -148,11 +162,15 @@ if (englishCount > 20) {
   console.warn(`  ... and ${englishCount - 20} more`);
 }
 if (englishCount === 0) {
+  console.log("  ✅ No English-looking values found");
 } else {
   console.warn(
     `  ⚠️  ${englishCount} values may be untranslated (warnings only)`,
   );
 }
+
+// 4. Placeholder parity
+console.log("\n── Placeholder Parity ──");
 let placeholderIssues = 0;
 for (const enPath of enPaths) {
   const enParts = enPath.split(".");
@@ -183,15 +201,23 @@ if (placeholderIssues > 10) {
   console.warn(`  ... and ${placeholderIssues - 10} more`);
 }
 if (placeholderIssues === 0) {
+  console.log("  ✅ All placeholders match");
 } else {
   console.warn(
     `  ⚠️  ${placeholderIssues} keys have placeholder mismatches (warnings only)`,
   );
 }
 
+// Summary
+console.log("\n── Summary ──");
+console.log(`  en.json: ${enPaths.size} leaf keys`);
+console.log(`  mn.json: ${mnPaths.size} leaf keys`);
+console.log(`  Warnings: ${warningCount}`);
+
 if (hasErrors) {
   console.error("\n❌ Translation file validation failed.\n");
   process.exit(1);
 } else {
+  console.log("\n✅ Translation files are valid.\n");
   process.exit(0);
 }

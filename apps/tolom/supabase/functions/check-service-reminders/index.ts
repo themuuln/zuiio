@@ -48,6 +48,7 @@ Deno.serve({ timeout: 300000 }, async () => {
   }
 
   if (!schedules || schedules.length === 0) {
+    console.log("No upcoming service schedules found");
     return new Response(JSON.stringify({ checked: 0 }), {
       headers: { "Content-Type": "application/json" },
     });
@@ -72,6 +73,7 @@ Deno.serve({ timeout: 300000 }, async () => {
   const toNotify = schedules.filter((s) => !alreadyNotified.has(s.id));
 
   if (toNotify.length === 0) {
+    console.log("All schedules already have recent reminders");
     return new Response(
       JSON.stringify({ checked: schedules.length, skipped: toNotify.length }),
       { headers: { "Content-Type": "application/json" } },
@@ -306,6 +308,10 @@ Deno.serve({ timeout: 300000 }, async () => {
       }
     }
   }
+
+  console.log(
+    `Created ${reminders.length} reminder(s), sent ${sentCount} total`,
+  );
   return new Response(
     JSON.stringify({
       checked: schedules.length,

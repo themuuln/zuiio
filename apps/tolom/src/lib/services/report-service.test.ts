@@ -1,5 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 
@@ -392,11 +392,7 @@ describe("getWeeklyReport", () => {
 describe("getMonthlyReport", () => {
   it("returns monthly totals", async () => {
     setupFromMock(mockClient, [
-      b([
-        { id: "wo-1", created_at: "2025-01-10T08:00:00Z" },
-        { id: "wo-2", created_at: "2025-01-15T09:00:00Z" },
-        { id: "wo-3", created_at: "2025-01-20T10:00:00Z" },
-      ]),
+      b([{ id: "wo-1", created_at: "2025-01-10T08:00:00Z" }, { id: "wo-2", created_at: "2025-01-15T09:00:00Z" }, { id: "wo-3", created_at: "2025-01-20T10:00:00Z" }]),
       b([
         { final_price: 100, discount_amount: 10, work_order_id: "wo-1" },
         { final_price: 200, discount_amount: 0, work_order_id: "wo-2" },
@@ -611,7 +607,9 @@ describe("getEndOfDaySummary", () => {
 // ── getDashboardData ──────────────────────────────────────────
 
 /** Shape returned by the get_full_dashboard_data RPC. */
-function rpcDashboardResponse(opts: { withPrevPeriod?: boolean } = {}) {
+function rpcDashboardResponse(
+  opts: { withPrevPeriod?: boolean } = {},
+) {
   const { withPrevPeriod = false } = opts;
   return {
     data: {
@@ -651,7 +649,9 @@ function rpcDashboardResponse(opts: { withPrevPeriod?: boolean } = {}) {
         { date: "2025-01-14", revenue: 200 },
         { date: "2025-01-15", revenue: 380 },
       ],
-      topServices: [{ name: "Oil Change", count: 2, revenue: 300 }],
+      topServices: [
+        { name: "Oil Change", count: 2, revenue: 300 },
+      ],
       technicianPerformance: [
         { mechanic_id: "m-1", name: "Mech One", completed: 5, revenue: 500 },
       ],

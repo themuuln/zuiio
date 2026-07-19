@@ -156,10 +156,8 @@ export const GET = createRouteHandler(
         return {
           data: {
             default_tax_rate: (s.default_tax_rate as number | null) ?? null,
-            payment_method_fees:
-              (s.payment_method_fees as Record<string, number> | null) ?? null,
-            transfer_bank_accounts:
-              (s.transfer_bank_accounts as unknown[] | null) ?? null,
+            payment_method_fees: (s.payment_method_fees as Record<string, number> | null) ?? null,
+            transfer_bank_accounts: (s.transfer_bank_accounts as unknown[] | null) ?? null,
           },
         };
       })(),

@@ -24,6 +24,7 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreatePart } from "@/lib/queries/use-wizard-data";
+import { reportServerError } from "@/lib/sentry-report-server";
 import type { CreatePartParams, PartsCatalogItem } from "@/lib/types";
 import { partSchema as sharedPartSchema } from "@/lib/validation/part-schema";
 import PartPhotoUpload from "./part-photo-upload";

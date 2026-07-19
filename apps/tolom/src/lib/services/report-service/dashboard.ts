@@ -61,56 +61,52 @@ export async function getDashboardData(
 
   const result = data as Record<string, unknown>;
 
-  const summary = result.summary as Record<string, number>;
-  const summaryComparison = result.summaryComparison as Record<
-    string,
-    number
-  > | null;
-  const statusDist =
-    result.workOrderStatusDistribution as WorkOrderStatusDistribution[];
-  const revenueTrend = result.revenueTrend as DashboardData["revenueTrend"];
-  const topServices = result.topServices as DashboardData["topServices"];
-  const techPerf =
-    result.technicianPerformance as DashboardData["technicianPerformance"];
-  const recentOrders =
-    result.recentWorkOrders as DashboardData["recentWorkOrders"];
-  const categoryBreakdown =
-    result.serviceCategoryBreakdown as DashboardData["serviceCategoryBreakdown"];
-  const acquisitionTrend =
-    result.customerAcquisitionTrend as DashboardData["customerAcquisitionTrend"];
+  const summary = result["summary"] as Record<string, number>;
+  const summaryComparison = result["summaryComparison"] as Record<string, number> | null;
+  const statusDist = result["workOrderStatusDistribution"] as WorkOrderStatusDistribution[];
+  const revenueTrend = result["revenueTrend"] as DashboardData["revenueTrend"];
+  const topServices = result["topServices"] as DashboardData["topServices"];
+  const techPerf = result["technicianPerformance"] as DashboardData["technicianPerformance"];
+  const recentOrders = result["recentWorkOrders"] as DashboardData["recentWorkOrders"];
+  const categoryBreakdown = result["serviceCategoryBreakdown"] as DashboardData["serviceCategoryBreakdown"];
+  const acquisitionTrend = result["customerAcquisitionTrend"] as DashboardData["customerAcquisitionTrend"];
 
   // Build comparison shape for insights
   const comparison: DashboardSummary | null = summaryComparison
     ? {
-        totalRevenue: summaryComparison.total_revenue ?? 0,
-        activeWorkOrders: summaryComparison.active_work_orders ?? 0,
-        completedToday: summaryComparison.completed_today ?? 0,
-        newCustomersToday: summaryComparison.new_customers_today ?? 0,
-        avgRepairOrderValue: summaryComparison.avg_repair_order_value ?? 0,
-        partsRevenue: summaryComparison.parts_revenue ?? 0,
-        serviceRevenue: summaryComparison.service_revenue ?? 0,
-        grossProfit: summaryComparison.gross_profit ?? 0,
-        marginPercent: summaryComparison.margin_percent ?? 0,
-        totalCustomers: summaryComparison.total_customers ?? 0,
-        totalVehicles: summaryComparison.total_vehicles ?? 0,
+        totalRevenue: summaryComparison["total_revenue"] ?? 0,
+        activeWorkOrders: summaryComparison["active_work_orders"] ?? 0,
+        completedToday: summaryComparison["completed_today"] ?? 0,
+        newCustomersToday: summaryComparison["new_customers_today"] ?? 0,
+        avgRepairOrderValue: summaryComparison["avg_repair_order_value"] ?? 0,
+        partsRevenue: summaryComparison["parts_revenue"] ?? 0,
+        serviceRevenue: summaryComparison["service_revenue"] ?? 0,
+        grossProfit: summaryComparison["gross_profit"] ?? 0,
+        marginPercent: summaryComparison["margin_percent"] ?? 0,
+        totalCustomers: summaryComparison["total_customers"] ?? 0,
+        totalVehicles: summaryComparison["total_vehicles"] ?? 0,
       }
     : null;
 
   const fullSummary: DashboardSummary = {
-    totalRevenue: summary.totalRevenue ?? 0,
-    activeWorkOrders: summary.activeWorkOrders ?? 0,
-    completedToday: summary.completedToday ?? 0,
-    newCustomersToday: summary.newCustomersToday ?? 0,
-    avgRepairOrderValue: summary.avgRepairOrderValue ?? 0,
-    partsRevenue: summary.partsRevenue ?? 0,
-    serviceRevenue: summary.serviceRevenue ?? 0,
-    grossProfit: summary.grossProfit ?? 0,
-    marginPercent: summary.marginPercent ?? 0,
-    totalCustomers: summary.totalCustomers ?? 0,
-    totalVehicles: summary.totalVehicles ?? 0,
+    totalRevenue: summary["totalRevenue"] ?? 0,
+    activeWorkOrders: summary["activeWorkOrders"] ?? 0,
+    completedToday: summary["completedToday"] ?? 0,
+    newCustomersToday: summary["newCustomersToday"] ?? 0,
+    avgRepairOrderValue: summary["avgRepairOrderValue"] ?? 0,
+    partsRevenue: summary["partsRevenue"] ?? 0,
+    serviceRevenue: summary["serviceRevenue"] ?? 0,
+    grossProfit: summary["grossProfit"] ?? 0,
+    marginPercent: summary["marginPercent"] ?? 0,
+    totalCustomers: summary["totalCustomers"] ?? 0,
+    totalVehicles: summary["totalVehicles"] ?? 0,
   };
 
-  const insights = generateInsights(fullSummary, comparison, statusDist);
+  const insights = generateInsights(
+    fullSummary,
+    comparison,
+    statusDist,
+  );
 
   return {
     summary: fullSummary,
@@ -467,3 +463,4 @@ export async function getDashboardMetricsFast(
   if (error) throw new Error(error.message);
   return (data as Record<string, unknown>) ?? {};
 }
+

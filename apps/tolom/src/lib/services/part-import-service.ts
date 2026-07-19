@@ -22,7 +22,7 @@ interface ParsedRow {
   location?: string;
 }
 
-const _EXPECTED_HEADERS = [
+const EXPECTED_HEADERS = [
   "name",
   "name_mn",
   "part_number",
@@ -136,7 +136,7 @@ export async function importParts(
     }
   }
 
-  revalidateTag(cacheTags.partsCatalog(orgId), "max");
+  revalidateTag(cacheTags.partsCatalog(orgId));
 
   return results;
 }

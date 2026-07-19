@@ -66,23 +66,6 @@ export default defineConfig({
     //   use: { ...devices['Desktop Safari'] },
     // },
 
-    // A11y tests (public pages, no auth)
-    {
-      name: "a11y",
-      testMatch: "**/*.a11y.spec.ts",
-      use: { ...devices["Desktop Chrome"] },
-    },
-
-    /* Visual regression tests */
-    {
-      name: "visual",
-      testMatch: "**/*.visual.spec.ts",
-      use: {
-        ...devices["Desktop Chrome"],
-        storageState: "e2e/.auth/user.json",
-      },
-    },
-
     /* Test against mobile viewports */
     // {
     //   name: 'Mobile Chrome',

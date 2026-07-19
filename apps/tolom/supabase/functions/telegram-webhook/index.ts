@@ -102,6 +102,7 @@ async function registerBotCommands(): Promise<void> {
     });
     if (res.ok) {
       commandsRegistered = true;
+      console.log("Bot commands registered successfully");
     } else {
       console.error("Failed to register commands:", await res.text());
     }

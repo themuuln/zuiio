@@ -58,11 +58,7 @@ export default function OverviewPage() {
   // (they get redirected to bay view, and these APIs return 403).
   // Also skip while role is still loading — we need to know if user
   // is a mechanic before firing these queries.
-  const effectiveOrgId = roleLoading
-    ? undefined
-    : isMechanic
-      ? undefined
-      : orgId;
+  const effectiveOrgId = roleLoading ? undefined : (isMechanic ? undefined : orgId);
   useSelectedBranchGuard(effectiveOrgId);
 
   // Realtime: refresh dashboard when core tables change

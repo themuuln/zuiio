@@ -73,61 +73,61 @@ export default function SuppliersPage() {
 
   return (
     <div className="px-4 pt-4 pb-6 md:px-6">
-      <DataTablePage
-        title={t("suppliersTitle")}
-        description={t("suppliersSubtitle")}
-        loading={isPending && suppliers.length === 0}
-        headerAction={
-          <Link href="/dashboard/inventory/suppliers/new">
-            <Button size="default">
-              <Plus className="size-5" /> {t("newSupplier")}
-            </Button>
-          </Link>
-        }
-        columns={columns}
-        data={filtered}
-        getRowId={(row) => row.id}
-        pageSize={20}
-        search={{
-          placeholder: t("searchSuppliers"),
-          value: search,
-          onChange: setSearch,
-        }}
-        stats={
-          <span>
-            {filtered.length} {t("suppliers")}
-          </span>
-        }
-        actions={
-          <ExportButton
-            data={filtered}
-            columns={exportColumns}
-            filename={`suppliers-${now.toISOString().split("T")[0]}.xlsx`}
-            sheetName="Suppliers"
-          />
-        }
-        onRowClick={(row) => setDetailSupplierId(row.id)}
-        renderMobileCard={(s) => (
-          <div className="flex flex-col gap-2 text-sm">
-            <div className="flex items-center gap-2">
-              <Building2 className="size-4 shrink-0 text-muted-foreground/60" />
-              <span className="font-medium truncate">{s.name}</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/50 pt-2 text-xs text-muted-foreground">
-              <span>{s.contact_person || "—"}</span>
-              <span>{s.phone || "—"}</span>
-              <span className="truncate">{s.email || "—"}</span>
-            </div>
+    <DataTablePage
+      title={t("suppliersTitle")}
+      description={t("suppliersSubtitle")}
+      loading={isPending && suppliers.length === 0}
+      headerAction={
+        <Link href="/dashboard/inventory/suppliers/new">
+          <Button size="default">
+            <Plus className="size-5" /> {t("newSupplier")}
+          </Button>
+        </Link>
+      }
+      columns={columns}
+      data={filtered}
+      getRowId={(row) => row.id}
+      pageSize={20}
+      search={{
+        placeholder: t("searchSuppliers"),
+        value: search,
+        onChange: setSearch,
+      }}
+      stats={
+        <span>
+          {filtered.length} {t("suppliers")}
+        </span>
+      }
+      actions={
+        <ExportButton
+          data={filtered}
+          columns={exportColumns}
+          filename={`suppliers-${now.toISOString().split("T")[0]}.xlsx`}
+          sheetName="Suppliers"
+        />
+      }
+      onRowClick={(row) => setDetailSupplierId(row.id)}
+      renderMobileCard={(s) => (
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="flex items-center gap-2">
+            <Building2 className="size-4 shrink-0 text-muted-foreground/60" />
+            <span className="font-medium truncate">{s.name}</span>
           </div>
-        )}
-        emptyTitle={t("noSuppliers")}
-        emptyIcon={Building2}
-        emptyAction={
-          <Link href="/dashboard/inventory/suppliers/new">
-            <Button>{t("addFirstSupplier")}</Button>
-          </Link>
-        }
-      />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/50 pt-2 text-xs text-muted-foreground">
+            <span>{s.contact_person || "—"}</span>
+            <span>{s.phone || "—"}</span>
+            <span className="truncate">{s.email || "—"}</span>
+          </div>
+        </div>
+      )}
+      emptyTitle={t("noSuppliers")}
+      emptyIcon={Building2}
+      emptyAction={
+        <Link href="/dashboard/inventory/suppliers/new">
+          <Button>{t("addFirstSupplier")}</Button>
+        </Link>
+      }
+    />
     </div>
   );
 }

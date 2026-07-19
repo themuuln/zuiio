@@ -11,10 +11,12 @@ const UnsubscribeBody = z.object({
  * POST /api/push/unsubscribe
  * Remove a push subscription for the current user.
  */
-export const POST = createSimpleRouteHandler(async ({ request, supabase }) => {
-  const body = UnsubscribeBody.parse(await request.json());
+export const POST = createSimpleRouteHandler(
+  async ({ request, supabase }) => {
+    const body = UnsubscribeBody.parse(await request.json());
 
-  await removeSubscription(supabase, body.endpoint);
+    await removeSubscription(supabase, body.endpoint);
 
-  return ok({ success: true });
-});
+    return ok({ success: true });
+  },
+);

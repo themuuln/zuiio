@@ -6,9 +6,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
 import {
+  sendPush,
   type PushSubscription,
   type SendPushResult,
-  sendPush,
 } from "@/lib/web-push";
 
 // ── Types ──────────────────────────────────────────────────────

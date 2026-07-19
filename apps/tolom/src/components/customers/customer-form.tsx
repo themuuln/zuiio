@@ -27,6 +27,7 @@ import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreateCustomer } from "@/lib/queries/use-wizard-data";
+import { reportServerError } from "@/lib/sentry-report-server";
 import type { CreateCustomerParams, Customer } from "@/lib/types";
 import { customerSchema as sharedCustomerSchema } from "@/lib/validation/customer-schema";
 import { emailSchema } from "@/lib/validation/schemas";

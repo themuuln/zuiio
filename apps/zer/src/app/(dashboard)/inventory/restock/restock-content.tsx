@@ -302,7 +302,6 @@ export function RestockContent() {
             <CardContent className="p-0">
               <div className="p-4 space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholder, no natural key
                   <Skeleton key={i} className="h-12 w-full" />
                 ))}
               </div>

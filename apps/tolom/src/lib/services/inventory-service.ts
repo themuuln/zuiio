@@ -65,7 +65,7 @@ export async function getPartsCatalog(
   let query = supabase
     .from("parts_catalog")
     .select(
-      "id, organization_id, name, name_mn, part_number, barcode, category, unit, default_price, is_active, purchase_price, image_url, location, created_at, deleted_at, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, unit, default_price, is_active, purchase_price, image_url, location, created_at, deleted_at, global_part_id",
       usePagination ? { count: "exact" } : undefined,
     )
     .eq("organization_id", orgId)
@@ -129,7 +129,7 @@ export async function getPart(
   const { data, error } = await supabase
     .from("parts_catalog")
     .select(
-      "id, organization_id, name, name_mn, part_number, barcode, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .eq("id", id)
     .eq("organization_id", orgId)
@@ -167,7 +167,7 @@ export async function createPart(
       updated_by: userId,
     })
     .select(
-      "id, organization_id, name, name_mn, part_number, barcode, category, description, unit, default_price, purchase_price, image_url, location, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, location, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .single();
   if (error || !data)
@@ -212,7 +212,7 @@ export async function updatePart(
     .eq("id", id)
     .eq("organization_id", orgId)
     .select(
-      "id, organization_id, name, name_mn, part_number, barcode, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .single();
   if (error || !data) throw new NotFoundError("Part not found");

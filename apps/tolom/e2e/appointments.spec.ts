@@ -15,9 +15,7 @@ test.describe("Appointments (Mocked)", () => {
   test.describe("Page Structure", () => {
     test("loads the appointments page", async ({ page }) => {
       // Appointments page has a breadcrumb, not an h1
-      await expect(
-        page.getByRole("navigation", { name: "breadcrumb" }),
-      ).toBeVisible({
+      await expect(page.getByRole("navigation", { name: "breadcrumb" })).toBeVisible({
         timeout: 10_000,
       });
     });
@@ -34,18 +32,13 @@ test.describe("Appointments (Mocked)", () => {
 
   test.describe("View Mode", () => {
     test("has view mode toggle", async ({ page }) => {
-      await expect(
-        page.getByRole("navigation", { name: "breadcrumb" }),
-      ).toBeVisible({
+      await expect(page.getByRole("navigation", { name: "breadcrumb" })).toBeVisible({
         timeout: 10_000,
       });
 
       // View toggle is icon-only buttons inside a bordered container
       // The container has rounded-lg border — find it near the date picker
-      const viewToggle = page
-        .locator(".rounded-lg.border")
-        .filter({ has: page.locator("button") })
-        .first();
+      const viewToggle = page.locator(".rounded-lg.border").filter({ has: page.locator("button") }).first();
       await expect(viewToggle).toBeVisible();
     });
 
@@ -55,9 +48,7 @@ test.describe("Appointments (Mocked)", () => {
       const calBtn = viewButtons.nth(1);
       await calBtn.click();
       // Page should still be functional after view switch
-      await expect(
-        page.getByRole("navigation", { name: "breadcrumb" }),
-      ).toBeVisible();
+      await expect(page.getByRole("navigation", { name: "breadcrumb" })).toBeVisible();
     });
   });
 

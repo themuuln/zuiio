@@ -39,7 +39,9 @@ self.addEventListener("push", (event: PushEvent) => {
     data: { url: payload.url ?? "/dashboard" },
   };
 
-  event.waitUntil(self.registration.showNotification(payload.title, options));
+  event.waitUntil(
+    self.registration.showNotification(payload.title, options),
+  );
 });
 
 // ── Notification Click ─────────────────────────────────────────
@@ -61,9 +63,7 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
       for (const client of allClients) {
         if ("focus" in client) {
           // If client URL already matches, just focus
-          if (
-            client.url.includes(new URL(url, self.location.origin).pathname)
-          ) {
+          if (client.url.includes(new URL(url, self.location.origin).pathname)) {
             return client.focus();
           }
         }

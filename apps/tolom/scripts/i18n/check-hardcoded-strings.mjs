@@ -297,7 +297,7 @@ function loadBaseline() {
 }
 
 function saveBaseline(findings) {
-  writeFileSync(BASELINE_PATH, `${JSON.stringify(findings, null, 2)}\n`);
+  writeFileSync(BASELINE_PATH, JSON.stringify(findings, null, 2) + "\n");
 }
 
 function findingKey(f) {
@@ -307,6 +307,7 @@ function findingKey(f) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 const files = findFiles(SCAN_DIRS, INCLUDE_EXTS);
+console.log(`Scanning ${files.length} files...\n`);
 
 let allFindings = [];
 
@@ -332,6 +333,7 @@ const rel = (f) => relative(ROOT, f.file);
 
 if (MODE === "baseline") {
   saveBaseline(allFindings);
+  console.log(`✅ Baseline saved with ${allFindings.length} findings.`);
   process.exit(0);
 }
 
@@ -340,6 +342,7 @@ if (MODE === "check") {
   const newFindings = allFindings.filter((f) => !baseline.has(findingKey(f)));
 
   if (newFindings.length === 0) {
+    console.log(`✅ No new hardcoded strings (baseline: ${baseline.size}).`);
     process.exit(0);
   }
 
@@ -356,13 +359,25 @@ if (MODE === "check") {
 
 // Default: report mode — show all findings
 if (allFindings.length === 0) {
+  console.log("✅ No hardcoded strings found.");
   process.exit(0);
 }
+
+console.log(`Found ${allFindings.length} hardcoded strings:\n`);
 
 let currentFile = "";
 for (const f of allFindings) {
   if (f.file !== currentFile) {
     currentFile = f.file;
+    console.log(`\n${rel(f)}:`);
   }
+  console.log(`  L${f.line}  [${f.type}]  "${f.value}"`);
 }
+
+console.log(
+  `\n${allFindings.length} total findings in ${new Set(allFindings.map((f) => f.file)).size} files.`,
+);
+console.log(
+  `\nTo generate baseline: node scripts/i18n/check-hardcoded-strings.mjs --baseline`,
+);
 process.exit(1);

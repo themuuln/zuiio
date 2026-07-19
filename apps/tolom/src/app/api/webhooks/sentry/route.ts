@@ -17,7 +17,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
-
 interface SentryAlertPayload {
   id?: string;
   project?: string;

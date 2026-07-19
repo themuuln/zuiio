@@ -75,16 +75,16 @@ export function useMechanicKpis(
     queryFn: async () => {
       const params: Record<string, string> = {
         type: "custom",
-        date_from: dateRange?.start,
-        date_to: dateRange?.end,
+        date_from: dateRange!.start,
+        date_to: dateRange!.end,
       };
       if (branchFilter) params.branch_id = branchFilter;
       return fetchReports(orgId!, {
         params,
         cacheKeyParams: {
           type: "custom",
-          date_from: dateRange?.start,
-          date_to: dateRange?.end,
+          date_from: dateRange!.start,
+          date_to: dateRange!.end,
         },
       });
     },
@@ -113,12 +113,12 @@ export function useMechanicHours(
     queryFn: () =>
       fetchMechanicHours(orgId!, {
         params: {
-          startDate: dateRange?.start,
-          endDate: dateRange?.end,
+          startDate: dateRange!.start,
+          endDate: dateRange!.end,
         },
         cacheKeyParams: {
-          startDate: dateRange?.start,
-          endDate: dateRange?.end,
+          startDate: dateRange!.start,
+          endDate: dateRange!.end,
         },
       }) as Promise<MechanicHoursRow[]>,
     enabled: !!orgId && !!dateRange,
@@ -146,12 +146,12 @@ export function useMechanicCommissions(
     queryFn: () =>
       fetchMechanicCommissions(orgId!, {
         params: {
-          startDate: dateRange?.start,
-          endDate: dateRange?.end,
+          startDate: dateRange!.start,
+          endDate: dateRange!.end,
         },
         cacheKeyParams: {
-          startDate: dateRange?.start,
-          endDate: dateRange?.end,
+          startDate: dateRange!.start,
+          endDate: dateRange!.end,
         },
       }) as Promise<MechanicCommissionsRow[]>,
     enabled: !!orgId && !!dateRange,

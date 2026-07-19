@@ -1,13 +1,19 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.4/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build", "!.turbo"],
-    "experimentalScannerIgnores": ["apps/onoo/supabase/**", "apps/onoo/packages/**"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build",
+      "!.turbo"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -22,7 +28,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "correctness": {
         "noUnusedVariables": "error",
         "noUnusedImports": "error"

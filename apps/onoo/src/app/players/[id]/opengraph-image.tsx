@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { createClient } from "@/lib/supabase/server";
 import { getPlayerById } from "../../lib/data";
 
+export const runtime = "edge";
 export const alt = "Оноо — Тоглогчийн статистик";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

@@ -23,9 +23,7 @@ describe("StatusBadge", () => {
   });
 
   it("renders 'Diagnosing' with correct styling", () => {
-    const { container } = render(<StatusBadge status="Diagnosing" />, {
-      messages,
-    });
+    const { container } = render(<StatusBadge status="Diagnosing" />, { messages });
     expect(screen.getByText("Diagnosing")).toBeDefined();
     const badge = container.querySelector('[data-slot="badge"]');
     expect(badge?.className).toContain("border-yellow-300");

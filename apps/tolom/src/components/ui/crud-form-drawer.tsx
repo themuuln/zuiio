@@ -133,7 +133,7 @@ export function CrudFormDrawer<T extends Record<string, unknown>>({
   );
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange}>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} >
       <DetailDrawer.Header>
         <DetailDrawer.Title>
           {mode === "edit" ? title.edit : title.create}

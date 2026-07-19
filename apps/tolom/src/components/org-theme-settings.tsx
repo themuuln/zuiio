@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  BRAND_THEMES,
   type BrandConfig,
+  BRAND_THEMES,
   DEFAULT_BRAND_CONFIG,
   FONT_OPTIONS,
   generateBrandCSS,
@@ -10,13 +10,10 @@ import {
 } from "@zuiio/branding";
 import { Check, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useBrandThemeQuery, useUpdateBrandTheme } from "@/lib/queries/use-org-theme";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import {
-  useBrandThemeQuery,
-  useUpdateBrandTheme,
-} from "@/lib/queries/use-org-theme";
 
 /** Apply brand CSS to the document for live preview. */
 function applyBrandCSS(config: BrandConfig) {
@@ -44,8 +41,9 @@ export function BrandSettings({ orgId }: { orgId: string }) {
   const { data: themeData } = useBrandThemeQuery(orgId);
   const updateTheme = useUpdateBrandTheme(orgId);
 
-  const [localConfig, setLocalConfig] =
-    useState<BrandConfig>(DEFAULT_BRAND_CONFIG);
+  const [localConfig, setLocalConfig] = useState<BrandConfig>(
+    DEFAULT_BRAND_CONFIG,
+  );
   const [hasChanges, setHasChanges] = useState(false);
 
   // Sync with server data
@@ -161,9 +159,7 @@ export function BrandSettings({ orgId }: { orgId: string }) {
           <CardContent className="space-y-4">
             {(["primary", "secondary", "accent"] as const).map((key) => (
               <div key={key} className="space-y-2">
-                <label className="text-sm font-medium capitalize">
-                  {key} Color
-                </label>
+                <label className="text-sm font-medium capitalize">{key} Color</label>
                 <input
                   type="text"
                   value={localConfig.custom_colors?.[key] ?? ""}

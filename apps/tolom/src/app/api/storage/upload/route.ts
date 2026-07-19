@@ -2,7 +2,6 @@ import { z } from "zod";
 import { apiError, createSimpleRouteHandler, ok } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { getStorage } from "@/lib/storage/storage-factory";
-
 const uploadMetadataSchema = z.object({
   orgId: z.string().uuid(),
   fileName: z.string().min(1),

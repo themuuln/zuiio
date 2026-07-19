@@ -34,16 +34,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from "@/components/ui/item";
+import { Item, ItemContent, ItemDescription, ItemTitle } from "@/components/ui/item";
 import { Typography } from "@/components/ui/typography";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { customerKeys } from "@/lib/queries/keys";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { WorkOrderStatus } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 
@@ -313,7 +309,9 @@ export function CustomerDetailPanel({
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
+                    <AlertDialogCancel>
+                      {commonT("cancel")}
+                    </AlertDialogCancel>
                     <AlertDialogAction onClick={handleDelete}>
                       {commonT("delete")}
                     </AlertDialogAction>

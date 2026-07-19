@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-
 /**
  * E2E Seed Script — creates deterministic test data.
  *
@@ -19,8 +18,8 @@
  *   - E2E test user (themuuln4@gmail.com)
  */
 
-import { execSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
+import { execSync } from "child_process";
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? "http://localhost:54321";
 const SERVICE_ROLE_KEY =

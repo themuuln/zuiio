@@ -176,12 +176,12 @@ export function AssignDialog({
         );
       })
       .map((wo) => ({
-        id: wo.vehicle?.id,
-        plate_number: wo.vehicle?.plate_number,
-        make: wo.vehicle?.make ?? "",
-        model: wo.vehicle?.model ?? "",
-        year: wo.vehicle?.year,
-        color: wo.vehicle?.color,
+        id: wo.vehicle!.id,
+        plate_number: wo.vehicle!.plate_number,
+        make: wo.vehicle!.make ?? "",
+        model: wo.vehicle!.model ?? "",
+        year: wo.vehicle!.year,
+        color: wo.vehicle!.color,
         customer: null,
         _fromQueue: true as const,
         _workOrderId: wo.id,

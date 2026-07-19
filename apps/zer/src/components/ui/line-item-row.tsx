@@ -91,7 +91,7 @@ export function LineItemRow<TProduct extends LineItemProduct>({
   getProductStockLabel,
   onProductSelect,
   onVariantSelect,
-  variantSelections: _variantSelections,
+  variantSelections,
   setVariantSelections,
   canRemove,
   onRemove,
