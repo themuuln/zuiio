@@ -57,6 +57,7 @@ export default function RootLayout({
               id="content"
               tabIndex={-1}
               className="flex-1 bg-[var(--surface-2)]"
+              style={{ viewTransitionName: "page-content" }}
             >
               <a
                 href="#main-content"

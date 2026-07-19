@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { type ReactNode, useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { createContext, useContext, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useInView } from "@/lib/animations";
 
 // ---------------------------------------------------------------------------
 // All animations are intentionally subtle: small opacity + translateY shifts,
@@ -53,17 +53,30 @@ export function AnimatedCounter({
     decimals > 0 ? display.toFixed(decimals) : Math.round(display).toString();
 
   return (
-    <motion.span
+    <span
       ref={ref}
-      className={cn("tabular-nums", className)}
-      initial={{ opacity: 0, y: 6 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={cn(
+        "tabular-nums transition-all ease-out",
+        isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1.5",
+        className,
+      )}
+      style={{ transitionDuration: "0.4s" }}
     >
       {formatted}{suffix}
-    </motion.span>
+    </span>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Stagger animation via React context — container provides visibility + delay,
+// each item reads its index to compute transition-delay.
+// ---------------------------------------------------------------------------
+
+const StaggerCtx = createContext<{
+  visible: boolean;
+  delay: number;
+  index: number;
+}>({ visible: false, delay: 0, index: 0 });
 
 /**
  * Staggered fade-in container. Children animate in sequence with a small delay.
@@ -73,23 +86,25 @@ export function StaggerContainer({
   className,
   staggerDelay = 0.06,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
   className?: string;
   staggerDelay?: number;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const visible = useInView(ref, { once: true, margin: "-30px" });
+  const items = React.Children.toArray(children);
+
   return (
-    <motion.div
-      className={className}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-30px" }}
-      variants={{
-        hidden: {},
-        visible: { transition: { staggerChildren: staggerDelay } },
-      }}
-    >
-      {children}
-    </motion.div>
+    <div ref={ref} className={className}>
+      {items.map((child, i) => (
+        <StaggerCtx.Provider
+          key={i}
+          value={{ visible, delay: staggerDelay, index: i }}
+        >
+          {child}
+        </StaggerCtx.Provider>
+      ))}
+    </div>
   );
 }
 
@@ -101,23 +116,25 @@ export function StaggerItem({
   children,
   className,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
   className?: string;
 }) {
+  const { visible, delay, index } = useContext(StaggerCtx);
+
   return (
-    <motion.div
-      className={className}
-      variants={{
-        hidden: { opacity: 0, y: 10 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.35, ease: "easeOut" },
-        },
+    <div
+      className={cn(
+        "transition-all ease-out",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2.5",
+        className,
+      )}
+      style={{
+        transitionDuration: "0.35s",
+        transitionDelay: `${index * delay}s`,
       }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -130,19 +147,27 @@ export function ScrollReveal({
   className,
   delay = 0,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
   className?: string;
   delay?: number;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-40px" });
+
   return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.4, delay, ease: "easeOut" }}
+    <div
+      ref={ref}
+      className={cn(
+        "transition-all ease-out",
+        isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3",
+        className,
+      )}
+      style={{
+        transitionDuration: "0.4s",
+        transitionDelay: `${delay}s`,
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

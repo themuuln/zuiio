@@ -4,7 +4,12 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   cacheComponents: true,
   experimental: {
-    optimizePackageImports: ["lucide-react"],
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "date-fns",
+      "@tanstack/react-query",
+    ],
     turbopackFileSystemCacheForBuild: true,
   },
 };
