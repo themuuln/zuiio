@@ -2,10 +2,11 @@ import { getStatLabel } from "@onoo/core";
 import { CalendarDays, MapPin, Ruler, Weight } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { getPlayerById, getPlayerSeasonAverages } from "@/app/lib/data";
+import { getLeaders, getPlayerById, getPlayerSeasonAverages } from "@/app/lib/data";
+import { FlipStatCard } from "@/app/components/flip-stat-card";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@zuiio/ui";
 import { cn } from "@/lib/utils";
 import { StatNumber } from "./stat-number";
 
@@ -43,6 +44,22 @@ export async function HeroCard({
       ? getPlayerSeasonAverages(playerId, competitionId)
       : Promise.resolve(null),
   ]);
+  // Fetch leaders for rank computation
+  const leaders = competitionId ? await getLeaders(true) : [];
+
+  // Compute ranks for each stat
+  function getRank(statKey: 'pts' | 'reb' | 'ast'): number | null {
+    if (!competitionId || leaders.length === 0) return null;
+    const competitionLeaders = leaders.filter(l => l.competition_id === competitionId);
+    const sorted = [...competitionLeaders].sort((a, b) => (b[statKey] ?? 0) - (a[statKey] ?? 0));
+    const rank = sorted.findIndex(l => l.player_id === playerId);
+    return rank >= 0 ? rank + 1 : null;
+  }
+
+  const ptsRank = getRank('pts');
+  const rebRank = getRank('reb');
+  const astRank = getRank('ast');
+
 
   if (!data?.player) return null;
 
@@ -213,20 +230,23 @@ export async function HeroCard({
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 sm:gap-6">
-            <StatNumber
+            <FlipStatCard
               value={averages?.ppg ?? null}
               label={getStatLabel("pts", locale)}
+              backLabel={ptsRank ? `#${ptsRank} лигт` : "—"}
               inverse
               accent
             />
-            <StatNumber
+            <FlipStatCard
               value={averages?.rpg ?? null}
               label={getStatLabel("reb", locale)}
+              backLabel={rebRank ? `#${rebRank} лигт` : "—"}
               inverse
             />
-            <StatNumber
+            <FlipStatCard
               value={averages?.apg ?? null}
               label={getStatLabel("ast", locale)}
+              backLabel={astRank ? `#${astRank} лигт` : "—"}
               inverse
             />
             <StatNumber
