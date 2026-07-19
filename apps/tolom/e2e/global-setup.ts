@@ -1,6 +1,4 @@
-import { execSync, readFileSync, statSync } from "node:fs";
-import type { FullConfig } from "@playwright/test";
-import { chromium } from "@playwright/test";
+import { addSupabaseSessionCookie } from "./auth-cookie";
 
 const PORT = process.env.PORT ?? 3000;
 const BASE_URL = `http://localhost:${PORT}`;
@@ -48,16 +46,23 @@ export default async function globalSetup(_config: FullConfig) {
     const ageHours = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
     if (ageHours < 24) {
       process.stdout.write(
-        `✓ Auth state is fresh (${ageHours.toFixed(1)}h old), skipping login\n`,
+        `✓ Auth state is fresh (${ageHours.toFixed(1)}h old), refreshing session cookie\n`,
       );
+      const browser = await chromium.launch();
+      const context = await browser.newContext({ baseURL: BASE_URL });
+      await addSupabaseSessionCookie(context);
+      await context.storageState({ path: authFile });
+      await browser.close();
       return;
     }
   } catch {
-    // Auth file doesn't exist — need to login
+    // Auth file doesn't exist — need to login below
   }
 
   // Skip seeding for remote Supabase — only seed local instances
-  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").toLowerCase();
+  const supabaseUrl = (
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
+  ).toLowerCase();
   const isLocalSupabase =
     supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1");
   if (!process.env.CI && isLocalSupabase) {
@@ -131,6 +136,11 @@ export default async function globalSetup(_config: FullConfig) {
   await page.goto("/dashboard");
   await page.waitForURL("**/dashboard**", { timeout: 15_000 });
 
+  await context.storageState({ path: authFile });
+  // user.json now exists with the sb-access-token cookie — reconstruct the
+  // sb-<ref>-auth-token cookie that @supabase/ssr actually reads, then re-save
+  // state so every auth-dependent spec inherits a working client session.
+  await addSupabaseSessionCookie(context);
   await context.storageState({ path: authFile });
   await browser.close();
 

@@ -35,10 +35,11 @@ function getSupabaseRef(): string {
 function readEnvLocal(key: string): string | undefined {
   try {
     const raw = readFileSync(resolve(process.cwd(), ".env.local"), "utf-8");
-    const line = raw
-      .split("\n")
-      .find((l) => l.startsWith(`${key}=`));
-    return line?.split("=")[1]?.trim().replace(/^["']|["']$/g, "");
+    const line = raw.split("\n").find((l) => l.startsWith(`${key}=`));
+    return line
+      ?.split("=")[1]
+      ?.trim()
+      .replace(/^["']|["']$/g, "");
   } catch {
     return undefined;
   }
@@ -53,9 +54,8 @@ export async function addSupabaseSessionCookie(
     (c: { name: string }) => c.name === "sb-access-token",
   )?.value;
   const refreshToken =
-    session.cookies.find(
-      (c: { name: string }) => c.name === "sb-refresh-token",
-    )?.value ?? "";
+    session.cookies.find((c: { name: string }) => c.name === "sb-refresh-token")
+      ?.value ?? "";
 
   if (!accessToken) {
     throw new Error("e2e/.auth/user.json missing sb-access-token");
