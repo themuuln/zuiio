@@ -428,22 +428,18 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                             <span className="col-span-2 sm:col-span-2 text-right text-base sm:text-xl font-black tabular-nums">
                               {category.getValue(leader).toFixed(1)}
                             </span>
-                            <Button
-                              asChild
-                              variant="ghost"
-                              size="icon-sm"
-                              className="col-span-2 justify-self-end hidden sm:block"
+                            <Link
+                              href={compareMode ? "#" : `/players/compare?players=${leader.player_id}`}
+                              aria-label={`${leader.player_name} тоглогчийг харьцуулах`}
+                              onClick={(e) => {
+                                if (compareMode) e.preventDefault();
+                              }}
+                              className={cn(
+                                "inline-flex size-7 shrink-0 items-center justify-center rounded-[min(var(--radius-md),12px)] transition-all outline-none select-none hover:bg-muted hover:text-foreground col-span-2 justify-self-end hidden sm:block",
+                              )}
                             >
-                              <Link
-                                href={compareMode ? "#" : `/players/compare?players=${leader.player_id}`}
-                                aria-label={`${leader.player_name} тоглогчийг харьцуулах`}
-                                onClick={(e) => {
-                                  if (compareMode) e.preventDefault();
-                                }}
-                              >
-                                <Scale aria-hidden="true" />
-                              </Link>
-                            </Button>
+                              <Scale aria-hidden="true" />
+                            </Link>
                           </div>
                         </DraggablePlayerCard>
                       </li>
@@ -464,12 +460,15 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                   тооны тоглолтод оролцсон байна.
                 </CardDescription>
                 <CardAction>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/players/compare">
-                      Тоглогч харьцуулах
-                      <ArrowRight data-icon="inline-end" aria-hidden="true" />
-                    </Link>
-                  </Button>
+                  <Link
+                    href="/players/compare"
+                    className={cn(
+                      "inline-flex h-7 shrink-0 items-center justify-center gap-1 rounded-[min(var(--radius-md),12px)] border-border bg-background px-2.5 text-[0.8rem] font-medium whitespace-nowrap transition-all outline-none select-none hover:bg-muted hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5",
+                    )}
+                  >
+                    Тоглогч харьцуулах
+                    <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                  </Link>
                 </CardAction>
               </CardHeader>
             </Card>

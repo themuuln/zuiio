@@ -1,6 +1,6 @@
 "use client";
 
-import { BoxScore, ListOrdered, Share2 } from "lucide-react";
+import { BarChart3, ListOrdered, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -27,13 +27,17 @@ export function SwipeableGameCard({
   const isDragging = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    startX.current = e.touches[0].clientX;
+    const touch = e.touches[0];
+    if (!touch) return;
+    startX.current = touch.clientX;
     isDragging.current = true;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging.current) return;
-    currentX.current = e.touches[0].clientX;
+    const touch = e.touches[0];
+    if (!touch) return;
+    currentX.current = touch.clientX;
     const diff = startX.current - currentX.current;
     // Only allow left swipe (positive diff), max to REVEAL_WIDTH
     const newOffset = Math.min(Math.max(0, diff), REVEAL_WIDTH);
@@ -80,7 +84,7 @@ export function SwipeableGameCard({
           className="flex size-10 items-center justify-center rounded-lg bg-card text-muted-foreground transition-colors hover:bg-card/80 hover:text-foreground"
           aria-label="Бүрэн статистик"
         >
-          <BoxScore className="size-4" />
+          <BarChart3 className="size-4" />
         </Link>
         <Link
           href={`/games/${game.id}#play-by-play`}

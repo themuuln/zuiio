@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Button } from "@zuiio/ui";
+import { cn } from "@/lib/utils";
 import { getLeaders, getMvpRace } from "../lib/data";
 import { LeaderTabs } from "./components/leader-tabs";
 import { MvpRace } from "./components/mvp-race";
@@ -23,7 +23,7 @@ export default async function LeadersPage({
     new Map(
       allLeaders.map((row) => [
         row.competition_id,
-        { name: row.competition_name, season: row.season_name },
+        row.competition_name,
       ]),
     ),
   );
@@ -56,16 +56,18 @@ export default async function LeadersPage({
       {competitions.length > 1 && (
         <nav aria-label="Тэмцээн сонгох" className="flex flex-wrap gap-2">
           {competitions.map(([id, item]) => (
-            <Button
+            <Link
               key={id}
-              asChild
-              variant={id === activeCompetitionId ? "default" : "outline"}
-              size="sm"
+              href={`/leaders?competition=${id}`}
+              className={cn(
+                "inline-flex h-7 shrink-0 items-center justify-center gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] font-medium whitespace-nowrap transition-all outline-none select-none [&_svg:not([class*='size-'])]:size-3.5",
+                id === activeCompetitionId
+                  ? "bg-primary text-primary-foreground hover:bg-primary/80"
+                  : "border-border bg-background hover:bg-muted hover:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+              )}
             >
-              <Link href={`/leaders?competition=${id}`}>
-                {item.name} · {item.season}
-              </Link>
-            </Button>
+              {item}
+            </Link>
           ))}
         </nav>
       )}
