@@ -1,8 +1,9 @@
 import { CalendarDays, Radio } from "lucide-react";
 import type { Metadata } from "next";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@zuiio/ui";
 import { cn } from "@/lib/utils";
 import { GameCard } from "../components/game-card";
+import { SwipeableGameCard } from "../components/swipeable-game-card";
 import { PublicEmptyState } from "../components/public-empty-state";
 import {
   formatDate,
@@ -167,8 +168,7 @@ function GameGroup({
         </Badge>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        {games.map((game) => (
-          <GameCard key={game.id} game={game} featured={live} />
+          <SwipeableGameCard key={game.id} game={game} featured={live} />
         ))}
       </div>
     </section>

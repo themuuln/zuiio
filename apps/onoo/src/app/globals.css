@@ -269,3 +269,15 @@
     transparent
   );
 }
+
+/* ─── Flip digit animation ─── */
+.rotate-x-180 {
+  transform: rotateX(180deg);
+}
+
+/* ─── Swipeable card hover reveal (desktop only) ─── */
+@media (hover: hover) and (pointer: fine) {
+  .swipeable-card:hover > div:last-child {
+    transform: translateX(-140px);
+  }
+}

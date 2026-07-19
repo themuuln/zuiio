@@ -11,17 +11,19 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
-import { Button } from "@/components/ui/button";
+import { Button } from "@zuiio/ui";
 import {
   Card,
   CardAction,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+} from "@zuiio/ui";
+import { Input } from "@zuiio/ui";
 import { cn } from "@/lib/utils";
 import { PublicEmptyState } from "./components/public-empty-state";
+import { CountdownTimer } from "./components/countdown-timer";
+import { FlipScore } from "./components/flip-score";
 import {
   getBoxScore,
   getGamesByDate,
@@ -119,11 +121,11 @@ export default async function HomePage() {
                 <div className="text-center">
                   {heroGame.home_score != null &&
                   heroGame.away_score != null ? (
-                    <p className="stat-number text-5xl text-warning sm:text-6xl lg:text-7xl">
-                      {heroGame.home_score}
-                      <span className="px-2 text-sidebar-foreground/30">–</span>
-                      {heroGame.away_score}
-                    </p>
+                    <FlipScore
+                      homeScore={heroGame.home_score}
+                      awayScore={heroGame.away_score}
+                      className="text-warning"
+                    />
                   ) : (
                     <p className="text-2xl font-bold tabular-nums text-sidebar-foreground/70">
                       {new Date(heroGame.scheduled_at).toLocaleTimeString(
@@ -190,6 +192,15 @@ export default async function HomePage() {
           )}
         </div>
       </section>
+
+        {/* ── Countdown to next game ── */}
+        {!liveGame && heroGame && heroGame.status === "scheduled" && (
+          <CountdownTimer
+            targetIso={heroGame.scheduled_at}
+            label="Дараагийн тоглолт хүртэл"
+            className="border-b bg-[var(--surface-1)]"
+          />
+        )}
 
       {/* ── Tonight's games ticker ── */}
       {tonightGames.length > 0 && (
@@ -611,6 +622,106 @@ export default async function HomePage() {
             </CardContent>
           </Card>
         </section>
+        {/* ── Multi-category leaderboard strip ── */}
+        {leaders.length > 0 && (
+          <section className="grid gap-6 rounded-xl bg-[var(--surface-1)] p-6 sm:p-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ангилал бүрийн шилдэг
+                </p>
+                <h2 className="mt-1 text-xl font-bold tracking-tight">
+                  Шилдгүүд ангилал бүрээр
+                </h2>
+              </div>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/leaders" className="gap-1">
+                  Бүгд <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {(
+                [
+                  { key: "rebounds_per_game" as const, label: "Сэргэлт" },
+                  { key: "assists_per_game" as const, label: "Олголт" },
+                  { key: "stl" as const, label: "Булаалт" },
+                  { key: "blk" as const, label: "Блок" },
+                ] satisfies {
+                  key: keyof (typeof leaders)[number];
+                  label: string;
+                }[]
+              ).map(({ key, label }) => {
+                const top3 = [...leaders]
+                  .sort((a, b) => (b[key] ?? 0) - (a[key] ?? 0))
+                  .slice(0, 3);
+                const hasData = top3.some((p) => p[key] != null && p[key] > 0);
+
+                return (
+                  <Card key={key} className="shadow-none">
+                    <CardHeader>
+                      <CardTitle className="text-base">{label}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {hasData ? (
+                        <ol className="flex flex-col gap-1">
+                          {top3.map((player, index) => {
+                            const statValue = player[key];
+                            return (
+                              <li key={`${player.player_id}-${key}`}>
+                                <Link
+                                  href={`/players/${player.player_id}`}
+                                  className={cn(
+                                    "flex items-center gap-3 rounded-lg p-3 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                                    index === 0 &&
+                                      "bg-[var(--surface-3)] ring-1 ring-[var(--brand-sports)]/20",
+                                  )}
+                                >
+                                  <span
+                                    className={cn(
+                                      "w-5 text-sm font-black tabular-nums",
+                                      index === 0
+                                        ? "text-[var(--brand-sports)]"
+                                        : "text-muted-foreground",
+                                    )}
+                                  >
+                                    {index + 1}
+                                  </span>
+                                  <PlayerAvatar
+                                    photoUrl={player.player_photo_url}
+                                    name={player.player_name}
+                                    primaryColor={player.team_primary_color}
+                                    size="sm"
+                                  />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate font-semibold">
+                                      {player.player_name}
+                                    </p>
+                                    <p className="truncate text-xs text-muted-foreground">
+                                      {player.team_name}
+                                    </p>
+                                  </div>
+                                  <span className="stat-number text-xl tabular-nums">
+                                    {formatAverage(statValue)}
+                                  </span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      ) : (
+                        <p className="py-4 text-center text-sm text-muted-foreground">
+                          Мэдээлэл алга
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

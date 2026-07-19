@@ -5,8 +5,8 @@ import { notFound } from "next/navigation";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { ReportErrorDialog } from "@/components/report-error-dialog";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@zuiio/ui";
+import { Button } from "@zuiio/ui";
 import {
   Card,
   CardAction,
@@ -14,7 +14,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@zuiio/ui";
 import {
   Table,
   TableBody,
@@ -23,7 +23,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@zuiio/ui";
 import { cn } from "@/lib/utils";
 import { GameStatusBadge } from "../../components/game-status-badge";
 import { PublicEmptyState } from "../../components/public-empty-state";
@@ -36,6 +36,7 @@ import {
   getPlayByPlay,
 } from "../../lib/data";
 import { generatePlayerGameSummary } from "../../lib/summaries";
+import { FlipScore } from "../../components/flip-score";
 
 interface GamePageProps {
   params: Promise<{ id: string }>;
@@ -252,11 +253,11 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                   {formatGameTime(game.scheduled_at)}
                 </p>
               ) : (
-                <p className="stat-number text-4xl sm:text-7xl tracking-tight">
-                  {game.home_score ?? 0}
-                  <span className="px-2 text-sidebar-foreground/30">–</span>
-                  {game.away_score ?? 0}
-                </p>
+                <FlipScore
+                  homeScore={game.home_score ?? 0}
+                  awayScore={game.away_score ?? 0}
+                  className="justify-center"
+                />
               )}
               {isLive && game.current_period > 0 ? (
                 <p className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-warning">

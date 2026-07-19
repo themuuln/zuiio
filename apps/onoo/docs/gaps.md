@@ -54,6 +54,160 @@ The `stat_events.payload` column is JSON, so `x,y` values are stored when presen
 
 ---
 
+## Landing Page & IA Gaps (Competitive Research)
+
+> Competitive analysis of NBA.com, Basketball-Reference, FIBA.basketball, and MaxPreps.
+> These gaps target landing page engagement and information architecture — different from the interactive UI features below.
+
+### 11. Multi-Category Leaderboard Strip
+
+**Surfaces:** Landing page, Leaders page
+
+**Concept:** Show leaders across 3-5 stat categories (PTS, REB, AST, STL, BLK), not just scoring. Each category shows top 3 with player avatar, name, team, and stat value. "View All" link per category.
+
+**Data required:**
+- `v_public_leaders` — already has per-player season aggregates
+
+**Database changes:** None
+
+**Implementation:**
+- Add horizontal scrollable strips below the current podium section
+- Each strip has a category header, top 3 players, and "View All →" link to `/leaders`
+
+**Libraries:** None
+
+**Complexity:** Low. ~150 lines. Reuse existing `PlayerAvatar` and leader data.
+
+**Evidence:** NBA (top-10 per category), FIBA (top-3 per category), MaxPreps (top-5 per category). All 3/3 visual competitors do this.
+
+**Priority:** P0
+
+---
+
+### 12. Tournament Hub Pages
+
+**Surfaces:** New route `/tournaments/[id]`
+
+**Concept:** Each tournament gets its own branded page with games grouped by phase/round, group standings, knockout bracket, tournament leaders, and news. Self-contained microsite pattern from FIBA.
+
+**Data required:**
+- `games` filtered by tournament/competition, `standings` by competition, `v_public_leaders` by competition
+
+**Database changes:** Audit whether data model distinguishes tournaments from seasons. May need `competitions` table or tournament grouping.
+
+**Implementation:**
+- Create `/tournaments/[id]/page.tsx` with: games grouped by round, group standings tables, bracket visualization, tournament leaders, editorial content
+
+**Libraries:** None
+
+**Complexity:** Medium. ~400 lines for the page + components.
+
+**Evidence:** FIBA (every competition is a self-contained microsite). No other competitor does this at local level.
+
+**Priority:** P1
+
+---
+
+### 13. Tournament Bracket Visualization
+
+**Surfaces:** Tournament hub pages, Playoffs section
+
+**Concept:** SVG or CSS-based bracket showing knockout round matchups with scores, team logos, and advancement lines. Include classification rounds (9-12, 13-16) following FIBA's model.
+
+**Data required:**
+- `games` with round/bracket metadata, team info
+
+**Database changes:** May need bracket positioning data or compute from game ordering
+
+**Implementation:**
+- SVG bracket component with team logos, scores, connecting lines
+- Standard 8-team single-elimination first, extend to classification
+
+**Libraries:** None — pure SVG + CSS
+
+**Complexity:** Medium. ~300 lines for bracket component.
+
+**Evidence:** FIBA (visual brackets for knockout + classification). Only 1/4 competitors.
+
+**Priority:** P1
+
+---
+
+### 14. Season/Competition Selector
+
+**Surfaces:** Landing page leaders section, Leaders page, Standings page
+
+**Concept:** Dropdown to switch between seasons/competitions. Default to current. Enables historical data browsing.
+
+**Data required:**
+- List of seasons/competitions (new query or from existing data)
+
+**Database changes:** None — seasons already exist in data model
+
+**Implementation:**
+- Add a `<Select>` dropdown above leader/standing sections
+- On change, re-fetch data for selected season/competition
+
+**Libraries:** shadcn `Select` (already installed)
+
+**Complexity:** Low. ~80 lines for the selector + data refetch logic.
+
+**Evidence:** NBA (season dropdown), BBRef (season dropdown on every page), FIBA (historical date selector). 3/4 competitors.
+
+**Priority:** P2
+
+---
+
+### 15. Countdown Timer for Next Game
+
+**Surfaces:** Landing page hero section
+
+**Concept:** Live countdown below the hero showing days/hours/minutes/seconds until the next scheduled game. Creates urgency and return visits.
+
+**Data required:**
+- `scheduled_at` from next game — already fetched in `getGamesByDate` / `getLiveGames`
+
+**Database changes:** None
+
+**Implementation:**
+- Simple countdown component using `Intl.DateTimeFormat` for Ulaanbaatar timezone
+- Remove when game starts, replace with live score
+
+**Libraries:** None
+
+**Complexity:** Low. ~60 lines for countdown component.
+
+**Evidence:** FIBA (countdown timers to Women's WC, Men's WC 2027). Unique pattern — only 1/4.
+
+**Priority:** P2
+
+---
+
+### 16. Shareable Stat Cards
+
+**Surfaces:** Player pages, Game result pages
+
+**Concept:** Generate Instagram/Twitter-ready stat graphics showing a player's top performance or game result. OG-image-style cards rendered server-side.
+
+**Data required:**
+- Player stats, game results — all existing
+
+**Database changes:** None
+
+**Implementation:**
+- Use `@vercel/og` or Satori to render stat cards server-side
+- Add share buttons on player/game pages
+- Generate OG images for social preview
+
+**Libraries:** `@vercel/og` or `satori` (new dep)
+
+**Complexity:** Medium. ~200 lines for card template + generation endpoint.
+
+**Evidence:** Gap in all 4 competitors — no one generates shareable stat graphics.
+
+**Priority:** P3
+---
+
 ## Feature Ideas
 
 ### 1. Score Flip Animation
@@ -327,6 +481,12 @@ The `stat_events.payload` column is JSON, so `x,y` values are stored when presen
 | **P2** | Reorder Leaders | ✅ | ✅ | @dnd-kit | Low | 🔥 |
 | **P2** | Court Heatmap | ⚠️ | ✅ | None | Medium | 🔥🔥🔥 |
 | **P3** | Live Court Animation | ⚠️ | ⚠️ | None | High | 🔥🔥🔥 |
+| **P0** | Multi-Category Leaderboard | ✅ | ✅ | None | Low | 🔥🔥🔥 |
+| **P1** | Tournament Hub Pages | ⚠️ | ✅ | None | Medium | 🔥🔥🔥 |
+| **P1** | Tournament Bracket | ⚠️ | ✅ | None | Medium | 🔥🔥 |
+| **P2** | Season Selector | ✅ | ✅ | shadcn Select | Low | 🔥🔥 |
+| **P2** | Countdown Timer | ✅ | ✅ | None | Low | 🔥 |
+| **P3** | Shareable Stat Cards | ✅ | ✅ | @vercel/og | Medium | 🔥 |
 
 **Legend:**
 - ✅ = fully supported by current schema
@@ -355,6 +515,16 @@ The `stat_events.payload` column is JSON, so `x,y` values are stored when presen
 ### Batch 4: Data-dependent (needs tracker enhancement)
 9. Court heatmap (requires shot location capture)
 10. Live court animation (requires shot capture + position model)
+
+### Batch 5: Competitive UI gaps (from research)
+11. Multi-category leaderboard strip
+12. Season/competition selector
+13. Countdown timer
+
+### Batch 6: Tournament infrastructure (new routes)
+14. Tournament hub pages
+15. Tournament bracket visualization
+16. Shareable stat cards
 
 ---
 

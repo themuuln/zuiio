@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Button } from "@zuiio/ui";
 import { getLeaders, getMvpRace } from "../lib/data";
 import { LeaderTabs } from "./components/leader-tabs";
 import { MvpRace } from "./components/mvp-race";
@@ -9,11 +11,29 @@ export const metadata: Metadata = {
     "Сагсан бөмбөгийн лигийн шилдэг тоглогчид бүх ангилалд: оноо, давсан, олгосон, булаасан, хаасан.",
 };
 
-export default async function LeadersPage() {
-  const leaders = await getLeaders(true);
+export default async function LeadersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ competition?: string }>;
+}) {
+  const { competition } = await searchParams;
+  const allLeaders = await getLeaders(true);
 
-  // Derive active competition from leaders data for MVP race
-  const activeCompetitionId = leaders[0]?.competition_id ?? null;
+  const competitions = Array.from(
+    new Map(
+      allLeaders.map((row) => [
+        row.competition_id,
+        { name: row.competition_name, season: row.season_name },
+      ]),
+    ),
+  );
+
+  const activeCompetitionId = competition ?? competitions[0]?.[0];
+  const leaders = activeCompetitionId
+    ? allLeaders.filter((row) => row.competition_id === activeCompetitionId)
+    : allLeaders;
+
+  // Derive active competition for MVP race
   const mvpCandidates = activeCompetitionId
     ? await getMvpRace(activeCompetitionId)
     : [];
@@ -32,6 +52,23 @@ export default async function LeadersPage() {
           шалгуурын төлөвтэй нь харьцуулна.
         </p>
       </header>
+
+      {competitions.length > 1 && (
+        <nav aria-label="Тэмцээн сонгох" className="flex flex-wrap gap-2">
+          {competitions.map(([id, item]) => (
+            <Button
+              key={id}
+              asChild
+              variant={id === activeCompetitionId ? "default" : "outline"}
+              size="sm"
+            >
+              <Link href={`/leaders?competition=${id}`}>
+                {item.name} · {item.season}
+              </Link>
+            </Button>
+          ))}
+        </nav>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-12">
         <div className="lg:col-span-8">
