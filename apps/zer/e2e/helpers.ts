@@ -35,17 +35,17 @@ export async function submitDrawerForm(page: Page, formId: string) {
     const prevented = !form.dispatchEvent(evt);
     return { ok: true, prevented };
   }, formId);
-  if (!result.ok) console.log(`[submitDrawerForm] ${result.error}`);
-  // Wait for dialog to close after form submit
-  // Support both Base UI (data-drawer-popup) and Radix UI (role="dialog")
-  await page
-    .waitForSelector('[data-drawer-popup], [role="dialog"]', {
-      state: "hidden",
-      timeout: 10000,
-    })
-    .catch(() => {
-      // Dialog may not close if there's a validation error — that's OK
-    });
+  if (!result.ok)
+    // Wait for dialog to close after form submit
+    // Support both Base UI (data-drawer-popup) and Radix UI (role="dialog")
+    await page
+      .waitForSelector('[data-drawer-popup], [role="dialog"]', {
+        state: "hidden",
+        timeout: 10000,
+      })
+      .catch(() => {
+        // Dialog may not close if there's a validation error — that's OK
+      });
 }
 
 /**
@@ -82,5 +82,5 @@ export async function clickInsideDrawer(page: Page, selector: string) {
     );
     return { ok: true };
   }, selector);
-  if (!result.ok) console.log(`[clickInsideDrawer] ${result.error}`);
+  if (!result.ok)
 }

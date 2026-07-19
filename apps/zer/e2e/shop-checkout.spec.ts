@@ -105,8 +105,6 @@ test.describe("Shop checkout flow", () => {
           );
         }
       } else {
-        // History might be in a different location
-        console.log("History button not found in expected location");
       }
     });
   });

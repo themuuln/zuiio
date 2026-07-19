@@ -95,6 +95,18 @@ pnpm test:e2e               # Playwright E2E
 
 **Pre-merge:** `pnpm validate && pnpm test`
 
+## Auto-Verification
+
+The OMP stop hook runs `pnpm --filter=zer typecheck` + `pnpm --filter=zer test` automatically before every agent yield. Fix any failures before claiming work is done.
+
+```bash
+# Manual scoped verification (if hook blocks on pre-existing issue)
+pnpm --filter=zer typecheck && pnpm --filter=zer test
+
+# Full gate (CI)
+pnpm validate && pnpm test
+```
+
 ---
 
 ## Permission Boundaries

@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { ThemeProvider } from "@/app/theme-provider";
 import { createClient } from "@/lib/supabase/server";
 import { ConsentForm } from "./consent-form";
 
@@ -27,18 +26,9 @@ export default function ConsentPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   return (
-    <ThemeProvider>
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4">
-        <div className="w-full max-w-sm">
-          <div className="mb-6 text-center">
-            <h1 className="text-lg font-semibold text-foreground">Zuiio</h1>
-          </div>
-          <Suspense fallback={<ConsentLoading />}>
-            <ConsentFormWrapper searchParams={searchParams} />
-          </Suspense>
-        </div>
-      </div>
-    </ThemeProvider>
+    <Suspense fallback={<ConsentLoading />}>
+      <ConsentFormWrapper searchParams={searchParams} />
+    </Suspense>
   );
 }
 

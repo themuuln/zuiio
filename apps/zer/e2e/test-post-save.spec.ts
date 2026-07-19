@@ -66,7 +66,6 @@ test.describe("Post-save workflow", () => {
     await expect(toast).toBeVisible({ timeout: 3000 });
 
     const toastText = await toast.textContent();
-    console.log("Toast text:", toastText);
 
     // Verify toast shows formatted amount
     expect(toastText).toContain("Борлуулалт амжилттай");
@@ -128,7 +127,8 @@ test.describe("Post-save workflow", () => {
 
     // Verify form was reset - customer field should be empty
     const customerInputAfter = page.getByPlaceholder("Харилцагч хайх...");
-    const customerValue = await customerInputAfter.inputValue().catch(() => "");
-    console.log("Customer value after keepOpen submit:", customerValue);
+    const _customerValue = await customerInputAfter
+      .inputValue()
+      .catch(() => "");
   });
 });

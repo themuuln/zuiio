@@ -8,10 +8,6 @@ if (
   !process.env.MIDSCENE_MODEL_BASE_URL &&
   !process.env.MIDSCENE_MODEL_API_KEY
 ) {
-  console.log(
-    "\n  Midscene: Set MIDSCENE_MODEL_BASE_URL, MIDSCENE_MODEL_API_KEY, MIDSCENE_MODEL_NAME, and MIDSCENE_MODEL_FAMILY in your environment.\n" +
-      "  See https://midscenejs.com/model-strategy.html\n",
-  );
 }
 
 const AUTH_FILE = ".auth/user.json";

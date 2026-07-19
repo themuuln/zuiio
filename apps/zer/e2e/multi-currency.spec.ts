@@ -96,8 +96,6 @@ test.describe("Multi-currency checkout flow", () => {
           await expect(page.getByText("Монгол төгрөг").first()).toBeVisible();
         }
       } else {
-        // Single currency org - currency selector hidden (expected)
-        console.log("Single currency org - selector hidden as expected");
       }
     });
   });
@@ -374,9 +372,6 @@ test.describe("Mobile POS responsiveness", () => {
             // Main action buttons should be at least 44px
             // Log warning if smaller but don't fail the test
             if (box.height < 44) {
-              console.log(
-                `Warning: Button height ${box.height}px is below 44px touch target`,
-              );
             }
           }
         }

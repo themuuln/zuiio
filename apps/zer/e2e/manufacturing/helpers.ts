@@ -61,9 +61,6 @@ async function ensureTestProduct(
     const { data: users, error: listError } =
       await supabase.auth.admin.listUsers({ page, perPage: 50 });
     if (listError) {
-      console.log(
-        `[ensureTestProduct] Failed to list users: ${listError.message}`,
-      );
       return;
     }
     authUser = users?.users?.find((u) => u.email === testEmail);
@@ -72,7 +69,6 @@ async function ensureTestProduct(
   }
 
   if (!authUser) {
-    console.log(`[ensureTestProduct] User ${testEmail} not found in auth`);
     return;
   }
 
@@ -84,7 +80,6 @@ async function ensureTestProduct(
 
   const orgId = profile?.organization_id;
   if (!orgId) {
-    console.log(`[ensureTestProduct] No org found for user ${testEmail}`);
     return;
   }
 
@@ -112,9 +107,6 @@ async function ensureTestProduct(
   } as never);
 
   if (error) {
-    console.log(
-      `[ensureTestProduct] Failed to create "${name}": ${error.message}`,
-    );
   }
 }
 

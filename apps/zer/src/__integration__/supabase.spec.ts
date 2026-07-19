@@ -40,13 +40,10 @@ describe("Supabase connectivity", () => {
     // Use the service key to verify the user was created
     const { data, error } = await admin.auth.admin.listUsers();
     if (error) {
-      // GoTrue admin API may require a JWT in newer Supabase versions
-      // (sb_secret keys are Kong gateway keys, not GoTrue JWTs)
-      console.log("admin.listUsers not available:", error.message);
       return; // soft-skip — infra limitation, not test failure
     }
     expect(data).toBeDefined();
     expect(Array.isArray(data?.users)).toBe(true);
-    expect(data!.users.length).toBeGreaterThanOrEqual(1);
+    expect(data?.users.length).toBeGreaterThanOrEqual(1);
   });
 });

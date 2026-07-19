@@ -69,6 +69,7 @@ export function LoginForm({
                 placeholder="••••••••"
                 required
                 autoComplete="current-password"
+                className="pl-9"
                 defaultValue={isDev ? DEV_PASSWORD : undefined}
               />
             </div>

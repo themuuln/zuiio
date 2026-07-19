@@ -39,7 +39,7 @@ async function getOrgId(admin: SupabaseClient): Promise<string | null> {
     .single();
   return (data as { organization_id: string } | null)?.organization_id ?? null;
 }
-async function getUserProfile(
+async function _getUserProfile(
   admin: SupabaseClient,
 ): Promise<{ orgId: string; branchId: string } | null> {
   // Get org from profile (branch_id may be null)
@@ -76,7 +76,7 @@ async function getUserProfile(
   return { orgId, branchId };
 }
 
-async function getOrCreateSale(
+async function _getOrCreateSale(
   admin: SupabaseClient,
   orgId: string,
   branchId: string,
@@ -161,8 +161,8 @@ test.describe("Financial Data Protection", () => {
   test("soft delete hides sale from list", async ({ page }) => {
     requireEnv();
     const admin = await getAdmin();
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+    const _supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const _anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
     // Navigate to sales list
     await page.goto("/sales", { waitUntil: "networkidle" });
@@ -180,11 +180,11 @@ test.describe("Financial Data Protection", () => {
     const { data: profile } = await admin
       .from("profiles")
       .select("organization_id, branch_id")
-      .eq("id", authUser!.id)
+      .eq("id", authUser?.id)
       .single();
     test.skip(!profile?.organization_id, "Profile has no organization_id");
     const userCtx = {
-      userId: authUser!.id,
+      userId: authUser?.id,
       orgId: profile.organization_id as string,
       branchId: (profile as Record<string, unknown>).branch_id as string | null,
     };
@@ -193,16 +193,16 @@ test.describe("Financial Data Protection", () => {
     let query = admin
       .from("sales")
       .select("id, total_amount")
-      .eq("organization_id", userCtx!.orgId)
+      .eq("organization_id", userCtx?.orgId)
       .is("deleted_at", null)
       .gt("total_amount", 0);
-    if (userCtx!.branchId) query = query.eq("branch_id", userCtx!.branchId);
+    if (userCtx?.branchId) query = query.eq("branch_id", userCtx?.branchId);
     const { data: sales } = await query.limit(5);
     test.skip(
       !sales || sales.length === 0,
       "No non-zero sale found matching user's org/branch",
     );
-    const targetSale = sales![0];
+    const targetSale = sales?.[0];
     const formattedAmount = (targetSale.total_amount as number).toLocaleString(
       "en-US",
     );
@@ -369,8 +369,8 @@ test.describe("Financial Data Protection", () => {
   test("restore brings back soft-deleted record", async ({ page }) => {
     requireEnv();
     const admin = await getAdmin();
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+    const _supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const _anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
     // Navigate to sales list
     await page.goto("/sales", { waitUntil: "networkidle" });
@@ -388,11 +388,11 @@ test.describe("Financial Data Protection", () => {
     const { data: profile } = await admin
       .from("profiles")
       .select("organization_id, branch_id")
-      .eq("id", authUser!.id)
+      .eq("id", authUser?.id)
       .single();
     test.skip(!profile?.organization_id, "Profile has no organization_id");
     const userCtx = {
-      userId: authUser!.id,
+      userId: authUser?.id,
       orgId: profile.organization_id as string,
       branchId: (profile as Record<string, unknown>).branch_id as string | null,
     };
@@ -401,16 +401,16 @@ test.describe("Financial Data Protection", () => {
     let query = admin
       .from("sales")
       .select("id, total_amount")
-      .eq("organization_id", userCtx!.orgId)
+      .eq("organization_id", userCtx?.orgId)
       .is("deleted_at", null)
       .gt("total_amount", 0);
-    if (userCtx!.branchId) query = query.eq("branch_id", userCtx!.branchId);
+    if (userCtx?.branchId) query = query.eq("branch_id", userCtx?.branchId);
     const { data: sales } = await query.limit(5);
     test.skip(
       !sales || sales.length === 0,
       "No non-zero sale found matching user's org/branch",
     );
-    const targetSale = sales![0];
+    const targetSale = sales?.[0];
     const formattedAmount = (targetSale.total_amount as number).toLocaleString(
       "en-US",
     );

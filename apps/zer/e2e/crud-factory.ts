@@ -253,7 +253,7 @@ export function createCrudTests(config: EntityConfig) {
         await verifyInList(page, config.listUrl, listText, t.listAssertion);
 
         // Navigate to edit
-        const editMode = config.edit!.mode;
+        const editMode = config.edit?.mode;
         if (editMode === "row-detail-edit") {
           // Click row → detail drawer → click "Засах" → edit drawer
           const row = page.locator(`main >> text="${listText}"`).first();
@@ -277,7 +277,7 @@ export function createCrudTests(config: EntityConfig) {
         }
 
         // Fill edit fields
-        const editResolved = config.edit!.fields.map((f) => ({
+        const editResolved = config.edit?.fields.map((f) => ({
           ...f,
           value: resolve(f.value),
         }));
@@ -287,7 +287,7 @@ export function createCrudTests(config: EntityConfig) {
 
         // Submit edit
         const submitBtn = page.locator(
-          `button:has-text("${config.edit!.submitText}")`,
+          `button:has-text("${config.edit?.submitText}")`,
         );
         if (await submitBtn.isVisible().catch(() => false)) {
           await submitBtn.click();
@@ -309,7 +309,7 @@ export function createCrudTests(config: EntityConfig) {
         await verifyInList(page, config.listUrl, listText, t.listAssertion);
 
         // Delete
-        const delMode = config.delete!.mode;
+        const delMode = config.delete?.mode;
         if (delMode === "row-button") {
           // Find delete button in the row
           const row = page.locator(`main >> text="${listText}"`).first();
@@ -337,7 +337,7 @@ export function createCrudTests(config: EntityConfig) {
         await page.waitForTimeout(800);
 
         // Confirm
-        const confirmText = config.delete!.confirmText ?? "Устгах";
+        const confirmText = config.delete?.confirmText ?? "Устгах";
         const confirmBtn = page.locator(
           `[data-slot="alert-dialog-action"]:has-text("${confirmText}")`,
         );
@@ -365,19 +365,19 @@ export function createCrudTests(config: EntityConfig) {
         await verifyInList(page, config.listUrl, listText, t.listAssertion);
 
         // Open detail
-        if (config.detail!.mode === "row-click") {
+        if (config.detail?.mode === "row-click") {
           const row = page.locator(`main >> text="${listText}"`).first();
           if (await row.isVisible().catch(() => false)) {
             await row.click();
             await page.waitForTimeout(1200);
           }
-        } else if (config.detail!.mode === "navigate") {
+        } else if (config.detail?.mode === "navigate") {
           // Navigate to detail (can't get exact ID, but try)
           // Just verify list page for now
         }
 
         await expect(
-          page.getByText(config.detail!.titleContains).first(),
+          page.getByText(config.detail?.titleContains).first(),
         ).toBeVisible({ timeout: t.listAssertion });
       });
     }

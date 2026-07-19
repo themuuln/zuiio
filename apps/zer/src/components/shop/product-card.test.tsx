@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the cart context so we can assert stepper mutations.
 const mockUpdateQuantity = vi.fn();
@@ -56,13 +56,17 @@ describe("ProductCard stepper", () => {
   });
 
   it("shows add button when not in cart", () => {
-    render(<ProductCard product={baseProduct} cartQuantity={0} variant="tile" />);
+    render(
+      <ProductCard product={baseProduct} cartQuantity={0} variant="tile" />,
+    );
     expect(screen.getByText("Нэмэх")).toBeTruthy();
     expect(screen.queryByLabelText("Нэмэх")).toBeNull();
   });
 
   it("renders stepper with quantity when in cart and no variants", () => {
-    render(<ProductCard product={baseProduct} cartQuantity={2} variant="tile" />);
+    render(
+      <ProductCard product={baseProduct} cartQuantity={2} variant="tile" />,
+    );
     // Quantity shown in stepper
     expect(screen.getByText("2")).toBeTruthy();
     // No standalone add button text
@@ -71,19 +75,25 @@ describe("ProductCard stepper", () => {
   });
 
   it("increment calls updateQuantity with qty+1", () => {
-    render(<ProductCard product={baseProduct} cartQuantity={2} variant="tile" />);
+    render(
+      <ProductCard product={baseProduct} cartQuantity={2} variant="tile" />,
+    );
     fireEvent.click(screen.getByLabelText("Нэмэх"));
     expect(mockUpdateQuantity).toHaveBeenCalledWith("p1", 3);
   });
 
   it("decrement to 1 removes the item", () => {
-    render(<ProductCard product={baseProduct} cartQuantity={1} variant="tile" />);
+    render(
+      <ProductCard product={baseProduct} cartQuantity={1} variant="tile" />,
+    );
     fireEvent.click(screen.getByLabelText("Хасах"));
     expect(mockRemoveItem).toHaveBeenCalledWith("p1");
   });
 
   it("decrement from 3 calls updateQuantity with qty-1", () => {
-    render(<ProductCard product={baseProduct} cartQuantity={3} variant="tile" />);
+    render(
+      <ProductCard product={baseProduct} cartQuantity={3} variant="tile" />,
+    );
     fireEvent.click(screen.getByLabelText("Хасах"));
     expect(mockUpdateQuantity).toHaveBeenCalledWith("p1", 2);
     expect(mockRemoveItem).not.toHaveBeenCalled();

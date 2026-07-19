@@ -7,7 +7,6 @@
 
 import { globSync, readFileSync } from "node:fs";
 
-const ROOT = process.argv[2] || "src";
 let errors = 0;
 
 const EXEMPT = (f) =>
@@ -15,14 +14,17 @@ const EXEMPT = (f) =>
   f.includes(".next") ||
   f.includes("/__tests__/");
 
-const files = globSync(`${ROOT}/**/*.{ts,tsx}`, {
-  ignore: [
-    "**/node_modules/**",
-    "**/.next/**",
-    "**/dist/**",
-    "**/__tests__/**",
-  ],
-});
+const files =
+  process.argv.length > 2
+    ? process.argv.slice(2).filter((f) => !EXEMPT(f))
+    : globSync(`src/**/*.{ts,tsx}`, {
+        ignore: [
+          "**/node_modules/**",
+          "**.next/**",
+          "**/dist/**",
+          "**/__tests__/**",
+        ],
+      });
 
 // ── Pass 1: Single-line patterns ──
 
@@ -73,5 +75,3 @@ if (errors > 0) {
   );
   process.exit(1);
 }
-
-console.log("✅ No console.error in catch blocks found.");

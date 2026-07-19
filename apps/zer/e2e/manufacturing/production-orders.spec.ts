@@ -20,12 +20,12 @@ const STAGE_COUNT = 5;
 
 test.describe
   .serial("Production order lifecycle", () => {
-    let orderName: string;
+    let _orderName: string;
 
     test("create a new production order", async ({ page }) => {
       await page.goto("/production", { waitUntil: "domcontentloaded" });
 
-      orderName = `PO-${Date.now()}`;
+      _orderName = `PO-${Date.now()}`;
 
       // Open create drawer
       await page

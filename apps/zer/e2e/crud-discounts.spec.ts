@@ -58,7 +58,6 @@ test.describe("Discounts module", () => {
       const toast = page.locator("[data-sonner-toast]").first();
       const toastVisible = await toast.isVisible().catch(() => false);
       if (toastVisible) {
-        console.log("Discount created successfully");
       }
     }
   });

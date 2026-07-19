@@ -46,8 +46,6 @@ test.describe("Warehouses module", () => {
         dialogContent.getByRole("button", { name: "Агуулах нэмэх" }),
       ).toBeVisible({ timeout: 5000 });
     } else {
-      // Dialog might not open due to permissions or state
-      console.log("Warehouse create dialog did not open");
     }
   });
 

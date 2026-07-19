@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 import { signInWithApple, signInWithGoogle } from "@/app/(auth)/login/actions";
 import { EyeIcon, EyeSlashIcon } from "@/components/icons";
 import { generateGoogleNonce } from "@/lib/auth/google-nonce";
@@ -80,53 +80,7 @@ export function SignupForm({
   const [oauthError, setOauthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showUsername, setShowUsername] = useState(false);
-  /* ── Google OAuth popup — postMessage listener ─────────────── */
-  const googleNonceRef = useRef("");
-
-  useEffect(() => {
-    function onMessage(event: MessageEvent) {
-      if (
-        event.origin !== window.location.origin ||
-        event.data?.type !== "google-oauth-callback"
-      ) {
-        return;
-      }
-
-      const { idToken } = event.data as { idToken?: string };
-      if (!idToken) {
-        setOauthError("Google нэвтрэхэд алдаа гарлаа.");
-        setOauthLoading(null);
-        return;
-      }
-
-      setOauthError(null);
-
-      (async () => {
-        try {
-          const result = await signInWithGoogle(
-            idToken,
-            googleNonceRef.current,
-          );
-          if (result?.formError) setOauthError(result.formError);
-          else if (result?.redirectTo) router.push(result.redirectTo);
-        } catch {
-          setOauthError("Google нэвтрэхэд алдаа гарлаа.");
-        } finally {
-          setOauthLoading(null);
-        }
-      })();
-    }
-
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, [router]);
-
-  if (state?.redirectTo) {
-    window.location.href = state.redirectTo;
-    return null;
-  }
-
-  /* ── Google OAuth — open popup window ─────────────────────── */
+  /* ── Google OAuth — same-page redirect ────────────────────── */
   async function handleGoogleSignIn() {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) {
@@ -139,28 +93,20 @@ export function SignupForm({
 
     try {
       const { rawNonce, hashedNonce } = await generateGoogleNonce();
-      googleNonceRef.current = rawNonce;
 
-      const redirectUri = `${window.location.origin}/auth/callback/google`;
+      // Persist nonce across the same-origin redirect
+      sessionStorage.setItem("google_nonce", rawNonce);
+
       const params = new URLSearchParams({
         client_id: clientId,
-        redirect_uri: redirectUri,
+        redirect_uri: `${window.location.origin}/auth/callback/google`,
         response_type: "id_token",
         scope: "openid email profile",
         nonce: hashedNonce,
         prompt: "select_account",
       });
 
-      const width = 500;
-      const height = 600;
-      const left = window.screenX + (window.outerWidth - width) / 2;
-      const top = window.screenY + (window.outerHeight - height) / 2;
-
-      window.open(
-        `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
-        "google-oauth",
-        `width=${width},height=${height},left=${left},top=${top}`,
-      );
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
     } catch {
       setOauthError("Google нэвтрэхэд алдаа гарлаа.");
       setOauthLoading(null);
