@@ -22,6 +22,7 @@ export interface CatalogItem {
   id: string;
   name: string;
   name_mn?: string | null;
+  barcode?: string | null;
   default_price: number | null;
   last_price?: number | null;
   last_make?: string | null;
@@ -513,12 +514,12 @@ export function CatalogCombobox<T extends CatalogItem>({
   filterAllLabel,
 }: CatalogComboboxProps<T>) {
   const q = search.toLowerCase();
-  const hasSearch = search.trim().length > 0;
   const filtered = hasSearch
     ? items.filter((s) => {
         const matchName = s.name.toLowerCase().includes(q);
         const matchNameMn = s.name_mn?.toLowerCase().includes(q) ?? false;
-        return matchName || matchNameMn;
+        const matchBarcode = s.barcode?.toLowerCase().includes(q) ?? false;
+        return matchName || matchNameMn || matchBarcode;
       })
     : items;
   const isInline = resultsMode === "inline";

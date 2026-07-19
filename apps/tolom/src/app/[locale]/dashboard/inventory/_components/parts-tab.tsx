@@ -12,6 +12,7 @@ import {
   Loader2,
   Star,
   Trash2,
+  Upload,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
@@ -385,6 +386,16 @@ export function PartsTab({
               >
                 <Plus className="size-4" />
                 Add Part
+              </Button>
+              <Button
+                variant="outline"
+                size="default"
+                asChild
+              >
+                <Link href="/dashboard/inventory/import">
+                  <Upload className="size-4" />
+                  Import
+                </Link>
               </Button>
               <Button
                 variant="outline"

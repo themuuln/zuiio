@@ -97,6 +97,59 @@ export function createColumns(
       ),
     },
     {
+      id: "default_cost",
+      accessorKey: "default_cost",
+      meta: { align: "right" } as const,
+      header: ({ column }) => {
+        const t = useTranslations("services");
+        return <DataTableColumnHeader column={column} title={t("cost")} />;
+      },
+      cell: ({ row }) => {
+        const cost = row.original.default_cost;
+        if (cost == null) {
+          return (
+            <span className="text-sm text-muted-foreground/30">&mdash;</span>
+          );
+        }
+        return (
+          <span className="text-sm tabular-nums text-muted-foreground">
+            {formatMNT(cost)}
+          </span>
+        );
+      },
+    },
+    {
+      id: "margin",
+      meta: { align: "right" } as const,
+      header: () => {
+        const t = useTranslations("services");
+        return (
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("margin")}
+          </span>
+        );
+      },
+      enableSorting: false,
+      cell: ({ row }) => {
+        const price = row.original.default_price;
+        const cost = row.original.default_cost;
+        if (price == null || cost == null || price === 0) {
+          return (
+            <span className="text-sm text-muted-foreground/30">&mdash;</span>
+          );
+        }
+        const margin = ((price - cost) / price) * 100;
+        const color = margin >= 0 ? "text-emerald-600" : "text-destructive";
+        return (
+          <span className={`text-xs tabular-nums font-medium ${color}`}>
+            {margin >= 0 ? "+" : ""}
+            {margin.toFixed(0)}%
+          </span>
+        );
+      },
+    },
+
+    {
       id: "last_used_price",
       meta: { align: "right" } as const,
       header: () => {

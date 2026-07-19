@@ -417,8 +417,7 @@ export function useUpdatePart(orgId: string | undefined) {
 }
 export function useDeletePart(orgId: string | undefined) {
   return useOrgMutation<PartsCatalogItem, string>({
-    endpoint: (id) =>
-      `/api/organizations/${orgId}/inventory/parts/${id}`,
+    endpoint: (id) => `/api/organizations/${orgId}/inventory/parts/${id}`,
     method: "DELETE",
     queryKey: inventoryKeys.parts(orgId ?? ""),
     invalidateKeys: [inventoryKeys.balances(orgId ?? "")],
@@ -471,6 +470,26 @@ export function useReceivePurchaseOrder(orgId: string | undefined) {
       inventoryKeys.parts(orgId ?? ""),
       inventoryKeys.movements(orgId ?? ""),
     ],
+  });
+}
+
+export function useReceiveByBarcode(
+  orgId: string | undefined,
+  poId: string | undefined,
+) {
+  return useOrgMutation<PurchaseOrderItem, { poId: string; barcode: string }>({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/inventory/purchase-orders/${vars.poId}/receive-barcode`,
+    method: "POST",
+    queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
+    invalidateKeys: [
+      inventoryKeys.purchaseOrderItems(poId ?? ""),
+      inventoryKeys.purchaseOrders(orgId ?? ""),
+      inventoryKeys.balances(orgId ?? ""),
+      inventoryKeys.parts(orgId ?? ""),
+      inventoryKeys.movements(orgId ?? ""),
+    ],
+    bodyFn: (vars) => ({ barcode: vars.barcode }),
   });
 }
 
@@ -594,5 +613,43 @@ export function useDeletePartsCar(orgId: string | undefined) {
     endpoint: (id) => `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
     method: "DELETE",
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
+  });
+}
+
+export function useVehicleModelParts(
+  orgId: string | undefined,
+  partId: string | undefined,
+) {
+  return useQuery({
+    queryKey: inventoryKeys.vehicleModelParts(orgId ?? "", partId ?? ""),
+    queryFn: async () => {
+      if (!orgId || !partId) return [];
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts/${partId}/vehicle-models`,
+      );
+      if (!res.ok) throw new Error("Failed to fetch vehicle fitment");
+      const json = await res.json();
+      return json.data ?? [];
+    },
+    enabled: !!orgId && !!partId,
+  });
+}
+
+export function useSupplierPriceHistory(
+  orgId: string | undefined,
+  partId: string | undefined,
+) {
+  return useQuery({
+    queryKey: inventoryKeys.supplierPriceHistory(orgId ?? "", partId ?? ""),
+    queryFn: async () => {
+      if (!orgId || !partId) return [];
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts/${partId}/purchase-history`,
+      );
+      if (!res.ok) throw new Error("Failed to fetch purchase history");
+      const json = await res.json();
+      return json.data ?? [];
+    },
+    enabled: !!orgId && !!partId,
   });
 }

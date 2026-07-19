@@ -37,6 +37,8 @@ const nextConfig: NextConfig = {
 	experimental: {
 		// Use native Rust React Compiler instead of Babel — faster dev builds
 		turbopackRustReactCompiler: true,
+		// Next.js 16.3+ requires this for TypeScript 7.x compatibility
+		useTypeScriptCli: true,
 	},
 
 	// ── Next.js 16.3: Instant Navigations ──────────────────────

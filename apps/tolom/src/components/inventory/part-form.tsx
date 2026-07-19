@@ -37,6 +37,7 @@ const partSchema = z.object({
   name_mn: sharedPartSchema.shape.nameMn,
   name: sharedPartSchema.shape.name,
   part_number: sharedPartSchema.shape.partNumber,
+  barcode: sharedPartSchema.shape.barcode,
   default_price: sharedPartSchema.shape.defaultPrice,
   purchase_price: sharedPartSchema.shape.purchasePrice,
   category: sharedPartSchema.shape.category,
@@ -99,6 +100,7 @@ export function PartForm({
       name_mn: initialData?.name_mn ?? "",
       name: initialData?.name ?? "",
       part_number: initialData?.part_number ?? "",
+      barcode: initialData?.barcode ?? "",
       default_price:
         initialData?.default_price != null
           ? String(initialData.default_price)
@@ -144,6 +146,7 @@ export function PartForm({
       const payload: CreatePartParams = {
         name: nameEn || nameMn,
         part_number: data.part_number?.trim() || undefined,
+        barcode: data.barcode?.trim() || undefined,
         default_price: data.default_price?.trim()
           ? Number(data.default_price)
           : undefined,
@@ -279,46 +282,55 @@ export function PartForm({
 
         {/* ── Part Number + Category (full) or Part Number + Price (quick) ── */}
         {currentMode === "full" ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field>
-              <FieldLabel>Part Number</FieldLabel>
-              <FieldContent>
-                <Input
-                  placeholder="e.g. OF-101"
-                  {...form.register("part_number")}
-                />
-              </FieldContent>
-            </Field>
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field>
+                <FieldLabel>Part Number</FieldLabel>
+                <FieldContent>
+                  <Input
+                    placeholder="e.g. OF-101"
+                    disabled={readOnly}
+                    {...form.register("part_number")}
+                  />
+                </FieldContent>
+              </Field>
 
-            <Field>
-              <FieldLabel>Category</FieldLabel>
-              <FieldContent>
-                <CreatableCombobox
-                  items={allCategories}
-                  value={selectedCategory}
-                  onValueChange={(cat) => {
-                    if (cat) {
-                      form.setValue("category", cat.name);
-                    } else {
-                      form.setValue("category", "");
-                    }
-                  }}
-                  onCreateItem={handleCreateCategory}
-                  isCreating={createCategory.isPending}
-                  createLabel={(name) =>
-                    t("createCategory", { name })
-                  }
-                  isItemEqualToValue={(a: { id: string }, b: { id: string }) =>
-                    a.id === b.id
-                  }
-                  placeholder="e.g. Filters, Suspension"
-                  showTrigger
-                  disabled={readOnly}
-                  className="h-11"
-                />
-              </FieldContent>
-            </Field>
-          </div>
+              <Field>
+                <FieldLabel>Category</FieldLabel>
+                <FieldContent>
+                  <CreatableCombobox
+                    items={allCategories}
+                    value={selectedCategory}
+                    onValueChange={(cat) => {
+                      if (cat) {
+                        form.setValue("category", cat.name);
+                      } else {
+                        form.setValue("category", "");
+                      }
+                    }}
+                    onCreateNew={handleCreateCategory}
+                    itemToStringLabel={(item) => item?.name ?? ""}
+                    isItemEqualToValue={(a, b) => a?.name === b?.name}
+                    placeholder="Select category"
+                    disabled={readOnly}
+                    className="h-11"
+                  />
+                </FieldContent>
+              </Field>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field>
+                <FieldLabel>Barcode</FieldLabel>
+                <FieldContent>
+                  <Input
+                    placeholder="Scan or enter barcode"
+                    disabled={readOnly}
+                    {...form.register("barcode")}
+                  />
+                </FieldContent>
+              </Field>
+            </div>
+          </>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             <Field>
@@ -339,7 +351,11 @@ export function PartForm({
                   min={0}
                   placeholder="15000"
                   disabled={readOnly}
-                  value={form.watch("default_price")?.trim() ? Number(form.watch("default_price")) : undefined}
+                  value={
+                    form.watch("default_price")?.trim()
+                      ? Number(form.watch("default_price"))
+                      : undefined
+                  }
                   onChange={(val) =>
                     form.setValue("default_price", String(val))
                   }
@@ -363,7 +379,11 @@ export function PartForm({
                 <CurrencyInput
                   min={0}
                   placeholder="15000"
-                  value={form.watch("default_price")?.trim() ? Number(form.watch("default_price")) : undefined}
+                  value={
+                    form.watch("default_price")?.trim()
+                      ? Number(form.watch("default_price"))
+                      : undefined
+                  }
                   onChange={(val) =>
                     form.setValue("default_price", String(val))
                   }
@@ -382,7 +402,11 @@ export function PartForm({
                 <CurrencyInput
                   min={0}
                   placeholder="10000"
-                  value={form.watch("purchase_price")?.trim() ? Number(form.watch("purchase_price")) : undefined}
+                  value={
+                    form.watch("purchase_price")?.trim()
+                      ? Number(form.watch("purchase_price"))
+                      : undefined
+                  }
                   onChange={(val) =>
                     form.setValue("purchase_price", String(val))
                   }
@@ -454,10 +478,11 @@ export function PartForm({
                 <Loader2 className="size-4 animate-spin" />
                 {commonT("saving")}
               </span>
-            ) : isUpdate
-              ? t("updatePart")
-              : t("createPart")
-            }
+            ) : isUpdate ? (
+              t("updatePart")
+            ) : (
+              t("createPart")
+            )}
           </Button>
         </div>
       )}

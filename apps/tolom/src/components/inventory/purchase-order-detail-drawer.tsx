@@ -2,7 +2,7 @@
 
 import { Loader2, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { Typography } from "@/components/ui/typography";
 import {
   usePurchaseOrderItems,
   usePurchaseOrders,
+  useReceiveByBarcode,
   useReceivePurchaseOrder,
   useUpdatePurchaseOrder,
 } from "@/lib/queries/use-inventory";
@@ -59,6 +60,9 @@ export function PurchaseOrderDetailSheet({
   );
   const receivePO = useReceivePurchaseOrder(orgId);
   const updatePO = useUpdatePurchaseOrder(orgId);
+  const receiveBarcode = useReceiveByBarcode(orgId, poId ?? undefined);
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [scanError, setScanError] = useState<string | null>(null);
 
   const po = useMemo(
     () => purchaseOrders.find((p) => p.id === poId),
@@ -79,6 +83,28 @@ export function PurchaseOrderDetailSheet({
       toast.error(err instanceof Error ? err.message : t("failedToReceive"));
     }
   }, [poId, receivePO, t]);
+
+  const handleBarcodeScan = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!poId || !barcodeInput.trim()) return;
+      setScanError(null);
+      try {
+        await receiveBarcode.mutateAsync({
+          poId,
+          barcode: barcodeInput.trim(),
+        });
+        setBarcodeInput("");
+        toast.dismiss();
+        toast.success(t("itemReceivedByBarcode"));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : t("scanFailed");
+        setScanError(msg);
+        reportServerError("Barcode receive failed", err);
+      }
+    },
+    [poId, barcodeInput, receiveBarcode, t],
+  );
 
   const handleStatusChange = useCallback(
     async (status: string) => {
@@ -180,6 +206,43 @@ export function PurchaseOrderDetailSheet({
               >
                 <Truck className="size-4" /> {t("receiveStock")}
               </Button>
+            )}
+            {/* Barcode scan receive */}
+            {canReceive && (
+              <form
+                onSubmit={handleBarcodeScan}
+                className="flex flex-col gap-2 px-4 py-3 border-b border-border/50"
+              >
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t("scanToReceive")}
+                </span>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={barcodeInput}
+                    onChange={(e) => setBarcodeInput(e.target.value)}
+                    placeholder={t("enterBarcode")}
+                    className="flex-1 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={receiveBarcode.isPending || !barcodeInput.trim()}
+                  >
+                    {receiveBarcode.isPending ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Truck className="size-4" />
+                    )}
+                    {t("receiveItem")}
+                  </Button>
+                </div>
+                {scanError && (
+                  <Typography.Muted className="text-xs text-destructive">
+                    {scanError}
+                  </Typography.Muted>
+                )}
+              </form>
             )}
             {canCancel && (
               <Button

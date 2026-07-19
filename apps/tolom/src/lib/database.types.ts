@@ -56,6 +56,84 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_briefing_log: {
+        Row: {
+          admin_chat_id: number
+          briefing_text: string
+          delivered_at: string | null
+          events_summary: Json | null
+          id: string
+          organization_id: string
+          overnight_messages: number | null
+          overnight_tool_calls: number | null
+          pending_handoffs: number | null
+        }
+        Insert: {
+          admin_chat_id: number
+          briefing_text: string
+          delivered_at?: string | null
+          events_summary?: Json | null
+          id?: string
+          organization_id: string
+          overnight_messages?: number | null
+          overnight_tool_calls?: number | null
+          pending_handoffs?: number | null
+        }
+        Update: {
+          admin_chat_id?: number
+          briefing_text?: string
+          delivered_at?: string | null
+          events_summary?: Json | null
+          id?: string
+          organization_id?: string
+          overnight_messages?: number | null
+          overnight_tool_calls?: number | null
+          pending_handoffs?: number | null
+        }
+        Relationships: []
+      }
+      agent_customer_memory: {
+        Row: {
+          confidence: number
+          created_at: string | null
+          customer_id: string
+          customer_name: string | null
+          fact: string
+          fact_type: string
+          id: string
+          is_active: boolean | null
+          organization_id: string
+          source_chat_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string | null
+          customer_id: string
+          customer_name?: string | null
+          fact: string
+          fact_type?: string
+          id?: string
+          is_active?: boolean | null
+          organization_id: string
+          source_chat_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          confidence?: number
+          created_at?: string | null
+          customer_id?: string
+          customer_name?: string | null
+          fact?: string
+          fact_type?: string
+          id?: string
+          is_active?: boolean | null
+          organization_id?: string
+          source_chat_id?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       agent_daily_spend: {
         Row: {
           api_calls: number
@@ -82,6 +160,168 @@ export type Database = {
           id?: string
           organization_id?: string
           tokens_used?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      agent_handoff_config: {
+        Row: {
+          admin_chat_id: number | null
+          auto_handoff_after_hours: boolean | null
+          created_at: string | null
+          id: string
+          keyword_triggers: string[] | null
+          low_confidence_threshold: number | null
+          organization_id: string
+          sentiment_enabled: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_chat_id?: number | null
+          auto_handoff_after_hours?: boolean | null
+          created_at?: string | null
+          id?: string
+          keyword_triggers?: string[] | null
+          low_confidence_threshold?: number | null
+          organization_id: string
+          sentiment_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_chat_id?: number | null
+          auto_handoff_after_hours?: boolean | null
+          created_at?: string | null
+          id?: string
+          keyword_triggers?: string[] | null
+          low_confidence_threshold?: number | null
+          organization_id?: string
+          sentiment_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      agent_handoff_events: {
+        Row: {
+          admin_chat_id: number | null
+          admin_user_id: number | null
+          bot_response: string | null
+          chat_id: number
+          created_at: string | null
+          customer_query: string | null
+          escalated_by: string | null
+          id: string
+          organization_id: string
+          reason: string | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["handoff_status"]
+          updated_at: string | null
+          user_id: number
+        }
+        Insert: {
+          admin_chat_id?: number | null
+          admin_user_id?: number | null
+          bot_response?: string | null
+          chat_id: number
+          created_at?: string | null
+          customer_query?: string | null
+          escalated_by?: string | null
+          id?: string
+          organization_id: string
+          reason?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["handoff_status"]
+          updated_at?: string | null
+          user_id: number
+        }
+        Update: {
+          admin_chat_id?: number | null
+          admin_user_id?: number | null
+          bot_response?: string | null
+          chat_id?: number
+          created_at?: string | null
+          customer_query?: string | null
+          escalated_by?: string | null
+          id?: string
+          organization_id?: string
+          reason?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["handoff_status"]
+          updated_at?: string | null
+          user_id?: number
+        }
+        Relationships: []
+      }
+      agent_knowledge_sources: {
+        Row: {
+          content: string
+          created_at: string | null
+          embedding: string | null
+          id: string
+          is_active: boolean | null
+          organization_id: string
+          source_type: string
+          title: string | null
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          is_active?: boolean | null
+          organization_id: string
+          source_type: string
+          title?: string | null
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          is_active?: boolean | null
+          organization_id?: string
+          source_type?: string
+          title?: string | null
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
+      agent_notification_triggers: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_fired_at: string | null
+          message_template: string | null
+          organization_id: string
+          trigger_config: Json
+          trigger_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_fired_at?: string | null
+          message_template?: string | null
+          organization_id: string
+          trigger_config?: Json
+          trigger_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_fired_at?: string | null
+          message_template?: string | null
+          organization_id?: string
+          trigger_config?: Json
+          trigger_type?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -3379,6 +3619,7 @@ export type Database = {
       }
       parts_catalog: {
         Row: {
+          barcode: string | null
           category: string | null
           created_at: string
           created_by: string | null
@@ -3402,6 +3643,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          barcode?: string | null
           category?: string | null
           created_at?: string
           created_by?: string | null
@@ -3425,6 +3667,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          barcode?: string | null
           category?: string | null
           created_at?: string
           created_by?: string | null
@@ -3945,6 +4188,50 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_used_at: string | null
+          organization_id: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_used_at?: string | null
+          organization_id: string
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_used_at?: string | null
+          organization_id?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reminder_logs: {
         Row: {
           channel: string
@@ -4165,6 +4452,7 @@ export type Database = {
           category: string | null
           created_at: string
           created_by: string | null
+          default_cost: number | null
           default_price: number
           deleted_at: string | null
           description: string | null
@@ -4186,6 +4474,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           created_by?: string | null
+          default_cost?: number | null
           default_price?: number
           deleted_at?: string | null
           description?: string | null
@@ -4207,6 +4496,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           created_by?: string | null
+          default_cost?: number | null
           default_price?: number
           deleted_at?: string | null
           description?: string | null
@@ -4982,6 +5272,8 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          lead_time_days: number | null
+          min_order_quantity: number | null
           name: string
           notes: string | null
           organization_id: string
@@ -5001,6 +5293,8 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          lead_time_days?: number | null
+          min_order_quantity?: number | null
           name: string
           notes?: string | null
           organization_id: string
@@ -5020,6 +5314,8 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          lead_time_days?: number | null
+          min_order_quantity?: number | null
           name?: string
           notes?: string | null
           organization_id?: string
@@ -5137,60 +5433,9 @@ export type Database = {
           },
         ]
       }
-      push_subscriptions: {
-        Row: {
-          auth: string
-          created_at: string
-          endpoint: string
-          id: string
-          last_used_at: string | null
-          organization_id: string
-          p256dh: string
-          user_agent: string | null
-          user_id: string
-        }
-        Insert: {
-          auth: string
-          created_at?: string
-          endpoint: string
-          id?: string
-          last_used_at?: string | null
-          organization_id: string
-          p256dh: string
-          user_agent?: string | null
-          user_id: string
-        }
-        Update: {
-          auth?: string
-          created_at?: string
-          endpoint?: string
-          id?: string
-          last_used_at?: string | null
-          organization_id?: string
-          p256dh?: string
-          user_agent?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "push_subscriptions_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-
       vehicle_model_parts: {
         Row: {
+          compatibility_notes: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -5203,6 +5448,7 @@ export type Database = {
           vehicle_model_id: string
         }
         Insert: {
+          compatibility_notes?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -5215,6 +5461,7 @@ export type Database = {
           vehicle_model_id: string
         }
         Update: {
+          compatibility_notes?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -6862,6 +7109,16 @@ export type Database = {
         Args: { p_org_id: string; p_period?: string }
         Returns: Json
       }
+      get_full_dashboard_data: {
+        Args: {
+          p_branch_id?: string
+          p_date_from?: string
+          p_date_to?: string
+          p_org_id: string
+          p_period?: string
+        }
+        Returns: Json
+      }
       get_inventory_with_stock: {
         Args: {
           p_limit?: number
@@ -7025,6 +7282,12 @@ export type Database = {
       }
     }
     Enums: {
+      handoff_status:
+        | "bot"
+        | "pending_human"
+        | "human_active"
+        | "human_resolved"
+        | "bot_resumed"
       inventory_movement_type:
         | "purchase"
         | "sale"
@@ -7193,6 +7456,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      handoff_status: [
+        "bot",
+        "pending_human",
+        "human_active",
+        "human_resolved",
+        "bot_resumed",
+      ],
       inventory_movement_type: [
         "purchase",
         "sale",

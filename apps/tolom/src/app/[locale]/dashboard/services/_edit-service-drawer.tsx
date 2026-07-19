@@ -41,6 +41,7 @@ const editServiceSchema = z.object({
     .string()
     .min(1, "Price is required")
     .refine((val) => !Number.isNaN(parseFloat(val)), "Enter a valid price"),
+  defaultCost: z.string().optional(),
   category: z.string().optional(),
   description: z.string().optional(),
 });
@@ -71,11 +72,11 @@ export function EditServiceSheet({
   const [showVariants, setShowVariants] = useState(false);
 
   const form = useForm<EditServiceValues>({
-    resolver: zodResolver(editServiceSchema),
     defaultValues: {
       name: "",
       nameMn: "",
       defaultPrice: "",
+      defaultCost: "",
       category: "",
       description: "",
     },
@@ -88,6 +89,8 @@ export function EditServiceSheet({
         name: service.name,
         nameMn: service.name_mn ?? "",
         defaultPrice: String(service.default_price),
+        defaultCost:
+          service.default_cost != null ? String(service.default_cost) : "",
         category: service.category ?? "",
         description: service.description ?? "",
       });
@@ -211,6 +214,18 @@ export function EditServiceSheet({
                   {form.formState.errors.defaultPrice.message}
                 </FieldError>
               )}
+            </FieldContent>
+          </Field>
+          {/* Default Cost */}
+          <Field>
+            <FieldLabel>{t("cost")} (₮)</FieldLabel>
+            <FieldContent>
+              <CurrencyInput
+                value={Number(form.watch("defaultCost")) || 0}
+                onChange={(val) => form.setValue("defaultCost", String(val))}
+                min={0}
+                placeholder="0"
+              />
             </FieldContent>
           </Field>
 

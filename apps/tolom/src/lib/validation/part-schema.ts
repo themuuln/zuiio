@@ -6,6 +6,7 @@ export const partSchema = z.object({
   nameMn: z.string().min(1, "Монгол нэр шаардлагатай"),
   name: z.string().optional(),
   partNumber: z.string().optional(),
+  barcode: z.string().optional(),
   defaultPrice: z.string().optional(),
   purchasePrice: z.string().optional(),
   category: z.string().optional(),

@@ -1,10 +1,12 @@
 "use client";
 
-import { AlertCircle, Dices } from "lucide-react";
+import { AlertCircle, Dices, PackagePlus, RotateCcw } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { PartForm } from "@/components/inventory/part-form";
+import { QuickStockInDialog } from "@/components/inventory/quick-stock-in-dialog";
+import { ReturnToSupplierDialog } from "@/components/inventory/return-to-supplier-dialog";
 import { VariantEditorSheet } from "@/components/services/variant-editor-drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,12 +17,16 @@ import {
   useInventoryMovements,
   usePartsCatalog,
   useStockThresholds,
+  useSupplierPriceHistory,
+  useVehicleModelParts,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
 import { PartHeader } from "./_header";
 import { StockHistory } from "./_stock-history";
+import { SupplierPriceHistory } from "./_supplier-price-history";
 import { ThresholdCard } from "./_threshold-card";
+import { VehicleFitment } from "./_vehicle-fitment";
 
 export default function PartDetailPage() {
   const t = useTranslations("inventory");
@@ -33,6 +39,8 @@ export default function PartDetailPage() {
   const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
 
   const [showVariants, setShowVariants] = useState(false);
+  const [showQuickStockIn, setShowQuickStockIn] = useState(false);
+  const [showReturnToSupplier, setShowReturnToSupplier] = useState(false);
 
   const { data: variants = [] } = useItemVariants(
     orgId ?? undefined,
@@ -49,6 +57,10 @@ export default function PartDetailPage() {
     useInventoryBalances(orgId ?? undefined, branchFilter);
   const { data: movements = [], isPending: movementsLoading } =
     useInventoryMovements(orgId ?? undefined, undefined, branchFilter);
+  const { data: fitments = [], isPending: fitmentsLoading } =
+    useVehicleModelParts(orgId ?? undefined, partId);
+  const { data: priceHistory = [], isPending: priceHistoryLoading } =
+    useSupplierPriceHistory(orgId ?? undefined, partId);
   const { data: thresholds = [], isPending: thresholdsLoading } =
     useStockThresholds(orgId ?? undefined, branchFilter);
 
@@ -128,15 +140,19 @@ export default function PartDetailPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column: Stock History */}
-        <div className="lg:col-span-2">
+        {/* Left column: Stock History + Price History */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
           <StockHistory
             movements={partMovements}
             isPending={movementsLoading}
           />
+          <SupplierPriceHistory
+            history={priceHistory}
+            isPending={priceHistoryLoading}
+          />
         </div>
 
-        {/* Right column: Threshold + Details + Variants */}
+        {/* Right column: Threshold + Fitment + Details + Actions */}
         <div className="flex flex-col gap-6">
           <ThresholdCard
             orgId={orgId}
@@ -145,6 +161,31 @@ export default function PartDetailPage() {
             onHand={onHand}
             isPending={thresholdsLoading}
           />
+
+          {/* Quick Actions */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={() => setShowQuickStockIn(true)}
+            >
+              <PackagePlus className="size-4" />
+              {t("quickStockIn")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={() => setShowReturnToSupplier(true)}
+            >
+              <RotateCcw className="size-4" />
+              {t("returnToSupplier")}
+            </Button>
+          </div>
+
+          <VehicleFitment fitments={fitments} isPending={fitmentsLoading} />
+
           {part && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -199,6 +240,28 @@ export default function PartDetailPage() {
         open={showVariants}
         onOpenChange={setShowVariants}
       />
+
+      {/* Quick Stock In Dialog */}
+      {orgId && (
+        <QuickStockInDialog
+          open={showQuickStockIn}
+          onOpenChange={setShowQuickStockIn}
+          orgId={orgId}
+          branchId={branchFilter}
+          preselectedPartId={partId}
+        />
+      )}
+
+      {/* Return to Supplier Dialog */}
+      {orgId && (
+        <ReturnToSupplierDialog
+          open={showReturnToSupplier}
+          onOpenChange={setShowReturnToSupplier}
+          orgId={orgId}
+          branchId={branchFilter}
+          preselectedPartId={partId}
+        />
+      )}
     </div>
   );
 }
