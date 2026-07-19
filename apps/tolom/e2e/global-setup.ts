@@ -60,13 +60,54 @@ export default async function globalSetup(_config: FullConfig) {
   }
 
   if (authFileFresh) {
-    process.stdout.write("✓ Auth state is fresh, refreshing session cookie\n");
-    const browser = await chromium.launch();
-    const context = await browser.newContext({ baseURL: BASE_URL });
-    await addSupabaseSessionCookie(context);
-    await context.storageState({ path: authFile });
-    await browser.close();
-    return;
+    // The file is recent, but the saved access token may already be
+    // expired (Supabase JWTs live ~1h) or in a stale format that
+    // @supabase/ssr can't reconstruct. Verify both before trusting it:
+    //   1. it carries an sb-access-token, and
+    //   2. that token's `exp` claim is still in the future.
+    // Otherwise the middleware accepts the cookie for the layout shell but
+    // v2 server actions (which read the real session) return no data and
+    // the bay regions never render. Fall through to a full login.
+    let hasUsableToken = false;
+    try {
+      const raw = readFileSync(authFile, "utf-8");
+      const tokenMatch = raw.match(/"sb-access-token","value":"([^"]+)"/);
+      if (tokenMatch) {
+        const payload = JSON.parse(
+          Buffer.from(tokenMatch[1].split(".")[1], "base64").toString(),
+        );
+        const expiresAt = typeof payload.exp === "number" ? payload.exp : 0;
+        hasUsableToken = Date.now() / 1000 < expiresAt - 60;
+      }
+    } catch {
+      hasUsableToken = false;
+    }
+
+    if (hasUsableToken) {
+      process.stdout.write(
+        "✓ Auth state is fresh, refreshing session cookie via dashboard nav\n",
+      );
+      const browser = await chromium.launch();
+      const context = await browser.newContext({ baseURL: BASE_URL });
+      await addSupabaseSessionCookie(context);
+      // Re-navigate to /dashboard so the @supabase/ssr middleware
+      // re-exchanges/refreshes the session cookie through the real
+      // server path (a cookie rebuilt from the stored token is accepted
+      // by the layout shell but can fail RLS-scoped server actions in
+      // bay-view-v2). Re-saving the state guarantees a valid session.
+      const page = await context.newPage();
+      await page.goto("/dashboard", {
+        waitUntil: "domcontentloaded",
+        timeout: 60_000,
+      });
+      await page.waitForURL("**/dashboard**", { timeout: 30_000 });
+      await context.storageState({ path: authFile });
+      await browser.close();
+      return;
+    }
+    process.stdout.write(
+      "⚠️  Auth file fresh but token expired/stale, performing full login\n",
+    );
   }
 
   // Skip seeding for remote Supabase — only seed local instances
