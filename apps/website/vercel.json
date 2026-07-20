@@ -1,8 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": [
-    "sin1"
-  ],
+  "regions": ["sin1"],
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "buildCommand": "cd ../.. && pnpm exec turbo run build --filter=@zuiio/website",
   "outputDirectory": ".next"

@@ -1,55 +1,63 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { LegalPage, type LegalDocument, type LegalSection } from "../legal-page";
+import {
+  type LegalDocument,
+  LegalPage,
+  type LegalSection,
+} from "../legal-page";
 
 interface Props {
-	params: Promise<{ locale: string }>;
+  params: Promise<{ locale: string }>;
 }
 
-function buildSections(t: (key: string) => string, tHas: (key: string) => boolean, count: number): LegalSection[] {
-	const sections: LegalSection[] = [];
-	for (let i = 0; i < count; i++) {
-		const section: LegalSection = {
-			id: t(`section-${i}-id`),
-			title: t(`section-${i}-title`),
-			paragraphs: [],
-		};
-		for (let j = 0; tHas(`section-${i}-p${j}`); j++) {
-			section.paragraphs.push(t(`section-${i}-p${j}`));
-		}
-		const bullets: string[] = [];
-		for (let j = 0; tHas(`section-${i}-b${j}`); j++) {
-			bullets.push(t(`section-${i}-b${j}`));
-		}
-		if (bullets.length > 0) section.bullets = bullets;
-		sections.push(section);
-	}
-	return sections;
+function buildSections(
+  t: (key: string) => string,
+  tHas: (key: string) => boolean,
+  count: number,
+): LegalSection[] {
+  const sections: LegalSection[] = [];
+  for (let i = 0; i < count; i++) {
+    const section: LegalSection = {
+      id: t(`section-${i}-id`),
+      title: t(`section-${i}-title`),
+      paragraphs: [],
+    };
+    for (let j = 0; tHas(`section-${i}-p${j}`); j++) {
+      section.paragraphs.push(t(`section-${i}-p${j}`));
+    }
+    const bullets: string[] = [];
+    for (let j = 0; tHas(`section-${i}-b${j}`); j++) {
+      bullets.push(t(`section-${i}-b${j}`));
+    }
+    if (bullets.length > 0) section.bullets = bullets;
+    sections.push(section);
+  }
+  return sections;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-	const { locale } = await params;
-	const t = await getTranslations({ locale, namespace: "PrivacyPage" });
-	return {
-		title: t("eyebrow"),
-		description: t("description"),
-		alternates: { canonical: "/privacy" },
-	};
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "PrivacyPage" });
+  return {
+    title: t("eyebrow"),
+    description: t("description"),
+    alternates: { canonical: "/privacy" },
+  };
 }
 
 export default async function PrivacyPage({ params }: Props) {
-	const { locale } = await params;
-	setRequestLocale(locale);
-	const t = await getTranslations("PrivacyPage");
-	const tHas = t.has.bind(t);
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("PrivacyPage");
+  const tHas = t.has.bind(t);
 
-	const document: LegalDocument = {
-		eyebrow: t("eyebrow"),
-		title: t("title"),
-		description: t("description"),
-		lastUpdated: t("lastUpdated"),
-		sections: buildSections(t, tHas, 9),
-	};
+  const document: LegalDocument = {
+    eyebrow: t("eyebrow"),
+    title: t("title"),
+    description: t("description"),
+    lastUpdated: t("lastUpdated"),
+    sections: buildSections(t, tHas, 9),
+  };
 
-	return <LegalPage locale={locale} {...document} />;
+  return <LegalPage {...document} />;
 }

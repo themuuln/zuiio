@@ -1,129 +1,104 @@
-import { Link } from "@/lib/i18n/navigation";
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/lib/i18n/navigation";
 
 export interface LegalSection {
-	id: string;
-	title: string;
-	paragraphs: string[];
-	bullets?: string[];
+  id: string;
+  title: string;
+  paragraphs: string[];
+  bullets?: string[];
 }
 
 export interface LegalDocument {
-	eyebrow: string;
-	title: string;
-	description: string;
-	lastUpdated: string;
-	sections: LegalSection[];
+  eyebrow: string;
+  title: string;
+  description: string;
+  lastUpdated: string;
+  sections: LegalSection[];
 }
 
-export function resolveLocale(locale: string): "en" | "mn" {
-	return locale === "en" ? "en" : "mn";
-}
+export async function LegalPage(document: LegalDocument) {
+  const t = await getTranslations("LegalPage");
+  const quickLinksLabel = t("quick-links");
+  const lastUpdatedLabel = t("last-updated");
+  const contactTitle = t("contact-title");
+  const contactBody = t("contact-body");
+  const contactLabel = t("contact-label");
 
-interface LegalPageProps extends LegalDocument {
-	locale: string;
-}
+  return (
+    <section className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:grid-cols-[minmax(0,1fr)_18rem] md:py-24">
+      <article className="min-w-0">
+        <div className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {document.eyebrow}
+        </div>
+        <h1
+          className="mb-2 text-3xl font-semibold tracking-tight md:text-4xl"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {document.title}
+        </h1>
+        <p className="mb-12 max-w-2xl text-lg text-muted-foreground">
+          {document.description}
+        </p>
+        <div className="mb-12 text-xs text-muted-foreground">
+          {lastUpdatedLabel}:{" "}
+          <time dateTime={document.lastUpdated}>{document.lastUpdated}</time>
+        </div>
+        {document.sections.map((section) => (
+          <section
+            key={section.id}
+            id={section.id}
+            className="mb-12 scroll-mt-24"
+          >
+            <h2 className="mb-4 text-xl font-semibold tracking-tight">
+              {section.title}
+            </h2>
+            {section.paragraphs.map((p, i) => (
+              <p key={i} className="mb-4 leading-relaxed text-muted-foreground">
+                {p}
+              </p>
+            ))}
+            {section.bullets && (
+              <ul className="mb-4 list-disc space-y-2 pl-6 text-muted-foreground">
+                {section.bullets.map((b, i) => (
+                  <li key={i} className="leading-relaxed">
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ))}
+      </article>
 
-export async function LegalPage({
-	locale,
-	eyebrow,
-	title,
-	description,
-	lastUpdated,
-	sections,
-}: LegalPageProps) {
-	const t = await getTranslations("LegalPage");
-	const quickLinksLabel = t("quick-links");
-	const lastUpdatedLabel = t("last-updated");
-	const contactTitle = t("contact-title");
-	const contactBody = t("contact-body");
-	const contactLabel = t("contact-label");
-
-	return (
-		<section className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:grid-cols-[minmax(0,1fr)_18rem] md:py-24">
-			<article className="min-w-0">
-				<p className="mb-4 inline-flex rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-					{eyebrow}
-				</p>
-				<h1
-					className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight md:text-6xl"
-					style={{ fontFamily: "var(--font-display)" }}
-				>
-					{title}
-				</h1>
-				<p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-					{description}
-				</p>
-				<p className="mt-6 text-sm font-medium text-muted-foreground">
-					{lastUpdatedLabel}: <time dateTime="2026-07-07">{lastUpdated}</time>
-				</p>
-
-				<div className="mt-12 space-y-10 rounded-2xl border border-border bg-card p-6 md:p-10">
-					{sections.map((section) => (
-						<section key={section.id} id={section.id} className="scroll-mt-24">
-							<h2
-								className="text-2xl font-semibold tracking-tight"
-								style={{ fontFamily: "var(--font-display)" }}
-							>
-								{section.title}
-							</h2>
-							<div className="mt-4 space-y-4 text-base leading-7 text-muted-foreground">
-								{section.paragraphs.map((paragraph) => (
-									<p key={paragraph}>{paragraph}</p>
-								))}
-								{section.bullets && (
-									<ul className="ml-5 list-disc space-y-2 marker:text-primary">
-										{section.bullets.map((bullet) => (
-											<li key={bullet}>{bullet}</li>
-										))}
-									</ul>
-								)}
-							</div>
-						</section>
-					))}
-				</div>
-			</article>
-
-			<aside className="md:sticky md:top-24 md:self-start">
-				<nav
-					aria-label={quickLinksLabel}
-					className="rounded-2xl border border-border bg-card p-5 shadow-sm"
-				>
-					<h2 className="text-sm font-semibold text-foreground">{quickLinksLabel}</h2>
-					<ul className="mt-4 space-y-2">
-						{sections.map((section) => (
-							<li key={section.id}>
-								<a
-									href={`#${section.id}`}
-									className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted"
-								>
-									{section.title}
-								</a>
-							</li>
-						))}
-					</ul>
-				</nav>
-
-				<div className="mt-5 rounded-2xl border border-border bg-background p-5">
-					<h2 className="text-sm font-semibold text-foreground">{contactTitle}</h2>
-					<p className="mt-2 text-sm leading-6 text-muted-foreground">{contactBody}</p>
-					<a href="mailto:sales@zuiio.com" className="btn-secondary mt-4 w-full justify-center">
-						{contactLabel}
-					</a>
-				</div>
-
-				<div className="mt-5 grid gap-2 text-sm">
-					<Link href="/privacy" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-						{t("privacy-link")}
-					</Link>
-					<Link href="/terms" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-						{t("terms-link")}
-					</Link>
-					<Link href="/data-deletion" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-						{t("data-deletion-link")}
-					</Link>
-				</div>
-			</aside>
-		</section>
-	);
+      <aside className="md:sticky md:top-24 md:self-start">
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h3 className="mb-4 text-sm font-semibold">{quickLinksLabel}</h3>
+          <nav aria-label={quickLinksLabel}>
+            <ul className="space-y-2">
+              {document.sections.map((section) => (
+                <li key={section.id}>
+                  <Link
+                    href={`#${section.id}`}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {section.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="mt-6 border-t border-border pt-6">
+            <p className="mb-1 text-sm font-semibold">{contactTitle}</p>
+            <p className="mb-3 text-sm text-muted-foreground">{contactBody}</p>
+            <Link
+              href="mailto:legal@zuiio.com"
+              className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
+            >
+              {contactLabel}
+            </Link>
+          </div>
+        </div>
+      </aside>
+    </section>
+  );
 }
