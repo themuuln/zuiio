@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,8 +20,10 @@ export async function GET(
     .eq("id", id)
     .single();
 
-  if (error)
+  if (error) {
+    Sentry.captureException(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json(data);
 }
 
@@ -45,8 +48,10 @@ export async function PUT(
     .select("*, sports(name_en, name_mn)")
     .single();
 
-  if (error)
+  if (error) {
+    Sentry.captureException(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json(data);
 }
 
@@ -64,7 +69,9 @@ export async function DELETE(
 
   const { error } = await supabase.from("leagues").delete().eq("id", id);
 
-  if (error)
+  if (error) {
+    Sentry.captureException(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(null, { status: 204 });
+  }
+  return new NextResponse(null, { status: 204 });
 }

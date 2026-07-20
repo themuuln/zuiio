@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,7 +14,9 @@ export async function GET(_request: NextRequest) {
     .from("competitions")
     .select("id, name, type, season_id");
 
-  if (error)
+  if (error) {
+    Sentry.captureException(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json(data);
 }

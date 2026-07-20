@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -54,6 +55,7 @@ export async function GET() {
     ]
       .filter(Boolean)
       .join("; ");
+    Sentry.captureException(new Error(msg));
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AdminLayoutClient } from "./_components/layout-client";
 import { SidebarNav } from "./_components/sidebar-nav";
-
 export default async function AdminLayout({
   children,
 }: {
@@ -31,7 +31,9 @@ export default async function AdminLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto p-6">{children}</main>
+      <main className="flex-1 overflow-auto p-6">
+        <AdminLayoutClient>{children}</AdminLayoutClient>
+      </main>
     </div>
   );
 }

@@ -6,9 +6,17 @@ import { ArrowLeft, Calendar, MapPin, Trophy } from "lucide-react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { type GameRow, gamesApi } from "@/app/admin/_lib/api";
+import { AdminCardSkeleton } from "@/components/admin/admin-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReviewTab } from "./components/review-tab";
 
@@ -90,7 +98,7 @@ export default function GameDetailPage() {
           <ArrowLeft className="size-4" />
           Буцах
         </a>
-        <p className="text-muted-foreground">Ачаалж байна...</p>
+        <AdminCardSkeleton />
       </div>
     );
   }
@@ -105,11 +113,15 @@ export default function GameDetailPage() {
           <ArrowLeft className="size-4" />
           Буцах
         </a>
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            Тоглолт олдсонгүй
-          </CardContent>
-        </Card>
+        <Empty>
+          <EmptyMedia variant="icon" />
+          <EmptyHeader>
+            <EmptyTitle>Тоглолт олдсонгүй</EmptyTitle>
+            <EmptyDescription>
+              Энэ тоглолтын мэдээлэл олдсонгүй.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       </div>
     );
   }

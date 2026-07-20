@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,8 +16,10 @@ export async function GET(_request: NextRequest) {
     .from("leagues")
     .select("*, sports(name_en, name_mn)");
 
-  if (error)
+  if (error) {
+    Sentry.captureException(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json(data);
 }
 
@@ -49,7 +52,9 @@ export async function POST(request: NextRequest) {
     .select("*, sports(name_en, name_mn)")
     .single();
 
-  if (error)
+  if (error) {
+    Sentry.captureException(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json(data, { status: 201 });
 }

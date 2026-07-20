@@ -2,8 +2,16 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { AdminTableSkeleton } from "@/components/admin/admin-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Table,
   TableBody,
@@ -12,13 +20,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { GameRow } from "./_lib/api";
+import { gamesApi } from "./_lib/api";
 
 export default function AdminDashboardPage() {
   const { data: games, isPending } = useQuery({
-    queryKey: ["admin", "games"],
-    queryFn: () =>
-      fetch("/admin/api/games").then((r) => r.json() as Promise<GameRow[]>),
+    queryKey: ["admin-dashboard-games"],
+    queryFn: () => gamesApi.list(),
   });
 
   const finalGames =
@@ -41,11 +48,17 @@ export default function AdminDashboardPage() {
         </CardHeader>
         <CardContent>
           {isPending ? (
-            <p className="text-sm text-muted-foreground">Ачаалж байна…</p>
+            <AdminTableSkeleton rows={4} />
           ) : finalGames.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Баталгаажуулах тоглолт алга байна.
-            </p>
+            <Empty>
+              <EmptyMedia variant="icon" />
+              <EmptyHeader>
+                <EmptyTitle>Баталгаажуулах тоглолт алга</EmptyTitle>
+                <EmptyDescription>
+                  Бүх тоглолт баталгаажсан байна.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>

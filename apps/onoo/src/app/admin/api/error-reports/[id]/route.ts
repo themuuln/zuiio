@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,8 +26,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     .from("public_error_reports")
     .update({ status: body.status })
     .eq("id", id);
-
   if (error) {
+    Sentry.captureException(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

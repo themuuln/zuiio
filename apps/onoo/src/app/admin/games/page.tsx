@@ -15,6 +15,7 @@ import {
   teamSeasonsApi,
   venuesApi,
 } from "@/app/admin/_lib/api";
+import { AdminTableSkeleton } from "@/components/admin/admin-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Form,
   FormControl,
@@ -339,9 +347,17 @@ export default function AdminGamesPage() {
         </CardHeader>
         <CardContent>
           {gamesPending ? (
-            <p className="text-muted-foreground">Ачаалж байна...</p>
+            <AdminTableSkeleton rows={5} />
           ) : games.length === 0 ? (
-            <p className="text-muted-foreground">Тоглолт олдсонгүй</p>
+            <Empty>
+              <EmptyMedia variant="icon" />
+              <EmptyHeader>
+                <EmptyTitle>Тоглолт олдсонгүй</EmptyTitle>
+                <EmptyDescription>
+                  Одоогоор тоглолт бүртгэгдээгүй байна.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>

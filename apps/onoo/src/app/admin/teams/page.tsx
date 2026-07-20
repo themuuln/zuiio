@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { leaguesApi, type TeamRow, teamsApi } from "@/app/admin/_lib/api";
+import { AdminTableSkeleton } from "@/components/admin/admin-skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,6 +18,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Form,
   FormControl,
@@ -269,13 +277,17 @@ export default function TeamsPage() {
         </CardHeader>
         <CardContent>
           {teamsPending ? (
-            <div className="py-8 text-center text-muted-foreground">
-              Ачаалж байна...
-            </div>
+            <AdminTableSkeleton rows={5} />
           ) : teams.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground">
-              Баг олдсонгүй
-            </div>
+            <Empty>
+              <EmptyMedia variant="icon" />
+              <EmptyHeader>
+                <EmptyTitle>Баг олдсонгүй</EmptyTitle>
+                <EmptyDescription>
+                  Баг нэмэх товчийг дарж шинэ баг үүсгэнэ үү.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>

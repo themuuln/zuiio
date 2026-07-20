@@ -6,8 +6,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AdminTableSkeleton } from "@/components/admin/admin-skeleton";
 import { Button } from "@/components/ui/button";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -16,6 +16,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Form,
   FormControl,
@@ -164,7 +171,7 @@ export default function SeasonsPage() {
           {!selectedLeagueId ? (
             <p className="text-muted-foreground text-sm">Лиг сонгоно уу</p>
           ) : isPending ? (
-            <p className="text-muted-foreground text-sm">Ачаалж байна…</p>
+            <AdminTableSkeleton rows={5} />
           ) : (
             <Table>
               <TableHeader>
@@ -212,11 +219,16 @@ export default function SeasonsPage() {
                 ))}
                 {seasons.length === 0 && (
                   <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="text-center text-muted-foreground"
-                    >
-                      Улирал байхгүй байна
+                    <TableCell colSpan={4}>
+                      <Empty>
+                        <EmptyMedia variant="icon" />
+                        <EmptyHeader>
+                          <EmptyTitle>Улирал байхгүй байна</EmptyTitle>
+                          <EmptyDescription>
+                            Улирал нэмэх товчийг дарж шинэ улирал үүсгэнэ үү.
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
                     </TableCell>
                   </TableRow>
                 )}

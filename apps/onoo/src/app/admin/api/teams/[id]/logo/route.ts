@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -50,6 +51,7 @@ export async function POST(
     });
 
   if (uploadError) {
+    Sentry.captureException(uploadError);
     return NextResponse.json({ error: uploadError.message }, { status: 500 });
   }
 
@@ -64,6 +66,7 @@ export async function POST(
     .eq("id", id);
 
   if (updateError) {
+    Sentry.captureException(updateError);
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
