@@ -82,7 +82,7 @@ export default async function OpsConsolePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{pendingSubmissions ?? 0}</p>
+            <p className="text-3xl font-bold">{pendingSubmissions ?? "—"}</p>
           </CardContent>
         </Card>
         <Card>
@@ -92,7 +92,7 @@ export default async function OpsConsolePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{pendingRevisions ?? 0}</p>
+            <p className="text-3xl font-bold">{pendingRevisions ?? "—"}</p>
           </CardContent>
         </Card>
       </div>
@@ -108,9 +108,7 @@ export default async function OpsConsolePage() {
         </CardHeader>
         <CardContent>
           {reports.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Нээлттэй алдааны мэдээлэл байхгүй
-            </p>
+            <p className="text-sm text-muted-foreground">Хоосон</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -161,9 +159,7 @@ export default async function OpsConsolePage() {
         </CardHeader>
         <CardContent>
           {sessions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Идэвхитэй бүртгэгч байхгүй байна
-            </p>
+            <p className="text-sm text-muted-foreground">Хоосон</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -213,15 +209,19 @@ export default async function OpsConsolePage() {
       </Card>
 
       {/* Staleness Alarm */}
-      {stale.length > 0 && (
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Хугацаа хэтэрсэн
+      <Card className={stale.length > 0 ? "border-destructive" : ""}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            Хугацаа хэтэрсэн
+            {stale.length > 0 && (
               <Badge variant="destructive">{stale.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stale.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Хоосон</p>
+          ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -251,9 +251,9 @@ export default async function OpsConsolePage() {
                 </TableBody>
               </Table>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Audit Log */}
       <Card>
@@ -262,7 +262,7 @@ export default async function OpsConsolePage() {
         </CardHeader>
         <CardContent>
           {auditLog.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Бүртгэл байхгүй</p>
+            <p className="text-sm text-muted-foreground">Хоосон</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>

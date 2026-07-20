@@ -3,6 +3,9 @@
 import {
   Calendar,
   LayoutDashboard,
+  MapPin,
+  Medal,
+  Settings2,
   Timer,
   Trophy,
   UserCircle,
@@ -15,9 +18,12 @@ const links = [
   { href: "/admin", label: "Хянах цэс", icon: LayoutDashboard },
   { href: "/admin/leagues", label: "Лиг", icon: Trophy },
   { href: "/admin/seasons", label: "Улирал", icon: Calendar },
+  { href: "/admin/competitions", label: "Тэмцээн", icon: Medal },
   { href: "/admin/teams", label: "Баг", icon: Users },
   { href: "/admin/players", label: "Тоглогч", icon: UserCircle },
   { href: "/admin/games", label: "Тоглолт", icon: Timer },
+  { href: "/admin/venues", label: "Талбай", icon: MapPin },
+  { href: "/admin/ops", label: "Үйлдлүүд", icon: Settings2 },
 ] as const;
 
 export function SidebarNav() {

@@ -1,8 +1,18 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { gamesApi, playersApi } from "@/app/admin/_lib/api";
+import { AdminCardSkeleton } from "@/components/admin/admin-skeleton";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 interface PlayerLine {
   player_id: string;
@@ -25,22 +35,6 @@ interface PlayerLine {
   seconds_played: number | null;
 }
 
-interface BoxEntryFormProps {
-  gameId: string;
-  homeTeamSeasonId: string;
-  awayTeamSeasonId: string;
-  homePlayers: {
-    id: string;
-    canonical_name: string;
-    jersey_number: number | null;
-  }[];
-  awayPlayers: {
-    id: string;
-    canonical_name: string;
-    jersey_number: number | null;
-  }[];
-}
-
 const STAT_FIELDS = [
   "pts",
   "fgm",
@@ -61,7 +55,7 @@ const STAT_FIELDS = [
 function emptyLine(player: {
   id: string;
   canonical_name: string;
-  jersey_number: number | null;
+  jersey_number?: number | null;
 }): PlayerLine {
   return {
     player_id: player.id,
@@ -110,21 +104,58 @@ function StatInput({
   );
 }
 
-export default function BoxEntryForm({
-  gameId: _gameId,
-  homeTeamSeasonId: _homeTeamSeasonId,
-  awayTeamSeasonId: _awayTeamSeasonId,
-  homePlayers,
-  awayPlayers,
-}: BoxEntryFormProps) {
+export default function BoxEntryPage() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [homeLines, setHomeLines] = useState<PlayerLine[]>(
-    homePlayers.map(emptyLine),
-  );
-  const [awayLines, setAwayLines] = useState<PlayerLine[]>(
-    awayPlayers.map(emptyLine),
-  );
+
+  const {
+    data: game,
+    isPending,
+    isError,
+  } = useQuery({
+    queryKey: ["admin", "game", params.id],
+    queryFn: () => gamesApi.get(params.id),
+  });
+
+  const { data: allPlayers = [] } = useQuery({
+    queryKey: ["admin", "players"],
+    queryFn: () => playersApi.list(),
+  });
+
+  const homeName = game?.home_team_season?.teams?.name ?? "Home";
+  const awayName = game?.away_team_season?.teams?.name ?? "Away";
+
+  const homePlayers = allPlayers
+    .filter(
+      (p) =>
+        !p.position || p.position.startsWith("F") || p.position.startsWith("C"),
+    )
+    .slice(0, 12);
+
+  const awayPlayers = allPlayers
+    .filter((p) => p.position?.startsWith("G"))
+    .concat(
+      allPlayers.filter(
+        (p) =>
+          !p.position ||
+          (!p.position.startsWith("F") &&
+            !p.position.startsWith("G") &&
+            !p.position.startsWith("C")),
+      ),
+    )
+    .slice(0, 12);
+
+  const [homeLines, setHomeLines] = useState<PlayerLine[]>([]);
+  const [awayLines, setAwayLines] = useState<PlayerLine[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // Initialize lines once players load
+  if (homeLines.length === 0 && homePlayers.length > 0) {
+    setHomeLines(homePlayers.map(emptyLine));
+  }
+  if (awayLines.length === 0 && awayPlayers.length > 0) {
+    setAwayLines(awayPlayers.map(emptyLine));
+  }
 
   function updateLine(
     team: "home" | "away",
@@ -135,7 +166,6 @@ export default function BoxEntryForm({
     const lines = team === "home" ? [...homeLines] : [...awayLines];
     const line = lines[idx];
     if (!line) return;
-    // Safe: field is keyof PlayerLine, value matches the expected type
     const updated = { ...line, [field]: value } as PlayerLine;
     lines[idx] = updated;
     if (team === "home") setHomeLines(lines);
@@ -237,10 +267,34 @@ export default function BoxEntryForm({
     );
   }
 
+  if (isPending) {
+    return (
+      <div className="space-y-6">
+        <AdminCardSkeleton />
+      </div>
+    );
+  }
+
+  if (isError || !game) {
+    return (
+      <div className="space-y-6">
+        <Empty>
+          <EmptyMedia variant="icon" />
+          <EmptyHeader>
+            <EmptyTitle>Тоглолт олдсонгүй</EmptyTitle>
+            <EmptyDescription>
+              Энэ тоглолтын мэдээлэл байхгүй байна.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {renderTeamTable("Home", homeLines, "home")}
-      {renderTeamTable("Away", awayLines, "away")}
+      {renderTeamTable(homeName, homeLines, "home")}
+      {renderTeamTable(awayName, awayLines, "away")}
       <button
         type="button"
         onClick={handleSubmit}

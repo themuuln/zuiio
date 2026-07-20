@@ -78,6 +78,10 @@ export default function GameDetailPage() {
 
   async function updateStatus(newStatus: string) {
     if (!game) return;
+    const confirmed = window.confirm(
+      `"${homeName}" vs "${awayName}" тоглолтын төлөв "${statusLabel(newStatus)}" болгох уу?`,
+    );
+    if (!confirmed) return;
     try {
       await gamesApi.updateStatus(game.id, newStatus);
       toast.success("Төлөв шинэчлэгдлээ");
@@ -239,10 +243,18 @@ export default function GameDetailPage() {
             <CardHeader>
               <CardTitle>Хариуцагчид</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <p className="text-muted-foreground">
                 Хариуцагчид удахгүй нэмэгдэнэ
               </p>
+              <Button
+                onClick={() =>
+                  window.open(`/admin/games/${game.id}/box-entry`, "_blank")
+                }
+                variant="outline"
+              >
+                Box Score оруулах
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

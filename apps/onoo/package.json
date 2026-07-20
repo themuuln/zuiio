@@ -11,6 +11,10 @@
     "validate:types": "NODE_OPTIONS='--max-old-space-size=8192' tsc --noEmit --incremental",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
+    "test:db:setup": "npx tsx src/test/apply-migrations.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:integration:watch": "vitest --config vitest.integration.config.ts",
+    "test:all": "vitest run && vitest run --config vitest.integration.config.ts",
     "clean:dev": "rm -rf .next/cache/turbopack .next/dev/cache/turbopack"
   },
   "dependencies": {

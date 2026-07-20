@@ -19,12 +19,44 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
+/**
+ * Standard CRUD API client factory for admin entities.
+ * Returns `{ list, get, create, update, remove }`.
+ *
+ * @example
+ * const teamsApi = createEntityApi<TeamRow>("/admin/api/teams");
+ * teamsApi.list({ league_id: "..." });  // GET /admin/api/teams?league_id=...
+ * teamsApi.create({ name: "..." });     // POST /admin/api/teams
+ */
+function createEntityApi<T extends { id: string }>(basePath: string) {
+  return {
+    list: (params?: Record<string, string>) => {
+      const qs = params ? `?${new URLSearchParams(params).toString()}` : "";
+      return request<T[]>(`${basePath}${qs}`);
+    },
+    get: (id: string) => request<T>(`${basePath}/${id}`),
+    create: (data: Partial<T>) =>
+      request<T>(basePath, { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<T>) =>
+      request<T>(`${basePath}/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    remove: (id: string) =>
+      request<void>(`${basePath}/${id}`, { method: "DELETE" }),
+  };
+}
+
 // ── Sports ──
+export interface SportRow {
+  id: string;
+  key: string;
+  name_mn: string;
+  name_en: string;
+}
+
 export const sportsApi = {
-  list: () =>
-    request<
-      Array<{ id: string; key: string; name_mn: string; name_en: string }>
-    >(`${BASE}/sports`),
+  list: () => request<SportRow[]>(`${BASE}/sports`),
 };
 
 // ── Leagues ──
@@ -39,27 +71,7 @@ export interface LeagueRow {
   sports?: { name_en: string; name_mn: string } | null;
 }
 
-export const leaguesApi = {
-  list: () => request<LeagueRow[]>(`${BASE}/leagues`),
-  get: (id: string) => request<LeagueRow>(`${BASE}/leagues/${id}`),
-  create: (data: {
-    name: string;
-    slug: string;
-    sport_id: string;
-    organization_id: string;
-  }) =>
-    request<LeagueRow>(`${BASE}/leagues`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  update: (id: string, data: Partial<LeagueRow>) =>
-    request<LeagueRow>(`${BASE}/leagues/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  remove: (id: string) =>
-    request<void>(`${BASE}/leagues/${id}`, { method: "DELETE" }),
-};
+export const leaguesApi = createEntityApi<LeagueRow>(`${BASE}/leagues`);
 
 // ── Seasons ──
 export interface SeasonRow {
@@ -72,30 +84,7 @@ export interface SeasonRow {
   leagues?: { name: string } | null;
 }
 
-export const seasonsApi = {
-  list: (leagueId?: string) => {
-    const qs = leagueId ? `?league_id=${leagueId}` : "";
-    return request<SeasonRow[]>(`${BASE}/seasons${qs}`);
-  },
-  get: (id: string) => request<SeasonRow>(`${BASE}/seasons/${id}`),
-  create: (data: {
-    league_id: string;
-    name: string;
-    starts_on?: string;
-    ends_on?: string;
-  }) =>
-    request<SeasonRow>(`${BASE}/seasons`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  update: (id: string, data: Partial<SeasonRow>) =>
-    request<SeasonRow>(`${BASE}/seasons/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  remove: (id: string) =>
-    request<void>(`${BASE}/seasons/${id}`, { method: "DELETE" }),
-};
+export const seasonsApi = createEntityApi<SeasonRow>(`${BASE}/seasons`);
 
 // ── Teams ──
 export interface TeamRow {
@@ -110,31 +99,7 @@ export interface TeamRow {
   leagues?: { name: string } | null;
 }
 
-export const teamsApi = {
-  list: (leagueId?: string) => {
-    const qs = leagueId ? `?league_id=${leagueId}` : "";
-    return request<TeamRow[]>(`${BASE}/teams${qs}`);
-  },
-  get: (id: string) => request<TeamRow>(`${BASE}/teams/${id}`),
-  create: (data: {
-    league_id: string;
-    name: string;
-    short_code: string;
-    slug: string;
-    primary_color?: string;
-  }) =>
-    request<TeamRow>(`${BASE}/teams`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  update: (id: string, data: Partial<TeamRow>) =>
-    request<TeamRow>(`${BASE}/teams/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  remove: (id: string) =>
-    request<void>(`${BASE}/teams/${id}`, { method: "DELETE" }),
-};
+export const teamsApi = createEntityApi<TeamRow>(`${BASE}/teams`);
 
 // ── Players ──
 export interface PlayerRow {
@@ -153,33 +118,7 @@ export interface PlayerRow {
   created_at: string;
 }
 
-export const playersApi = {
-  list: (search?: string) => {
-    const qs = search ? `?search=${encodeURIComponent(search)}` : "";
-    return request<PlayerRow[]>(`${BASE}/players${qs}`);
-  },
-  get: (id: string) => request<PlayerRow>(`${BASE}/players/${id}`),
-  create: (data: {
-    canonical_name: string;
-    name_latin?: string;
-    position?: string;
-    nationality?: string;
-    visibility?: string;
-    consent_recorded_at?: string;
-    consent_note?: string;
-  }) =>
-    request<PlayerRow>(`${BASE}/players`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  update: (id: string, data: Partial<PlayerRow>) =>
-    request<PlayerRow>(`${BASE}/players/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  remove: (id: string) =>
-    request<void>(`${BASE}/players/${id}`, { method: "DELETE" }),
-};
+export const playersApi = createEntityApi<PlayerRow>(`${BASE}/players`);
 
 // ── Games ──
 export interface GameRow {
@@ -209,12 +148,15 @@ export interface CompetitionRow {
   name: string;
   type: string;
   season_id: string;
+  created_at: string;
 }
 
 export interface VenueRow {
   id: string;
   name: string;
   city: string | null;
+  capacity: number | null;
+  created_at: string;
 }
 
 export interface TeamSeasonRow {
@@ -225,19 +167,8 @@ export interface TeamSeasonRow {
 }
 
 export const gamesApi = {
-  list: () => request<GameRow[]>(`${BASE}/games`),
-  get: (id: string) => request<GameRow>(`${BASE}/games/${id}`),
-  create: (data: {
-    competition_id: string;
-    home_team_season_id: string;
-    away_team_season_id: string;
-    venue_id?: string;
-    scheduled_at: string;
-  }) =>
-    request<GameRow>(`${BASE}/games`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+  ...createEntityApi<GameRow>(`${BASE}/games`),
+  /** Only status is updatable on games via PUT. */
   updateStatus: (id: string, status: string) =>
     request<GameRow>(`${BASE}/games/${id}`, {
       method: "PUT",
@@ -245,20 +176,15 @@ export const gamesApi = {
     }),
 };
 
-export const competitionsApi = {
-  list: () => request<CompetitionRow[]>(`${BASE}/competitions`),
-};
+export const competitionsApi = createEntityApi<CompetitionRow>(
+  `${BASE}/competitions`,
+);
 
-export const venuesApi = {
-  list: () => request<VenueRow[]>(`${BASE}/venues`),
-};
+export const venuesApi = createEntityApi<VenueRow>(`${BASE}/venues`);
 
-export const teamSeasonsApi = {
-  list: (competitionId?: string) => {
-    const qs = competitionId ? `?competition_id=${competitionId}` : "";
-    return request<TeamSeasonRow[]>(`${BASE}/team-seasons${qs}`);
-  },
-};
+export const teamSeasonsApi = createEntityApi<TeamSeasonRow>(
+  `${BASE}/team-seasons`,
+);
 
 // ── Submissions (source_submissions) ──
 export interface SubmissionRow {

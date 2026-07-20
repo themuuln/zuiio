@@ -6,10 +6,8 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const devEmail =
-    process.env.NEXT_PUBLIC_ADMIN_DEV_EMAIL ?? "admin@onoo.mn";
-  const devPassword =
-    process.env.NEXT_PUBLIC_ADMIN_DEV_PASSWORD ?? "onoo2026";
+  const devEmail = process.env.NEXT_PUBLIC_ADMIN_DEV_EMAIL ?? "admin@onoo.mn";
+  const devPassword = process.env.NEXT_PUBLIC_ADMIN_DEV_PASSWORD ?? "onoo2026";
 
   const [email, setEmail] = useState(
     process.env.NODE_ENV === "development" ? devEmail : "",

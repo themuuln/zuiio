@@ -15,6 +15,8 @@ export default defineConfig({
       "e2e",
       "packages",
       "src/test/integration",
+      "**/*.integration.test.ts",
+      "**/*.int.test.ts",
     ],
     coverage: {
       provider: "v8",

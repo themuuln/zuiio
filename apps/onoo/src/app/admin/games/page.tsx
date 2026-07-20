@@ -134,7 +134,12 @@ export default function AdminGamesPage() {
 
   const { data: teamSeasons = [] } = useQuery({
     queryKey: ["admin", "team-seasons", selectedCompetitionId],
-    queryFn: () => teamSeasonsApi.list(selectedCompetitionId),
+    queryFn: () =>
+      teamSeasonsApi.list(
+        selectedCompetitionId
+          ? { competition_id: selectedCompetitionId }
+          : undefined,
+      ),
     enabled: !!selectedCompetitionId,
   });
 

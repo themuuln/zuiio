@@ -29,6 +29,9 @@ vi.mock("lucide-react", () => {
   return {
     Calendar: icon,
     LayoutDashboard: icon,
+    MapPin: icon,
+    Medal: icon,
+    Settings2: icon,
     Timer: icon,
     Trophy: icon,
     UserCircle: icon,
@@ -45,9 +48,12 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Хянах цэс" },
   { href: "/admin/leagues", label: "Лиг" },
   { href: "/admin/seasons", label: "Улирал" },
+  { href: "/admin/competitions", label: "Тэмцээн" },
   { href: "/admin/teams", label: "Баг" },
   { href: "/admin/players", label: "Тоглогч" },
   { href: "/admin/games", label: "Тоглолт" },
+  { href: "/admin/venues", label: "Талбай" },
+  { href: "/admin/ops", label: "Үйлдлүүд" },
 ];
 
 function getNavLink(label: string): HTMLAnchorElement {

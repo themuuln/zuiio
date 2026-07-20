@@ -1,44 +1,30 @@
-import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createRouteHandlers, withAuth } from "@/lib/supabase/admin-route";
 
+// ── Custom GET with search ────────────────────────────────────
+// Players use ilike search on canonical_name and name_latin,
+// which doesn't fit the simple eq filter pattern.
 export async function GET(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const search = request.nextUrl.searchParams.get("search");
-
-  let query = supabase.from("players").select("*");
-
-  if (search) {
-    const pattern = `%${search}%`;
-    query = query.or(
-      `canonical_name.ilike.${pattern},name_latin.ilike.${pattern}`,
-    );
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    Sentry.captureException(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  return NextResponse.json(data);
+  return withAuth<unknown>(async (supabase) => {
+    const search = request.nextUrl.searchParams.get("search");
+    let query = supabase.from("players").select("*");
+    if (search) {
+      const pattern = `%${search}%`;
+      query = query.or(
+        `canonical_name.ilike.${pattern},name_latin.ilike.${pattern}`,
+      );
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    return NextResponse.json(data);
+  });
 }
 
-export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+// ── Standard CRUD for create/update/delete ────────────────────
 
-  const body = await request.json();
+const players = createRouteHandlers("players", { select: "*" });
+
+export const POST = players.create((body) => {
   const {
     canonical_name,
     name_latin,
@@ -48,31 +34,16 @@ export async function POST(request: NextRequest) {
     consent_recorded_at,
     consent_note,
   } = body;
-
   if (!canonical_name) {
-    return NextResponse.json(
-      { error: "canonical_name is required" },
-      { status: 400 },
-    );
+    return { insert: body, validate: "canonical_name is required" };
   }
-
-  const { data, error } = await supabase
-    .from("players")
-    .insert({
-      canonical_name,
-      name_latin: name_latin ?? null,
-      position: position ?? null,
-      nationality: nationality ?? null,
-      visibility: visibility ?? "public",
-      consent_recorded_at: consent_recorded_at || null,
-      consent_note: consent_note ?? null,
-    })
-    .select("*")
-    .single();
-
-  if (error) {
-    Sentry.captureException(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  return NextResponse.json(data, { status: 201 });
-}
+  return {
+    canonical_name,
+    name_latin: name_latin ?? null,
+    position: position ?? null,
+    nationality: nationality ?? null,
+    visibility: visibility ?? "public",
+    consent_recorded_at: consent_recorded_at || null,
+    consent_note: consent_note ?? null,
+  };
+});
