@@ -96,7 +96,7 @@ export default function RootLayout({
           />
         )}
       </head>
-      <body className="min-h-full bg-background text-foreground flex flex-col">
+      <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <ErrorHandler />
           <QueryProvider>
