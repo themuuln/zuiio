@@ -4,9 +4,6 @@
 [submodule "apps/card"]
 	path = apps/card
 	url = https://github.com/themuuln/card.git
-[submodule "apps/tumurch"]
-	path = apps/tumurch
-	url = https://github.com/themuuln/tumurch.git
 [submodule "apps/zoa"]
 	path = apps/zoa
 	url = https://github.com/themuuln/zoa.git
