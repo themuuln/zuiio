@@ -24,6 +24,9 @@ export const getDashboardContext = cache(async () => {
     redirect("/login");
   }
 
+  // User email from JWT claims (set by Supabase Auth)
+  const userEmail = (claims?.email as string) ?? null;
+
   // Fetch profile with org details in one join
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -82,5 +85,6 @@ export const getDashboardContext = cache(async () => {
     branchId,
     isBranchScoped: branchId !== null,
     userId,
+    userEmail,
   };
 });

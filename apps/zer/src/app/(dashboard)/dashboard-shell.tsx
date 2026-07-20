@@ -55,6 +55,7 @@ type DashboardShellProps = {
   organizationName: string | null;
   logoUrl: string | null;
   userFullName: string | null;
+  userEmail: string | null;
   enabledFeatures: string[];
   hasMultiBranch: boolean;
   orgSettings: OrgSettings;
@@ -66,6 +67,7 @@ function SidebarNav({
   logoUrl,
   organizationName,
   userFullName,
+  userEmail,
   initials,
   isBranchScoped,
   hasMultiBranch,
@@ -79,6 +81,7 @@ function SidebarNav({
   logoUrl: string | null;
   organizationName: string | null;
   userFullName: string | null;
+  userEmail: string | null;
   initials: string;
   isBranchScoped: boolean;
   hasMultiBranch: boolean;
@@ -130,7 +133,9 @@ function SidebarNav({
         ) : (
           <Select
             value={selectedBranchId ?? ""}
-            onValueChange={handleBranchChange}
+            onValueChange={(value) => {
+              if (value !== null) handleBranchChange(value);
+            }}
           >
             <SelectTrigger
               className={cn(
@@ -175,9 +180,7 @@ function SidebarNav({
               align="start"
               side="bottom"
               sideOffset={4}
-              position="popper"
               className="max-h-[50vh] min-w-[14rem]"
-              avoidCollisions={true}
             >
               <SelectItem value="">
                 <Storefront className="size-4" />
@@ -227,14 +230,12 @@ function SidebarNav({
                     <SidebarMenuItem key={item.href}>
                       <ViewTransition>
                         <SidebarMenuButton
-                          asChild
                           isActive={isActive}
                           tooltip={item.title}
+                          render={<Link href={item.href} />}
                         >
-                          <Link href={item.href}>
-                            <Icon />
-                            <span>{item.title}</span>
-                          </Link>
+                          <Icon />
+                          <span>{item.title}</span>
                         </SidebarMenuButton>
                       </ViewTransition>
                     </SidebarMenuItem>
@@ -250,17 +251,16 @@ function SidebarNav({
         <SidebarMenu>
           <SidebarMenuItem>
             <ViewTransition>
-              <SidebarMenuButton asChild>
-                <Link href="/settings">
-                  <Avatar className="size-6">
-                    <AvatarFallback className="text-xs">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="truncate">
-                    {userFullName || "Хэрэглэгч"}
-                  </span>
-                </Link>
+              <SidebarMenuButton render={<Link href="/settings" />}>
+                <Avatar className="size-6">
+                  <AvatarFallback className="text-xs">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate">
+                  {userFullName ||
+                    (userEmail ? userEmail.split("@")[0] : "Хэрэглэгч")}
+                </span>
               </SidebarMenuButton>
             </ViewTransition>
           </SidebarMenuItem>
@@ -288,6 +288,7 @@ export function DashboardShell({
   organizationName,
   logoUrl,
   userFullName,
+  userEmail,
   enabledFeatures,
   hasMultiBranch,
   orgSettings,
@@ -355,14 +356,21 @@ export function DashboardShell({
     prevPathRef.current = pathname;
   }, [pathname]);
 
-  const initials = userFullName
-    ? userFullName
-        .split(" ")
-        .map((name) => name[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "??";
+  // Display name with email prefix fallback
+  const displayName =
+    userFullName ?? (userEmail ? userEmail.split("@")[0] : null) ?? "Хэрэглэгч";
+
+  const initials =
+    displayName && displayName !== "Хэрэглэгч"
+      ? displayName
+          .split(" ")
+          .map((name) => name[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2)
+      : userEmail
+        ? userEmail[0].toUpperCase()
+        : "?";
 
   const isShop = pathname.startsWith("/shop");
   return (
@@ -375,6 +383,7 @@ export function DashboardShell({
               logoUrl={logoUrl}
               organizationName={organizationName}
               userFullName={userFullName}
+              userEmail={userEmail}
               initials={initials}
               isBranchScoped={isBranchScoped}
               hasMultiBranch={hasMultiBranch}
@@ -412,6 +421,7 @@ export function DashboardShell({
                   logoUrl={logoUrl}
                   organizationName={organizationName}
                   userFullName={userFullName}
+                  userEmail={userEmail}
                   initials={initials}
                   isBranchScoped={isBranchScoped}
                   hasMultiBranch={hasMultiBranch}

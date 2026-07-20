@@ -15,7 +15,7 @@ export async function DashboardFetcher({
 }: {
   children: React.ReactNode;
 }) {
-  const { supabase, profile, org, organizationId } =
+  const { supabase, profile, org, organizationId, userEmail } =
     await getDashboardContext();
 
   // Branches + POS checkout settings. POS settings live in newer columns and
@@ -105,7 +105,7 @@ export async function DashboardFetcher({
           organizationName={org.name ?? null}
           logoUrl={brandConfig.logo_url ?? null}
           userFullName={profile.full_name}
-          enabledFeatures={allFeatures}
+          userEmail={userEmail}
           hasMultiBranch={hasMultiBranch}
           orgSettings={{
             organizationId: organizationId ?? "",
