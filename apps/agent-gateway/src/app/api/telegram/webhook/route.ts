@@ -4,8 +4,8 @@ import { onUserLinked, onWelcome } from "@/bot-ux";
 import { TelegramChannel } from "@/channels/telegram";
 import type { TelegramUpdate } from "@/channels/types";
 import { startTypingLoop } from "@/channels/typing-loop";
+import { handleFlowCallback, handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
-import { handleFlowMessage, handleFlowCallback } from "@/flow-executor";
 import { resolveOrgFromChatUser } from "@/gateway/mode-a";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { debug } from "@/lib/debug";
@@ -21,7 +21,6 @@ import { GptMiniProvider } from "@/providers/gpt-mini";
 import { OpenCodeGoProvider } from "@/providers/opencode-go";
 import { AiGateway } from "@/providers/types";
 import { confirmAction, rejectAction } from "@/runtime/confirmation";
-import { runAgentWithFallback } from "@/state/async-job";
 import { transcribeVoice } from "@/stt/groq";
 
 export const dynamic = "force-dynamic";
@@ -107,9 +106,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 		}
 
 		const msg = update.message;
-if (!msg?.text && !msg?.voice && !msg?.photo) {
-	return NextResponse.json({ ok: true });
-}
+		if (!msg?.text && !msg?.voice && !msg?.photo) {
+			return NextResponse.json({ ok: true });
+		}
 
 		const chatId = msg.chat.id;
 		const userId = msg.from?.id ?? 0;
@@ -191,7 +190,6 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 			return NextResponse.json({ ok: true });
 		}
 
-
 		if (text.startsWith("/switch")) {
 			await handleSwitchCommand(chatId, userId);
 			return NextResponse.json({ ok: true });
@@ -248,42 +246,72 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 
 		if (text.startsWith("/daily")) {
 			after(async () => {
-				await handleUserMessage(chatId, userId, "Өнөөдрийн хураангуй үзүүлээрэй", "private");
+				await handleUserMessage(
+					chatId,
+					userId,
+					"Өнөөдрийн хураангуй үзүүлээрэй",
+					"private",
+				);
 			});
 			return NextResponse.json({ ok: true });
 		}
 
 		if (text.startsWith("/active")) {
 			after(async () => {
-				await handleUserMessage(chatId, userId, "Идэвхтэй ажлын захиалгуудыг жагсааж өгөөч", "private");
+				await handleUserMessage(
+					chatId,
+					userId,
+					"Идэвхтэй ажлын захиалгуудыг жагсааж өгөөч",
+					"private",
+				);
 			});
 			return NextResponse.json({ ok: true });
 		}
 
 		if (text.startsWith("/mechanics")) {
 			after(async () => {
-				await handleUserMessage(chatId, userId, "Механикчдын жагсаалт үзүүлээрэй", "private");
+				await handleUserMessage(
+					chatId,
+					userId,
+					"Механикчдын жагсаалт үзүүлээрэй",
+					"private",
+				);
 			});
 			return NextResponse.json({ ok: true });
 		}
 
 		if (text.startsWith("/schedule")) {
 			after(async () => {
-				await handleUserMessage(chatId, userId, "Өнөөдрийн цагийн хуваарийг үзүүлээрэй", "private");
+				await handleUserMessage(
+					chatId,
+					userId,
+					"Өнөөдрийн цагийн хуваарийг үзүүлээрэй",
+					"private",
+				);
 			});
 			return NextResponse.json({ ok: true });
 		}
 
 		if (text.startsWith("/invoices")) {
 			after(async () => {
-				await handleUserMessage(chatId, userId, "Нэхэмжлэлийн хураангуй үзүүлээрэй", "private");
+				await handleUserMessage(
+					chatId,
+					userId,
+					"Нэхэмжлэлийн хураангуй үзүүлээрэй",
+					"private",
+				);
 			});
 			return NextResponse.json({ ok: true });
 		}
 
 		if (text.startsWith("/expenses")) {
 			after(async () => {
-				await handleUserMessage(chatId, userId, "Зарлагын хураангуй үзүүлээрэй", "private");
+				await handleUserMessage(
+					chatId,
+					userId,
+					"Зарлагын хураангуй үзүүлээрэй",
+					"private",
+				);
 			});
 			return NextResponse.json({ ok: true });
 		}
@@ -303,10 +331,10 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 			}
 		}
 
-	after(async () => {
-		await handleUserMessage(chatId, userId, text, chatType, msg.message_id);
-	});
-	return NextResponse.json({ ok: true });
+		after(async () => {
+			await handleUserMessage(chatId, userId, text, chatType, msg.message_id);
+		});
+		return NextResponse.json({ ok: true });
 	} catch (err) {
 		console.error("[webhook] ERROR:", err);
 		capture(err, { context: "agent-gateway: telegram webhook" });
@@ -707,14 +735,14 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 		}
 	}
 
-async function handleUserMessage(
-	chatId: number,
-	userId: number,
-	text: string,
-	chatType: string,
-	messageId?: number,
-	images?: string[],
-): Promise<void> {
+	async function handleUserMessage(
+		chatId: number,
+		userId: number,
+		text: string,
+		chatType: string,
+		messageId?: number,
+		images?: string[],
+	): Promise<void> {
 		const tg = getTelegram();
 		const sb = getSupabase();
 
@@ -776,49 +804,68 @@ async function handleUserMessage(
 		// Start typing indicator loop
 		const stopTyping = startTypingLoop(tg, chatId);
 		let typingStopped = false;
-	try {
-		// Run agent synchronously — await the result then send to Telegram.
-		// Vercel serverless kills background tasks after response, so we MUST
-		// await the full flow (agent + telegram send) before returning.
-		// Try flow routing first — if a flow is active or triggered, handle it
-		const flowResult = await handleFlowMessage(
-			resolved.context,
-			text,
-			sb,
-			tg,
-		);
+		try {
+			// Run agent synchronously — await the result then send to Telegram.
+			// Vercel serverless kills background tasks after response, so we MUST
+			// await the full flow (agent + telegram send) before returning.
+			// Try flow routing first — if a flow is active or triggered, handle it
+			const flowResult = await handleFlowMessage(
+				resolved.context,
+				text,
+				sb,
+				tg,
+			);
 
-		if (flowResult) {
-			// Flow handled the message — stop typing and return
-			stopTyping();
-			if (messageId) {
-				tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
+			if (flowResult) {
+				// Flow handled the message — stop typing and return
+				stopTyping();
+				if (messageId) {
+					tg.setReaction(
+						chatId,
+						messageId,
+						TelegramChannel.REACTIONS.done,
+					).catch(() => {});
+				}
+				return;
 			}
-			return;
-		}
 
-		// No flow matched — fall through to AI agent handler
-		const response = await handleAgentMessage(resolved.context, text, chatType, {
-			getSystemPrompt: systemPromptFor,
-			getTools: (ctx) => getProductTools(productType, ctx),
-			dataClient,
-			onToken,
-		}, images);
-		stopTyping();
-		debug("webhook", "agent responded", { chatId, len: response.length });
-		if (messageId) {
-			tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
+			// No flow matched — fall through to AI agent handler
+			const response = await handleAgentMessage(
+				resolved.context,
+				text,
+				chatType,
+				{
+					getSystemPrompt: systemPromptFor,
+					getTools: (ctx) => getProductTools(productType, ctx),
+					dataClient,
+					onToken,
+				},
+				images,
+			);
+			stopTyping();
+			debug("webhook", "agent responded", { chatId, len: response.length });
+			if (messageId) {
+				tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(
+					() => {},
+				);
+			}
+			await tg.sendMessage(chatId, response);
+		} catch (err) {
+			stopTyping();
+			console.error("[webhook] agent error:", err);
+			capture(err, { context: "agent-gateway: agent in handleUserMessage" });
+			if (messageId) {
+				tg.setReaction(
+					chatId,
+					messageId,
+					TelegramChannel.REACTIONS.error,
+				).catch(() => {});
+			}
+			await tg.sendMessage(
+				chatId,
+				"Уучлаарай, алдаа гарлаа. Дахин оролдоно уу.",
+			);
 		}
-		await tg.sendMessage(chatId, response);
-	} catch (err) {
-		stopTyping();
-		console.error("[webhook] agent error:", err);
-		capture(err, { context: "agent-gateway: agent in handleUserMessage" });
-		if (messageId) {
-			tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.error).catch(() => {});
-		}
-		await tg.sendMessage(chatId, "Уучлаарай, алдаа гарлаа. Дахин оролдоно уу.");
-	}
 	}
 
 	async function handleCallbackQuery(

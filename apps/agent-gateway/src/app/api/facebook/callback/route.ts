@@ -1,16 +1,15 @@
+import { capture } from "@zuiio/capture";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { capture } from "@zuiio/capture";
 
 import { FacebookChannel } from "@/channels/facebook";
-import { createServiceClient } from "@/lib/supabase";
 
 const FB_APP_ID = process.env.FB_APP_ID || "";
 const FB_APP_SECRET = process.env.FB_APP_SECRET || "";
 const FB_OAUTH_REDIRECT_URI = process.env.FB_OAUTH_REDIRECT_URI || "";
 const FB_GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
 
-const facebookChannel = new FacebookChannel();
+const _facebookChannel = new FacebookChannel();
 
 /**
  * GET: Facebook OAuth callback handler.
@@ -34,11 +33,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 	}
 
 	if (!code) {
-		return NextResponse.json({ error: "Missing authorization code" }, { status: 400 });
+		return NextResponse.json(
+			{ error: "Missing authorization code" },
+			{ status: 400 },
+		);
 	}
 
 	if (!FB_APP_ID || !FB_APP_SECRET || !FB_OAUTH_REDIRECT_URI) {
-		return NextResponse.json({ error: "Facebook app not configured" }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Facebook app not configured" },
+			{ status: 500 },
+		);
 	}
 
 	try {
@@ -65,7 +70,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
 		if (!tokenResponse.ok || !tokenData.access_token) {
 			return NextResponse.json(
-				{ error: tokenData.error?.message || "Failed to exchange access token" },
+				{
+					error: tokenData.error?.message || "Failed to exchange access token",
+				},
 				{ status: 400 },
 			);
 		}
@@ -77,7 +84,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 		longLivedTokenUrl.searchParams.set("grant_type", "fb_exchange_token");
 		longLivedTokenUrl.searchParams.set("client_id", FB_APP_ID);
 		longLivedTokenUrl.searchParams.set("client_secret", FB_APP_SECRET);
-		longLivedTokenUrl.searchParams.set("fb_exchange_token", tokenData.access_token);
+		longLivedTokenUrl.searchParams.set(
+			"fb_exchange_token",
+			tokenData.access_token,
+		);
 
 		const longLivedResponse = await fetch(longLivedTokenUrl);
 		const longLivedData = (await longLivedResponse.json()) as {

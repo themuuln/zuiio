@@ -1,11 +1,11 @@
+import type { ProductCatalog } from "@/read-engine/types";
 import type {
-	WriteCatalog,
-	WritePlan,
 	CompiledMutation,
+	WriteCatalog,
 	WriteField,
 	WriteOperationKind,
+	WritePlan,
 } from "./types";
-import type { ProductCatalog } from "@/read-engine/types";
 
 /**
  * Compiles a validated WritePlan into a Supabase-ready mutation.
@@ -31,7 +31,8 @@ export function compileMutation(
 	}
 
 	const tenantColumn = catalog.tenant.column;
-	const softDelete = plan.operation === "delete" ? (plan.softDelete ?? true) : false;
+	const softDelete =
+		plan.operation === "delete" ? (plan.softDelete ?? true) : false;
 
 	const payload: Record<string, unknown> = {};
 
@@ -49,7 +50,7 @@ export function compileMutation(
 
 	// Soft delete → set deleted_at instead of removing the row
 	if (softDelete) {
-		payload["deleted_at"] = new Date().toISOString();
+		payload.deleted_at = new Date().toISOString();
 	}
 
 	const operation: WriteOperationKind = softDelete ? "update" : plan.operation;

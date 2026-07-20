@@ -54,7 +54,7 @@ export async function handleAskQuestion(
  * Called when the flow is in waiting state and a message arrives.
  */
 export function processQuestionResponse(
-	runFields: Record<string, string>,
+	_runFields: Record<string, string>,
 	userMessage: string,
 	saveToField: string,
 ): { fieldUpdates: Record<string, string>; completed: boolean } {

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { createMockSupabase } from "../fixtures/supabase-mock";
-import { TEST_ORG_ID, TEST_USER_ID } from "../fixtures/supabase-mock";
+import {
+	createMockSupabase,
+	TEST_ORG_ID,
+	TEST_USER_ID,
+} from "../fixtures/supabase-mock";
 
 // Mock node:crypto before importing modules
 vi.mock("node:crypto", () => {
@@ -28,8 +31,8 @@ describe("createLinkCode", () => {
 		);
 
 		expect(result).not.toBeNull();
-		expect(result!.code).toHaveLength(8);
-		expect(result!.formatted).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+		expect(result?.code).toHaveLength(8);
+		expect(result?.formatted).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
 	});
 
 	it("returns null when insert fails", async () => {

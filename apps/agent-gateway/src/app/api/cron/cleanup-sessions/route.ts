@@ -1,8 +1,8 @@
 import "server-only";
 
+import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
-import { capture } from "@zuiio/capture";
 
 export const dynamic = "force-dynamic";
 

@@ -3,9 +3,13 @@ import { sanitizeErrorMessage } from "@/lib/sanitize";
 
 describe("sanitizeErrorMessage", () => {
 	it("returns generic message for non-Error values", () => {
-		expect(sanitizeErrorMessage("something")).toBe("Алдаа гарлаа. Дахин оролдоно уу.");
+		expect(sanitizeErrorMessage("something")).toBe(
+			"Алдаа гарлаа. Дахин оролдоно уу.",
+		);
 		expect(sanitizeErrorMessage(null)).toBe("Алдаа гарлаа. Дахин оролдоно уу.");
-		expect(sanitizeErrorMessage(undefined)).toBe("Алдаа гарлаа. Дахин оролдоно уу.");
+		expect(sanitizeErrorMessage(undefined)).toBe(
+			"Алдаа гарлаа. Дахин оролдоно уу.",
+		);
 		expect(sanitizeErrorMessage(42)).toBe("Алдаа гарлаа. Дахин оролдоно уу.");
 	});
 

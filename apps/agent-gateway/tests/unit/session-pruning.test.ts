@@ -86,8 +86,8 @@ describe("session context window pruning", () => {
 	it("handles empty session", () => {
 		const result = pruneSession([], "Hello", "Hi");
 		expect(result.length).toBe(2);
-		expect(result[0]!.role).toBe("user");
-		expect(result[1]!.role).toBe("assistant");
+		expect(result[0]?.role).toBe("user");
+		expect(result[1]?.role).toBe("assistant");
 	});
 
 	it("handles null content gracefully", () => {

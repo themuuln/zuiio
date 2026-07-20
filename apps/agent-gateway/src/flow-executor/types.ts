@@ -290,7 +290,10 @@ export interface FlowContext {
 		sendMessage(
 			chatId: string,
 			text: string,
-			options?: { parseMode?: string; quickReplies?: Array<{ text: string; callbackData: string }> },
+			options?: {
+				parseMode?: string;
+				quickReplies?: Array<{ text: string; callbackData: string }>;
+			},
 		): Promise<void>;
 	};
 	/** Supabase client for persistence. */

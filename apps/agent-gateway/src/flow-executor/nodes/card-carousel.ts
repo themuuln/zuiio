@@ -37,9 +37,7 @@ export async function handleCardCarousel(
 		buttons: card.buttons.map((b) => ({
 			text: b.text,
 			callbackData:
-				b.type === "postback"
-					? `flow:${ctx.run.id}:${b.value}`
-					: b.value,
+				b.type === "postback" ? `flow:${ctx.run.id}:${b.value}` : b.value,
 		})),
 	}));
 

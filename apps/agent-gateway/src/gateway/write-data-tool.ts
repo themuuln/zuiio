@@ -2,11 +2,14 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import type { GatewayTool, ToolContext } from "@/providers/types";
-import type { WriteCatalog, WriteOperationKind, WritePlan } from "@/write-engine/types";
 import { runWrite } from "@/write-engine";
-
 import tolomWriteCatalog from "@/write-engine/catalogs/tolom-write.json";
 import zerWriteCatalog from "@/write-engine/catalogs/zer-write.json";
+import type {
+	WriteCatalog,
+	WriteOperationKind,
+	WritePlan,
+} from "@/write-engine/types";
 
 /**
  * Per-product write catalog map. A product is wired to the dynamic `writeData`
@@ -32,7 +35,10 @@ const WRITE_CATALOGS: Record<string, WriteCatalog> = {
  * Returns `null` when the product has no write catalog (caller falls back to
  * legacy inline write tools).
  */
-export function createWriteDataTool(productType: string, context: ToolContext): GatewayTool | null {
+export function createWriteDataTool(
+	productType: string,
+	context: ToolContext,
+): GatewayTool | null {
 	const catalog = WRITE_CATALOGS[productType];
 	if (!catalog) return null;
 
@@ -89,9 +95,9 @@ export function createWriteDataTool(productType: string, context: ToolContext): 
 		execute: async (args) => {
 			try {
 				const rawOp = String(args.operation ?? "insert");
-				const operation = (["insert", "update", "delete"].includes(rawOp)
-					? rawOp
-					: "insert") as WriteOperationKind;
+				const operation = (
+					["insert", "update", "delete"].includes(rawOp) ? rawOp : "insert"
+				) as WriteOperationKind;
 				const plan = {
 					dataset: String(args.dataset ?? ""),
 					operation,

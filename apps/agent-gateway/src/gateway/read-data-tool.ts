@@ -2,11 +2,10 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import type { GatewayTool, ToolContext } from "@/providers/types";
-import type { ProductCatalog, ReadPlan } from "@/read-engine/types";
 import { createReadEngine } from "@/read-engine";
-
 import tolomReadCatalog from "@/read-engine/catalogs/tolom.json";
 import zerReadCatalog from "@/read-engine/catalogs/zer.json";
+import type { ProductCatalog, ReadPlan } from "@/read-engine/types";
 
 /**
  * Per-product read catalog map. A product is wired to the dynamic `readData`
@@ -32,7 +31,10 @@ const READ_CATALOGS: Record<string, ProductCatalog> = {
  * Returns `null` when the product has no read catalog (caller keeps legacy
  * inline read tools).
  */
-export function createReadDataTool(productType: string, context: ToolContext): GatewayTool | null {
+export function createReadDataTool(
+	productType: string,
+	context: ToolContext,
+): GatewayTool | null {
 	const catalog = READ_CATALOGS[productType];
 	if (!catalog) return null;
 
@@ -54,7 +56,7 @@ export function createReadDataTool(productType: string, context: ToolContext): G
 				name: "plan",
 				type: "object",
 				description:
-					"ReadPlan объект. queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }]; derivation?: { type, queries?, label? }; responseFormat?: table|summary|comparison|detail. Жишээ: { queries: [{ dataset: \"work_orders\", filters: [{ field: \"status\", op: \"eq\", value: \"in_progress\" }], limit: 10 }] }",
+					'ReadPlan объект. queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }]; derivation?: { type, queries?, label? }; responseFormat?: table|summary|comparison|detail. Жишээ: { queries: [{ dataset: "work_orders", filters: [{ field: "status", op: "eq", value: "in_progress" }], limit: 10 }] }',
 				required: true,
 			},
 		],

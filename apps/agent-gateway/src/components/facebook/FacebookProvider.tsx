@@ -96,7 +96,7 @@ export function FacebookProvider({
 		js.async = true;
 		js.defer = true;
 		const fjs = document.getElementsByTagName("script")[0]!;
-		fjs.parentNode!.insertBefore(js, fjs);
+		fjs.parentNode?.insertBefore(js, fjs);
 	}, [appId, apiVersion]);
 
 	// --- FB.login() raw (no server exchange) ---

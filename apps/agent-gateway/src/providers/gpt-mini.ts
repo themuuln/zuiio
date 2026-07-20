@@ -1,4 +1,3 @@
-
 import type { AiProvider, GatewayTool, ToolContext } from "./types";
 
 /**
@@ -15,34 +14,34 @@ export class GptMiniProvider implements AiProvider {
 		},
 	) {}
 
-async runWithTools(params: {
-	system: string;
-	userMessage: string;
-	images?: string[];
-	tools: GatewayTool[];
-	context: ToolContext;
-	maxRounds?: number;
-	onToken?: (token: string) => void;
-	conversationHistory?: Array<{
-		role: string;
-		content: string | null;
-		tool_calls?: Array<{
-			id: string;
-			type: "function";
-			function: { name: string; arguments: string };
+	async runWithTools(params: {
+		system: string;
+		userMessage: string;
+		images?: string[];
+		tools: GatewayTool[];
+		context: ToolContext;
+		maxRounds?: number;
+		onToken?: (token: string) => void;
+		conversationHistory?: Array<{
+			role: string;
+			content: string | null;
+			tool_calls?: Array<{
+				id: string;
+				type: "function";
+				function: { name: string; arguments: string };
+			}>;
+			tool_call_id?: string;
 		}>;
-		tool_call_id?: string;
-	}>;
-}): Promise<string> {
-const {
-	system,
-	userMessage,
-	images,
-	tools,
-	context,
-	maxRounds = 5,
-	conversationHistory,
-} = params;
+	}): Promise<string> {
+		const {
+			system,
+			userMessage,
+			images,
+			tools,
+			context,
+			maxRounds = 5,
+			conversationHistory,
+		} = params;
 		const baseUrl = this.options.baseUrl ?? "https://api.openai.com/v1";
 
 		// Convert tools to OpenAI function-calling format
@@ -79,20 +78,20 @@ const {
 			messages.push(...conversationHistory);
 		}
 
-if (images && images.length > 0) {
-	messages.push({
-		role: "user",
-		content: [
-			{ type: "text", text: userMessage },
-			...images.map((url) => ({
-				type: "image_url" as const,
-				image_url: { url, detail: "auto" as const },
-			})),
-		],
-	});
-} else {
-	messages.push({ role: "user", content: userMessage });
-}
+		if (images && images.length > 0) {
+			messages.push({
+				role: "user",
+				content: [
+					{ type: "text", text: userMessage },
+					...images.map((url) => ({
+						type: "image_url" as const,
+						image_url: { url, detail: "auto" as const },
+					})),
+				],
+			});
+		} else {
+			messages.push({ role: "user", content: userMessage });
+		}
 
 		let lastContent: string | null = null;
 
@@ -125,14 +124,24 @@ if (images && images.length > 0) {
 			}
 
 			// Parse response — streaming or non-streaming
-			let message: { content: string | null; tool_calls?: Array<{ id: string; type: string; function: { name: string; arguments: string } }> } | null = null;
+			let message: {
+				content: string | null;
+				tool_calls?: Array<{
+					id: string;
+					type: string;
+					function: { name: string; arguments: string };
+				}>;
+			} | null = null;
 
 			if (isStreaming && response.body) {
 				// Parse SSE stream
 				const reader = response.body.getReader();
 				const decoder = new TextDecoder();
 				let buffer = "";
-				const toolCallsById = new Map<string, { id: string; name: string; arguments: string }>();
+				const toolCallsById = new Map<
+					string,
+					{ id: string; name: string; arguments: string }
+				>();
 
 				while (true) {
 					const { done, value } = await reader.read();
@@ -148,8 +157,12 @@ if (images && images.length > 0) {
 						if (data === "[DONE]") break;
 
 						const parsed = JSON.parse(data) as Record<string, unknown>;
-						const choices = parsed.choices as Array<Record<string, unknown>> | undefined;
-						const delta = choices?.[0]?.delta as Record<string, unknown> | undefined;
+						const choices = parsed.choices as
+							| Array<Record<string, unknown>>
+							| undefined;
+						const delta = choices?.[0]?.delta as
+							| Record<string, unknown>
+							| undefined;
 						if (!delta) continue;
 
 						// Content token
@@ -159,7 +172,9 @@ if (images && images.length > 0) {
 						}
 
 						// Tool call delta
-						const tcDelta = delta.tool_calls as Array<Record<string, unknown>> | undefined;
+						const tcDelta = delta.tool_calls as
+							| Array<Record<string, unknown>>
+							| undefined;
 						if (tcDelta) {
 							for (const tc of tcDelta) {
 								const idx = tc.index as number;
@@ -179,26 +194,37 @@ if (images && images.length > 0) {
 					}
 				}
 
-				const toolCalls = toolCallsById.size > 0
-					? [...toolCallsById.values()].map((tc) => ({
-						id: tc.id,
-						type: "function" as const,
-						function: { name: tc.name, arguments: tc.arguments },
-					}))
-					: undefined;
+				const toolCalls =
+					toolCallsById.size > 0
+						? [...toolCallsById.values()].map((tc) => ({
+								id: tc.id,
+								type: "function" as const,
+								function: { name: tc.name, arguments: tc.arguments },
+							}))
+						: undefined;
 
 				message = { content: lastContent, tool_calls: toolCalls };
 			} else {
 				// Non-streaming: parse full JSON response
-				const json = await response.json() as Record<string, unknown>;
-				const choices = json.choices as Array<Record<string, unknown>> | undefined;
-				const msg = choices?.[0]?.message as Record<string, unknown> | undefined;
+				const json = (await response.json()) as Record<string, unknown>;
+				const choices = json.choices as
+					| Array<Record<string, unknown>>
+					| undefined;
+				const msg = choices?.[0]?.message as
+					| Record<string, unknown>
+					| undefined;
 				if (!msg) {
 					throw new Error("OpenAI API returned empty response");
 				}
 				message = {
 					content: (msg.content as string) ?? null,
-					tool_calls: msg.tool_calls as Array<{ id: string; type: string; function: { name: string; arguments: string } }> | undefined,
+					tool_calls: msg.tool_calls as
+						| Array<{
+								id: string;
+								type: string;
+								function: { name: string; arguments: string };
+						  }>
+						| undefined,
 				};
 			}
 
@@ -206,9 +232,9 @@ if (images && images.length > 0) {
 				throw new Error("OpenAI API returned empty response");
 			}
 
-if (message.content && typeof message.content === "string") {
-	lastContent = message.content;
-}
+			if (message.content && typeof message.content === "string") {
+				lastContent = message.content;
+			}
 
 			// No tool calls → done
 			if (!message.tool_calls || message.tool_calls.length === 0) {

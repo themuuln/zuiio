@@ -38,7 +38,11 @@ export default function GoogleCallbackPage() {
     sessionStorage.removeItem("google_redirectTo");
 
     (async () => {
-      const result = await signInWithGoogle(idToken, rawNonce ?? "", redirectTo);
+      const result = await signInWithGoogle(
+        idToken,
+        rawNonce ?? "",
+        redirectTo,
+      );
       if (result?.redirectTo) {
         router.push(result.redirectTo);
       } else {

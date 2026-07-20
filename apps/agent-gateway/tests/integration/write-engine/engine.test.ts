@@ -1,11 +1,14 @@
-import { describe, it, expect, vi } from "vitest";
-import { readFileSync } from "fs";
-import { resolve } from "path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, it, vi } from "vitest";
 import { runWrite } from "@/write-engine";
 import type { WriteCatalog, WriteEngineConfig } from "@/write-engine/types";
 
 const catalog: WriteCatalog = JSON.parse(
-	readFileSync(resolve(__dirname, "../../../src/write-engine/catalogs/tolom-write.json"), "utf8"),
+	readFileSync(
+		resolve(__dirname, "../../../src/write-engine/catalogs/tolom-write.json"),
+		"utf8",
+	),
 );
 
 const TENANT = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
@@ -26,10 +29,14 @@ interface WriteMockCall {
 function createWriteMock() {
 	const calls: WriteMockCall[] = [];
 
-	function makeBuilder(op: WriteMockCall["op"], source: string, initialPayload?: Record<string, unknown>) {
+	function makeBuilder(
+		op: WriteMockCall["op"],
+		source: string,
+		initialPayload?: Record<string, unknown>,
+	) {
 		const builder: Record<string, unknown> = {};
 		const filters: Record<string, unknown> = {};
-		let payload = initialPayload;
+		const payload = initialPayload;
 		builder.eq = vi.fn((field: string, val: unknown) => {
 			filters[field] = val;
 			return builder;
@@ -53,8 +60,10 @@ function createWriteMock() {
 	const client = {
 		from: vi.fn((source: string) => {
 			const api = {
-				insert: (p: Record<string, unknown>) => makeBuilder("insert", source, p),
-				update: (p: Record<string, unknown>) => makeBuilder("update", source, p),
+				insert: (p: Record<string, unknown>) =>
+					makeBuilder("insert", source, p),
+				update: (p: Record<string, unknown>) =>
+					makeBuilder("update", source, p),
 				delete: () => makeBuilder("delete", source),
 			};
 			return api;
@@ -65,7 +74,11 @@ function createWriteMock() {
 }
 
 function makeConfig(client: unknown): WriteEngineConfig {
-	return { tenantId: TENANT, catalog, supabase: client as WriteEngineConfig["supabase"] };
+	return {
+		tenantId: TENANT,
+		catalog,
+		supabase: client as WriteEngineConfig["supabase"],
+	};
 }
 
 describe("runWrite (execute)", () => {

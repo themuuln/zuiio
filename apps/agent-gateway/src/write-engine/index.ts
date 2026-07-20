@@ -1,14 +1,14 @@
-import type {
-	WriteCatalog,
-	WritePlan,
-	WriteEngineConfig,
-	WriteResult,
-} from "./types";
-import { validateWritePlan } from "./validate";
 import { compileMutation } from "./compile";
 import { executeMutation } from "./execute";
+import type { WriteEngineConfig, WritePlan, WriteResult } from "./types";
+import { validateWritePlan } from "./validate";
 
-export type { WriteCatalog, WritePlan, WriteEngineConfig, WriteResult } from "./types";
+export type {
+	WriteCatalog,
+	WriteEngineConfig,
+	WritePlan,
+	WriteResult,
+} from "./types";
 
 /**
  * Top-level Write Engine entry point.
@@ -34,10 +34,9 @@ export async function runWrite(
 		const first = validation.errors[0];
 		return {
 			success: false,
-			message:
-				first?.field
-					? `Бичих төлөвлөгөө алдаатай: ${first.message}`
-					: `Бичих төлөвлөөгөө алдаатай: ${first?.message ?? "тодорхойгүй"}`,
+			message: first?.field
+				? `Бичих төлөвлөгөө алдаатай: ${first.message}`
+				: `Бичих төлөвлөөгөө алдаатай: ${first?.message ?? "тодорхойгүй"}`,
 			warnings: validation.warnings,
 		};
 	}

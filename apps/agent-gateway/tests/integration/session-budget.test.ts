@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createMockSupabase, TEST_ORG_ID } from "../fixtures/supabase-mock";
 
 describe("checkDailyBudget", () => {
@@ -37,7 +37,7 @@ describe("checkDailyBudget", () => {
 	it("blocks request when over the hard cap", async () => {
 		const { checkDailyBudget } = await import("@/state/budget");
 		const mockSupabase = createMockSupabase({
-		data: { tokens_used: 10_000_001 },
+			data: { tokens_used: 10_000_001 },
 			error: null,
 		});
 

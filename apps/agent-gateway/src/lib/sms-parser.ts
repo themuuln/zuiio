@@ -44,21 +44,21 @@ function tryRegexParsing(
 		{
 			bank: "khanbank",
 			senders: ["khanbank", "khan bank", "хаан банк", "хаанбанк"],
-			amount: /(\d[\d,\.]+)\s*₮/,
+			amount: /(\d[\d,.]+)\s*₮/,
 			sender_name: /илгээгч:\s*([^\s.]+)/i,
 			reference: /утга:\s*([^\s.]+)/i,
 		},
 		{
 			bank: "golomt",
 			senders: ["golomt", "голомт"],
-			amount: /(\d[\d,\.]+)\s*₮/,
+			amount: /(\d[\d,.]+)\s*₮/,
 			sender_name: /илгээгч:\s*([^\s.]+)/i,
 			reference: /утга:\s*([^\s.]+)/i,
 		},
 		{
 			bank: "tdb",
 			senders: ["tdb", "тдб", "тdb"],
-			amount: /(\d[\d,\.]+)\s*₮/,
+			amount: /(\d[\d,.]+)\s*₮/,
 			sender_name: /илгээгч:\s*([^\s.]+)/i,
 			reference: /утга:\s*([^\s.]+)/i,
 		},
@@ -68,9 +68,7 @@ function tryRegexParsing(
 	const messageLower = message.toLowerCase();
 
 	for (const pattern of patterns) {
-		const isSenderMatch = pattern.senders.some((s) =>
-			senderLower.includes(s),
-		);
+		const isSenderMatch = pattern.senders.some((s) => senderLower.includes(s));
 		const isContentMatch = pattern.senders.some((s) =>
 			messageLower.includes(s),
 		);
@@ -109,11 +107,10 @@ function tryRegexParsing(
 async function llmParsing(
 	message: string,
 	sender: string,
-	supabase: ServiceClient,
+	_supabase: ServiceClient,
 ): Promise<ParsedPayment> {
 	const apiKey = process.env.OPENAI_API_KEY;
-	const baseUrl =
-		process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1";
+	const baseUrl = process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1";
 	const model = process.env.SMS_PARSE_MODEL ?? "gpt-4o-mini";
 
 	if (!apiKey) {

@@ -39,17 +39,15 @@ describe("Tolom tool coverage", () => {
 		expect(new Set(toolNames).size).toBe(toolNames.length);
 	});
 
-
 	it("readData tool has a description listing datasets", () => {
 		const tools = getProductTools("tolom", mockContext);
 		const readData = tools.find((t) => t.name === "readData");
 		expect(readData).toBeDefined();
-		expect(readData!.description).toBeTruthy();
+		expect(readData?.description).toBeTruthy();
 		// Description should reference available business datasets
-		expect(readData!.description.length).toBeGreaterThan(50);
+		expect(readData?.description.length).toBeGreaterThan(50);
 	});
 });
-
 
 describe("Zer tool coverage", () => {
 	it("returns Zer tools with getSalesByCategory", () => {

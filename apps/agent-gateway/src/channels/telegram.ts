@@ -1,7 +1,10 @@
 import "server-only";
 import { capture } from "@zuiio/capture";
 import { debug } from "@/lib/debug";
-import { markdownToTelegramHtml, convertMarkdownToRichBlocks } from "@/lib/format-telegram";
+import {
+	convertMarkdownToRichBlocks,
+	markdownToTelegramHtml,
+} from "@/lib/format-telegram";
 
 import type { Channel, InlineButton, SendMessageOptions } from "./types";
 
@@ -66,7 +69,11 @@ export class TelegramChannel implements Channel {
 	): Promise<void> {
 		const formData = new FormData();
 		formData.append("chat_id", String(chatId));
-		formData.append("document", new Blob([fileBuffer as unknown as BlobPart]), filename);
+		formData.append(
+			"document",
+			new Blob([fileBuffer as unknown as BlobPart]),
+			filename,
+		);
 		if (caption) formData.append("caption", caption);
 
 		const res = await fetch(`${this.baseUrl}/sendDocument`, {
@@ -308,7 +315,11 @@ export class TelegramChannel implements Channel {
 				});
 			}
 		} catch (err) {
-			capture(err, { context: "telegram:setReaction:network", chatId, messageId });
+			capture(err, {
+				context: "telegram:setReaction:network",
+				chatId,
+				messageId,
+			});
 		}
 	}
 
@@ -343,5 +354,4 @@ export class TelegramChannel implements Channel {
 			// Draft failures are non-critical — streaming degrades gracefully
 		}
 	}
-
 }

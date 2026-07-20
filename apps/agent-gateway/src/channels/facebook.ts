@@ -1,9 +1,8 @@
 import "server-only";
 
 import { capture } from "@zuiio/capture";
-
-import type { Channel, InlineButton, SendMessageOptions } from "./types";
 import { markdownToMessengerFormat } from "@/lib/format-telegram";
+import type { Channel, InlineButton, SendMessageOptions } from "./types";
 
 const GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
 const GRAPH_API_BASE = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
@@ -42,9 +41,12 @@ export class FacebookChannel implements Channel {
 		const pageId = this.pageId;
 		const pageAccessToken = this.pageAccessToken;
 		if (!pageId || !pageAccessToken) {
-			capture(new Error("Facebook sendMessage missing pageId or pageAccessToken"), {
-				context: "facebook-channel",
-			});
+			capture(
+				new Error("Facebook sendMessage missing pageId or pageAccessToken"),
+				{
+					context: "facebook-channel",
+				},
+			);
 			return;
 		}
 
@@ -93,9 +95,14 @@ export class FacebookChannel implements Channel {
 		const pageId = this.pageId;
 		const pageAccessToken = this.pageAccessToken;
 		if (!pageId || !pageAccessToken) {
-			capture(new Error("Facebook sendInlineKeyboard missing pageId or pageAccessToken"), {
-				context: "facebook-channel",
-			});
+			capture(
+				new Error(
+					"Facebook sendInlineKeyboard missing pageId or pageAccessToken",
+				),
+				{
+					context: "facebook-channel",
+				},
+			);
 			return;
 		}
 
@@ -127,16 +134,22 @@ export class FacebookChannel implements Channel {
 
 			if (!res.ok) {
 				const err = await res.text().catch(() => "unknown");
-				capture(new Error(`Facebook inline keyboard failed: ${res.status} ${err}`), {
-					context: "facebook-channel",
-				});
+				capture(
+					new Error(`Facebook inline keyboard failed: ${res.status} ${err}`),
+					{
+						context: "facebook-channel",
+					},
+				);
 			}
 		} catch (err) {
 			capture(err, { context: "facebook-channel: sendInlineKeyboard" });
 		}
 	}
 
-	async answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void> {
+	async answerCallbackQuery(
+		_callbackQueryId: string,
+		_text?: string,
+	): Promise<void> {
 		// Facebook/Instagram don't have callback queries like Telegram
 		// Messenger uses postbacks, Instagram has no equivalent
 		// This is a no-op for FB/IG channels
@@ -144,7 +157,7 @@ export class FacebookChannel implements Channel {
 
 	async editMessageText(
 		chatId: number | string,
-		messageId: number,
+		_messageId: number,
 		text: string,
 	): Promise<void> {
 		// Facebook/Instagram don't support message editing
@@ -161,16 +174,12 @@ export class FacebookChannel implements Channel {
 		text: string,
 		confirmId: string,
 	): Promise<void> {
-		await this.sendInlineKeyboard(
-			chatId,
-			text,
+		await this.sendInlineKeyboard(chatId, text, [
 			[
-				[
-					{ text: "✅ Баталгаажуулах", callbackData: `confirm:${confirmId}` },
-					{ text: "❌ Цуцлах", callbackData: `reject:${confirmId}` },
-				],
+				{ text: "✅ Баталгаажуулах", callbackData: `confirm:${confirmId}` },
+				{ text: "❌ Цуцлах", callbackData: `reject:${confirmId}` },
 			],
-		);
+		]);
 	}
 
 	/**
@@ -193,9 +202,12 @@ export class FacebookChannel implements Channel {
 
 			if (!res.ok) {
 				const err = await res.text().catch(() => "unknown");
-				capture(new Error(`Webhook subscription failed: ${res.status} ${err}`), {
-					context: "facebook-channel",
-				});
+				capture(
+					new Error(`Webhook subscription failed: ${res.status} ${err}`),
+					{
+						context: "facebook-channel",
+					},
+				);
 				return false;
 			}
 
@@ -260,5 +272,4 @@ export class FacebookChannel implements Channel {
 			// Sender action failures are non-critical
 		}
 	}
-
 }

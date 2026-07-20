@@ -87,7 +87,12 @@ export interface TelegramUpdate {
 		};
 		text?: string;
 		voice?: { file_id: string; duration: number };
-		photo?: Array<{ file_id: string; file_size?: number; width?: number; height?: number }>;
+		photo?: Array<{
+			file_id: string;
+			file_size?: number;
+			width?: number;
+			height?: number;
+		}>;
 		caption?: string;
 	};
 	callback_query?: {

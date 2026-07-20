@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { ProductCatalog, ReadPlan } from "@/read-engine/types";
+import { describe, expect, it, vi } from "vitest";
 import { ReadEngine } from "@/read-engine/index";
+import type { ProductCatalog, ReadPlan } from "@/read-engine/types";
 
 const catalog: ProductCatalog = JSON.parse(
 	readFileSync(
@@ -19,19 +19,48 @@ interface MockCall {
 	val: string;
 }
 
-function createMockSupabase(returns: Record<string, unknown>[] = [{ value: 100 }]) {
+function createMockSupabase(
+	returns: Record<string, unknown>[] = [{ value: 100 }],
+) {
 	const calls: MockCall[] = [];
 	const queryBuilder: Record<string, unknown> = {
 		select: vi.fn(() => queryBuilder),
-		eq: vi.fn((field: string, val: string) => { calls.push({ op: "eq", field, val }); return queryBuilder; }),
-		neq: vi.fn((field: string, val: string) => { calls.push({ op: "neq", field, val }); return queryBuilder; }),
-		gt: vi.fn((field: string, val: string) => { calls.push({ op: "gt", field, val }); return queryBuilder; }),
-		gte: vi.fn((field: string, val: string) => { calls.push({ op: "gte", field, val }); return queryBuilder; }),
-		lt: vi.fn((field: string, val: string) => { calls.push({ op: "lt", field, val }); return queryBuilder; }),
-		lte: vi.fn((field: string, val: string) => { calls.push({ op: "lte", field, val }); return queryBuilder; }),
-		like: vi.fn((field: string, val: string) => { calls.push({ op: "like", field, val }); return queryBuilder; }),
-		ilike: vi.fn((field: string, val: string) => { calls.push({ op: "ilike", field, val }); return queryBuilder; }),
-		in: vi.fn((field: string, val: string) => { calls.push({ op: "in", field, val }); return queryBuilder; }),
+		eq: vi.fn((field: string, val: string) => {
+			calls.push({ op: "eq", field, val });
+			return queryBuilder;
+		}),
+		neq: vi.fn((field: string, val: string) => {
+			calls.push({ op: "neq", field, val });
+			return queryBuilder;
+		}),
+		gt: vi.fn((field: string, val: string) => {
+			calls.push({ op: "gt", field, val });
+			return queryBuilder;
+		}),
+		gte: vi.fn((field: string, val: string) => {
+			calls.push({ op: "gte", field, val });
+			return queryBuilder;
+		}),
+		lt: vi.fn((field: string, val: string) => {
+			calls.push({ op: "lt", field, val });
+			return queryBuilder;
+		}),
+		lte: vi.fn((field: string, val: string) => {
+			calls.push({ op: "lte", field, val });
+			return queryBuilder;
+		}),
+		like: vi.fn((field: string, val: string) => {
+			calls.push({ op: "like", field, val });
+			return queryBuilder;
+		}),
+		ilike: vi.fn((field: string, val: string) => {
+			calls.push({ op: "ilike", field, val });
+			return queryBuilder;
+		}),
+		in: vi.fn((field: string, val: string) => {
+			calls.push({ op: "in", field, val });
+			return queryBuilder;
+		}),
 		order: vi.fn(() => queryBuilder),
 		range: vi.fn(() => queryBuilder),
 	};
@@ -88,7 +117,11 @@ describe("ReadEngine", () => {
 		const plan: ReadPlan = { queries: [{ dataset: "nonexistent" }] };
 		const result = await engine.execute(plan);
 		expect(result.meta.totalQueries).toBe(0);
-		expect(result.meta.warnings.some((w) => w.includes("DATASET_NOT_FOUND") || w.includes("nonexistent"))).toBe(true);
+		expect(
+			result.meta.warnings.some(
+				(w) => w.includes("DATASET_NOT_FOUND") || w.includes("nonexistent"),
+			),
+		).toBe(true);
 	});
 
 	it("always injects tenant filter into compiled query", async () => {
@@ -105,7 +138,11 @@ describe("ReadEngine", () => {
 		const plan: ReadPlan = { queries: [{ dataset: "work_orders" }] };
 		await engine.execute(plan);
 		// The mock records calls; tenant filter is applied as eq(organization_id, TENANT_ID)
-		expect(mock.calls.some((c) => c.field === "organization_id" && c.val === TENANT_ID)).toBe(true);
+		expect(
+			mock.calls.some(
+				(c) => c.field === "organization_id" && c.val === TENANT_ID,
+			),
+		).toBe(true);
 	});
 
 	it("applies derivation when specified", async () => {
@@ -122,8 +159,14 @@ describe("ReadEngine", () => {
 
 		const plan: ReadPlan = {
 			queries: [
-				{ dataset: "work_orders", measures: [{ field: "total_amount", op: "sum", alias: "value" }] },
-				{ dataset: "invoices", measures: [{ field: "total", op: "sum", alias: "value" }] },
+				{
+					dataset: "work_orders",
+					measures: [{ field: "total_amount", op: "sum", alias: "value" }],
+				},
+				{
+					dataset: "invoices",
+					measures: [{ field: "total", op: "sum", alias: "value" }],
+				},
 			],
 			derivation: { type: "compare", targetField: "value" },
 		};

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useActionState, useState } from "react";
-import { signInWithApple, signInWithGoogle } from "@/app/(auth)/login/actions";
+import { signInWithApple } from "@/app/(auth)/login/actions";
 import { EyeIcon, EyeSlashIcon } from "@/components/icons";
 import { generateGoogleNonce } from "@/lib/auth/google-nonce";
 import { signup } from "./actions";

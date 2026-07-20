@@ -15,7 +15,9 @@ export function debug(
 	const ts = new Date().toISOString();
 	const extra = data
 		? ` ${Object.entries(data)
-				.map(([k, v]) => `${k}=${typeof v === "string" ? v : JSON.stringify(v)}`)
+				.map(
+					([k, v]) => `${k}=${typeof v === "string" ? v : JSON.stringify(v)}`,
+				)
 				.join(" ")}`
 		: "";
 	console.log(`[DEBUG:${ts}] [${component}] ${message}${extra}`);

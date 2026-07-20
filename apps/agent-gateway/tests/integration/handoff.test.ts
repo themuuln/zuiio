@@ -1,5 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
-import { createMockSupabase, TEST_ORG_ID, TEST_CHAT_ID } from "../fixtures/supabase-mock";
+import { describe, expect, it } from "vitest";
+import {
+	createMockSupabase,
+	TEST_CHAT_ID,
+	TEST_ORG_ID,
+} from "../fixtures/supabase-mock";
 
 describe("triggerHandoff / getActiveHandoff / resolveHandoff / resumeBotAfterHandoff", () => {
 	it("creates a handoff event and returns it", async () => {
@@ -52,17 +56,25 @@ describe("triggerHandoff / getActiveHandoff / resolveHandoff / resumeBotAfterHan
 			error: null,
 		});
 
-		const handoff = await getActiveHandoff(mockSupabase, TEST_ORG_ID, TEST_CHAT_ID);
+		const handoff = await getActiveHandoff(
+			mockSupabase,
+			TEST_ORG_ID,
+			TEST_CHAT_ID,
+		);
 		expect(handoff).not.toBeNull();
-		expect(handoff!.id).toBe("handoff-2");
-		expect(handoff!.status).toBe("pending_human");
+		expect(handoff?.id).toBe("handoff-2");
+		expect(handoff?.status).toBe("pending_human");
 	});
 
 	it("returns null when no active handoff exists", async () => {
 		const { getActiveHandoff } = await import("@/state/handoff");
 		const mockSupabase = createMockSupabase({ data: [], error: null });
 
-		const handoff = await getActiveHandoff(mockSupabase, TEST_ORG_ID, TEST_CHAT_ID);
+		const handoff = await getActiveHandoff(
+			mockSupabase,
+			TEST_ORG_ID,
+			TEST_CHAT_ID,
+		);
 		expect(handoff).toBeNull();
 	});
 
@@ -70,7 +82,9 @@ describe("triggerHandoff / getActiveHandoff / resolveHandoff / resumeBotAfterHan
 		const { resolveHandoff } = await import("@/state/handoff");
 		const mockSupabase = createMockSupabase({ data: null, error: null });
 
-		await expect(resolveHandoff(mockSupabase, "handoff-1")).resolves.toBeUndefined();
+		await expect(
+			resolveHandoff(mockSupabase, "handoff-1"),
+		).resolves.toBeUndefined();
 	});
 
 	it("resumes bot after human resolution", async () => {

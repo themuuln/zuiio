@@ -1,5 +1,5 @@
-import { capture } from "@zuiio/capture";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { capture } from "@zuiio/capture";
 import type { GatewayTool } from "@/providers/types";
 import {
 	formatCustomerMemory,
@@ -66,10 +66,8 @@ export function createCustomerMemoryTools(context: Ctx): GatewayTool[] {
 				let customerId = (args.customerId as string) || undefined;
 				if (!customerId && args.phone) {
 					customerId =
-						(await resolveCustomerIdByPhone(
-							context,
-							args.phone as string,
-						)) ?? undefined;
+						(await resolveCustomerIdByPhone(context, args.phone as string)) ??
+						undefined;
 				}
 				if (!customerId) {
 					return {
@@ -83,7 +81,10 @@ export function createCustomerMemoryTools(context: Ctx): GatewayTool[] {
 					customerId,
 				);
 				if (facts.length === 0) {
-					return { found: false, message: "Энэ харилцагчийн түүх байхгүй байна." };
+					return {
+						found: false,
+						message: "Энэ харилцагчийн түүх байхгүй байна.",
+					};
 				}
 				const { data: cust } = await context.supabase
 					.from("customers")
@@ -143,10 +144,8 @@ export function createCustomerMemoryTools(context: Ctx): GatewayTool[] {
 				let customerName: string | undefined;
 				if (!customerId && args.phone) {
 					customerId =
-						(await resolveCustomerIdByPhone(
-							context,
-							args.phone as string,
-						)) ?? undefined;
+						(await resolveCustomerIdByPhone(context, args.phone as string)) ??
+						undefined;
 				}
 				if (customerId) {
 					const { data: cust } = await context.supabase

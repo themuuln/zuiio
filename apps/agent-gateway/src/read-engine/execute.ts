@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { CompiledQuery, QueryResult, ColumnMeta } from "./types";
+import type { ColumnMeta, CompiledQuery, QueryResult } from "./types";
 
 /**
  * Executes a compiled PostgREST query via the Supabase client.
@@ -64,13 +64,13 @@ export async function executeCompiledQuery(
 	const executionTimeMs = performance.now() - start;
 
 	if (error) {
-		throw new Error(
-			`Асуулга амжилтгүй боллоо (${dataset}): ${error.message}`,
-		);
+		throw new Error(`Асуулга амжилтгүй боллоо (${dataset}): ${error.message}`);
 	}
 
 	const rows = (data as unknown as Record<string, unknown>[] | null) ?? [];
-	const columns: ColumnMeta[] = [{ name: dataset, displayName: dataset, type: "string" }];
+	const columns: ColumnMeta[] = [
+		{ name: dataset, displayName: dataset, type: "string" },
+	];
 
 	return {
 		queryRef: compiled.sourceQuery.alias ?? dataset,

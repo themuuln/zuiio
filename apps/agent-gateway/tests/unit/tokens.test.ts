@@ -14,23 +14,23 @@ describe("createCompactToken / verifyCompactToken", () => {
 		const token = createCompactToken(orgId, userId, "zer");
 		const payload = verifyCompactToken(token);
 		expect(payload).not.toBeNull();
-		expect(payload!.orgId).toBe(orgId);
-		expect(payload!.userId).toBe(userId);
-		expect(payload!.productType).toBe("zer");
+		expect(payload?.orgId).toBe(orgId);
+		expect(payload?.userId).toBe(userId);
+		expect(payload?.productType).toBe("zer");
 	});
 
 	it("verifies a token it created (tolom)", () => {
 		const token = createCompactToken(orgId, userId, "tolom");
 		const payload = verifyCompactToken(token);
 		expect(payload).not.toBeNull();
-		expect(payload!.orgId).toBe(orgId);
-		expect(payload!.userId).toBe(userId);
-		expect(payload!.productType).toBe("tolom");
+		expect(payload?.orgId).toBe(orgId);
+		expect(payload?.userId).toBe(userId);
+		expect(payload?.productType).toBe("tolom");
 	});
 
 	it("returns null for tampered token (bad signature)", () => {
 		const token = createCompactToken(orgId, userId, "zer");
-		const tampered = token.slice(0, -1) + "X";
+		const tampered = `${token.slice(0, -1)}X`;
 		const payload = verifyCompactToken(tampered);
 		expect(payload).toBeNull();
 	});

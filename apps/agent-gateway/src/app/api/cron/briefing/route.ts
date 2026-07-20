@@ -1,8 +1,8 @@
 import "server-only";
 
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase";
 import { TelegramChannel } from "@/channels/telegram";
+import { createServiceClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 
@@ -49,11 +49,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 							.select("id, status")
 							.eq("organization_id", orgId)
 							.is("deleted_at", null)
-							.not(
-								"status",
-								"in",
-								'("delivered","cancelled","completed")',
-							),
+							.not("status", "in", '("delivered","cancelled","completed")'),
 						sb
 							.from("appointments")
 							.select("id, scheduled_at, customers(full_name)")

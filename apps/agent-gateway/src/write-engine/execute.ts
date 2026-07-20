@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { CompiledMutation, WriteResult, WriteCatalog } from "./types";
+import type { CompiledMutation, WriteCatalog, WriteResult } from "./types";
 
 /**
  * Executes a compiled mutation against Supabase with tenant isolation enforced
@@ -29,7 +29,9 @@ export async function executeMutation(
 			if (error) {
 				return { success: false, message: sanitize(error), warnings };
 			}
-			const newId = (data as Record<string, unknown>)?.[catalog.datasets[sourceToDatasetId(catalog, source)].pk] as string | undefined;
+			const newId = (data as Record<string, unknown>)?.[
+				catalog.datasets[sourceToDatasetId(catalog, source)].pk
+			] as string | undefined;
 			return {
 				success: true,
 				message: "Амжилттай бүртгэгдлээ.",
@@ -42,7 +44,7 @@ export async function executeMutation(
 		if (operation === "update") {
 			// Build a query that filters by PK AND tenant
 			const ds = catalog.datasets[sourceToDatasetId(catalog, source)];
-			let query = supabase
+			const query = supabase
 				.from(source)
 				.update(payload)
 				.eq(ds.pk, id as string)
@@ -58,7 +60,9 @@ export async function executeMutation(
 			}
 			return {
 				success: true,
-				message: softDelete ? "Амжилттай устгагалаа (soft)." : "Амжилттай шинэчлэгдлээ.",
+				message: softDelete
+					? "Амжилттай устгагалаа (soft)."
+					: "Амжилттай шинэчлэгдлээ.",
 				id: id,
 				data: data as Record<string, unknown>,
 				warnings,

@@ -16,12 +16,7 @@ import {
   isPasskeySupported,
 } from "@/lib/auth/passkey";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import {
-  completePasskeySignIn,
-  login,
-  signInWithApple,
-  signInWithGoogle,
-} from "./actions";
+import { completePasskeySignIn, login, signInWithApple } from "./actions";
 
 function SignInMethodButton({
   provider,
@@ -146,7 +141,6 @@ export function LoginForm({
     router.push(state.redirectTo);
     return null;
   }
-
 
   async function handlePasskeySignIn() {
     if (!isPasskeySupported()) {

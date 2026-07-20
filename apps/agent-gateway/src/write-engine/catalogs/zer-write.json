@@ -117,7 +117,10 @@
 				"bank_account_id": { "type": "uuid" },
 				"currency_id": { "type": "uuid" },
 				"sale_date": { "type": "timestamp" },
-				"status": { "type": "string", "allowedValues": ["pending", "completed", "cancelled", "refunded"] },
+				"status": {
+					"type": "string",
+					"allowedValues": ["pending", "completed", "cancelled", "refunded"]
+				},
 				"payment_method": { "type": "string" },
 				"total_amount": { "type": "number", "required": true },
 				"original_amount": { "type": "number" },
@@ -166,7 +169,10 @@
 				"supplier_id": { "type": "uuid", "required": true },
 				"currency_id": { "type": "uuid" },
 				"order_number": { "type": "string" },
-				"status": { "type": "string", "allowedValues": ["draft", "ordered", "received", "cancelled"] },
+				"status": {
+					"type": "string",
+					"allowedValues": ["draft", "ordered", "received", "cancelled"]
+				},
 				"total_amount": { "type": "number" },
 				"original_amount": { "type": "number" },
 				"exchange_rate": { "type": "number" },

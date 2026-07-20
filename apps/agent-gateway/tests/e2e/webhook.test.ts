@@ -68,14 +68,22 @@ vi.mock("@/lib/supabase", () => ({
 }));
 
 vi.mock("@/state/budget", () => ({
-	checkDailyBudget: vi.fn().mockResolvedValue({ allowed: true, tokensUsedToday: 100 }),
+	checkDailyBudget: vi
+		.fn()
+		.mockResolvedValue({ allowed: true, tokensUsedToday: 100 }),
 	recordUsageAtomic: vi.fn().mockResolvedValue(undefined),
-	REQUEST_LIMITS: { maxToolRounds: 5, maxTotalTokens: 16384, maxResultTokens: 2048 },
+	REQUEST_LIMITS: {
+		maxToolRounds: 5,
+		maxTotalTokens: 16384,
+		maxResultTokens: 2048,
+	},
 	DAILY_LIMITS: { softCapTokens: 500000, hardCapTokens: 1000000 },
 }));
 
 vi.mock("@/state/rate-limit", () => ({
-	checkRateLimit: vi.fn().mockReturnValue({ allowed: true, remaining: 19, resetInMs: 60000 }),
+	checkRateLimit: vi
+		.fn()
+		.mockReturnValue({ allowed: true, remaining: 19, resetInMs: 60000 }),
 	RATE_LIMITS: { messagesPerMinute: 20, linksPerMinute: 10 },
 }));
 
@@ -88,7 +96,9 @@ vi.mock("@/state/session", () => ({
 vi.mock("@/state/audit", () => ({
 	withAudit: vi.fn().mockImplementation((tool) => ({
 		...tool,
-		execute: vi.fn().mockImplementation((args, context) => tool.execute(args, context)),
+		execute: vi
+			.fn()
+			.mockImplementation((args, context) => tool.execute(args, context)),
 	})),
 }));
 
@@ -119,11 +129,18 @@ vi.mock("@/lib/tokens", () => ({
 }));
 
 vi.mock("next/server", () => ({
-	NextResponse: { json: (data: unknown, init?: ResponseInit) => new Response(JSON.stringify(data), init) },
-	after: (fn: () => void | Promise<void>) => { fn(); },
+	NextResponse: {
+		json: (data: unknown, init?: ResponseInit) =>
+			new Response(JSON.stringify(data), init),
+	},
+	after: (fn: () => void | Promise<void>) => {
+		fn();
+	},
 }));
 
-const mockFetch = vi.hoisted(() => vi.fn().mockResolvedValue(new Response("{}")));
+const mockFetch = vi.hoisted(() =>
+	vi.fn().mockResolvedValue(new Response("{}")),
+);
 
 // ─── Tests ─────────────────────────────────────────────────────────────────────
 
@@ -132,7 +149,6 @@ describe("POST /api/telegram/webhook", () => {
 		vi.clearAllMocks();
 		vi.stubGlobal("fetch", mockFetch);
 	});
-
 
 	it("rejects unauthorized requests (missing secret token)", async () => {
 		const { POST } = await import("@/app/api/telegram/webhook/route");
@@ -357,9 +373,12 @@ describe("POST /api/telegram/webhook", () => {
 
 		expect(response.status).toBe(200);
 		// Async fallback: agent runs in background, wait for sendMessage call
-		await vi.waitFor(() => {
-			expect(mockFetch).toHaveBeenCalled();
-		}, { timeout: 5000 });
+		await vi.waitFor(
+			() => {
+				expect(mockFetch).toHaveBeenCalled();
+			},
+			{ timeout: 5000 },
+		);
 	});
 
 	it("handles voice messages", async () => {

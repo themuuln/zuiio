@@ -1,8 +1,7 @@
 import "server-only";
 import { capture } from "@zuiio/capture";
-
-import type { Channel, InlineButton, SendMessageOptions } from "./types";
 import { markdownToMessengerFormat } from "@/lib/format-telegram";
+import type { Channel, InlineButton, SendMessageOptions } from "./types";
 
 /**
  * WhatsApp Cloud API channel adapter.

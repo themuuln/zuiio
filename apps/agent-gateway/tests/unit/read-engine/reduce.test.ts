@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import type { QueryResult, Derivation } from "@/read-engine/types";
+import { describe, expect, it } from "vitest";
 import { applyDerivation } from "@/read-engine/reduce";
+import type { Derivation, QueryResult } from "@/read-engine/types";
 
 const results: QueryResult[] = [
 	{
@@ -21,7 +21,11 @@ const results: QueryResult[] = [
 
 describe("applyDerivation", () => {
 	it("sums across queries", () => {
-		const d: Derivation = { type: "sum", targetField: "value", description: "Нийт" };
+		const d: Derivation = {
+			type: "sum",
+			targetField: "value",
+			description: "Нийт",
+		};
 		const result = applyDerivation(results, d);
 		expect(result?.type).toBe("sum");
 		expect(result?.rows[0]?.value).toBe(150);
@@ -68,7 +72,13 @@ describe("applyDerivation", () => {
 
 	it("handles missing numeric field gracefully", () => {
 		const empty: QueryResult[] = [
-			{ queryRef: "x", columns: [], rows: [{}], rowCount: 0, executionTimeMs: 0 },
+			{
+				queryRef: "x",
+				columns: [],
+				rows: [{}],
+				rowCount: 0,
+				executionTimeMs: 0,
+			},
 		];
 		const d: Derivation = { type: "sum", targetField: "value" };
 		const result = applyDerivation(empty, d);

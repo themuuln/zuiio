@@ -24,9 +24,7 @@ export async function handleAiReply(
 	if (!ctx.aiProvider) {
 		return {
 			action: { type: "next" },
-			messages: [
-				{ text: "Уучлаарай, одоогоор AI үйлчилгээ боломжгүй байна." },
-			],
+			messages: [{ text: "Уучлаарай, одоогоор AI үйлчилгээ боломжгүй байна." }],
 		};
 	}
 
@@ -57,9 +55,7 @@ export async function handleAiReply(
 		console.error("[flow-executor:ai-reply] Provider error:", error);
 		return {
 			action: { type: "next" },
-			messages: [
-				{ text: "Уучлаарай, AI алдаа гарлаа. Дахин оролдоно уу." },
-			],
+			messages: [{ text: "Уучлаарай, AI алдаа гарлаа. Дахин оролдоно уу." }],
 		};
 	}
 }

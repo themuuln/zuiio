@@ -14,8 +14,10 @@ export async function handleDelay(
 		};
 	},
 ): Promise<NodeResult> {
-const { duration, unit } = node.data;
-const durationMs = duration * (unit === "seconds" ? 1_000 : unit === "hours" ? 3_600_000 : 60_000);
+	const { duration, unit } = node.data;
+	const durationMs =
+		duration *
+		(unit === "seconds" ? 1_000 : unit === "hours" ? 3_600_000 : 60_000);
 	const scheduledAt = new Date(Date.now() + durationMs).toISOString();
 
 	return {
@@ -28,7 +30,6 @@ const durationMs = duration * (unit === "seconds" ? 1_000 : unit === "hours" ? 3
 	};
 }
 
-
 /**
  * Calculate delay in milliseconds from node data.
  * Exported for the cron scheduler.
@@ -37,5 +38,8 @@ export function calculateDelayMs(
 	duration: number,
 	unit: "seconds" | "minutes" | "hours",
 ): number {
-	return duration * (unit === "seconds" ? 1_000 : unit === "hours" ? 3_600_000 : 60_000);
+	return (
+		duration *
+		(unit === "seconds" ? 1_000 : unit === "hours" ? 3_600_000 : 60_000)
+	);
 }

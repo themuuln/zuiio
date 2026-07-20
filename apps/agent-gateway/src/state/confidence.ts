@@ -55,7 +55,7 @@ export function scoreConfidence(params: {
 	if (params.llmResponse) {
 		const hasHallucinationMarkers =
 			params.hallucinationIndicators?.some((marker) =>
-				params.llmResponse!.toLowerCase().includes(marker.toLowerCase()),
+				params.llmResponse?.toLowerCase().includes(marker.toLowerCase()),
 			) ?? false;
 
 		if (!hasHallucinationMarkers) {
@@ -69,7 +69,7 @@ export function scoreConfidence(params: {
 				"таамаглаж",
 			];
 			const hasUncertainty = hallucinationPatterns.some((p) =>
-				params.llmResponse!.toLowerCase().includes(p),
+				params.llmResponse?.toLowerCase().includes(p),
 			);
 
 			checks.push({

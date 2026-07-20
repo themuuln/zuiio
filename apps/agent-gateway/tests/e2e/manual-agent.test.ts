@@ -4,7 +4,10 @@
  * (Cannot use tsx due to Next.js server-only imports)
  */
 import { describe, expect, it, vi } from "vitest";
-import { getProductTools, systemPromptFor } from "../../src/gateway/webhook-helpers";
+import {
+	getProductTools,
+	systemPromptFor,
+} from "../../src/gateway/webhook-helpers";
 import type { ToolContext } from "../../src/providers/types";
 import { createMockSupabase, TEST_ORG_ID } from "../fixtures/supabase-mock";
 
@@ -62,7 +65,9 @@ describe("Manual Agent Test — Tool Counts", () => {
 	});
 
 	it("Zer has 2+ tools", () => {
-		expect(getProductTools("zer", mockContext).length).toBeGreaterThanOrEqual(2);
+		expect(getProductTools("zer", mockContext).length).toBeGreaterThanOrEqual(
+			2,
+		);
 	});
 });
 

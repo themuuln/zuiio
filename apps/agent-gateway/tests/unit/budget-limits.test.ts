@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { REQUEST_LIMITS, DAILY_LIMITS } from "@/state/budget";
+import { DAILY_LIMITS, REQUEST_LIMITS } from "@/state/budget";
 
 describe("REQUEST_LIMITS", () => {
 	it("has maxToolRounds set to 10", () => {
-	expect(REQUEST_LIMITS.maxToolRounds).toBe(10);
+		expect(REQUEST_LIMITS.maxToolRounds).toBe(10);
 	});
 
 	it("has maxTotalTokens set to 100_000", () => {

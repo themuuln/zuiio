@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { createMockSupabase } from "../fixtures/supabase-mock";
 import { createCustomerMemoryTools } from "@/gateway/customer-memory-tool";
+import { createMockSupabase } from "../fixtures/supabase-mock";
 
 const ORG_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
 const CUSTOMER_ID = "cust-0001";
@@ -78,7 +78,10 @@ function mockClientForMemory() {
 describe("createCustomerMemoryTools — recallCustomerMemory", () => {
 	it("returns formatted memory for a known customer id", async () => {
 		const { client } = mockClientForMemory();
-		const [recall] = createCustomerMemoryTools({ orgId: ORG_ID, supabase: client as never });
+		const [recall] = createCustomerMemoryTools({
+			orgId: ORG_ID,
+			supabase: client as never,
+		});
 		const result = (await recall.execute({ customerId: CUSTOMER_ID })) as {
 			found: boolean;
 			memory: string;
@@ -91,7 +94,10 @@ describe("createCustomerMemoryTools — recallCustomerMemory", () => {
 
 	it("resolves customer id from phone before recalling", async () => {
 		const { client } = mockClientForMemory();
-		const [recall] = createCustomerMemoryTools({ orgId: ORG_ID, supabase: client as never });
+		const [recall] = createCustomerMemoryTools({
+			orgId: ORG_ID,
+			supabase: client as never,
+		});
 		// No customerId, only phone -> should resolve via customers lookup then recall.
 		const result = (await recall.execute({ phone: "99112233" })) as {
 			found: boolean;
@@ -103,8 +109,14 @@ describe("createCustomerMemoryTools — recallCustomerMemory", () => {
 
 	it("returns not found when neither id nor phone resolves", async () => {
 		const { client } = mockClientForMemory();
-		const [recall] = createCustomerMemoryTools({ orgId: ORG_ID, supabase: client as never });
-		const result = (await recall.execute({})) as { found: boolean; message: string };
+		const [recall] = createCustomerMemoryTools({
+			orgId: ORG_ID,
+			supabase: client as never,
+		});
+		const result = (await recall.execute({})) as {
+			found: boolean;
+			message: string;
+		};
 		expect(result.found).toBe(false);
 		expect(result.message).toContain("олдсонгүй");
 	});
@@ -138,7 +150,10 @@ describe("createCustomerMemoryTools — rememberCustomerFact", () => {
 			orgId: ORG_ID,
 			supabase: client as never,
 		});
-		await remember.execute({ phone: "99112233", fact: "Хоолны захиалга хийдэг" });
+		await remember.execute({
+			phone: "99112233",
+			fact: "Хоолны захиалга хийдэг",
+		});
 		expect(capturedInserts.length).toBe(1);
 		const row = capturedInserts[0] as Record<string, unknown>;
 		expect(row.customer_id).toBe(CUSTOMER_ID);
@@ -150,7 +165,10 @@ describe("createCustomerMemoryTools — rememberCustomerFact", () => {
 			orgId: ORG_ID,
 			supabase: client as never,
 		});
-		const result = (await remember.execute({ customerId: CUSTOMER_ID, fact: "   " })) as {
+		const result = (await remember.execute({
+			customerId: CUSTOMER_ID,
+			fact: "   ",
+		})) as {
 			error: string;
 		};
 		expect(result.error).toBeTruthy();

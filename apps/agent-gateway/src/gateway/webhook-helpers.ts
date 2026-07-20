@@ -2,14 +2,14 @@ import { capture } from "@zuiio/capture";
 
 import "server-only";
 
-import type { GatewayTool, ToolContext } from "@/providers/types";
+import { createCustomerMemoryTools } from "@/gateway/customer-memory-tool";
+import { createReadDataTool } from "@/gateway/read-data-tool";
+import { createWriteDataTool } from "@/gateway/write-data-tool";
 import { getRedis } from "@/lib/redis";
 import { createServiceClient } from "@/lib/supabase";
-import { createWriteDataTool } from "@/gateway/write-data-tool";
-import { createReadDataTool } from "@/gateway/read-data-tool";
-import { createCustomerMemoryTools } from "@/gateway/customer-memory-tool";
+import type { GatewayTool, ToolContext } from "@/providers/types";
 
- /**
+/**
  * Generate system prompt for a product type.
  * Shared between Mode A and Mode B webhooks.
  */
@@ -27,7 +27,7 @@ export async function systemPromptFor(
 	let orgName = "";
 	const redis = getRedis();
 	const orgCacheKey = `org:name:${orgId}`;
-	
+
 	// Try Redis cache first (independent try — don't let Redis failure block DB)
 	if (redis) {
 		try {
@@ -36,7 +36,7 @@ export async function systemPromptFor(
 			// Redis failure — fall through to DB query
 		}
 	}
-	
+
 	// Cache miss — query Supabase
 	if (!orgName) {
 		try {
@@ -60,7 +60,7 @@ export async function systemPromptFor(
 
 	if (productType === "tolom") {
 		if (lang === "en") {
-return `You are "${orgName || "This auto repair shop"}" — a proactive Tolom auto repair agent.
+			return `You are "${orgName || "This auto repair shop"}" — a proactive Tolom auto repair agent.
 RESPONSE: HTML only (<b>, <i>, <code>). No Markdown. 1-2 sentences max, warm but brief.
 RULES:
 1. Never say "I don't have that data" — always use tools to query business data
@@ -74,7 +74,7 @@ Examples: "show active orders" → readData({ queries: [{ dataset:"work_orders",
 MEMORY: When you identify a customer (by id or phone via readData on "customers"), call recallCustomerMemory to retrieve their saved preferences/history and use it to personalize. When the user states a durable fact about themselves (name they prefer, contact preference, vehicle, note), call rememberCustomerFact to save it.
 Organization ID: ${orgId}${groupWarning}`;
 		}
-return `Та "${orgName || "This auto repair shop"}" — идэвхтэй засварын газрын бизнес агент.
+		return `Та "${orgName || "This auto repair shop"}" — идэвхтэй засварын газрын бизнес агент.
 ХЭЛНИЙ ДҮРЭМ: ЗӨВХӨН Монгол хэлээр хариулна. Англи, Орос бусад хэл ашиглахгүй.
 ФОРМАТ: Зөвхөн HTML (<b>, <i>, <code>). Markdown ашиглахгүй. Хариулт богино — 1-2 өгүүлбэр.
 АЖИЛЧНЫ ДҮРЭМ:
@@ -93,7 +93,7 @@ return `Та "${orgName || "This auto repair shop"}" — идэвхтэй зас
 Organization ID: ${orgId}${groupWarning}`;
 	}
 	if (lang === "en") {
-return `You are "${orgName || "This store"}" — a proactive Zer retail/accounting agent.
+		return `You are "${orgName || "This store"}" — a proactive Zer retail/accounting agent.
 RESPONSE: HTML only (<b>, <i>, <code>). 1-2 sentences max.
 RULES:
 1. Never say "I don't have that data" — always use tools to query business data
@@ -127,7 +127,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		now.getMonth(),
 		now.getDate(),
 	).toISOString();
-	const yesterday = new Date(
+	const _yesterday = new Date(
 		now.getFullYear(),
 		now.getMonth(),
 		now.getDate() - 1,
@@ -137,7 +137,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		now.getMonth(),
 		1,
 	).toISOString();
-	const monthEnd = new Date(
+	const _monthEnd = new Date(
 		now.getFullYear(),
 		now.getMonth() + 1,
 		0,
@@ -259,8 +259,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "getVehicleAnalytics",
-			description:
-				"Машин бүрийн засвар аналитик: тоо, орлого.",
+			description: "Машин бүрийн засвар аналитик: тоо, орлого.",
 			parameters: [
 				{
 					name: "date_from",
@@ -378,8 +377,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "getFinancialSummary",
-			description:
-				"Орлого, зарлага, төлбөрийн хураангуй.",
+			description: "Орлого, зарлага, төлбөрийн хураангуй.",
 			parameters: [
 				{
 					name: "date_from",
@@ -487,8 +485,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "exportData",
-			description:
-				"Өгөгдлийг CSV болгож экспортлох.",
+			description: "Өгөгдлийг CSV болгож экспортлох.",
 			parameters: [
 				{
 					name: "table",
@@ -586,8 +583,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "partsLookup",
-			description:
-				"Сэлбэгийн үнийн мэдээлэл хайх.",
+			description: "Сэлбэгийн үнийн мэдээлэл хайх.",
 			parameters: [
 				{
 					name: "query",
@@ -609,7 +605,9 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 							.limit(10),
 						supabase
 							.from("work_order_parts")
-							.select("part_name, part_number, unit_price, final_price, created_at")
+							.select(
+								"part_name, part_number, unit_price, final_price, created_at",
+							)
 							.eq("organization_id", orgId)
 							.or(`part_name.ilike.%${q}%,part_number.ilike.%${q}%`)
 							.order("created_at", { ascending: false })
@@ -644,8 +642,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "getSparePartsSales",
-			description:
-				"Сэлбэгийн борлуулалтын хураангуй.",
+			description: "Сэлбэгийн борлуулалтын хураангуй.",
 			parameters: [
 				{
 					name: "date_from",
@@ -809,13 +806,12 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 
 // ─── Tolom Write Tools ─────────────────────────────────────────────────────
 
-function tolomWriteTools(context: ToolContext): GatewayTool[] {
+function _tolomWriteTools(context: ToolContext): GatewayTool[] {
 	const { supabase, orgId } = context;
 	return [
 		{
 			name: "createWorkOrder",
-			description:
-				"Шинэ ажлын захиалга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description: "Шинэ ажлын захиалга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "customerName",
@@ -920,8 +916,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "updateWorkOrderStatus",
-			description:
-				"Төлөв өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description: "Төлөв өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "workOrderId",
@@ -976,8 +971,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "createInvoice",
-			description:
-				"Нэхэмжлэх үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description: "Нэхэмжлэх үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "customerId",
@@ -1032,8 +1026,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		// ─── New CRU Tools ─────────────────────────────────────────────
 		{
 			name: "updateWorkOrderDetails",
-			description:
-				"Дэлгэрэнгүй засах. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description: "Дэлгэрэнгүй засах. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "workOrderId",
@@ -1324,8 +1317,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "createReminder",
-			description:
-				"Сануулга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description: "Сануулга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "message",
@@ -1369,8 +1361,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "bulkUpdateWorkOrderStatus",
-			description:
-				"Олон захиалгын төлөв өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description: "Олон захиалгын төлөв өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "workOrderIds",
@@ -1435,8 +1426,7 @@ function zerWriteTools(context: ToolContext): GatewayTool[] {
 	return [
 		{
 			name: "createSale",
-			description:
-				"Борлуулалт бүртгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description: "Борлуулалт бүртгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "totalAmount",
@@ -1583,8 +1573,7 @@ function zerTools(context: ToolContext): GatewayTool[] {
 	return [
 		{
 			name: "getSalesByCategory",
-			description:
-				"Ангиллаар борлуулалтын хураангуй.",
+			description: "Ангиллаар борлуулалтын хураангуй.",
 			parameters: [
 				{
 					name: "days",
@@ -1716,14 +1705,13 @@ export function getProductTools(
 	// catalog exists; legacy inline write tools are kept alongside.
 	const writeTools =
 		productType === "tolom"
-			? [createWriteDataTool("tolom", context)].filter((t): t is NonNullable<typeof t> => t !== null)
-			: [
-					...zerWriteTools(context),
-					createWriteDataTool("zer", context),
-				].filter((t): t is NonNullable<typeof t> => t !== null);
-	const tools = options?.readOnly
-		? readTools
-		: [...readTools, ...writeTools];
+			? [createWriteDataTool("tolom", context)].filter(
+					(t): t is NonNullable<typeof t> => t !== null,
+				)
+			: [...zerWriteTools(context), createWriteDataTool("zer", context)].filter(
+					(t): t is NonNullable<typeof t> => t !== null,
+				);
+	const tools = options?.readOnly ? readTools : [...readTools, ...writeTools];
 
 	toolCache.set(cacheKey, { tools, expires: Date.now() + TOOL_CACHE_TTL_MS });
 

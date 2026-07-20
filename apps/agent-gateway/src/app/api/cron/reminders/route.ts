@@ -1,8 +1,8 @@
 import "server-only";
 
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase";
 import { TelegramChannel } from "@/channels/telegram";
+import { createServiceClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 

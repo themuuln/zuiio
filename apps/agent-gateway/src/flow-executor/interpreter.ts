@@ -1,14 +1,11 @@
+import { executeNode } from "./nodes";
 import type {
 	ConversationRun,
 	FlowContext,
-	FlowEdge,
-	FlowNode,
 	FlowVersion,
-	NodeResult,
 	OutboundMessage,
 	WaitState,
 } from "./types";
-import { executeNode } from "./nodes";
 
 const MAX_STEPS = 100; // Safety limit to prevent infinite loops
 
@@ -37,7 +34,9 @@ export async function interpretFlow(
 
 		const node = flow.nodes.find((n) => n.id === currentNodeId);
 		if (!node) {
-			console.error(`[flow-executor] Node ${currentNodeId} not found in flow ${flow.id}`);
+			console.error(
+				`[flow-executor] Node ${currentNodeId} not found in flow ${flow.id}`,
+			);
 			run.status = "failed";
 			break;
 		}
@@ -63,7 +62,8 @@ export async function interpretFlow(
 
 		// Apply A/B assignment
 		if (result.assignment) {
-			run.assignments[result.assignment.experimentId] = result.assignment.variantId;
+			run.assignments[result.assignment.experimentId] =
+				result.assignment.variantId;
 		}
 
 		// Execute side effects (fire-and-forget)
@@ -76,18 +76,19 @@ export async function interpretFlow(
 		// Determine next step
 		switch (result.action.type) {
 			case "next":
-			currentNodeId = findNextNode(flow, currentNodeId) ?? "";
+				currentNodeId = findNextNode(flow, currentNodeId) ?? "";
 				break;
 
 			case "branch":
-			currentNodeId = findBranchNode(flow, currentNodeId, result.action.edgeLabel) ?? "";
+				currentNodeId =
+					findBranchNode(flow, currentNodeId, result.action.edgeLabel) ?? "";
 				if (!currentNodeId) {
 					// No matching branch — try fallback to default next
-				currentNodeId = findNextNode(flow, currentNodeId) ?? "";
+					currentNodeId = findNextNode(flow, currentNodeId) ?? "";
 				}
 				break;
 
-			case "wait":
+			case "wait": {
 				run.status = result.action.waitType === "delay" ? "delayed" : "waiting";
 				run.currentNodeId = currentNodeId;
 				run.updatedAt = new Date().toISOString();
@@ -101,6 +102,7 @@ export async function interpretFlow(
 				};
 
 				return { run, waitState };
+			}
 
 			case "end":
 				run.status = "completed";
@@ -109,7 +111,9 @@ export async function interpretFlow(
 				return { run };
 
 			case "error":
-				console.error(`[flow-executor] Node ${node.id} error: ${result.action.reason}`);
+				console.error(
+					`[flow-executor] Node ${node.id} error: ${result.action.reason}`,
+				);
 				run.status = "failed";
 				run.currentNodeId = currentNodeId;
 				run.updatedAt = new Date().toISOString();
@@ -119,7 +123,9 @@ export async function interpretFlow(
 
 	// Safety limit reached or no more nodes
 	if (steps >= MAX_STEPS) {
-		console.error(`[flow-executor] Max steps (${MAX_STEPS}) reached for run ${run.id}`);
+		console.error(
+			`[flow-executor] Max steps (${MAX_STEPS}) reached for run ${run.id}`,
+		);
 		run.status = "failed";
 	}
 
@@ -145,9 +151,7 @@ export async function resumeFlow(
 
 /** Find the next node by following the default edge. */
 function findNextNode(flow: FlowVersion, currentNodeId: string): string | null {
-	const edge = flow.edges.find(
-		(e) => e.source === currentNodeId && !e.label,
-	);
+	const edge = flow.edges.find((e) => e.source === currentNodeId && !e.label);
 	return edge?.target ?? null;
 }
 
@@ -182,9 +186,10 @@ async function sendMessage(
 
 // ─── Side Effects ─────────────────────────────────────────────────────────────
 
-async function executeSideEffect(
-	effect: { type: string; [key: string]: unknown },
-): Promise<void> {
+async function executeSideEffect(effect: {
+	type: string;
+	[key: string]: unknown;
+}): Promise<void> {
 	switch (effect.type) {
 		case "webhook":
 			// Fire webhook (fire-and-forget)

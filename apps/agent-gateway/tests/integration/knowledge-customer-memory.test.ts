@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { createMockSupabase, TEST_ORG_ID, TEST_CHAT_ID } from "../fixtures/supabase-mock";
+import { describe, expect, it } from "vitest";
+import { createMockSupabase, TEST_ORG_ID } from "../fixtures/supabase-mock";
 
 describe("formatKnowledgeContext", () => {
 	it("returns empty string for empty chunks", async () => {
@@ -27,8 +27,20 @@ describe("formatKnowledgeContext", () => {
 	it("formats multiple chunks ordered", async () => {
 		const { formatKnowledgeContext } = await import("@/state/knowledge");
 		const result = formatKnowledgeContext([
-			{ id: "1", sourceType: "faq", title: "First", content: "Content A", similarity: 0.9 },
-			{ id: "2", sourceType: "document", title: null, content: "Content B", similarity: 0.8 },
+			{
+				id: "1",
+				sourceType: "faq",
+				title: "First",
+				content: "Content A",
+				similarity: 0.9,
+			},
+			{
+				id: "2",
+				sourceType: "document",
+				title: null,
+				content: "Content B",
+				similarity: 0.8,
+			},
 		]);
 		expect(result).toContain("Мэдлэг 1");
 		expect(result).toContain("Мэдлэг 2");
@@ -39,7 +51,13 @@ describe("formatKnowledgeContext", () => {
 	it("omits title label when title is null", async () => {
 		const { formatKnowledgeContext } = await import("@/state/knowledge");
 		const result = formatKnowledgeContext([
-			{ id: "1", sourceType: "document", title: null, content: "Plain content", similarity: 0.7 },
+			{
+				id: "1",
+				sourceType: "document",
+				title: null,
+				content: "Plain content",
+				similarity: 0.7,
+			},
 		]);
 		expect(result).not.toContain("(");
 	});
@@ -47,7 +65,13 @@ describe("formatKnowledgeContext", () => {
 	it("includes instruction to use knowledge in response", async () => {
 		const { formatKnowledgeContext } = await import("@/state/knowledge");
 		const result = formatKnowledgeContext([
-			{ id: "1", sourceType: "faq", title: "Test", content: "Test content", similarity: 0.9 },
+			{
+				id: "1",
+				sourceType: "faq",
+				title: "Test",
+				content: "Test content",
+				similarity: 0.9,
+			},
 		]);
 		expect(result).toContain("ашиглана уу");
 	});
@@ -58,22 +82,31 @@ describe("searchKnowledge — fallback text search", () => {
 		const { searchKnowledge } = await import("@/state/knowledge");
 		const mockSupabase = createMockSupabase({
 			data: [
-				{ id: "k1", source_type: "faq", title: "Часто", content: "Асуулт хариулт" },
+				{
+					id: "k1",
+					source_type: "faq",
+					title: "Часто",
+					content: "Асуулт хариулт",
+				},
 			],
 			error: null,
 		});
 
 		const result = await searchKnowledge(mockSupabase, TEST_ORG_ID, "асуулт");
 		expect(result).toHaveLength(1);
-		expect(result[0]!.id).toBe("k1");
-		expect(result[0]!.similarity).toBe(0.5);
+		expect(result[0]?.id).toBe("k1");
+		expect(result[0]?.similarity).toBe(0.5);
 	});
 
 	it("returns empty array when no matches found", async () => {
 		const { searchKnowledge } = await import("@/state/knowledge");
 		const mockSupabase = createMockSupabase({ data: [], error: null });
 
-		const result = await searchKnowledge(mockSupabase, TEST_ORG_ID, "nonexistent");
+		const result = await searchKnowledge(
+			mockSupabase,
+			TEST_ORG_ID,
+			"nonexistent",
+		);
 		expect(result).toHaveLength(0);
 	});
 });
@@ -113,7 +146,9 @@ describe("ingestKnowledge", () => {
 
 describe("rememberCustomerFact / recallCustomerFacts / forgetCustomerFact", () => {
 	it("remembers and recalls customer facts", async () => {
-		const { rememberCustomerFact, recallCustomerFacts } = await import("@/state/customer-memory");
+		const { rememberCustomerFact, recallCustomerFacts } = await import(
+			"@/state/customer-memory"
+		);
 
 		const mockSupabase = createMockSupabase({
 			data: [
@@ -144,10 +179,14 @@ describe("rememberCustomerFact / recallCustomerFacts / forgetCustomerFact", () =
 			factType: "note",
 		});
 
-		const facts = await recallCustomerFacts(mockSupabase, TEST_ORG_ID, "cust-1");
+		const facts = await recallCustomerFacts(
+			mockSupabase,
+			TEST_ORG_ID,
+			"cust-1",
+		);
 		expect(facts).toHaveLength(2);
-		expect(facts[0]!.fact).toBe("Даваа гаригт захиалга өгдөг");
-		expect(facts[0]!.factType).toBe("preference");
+		expect(facts[0]?.fact).toBe("Даваа гаригт захиалга өгдөг");
+		expect(facts[0]?.factType).toBe("preference");
 	});
 
 	it("filters facts by factType", async () => {
@@ -155,23 +194,36 @@ describe("rememberCustomerFact / recallCustomerFacts / forgetCustomerFact", () =
 
 		const mockSupabase = createMockSupabase({
 			data: [
-				{ id: "f1", fact: "Note", fact_type: "note", confidence: 1.0, created_at: new Date().toISOString() },
+				{
+					id: "f1",
+					fact: "Note",
+					fact_type: "note",
+					confidence: 1.0,
+					created_at: new Date().toISOString(),
+				},
 			],
 			error: null,
 		});
 
-		const facts = await recallCustomerFacts(mockSupabase, TEST_ORG_ID, "cust-1", {
-			factType: "note",
-		});
+		const facts = await recallCustomerFacts(
+			mockSupabase,
+			TEST_ORG_ID,
+			"cust-1",
+			{
+				factType: "note",
+			},
+		);
 		expect(facts).toHaveLength(1);
-		expect(facts[0]!.factType).toBe("note");
+		expect(facts[0]?.factType).toBe("note");
 	});
 
 	it("forgets a fact by marking it inactive", async () => {
 		const { forgetCustomerFact } = await import("@/state/customer-memory");
 		const mockSupabase = createMockSupabase({ data: null, error: null });
 
-		await expect(forgetCustomerFact(mockSupabase, "fact-1")).resolves.toBeUndefined();
+		await expect(
+			forgetCustomerFact(mockSupabase, "fact-1"),
+		).resolves.toBeUndefined();
 	});
 });
 
@@ -184,7 +236,13 @@ describe("formatCustomerMemory", () => {
 	it("formats facts with confidence and customer name", async () => {
 		const { formatCustomerMemory } = await import("@/state/customer-memory");
 		const result = formatCustomerMemory("Бат", [
-			{ id: "1", fact: "Тогтмол харилцагч", factType: "note", confidence: 0.9, createdAt: "2026-01-01" },
+			{
+				id: "1",
+				fact: "Тогтмол харилцагч",
+				factType: "note",
+				confidence: 0.9,
+				createdAt: "2026-01-01",
+			},
 		]);
 		expect(result).toContain("Бат");
 		expect(result).toContain("Тогтмол харилцагч");
@@ -194,7 +252,13 @@ describe("formatCustomerMemory", () => {
 	it("includes instruction to use in response", async () => {
 		const { formatCustomerMemory } = await import("@/state/customer-memory");
 		const result = formatCustomerMemory("Сараа", [
-			{ id: "1", fact: "Some fact", factType: "general", confidence: 1.0, createdAt: "2026-01-01" },
+			{
+				id: "1",
+				fact: "Some fact",
+				factType: "general",
+				confidence: 1.0,
+				createdAt: "2026-01-01",
+			},
 		]);
 		expect(result).toContain("ашиглана уу");
 	});

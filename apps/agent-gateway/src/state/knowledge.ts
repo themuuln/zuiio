@@ -45,7 +45,13 @@ export async function searchKnowledge(
 	}
 
 	// Cache miss — run the query
-	const result = await runKnowledgeQuery(supabase, orgId, query, limit, embedding);
+	const result = await runKnowledgeQuery(
+		supabase,
+		orgId,
+		query,
+		limit,
+		embedding,
+	);
 
 	// Populate cache (fire-and-forget — never block response)
 	if (redis && result.length > 0) {

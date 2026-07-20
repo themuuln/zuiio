@@ -48,13 +48,19 @@ export function runAgentWithFallback(
 			const result = await Promise.race([agentPromise, delay(timeoutMs)]);
 
 			if (result === "timeout") {
-				console.log(`[async-job] timeout after ${timeoutMs}ms, falling back to background`);
+				console.log(
+					`[async-job] timeout after ${timeoutMs}ms, falling back to background`,
+				);
 				await opts.onAsyncFallback();
 				const finalResult = await agentPromise;
-				console.log(`[async-job] background result ready, len=${finalResult.length}, took ${Date.now() - start}ms`);
+				console.log(
+					`[async-job] background result ready, len=${finalResult.length}, took ${Date.now() - start}ms`,
+				);
 				await opts.onResult(finalResult);
 			} else {
-				console.log(`[async-job] fast path, len=${(result as string).length}, took ${Date.now() - start}ms`);
+				console.log(
+					`[async-job] fast path, len=${(result as string).length}, took ${Date.now() - start}ms`,
+				);
 				await opts.onResult(result as string);
 			}
 		} catch (err) {

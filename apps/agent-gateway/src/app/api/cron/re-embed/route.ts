@@ -1,9 +1,9 @@
 import "server-only";
 
-import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase";
 import { capture } from "@zuiio/capture";
+import { NextResponse } from "next/server";
 import { generateEmbedding } from "@/lib/embeddings";
+import { createServiceClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 

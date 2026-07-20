@@ -1,11 +1,14 @@
-import { describe, it, expect } from "vitest";
-import { readFileSync } from "fs";
-import { resolve } from "path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
 import { compileMutation } from "@/write-engine/compile";
 import type { WriteCatalog } from "@/write-engine/types";
 
 const catalog: WriteCatalog = JSON.parse(
-	readFileSync(resolve(__dirname, "../../../src/write-engine/catalogs/tolom-write.json"), "utf8"),
+	readFileSync(
+		resolve(__dirname, "../../../src/write-engine/catalogs/tolom-write.json"),
+		"utf8",
+	),
 );
 
 const UUID = "11111111-1111-1111-1111-111111111111";
@@ -51,7 +54,12 @@ describe("compileMutation", () => {
 
 	it("hard delete keeps delete operation and no deleted_at", () => {
 		const compiled = compileMutation(
-			{ dataset: "vehicles", operation: "delete", id: "xyz", softDelete: false },
+			{
+				dataset: "vehicles",
+				operation: "delete",
+				id: "xyz",
+				softDelete: false,
+			},
 			catalog,
 			TENANT,
 		);
@@ -62,7 +70,12 @@ describe("compileMutation", () => {
 
 	it("preserves update target id", () => {
 		const compiled = compileMutation(
-			{ dataset: "vehicles", operation: "update", id: "wo-9", data: { make: "Honda" } },
+			{
+				dataset: "vehicles",
+				operation: "update",
+				id: "wo-9",
+				data: { make: "Honda" },
+			},
 			catalog,
 			TENANT,
 		);

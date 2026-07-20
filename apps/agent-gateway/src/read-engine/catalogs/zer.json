@@ -21,7 +21,10 @@
 				"sale_date": { "type": "timestamp", "dimension": true, "time": true },
 				"status": { "type": "string", "dimension": true },
 				"payment_method": { "type": "string", "dimension": true },
-				"total_amount": { "type": "number", "measures": ["sum", "avg", "count"] },
+				"total_amount": {
+					"type": "number",
+					"measures": ["sum", "avg", "count"]
+				},
 				"original_amount": { "type": "number", "measures": ["sum", "avg"] },
 				"paid_amount": { "type": "number", "measures": ["sum", "avg"] },
 				"exchange_rate": { "type": "number" },
@@ -132,7 +135,11 @@
 				"amount": { "type": "number", "measures": ["sum", "avg", "count"] },
 				"original_amount": { "type": "number", "measures": ["sum"] },
 				"exchange_rate": { "type": "number" },
-				"expense_date": { "type": "timestamp", "dimension": true, "time": true },
+				"expense_date": {
+					"type": "timestamp",
+					"dimension": true,
+					"time": true
+				},
 				"created_at": { "type": "timestamp", "time": true },
 				"deleted_at": { "type": "timestamp" }
 			}
@@ -152,7 +159,10 @@
 				"receipt_number": { "type": "string" },
 				"status": { "type": "string", "dimension": true },
 				"is_receipt": { "type": "boolean", "dimension": true },
-				"total_amount": { "type": "number", "measures": ["sum", "avg", "count"] },
+				"total_amount": {
+					"type": "number",
+					"measures": ["sum", "avg", "count"]
+				},
 				"paid_amount": { "type": "number", "measures": ["sum", "avg"] },
 				"issue_date": { "type": "timestamp", "dimension": true, "time": true },
 				"due_date": { "type": "timestamp", "time": true },
@@ -207,7 +217,10 @@
 				"type": { "type": "string", "dimension": true },
 				"reason": { "type": "text" },
 				"status": { "type": "string", "dimension": true },
-				"total_amount": { "type": "number", "measures": ["sum", "avg", "count"] },
+				"total_amount": {
+					"type": "number",
+					"measures": ["sum", "avg", "count"]
+				},
 				"return_date": { "type": "timestamp", "dimension": true, "time": true },
 				"return_number": { "type": "string" },
 				"created_at": { "type": "timestamp", "time": true },
@@ -244,7 +257,10 @@
 				"currency_id": { "type": "uuid" },
 				"order_number": { "type": "string" },
 				"status": { "type": "string", "dimension": true },
-				"total_amount": { "type": "number", "measures": ["sum", "avg", "count"] },
+				"total_amount": {
+					"type": "number",
+					"measures": ["sum", "avg", "count"]
+				},
 				"original_amount": { "type": "number", "measures": ["sum"] },
 				"exchange_rate": { "type": "number" },
 				"order_date": { "type": "timestamp", "dimension": true, "time": true },

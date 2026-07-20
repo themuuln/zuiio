@@ -15,7 +15,10 @@ describe("TelegramChannel message reactions", () => {
 		const originalFetch = globalThis.fetch;
 		let capturedUrl = "";
 		let capturedBody = "";
-		globalThis.fetch = async (url: string | URL | Request, init?: RequestInit) => {
+		globalThis.fetch = async (
+			url: string | URL | Request,
+			init?: RequestInit,
+		) => {
 			if (typeof url === "string") capturedUrl = url;
 			if (init?.body) capturedBody = init.body as string;
 			return new Response(JSON.stringify({ ok: true }), { status: 200 });

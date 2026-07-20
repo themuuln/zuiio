@@ -12,10 +12,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import type { ToolContext } from "@/providers/types";
-import {
-	createMockSupabase,
-	TEST_ORG_ID,
-} from "../fixtures/supabase-mock";
+import { createMockSupabase, TEST_ORG_ID } from "../fixtures/supabase-mock";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 // systemPromptFor queries Redis → Supabase for org name.  Mock both to return
@@ -30,9 +27,7 @@ vi.mock("@/lib/supabase", () => ({
 		from: vi.fn(() => ({
 			select: vi.fn(() => ({
 				eq: vi.fn(() => ({
-					single: vi.fn(() =>
-						Promise.resolve({ data: null, error: null }),
-					),
+					single: vi.fn(() => Promise.resolve({ data: null, error: null })),
 				})),
 			})),
 		})),
@@ -159,15 +154,14 @@ describe("Agent Simulation — Tool Execution", () => {
 	it("getDailySummary executes without crashing", async () => {
 		const t = findTool("getDailySummary");
 		expect(t).toBeDefined();
-		const result = await t!.execute({}, mockContext);
+		const result = await t?.execute({}, mockContext);
 		expect(result).toBeDefined();
 	});
-
 
 	it("readData executes with a valid plan", async () => {
 		const t = findTool("readData");
 		expect(t).toBeDefined();
-		const result = await t!.execute(
+		const result = await t?.execute(
 			{ plan: { queries: [{ dataset: "customers", limit: 5 }] } },
 			mockContext,
 		);
@@ -178,7 +172,7 @@ describe("Agent Simulation — Tool Execution", () => {
 
 	it("readData rejects an invalid dataset", async () => {
 		const t = findTool("readData");
-		const result = await t!.execute(
+		const result = await t?.execute(
 			{ plan: { queries: [{ dataset: "nonexistent_table" }] } },
 			mockContext,
 		);

@@ -2,38 +2,112 @@
  * Rich test data factory for Mongolian auto workshop and retail business scenarios.
  * Generates diverse, realistic data that mirrors actual production data.
  */
+
 import { TEST_ORG_ID } from "./supabase-mock";
-import { vi } from "vitest";
 
 // ─── Mongolian Data Pools ───────────────────────────────────────────────────────
 
 const MONGOLIAN_FIRST_NAMES = [
-	"Бат", "Ган", "Оюун", "Мөнх", "Түвшин", "Билэг", "Эрдэнэ", "Сүрэн",
-	"Дорж", "Баяр", "Гал", "Жаргал", "Наран", "Хүрэл", "Цэцэг",
+	"Бат",
+	"Ган",
+	"Оюун",
+	"Мөнх",
+	"Түвшин",
+	"Билэг",
+	"Эрдэнэ",
+	"Сүрэн",
+	"Дорж",
+	"Баяр",
+	"Гал",
+	"Жаргал",
+	"Наран",
+	"Хүрэл",
+	"Цэцэг",
 ] as const;
 
 const MONGOLIAN_LAST_NAMES = [
-	"Эрдэнэ", "Баатар", "Болд", "Төмөр", "Очир", "Сайхан", "Ариун",
-	"Даваа", "Энх", "Мөнгөн", "Алтан", "Гэрэл", "Өсөх", "Дэлгэр",
+	"Эрдэнэ",
+	"Баатар",
+	"Болд",
+	"Төмөр",
+	"Очир",
+	"Сайхан",
+	"Ариун",
+	"Даваа",
+	"Энх",
+	"Мөнгөн",
+	"Алтан",
+	"Гэрэл",
+	"Өсөх",
+	"Дэлгэр",
 ] as const;
 
 const MONGOLIAN_FULL_NAMES = [
-	"Бат-Эрдэнэ", "Ганбат", "Оюунбат", "Мөнхбат", "Түвшинбат",
-	"Билэгт", "Эрдэнэбат", "Сүрэнжав", "Доржсүрэн", "Баярсайхан",
-	"Галбаатар", "Жаргалсайхан", "Наранбаатар", "Хүрэлбаатар",
-	"Цэцэгмаа", "Оюунчимэг", "Энхтуяа", "Мөнхтуяа", "Алтантуяа",
-	"Гэрэлмаа", "Номин", "Ангирмаа", "Маралмаа", "Цэнгүүн",
+	"Бат-Эрдэнэ",
+	"Ганбат",
+	"Оюунбат",
+	"Мөнхбат",
+	"Түвшинбат",
+	"Билэгт",
+	"Эрдэнэбат",
+	"Сүрэнжав",
+	"Доржсүрэн",
+	"Баярсайхан",
+	"Галбаатар",
+	"Жаргалсайхан",
+	"Наранбаатар",
+	"Хүрэлбаатар",
+	"Цэцэгмаа",
+	"Оюунчимэг",
+	"Энхтуяа",
+	"Мөнхтуяа",
+	"Алтантуяа",
+	"Гэрэлмаа",
+	"Номин",
+	"Ангирмаа",
+	"Маралмаа",
+	"Цэнгүүн",
 ] as const;
 
-const PHONE_PREFIXES = ["99", "88", "95", "96", "70", "80", "85", "90", "91", "94"];
+const PHONE_PREFIXES = [
+	"99",
+	"88",
+	"95",
+	"96",
+	"70",
+	"80",
+	"85",
+	"90",
+	"91",
+	"94",
+];
 
 const VEHICLE_BRANDS = [
-	"Toyota", "Hyundai", "Nissan", "Honda", "Kia", "Mitsubishi",
-	"Lexus", "BMW", "Mercedes-Benz", "Volkswagen", "Subaru", "Mazda",
+	"Toyota",
+	"Hyundai",
+	"Nissan",
+	"Honda",
+	"Kia",
+	"Mitsubishi",
+	"Lexus",
+	"BMW",
+	"Mercedes-Benz",
+	"Volkswagen",
+	"Subaru",
+	"Mazda",
 ] as const;
 
 const VEHICLE_MODELS: Record<string, string[]> = {
-	Toyota: ["Camry", "Corolla", "RAV4", "Land Cruiser", "Prado", "Prius", "Hilux", "Yaris"],
+	Toyota: [
+		"Camry",
+		"Corolla",
+		"RAV4",
+		"Land Cruiser",
+		"Prado",
+		"Prius",
+		"Hilux",
+		"Yaris",
+	],
 	Hyundai: ["Sonata", "Elantra", "Tucson", "Santa Fe", "Accent", "Porter"],
 	Nissan: ["Tiida", "X-Trail", "Patrol", "Sunny", "Qashqai", "Navara"],
 	Honda: ["Civic", "Accord", "CR-V", "Fit", "City", "Odyssey"],
@@ -49,10 +123,22 @@ const VEHICLE_MODELS: Record<string, string[]> = {
 
 const PLATE_LETTERS = ["УБА", "УББ", "УБЕ", "УБД", "УБМ", "УБХ", "УБС", "УБТ"];
 
-const WORK_ORDER_STATUSES = ["pending", "in_progress", "waiting_parts", "completed", "delivered", "cancelled"] as const;
-const ACTIVE_STATUSES = ["pending", "in_progress", "waiting_parts"];
+const _WORK_ORDER_STATUSES = [
+	"pending",
+	"in_progress",
+	"waiting_parts",
+	"completed",
+	"delivered",
+	"cancelled",
+] as const;
+const _ACTIVE_STATUSES = ["pending", "in_progress", "waiting_parts"];
 
-const APPOINTMENT_STATUSES = ["scheduled", "confirmed", "completed", "cancelled"] as const;
+const APPOINTMENT_STATUSES = [
+	"scheduled",
+	"confirmed",
+	"completed",
+	"cancelled",
+] as const;
 
 const EXPENSE_CATEGORIES = [
 	{ id: "cat-parts", name: "Сэлбэг" },
@@ -157,7 +243,10 @@ export interface TestVehicle {
 	year: number;
 }
 
-export function generateVehicles(count: number, customers: TestCustomer[]): TestVehicle[] {
+export function generateVehicles(
+	count: number,
+	customers: TestCustomer[],
+): TestVehicle[] {
 	return Array.from({ length: count }, (_, i) => {
 		const make = pick(VEHICLE_BRANDS);
 		const models = VEHICLE_MODELS[make] ?? ["Unknown"];
@@ -191,7 +280,14 @@ export interface TestWorkOrder {
 export function generateWorkOrders(
 	count: number,
 	customers: TestCustomer[],
-	statusDistribution: Record<string, number> = { pending: 0.2, in_progress: 0.3, waiting_parts: 0.15, completed: 0.2, delivered: 0.1, cancelled: 0.05 },
+	statusDistribution: Record<string, number> = {
+		pending: 0.2,
+		in_progress: 0.3,
+		waiting_parts: 0.15,
+		completed: 0.2,
+		delivered: 0.1,
+		cancelled: 0.05,
+	},
 ): TestWorkOrder[] {
 	const statuses = Object.keys(statusDistribution);
 	const weights = Object.values(statusDistribution);
@@ -201,7 +297,10 @@ export function generateWorkOrders(
 		let status = statuses[statuses.length - 1]!;
 		for (let j = 0; j < statuses.length; j++) {
 			cumulative += weights[j]!;
-			if (r <= cumulative) { status = statuses[j]!; break; }
+			if (r <= cumulative) {
+				status = statuses[j]!;
+				break;
+			}
 		}
 		const customer = customers[i % customers.length];
 		return {
@@ -232,18 +331,36 @@ export interface TestInvoice {
 	created_at: string;
 }
 
-export function generateInvoices(count: number, customers: TestCustomer[]): TestInvoice[] {
+export function generateInvoices(
+	count: number,
+	customers: TestCustomer[],
+): TestInvoice[] {
 	return Array.from({ length: count }, (_, i) => {
 		const total = randomAmount(50000, 3000000);
 		const status = pick(INVOICE_STATUSES);
 		let amountPaid: number;
 		let balanceDue: number;
 		switch (status) {
-			case "paid": amountPaid = total; balanceDue = 0; break;
-			case "unpaid": amountPaid = 0; balanceDue = total; break;
-			case "partial": amountPaid = Math.round(total * (0.2 + Math.random() * 0.5) / 1000) * 1000; balanceDue = total - amountPaid; break;
-			case "overdue": amountPaid = 0; balanceDue = total; break;
-			default: amountPaid = 0; balanceDue = total;
+			case "paid":
+				amountPaid = total;
+				balanceDue = 0;
+				break;
+			case "unpaid":
+				amountPaid = 0;
+				balanceDue = total;
+				break;
+			case "partial":
+				amountPaid =
+					Math.round((total * (0.2 + Math.random() * 0.5)) / 1000) * 1000;
+				balanceDue = total - amountPaid;
+				break;
+			case "overdue":
+				amountPaid = 0;
+				balanceDue = total;
+				break;
+			default:
+				amountPaid = 0;
+				balanceDue = total;
 		}
 		return {
 			id: `inv-${i + 1}-${Date.now()}`,
@@ -281,9 +398,15 @@ export function generateExpenses(count: number): TestExpense[] {
 			amount: String(randomAmount(5000, 2000000)),
 			expense_date: randomDate(30).split("T")[0]!,
 			description: pick([
-				"Сэлбэг худалдан авалт", "Цалин", "Түрээсийн төлбөр",
-				"Цахилгаан", "Сурталчилгаа", "Тасалгааны материал",
-				"Багаж хэрэгсэл", "Тээврийн зардал", "Интернет",
+				"Сэлбэг худалдан авалт",
+				"Цалин",
+				"Түрээсийн төлбөр",
+				"Цахилгаан",
+				"Сурталчилгаа",
+				"Тасалгааны материал",
+				"Багаж хэрэгсэл",
+				"Тээврийн зардал",
+				"Интернет",
 			]),
 			category_id: category.id,
 			expense_categories: { name: category.name },
@@ -313,7 +436,9 @@ export function generateAppointments(
 ): TestAppointment[] {
 	return Array.from({ length: count }, (_, i) => {
 		const customer = customers[i % customers.length];
-		const vehicle = vehicles.find(v => v.customer_id === customer.id) ?? vehicles[i % vehicles.length];
+		const vehicle =
+			vehicles.find((v) => v.customer_id === customer.id) ??
+			vehicles[i % vehicles.length];
 		return {
 			id: `apt-${i + 1}-${Date.now()}`,
 			organization_id: TEST_ORG_ID,
@@ -324,7 +449,11 @@ export function generateAppointments(
 			notes: pick(APPOINTMENT_NOTES),
 			created_at: randomDate(14),
 			customers: { full_name: customer.full_name, phone: customer.phone },
-			vehicles: { plate_number: vehicle?.plate_number ?? randomPlate(), make: vehicle?.make ?? "Toyota", model: vehicle?.model ?? "Camry" },
+			vehicles: {
+				plate_number: vehicle?.plate_number ?? randomPlate(),
+				make: vehicle?.make ?? "Toyota",
+				model: vehicle?.model ?? "Camry",
+			},
 		};
 	});
 }
@@ -348,7 +477,11 @@ export function generateSales(count: number): TestSale[] {
 			organization_id: TEST_ORG_ID,
 			sale_date: randomDate(30).split("T")[0]!,
 			total_amount: String(total),
-			paid_amount: isFullyPaid ? String(total) : (Math.random() > 0.5 ? String(randomAmount(0, total)) : null),
+			paid_amount: isFullyPaid
+				? String(total)
+				: Math.random() > 0.5
+					? String(randomAmount(0, total))
+					: null,
 		};
 	});
 }
@@ -383,14 +516,21 @@ export function generateFullDataset(opts?: {
 		workOrders: generateWorkOrders(opts?.workOrderCount ?? 40, customers),
 		invoices: generateInvoices(opts?.invoiceCount ?? 30, customers),
 		expenses: generateExpenses(opts?.expenseCount ?? 50),
-		appointments: generateAppointments(opts?.appointmentCount ?? 15, customers, vehicles),
+		appointments: generateAppointments(
+			opts?.appointmentCount ?? 15,
+			customers,
+			vehicles,
+		),
 		sales: generateSales(opts?.saleCount ?? 60),
 	};
 }
 
 // ─── Report a single customer's full profile ────────────────────────────────────
 
-export function findCustomerByQuery(dataset: TestDataset, query: string): TestCustomer[] {
+export function findCustomerByQuery(
+	dataset: TestDataset,
+	query: string,
+): TestCustomer[] {
 	const q = query.toLowerCase();
 	return dataset.customers.filter(
 		(c) =>
@@ -401,6 +541,9 @@ export function findCustomerByQuery(dataset: TestDataset, query: string): TestCu
 	);
 }
 
-export function getCustomerVehicles(dataset: TestDataset, customerId: string): TestVehicle[] {
+export function getCustomerVehicles(
+	dataset: TestDataset,
+	customerId: string,
+): TestVehicle[] {
 	return dataset.vehicles.filter((v) => v.customer_id === customerId);
 }

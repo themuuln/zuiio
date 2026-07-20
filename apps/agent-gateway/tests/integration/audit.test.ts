@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import type { GatewayTool, ToolContext } from "@/providers/types";
+import { describe, expect, it } from "vitest";
+import type { GatewayTool } from "@/providers/types";
 import { createMockSupabase, TEST_ORG_ID } from "../fixtures/supabase-mock";
 
 describe("withAudit", () => {
@@ -14,12 +14,7 @@ describe("withAudit", () => {
 			execute: async () => ({ result: "ok" }),
 		};
 
-		const wrapped = withAudit(
-			tool,
-			"telegram",
-			"12345",
-			"67890",
-		);
+		const wrapped = withAudit(tool, "telegram", "12345", "67890");
 
 		// The wrapped tool should still return the original result
 		// and call logToolCall internally
@@ -37,7 +32,9 @@ describe("withAudit", () => {
 		const tool: GatewayTool = {
 			name: "getTest",
 			description: "Test tool",
-			parameters: [{ name: "p1", type: "string", description: "param", required: false }],
+			parameters: [
+				{ name: "p1", type: "string", description: "param", required: false },
+			],
 			execute: async () => ({}),
 		};
 

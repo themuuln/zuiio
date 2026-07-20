@@ -25,7 +25,7 @@ export interface BriefingData {
 export async function gatherBriefingData(
 	supabase: SupabaseClient,
 	orgId: string,
-	adminChatId: number,
+	_adminChatId: number,
 ): Promise<BriefingData | null> {
 	const yesterday = new Date(Date.now() - 86400000).toISOString();
 	const todayStart = new Date();

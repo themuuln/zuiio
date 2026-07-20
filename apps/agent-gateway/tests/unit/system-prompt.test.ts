@@ -12,9 +12,7 @@ vi.mock("@/lib/supabase", () => ({
 		from: vi.fn(() => ({
 			select: vi.fn(() => ({
 				eq: vi.fn(() => ({
-					single: vi.fn(() =>
-						Promise.resolve({ data: null, error: null }),
-					),
+					single: vi.fn(() => Promise.resolve({ data: null, error: null })),
 				})),
 			})),
 		})),
@@ -83,23 +81,13 @@ describe("systemPromptFor — Zer", () => {
 describe("systemPromptFor — unknown product", () => {
 	it("falls back to Zer prompt for unrecognized product type", async () => {
 		// No explicit fallback — the function returns Zer prompt for unknown types
-		const prompt = await systemPromptFor(
-			"unknown",
-			"org-1",
-			"private",
-			"en",
-		);
+		const prompt = await systemPromptFor("unknown", "org-1", "private", "en");
 		// Falls through to Zer prompt (last return)
 		expect(prompt).toContain("proactive Zer");
 	});
 
 	it("falls back with Mongolian lang for unknown product", async () => {
-		const prompt = await systemPromptFor(
-			"unknown",
-			"org-1",
-			"private",
-			"mn",
-		);
+		const prompt = await systemPromptFor("unknown", "org-1", "private", "mn");
 		// Falls through to Mongolian Zer prompt
 		expect(prompt).toContain("найрсаг");
 	});

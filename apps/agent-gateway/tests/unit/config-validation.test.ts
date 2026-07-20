@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { validateConfig } from "@/lib/env";
 
 describe("validateConfig", () => {
@@ -45,7 +45,9 @@ describe("validateConfig", () => {
 		delete process.env.OPENCODE_API_KEY;
 		delete process.env.TELEGRAM_BOT_TOKEN;
 		delete process.env.TELEGRAM_WEBHOOK_SECRET;
-		expect(() => validateConfig()).toThrow("SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENCODE_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET");
+		expect(() => validateConfig()).toThrow(
+			"SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENCODE_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET",
+		);
 	});
 
 	it("warns on missing optional vars", () => {
@@ -58,7 +60,9 @@ describe("validateConfig", () => {
 		delete process.env.SENTRY_DSN;
 		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 		validateConfig();
-		expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("OPENAI_API_KEY"));
+		expect(warnSpy).toHaveBeenCalledWith(
+			expect.stringContaining("OPENAI_API_KEY"),
+		);
 		warnSpy.mockRestore();
 	});
 });

@@ -1,7 +1,7 @@
 import "server-only";
 
-import { openCodeGoConfig } from "@/lib/env";
 import { capture } from "@zuiio/capture";
+import { openCodeGoConfig } from "@/lib/env";
 
 /**
  * Embedding generation via OpenCodeGo API.

@@ -63,10 +63,7 @@ export function createMockSupabase(response?: MockResponse) {
 }
 
 /** Create a mock Supabase that returns specific data for a table. */
-export function createMockSupabaseWithData(
-	tableName: string,
-	data: unknown[],
-) {
+export function createMockSupabaseWithData(tableName: string, data: unknown[]) {
 	const chain = {
 		select: vi.fn(() => chain),
 		insert: vi.fn(() => chain),
@@ -85,7 +82,9 @@ export function createMockSupabaseWithData(
 		gte: vi.fn(() => chain),
 		lte: vi.fn(() => chain),
 		is: vi.fn(() => chain),
-		single: vi.fn(() => Promise.resolve({ data: data[0] ?? null, error: null })),
+		single: vi.fn(() =>
+			Promise.resolve({ data: data[0] ?? null, error: null }),
+		),
 		maybeSingle: vi.fn(() =>
 			Promise.resolve({ data: data[0] ?? null, error: null }),
 		),
@@ -93,9 +92,9 @@ export function createMockSupabaseWithData(
 	};
 
 	// Override `.then()` to make the chain thenable (for `await chain`)
-	const thenable = Promise.resolve({ data, error: null });
+	const _thenable = Promise.resolve({ data, error: null });
 
-	const chainWithThen = new Proxy(chain, {
+	const _chainWithThen = new Proxy(chain, {
 		get(target, prop) {
 			if (prop === "then") {
 				return (resolve: (v: MockResponse) => unknown) =>

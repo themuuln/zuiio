@@ -1,17 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type {
-	ProductCatalog,
-	ReadPlan,
-	ReadEngineConfig,
-	ReadEngineResult,
-	QueryResult,
-	ExecutionMeta,
-} from "./types";
-import type { ValidationResult } from "./validate";
-import { validateReadPlan } from "./validate";
 import { compileQuery } from "./compile";
 import { executeCompiledQuery } from "./execute";
 import { applyDerivation } from "./reduce";
+import type {
+	ExecutionMeta,
+	ProductCatalog,
+	QueryResult,
+	ReadEngineConfig,
+	ReadEngineResult,
+	ReadPlan,
+} from "./types";
+import type { ValidationResult } from "./validate";
+import { validateReadPlan } from "./validate";
 
 export class ReadEngine {
 	private supabase: SupabaseClient;

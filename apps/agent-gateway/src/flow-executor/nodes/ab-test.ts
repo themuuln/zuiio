@@ -48,9 +48,7 @@ export async function handleAbTest(
 		);
 	}
 
-	const messages: OutboundMessage[] = [
-		{ text: selectedVariant.message },
-	];
+	const messages: OutboundMessage[] = [{ text: selectedVariant.message }];
 
 	return {
 		action: { type: "next" },

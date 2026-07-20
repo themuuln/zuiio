@@ -50,26 +50,26 @@ export interface AiProvider {
 	 * Provider sends messages, parses tool calls, executes tools with context,
 	 * appends results, repeats until no more tool calls or maxRounds reached.
 	 */
-runWithTools(params: {
-	system: string;
-	userMessage: string;
-	images?: string[];
-	tools: GatewayTool[];
-	context: ToolContext;
-	maxRounds?: number;
-	/** Called with each token chunk when streaming is enabled. */
-	onToken?: (token: string) => void;
-	conversationHistory?: Array<{
-		role: "system" | "user" | "assistant" | "tool";
-		content: string | null;
-		tool_calls?: Array<{
-			id: string;
-			type: "function";
-			function: { name: string; arguments: string };
+	runWithTools(params: {
+		system: string;
+		userMessage: string;
+		images?: string[];
+		tools: GatewayTool[];
+		context: ToolContext;
+		maxRounds?: number;
+		/** Called with each token chunk when streaming is enabled. */
+		onToken?: (token: string) => void;
+		conversationHistory?: Array<{
+			role: "system" | "user" | "assistant" | "tool";
+			content: string | null;
+			tool_calls?: Array<{
+				id: string;
+				type: "function";
+				function: { name: string; arguments: string };
+			}>;
+			tool_call_id?: string;
 		}>;
-		tool_call_id?: string;
-	}>;
-}): Promise<string>;
+	}): Promise<string>;
 }
 
 /**
@@ -95,19 +95,19 @@ export class AiGateway {
 	async runWithTools(
 		params: Parameters<AiProvider["runWithTools"]>[0],
 	): Promise<string> {
-	try {
-		return await this.primary.runWithTools(params);
-	} catch (err) {
-		console.error(`[AiGateway] provider error:`, err);
-		if (this.isRateLimitError(err)) {
-			capture(err, { context: "agent-gateway: rate limit" });
-			return "⚠️ Үйлчилгээний хэрэглээ хязгаарт хүрсэн байна. Түр хүлээгээд дахин оролдоно уу.";
+		try {
+			return await this.primary.runWithTools(params);
+		} catch (err) {
+			console.error(`[AiGateway] provider error:`, err);
+			if (this.isRateLimitError(err)) {
+				capture(err, { context: "agent-gateway: rate limit" });
+				return "⚠️ Үйлчилгээний хэрэглээ хязгаарт хүрсэн байна. Түр хүлээгээд дахин оролдоно уу.";
+			}
+			if (this.fallback) {
+				capture(err, { context: "agent-gateway: provider fallback" });
+				return await this.fallback.runWithTools(params);
+			}
+			throw err;
 		}
-		if (this.fallback) {
-			capture(err, { context: "agent-gateway: provider fallback" });
-			return await this.fallback.runWithTools(params);
-		}
-		throw err;
-	}
 	}
 }

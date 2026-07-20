@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createMockSupabase, TEST_ORG_ID, TEST_CHAT_ID } from "../fixtures/supabase-mock";
+import { createMockSupabase, TEST_ORG_ID } from "../fixtures/supabase-mock";
 
 describe("getUsageStats", () => {
 	it("returns zeroed stats when no data exists", async () => {
@@ -19,7 +19,7 @@ describe("getUsageStats", () => {
 		const { getUsageStats } = await import("@/state/usage");
 
 		// Mock that returns spend data but empty tools/handoffs
-		let callCount = 0;
+		const _callCount = 0;
 		const mockSupabase = {
 			from: vi.fn().mockReturnValue({
 				select: vi.fn().mockReturnValue({
@@ -30,8 +30,16 @@ describe("getUsageStats", () => {
 									then: (resolve: (v: unknown) => unknown) =>
 										resolve({
 											data: [
-												{ date: "2026-07-06", tokens_used: 50000, api_calls: 10 },
-												{ date: "2026-07-05", tokens_used: 30000, api_calls: 5 },
+												{
+													date: "2026-07-06",
+													tokens_used: 50000,
+													api_calls: 10,
+												},
+												{
+													date: "2026-07-05",
+													tokens_used: 30000,
+													api_calls: 5,
+												},
 											],
 											error: null,
 										}),
@@ -61,7 +69,13 @@ describe("getUsageStats", () => {
 								order: vi.fn().mockReturnValue({
 									then: (resolve: (v: unknown) => unknown) =>
 										resolve({
-											data: [{ date: "2026-07-06", tokens_used: 1000000, api_calls: 10 }],
+											data: [
+												{
+													date: "2026-07-06",
+													tokens_used: 1000000,
+													api_calls: 10,
+												},
+											],
 											error: null,
 										}),
 								}),
@@ -75,7 +89,7 @@ describe("getUsageStats", () => {
 		const cheap = await getUsageStats(mockSupabase, TEST_ORG_ID, 7, 0.14);
 		expect(cheap.estimatedCost).toBe(0.14); // 1M tokens * $0.14/M
 
-		const expensive = await getUsageStats(mockSupabase, TEST_ORG_ID, 7, 2.00);
+		const expensive = await getUsageStats(mockSupabase, TEST_ORG_ID, 7, 2.0);
 		expect(expensive.estimatedCost).toBe(2.0); // 1M tokens * $2.00/M (MBA pricing)
 	});
 });

@@ -1,9 +1,9 @@
 import "server-only";
 
-import { NextResponse } from "next/server";
 import { capture } from "@zuiio/capture";
+import { NextResponse } from "next/server";
+import type { FlowEdge, FlowNode, FlowNodeKind } from "@/flow-executor/types";
 import { createServiceClient } from "@/lib/supabase";
-import type { FlowNode, FlowEdge, FlowNodeKind } from "@/flow-executor/types";
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
@@ -28,7 +28,11 @@ export async function POST(request: Request) {
 	// Auth: either cron secret or internal API key
 	const authHeader = request.headers.get("authorization");
 	const apiKey = request.headers.get("x-api-key");
-	if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}` && apiKey !== CRON_SECRET) {
+	if (
+		CRON_SECRET &&
+		authHeader !== `Bearer ${CRON_SECRET}` &&
+		apiKey !== CRON_SECRET
+	) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
@@ -159,7 +163,9 @@ function validateFlow(
 	// Must have exactly one start node
 	const startNodes = nodes.filter((n) => n.type === "start");
 	if (startNodes.length !== 1) {
-		errors.push(`Flow must have exactly one start node (found ${startNodes.length})`);
+		errors.push(
+			`Flow must have exactly one start node (found ${startNodes.length})`,
+		);
 	}
 
 	// All nodes must have valid types
@@ -176,16 +182,20 @@ function validateFlow(
 	const nodeIds = new Set(nodes.map((n) => n.id));
 	for (const edge of edges) {
 		if (!nodeIds.has(edge.source)) {
-			errors.push(`Edge ${edge.id} references unknown source node: ${edge.source}`);
+			errors.push(
+				`Edge ${edge.id} references unknown source node: ${edge.source}`,
+			);
 		}
 		if (!nodeIds.has(edge.target)) {
-			errors.push(`Edge ${edge.id} references unknown target node: ${edge.target}`);
+			errors.push(
+				`Edge ${edge.id} references unknown target node: ${edge.target}`,
+			);
 		}
 	}
 
 	// Start node must have an outgoing edge
 	if (startNodes.length === 1) {
-		const startId = startNodes[0]!.id;
+		const startId = startNodes[0]?.id;
 		const hasOutgoing = edges.some((e) => e.source === startId);
 		if (!hasOutgoing) {
 			errors.push("Start node must have an outgoing edge");
@@ -198,7 +208,9 @@ function validateFlow(
 		const outgoing = edges.filter((e) => e.source === node.id);
 		const labels = outgoing.map((e) => e.label).filter(Boolean);
 		if (!labels.includes("true") || !labels.includes("false")) {
-			errors.push(`Condition node ${node.id} must have both "true" and "false" branch edges`);
+			errors.push(
+				`Condition node ${node.id} must have both "true" and "false" branch edges`,
+			);
 		}
 	}
 

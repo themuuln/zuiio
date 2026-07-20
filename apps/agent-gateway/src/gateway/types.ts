@@ -1,5 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 /** Supported messaging channels. */
 export type ChannelType = "telegram" | "messenger" | "instagram" | "whatsapp";
 
@@ -64,4 +62,23 @@ export interface LinkRecord {
 	is_active: boolean;
 	created_at: string;
 	updated_at: string;
+}
+
+/** An agent context profile from agent_context_profiles table. */
+export interface AgentProfile {
+	id?: string;
+	organizationId: string;
+	audience: "internal" | "customer";
+	assistantName: string | null;
+	businessSummary: string | null;
+	responseLanguage: string | null;
+	tone: string | null;
+	contactDetails: string | null;
+	businessHours: Record<string, unknown> | null;
+	responseRules: string | null;
+	handoffMessage: string | null;
+	isActive: boolean;
+	updatedBy: string | null;
+	createdAt: string;
+	updatedAt: string;
 }

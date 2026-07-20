@@ -35,7 +35,10 @@ function simulateStreaming(sseLines: string[]): {
 	toolCalls: Map<string, { id: string; name: string; arguments: string }>;
 } {
 	let content = "";
-	const toolCallsById = new Map<string, { id: string; name: string; arguments: string }>();
+	const toolCallsById = new Map<
+		string,
+		{ id: string; name: string; arguments: string }
+	>();
 
 	for (const line of sseLines) {
 		const chunk = parseSSEChunk(line);
@@ -110,8 +113,8 @@ describe("SSE streaming parser", () => {
 		];
 		const result = simulateStreaming(lines);
 		expect(result.toolCalls.size).toBe(2);
-		expect(result.toolCalls.get("0")!.name).toBe("tool1");
-		expect(result.toolCalls.get("1")!.name).toBe("tool2");
+		expect(result.toolCalls.get("0")?.name).toBe("tool1");
+		expect(result.toolCalls.get("1")?.name).toBe("tool2");
 	});
 
 	it("ignores non-data lines", () => {

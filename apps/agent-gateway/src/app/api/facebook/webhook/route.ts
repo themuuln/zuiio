@@ -1,17 +1,20 @@
+import crypto from "node:crypto";
 import { capture } from "@zuiio/capture";
-
-import crypto from "crypto";
 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { FacebookChannel } from "@/channels/facebook";
 import type { MetaWebhookPayload } from "@/channels/types";
-import { handleAgentMessage } from "@/gateway/agent-handler";
 import { handleFlowMessage } from "@/flow-executor";
+import { handleAgentMessage } from "@/gateway/agent-handler";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
+import {
+	createServiceClient,
+	getSupabaseForProduct,
+	type ServiceClient,
+} from "@/lib/supabase";
 import { confirmAction, rejectAction } from "@/runtime/confirmation";
-import { createServiceClient, type ServiceClient, getSupabaseForProduct } from "@/lib/supabase";
 
 const VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN || "";
 const APP_SECRET = process.env.FB_APP_SECRET || "";
@@ -170,7 +173,10 @@ function validateSignature(rawBody: string, signature: string | null): boolean {
 
 	// Constant-time comparison
 	try {
-		return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+		return crypto.timingSafeEqual(
+			Buffer.from(signature),
+			Buffer.from(expected),
+		);
 	} catch {
 		return false;
 	}
@@ -223,9 +229,7 @@ async function handleMessage(
 		}
 
 		const dataClient =
-			ctx.productType === "tolom"
-				? getSupabaseForProduct("tolom")
-				: supabase;
+			ctx.productType === "tolom" ? getSupabaseForProduct("tolom") : supabase;
 
 		// Show typing indicator while processing
 		await channel.sendSenderAction(ctx.senderId, "typing_on");
@@ -258,17 +262,11 @@ async function handleMessage(
 		}
 
 		// No flow matched — fall through to AI agent handler
-		const response = await handleAgentMessage(
-			gatewayCtx,
-			ctx.text,
-			"private",
-			{
-				getSystemPrompt: systemPromptFor,
-				getTools: (toolCtx) =>
-					getProductTools(ctx.productType, toolCtx),
-				dataClient,
-			},
-		);
+		const response = await handleAgentMessage(gatewayCtx, ctx.text, "private", {
+			getSystemPrompt: systemPromptFor,
+			getTools: (toolCtx) => getProductTools(ctx.productType, toolCtx),
+			dataClient,
+		});
 
 		// Hide typing indicator and send response
 		await channel.sendSenderAction(ctx.senderId, "typing_off");
@@ -348,7 +346,6 @@ async function handlePostback(
 		await channel.sendMessage(ctx.senderId, "❌ Цуцаллаа.");
 		return;
 	}
-
 
 	// Default: treat as text message
 	await handleMessage(supabase, {

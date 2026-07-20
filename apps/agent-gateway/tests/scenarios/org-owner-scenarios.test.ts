@@ -21,7 +21,9 @@ import { generateFullDataset } from "../fixtures/test-data-factory";
 
 // ─── Mock Supabase Builder ──────────────────────────────────────────────────────
 
-function createDatasetMockSupabase(dataset: ReturnType<typeof generateFullDataset>) {
+function createDatasetMockSupabase(
+	dataset: ReturnType<typeof generateFullDataset>,
+) {
 	const tableData: Record<string, unknown[]> = {
 		work_orders: dataset.workOrders,
 		invoices: dataset.invoices,
@@ -52,7 +54,8 @@ function createDatasetMockSupabase(dataset: ReturnType<typeof generateFullDatase
 			contains: () => chain,
 			single: () => Promise.resolve({ data: null, error: null }),
 			maybeSingle: () => Promise.resolve({ data: null, error: null }),
-			then: (resolve: (v: unknown) => unknown) => resolve({ data: [], error: null }),
+			then: (resolve: (v: unknown) => unknown) =>
+				resolve({ data: [], error: null }),
 			rpc: () => Promise.resolve({ data: null, error: null }),
 			insert: () => chain,
 			update: () => chain,
@@ -68,7 +71,8 @@ function createDatasetMockSupabase(dataset: ReturnType<typeof generateFullDatase
 		const data = tableData[table] ?? [];
 		const chain = buildChain();
 		// Override then to return table-specific data
-		chain.then = (resolve: (v: unknown) => unknown) => resolve({ data, error: null });
+		chain.then = (resolve: (v: unknown) => unknown) =>
+			resolve({ data, error: null });
 		return chain;
 	};
 
@@ -82,12 +86,21 @@ function createDatasetMockSupabase(dataset: ReturnType<typeof generateFullDatase
 // ─── Single Dataset ─────────────────────────────────────────────────────────────
 
 const dataset = generateFullDataset({
-	customerCount: 24, vehicleCount: 24, workOrderCount: 45,
-	invoiceCount: 35, expenseCount: 50, appointmentCount: 18, saleCount: 60,
+	customerCount: 24,
+	vehicleCount: 24,
+	workOrderCount: 45,
+	invoiceCount: 35,
+	expenseCount: 50,
+	appointmentCount: 18,
+	saleCount: 60,
 });
 const supabase = createDatasetMockSupabase(dataset);
 
-const ctx: ToolContext = { orgId: TEST_ORG_ID, userId: "org-owner", supabase: supabase as never };
+const ctx: ToolContext = {
+	orgId: TEST_ORG_ID,
+	userId: "org-owner",
+	supabase: supabase as never,
+};
 
 const tolomTools = getProductTools("tolom", ctx);
 const zerTools = getProductTools("zer", ctx);
@@ -119,7 +132,9 @@ describe("🧰 Tolom — getDailySummary", () => {
 		expect(r.activeWorkOrders).toBeGreaterThanOrEqual(0);
 		expect(r.activeWorkOrders).toBeLessThanOrEqual(r.totalWorkOrders);
 	});
-	it("🗣️ 'Өчигдрийн орлогын мэдээлэл хэрэгтэй'", async () => { expect((await run())).not.toHaveProperty("error"); });
+	it("🗣️ 'Өчигдрийн орлогын мэдээлэл хэрэгтэй'", async () => {
+		expect(await run()).not.toHaveProperty("error");
+	});
 	it("🗣️ 'Энэ сард хэдэн шинэ харилцагч нэмэгдсэн бэ?'", async () => {
 		expect((await run()).newCustomersThisMonth).toBeGreaterThanOrEqual(0);
 	});
@@ -127,7 +142,7 @@ describe("🧰 Tolom — getDailySummary", () => {
 		expect((await run()).monthlyInvoices).toBeGreaterThanOrEqual(0);
 	});
 	it("🗣️ 'Сарын хураангуй харуулаач'", async () => {
-		expect((await run())).not.toHaveProperty("error");
+		expect(await run()).not.toHaveProperty("error");
 	});
 	it("🗣️ 'Манай цех өнөөдөр хэр их ачаалалтай байна?'", async () => {
 		expect(typeof (await run()).activeWorkOrders).toBe("number");
@@ -145,50 +160,74 @@ describe("🧰 Tolom — getDailySummary", () => {
 	});
 });
 
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // PART 3: CROSS-CUTTING — EDGE CASES & INTEGRITY
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe("⚠️  Empty / Zero Data Edge Cases", () => {
-	const emptyCtx = (overrides: Partial<ReturnType<typeof generateFullDataset>> = {}) => {
+	const emptyCtx = (
+		overrides: Partial<ReturnType<typeof generateFullDataset>> = {},
+	) => {
 		const ds = generateFullDataset({
-			customerCount: 0, vehicleCount: 0, workOrderCount: 0,
-			invoiceCount: 0, expenseCount: 0, appointmentCount: 0, saleCount: 0,
+			customerCount: 0,
+			vehicleCount: 0,
+			workOrderCount: 0,
+			invoiceCount: 0,
+			expenseCount: 0,
+			appointmentCount: 0,
+			saleCount: 0,
 			...overrides,
 		});
-		return { supabase: createDatasetMockSupabase(ds) as never, ctx: { orgId: TEST_ORG_ID, userId: "u1", supabase: null as never } as ToolContext };
+		return {
+			supabase: createDatasetMockSupabase(ds) as never,
+			ctx: {
+				orgId: TEST_ORG_ID,
+				userId: "u1",
+				supabase: null as never,
+			} as ToolContext,
+		};
 	};
 
 	it("getDailySummary — no data returns 0s", async () => {
 		const { supabase } = emptyCtx();
 		const tools = getProductTools("tolom", { ...ctx, supabase });
-		const r = await tools.find(t => t.name === "getDailySummary")!.execute({}, ctx) as any;
+		const r = (await tools
+			.find((t) => t.name === "getDailySummary")
+			?.execute({}, ctx)) as any;
 		expect(r.activeWorkOrders).toBe(0);
 		expect(r.monthlyInvoices).toBe(0);
 	});
 });
 
-
 describe("⚠️  Error Resilience", () => {
 	const brokenCtx = (): ToolContext => {
-		const thrower = { from: () => { throw new Error("DB connection failed"); } };
+		const thrower = {
+			from: () => {
+				throw new Error("DB connection failed");
+			},
+		};
 		return { orgId: TEST_ORG_ID, userId: "u1", supabase: thrower as never };
 	};
 
 	it("getDailySummary — DB error returns Mongolian error", async () => {
-		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getDailySummary")!.execute({}, ctx);
+		const r = await getProductTools("tolom", brokenCtx())
+			.find((t) => t.name === "getDailySummary")
+			?.execute({}, ctx);
 		expect(r).toHaveProperty("error");
 		expect((r as any).error).toMatch(/[А-Яа-я]/); // Cyrillic error message
 	});
 });
 
 describe("🔧 Product Type Integrity", () => {
-	it("Tolom has 11 tools (8 read + readData + recallCustomerMemory + rememberCustomerFact)", () => { expect(getProductTools("tolom", ctx)).toHaveLength(11); });
-	it("Zer has 7 tools (3 specialized + readData + recallCustomerMemory + rememberCustomerFact + writeData)", () => { expect(getProductTools("zer", ctx)).toHaveLength(7); });
+	it("Tolom has 11 tools (8 read + readData + recallCustomerMemory + rememberCustomerFact)", () => {
+		expect(getProductTools("tolom", ctx)).toHaveLength(11);
+	});
+	it("Zer has 7 tools (3 specialized + readData + recallCustomerMemory + rememberCustomerFact + writeData)", () => {
+		expect(getProductTools("zer", ctx)).toHaveLength(7);
+	});
 	it("All tool names are unique per product", () => {
 		for (const product of ["tolom", "zer"] as const) {
-			const names = getProductTools(product, ctx).map(t => t.name);
+			const names = getProductTools(product, ctx).map((t) => t.name);
 			expect(new Set(names).size).toBe(names.length);
 		}
 	});
@@ -208,5 +247,4 @@ describe("🔧 Product Type Integrity", () => {
 	});
 });
 
-describe("📊 Data Validity", () => {
-});
+describe("📊 Data Validity", () => {});

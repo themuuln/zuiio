@@ -4,8 +4,9 @@
  * These tests directly invoke the Next.js route handlers with mock Request objects,
  * testing input validation, response formatting, and error handling.
  */
-import { describe, expect, it, vi } from "vitest";
+
 import { NextRequest } from "next/server";
+import { describe, expect, it, vi } from "vitest";
 
 // Mock Supabase so routes don't make real network calls
 vi.mock("@/lib/supabase", () => ({

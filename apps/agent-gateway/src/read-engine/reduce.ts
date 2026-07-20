@@ -1,4 +1,9 @@
-import type { QueryResult, Derivation, DerivedResult, ColumnMeta } from "./types";
+import type {
+	ColumnMeta,
+	Derivation,
+	DerivedResult,
+	QueryResult,
+} from "./types";
 
 /**
  * Applies a derivation across multiple query results.
@@ -48,8 +53,7 @@ export function applyDerivation(
 					{ name: "to", displayName: "одоо", type: "number" },
 					{ name: "changePct", displayName: "өөрчлөлт %", type: "number" },
 				],
-				description:
-					derivation.description ?? `Өөрчлөлт: ${pct.toFixed(1)}%`,
+				description: derivation.description ?? `Өөрчлөлт: ${pct.toFixed(1)}%`,
 			};
 		}
 
@@ -58,15 +62,16 @@ export function applyDerivation(
 			return {
 				type: "concat",
 				rows: allRows,
-				columns: allRows.length > 0
-					? Object.keys(allRows[0]).map(
-							(k): ColumnMeta => ({
-								name: k,
-								displayName: k,
-								type: inferType(allRows[0][k]),
-							}),
-						)
-					: [],
+				columns:
+					allRows.length > 0
+						? Object.keys(allRows[0]).map(
+								(k): ColumnMeta => ({
+									name: k,
+									displayName: k,
+									type: inferType(allRows[0][k]),
+								}),
+							)
+						: [],
 				description: derivation.description ?? `Нийт ${allRows.length} мөр`,
 			};
 		}
@@ -84,15 +89,16 @@ export function applyDerivation(
 			return {
 				type: "merge",
 				rows: merged,
-				columns: merged.length > 0
-					? Object.keys(merged[0]).map(
-							(k): ColumnMeta => ({
-								name: k,
-								displayName: k,
-								type: inferType(merged[0][k]),
-							}),
-						)
-					: [],
+				columns:
+					merged.length > 0
+						? Object.keys(merged[0]).map(
+								(k): ColumnMeta => ({
+									name: k,
+									displayName: k,
+									type: inferType(merged[0][k]),
+								}),
+							)
+						: [],
 				description: derivation.description ?? `Нэгтгэсэн ${merged.length} мөр`,
 			};
 		}
@@ -105,7 +111,10 @@ export function applyDerivation(
 function extractNumeric(result: QueryResult, field: string): number {
 	const firstRow = result.rows[0];
 	if (!firstRow) return 0;
-	const raw = firstRow[field] ?? firstRow.value ?? firstRow[result.columns[0]?.name ?? ""];
+	const raw =
+		firstRow[field] ??
+		firstRow.value ??
+		firstRow[result.columns[0]?.name ?? ""];
 	const num = Number(raw);
 	return Number.isNaN(num) ? 0 : num;
 }

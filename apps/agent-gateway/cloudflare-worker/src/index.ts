@@ -64,10 +64,9 @@ async function handleWebhook(request: Request, env: Env): Promise<Response> {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (err) {
-		return new Response(
-			JSON.stringify({ error: String(err) }),
-			{ status: 500 },
-		);
+		return new Response(JSON.stringify({ error: String(err) }), {
+			status: 500,
+		});
 	}
 }
 

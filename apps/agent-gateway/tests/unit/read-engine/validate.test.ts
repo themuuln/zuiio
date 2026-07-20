@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
 import type { ProductCatalog, ReadPlan } from "@/read-engine/types";
 import { validateReadPlan } from "@/read-engine/validate";
 
@@ -47,7 +47,12 @@ describe("validateReadPlan", () => {
 
 	it("rejects non-measure field used as measure", () => {
 		const plan: ReadPlan = {
-			queries: [{ dataset: "work_orders", measures: [{ field: "status", op: "sum", alias: "x" }] }],
+			queries: [
+				{
+					dataset: "work_orders",
+					measures: [{ field: "status", op: "sum", alias: "x" }],
+				},
+			],
 		};
 		const result = validateReadPlan(plan, catalog, TENANT_ID);
 		expect(result.valid).toBe(false);
@@ -56,7 +61,12 @@ describe("validateReadPlan", () => {
 
 	it("rejects invalid aggregate op for field", () => {
 		const plan: ReadPlan = {
-			queries: [{ dataset: "work_orders", measures: [{ field: "total_amount", op: "mean", alias: "x" }] }],
+			queries: [
+				{
+					dataset: "work_orders",
+					measures: [{ field: "total_amount", op: "mean", alias: "x" }],
+				},
+			],
 		};
 		const result = validateReadPlan(plan, catalog, TENANT_ID);
 		expect(result.valid).toBe(false);
@@ -65,7 +75,14 @@ describe("validateReadPlan", () => {
 
 	it("rejects invalid filter operator", () => {
 		const plan: ReadPlan = {
-			queries: [{ dataset: "work_orders", filters: [{ field: "status", op: "bogus_op" as never, value: "paid" }] }],
+			queries: [
+				{
+					dataset: "work_orders",
+					filters: [
+						{ field: "status", op: "bogus_op" as never, value: "paid" },
+					],
+				},
+			],
 		};
 		const result = validateReadPlan(plan, catalog, TENANT_ID);
 		expect(result.valid).toBe(false);
@@ -74,11 +91,20 @@ describe("validateReadPlan", () => {
 
 	it("rejects tenant column leaked into filters", () => {
 		const plan: ReadPlan = {
-			queries: [{ dataset: "work_orders", filters: [{ field: catalog.tenant.column, op: "eq", value: TENANT_ID }] }],
+			queries: [
+				{
+					dataset: "work_orders",
+					filters: [
+						{ field: catalog.tenant.column, op: "eq", value: TENANT_ID },
+					],
+				},
+			],
 		};
 		const result = validateReadPlan(plan, catalog, TENANT_ID);
 		expect(result.valid).toBe(false);
-		expect(result.errors.some((e) => e.code === "TENANT_COLUMN_LEAKED")).toBe(true);
+		expect(result.errors.some((e) => e.code === "TENANT_COLUMN_LEAKED")).toBe(
+			true,
+		);
 	});
 
 	it("rejects unknown relation in embeds", () => {
@@ -114,7 +140,9 @@ describe("validateReadPlan", () => {
 
 	it("rejects too many queries", () => {
 		const plan: ReadPlan = {
-			queries: Array.from({ length: 11 }, () => ({ dataset: "work_orders" })) as ReadPlan["queries"],
+			queries: Array.from({ length: 11 }, () => ({
+				dataset: "work_orders",
+			})) as ReadPlan["queries"],
 		};
 		const result = validateReadPlan(plan, catalog, TENANT_ID);
 		expect(result.valid).toBe(false);
@@ -123,7 +151,9 @@ describe("validateReadPlan", () => {
 
 	it("accepts valid embed relation", () => {
 		const dataset = catalog.datasets.work_orders;
-		const firstRelation = dataset?.relations ? Object.keys(dataset.relations)[0] : undefined;
+		const firstRelation = dataset?.relations
+			? Object.keys(dataset.relations)[0]
+			: undefined;
 		expect(firstRelation).toBeDefined();
 		const plan: ReadPlan = {
 			queries: [{ dataset: "work_orders", embeds: [firstRelation as string] }],

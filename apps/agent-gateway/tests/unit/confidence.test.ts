@@ -10,7 +10,7 @@ describe("scoreConfidence", () => {
 
 	it("returns high confidence for successful tool with verified data", () => {
 		const result = scoreConfidence({
-		toolName: "getDailySummary",
+			toolName: "getDailySummary",
 			toolResult: { totalAmount: 500000, saleCount: 12 },
 			dataCompleteness: "full",
 		});
@@ -32,7 +32,7 @@ describe("scoreConfidence", () => {
 
 	it("returns medium confidence for partial data", () => {
 		const result = scoreConfidence({
-		toolName: "readData",
+			toolName: "readData",
 			toolResult: { message: "Харилцагч олдсонгүй" },
 			dataCompleteness: "empty",
 		});
@@ -44,7 +44,7 @@ describe("scoreConfidence", () => {
 
 	it("returns medium confidence and warns for error results", () => {
 		const result = scoreConfidence({
-		toolName: "readData",
+			toolName: "readData",
 			toolResult: { error: "Борлуулалтын хураангуй авахад алдаа гарлаа" },
 		});
 		expect(result.level).toBe("medium");
@@ -54,9 +54,10 @@ describe("scoreConfidence", () => {
 
 	it("detects hallucination indicators in LLM response", () => {
 		const result = scoreConfidence({
-		toolName: "getDailySummary",
+			toolName: "getDailySummary",
 			toolResult: { totalAmount: 500000 },
-			llmResponse: "Таны борлуулалт ойролцоогоор 500,000₮ байна. Магадгүй таамаглаж байна.",
+			llmResponse:
+				"Таны борлуулалт ойролцоогоор 500,000₮ байна. Магадгүй таамаглаж байна.",
 			hallucinationIndicators: ["ойролцоогоор", "магадгүй"],
 		});
 		expect(result.level).toBe("medium");
@@ -65,7 +66,7 @@ describe("scoreConfidence", () => {
 
 	it("returns high confidence for empty array — valid result, not error", () => {
 		const result = scoreConfidence({
-		toolName: "readData",
+			toolName: "readData",
 			toolResult: [],
 		});
 		expect(result.level).toBe("high");
@@ -74,7 +75,7 @@ describe("scoreConfidence", () => {
 
 	it("uses tool-specific confidence for high-confidence tools", () => {
 		const result = scoreConfidence({
-		toolName: "getDailySummary",
+			toolName: "getDailySummary",
 			toolResult: { totalAmount: 100 },
 			dataCompleteness: "full",
 		});
@@ -83,11 +84,13 @@ describe("scoreConfidence", () => {
 
 	it("rounds score to 2 decimal places", () => {
 		const result = scoreConfidence({
-		toolName: "getDailySummary",
+			toolName: "getDailySummary",
 			toolResult: { totalAmount: 500 },
 			dataCompleteness: "full",
 		});
-		expect(String(result.score).split(".")[1]?.length ?? 0).toBeLessThanOrEqual(2);
+		expect(String(result.score).split(".")[1]?.length ?? 0).toBeLessThanOrEqual(
+			2,
+		);
 	});
 
 	it("returns medium confidence for unknown tool name", () => {

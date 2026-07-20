@@ -83,7 +83,10 @@ export function validateWritePlan(
 	}
 
 	// data presence (insert/update need it)
-	if (plan.operation !== "delete" && (!plan.data || Object.keys(plan.data).length === 0)) {
+	if (
+		plan.operation !== "delete" &&
+		(!plan.data || Object.keys(plan.data).length === 0)
+	) {
 		errors.push({
 			code: "MISSING_DATA",
 			message: `"${plan.operation}" үйлдэлд өгөгдөл (data) шаардлагатай`,

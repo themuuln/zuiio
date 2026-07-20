@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-	markdownToTelegramHtml,
-	markdownToMessengerFormat,
 	convertTablesToPlainList,
+	markdownToMessengerFormat,
+	markdownToTelegramHtml,
 } from "@/lib/format-telegram";
 
 describe("markdownToTelegramHtml", () => {

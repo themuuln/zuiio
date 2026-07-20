@@ -1,11 +1,11 @@
 import "server-only";
 
-import { NextResponse } from "next/server";
 import { capture } from "@zuiio/capture";
-import { createServiceClient } from "@/lib/supabase";
-import { resumeDelayedFlows } from "@/flow-executor";
-import { TelegramChannel } from "@/channels/telegram";
+import { NextResponse } from "next/server";
 import { FacebookChannel } from "@/channels/facebook";
+import { TelegramChannel } from "@/channels/telegram";
+import { resumeDelayedFlows } from "@/flow-executor";
+import { createServiceClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -48,10 +48,7 @@ export async function POST(request: Request) {
  * Factory function: creates the appropriate channel adapter based on
  * the channel type stored in the conversation run.
  */
-function createChannelForRun(
-	channel: string,
-	meta?: Record<string, unknown>,
-) {
+function createChannelForRun(channel: string, meta?: Record<string, unknown>) {
 	switch (channel) {
 		case "telegram":
 			return new TelegramChannel();

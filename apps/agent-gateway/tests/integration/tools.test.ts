@@ -30,12 +30,8 @@ function createMockToolSupabase() {
 			gte: vi.fn(() => chain),
 			lte: vi.fn(() => chain),
 			is: vi.fn(() => chain),
-			single: vi.fn(() =>
-				Promise.resolve({ data: null, error: null }),
-			),
-			maybeSingle: vi.fn(() =>
-				Promise.resolve({ data: null, error: null }),
-			),
+			single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+			maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
 			then: vi.fn((resolve: (v: unknown) => unknown) =>
 				resolve({ data: [], error: null }),
 			),
@@ -60,7 +56,9 @@ function createMockToolSupabase() {
 		from: fromMock,
 		rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
 		// Make the whole client thenable (for `await client.from(...)`)
-		then: vi.fn((resolve: (v: unknown) => unknown) => resolve({ data: [], error: null })),
+		then: vi.fn((resolve: (v: unknown) => unknown) =>
+			resolve({ data: [], error: null }),
+		),
 	};
 
 	return {
@@ -118,13 +116,10 @@ describe("Tolom Tools", () => {
 		const { onTable, mockClient } = createMockToolSupabase();
 
 		// Mock all 9 parallel Tolom queries with realistic data
-		onTable("invoice_payments", (chain, respond) => {
-			respond([
-				{ amount: "500000" },
-				{ amount: "300000" },
-			]);
+		onTable("invoice_payments", (_chain, respond) => {
+			respond([{ amount: "500000" }, { amount: "300000" }]);
 		});
-		onTable("payments", (chain, respond) => {
+		onTable("payments", (_chain, respond) => {
 			respond([{ amount: "200000" }]);
 		});
 		onTable("work_orders", (chain, respond) => {
@@ -133,7 +128,7 @@ describe("Tolom Tools", () => {
 			chain.count = { count: 5, data: null, error: null };
 			respond([]);
 		});
-		onTable("expenses", (chain, respond) => {
+		onTable("expenses", (_chain, respond) => {
 			respond([{ amount: "150000" }, { amount: "80000" }]);
 		});
 		onTable("customers", (chain, respond) => {
@@ -152,7 +147,6 @@ describe("Tolom Tools", () => {
 		expect(result).not.toHaveProperty("error");
 		expect(typeof result).toBe("object");
 	});
-
 });
 
 describe("Zer Tools", () => {

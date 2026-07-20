@@ -1,405 +1,442 @@
 {
-  "id": "tolom",
-  "name": "Толом",
-  "description": "Автомашиин засвар үйлчилгээний менежмент",
-  "tenant": {
-    "column": "organization_id",
-    "source": "jwt"
-  },
-  "datasets": {
-    "work_orders": {
-      "source": "work_orders",
-      "displayName": "Ажлын захиалга",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "customer_id": { "type": "uuid" },
-        "vehicle_id": { "type": "uuid" },
-        "plate_number": { "type": "string", "dimension": true },
-        "status": { "type": "string", "dimension": true },
-        "description": { "type": "text" },
-        "notes": { "type": "text" },
-        "total_amount": { "type": "number", "measures": ["sum", "avg", "count", "max", "min"] },
-        "created_at": { "type": "timestamp", "dimension": true, "time": true },
-        "deleted_at": { "type": "timestamp" }
-      },
-      "relations": {
-        "customer": { "dataset": "customers", "join": "customer_id" },
-        "vehicle": { "dataset": "vehicles", "join": "vehicle_id" }
-      }
-    },
-    "customers": {
-      "source": "customers",
-      "displayName": "Харилцагчид",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "full_name": { "type": "string", "dimension": true },
-        "first_name": { "type": "string" },
-        "last_name": { "type": "string" },
-        "phone": { "type": "string", "dimension": true },
-        "email": { "type": "string" },
-        "total_visits": { "type": "number", "measures": ["sum", "avg", "max"] },
-        "created_at": { "type": "timestamp", "dimension": true, "time": true },
-        "deleted_at": { "type": "timestamp" }
-      }
-    },
-    "vehicles": {
-      "source": "vehicles",
-      "displayName": "Машинууд",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "customer_id": { "type": "uuid" },
-        "plate_number": { "type": "string", "dimension": true },
-        "make": { "type": "string", "dimension": true },
-        "model": { "type": "string", "dimension": true },
-        "year": { "type": "number", "dimension": true },
-        "created_at": { "type": "timestamp", "dimension": true, "time": true },
-        "deleted_at": { "type": "timestamp" }
-      },
-      "relations": {
-        "customer": { "dataset": "customers", "join": "customer_id" }
-      }
-    },
-    "appointments": {
-      "source": "appointments",
-      "displayName": "Цаг захиалга",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "customer_id": { "type": "uuid" },
-        "scheduled_at": { "type": "timestamp", "dimension": true, "time": true },
-        "description": { "type": "text" },
-        "status": { "type": "string", "dimension": true },
-        "created_at": { "type": "timestamp", "time": true }
-      },
-      "relations": {
-        "customer": { "dataset": "customers", "join": "customer_id" }
-      }
-    },
-    "invoices": {
-      "source": "invoices",
-      "displayName": "Нэхэмжлэх",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "customer_id": { "type": "uuid" },
-        "invoice_number": { "type": "string", "dimension": true },
-        "status": { "type": "string", "dimension": true },
-        "total": { "type": "number", "measures": ["sum", "avg", "count", "max", "min"] },
-        "amount_paid": { "type": "number", "measures": ["sum", "avg", "max"] },
-        "balance_due": { "type": "number", "measures": ["sum", "avg", "max"] },
-        "description": { "type": "text" },
-        "customer_name": { "type": "string", "dimension": true },
-        "issued_at": { "type": "timestamp", "dimension": true, "time": true },
-        "paid_at": { "type": "timestamp", "time": true },
-        "created_at": { "type": "timestamp", "time": true },
-        "deleted_at": { "type": "timestamp" }
-      },
-      "relations": {
-        "customer": { "dataset": "customers", "join": "customer_id" }
-      }
-    },
-    "invoice_items": {
-      "source": "invoice_items",
-      "displayName": "Нэхэмжлэхийн зүйлс",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "invoice_id": { "type": "uuid" },
-        "part_name": { "type": "string", "dimension": true },
-        "part_number": { "type": "string" },
-        "quantity": { "type": "number", "measures": ["sum", "avg", "count"] },
-        "unit_price": { "type": "number", "measures": ["avg", "max", "min"] },
-        "total_price": { "type": "number", "measures": ["sum", "avg", "max"] },
-        "created_at": { "type": "timestamp", "time": true }
-      },
-      "relations": {
-        "invoice": { "dataset": "invoices", "join": "invoice_id" }
-      }
-    },
-    "invoice_payments": {
-      "source": "invoice_payments",
-      "displayName": "Төлбөрийн бүртгэл",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "invoice_id": { "type": "uuid" },
-        "amount": { "type": "number", "measures": ["sum", "avg", "max", "min"] },
-        "method": { "type": "string", "dimension": true },
-        "paid_at": { "type": "timestamp", "dimension": true, "time": true }
-      },
-      "relations": {
-        "invoice": { "dataset": "invoices", "join": "invoice_id" }
-      }
-    },
-    "expenses": {
-      "source": "expenses",
-      "displayName": "Зарлага",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "expense_category_id": { "type": "uuid" },
-        "amount": { "type": "number", "measures": ["sum", "avg", "count", "max", "min"] },
-        "description": { "type": "text" },
-        "expense_date": { "type": "timestamp", "dimension": true, "time": true },
-        "created_at": { "type": "timestamp", "time": true },
-        "deleted_at": { "type": "timestamp" }
-      },
-      "relations": {
-        "category": { "dataset": "expense_categories", "join": "expense_category_id" }
-      }
-    },
-    "expense_categories": {
-      "source": "expense_categories",
-      "displayName": "Зарлагын ангилал",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "name": { "type": "string", "dimension": true }
-      }
-    },
-    "suppliers": {
-      "source": "suppliers",
-      "displayName": "Нийлүүлэгчид",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "name": { "type": "string", "dimension": true },
-        "contact_person": { "type": "string" },
-        "phone": { "type": "string" },
-        "email": { "type": "string" },
-        "created_at": { "type": "timestamp", "dimension": true, "time": true },
-        "deleted_at": { "type": "timestamp" }
-      }
-    },
-    "profiles": {
-      "source": "profiles",
-      "displayName": "Профайл",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "full_name": { "type": "string", "dimension": true },
-        "role": { "type": "string", "dimension": true },
-        "created_at": { "type": "timestamp", "time": true }
-      }
-    },
-    "parts_catalog": {
-      "source": "parts_catalog",
-      "displayName": "Сэлбэгийн каталог",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "name": { "type": "string", "dimension": true },
-        "part_number": { "type": "string", "dimension": true },
-        "unit_price": { "type": "number", "measures": ["avg", "max", "min"] },
-        "category": { "type": "string", "dimension": true },
-        "created_at": { "type": "timestamp", "time": true },
-        "deleted_at": { "type": "timestamp" }
-      }
-    },
-    "service_catalog": {
-      "source": "service_catalog",
-      "displayName": "Үйлчилгээний каталог",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "name": { "type": "string", "dimension": true },
-        "price": { "type": "number", "measures": ["avg", "max", "min"] },
-        "category": { "type": "string", "dimension": true },
-        "created_at": { "type": "timestamp", "time": true },
-        "deleted_at": { "type": "timestamp" }
-      }
-    },
-    "sales": {
-      "source": "sales",
-      "displayName": "Борлуулалт",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "total_amount": { "type": "number", "measures": ["sum", "avg", "count", "max", "min"] },
-        "paid_amount": { "type": "number", "measures": ["sum", "avg", "max"] },
-        "sale_date": { "type": "timestamp", "dimension": true, "time": true },
-        "customer_name": { "type": "string", "dimension": true },
-        "created_at": { "type": "timestamp", "time": true }
-      }
-    },
-    "sales_items": {
-      "source": "sales_items",
-      "displayName": "Борлуулалтын зүйлс",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "sale_id": { "type": "uuid" },
-        "part_name": { "type": "string", "dimension": true },
-        "part_number": { "type": "string" },
-        "quantity": { "type": "number", "measures": ["sum", "avg", "count"] },
-        "unit_price": { "type": "number", "measures": ["avg", "max", "min"] },
-        "total_price": { "type": "number", "measures": ["sum", "avg", "max"] },
-        "created_at": { "type": "timestamp", "time": true }
-      },
-      "relations": {
-        "sale": { "dataset": "sales", "join": "sale_id" }
-      }
-    },
-    "cash_register_sessions": {
-      "source": "cash_register_sessions",
-      "displayName": "Бэлэн мөнгөний бүртгэл",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "date": { "type": "timestamp", "dimension": true, "time": true },
-        "opening_balance": { "type": "number", "measures": ["sum", "avg"] },
-        "closing_balance": { "type": "number", "measures": ["sum", "avg"] },
-        "total_cash": { "type": "number", "measures": ["sum", "avg"] },
-        "total_card": { "type": "number", "measures": ["sum", "avg"] },
-        "status": { "type": "string", "dimension": true }
-      }
-    },
-    "work_order_parts": {
-      "source": "work_order_parts",
-      "displayName": "Захиалгын сэлбэг",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "work_order_id": { "type": "uuid" },
-        "organization_id": { "type": "uuid" },
-        "part_name": { "type": "string", "dimension": true },
-        "part_number": { "type": "string" },
-        "quantity": { "type": "number", "measures": ["sum", "avg", "count"] },
-        "unit_price": { "type": "number", "measures": ["avg", "max", "min"] },
-        "final_price": { "type": "number", "measures": ["sum", "avg", "max"] },
-        "created_at": { "type": "timestamp", "time": true }
-      },
-      "relations": {
-        "work_order": { "dataset": "work_orders", "join": "work_order_id" }
-      }
-    },
-    "work_order_services": {
-      "source": "work_order_services",
-      "displayName": "Захиалгын үйлчилгээ",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "work_order_id": { "type": "uuid" },
-        "organization_id": { "type": "uuid" },
-        "service_name": { "type": "string", "dimension": true },
-        "quantity": { "type": "number", "measures": ["sum", "count"] },
-        "unit_price": { "type": "number", "measures": ["avg", "max", "min"] },
-        "total_price": { "type": "number", "measures": ["sum", "avg", "max"] },
-        "created_at": { "type": "timestamp", "time": true }
-      },
-      "relations": {
-        "work_order": { "dataset": "work_orders", "join": "work_order_id" }
-      }
-    },
-    "mechanic_daily_reports": {
-      "source": "mechanic_daily_reports",
-      "displayName": "Механикийн тайлан",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "mechanic_id": { "type": "uuid" },
-        "report_date": { "type": "timestamp", "dimension": true, "time": true },
-        "total_work_orders": { "type": "number", "measures": ["sum", "avg", "max", "min"] },
-        "total_hours": { "type": "number", "measures": ["sum", "avg", "max"] },
-        "notes": { "type": "text" },
-        "created_at": { "type": "timestamp", "time": true }
-      },
-      "relations": {
-        "mechanic": { "dataset": "profiles", "join": "mechanic_id" }
-      }
-    },
-    "notifications": {
-      "source": "notifications",
-      "displayName": "Мэдэгдэл",
-      "fields": {
-        "id": { "type": "uuid", "pk": true },
-        "organization_id": { "type": "uuid" },
-        "type": { "type": "string", "dimension": true },
-        "title": { "type": "string" },
-        "message": { "type": "text" },
-        "scheduled_for": { "type": "timestamp", "time": true },
-        "is_read": { "type": "boolean", "dimension": true },
-        "created_at": { "type": "timestamp", "time": true }
-      }
-    }
-  },
-  "metrics": {
-    "daily_revenue": {
-      "displayName": "Өдрийн орлого",
-      "description": "Төлсөн нэхэмжлэхүүдийн өдрийн нийт дүн",
-      "query": "invoice_payments",
-      "measures": [{ "field": "amount", "op": "sum" }],
-      "timeField": "paid_at",
-      "filters": []
-    },
-    "monthly_income": {
-      "displayName": "Сарын цэвэр орлого",
-      "description": "Төлбөрүүдээс зарлагыг хассан дүн",
-      "query": "invoices",
-      "measures": [{ "field": "amount_paid", "op": "sum" }],
-      "timeField": "issued_at",
-      "filters": []
-    },
-    "active_work_orders": {
-      "displayName": "Идэвхтэй захиалга",
-      "description": "Дуусаагүй ажлын захиалгын тоо",
-      "query": "work_orders",
-      "measures": [{ "field": "id", "op": "count" }],
-      "filters": [{ "field": "status", "op": "not_in", "value": ["delivered", "cancelled", "completed"] }]
-    },
-    "new_customers": {
-      "displayName": "Шинэ харилцагч",
-      "description": "Өгөгдсөн хугацаанд шинээр бүртгүүлсэн харилцагчдын тоо",
-      "query": "customers",
-      "measures": [{ "field": "id", "op": "count" }],
-      "timeField": "created_at",
-      "filters": []
-    },
-    "parts_sales_revenue": {
-      "displayName": "Сэлбэгийн борлуулалт",
-      "description": "Захиалгын сэлбэг болон шууд борлуулалтын нийт орлого",
-      "query": "work_order_parts",
-      "measures": [{ "field": "final_price", "op": "sum" }],
-      "timeField": "created_at",
-      "filters": []
-    },
-    "total_expenses": {
-      "displayName": "Нийт зарлага",
-      "description": "Өгөгдсөн хугацааны нийт зарлагын дүн",
-      "query": "expenses",
-      "measures": [{ "field": "amount", "op": "sum" }],
-      "timeField": "expense_date",
-      "filters": []
-    },
-    "completed_work_orders": {
-      "displayName": "Гүйцэтгэсэн захиалга",
-      "description": "Гүйцэтгэсэн эсвэл хүлээлгэн өгсөн захиалгын тоо",
-      "query": "work_orders",
-      "measures": [{ "field": "id", "op": "count" }],
-      "filters": [{ "field": "status", "op": "in", "value": ["completed", "delivered"] }]
-    },
-    "total_upcoming_appointments": {
-      "displayName": "Товлогдсон цаг",
-      "description": "Ирэх цаг захиалгын тоо",
-      "query": "appointments",
-      "measures": [{ "field": "id", "op": "count" }],
-      "filters": [{ "field": "status", "op": "eq", "value": "scheduled" }]
-    },
-    "invoices_pending": {
-      "displayName": "Төлөгдөөгүй нэхэмжлэх",
-      "description": "Төлбөр төлөгдөөгүй эсвэл хэсэгчилсэн нэхэмжлэхийн дүн",
-      "query": "invoices",
-      "measures": [{ "field": "balance_due", "op": "sum" }],
-      "filters": []
-    },
-    "cash_register_balance": {
-      "displayName": "Бэлэн мөнгөний үлдэгдэл",
-      "description": "Бэлэн мөнгөний бүртгэлийн нийт бэлэн ба картын орлого",
-      "query": "cash_register_sessions",
-      "measures": [{ "field": "closing_balance", "op": "sum" }],
-      "timeField": "date",
-      "filters": []
-    }
-  }
+	"id": "tolom",
+	"name": "Толом",
+	"description": "Автомашиин засвар үйлчилгээний менежмент",
+	"tenant": {
+		"column": "organization_id",
+		"source": "jwt"
+	},
+	"datasets": {
+		"work_orders": {
+			"source": "work_orders",
+			"displayName": "Ажлын захиалга",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"customer_id": { "type": "uuid" },
+				"vehicle_id": { "type": "uuid" },
+				"plate_number": { "type": "string", "dimension": true },
+				"status": { "type": "string", "dimension": true },
+				"description": { "type": "text" },
+				"notes": { "type": "text" },
+				"total_amount": {
+					"type": "number",
+					"measures": ["sum", "avg", "count", "max", "min"]
+				},
+				"created_at": { "type": "timestamp", "dimension": true, "time": true },
+				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"customer": { "dataset": "customers", "join": "customer_id" },
+				"vehicle": { "dataset": "vehicles", "join": "vehicle_id" }
+			}
+		},
+		"customers": {
+			"source": "customers",
+			"displayName": "Харилцагчид",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"full_name": { "type": "string", "dimension": true },
+				"first_name": { "type": "string" },
+				"last_name": { "type": "string" },
+				"phone": { "type": "string", "dimension": true },
+				"email": { "type": "string" },
+				"total_visits": { "type": "number", "measures": ["sum", "avg", "max"] },
+				"created_at": { "type": "timestamp", "dimension": true, "time": true },
+				"deleted_at": { "type": "timestamp" }
+			}
+		},
+		"vehicles": {
+			"source": "vehicles",
+			"displayName": "Машинууд",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"customer_id": { "type": "uuid" },
+				"plate_number": { "type": "string", "dimension": true },
+				"make": { "type": "string", "dimension": true },
+				"model": { "type": "string", "dimension": true },
+				"year": { "type": "number", "dimension": true },
+				"created_at": { "type": "timestamp", "dimension": true, "time": true },
+				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"customer": { "dataset": "customers", "join": "customer_id" }
+			}
+		},
+		"appointments": {
+			"source": "appointments",
+			"displayName": "Цаг захиалга",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"customer_id": { "type": "uuid" },
+				"scheduled_at": {
+					"type": "timestamp",
+					"dimension": true,
+					"time": true
+				},
+				"description": { "type": "text" },
+				"status": { "type": "string", "dimension": true },
+				"created_at": { "type": "timestamp", "time": true }
+			},
+			"relations": {
+				"customer": { "dataset": "customers", "join": "customer_id" }
+			}
+		},
+		"invoices": {
+			"source": "invoices",
+			"displayName": "Нэхэмжлэх",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"customer_id": { "type": "uuid" },
+				"invoice_number": { "type": "string", "dimension": true },
+				"status": { "type": "string", "dimension": true },
+				"total": {
+					"type": "number",
+					"measures": ["sum", "avg", "count", "max", "min"]
+				},
+				"amount_paid": { "type": "number", "measures": ["sum", "avg", "max"] },
+				"balance_due": { "type": "number", "measures": ["sum", "avg", "max"] },
+				"description": { "type": "text" },
+				"customer_name": { "type": "string", "dimension": true },
+				"issued_at": { "type": "timestamp", "dimension": true, "time": true },
+				"paid_at": { "type": "timestamp", "time": true },
+				"created_at": { "type": "timestamp", "time": true },
+				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"customer": { "dataset": "customers", "join": "customer_id" }
+			}
+		},
+		"invoice_items": {
+			"source": "invoice_items",
+			"displayName": "Нэхэмжлэхийн зүйлс",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"invoice_id": { "type": "uuid" },
+				"part_name": { "type": "string", "dimension": true },
+				"part_number": { "type": "string" },
+				"quantity": { "type": "number", "measures": ["sum", "avg", "count"] },
+				"unit_price": { "type": "number", "measures": ["avg", "max", "min"] },
+				"total_price": { "type": "number", "measures": ["sum", "avg", "max"] },
+				"created_at": { "type": "timestamp", "time": true }
+			},
+			"relations": {
+				"invoice": { "dataset": "invoices", "join": "invoice_id" }
+			}
+		},
+		"invoice_payments": {
+			"source": "invoice_payments",
+			"displayName": "Төлбөрийн бүртгэл",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"invoice_id": { "type": "uuid" },
+				"amount": {
+					"type": "number",
+					"measures": ["sum", "avg", "max", "min"]
+				},
+				"method": { "type": "string", "dimension": true },
+				"paid_at": { "type": "timestamp", "dimension": true, "time": true }
+			},
+			"relations": {
+				"invoice": { "dataset": "invoices", "join": "invoice_id" }
+			}
+		},
+		"expenses": {
+			"source": "expenses",
+			"displayName": "Зарлага",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"expense_category_id": { "type": "uuid" },
+				"amount": {
+					"type": "number",
+					"measures": ["sum", "avg", "count", "max", "min"]
+				},
+				"description": { "type": "text" },
+				"expense_date": {
+					"type": "timestamp",
+					"dimension": true,
+					"time": true
+				},
+				"created_at": { "type": "timestamp", "time": true },
+				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"category": {
+					"dataset": "expense_categories",
+					"join": "expense_category_id"
+				}
+			}
+		},
+		"expense_categories": {
+			"source": "expense_categories",
+			"displayName": "Зарлагын ангилал",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"name": { "type": "string", "dimension": true }
+			}
+		},
+		"suppliers": {
+			"source": "suppliers",
+			"displayName": "Нийлүүлэгчид",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"name": { "type": "string", "dimension": true },
+				"contact_person": { "type": "string" },
+				"phone": { "type": "string" },
+				"email": { "type": "string" },
+				"created_at": { "type": "timestamp", "dimension": true, "time": true },
+				"deleted_at": { "type": "timestamp" }
+			}
+		},
+		"profiles": {
+			"source": "profiles",
+			"displayName": "Профайл",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"full_name": { "type": "string", "dimension": true },
+				"role": { "type": "string", "dimension": true },
+				"created_at": { "type": "timestamp", "time": true }
+			}
+		},
+		"parts_catalog": {
+			"source": "parts_catalog",
+			"displayName": "Сэлбэгийн каталог",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"name": { "type": "string", "dimension": true },
+				"part_number": { "type": "string", "dimension": true },
+				"unit_price": { "type": "number", "measures": ["avg", "max", "min"] },
+				"category": { "type": "string", "dimension": true },
+				"created_at": { "type": "timestamp", "time": true },
+				"deleted_at": { "type": "timestamp" }
+			}
+		},
+		"service_catalog": {
+			"source": "service_catalog",
+			"displayName": "Үйлчилгээний каталог",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"name": { "type": "string", "dimension": true },
+				"price": { "type": "number", "measures": ["avg", "max", "min"] },
+				"category": { "type": "string", "dimension": true },
+				"created_at": { "type": "timestamp", "time": true },
+				"deleted_at": { "type": "timestamp" }
+			}
+		},
+		"sales": {
+			"source": "sales",
+			"displayName": "Борлуулалт",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"total_amount": {
+					"type": "number",
+					"measures": ["sum", "avg", "count", "max", "min"]
+				},
+				"paid_amount": { "type": "number", "measures": ["sum", "avg", "max"] },
+				"sale_date": { "type": "timestamp", "dimension": true, "time": true },
+				"customer_name": { "type": "string", "dimension": true },
+				"created_at": { "type": "timestamp", "time": true }
+			}
+		},
+		"sales_items": {
+			"source": "sales_items",
+			"displayName": "Борлуулалтын зүйлс",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"sale_id": { "type": "uuid" },
+				"part_name": { "type": "string", "dimension": true },
+				"part_number": { "type": "string" },
+				"quantity": { "type": "number", "measures": ["sum", "avg", "count"] },
+				"unit_price": { "type": "number", "measures": ["avg", "max", "min"] },
+				"total_price": { "type": "number", "measures": ["sum", "avg", "max"] },
+				"created_at": { "type": "timestamp", "time": true }
+			},
+			"relations": {
+				"sale": { "dataset": "sales", "join": "sale_id" }
+			}
+		},
+		"cash_register_sessions": {
+			"source": "cash_register_sessions",
+			"displayName": "Бэлэн мөнгөний бүртгэл",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"date": { "type": "timestamp", "dimension": true, "time": true },
+				"opening_balance": { "type": "number", "measures": ["sum", "avg"] },
+				"closing_balance": { "type": "number", "measures": ["sum", "avg"] },
+				"total_cash": { "type": "number", "measures": ["sum", "avg"] },
+				"total_card": { "type": "number", "measures": ["sum", "avg"] },
+				"status": { "type": "string", "dimension": true }
+			}
+		},
+		"work_order_parts": {
+			"source": "work_order_parts",
+			"displayName": "Захиалгын сэлбэг",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"work_order_id": { "type": "uuid" },
+				"organization_id": { "type": "uuid" },
+				"part_name": { "type": "string", "dimension": true },
+				"part_number": { "type": "string" },
+				"quantity": { "type": "number", "measures": ["sum", "avg", "count"] },
+				"unit_price": { "type": "number", "measures": ["avg", "max", "min"] },
+				"final_price": { "type": "number", "measures": ["sum", "avg", "max"] },
+				"created_at": { "type": "timestamp", "time": true }
+			},
+			"relations": {
+				"work_order": { "dataset": "work_orders", "join": "work_order_id" }
+			}
+		},
+		"work_order_services": {
+			"source": "work_order_services",
+			"displayName": "Захиалгын үйлчилгээ",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"work_order_id": { "type": "uuid" },
+				"organization_id": { "type": "uuid" },
+				"service_name": { "type": "string", "dimension": true },
+				"quantity": { "type": "number", "measures": ["sum", "count"] },
+				"unit_price": { "type": "number", "measures": ["avg", "max", "min"] },
+				"total_price": { "type": "number", "measures": ["sum", "avg", "max"] },
+				"created_at": { "type": "timestamp", "time": true }
+			},
+			"relations": {
+				"work_order": { "dataset": "work_orders", "join": "work_order_id" }
+			}
+		},
+		"mechanic_daily_reports": {
+			"source": "mechanic_daily_reports",
+			"displayName": "Механикийн тайлан",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"mechanic_id": { "type": "uuid" },
+				"report_date": { "type": "timestamp", "dimension": true, "time": true },
+				"total_work_orders": {
+					"type": "number",
+					"measures": ["sum", "avg", "max", "min"]
+				},
+				"total_hours": { "type": "number", "measures": ["sum", "avg", "max"] },
+				"notes": { "type": "text" },
+				"created_at": { "type": "timestamp", "time": true }
+			},
+			"relations": {
+				"mechanic": { "dataset": "profiles", "join": "mechanic_id" }
+			}
+		},
+		"notifications": {
+			"source": "notifications",
+			"displayName": "Мэдэгдэл",
+			"fields": {
+				"id": { "type": "uuid", "pk": true },
+				"organization_id": { "type": "uuid" },
+				"type": { "type": "string", "dimension": true },
+				"title": { "type": "string" },
+				"message": { "type": "text" },
+				"scheduled_for": { "type": "timestamp", "time": true },
+				"is_read": { "type": "boolean", "dimension": true },
+				"created_at": { "type": "timestamp", "time": true }
+			}
+		}
+	},
+	"metrics": {
+		"daily_revenue": {
+			"displayName": "Өдрийн орлого",
+			"description": "Төлсөн нэхэмжлэхүүдийн өдрийн нийт дүн",
+			"query": "invoice_payments",
+			"measures": [{ "field": "amount", "op": "sum" }],
+			"timeField": "paid_at",
+			"filters": []
+		},
+		"monthly_income": {
+			"displayName": "Сарын цэвэр орлого",
+			"description": "Төлбөрүүдээс зарлагыг хассан дүн",
+			"query": "invoices",
+			"measures": [{ "field": "amount_paid", "op": "sum" }],
+			"timeField": "issued_at",
+			"filters": []
+		},
+		"active_work_orders": {
+			"displayName": "Идэвхтэй захиалга",
+			"description": "Дуусаагүй ажлын захиалгын тоо",
+			"query": "work_orders",
+			"measures": [{ "field": "id", "op": "count" }],
+			"filters": [
+				{
+					"field": "status",
+					"op": "not_in",
+					"value": ["delivered", "cancelled", "completed"]
+				}
+			]
+		},
+		"new_customers": {
+			"displayName": "Шинэ харилцагч",
+			"description": "Өгөгдсөн хугацаанд шинээр бүртгүүлсэн харилцагчдын тоо",
+			"query": "customers",
+			"measures": [{ "field": "id", "op": "count" }],
+			"timeField": "created_at",
+			"filters": []
+		},
+		"parts_sales_revenue": {
+			"displayName": "Сэлбэгийн борлуулалт",
+			"description": "Захиалгын сэлбэг болон шууд борлуулалтын нийт орлого",
+			"query": "work_order_parts",
+			"measures": [{ "field": "final_price", "op": "sum" }],
+			"timeField": "created_at",
+			"filters": []
+		},
+		"total_expenses": {
+			"displayName": "Нийт зарлага",
+			"description": "Өгөгдсөн хугацааны нийт зарлагын дүн",
+			"query": "expenses",
+			"measures": [{ "field": "amount", "op": "sum" }],
+			"timeField": "expense_date",
+			"filters": []
+		},
+		"completed_work_orders": {
+			"displayName": "Гүйцэтгэсэн захиалга",
+			"description": "Гүйцэтгэсэн эсвэл хүлээлгэн өгсөн захиалгын тоо",
+			"query": "work_orders",
+			"measures": [{ "field": "id", "op": "count" }],
+			"filters": [
+				{ "field": "status", "op": "in", "value": ["completed", "delivered"] }
+			]
+		},
+		"total_upcoming_appointments": {
+			"displayName": "Товлогдсон цаг",
+			"description": "Ирэх цаг захиалгын тоо",
+			"query": "appointments",
+			"measures": [{ "field": "id", "op": "count" }],
+			"filters": [{ "field": "status", "op": "eq", "value": "scheduled" }]
+		},
+		"invoices_pending": {
+			"displayName": "Төлөгдөөгүй нэхэмжлэх",
+			"description": "Төлбөр төлөгдөөгүй эсвэл хэсэгчилсэн нэхэмжлэхийн дүн",
+			"query": "invoices",
+			"measures": [{ "field": "balance_due", "op": "sum" }],
+			"filters": []
+		},
+		"cash_register_balance": {
+			"displayName": "Бэлэн мөнгөний үлдэгдэл",
+			"description": "Бэлэн мөнгөний бүртгэлийн нийт бэлэн ба картын орлого",
+			"query": "cash_register_sessions",
+			"measures": [{ "field": "closing_balance", "op": "sum" }],
+			"timeField": "date",
+			"filters": []
+		}
+	}
 }

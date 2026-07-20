@@ -1,6 +1,6 @@
+import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 import { TelegramChannel } from "@/channels/telegram";
-import { capture } from "@zuiio/capture";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,8 @@ export async function GET(request: Request) {
 
 	const tg = new TelegramChannel();
 	const draftId = `test_draft_${Date.now()}`;
-	const text = "Hello, this is a streaming test! 🚀 The tokens appear one by one, just like a real AI response. This proves sendMessageDraft works for live streaming in your Telegram bot.";
+	const text =
+		"Hello, this is a streaming test! 🚀 The tokens appear one by one, just like a real AI response. This proves sendMessageDraft works for live streaming in your Telegram bot.";
 
 	// Stream tokens one by one
 	const tokens = text.split("");

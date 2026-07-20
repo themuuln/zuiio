@@ -1,11 +1,11 @@
 import "server-only";
 
-import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase";
 import { capture } from "@zuiio/capture";
+import { NextResponse } from "next/server";
 import { handleAgentMessage } from "@/gateway/agent-handler";
-import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { resolveOrgFromChatUser } from "@/gateway/mode-a";
+import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
+import { createServiceClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -77,15 +77,10 @@ export async function POST(request: Request) {
 				const { productType } = resolved.context;
 
 				// Process through agent
-				await handleAgentMessage(
-					resolved.context,
-					text,
-					chatType,
-					{
-						getSystemPrompt: systemPromptFor,
-						getTools: (ctx) => getProductTools(productType, ctx),
-					},
-				);
+				await handleAgentMessage(resolved.context, text, chatType, {
+					getSystemPrompt: systemPromptFor,
+					getTools: (ctx) => getProductTools(productType, ctx),
+				});
 
 				await markProcessed(sb, item.id);
 				processed++;

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-	sanitizeUserInput,
-	sanitizeDisplayName,
 	sanitizeDbError,
+	sanitizeDisplayName,
+	sanitizeUserInput,
 	truncateResult,
 } from "@/lib/sanitize";
 

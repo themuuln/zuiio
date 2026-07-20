@@ -8,8 +8,8 @@
  */
 import "server-only";
 
-import { getRedis } from "@/lib/redis";
 import { debug } from "@/lib/debug";
+import { getRedis } from "@/lib/redis";
 
 const REDIS_KEY = "opencode:keys";
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // refresh from Redis every 5 min
@@ -66,11 +66,17 @@ async function refreshKeys(): Promise<void> {
  */
 export async function getCurrentKey(): Promise<string> {
 	// Refresh periodically
-	if (Date.now() - lastRefresh > REFRESH_INTERVAL_MS || cachedKeys.length === 0) {
+	if (
+		Date.now() - lastRefresh > REFRESH_INTERVAL_MS ||
+		cachedKeys.length === 0
+	) {
 		await refreshKeys();
 	}
 	const key = cachedKeys[currentIndex] ?? cachedKeys[0] ?? "";
-	debug("key-rotation", "getCurrentKey", { hasKey: !!key, keyLength: key.length });
+	debug("key-rotation", "getCurrentKey", {
+		hasKey: !!key,
+		keyLength: key.length,
+	});
 	return key;
 }
 

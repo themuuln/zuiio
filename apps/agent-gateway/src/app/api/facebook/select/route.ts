@@ -1,6 +1,6 @@
+import { capture } from "@zuiio/capture";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { capture } from "@zuiio/capture";
 
 import { FacebookChannel } from "@/channels/facebook";
 import { createServiceClient } from "@/lib/supabase";
@@ -85,8 +85,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					is_active: true,
 				},
 				{
-					onConflict:
-						"organization_id,channel,channel_chat_id,channel_user_id",
+					onConflict: "organization_id,channel,channel_chat_id,channel_user_id",
 				},
 			);
 
@@ -129,8 +128,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					is_active: true,
 				},
 				{
-					onConflict:
-						"organization_id,channel,channel_chat_id,channel_user_id",
+					onConflict: "organization_id,channel,channel_chat_id,channel_user_id",
 				},
 			);
 		}

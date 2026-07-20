@@ -4,16 +4,16 @@ import type { GatewayContext } from "@/gateway/types";
 import type { AiProvider } from "@/providers/types";
 import { interpretFlow, resumeFlow } from "./interpreter";
 import {
-	loadFlowVersion,
+	createRun,
+	deleteWaitState,
 	findActiveFlow,
 	loadActiveRun,
-	createRun,
+	loadFlowVersion,
+	loadReadyWaits,
 	saveRun,
 	saveWaitState,
-	loadReadyWaits,
-	deleteWaitState,
 } from "./persistence";
-import type { ConversationRun, FlowContext, FlowVersion, WaitState } from "./types";
+import type { ConversationRun, FlowContext } from "./types";
 
 /**
  * Flow Executor — the public API.
@@ -40,7 +40,14 @@ export async function handleFlowMessage(
 	);
 
 	if (existingRun) {
-		return resumeExistingRun(existingRun, text, supabase, channel, aiProvider, ctx);
+		return resumeExistingRun(
+			existingRun,
+			text,
+			supabase,
+			channel,
+			aiProvider,
+			ctx,
+		);
 	}
 
 	// 2. Check if a flow should be triggered by this message
@@ -92,7 +99,7 @@ export async function handleFlowMessage(
 							maxRounds: params.maxRounds,
 							conversationHistory: undefined,
 						}),
-			}
+				}
 			: undefined,
 	};
 
@@ -117,7 +124,7 @@ export async function handleFlowCallback(
 	callbackData: string,
 	supabase: SupabaseClient,
 	channel: Channel,
-	aiProvider?: AiProvider,
+	_aiProvider?: AiProvider,
 ): Promise<string | null> {
 	const run = await loadActiveRunById(supabase, runId);
 	if (!run) return null;
@@ -153,7 +160,7 @@ export async function handleFlowCallback(
 export async function resumeDelayedFlows(
 	supabase: SupabaseClient,
 	channelFactory: (channel: string, meta?: Record<string, unknown>) => Channel,
-	aiProvider?: AiProvider,
+	_aiProvider?: AiProvider,
 ): Promise<number> {
 	const readyWaits = await loadReadyWaits(supabase);
 	let resumed = 0;
@@ -246,7 +253,7 @@ async function resumeExistingRun(
 							maxRounds: params.maxRounds,
 							conversationHistory: undefined,
 						}),
-			}
+				}
 			: undefined,
 	};
 
@@ -294,9 +301,7 @@ async function loadActiveRunById(
 /**
  * Wrap a Channel adapter to match FlowContext's simpler send interface.
  */
-function wrapChannel(
-	channel: Channel,
-): FlowContext["channel"] {
+function wrapChannel(channel: Channel): FlowContext["channel"] {
 	return {
 		async sendMessage(chatId, text, options) {
 			await channel.sendMessage(chatId, text, {

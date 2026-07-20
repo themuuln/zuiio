@@ -34,7 +34,7 @@ export function securityAudit(): string[] {
 		openaiKey.startsWith("sk-...")
 	) {
 		warnings.push(
-		"OPENAI_API_KEY not set — fallback provider unavailable (optional, OpenCodeGo will be used directly)",
+			"OPENAI_API_KEY not set — fallback provider unavailable (optional, OpenCodeGo will be used directly)",
 		);
 	}
 	if (!groqKey || groqKey === "placeholder") {

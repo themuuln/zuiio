@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { ProductCatalog, ReadPlanQuery } from "@/read-engine/types";
+import { describe, expect, it } from "vitest";
 import { compileQuery } from "@/read-engine/compile";
+import type { ProductCatalog, ReadPlanQuery } from "@/read-engine/types";
 
 const catalog: ProductCatalog = JSON.parse(
 	readFileSync(
@@ -18,7 +18,7 @@ describe("compileQuery", () => {
 		const q: ReadPlanQuery = { dataset: "work_orders" };
 		const compiled = compileQuery(q, catalog, TENANT_ID);
 		expect(compiled.params.select).toBe("*");
-		expect(compiled.params["organization_id"]).toBe(`eq.${TENANT_ID}`);
+		expect(compiled.params.organization_id).toBe(`eq.${TENANT_ID}`);
 		expect(compiled.path).toBe("/rest/v1/work_orders");
 	});
 
@@ -47,7 +47,7 @@ describe("compileQuery", () => {
 			filters: [{ field: "status", op: "eq", value: "paid" }],
 		};
 		const compiled = compileQuery(q, catalog, TENANT_ID);
-		expect(compiled.params["status"]).toBe("eq.paid");
+		expect(compiled.params.status).toBe("eq.paid");
 	});
 
 	it("compiles in filter with values array", () => {
@@ -56,7 +56,7 @@ describe("compileQuery", () => {
 			filters: [{ field: "status", op: "in", values: ["paid", "done"] }],
 		};
 		const compiled = compileQuery(q, catalog, TENANT_ID);
-		expect(compiled.params["status"]).toBe("in.(paid,done)");
+		expect(compiled.params.status).toBe("in.(paid,done)");
 	});
 
 	it("compiles nested embeds", () => {
@@ -68,7 +68,7 @@ describe("compileQuery", () => {
 	it("always injects tenant filter", () => {
 		const q: ReadPlanQuery = { dataset: "work_orders" };
 		const compiled = compileQuery(q, catalog, TENANT_ID);
-		expect(compiled.params["organization_id"]).toBe(`eq.${TENANT_ID}`);
+		expect(compiled.params.organization_id).toBe(`eq.${TENANT_ID}`);
 		expect(compiled.tenantId).toBe(TENANT_ID);
 	});
 

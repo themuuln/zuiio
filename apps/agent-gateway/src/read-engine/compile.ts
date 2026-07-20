@@ -1,11 +1,10 @@
 import type {
+	CompiledQuery,
+	Filter,
+	MeasureExpr,
 	ProductCatalog,
 	ReadPlanQuery,
-	CompiledQuery,
-	MeasureExpr,
-	Filter,
 	Sort,
-	FieldType,
 } from "./types";
 
 export function compileQuery(
@@ -90,7 +89,12 @@ export function compileQuery(
 		params["request.prefer"] = "count=exact";
 	}
 
-	const description = buildDescription(query, hasMeasures, tenantColumn, tenantId);
+	const description = buildDescription(
+		query,
+		hasMeasures,
+		tenantColumn,
+		tenantId,
+	);
 
 	return {
 		method: "GET",

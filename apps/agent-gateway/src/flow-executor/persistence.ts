@@ -296,7 +296,10 @@ export async function enqueueMessage(
 	runId: string,
 	channel: string,
 	channelChatId: string,
-	payload: { text: string; buttons?: Array<{ text: string; callbackData: string }> },
+	payload: {
+		text: string;
+		buttons?: Array<{ text: string; callbackData: string }>;
+	},
 ): Promise<string> {
 	const id = crypto.randomUUID();
 

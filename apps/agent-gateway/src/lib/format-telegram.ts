@@ -29,13 +29,10 @@ export function markdownToTelegramHtml(text: string): string {
 	result = convertTables(result);
 
 	// Code blocks: ```lang\n...``` → <pre><code class="language-lang">...</code></pre>
-	result = result.replace(
-		/```(\w*)\n?([\s\S]*?)```/g,
-		(_, lang, code) => {
-			const cls = lang ? ` class="language-${lang}"` : "";
-			return `<pre><code${cls}>${escapeHtml(code.trim())}</code></pre>`;
-		},
-	);
+	result = result.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+		const cls = lang ? ` class="language-${lang}"` : "";
+		return `<pre><code${cls}>${escapeHtml(code.trim())}</code></pre>`;
+	});
 
 	// Inline code: `text` → <code>text</code>
 	result = result.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -67,7 +64,7 @@ function convertTables(text: string): string {
 	let i = 0;
 
 	while (i < lines.length) {
-		const line = lines[i]!.trim();
+		const line = lines[i]?.trim();
 
 		// Detect table start: first row with | separators
 		if (line.startsWith("|") && line.endsWith("|")) {
@@ -75,7 +72,7 @@ function convertTables(text: string): string {
 
 			// Collect all table rows
 			while (i < lines.length) {
-				const row = lines[i]!.trim();
+				const row = lines[i]?.trim();
 				if (!row.startsWith("|") || !row.endsWith("|")) break;
 
 				const cells = row
@@ -146,13 +143,13 @@ export function convertTablesToPlainList(text: string): string {
 	let i = 0;
 
 	while (i < lines.length) {
-		const line = lines[i]!.trim();
+		const line = lines[i]?.trim();
 
 		if (line.startsWith("|") && line.endsWith("|")) {
 			const rows: string[][] = [];
 
 			while (i < lines.length) {
-				const row = lines[i]!.trim();
+				const row = lines[i]?.trim();
 				if (!row.startsWith("|") || !row.endsWith("|")) break;
 
 				const cells = row
@@ -208,13 +205,13 @@ export function convertMarkdownToRichBlocks(
 	let i = 0;
 
 	while (i < lines.length) {
-		const line = lines[i]!.trim();
+		const line = lines[i]?.trim();
 
 		if (line.startsWith("|") && line.endsWith("|")) {
 			const rows: string[][] = [];
 
 			while (i < lines.length) {
-				const row = lines[i]!.trim();
+				const row = lines[i]?.trim();
 				if (!row.startsWith("|") || !row.endsWith("|")) break;
 
 				const cells = row
@@ -281,7 +278,7 @@ function escapeStrayHtml(text: string): string {
 			parts.push(escapeHtml(text.slice(lastIdx, match.index!)));
 		}
 		parts.push(match[0]!);
-		lastIdx = match.index! + match[0]!.length;
+		lastIdx = match.index! + match[0]?.length;
 	}
 	if (lastIdx < text.length) {
 		parts.push(escapeHtml(text.slice(lastIdx)));
@@ -296,5 +293,3 @@ function escapeHtml(text: string): string {
 		.replace(/</g, "&lt;")
 		.replace(/>/g, "&gt;");
 }
-
-

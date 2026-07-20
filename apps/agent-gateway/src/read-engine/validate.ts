@@ -3,7 +3,6 @@ import type {
 	ReadPlan,
 	ReadPlanQuery,
 	ReadPlanValidationError,
-	ValidationErrorCode,
 } from "./types";
 
 export interface ValidationResult {
@@ -182,7 +181,7 @@ function validateQuery(
 
 	// Embeds must be valid relations
 	for (const embed of query.embeds ?? []) {
-		if (!dataset.relations || !dataset.relations[embed]) {
+		if (!dataset.relations?.[embed]) {
 			errors.push({
 				code: "EMBED_RELATION_NOT_FOUND",
 				message: `"${embed}" холбоо "${query.dataset}" өгөгдлийн багц дээр олдсонгүй`,

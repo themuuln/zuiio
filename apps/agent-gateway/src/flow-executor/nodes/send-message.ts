@@ -6,7 +6,17 @@ import type { FlowContext, NodeResult, OutboundMessage } from "../types";
  */
 export async function handleSendMessage(
 	ctx: FlowContext,
-	node: { data: { message: string; buttons?: Array<{ id: string; text: string; actionType?: string; actionValue?: string }> } },
+	node: {
+		data: {
+			message: string;
+			buttons?: Array<{
+				id: string;
+				text: string;
+				actionType?: string;
+				actionValue?: string;
+			}>;
+		};
+	},
 ): Promise<NodeResult> {
 	const { message, buttons } = node.data;
 
@@ -34,5 +44,8 @@ function interpolateFields(
 	text: string,
 	fields: Record<string, string>,
 ): string {
-	return text.replace(/\{\{(\w+)\}\}/g, (_, key) => fields[key] ?? `{{${key}}}`);
+	return text.replace(
+		/\{\{(\w+)\}\}/g,
+		(_, key) => fields[key] ?? `{{${key}}}`,
+	);
 }

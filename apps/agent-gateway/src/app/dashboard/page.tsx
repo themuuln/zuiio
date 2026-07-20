@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -170,7 +170,7 @@ export default function DashboardPage() {
 			setStats(data);
 
 			// Fetch handoffs
-			const handoffRes = await fetch(
+			const _handoffRes = await fetch(
 				`/api/dashboard/usage?orgId=${encodeURIComponent(orgId)}&days=7`,
 			);
 			// For now, handoff data is embedded in usage stats

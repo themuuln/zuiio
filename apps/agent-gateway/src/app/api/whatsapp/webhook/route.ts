@@ -1,17 +1,13 @@
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
-import { resolveOrgFromBotKey } from "@/gateway/mode-b";
-import { handleAgentMessage } from "@/gateway/agent-handler";
-import { createServiceClient } from "@/lib/supabase";
-import { sanitizeUserInput } from "@/lib/sanitize";
-import type { LinkRecord } from "@/gateway/types";
-import { getProductTools } from "@/gateway/webhook-helpers";
-import { systemPromptFor } from "@/gateway/webhook-helpers";
 import { WhatsAppChannel } from "@/channels/whatsapp";
-import {
-	confirmAction,
-	rejectAction,
-} from "@/runtime/confirmation";
+import { handleAgentMessage } from "@/gateway/agent-handler";
+import { resolveOrgFromBotKey } from "@/gateway/mode-b";
+import type { LinkRecord } from "@/gateway/types";
+import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
+import { sanitizeUserInput } from "@/lib/sanitize";
+import { createServiceClient } from "@/lib/supabase";
+import { confirmAction, rejectAction } from "@/runtime/confirmation";
 
 export const dynamic = "force-dynamic";
 
@@ -181,7 +177,7 @@ export async function POST(request: Request) {
 						{
 							getSystemPrompt: systemPromptFor,
 							getTools: (toolCtx) =>
-								getProductTools(ctx!.context.productType, toolCtx),
+								getProductTools(ctx?.context.productType, toolCtx),
 						},
 					);
 

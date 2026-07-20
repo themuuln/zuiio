@@ -87,7 +87,13 @@ export interface Field {
 }
 
 /** Postgres-compatible field types. */
-export type FieldType = "uuid" | "string" | "number" | "text" | "timestamp" | "boolean";
+export type FieldType =
+	| "uuid"
+	| "string"
+	| "number"
+	| "text"
+	| "timestamp"
+	| "boolean";
 
 /** Display format for result rendering. */
 export type FieldFormat =
@@ -235,20 +241,20 @@ export interface Filter {
 
 /** PostgREST filter operators. */
 export type FilterOp =
-	| "eq"      // =   field=eq.value
-	| "neq"     // ≠   field=neq.value
-	| "gt"      // >   field=gt.value
-	| "gte"     // ≥   field=gte.value
-	| "lt"      // <   field=lt.value
-	| "lte"     // ≤   field=lte.value
-	| "like"    // SQL LIKE     field=like.value
-	| "ilike"   // SQL ILIKE    field=ilike.value
-	| "in"      // IN list      field=in.(v1,v2,v3)
-	| "not_in"  // NOT IN       field=not.in.(v1,v2,v3)
-	| "is"      // IS NULL/TRUE/FALSE  field=is.null|true|false
-	| "fts"     // Full text search    field=fts.value
-	| "plfts"   // Phrase FTS          field=plfts.value
-	| "match"   // Regex match         field=match.value
+	| "eq" // =   field=eq.value
+	| "neq" // ≠   field=neq.value
+	| "gt" // >   field=gt.value
+	| "gte" // ≥   field=gte.value
+	| "lt" // <   field=lt.value
+	| "lte" // ≤   field=lte.value
+	| "like" // SQL LIKE     field=like.value
+	| "ilike" // SQL ILIKE    field=ilike.value
+	| "in" // IN list      field=in.(v1,v2,v3)
+	| "not_in" // NOT IN       field=not.in.(v1,v2,v3)
+	| "is" // IS NULL/TRUE/FALSE  field=is.null|true|false
+	| "fts" // Full text search    field=fts.value
+	| "plfts" // Phrase FTS          field=plfts.value
+	| "match" // Regex match         field=match.value
 	| "imatch"; // Case-insensitive regex  field=imatch.value
 
 /** Sort specification. */

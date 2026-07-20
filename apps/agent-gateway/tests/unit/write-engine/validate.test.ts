@@ -1,11 +1,14 @@
-import { describe, it, expect, vi } from "vitest";
-import { readFileSync } from "fs";
-import { resolve } from "path";
-import { validateWritePlan } from "@/write-engine/validate";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
 import type { WriteCatalog } from "@/write-engine/types";
+import { validateWritePlan } from "@/write-engine/validate";
 
 const catalog: WriteCatalog = JSON.parse(
-	readFileSync(resolve(__dirname, "../../../src/write-engine/catalogs/tolom-write.json"), "utf8"),
+	readFileSync(
+		resolve(__dirname, "../../../src/write-engine/catalogs/tolom-write.json"),
+		"utf8",
+	),
 );
 
 describe("validateWritePlan", () => {
@@ -82,7 +85,9 @@ describe("validateWritePlan", () => {
 			catalog,
 		);
 		expect(res.valid).toBe(false);
-		expect(res.errors.some((e) => e.code === "TENANT_COLUMN_LEAKED")).toBe(true);
+		expect(res.errors.some((e) => e.code === "TENANT_COLUMN_LEAKED")).toBe(
+			true,
+		);
 	});
 
 	it("rejects non-writable field (id)", () => {
@@ -161,11 +166,16 @@ describe("validateWritePlan", () => {
 			{
 				dataset: "vehicles",
 				operation: "insert",
-				data: { customer_id: "11111111-1111-1111-1111-111111111111", plate_number: "УБА1" },
+				data: {
+					customer_id: "11111111-1111-1111-1111-111111111111",
+					plate_number: "УБА1",
+				},
 			},
 			locked,
 		);
 		expect(res.valid).toBe(false);
-		expect(res.errors.some((e) => e.code === "OPERATION_NOT_ALLOWED")).toBe(true);
+		expect(res.errors.some((e) => e.code === "OPERATION_NOT_ALLOWED")).toBe(
+			true,
+		);
 	});
 });
