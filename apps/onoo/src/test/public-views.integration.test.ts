@@ -182,18 +182,24 @@ async function setupPublishedGame(
       );
     });
 
+    // Rebuild standings and player stats after the transition
+    // (cmd_approve_revision rebuilds them, but the game was still final_pending_review
+    //  at that point, so it wasn't included)
+    await pool.query("SELECT public.refresh_standings($1::uuid)", [SEED_COMPETITION_ID]);
+    await pool.query("SELECT public.refresh_season_player_stats($1::uuid)", [SEED_COMPETITION_ID]);
+
     return { gameId, revisionId };
   } catch (err) {
     // Clean up on failure only
+    try { await pool.query("DELETE FROM public.game_player_stats WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
+    try { await pool.query("DELETE FROM public.game_team_stats WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
     try { await pool.query("DELETE FROM public.stat_events WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
     try { await pool.query("DELETE FROM public.tracker_sessions WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
     try { await pool.query("DELETE FROM public.game_revisions WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
     try { await pool.query("DELETE FROM public.source_submissions WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
-    try { await pool.query("DELETE FROM public.game_rosters WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
     try { await pool.query("DELETE FROM public.game_assignments WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
+    try { await pool.query("DELETE FROM public.game_rosters WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
     try { await pool.query("DELETE FROM public.correction_records WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
-    try { await pool.query("DELETE FROM public.game_player_stats WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
-    try { await pool.query("DELETE FROM public.game_team_stats WHERE game_id IN (SELECT id FROM public.games WHERE home_team_season_id = $1)", [SEED_HOME_TS]); } catch {}
     try { await pool.query("DELETE FROM public.games WHERE home_team_season_id = $1", [SEED_HOME_TS]); } catch {}
     try { await pool.query("DELETE FROM public.memberships WHERE user_id IN ($1, $2)", [admin.id, approver.id]); } catch {}
     try { await pool.query("DELETE FROM auth.users WHERE id IN ($1, $2)", [admin.id, approver.id]); } catch {}
@@ -208,6 +214,8 @@ describe("v_public_games", () => {
     if (client) await client.release();
     // FK-safe cleanup for test game
     if (pool && gameId) {
+      await pool.query("DELETE FROM public.game_player_stats WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.game_team_stats WHERE game_id = $1", [gameId]);
       await pool.query("DELETE FROM public.stat_events WHERE game_id = $1", [gameId]);
       await pool.query("DELETE FROM public.tracker_sessions WHERE game_id = $1", [gameId]);
       await pool.query("DELETE FROM public.game_revisions WHERE game_id = $1", [gameId]);
@@ -215,9 +223,8 @@ describe("v_public_games", () => {
       await pool.query("DELETE FROM public.game_assignments WHERE game_id = $1", [gameId]);
       await pool.query("DELETE FROM public.game_rosters WHERE game_id = $1", [gameId]);
       await pool.query("DELETE FROM public.correction_records WHERE game_id = $1", [gameId]);
-      await pool.query("DELETE FROM public.game_player_stats WHERE game_id = $1", [gameId]);
-      await pool.query("DELETE FROM public.game_team_stats WHERE game_id = $1", [gameId]);
       await pool.query("DELETE FROM public.games WHERE id = $1", [gameId]);
+      await pool.query("DELETE FROM public.memberships WHERE user_id IN (SELECT user_id FROM public.game_assignments WHERE game_id = $1)", [gameId]);
     }
   });
 
@@ -323,6 +330,10 @@ describe("v_public_box_score", () => {
   afterAll(async () => {
     if (client) await client.release();
     if (pool && gameId) {
+      await pool.query("DELETE FROM public.game_player_stats WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.game_team_stats WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.game_revisions WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.source_submissions WHERE game_id = $1", [gameId]);
       await pool.query("DELETE FROM public.games WHERE id = $1", [gameId]);
     }
     await closePool();
@@ -367,6 +378,10 @@ describe("v_public_standings", () => {
   afterAll(async () => {
     if (client) await client.release();
     if (pool && gameId) {
+      await pool.query("DELETE FROM public.game_player_stats WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.game_team_stats WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.game_revisions WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.source_submissions WHERE game_id = $1", [gameId]);
       await pool.query("DELETE FROM public.games WHERE id = $1", [gameId]);
     }
     await closePool();
@@ -417,6 +432,10 @@ describe("v_public_leaders", () => {
   afterAll(async () => {
     if (client) await client.release();
     if (pool && gameId) {
+      await pool.query("DELETE FROM public.game_player_stats WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.game_team_stats WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.game_revisions WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.source_submissions WHERE game_id = $1", [gameId]);
       await pool.query("DELETE FROM public.games WHERE id = $1", [gameId]);
     }
     await closePool();
@@ -510,6 +529,10 @@ describe("v_public_play_by_play", () => {
   afterAll(async () => {
     if (client) await client.release();
     if (pool && gameId) {
+      await pool.query("DELETE FROM public.game_player_stats WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.game_team_stats WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.game_revisions WHERE game_id = $1", [gameId]);
+      await pool.query("DELETE FROM public.source_submissions WHERE game_id = $1", [gameId]);
       await pool.query("DELETE FROM public.games WHERE id = $1", [gameId]);
     }
     await closePool();

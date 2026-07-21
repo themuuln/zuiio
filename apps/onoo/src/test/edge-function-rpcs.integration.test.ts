@@ -199,11 +199,11 @@ describe("derive-game RPC pattern", () => {
   });
 
   afterAll(async () => {
-    await pool.query("DELETE FROM public.game_revisions WHERE game_id = $1", [gameId]);
-    await pool.query("DELETE FROM public.source_submissions WHERE game_id = $1", [gameId]);
     await pool.query("DELETE FROM public.game_player_stats WHERE game_id = $1", [gameId]);
     await pool.query("DELETE FROM public.game_team_stats WHERE game_id = $1", [gameId]);
     await pool.query("DELETE FROM public.stat_events WHERE game_id = $1", [gameId]);
+    await pool.query("DELETE FROM public.source_submissions WHERE game_id = $1", [gameId]);
+    await pool.query("DELETE FROM public.game_revisions WHERE game_id = $1", [gameId]);
     await pool.query("DELETE FROM public.tracker_sessions WHERE game_id = $1", [gameId]);
     await pool.query("DELETE FROM public.game_assignments WHERE game_id = $1", [gameId]);
     await pool.query("DELETE FROM public.game_rosters WHERE game_id = $1", [gameId]);

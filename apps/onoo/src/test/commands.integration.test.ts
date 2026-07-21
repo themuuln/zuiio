@@ -182,6 +182,7 @@ describe("game lifecycle commands", () => {
       await pool.query("DELETE FROM public.game_rosters WHERE game_id IN (SELECT id FROM public.games WHERE created_at > NOW() - INTERVAL '1 hour')");
       await pool.query("DELETE FROM public.game_assignments WHERE game_id IN (SELECT id FROM public.games WHERE created_at > NOW() - INTERVAL '1 hour')");
       await pool.query("DELETE FROM public.games WHERE created_at > NOW() - INTERVAL '1 hour'");
+      await pool.query("DELETE FROM public.source_submissions WHERE submitted_by IN (SELECT id FROM auth.users WHERE email LIKE '%@onoo-test.mn')");
       await pool.query("DELETE FROM auth.users WHERE email LIKE '%@onoo-test.mn' AND id != '397692e0-915f-4361-9f75-f84d0883ba80'");
     }
     await closePool();

@@ -18,6 +18,7 @@ import {
 
 const SEED_LEAGUE_ID = "c0000000-0000-0000-0000-000000000001";
 const SEED_ADMIN_ID = "397692e0-915f-4361-9f75-f84d0883ba80";
+const SEED_COMPETITION_ID = "e0000000-0000-0000-0000-000000000001";
 
 let pool: Pool;
 let client: PoolClient;
@@ -28,6 +29,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await pool.query("DELETE FROM public.game_player_stats WHERE game_id IN (SELECT id FROM public.games WHERE competition_id = $1)", [SEED_COMPETITION_ID]);
+  await pool.query("DELETE FROM public.game_team_stats WHERE game_id IN (SELECT id FROM public.games WHERE competition_id = $1)", [SEED_COMPETITION_ID]);
+  await pool.query("DELETE FROM public.game_revisions WHERE game_id IN (SELECT id FROM public.games WHERE competition_id = $1)", [SEED_COMPETITION_ID]);
+  await pool.query("DELETE FROM public.source_submissions WHERE game_id IN (SELECT id FROM public.games WHERE competition_id = $1)", [SEED_COMPETITION_ID]);
+  await pool.query("DELETE FROM public.source_submissions WHERE submitted_by IN (SELECT id FROM auth.users WHERE email LIKE '%@onoo-test.mn')");
   await pool.query("DELETE FROM public.memberships WHERE scope_type = 'league' AND role = 'admin' AND scope_id::text LIKE 'c0000000-%'");
   await pool.query("DELETE FROM auth.users WHERE email LIKE '%@onoo-test.mn' AND id != '397692e0-915f-4361-9f75-f84d0883ba80'");
   if (client) client.release();
