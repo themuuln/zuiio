@@ -44,9 +44,10 @@ export interface FibaOfficialStats {
   confidence: number;
 }
 
-const TEAM_HEADER = /^(?<name>.+?)\s+\((?<code>[A-Z0-9]{2,6})\)$/;
-const PLAYER_LINE = /^(?<starter>\*)?(?<jersey>\d+)\s*\.?\s*(?<name>.+?)\s+(?<minutes>DNP|\d{1,2}:\d{2})(?:\s+(?<stats>.*))?$/i;
-const MADE_ATTEMPT = /(?<made>\d+)\s*\/\s*(?<attempted>\d+)/g;
+const TEAM_HEADER = /^(.+?)\s+\(([A-Z0-9]{2,6})\)$/;
+const PLAYER_LINE =
+  /^(\*)?(\d+)\s*\.?\s*(.+?)\s+(DNP|\d{1,2}:\d{2})(?:\s+(.*))?$/i;
+const MADE_ATTEMPT = /(\d+)\s*\/\s*(\d+)/g;
 
 function numberOrZero(value: string | undefined): number {
   return Number(value ?? "0");
@@ -71,10 +72,10 @@ function toSeconds(minutes: string): number | null {
 
 function parsePlayer(line: string): FibaPlayerStatLine | null {
   const match = PLAYER_LINE.exec(line);
-  if (!match?.groups) return null;
+  if (!match) return null;
 
-  const rawName = match.groups.name;
-  const rawMinutes = match.groups.minutes;
+  const rawName = match[3];
+  const rawMinutes = match[4];
   if (!rawName || !rawMinutes) return null;
 
   const name = rawName.trim().replace(/\s+/g, " ");
@@ -82,7 +83,7 @@ function parsePlayer(line: string): FibaPlayerStatLine | null {
   const dnp = minutes === "DNP";
   if (!name || dnp) {
     return {
-      jerseyNumber: numberOrZero(match.groups.jersey),
+      jerseyNumber: numberOrZero(match[2]),
       name,
       secondsPlayed: null,
       dnp: true,
@@ -105,10 +106,10 @@ function parsePlayer(line: string): FibaPlayerStatLine | null {
     };
   }
 
-  const stats = match.groups.stats ?? "";
+  const stats = match[5] ?? "";
   const shooting = [...stats.matchAll(MADE_ATTEMPT)].map((attempt) => ({
-    made: numberOrZero(attempt.groups?.made),
-    attempted: numberOrZero(attempt.groups?.attempted),
+    made: numberOrZero(attempt[1]),
+    attempted: numberOrZero(attempt[2]),
   }));
 
   if (shooting.length < 4) return null;
@@ -122,7 +123,7 @@ function parsePlayer(line: string): FibaPlayerStatLine | null {
   if (values.length < 12) return null;
 
   return {
-    jerseyNumber: numberOrZero(match.groups.jersey),
+    jerseyNumber: numberOrZero(match[2]),
     name,
     secondsPlayed: toSeconds(minutes),
     dnp: false,
@@ -156,7 +157,9 @@ export function fibaTextItemsToLines(
   const lines: Array<{ y: number; items: FibaTextItem[] }> = [];
 
   for (const item of [...items].sort((a, b) => b.y - a.y || a.x - b.x)) {
-    const line = lines.find((candidate) => Math.abs(candidate.y - item.y) <= tolerance);
+    const line = lines.find(
+      (candidate) => Math.abs(candidate.y - item.y) <= tolerance,
+    );
     if (line) {
       line.items.push(item);
     } else {
@@ -182,14 +185,18 @@ export function fibaTextItemsToLines(
  * is a reviewable source document; it must not be written directly to any
  * derived stats table.
  */
-export function parseFibaOfficialStats(lines: readonly string[]): FibaOfficialStats {
+export function parseFibaOfficialStats(
+  lines: readonly string[],
+): FibaOfficialStats {
   const normalizedLines = lines
     .map((line) => line.replace(/\s+/g, " ").trim())
     .filter(Boolean);
-  const scoreLine = normalizedLines.find((line) => /\b\d{1,3}\s*-\s*\d{1,3}\b/.test(line));
-  const scoreMatch = scoreLine?.match(/\b(?<home>\d{1,3})\s*-\s*(?<away>\d{1,3})\b/);
+  const scoreLine = normalizedLines.find((line) =>
+    /\b\d{1,3}\s*-\s*\d{1,3}\b/.test(line),
+  );
+  const scoreMatch = scoreLine?.match(/\b(\d{1,3})\s*-\s*(\d{1,3})\b/);
 
-  if (!scoreMatch?.groups) {
+  if (!scoreMatch) {
     throw new Error("FIBA official statistics score was not found");
   }
 
@@ -199,12 +206,12 @@ export function parseFibaOfficialStats(lines: readonly string[]): FibaOfficialSt
   for (const line of normalizedLines) {
     const teamMatch = TEAM_HEADER.exec(line);
     if (
-      teamMatch?.groups &&
+      teamMatch &&
       !/\bvs\b/i.test(line) &&
       !/^official statistics$/i.test(line)
     ) {
-      const name = teamMatch.groups.name;
-      const code = teamMatch.groups.code;
+      const name = teamMatch[1];
+      const code = teamMatch[2];
       if (!name || !code) continue;
 
       const team = {
@@ -236,16 +243,26 @@ export function parseFibaOfficialStats(lines: readonly string[]): FibaOfficialSt
   if (!homeTeam || !awayTeam) {
     throw new Error("Expected two FIBA team tables");
   }
-  const homePoints = homeTeam.players.reduce((sum, player) => sum + player.pts, 0);
-  const awayPoints = awayTeam.players.reduce((sum, player) => sum + player.pts, 0);
-  const homeScore = numberOrZero(scoreMatch.groups.home);
-  const awayScore = numberOrZero(scoreMatch.groups.away);
+  const homePoints = homeTeam.players.reduce(
+    (sum, player) => sum + player.pts,
+    0,
+  );
+  const awayPoints = awayTeam.players.reduce(
+    (sum, player) => sum + player.pts,
+    0,
+  );
+  const homeScore = numberOrZero(scoreMatch[1]);
+  const awayScore = numberOrZero(scoreMatch[2]);
 
   if (homePoints !== homeScore) {
-    warnings.push(`${homeTeam.name}: player points ${homePoints} do not match score ${homeScore}`);
+    warnings.push(
+      `${homeTeam.name}: player points ${homePoints} do not match score ${homeScore}`,
+    );
   }
   if (awayPoints !== awayScore) {
-    warnings.push(`${awayTeam.name}: player points ${awayPoints} do not match score ${awayScore}`);
+    warnings.push(
+      `${awayTeam.name}: player points ${awayPoints} do not match score ${awayScore}`,
+    );
   }
 
   return {

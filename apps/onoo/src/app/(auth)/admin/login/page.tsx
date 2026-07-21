@@ -19,6 +19,17 @@ export default function LoginPage() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
 
+  const AUTH_ERRORS: Record<string, string> = {
+    "Invalid login credentials": "Имэйл эсвэл нууц үг буруу байна",
+    "Email not confirmed": "Имэйл баталгаажаагүй байна",
+    "Rate limit exceeded": "Хэт олон удаа оролдсон. Түр хүлээгээд дахин оролдоно уу",
+    "Invalid email": "Имэйл хаяг буруу байна",
+  };
+
+  function getMongolianError(message: string): string {
+    return AUTH_ERRORS[message] ?? `Алдаа: ${message}`;
+  }
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -27,7 +38,7 @@ export default function LoginPage() {
       password,
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(getMongolianError(error.message));
     } else {
       router.push("/admin");
       router.refresh();

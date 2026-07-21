@@ -85,8 +85,8 @@ describe("parseFibaOfficialStats", () => {
   });
 
   it("rejects documents that do not contain two FIBA team tables", () => {
-    expect(() => parseFibaOfficialStats(["OFFICIAL STATISTICS", "31 - 56"])).toThrow(
-      "Expected two team tables, found 0",
-    );
+    expect(() =>
+      parseFibaOfficialStats(["OFFICIAL STATISTICS", "31 - 56"]),
+    ).toThrow("Expected two team tables, found 0");
   });
 });

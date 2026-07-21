@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ArrowLeft, Calendar, MapPin, Trophy } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { type GameRow, gamesApi } from "@/app/admin/_lib/api";
 import { AdminCardSkeleton } from "@/components/admin/admin-skeleton";
@@ -65,8 +66,9 @@ function getTeamName(game: GameRow, side: "home" | "away"): string {
 
 export default function GameDetailPage() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-
+  const [tab, setTab] = useState(searchParams.get("tab") ?? "game");
   const {
     data: game,
     isPending,
@@ -147,8 +149,7 @@ export default function GameDetailPage() {
       <h1 className="text-2xl font-bold">
         {homeName} vs {awayName}
       </h1>
-
-      <Tabs defaultValue="game">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="game">Тоглолт</TabsTrigger>
           <TabsTrigger value="review">Шалгах</TabsTrigger>

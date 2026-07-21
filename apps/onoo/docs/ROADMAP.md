@@ -104,6 +104,17 @@ Stats people can show off:
 - [ ] Live game center with real-time score, on-fire player indicators, and play-by-play feed driven by the tracker journal.
 - [ ] Live-updating player stat lines during games (Supabase Realtime on curated views).
 
+### Phase 6 — Shop V1
+
+> Execution spec: [plans/phase-6-shop.md](plans/phase-6-shop.md)
+
+One complete commerce release for Onoo merchandise and future league products:
+
+- [ ] Public `/shop` catalogue and product detail pages — Mongolian-first, mobile-first, and account-free.
+- [ ] Product variants, inventory reservation, and private orders with curated public product data only.
+- [ ] QPay invoice → QR → verified callback → paid order flow; no manual payment checking.
+- [ ] Authenticated admin Products and Orders pages, with paid orders advanced to shipped.
+
 ## Design principles for public surfaces
 
 - Mongolian-first copy (`@onoo/core` i18n), numbers formatted via `formatNumber`/`formatPercent`.

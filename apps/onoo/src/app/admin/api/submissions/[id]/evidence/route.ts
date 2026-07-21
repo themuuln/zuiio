@@ -30,7 +30,10 @@ export async function GET(
     .createSignedUrl(submission.evidence_url, 60);
 
   if (signedUrlError || !data?.signedUrl) {
-    return NextResponse.json({ error: "Evidence is unavailable" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Evidence is unavailable" },
+      { status: 500 },
+    );
   }
 
   return NextResponse.redirect(data.signedUrl);
