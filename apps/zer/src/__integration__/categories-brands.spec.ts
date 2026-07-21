@@ -190,11 +190,12 @@ describe("get_public_categories RPC", () => {
 // ── RLS ──────────────────────────────────────────
 
 describe("Row Level Security", () => {
+  it("anon cannot create categories", async () => {
+    const anon = createAnonClient();
     const { error } = await anon.from("categories").insert({
       organization_id: "00000000-0000-0000-0000-000000000000",
       name: "Hacker Category",
       slug: "hacker",
-    });
     });
     expect(error).not.toBeNull();
   });
