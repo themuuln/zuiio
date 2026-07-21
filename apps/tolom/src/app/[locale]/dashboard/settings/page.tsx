@@ -104,7 +104,7 @@ function ErrorState({
   readonly message: string;
   readonly onRetry: () => void;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
 
   return (
     <div className="flex flex-col items-start gap-3 rounded-lg border border-destructive/20 px-4 py-3">
@@ -223,7 +223,7 @@ export default function SettingsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("general");
-  const t = useTranslations("settings");
+  const t = useTranslations("settings") as (key: string, values?: Record<string, string | number>) => string;
   const settingsSections = useMemo(() => getSettingsSections(t), [t]);
 
   const orgInfoQuery = useCurrentOrg();

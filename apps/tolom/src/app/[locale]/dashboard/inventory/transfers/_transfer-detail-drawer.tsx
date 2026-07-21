@@ -82,7 +82,7 @@ export function TransferDetailSheet({
   orgId,
   transferId,
 }: TransferDetailSheetProps) {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
   const { data: transfer, isPending } = useTransfer(orgId, transferId);
   const approveMutation = useApproveTransfer(orgId);
   const transitMutation = useMarkInTransit(orgId);

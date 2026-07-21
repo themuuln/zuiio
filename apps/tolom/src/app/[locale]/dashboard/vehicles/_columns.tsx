@@ -21,7 +21,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
       id: "plate_number",
       accessorKey: "plate_number",
       header: ({ column }) => {
-        const t = useTranslations("vehicles");
+        const t = useTranslations("vehicles") as (key: string, values?: Record<string, string | number>) => string;
         return <DataTableColumnHeader column={column} title={t("plate")} />;
       },
       cell: ({ row }) => (
@@ -46,7 +46,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
       id: "vin",
       accessorKey: "vin",
       header: ({ column }) => {
-        const t = useTranslations("vehicles");
+        const t = useTranslations("vehicles") as (key: string, values?: Record<string, string | number>) => string;
         return <DataTableColumnHeader column={column} title={t("vin")} />;
       },
       cell: ({ row }) =>
@@ -65,7 +65,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
       id: "owner_name",
       accessorKey: "owner_name",
       header: ({ column }) => {
-        const t = useTranslations("vehicles");
+        const t = useTranslations("vehicles") as (key: string, values?: Record<string, string | number>) => string;
         return <DataTableColumnHeader column={column} title={t("owner")} />;
       },
       cell: ({ row }) =>

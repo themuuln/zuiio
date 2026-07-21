@@ -146,7 +146,7 @@ function KpiCard({
 }
 
 export default function MechanicPerformancePage() {
-  const t = useTranslations("mechanicPerformance");
+  const t = useTranslations("mechanicPerformance") as (key: string, values?: Record<string, string | number>) => string;
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: branches } = useBranches(orgId);

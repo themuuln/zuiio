@@ -61,8 +61,8 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function IntegrationsPage() {
-  const t = useTranslations("integrations");
-  const appT = useTranslations("app");
+  const t = useTranslations("integrations") as (key: string, values?: Record<string, string | number>) => string;
+  const appT = useTranslations("app") as (key: string, values?: Record<string, string | number>) => string;
 
   return (
     <div className="flex min-h-dvh flex-col">

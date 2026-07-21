@@ -38,7 +38,7 @@ interface ReminderLogsTabProps {
 }
 
 export function ReminderLogsTab({ orgId, branchFilter }: ReminderLogsTabProps) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const {
     data: logs,
     isPending,

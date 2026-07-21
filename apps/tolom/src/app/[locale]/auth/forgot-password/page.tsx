@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
         <div className="mt-4">
           {cooldown > 0 ? (
             <Typography.Muted className="text-xs text-muted-foreground">
-              {t("cooldownMessage", { seconds: cooldown })}
+              {t("cooldownMessage", { seconds: String(cooldown) })}
             </Typography.Muted>
           ) : (
             <button

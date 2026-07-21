@@ -19,7 +19,7 @@ export const GET = createRouteHandler(
 
     // Fetch invoice via public RPC
     const { data: invoiceData, error: invError } = await supabase.rpc(
-      "get_public_invoice_by_token",
+      "get_public_invoice_by_token" as any,
       { p_token: token },
     );
 

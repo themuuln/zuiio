@@ -48,7 +48,7 @@ export function PurchaseOrderDetailSheet({
   onOpenChange,
   poId,
 }: PurchaseOrderDetailSheetProps) {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 

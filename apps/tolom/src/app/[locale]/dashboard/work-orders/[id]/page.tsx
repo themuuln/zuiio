@@ -52,7 +52,7 @@ export type ReturnTypeOfUseWorkOrderDetail = ReturnType<
 
 export default function WorkOrderDetailPage() {
   const ctx = useWorkOrderDetailPage();
-  const t = useTranslations("workOrderDetail");
+  const t = useTranslations("workOrderDetail") as (key: string, values?: Record<string, string | number>) => string;
 
   // paymentForm is UI state, not data-layer — keep it here
   const paymentSchema = z.object({

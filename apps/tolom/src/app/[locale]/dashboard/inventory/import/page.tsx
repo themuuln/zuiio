@@ -72,7 +72,7 @@ function parseCsvLine(line: string): string[] {
 export default function ImportPartsPage() {
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? null;
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<ImportState>({ status: "idle" });
   const [dragOver, setDragOver] = useState(false);
@@ -178,10 +178,8 @@ export default function ImportPartsPage() {
     <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon-sm" asChild>
-          <Link href="/dashboard/inventory">
-            <ArrowLeft className="size-4" />
-          </Link>
+        <Button variant="ghost" size="icon-sm" render={<Link href="/dashboard/inventory" />}>
+          <ArrowLeft className="size-4" />
         </Button>
         <div>
           <h1 className="text-xl font-semibold">{t("importParts")}</h1>

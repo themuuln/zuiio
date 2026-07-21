@@ -51,7 +51,7 @@ export function SupplierPriceHistory({
   history,
   isPending,
 }: SupplierPriceHistoryProps) {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
 
   if (isPending) {
     return (

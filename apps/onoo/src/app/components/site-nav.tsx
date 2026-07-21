@@ -14,7 +14,7 @@ const NAV_ITEMS = [
   { href: "/standings", label: "Шалгуур" },
   { href: "/players", label: "Тоглогчид" },
   { href: "/leaders", label: "Тэргүүлэгчид" },
-  { href: "/awards", label: "Наградууд" },
+  { href: "/shop", label: "Дэлгүүр" },
 ] as const;
 
 function isActive(href: string, pathname: string): boolean {

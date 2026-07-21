@@ -46,6 +46,7 @@ interface UseDrawerMutationsParams {
    */
   assignMechanicMutation?: {
     mutateAsync: (vars: { woId: string; mechanicId: string }) => Promise<void>;
+    isPending?: boolean;
   };
   assignCustomerMutation?: {
     mutateAsync: (vars: {
@@ -53,6 +54,7 @@ interface UseDrawerMutationsParams {
       customerId: string | null;
       customerName?: string | null;
     }) => Promise<void>;
+    isPending?: boolean;
   };
 }
 

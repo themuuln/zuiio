@@ -37,7 +37,7 @@ import { useMechanicsList } from "@/lib/queries/use-mechanic-dashboard";
 import { MechanicDashboard } from "./_mechanic-dashboard";
 
 export default function MechanicPage() {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const now = useClientNow();
   const {
     profile,

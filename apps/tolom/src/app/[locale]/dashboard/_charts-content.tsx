@@ -35,7 +35,7 @@ export function MechanicTrendChart({
 }: {
   data: { week: string; orders: number; revenue: number }[];
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   if (data.length === 0) return null;
   const config = {
     revenue: { label: t("reports.revenue"), color: CHART_COLORS[0] },
@@ -116,7 +116,7 @@ function EmptyCardBody({ message }: { message: string }) {
 }
 
 function TopServicesCard({ services }: { services: TopService[] }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const top = services.slice(0, 5);
   const maxRevenue = Math.max(...top.map((s) => s.revenue), 1);
 
@@ -160,7 +160,7 @@ function CategoryBreakdownCard({
 }: {
   categories: DashboardData["serviceCategoryBreakdown"];
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
 
   const config = useMemo(
     () =>
@@ -219,7 +219,7 @@ function TechnicianPerformanceCard({
 }: {
   technicians: TechnicianPerformance[];
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const top = [...technicians]
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5);
@@ -260,7 +260,7 @@ function TechnicianPerformanceCard({
 }
 
 export default function ChartsSection({ data }: { data: DashboardData }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const {
     revenueTrend,
     workOrderStatusDistribution,

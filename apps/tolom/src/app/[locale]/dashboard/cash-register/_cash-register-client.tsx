@@ -45,7 +45,7 @@ import { formatCurrency } from "@/lib/utils";
 // ── Main Client Component ──────────────────────────────────
 
 export function CashRegisterClient() {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
   const selectedBranchId = useSelectedBranchId();
@@ -153,7 +153,7 @@ function SessionHeader({
   onClose: () => void;
   onCashOut: () => void;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
 
   const expectedBalance =
     session.expected_balance ??
@@ -266,7 +266,7 @@ function TransactionList({
 }: {
   entries: NonNullable<ReturnType<typeof useCurrentSession>["data"]>["entries"];
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
 
   return (
     <Card>
@@ -325,7 +325,7 @@ function TransactionList({
 // ── No Session Card ────────────────────────────────────────
 
 function NoSessionCard({ onOpen }: { onOpen: () => void }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
 
   return (
     <Card>
@@ -369,7 +369,7 @@ function OpenSessionDialog({
   orgId: string | undefined;
   branchId: string | null;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const form = useForm<OpenSessionValues>({
     resolver: zodResolver(openSessionSchema),
     defaultValues: { balance: 0 },
@@ -459,7 +459,7 @@ function CloseSessionDialog({
   orgId: string | undefined;
   session: NonNullable<ReturnType<typeof useCurrentSession>["data"]>;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const form = useForm<CloseSessionValues>({
     resolver: zodResolver(closeSessionSchema),
     defaultValues: { balance: 0, note: "" },
@@ -643,7 +643,7 @@ function CashOutDialog({
   orgId: string | undefined;
   sessionId: string;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const form = useForm<CashOutValues>({
     resolver: zodResolver(cashOutSchema),
     defaultValues: { amount: 0, description: "" },

@@ -633,7 +633,7 @@ export function VehicleRegistrationDrawer({
                     <MessageSquarePlus className="size-4 text-primary" />
                   )}
                   {assignBayNumber
-                    ? t("assignToBayNumber", { bayNumber: assignBayNumber })
+                    ? t("assignToBayNumber", { bayNumber: String(assignBayNumber) })
                     : t("addToWaitingQueue")}
                 </Label>
 
@@ -659,7 +659,7 @@ export function VehicleRegistrationDrawer({
                   {queueSaving
                     ? t("addingToQueue")
                     : assignBayNumber
-                      ? t("assignToBayNumber", { bayNumber: assignBayNumber })
+                      ? t("assignToBayNumber", { bayNumber: String(assignBayNumber) })
                       : t("addQueueButton")}
                 </Button>
               </div>
@@ -967,7 +967,7 @@ export function VehicleRegistrationDrawer({
               <Typography.Text className="text-sm text-amber-200">
                 {activeWorkOrder.bay_number
                   ? t("vehicleAlreadyInBay", {
-                      bayNumber: activeWorkOrder.bay_number,
+                      bayNumber: String(activeWorkOrder.bay_number),
                     })
                   : t("vehicleAlreadyInQueue")}
               </Typography.Text>
@@ -1057,16 +1057,16 @@ export function VehicleRegistrationDrawer({
             {activeWorkOrder
               ? activeWorkOrder.bay_number
                 ? t("vehicleAlreadyInBay", {
-                    bayNumber: activeWorkOrder.bay_number,
+                    bayNumber: String(activeWorkOrder.bay_number),
                   })
                 : t("vehicleAlreadyInQueue")
               : (isExistingVehicle ? queueSaving : saving)
                 ? t("saving")
                 : assignBayNumber
                   ? isExistingVehicle
-                    ? t("assignToBayNumber", { bayNumber: assignBayNumber })
+                    ? t("assignToBayNumber", { bayNumber: String(assignBayNumber) })
                     : t("saveAndAssignToBay", {
-                        bayNumber: assignBayNumber,
+                        bayNumber: String(assignBayNumber),
                       })
                   : t("saveAndAddToQueue")}
           </Button>

@@ -160,7 +160,7 @@ export function VehicleForm({
   const queryClient = useQueryClient();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? "";
-  const t = useTranslations("vehicles");
+  const t = useTranslations("vehicles") as (key: string, values?: Record<string, string | number>) => string;
   const commonT = useTranslations("common");
 
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);

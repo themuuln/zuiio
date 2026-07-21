@@ -32,7 +32,7 @@ interface PendingInvitesProps {
   onCopyLink: (token: string) => void;
   onResend: (inviteId: string) => void;
   onCancel: (inviteId: string) => void;
-  t: ReturnType<typeof useTranslations<"organization.memberManagement">>;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
 export function PendingInvites({

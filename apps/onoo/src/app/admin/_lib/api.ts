@@ -264,3 +264,55 @@ export const revisionsApi = {
     return data as RevisionRow;
   },
 };
+
+// ── Shop: Products ──
+
+export interface ShopProductRow {
+  id: string;
+  name: string;
+  slug: string;
+  price_mnt: number;
+  images: string[];
+  variants: Array<{ size: string; stock: number }>;
+  is_available: boolean;
+  created_at: string;
+  updated_at: string;
+  name_en?: string;
+  description?: string;
+  category?: string;
+}
+
+export const shopProductsApi = {
+  list: () =>
+    fetch("/admin/api/products").then((r) => r.json()) as Promise<ShopProductRow[]>,
+};
+
+// ── Shop: Orders ──
+
+export interface ShopOrderRow {
+  id: string;
+  customer_name: string;
+  phone: string;
+  total_mnt: number;
+  status: string;
+  created_at: string;
+  qpay_invoice_id?: string;
+  items?: Array<{ product_name: string; variant?: string }>;
+}
+
+export const shopOrdersApi = {
+  list: () =>
+    fetch("/admin/api/orders").then((r) => r.json()) as Promise<ShopOrderRow[]>,
+  ship: (orderId: string) =>
+    fetch("/admin/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "ship", orderId }),
+    }).then((r) => r.json()),
+  cancel: (orderId: string) =>
+    fetch("/admin/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "cancel", orderId }),
+    }).then((r) => r.json()),
+};

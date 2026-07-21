@@ -41,7 +41,7 @@ export function OfflineQueueIndicator() {
         )}
         <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
           {pendingCount > 0
-            ? t("pendingCount", { count: pendingCount })
+            ? t("pendingCount", { count: String(pendingCount) })
             : isReplaying
               ? t("syncing")
               : t("queueEmpty")}

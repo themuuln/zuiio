@@ -93,7 +93,7 @@ export function EmptyBayActionDrawer({
           {t("addVehicleTitle")}
         </DetailDrawer.Title>
         <DetailDrawer.Description className="text-sm mt-1">
-          {t("addVehicleSubtitle", { bayNumber })}
+          {t("addVehicleSubtitle", { bayNumber: String(bayNumber) })}
         </DetailDrawer.Description>
       </DetailDrawer.Header>
 
@@ -117,7 +117,7 @@ export function EmptyBayActionDrawer({
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-foreground flex items-center gap-1.5">
               <span className="flex-1 min-w-0">
-                {t("registerAndAssignToBay", { bayNumber })}
+                {t("registerAndAssignToBay", { bayNumber: String(bayNumber) })}
               </span>
               <span className="text-[10px] font-normal text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
                 {t("selectLabel")}
@@ -223,7 +223,7 @@ export function EmptyBayActionDrawer({
               })}
               {queue.length > 10 && (
                 <div className="text-center text-[10px] text-muted-foreground/60 py-2">
-                  {t("moreInQueue", { count: queue.length - 10 })}
+                  {t("moreInQueue", { count: String(queue.length - 10) })}
                 </div>
               )}
             </div>

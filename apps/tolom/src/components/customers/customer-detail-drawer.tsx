@@ -387,7 +387,7 @@ export function CustomerDetailSheet({
                 {t("details")}
               </span>
               <div className="mt-2">
-                <CustomerEditForm form={form} t={t} />
+                <CustomerEditForm form={form} t={t as (key: string) => string} />
               </div>
             </form>
           )}

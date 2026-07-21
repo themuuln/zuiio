@@ -45,7 +45,7 @@ const STATUS_COLORS: Record<string, string> = {
 const PLAN_OPTIONS = ["starter", "pro", "business", "enterprise"];
 
 export default function AdminPage() {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const updatePlan = useUpdateOrgPlan();
   const extendTrial = useExtendTrial();
 

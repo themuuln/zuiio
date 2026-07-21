@@ -45,10 +45,10 @@ interface MemberListProps {
   loading: boolean;
   members: UserProfile[];
   roles: Role[];
-  onRoleChange: (userId: string, roleId: string) => void;
+  onRoleChange: (memberId: string, roleId: string) => void;
   onEdit: (member: UserProfile) => void;
-  onRemove: (userId: string) => void;
-  t: ReturnType<typeof useTranslations<"organization.memberManagement">>;
+  onRemove: (memberId: string) => void;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
 export function MemberList({

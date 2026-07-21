@@ -253,7 +253,7 @@ export function DrawerContentPanel({
   onComplete,
   onCreateInvoice,
 }: DrawerContentPanelProps) {
-  const t = useTranslations("bayView");
+  const t = useTranslations("bayView") as (key: string, values?: Record<string, string | number>) => string;
   const locale = useLocale();
 
   // ── Decompose wo into field-level references ──

@@ -672,5 +672,6 @@ export interface CreateServiceCatalogParams {
   name_mn?: string | null;
   description?: string;
   default_price: number;
+  default_cost?: number;
   category?: string;
 }

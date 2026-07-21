@@ -36,8 +36,8 @@ import { MemberList } from "./_member-list";
 import { PendingInvites } from "./_pending-invites";
 
 export default function MembersPage() {
-  const commonT = useTranslations("common");
-  const t = useTranslations("organization.memberManagement");
+  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("organization.memberManagement") as (key: string, values?: Record<string, string | number>) => string;
 
   const { data: profile } = useProfile();
   const orgId = profile?.organizationId ?? "";

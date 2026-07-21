@@ -46,6 +46,7 @@ export type MockSupabaseClient = ReturnType<typeof createMockSupabaseClient>;
 export function createMockSupabaseClient() {
   const qb: Record<string, ReturnType<typeof vi.fn>> & {
     then: Function;
+    catch: Function;
   } = {} as any;
 
   // Track what the query builder should resolve to when awaited.

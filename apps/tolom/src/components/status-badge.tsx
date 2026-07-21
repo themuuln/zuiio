@@ -28,7 +28,7 @@ export function StatusBadge({
   status: WorkOrderStatus;
   className?: string;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const label = t(STATUS_KEY[status] ?? status);
 
   return (

@@ -35,7 +35,7 @@ export function SuppliersTab({
   search,
   onSearchChange,
 }: SuppliersTabProps) {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
   const now = useClientNow();
   const { data: suppliers = [], isPending } = useSuppliers(orgId);
   const createSupplier = useCreateSupplier(orgId);

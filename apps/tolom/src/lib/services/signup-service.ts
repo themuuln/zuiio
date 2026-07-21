@@ -140,14 +140,12 @@ export async function finalizeSignup(
     // Already a member of an org — upsert profile and return.
     // Only set full_name if the IdP provided one; never overwrite
     // an existing name with null (SSO metadata may not include name).
-    const profileUpdate: Record<string, unknown> = {
+    const profileUpdate = {
       id: user.id,
       organization_id: existingMembership.organization_id,
       is_active: true,
+      ...(userFullName ? { full_name: userFullName } : {}),
     };
-    if (userFullName) {
-      profileUpdate.full_name = userFullName;
-    }
     const { error: upsertError } = await adminClient
       .from("profiles")
       .upsert(profileUpdate, { onConflict: "id" });

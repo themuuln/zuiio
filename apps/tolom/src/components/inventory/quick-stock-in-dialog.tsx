@@ -38,14 +38,24 @@ export function QuickStockInDialog({
   branchId,
   preselectedPartId,
 }: QuickStockInDialogProps) {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
 
   const [partId, setPartId] = useState(preselectedPartId ?? "");
   const [quantity, setQuantity] = useState("");
   const [unitCost, setUnitCost] = useState("");
   const [notes, setNotes] = useState("");
 
-  const createMovement = useOrgMutation({
+  const createMovement = useOrgMutation<
+    unknown,
+    {
+      part_id: string;
+      quantity: number;
+      unit_cost: number;
+      type: string;
+      notes: string;
+      branch_id: string | null;
+    }
+  >({
     endpoint: `/api/organizations/${orgId}/inventory/movements`,
     method: "POST",
     queryKey: inventoryKeys.all(orgId),

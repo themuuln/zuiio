@@ -54,11 +54,11 @@ export const columns: ColumnDef<CustomerRow>[] = [
     id: "name",
     accessorFn: (row) => getCustomerDisplayName(row),
     header: ({ column }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("name")} />;
     },
     cell: ({ row }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       const customer = row.original;
       return (
         <div className="flex items-center gap-2.5">
@@ -84,7 +84,7 @@ export const columns: ColumnDef<CustomerRow>[] = [
   {
     id: "contact",
     header: ({ column }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("contact")} />;
     },
     cell: ({ row }) => {
@@ -110,7 +110,7 @@ export const columns: ColumnDef<CustomerRow>[] = [
     id: "vehicles",
     accessorKey: "vehicle_count",
     header: ({ column }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("vehicles")} />;
     },
     cell: ({ row }) => (
@@ -125,7 +125,7 @@ export const columns: ColumnDef<CustomerRow>[] = [
     accessorKey: "total_visits",
     meta: { align: "right" } as const,
     header: ({ column }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("visits")} />;
     },
     cell: ({ row }) => (
@@ -136,11 +136,11 @@ export const columns: ColumnDef<CustomerRow>[] = [
     id: "last_visit",
     accessorKey: "last_visit_at",
     header: ({ column }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("lastVisit")} />;
     },
     cell: ({ row }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       const lastVisit = formatDate(row.original.last_visit_at, t as (key: string, values?: Record<string, number>) => string);
       return lastVisit ? (
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -166,11 +166,11 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
     id: "name",
     accessorFn: (row) => getCustomerDisplayName(row),
     header: ({ column }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("name")} />;
     },
     cell: ({ row }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       const customer = row.original;
       return (
         <div className="flex items-center gap-2.5">
@@ -207,7 +207,7 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
   {
     id: "contact",
     header: ({ column }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("contact")} />;
     },
     cell: ({ row }) => {
@@ -233,7 +233,7 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
     id: "vehicles",
     accessorKey: "vehicle_count",
     header: ({ column }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("vehicles")} />;
     },
     cell: ({ row }) => (
@@ -247,11 +247,11 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
     id: "last_visit",
     accessorKey: "last_visit_at",
     header: ({ column }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("lastVisit")} />;
     },
     cell: ({ row }) => {
-      const t = useTranslations("customers");
+      const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
       const lastVisit = formatDate(row.original.last_visit_at, t as (key: string, values?: Record<string, number>) => string);
       return lastVisit ? (
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">

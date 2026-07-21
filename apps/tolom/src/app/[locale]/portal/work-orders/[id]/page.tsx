@@ -119,7 +119,7 @@ const INVOICE_STATUS_VARIANTS: Record<
 };
 
 export default function PortalWorkOrderDetailPage() {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const params = useParams();
   const workOrderId = params.id as string;
   const { customer, loading: authLoading, token } = usePortalAuth();

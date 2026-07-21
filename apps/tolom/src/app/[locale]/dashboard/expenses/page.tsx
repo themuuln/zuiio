@@ -99,7 +99,7 @@ function KpiCard({
 type PaidFilter = "all" | "paid" | "unpaid" | "overdue";
 
 export default function ExpensesPage() {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const now = useClientNow();
 
   const PAID_FILTER_OPTIONS: { key: PaidFilter; label: string }[] = [

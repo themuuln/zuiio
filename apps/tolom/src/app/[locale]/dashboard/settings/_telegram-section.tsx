@@ -34,7 +34,7 @@ export function TelegramSection() {
   const [linkCode, setLinkCode] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
-  const t = useTranslations("settings");
+  const t = useTranslations("settings") as (key: string, values?: Record<string, string | number>) => string;
 
   const generateLinkMutation = useMutation({
     mutationFn: async () => {

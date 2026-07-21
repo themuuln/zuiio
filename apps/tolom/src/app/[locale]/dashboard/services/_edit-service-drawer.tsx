@@ -63,8 +63,8 @@ export function EditServiceSheet({
   open,
   onOpenChange,
 }: EditServiceSheetProps) {
-  const t = useTranslations("services");
-  const commonT = useTranslations("common");
+  const t = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
+  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 

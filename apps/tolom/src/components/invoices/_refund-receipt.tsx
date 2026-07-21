@@ -29,7 +29,7 @@ export function RefundReceipt({
   invoice,
   orgName,
 }: RefundReceiptProps) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const printRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {

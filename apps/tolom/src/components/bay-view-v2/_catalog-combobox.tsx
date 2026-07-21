@@ -514,7 +514,7 @@ export function CatalogCombobox<T extends CatalogItem>({
   filterAllLabel,
 }: CatalogComboboxProps<T>) {
   const q = search.toLowerCase();
-  const filtered = hasSearch
+  const filtered = search.length > 0
     ? items.filter((s) => {
         const matchName = s.name.toLowerCase().includes(q);
         const matchNameMn = s.name_mn?.toLowerCase().includes(q) ?? false;
@@ -572,7 +572,7 @@ export function CatalogCombobox<T extends CatalogItem>({
             noMatchMessage={noMatchMessage}
             addAsNewLabel={addAsNewLabel}
             locale={locale}
-            hasSearch={hasSearch}
+            hasSearch={search.length > 0}
           />
         </div>
       )}

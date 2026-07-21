@@ -16,7 +16,7 @@ export const columns: ColumnDef<ValuationRow>[] = [
     id: "part_name",
     accessorKey: "part_name",
     header: ({ column }) => {
-      const t = useTranslations("inventory");
+      const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("partName")} />;
     },
     cell: ({ row }) => (
@@ -33,7 +33,7 @@ export const columns: ColumnDef<ValuationRow>[] = [
   {
     accessorKey: "category",
     header: ({ column }) => {
-      const t = useTranslations("inventory");
+      const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("category")} />;
     },
     cell: ({ row }) => (
@@ -47,7 +47,7 @@ export const columns: ColumnDef<ValuationRow>[] = [
     accessorKey: "quantity_on_hand",
     meta: { align: "right" } as const,
     header: ({ column }) => {
-      const t = useTranslations("inventory");
+      const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("onHand")} />;
     },
     cell: ({ row }) => (
@@ -61,7 +61,7 @@ export const columns: ColumnDef<ValuationRow>[] = [
     accessorKey: "avgUnitCost",
     meta: { align: "right" } as const,
     header: ({ column }) => {
-      const t = useTranslations("inventory");
+      const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("avgUnitCost")} />;
     },
     cell: ({ row }) => (
@@ -75,7 +75,7 @@ export const columns: ColumnDef<ValuationRow>[] = [
     accessorKey: "totalValue",
     meta: { align: "right" } as const,
     header: ({ column }) => {
-      const t = useTranslations("inventory");
+      const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
       return <DataTableColumnHeader column={column} title={t("totalValue")} />;
     },
     cell: ({ row }) => (

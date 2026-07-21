@@ -64,8 +64,8 @@ export function CustomerForm({
 }: CustomerFormProps) {
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? "";
-  const t = useTranslations("customers");
-  const commonT = useTranslations("common");
+  const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
+  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
 
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);
   const [error, setError] = useState<string | null>(null);

@@ -17,7 +17,7 @@ import type { ValuationRow } from "./_columns";
 import { columns } from "./_columns";
 
 export default function ValuationPage() {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
   const now = useClientNow();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;

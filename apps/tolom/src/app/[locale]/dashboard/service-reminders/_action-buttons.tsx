@@ -17,7 +17,7 @@ export function ActionButtons({
   onSyncComplete,
   onSendComplete,
 }: ActionButtonsProps) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
 
   const syncMutation = useOrgMutation<{ data: { synced: number } }, void>({
     endpoint: `/api/organizations/${orgId}/service-reminders/sync-history`,

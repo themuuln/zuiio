@@ -350,6 +350,8 @@ export function useCreateSupplier(orgId: string | undefined) {
         organization_id: orgId ?? "",
         branch_id: null,
         name: body.name,
+        lead_time_days: null,
+        min_order_quantity: null,
         contact_person: body.contact_person ?? null,
         phone: body.phone ?? null,
         email: body.email ?? null,

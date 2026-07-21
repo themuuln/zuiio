@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "@/lib/i18n/navigation";
 
@@ -12,23 +11,15 @@ export const metadata: Metadata = {
     "TOLOM is the operating system for auto service businesses. Manage work orders, customers, inventory, and finances in one place.",
 };
 
-async function LocaleRedirect() {
+export default async function RootPage() {
   const cookieStore = await cookies();
   const existing = cookieStore.get("NEXT_LOCALE")?.value;
 
-  let locale = "mn";
+  let locale: "en" | "mn" = "mn";
 
   if (existing && ["mn", "en"].includes(existing)) {
-    locale = existing;
+    locale = existing as "en" | "mn";
   }
 
   redirect({ href: "/", locale });
-}
-
-export default function RootPage() {
-  return (
-    <Suspense>
-      <LocaleRedirect />
-    </Suspense>
-  );
 }

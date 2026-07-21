@@ -88,7 +88,7 @@ export function VehicleModelFormSheet({
   open,
   onOpenChange,
 }: VehicleModelFormSheetProps) {
-  const t = useTranslations("vehicleModels");
+  const t = useTranslations("vehicleModels") as (key: string, values?: Record<string, string | number>) => string;
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 

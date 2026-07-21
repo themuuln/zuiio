@@ -287,6 +287,8 @@ export const dashboardKeys = {
     ["organizations", orgId, "dashboard", branchId ?? "all"] as const,
   summary: (orgId: string, period: string, branchId?: string | null) =>
     [...dashboardKeys.all(orgId, branchId), "summary", period] as const,
+  bundle: (orgId: string, period: string, branchId?: string | null) =>
+    [...dashboardKeys.all(orgId, branchId), "bundle", period] as const,
 };
 
 export const inventoryKeys = {

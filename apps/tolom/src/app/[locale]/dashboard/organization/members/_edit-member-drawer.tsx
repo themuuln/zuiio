@@ -61,10 +61,18 @@ interface EditMemberSheetProps {
     branchId: string | null;
   };
   roles: Role[];
-  branches: Branch[];
-  onSave: (memberId: string, data: EditMemberValues) => Promise<void>;
+  branches: Pick<Branch, "id" | "name">[];
+  onSave: (
+    memberId: string,
+    data: {
+      fullName?: string;
+      phone?: string;
+      roleId: string;
+      branchId?: string;
+    },
+  ) => Promise<void>;
   saving: boolean;
-  t: ReturnType<typeof useTranslations<"organization.memberManagement">>;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
 export function EditMemberSheet({

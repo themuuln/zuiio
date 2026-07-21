@@ -87,8 +87,8 @@ export function PartsTab({
   onNavigate,
 }: PartsTabProps) {
   const locale = useLocale();
-  const t = useTranslations("inventory");
-  const commonT = useTranslations("common");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
+  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
   const now = useClientNow();
   const qc = useQueryClient();
 
@@ -390,12 +390,10 @@ export function PartsTab({
               <Button
                 variant="outline"
                 size="default"
-                asChild
+                render={<Link href="/dashboard/inventory/import" />}
               >
-                <Link href="/dashboard/inventory/import">
-                  <Upload className="size-4" />
-                  Import
-                </Link>
+                <Upload className="size-4" />
+                Import
               </Button>
               <Button
                 variant="outline"

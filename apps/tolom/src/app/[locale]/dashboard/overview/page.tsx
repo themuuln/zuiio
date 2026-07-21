@@ -41,7 +41,7 @@ const ChartsSection = dynamicImport(() => import("../_charts"), {
 });
 
 export default function OverviewPage() {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const router = useRouter();
   const { isMechanic, loading: roleLoading } = useCurrentUserRole();
 

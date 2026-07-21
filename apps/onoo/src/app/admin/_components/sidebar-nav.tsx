@@ -5,7 +5,9 @@ import {
   LayoutDashboard,
   MapPin,
   Medal,
+  Package,
   Settings2,
+  ShoppingCart,
   Timer,
   Trophy,
   UserCircle,
@@ -23,7 +25,8 @@ const links = [
   { href: "/admin/players", label: "Тоглогч", icon: UserCircle },
   { href: "/admin/games", label: "Тоглолт", icon: Timer },
   { href: "/admin/venues", label: "Талбай", icon: MapPin },
-  { href: "/admin/ops", label: "Үйлдлүүд", icon: Settings2 },
+  { href: "/admin/products", label: "Бүтээгдэхүүн", icon: Package },
+  { href: "/admin/orders", label: "Захиалга", icon: ShoppingCart },
 ] as const;
 
 export function SidebarNav() {

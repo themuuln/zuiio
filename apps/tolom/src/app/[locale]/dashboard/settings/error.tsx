@@ -13,7 +13,7 @@ export default function SettingsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
 
   useEffect(() => {
     reportError(error, "dashboard/settings");

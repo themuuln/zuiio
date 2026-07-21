@@ -150,8 +150,8 @@ export function CustomerDetailPanel({
   orgId,
   onClose,
 }: CustomerDetailPanelProps) {
-  const t = useTranslations("customers");
-  const commonT = useTranslations("common");
+  const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
+  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
   const queryClient = useQueryClient();
   const { setDetailVehicleId } = usePageHeader();
 

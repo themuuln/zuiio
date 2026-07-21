@@ -37,7 +37,7 @@ interface PortalWorkOrder {
 }
 
 export default function PortalWorkOrdersPage() {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const { customer, loading: authLoading, token } = usePortalAuth();
 
   const headers: Record<string, string> = {};

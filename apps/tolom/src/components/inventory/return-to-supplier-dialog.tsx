@@ -52,7 +52,7 @@ export function ReturnToSupplierDialog({
   branchId,
   preselectedPartId,
 }: ReturnToSupplierDialogProps) {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
 
   const [partId, setPartId] = useState(preselectedPartId ?? "");
   const [supplierId, setSupplierId] = useState("");
@@ -61,7 +61,17 @@ export function ReturnToSupplierDialog({
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
 
-  const createMovement = useOrgMutation({
+  const createMovement = useOrgMutation<
+    unknown,
+    {
+      part_id: string;
+      quantity: number;
+      unit_cost: number;
+      type: string;
+      notes: string;
+      branch_id: string | null;
+    }
+  >({
     endpoint: `/api/organizations/${orgId}/inventory/movements`,
     method: "POST",
     queryKey: inventoryKeys.all(orgId),
@@ -163,7 +173,7 @@ export function ReturnToSupplierDialog({
           <Field>
             <FieldLabel>{t("reason")}</FieldLabel>
             <FieldContent>
-              <Select value={reason} onValueChange={setReason}>
+              <Select value={reason} onValueChange={(v) => setReason(v ?? "")}>
                 <SelectTrigger>
                   <SelectValue placeholder={t("selectReason")} />
                 </SelectTrigger>

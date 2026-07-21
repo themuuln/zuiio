@@ -63,7 +63,7 @@ const OverviewTab = dynamic(
 // ── Main Reports Page ─────────────────────────────────────
 
 export default function ReportsPage() {
-  const t = useTranslations("reports");
+  const t = useTranslations("reports") as (key: string, values?: Record<string, string | number>) => string;
   const locale = useLocale();
   // ── State ────────────────────────────────────────────
   const [mechanicFilter, setMechanicFilter] = useState("");

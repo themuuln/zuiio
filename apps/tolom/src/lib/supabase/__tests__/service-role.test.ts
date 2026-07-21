@@ -17,6 +17,7 @@ describe("createServiceRoleClient", () => {
 
   it("throws when SUPABASE_SERVICE_ROLE_KEY is missing", async () => {
     mockEnv.mockReturnValue("https://test.supabase.co");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
 
     const { createServiceRoleClient } = await import("../service-role");
     await expect(createServiceRoleClient()).rejects.toThrow(

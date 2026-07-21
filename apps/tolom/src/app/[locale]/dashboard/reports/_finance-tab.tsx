@@ -23,7 +23,7 @@ export function FinanceTab({
   financePeriod,
   onPeriodChange,
   financeQ,
-  _t,
+  t,
 }: FinanceTabProps) {
   const financeSummary = financeQ.data;
 

@@ -160,8 +160,8 @@ const exportColumns: ExportColumn<WorkOrderListItem>[] = [
 // ── Page ──────────────────────────────────────────────────────
 
 export default function WorkOrdersPage() {
-  const t = useTranslations();
-  const tWorkOrders = useTranslations("workOrders");
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const tWorkOrders = useTranslations("workOrders") as (key: string, values?: Record<string, string | number>) => string;
   const now = useClientNow();
 
   const { setDetailWorkOrderId } = usePageHeader();

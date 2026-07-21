@@ -42,7 +42,7 @@ import { reportServerError } from "@/lib/sentry-report-server";
 // ── Page ─────────────────────────────────────────────────────────
 
 export default function DevicesPage() {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const { data: orgInfo } = useCurrentOrg();
   const orgId = orgInfo?.orgId ?? "";
 

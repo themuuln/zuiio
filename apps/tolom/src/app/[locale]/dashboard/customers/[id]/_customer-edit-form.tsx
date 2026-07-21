@@ -34,7 +34,7 @@ export type CustomerEditValues = z.infer<typeof customerEditSchema>;
 
 interface CustomerEditFormProps {
   form: UseFormReturn<CustomerEditValues>;
-  t: ReturnType<typeof useTranslations<"customers">>;
+  t: (key: string) => string;
 }
 
 export function CustomerEditForm({ form, t }: CustomerEditFormProps) {

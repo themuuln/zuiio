@@ -32,7 +32,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { columns, sharedColumns } from "./_columns";
 
 export default function CustomersPage() {
-  const t = useTranslations("customers");
+  const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
   const isMobile = useIsMobile();
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
     null,

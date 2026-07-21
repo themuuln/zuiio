@@ -54,8 +54,8 @@ const STATUS_CONFIG: Record<string, { icon: typeof Clock; className: string }> =
   };
 
 export default function PublicEstimatePage() {
-  const t = useTranslations("estimates");
-  const commonT = useTranslations("common");
+  const t = useTranslations("estimates") as (key: string, values?: Record<string, string | number>) => string;
+  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
   const params = useParams();
   const token = params.token as string;
   const estimateQuery = usePublicEstimate(token);

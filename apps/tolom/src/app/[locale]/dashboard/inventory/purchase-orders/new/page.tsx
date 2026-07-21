@@ -29,7 +29,7 @@ interface LineItem {
 }
 
 export default function NewPurchaseOrderPage() {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
   const { push, back } = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;

@@ -62,9 +62,9 @@ const fetchOrgDetail = createOrgQuery<Organization>("");
 const fetchSubscription = createOrgQuery<SubscriptionPlanInfo>("/subscription");
 
 export default function OrganizationPage() {
-  const t = useTranslations();
-  const orgT = useTranslations("organization");
-  const pageT = useTranslations("organization.page");
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const orgT = useTranslations("organization") as (key: string, values?: Record<string, string | number>) => string;
+  const pageT = useTranslations("organization.page") as (key: string, values?: Record<string, string | number>) => string;
   const orgInfoQuery = useCurrentOrg();
   const orgId = orgInfoQuery.data?.orgId;
 

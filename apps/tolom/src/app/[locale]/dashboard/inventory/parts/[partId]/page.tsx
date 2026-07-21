@@ -29,8 +29,8 @@ import { ThresholdCard } from "./_threshold-card";
 import { VehicleFitment } from "./_vehicle-fitment";
 
 export default function PartDetailPage() {
-  const t = useTranslations("inventory");
-  const commonT = useTranslations("common");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
+  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
   const params = useParams();
   const partId = params.partId as string;
   const { data: org } = useCurrentOrg();

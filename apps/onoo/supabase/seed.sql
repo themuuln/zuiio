@@ -1115,3 +1115,13 @@ JOIN public.team_seasons ts ON (ts.id = g.home_team_season_id OR ts.id = g.away_
 WHERE g.status = 'official'
 GROUP BY g.competition_id, ts.id
 on conflict (competition_id, team_season_id) do nothing;
+-- ============================================================================
+-- SHOP PRODUCTS (Phase 6)
+-- ============================================================================
+INSERT INTO public.products (id, name, name_en, slug, description, price_mnt, images, category, variants, is_available)
+VALUES
+  ('00000000-0000-0000-0000-000000000001', 'Onoo подуу цамц', 'Onoo T-Shirt', 'onoo-t-shirt', 'Өндөр чанартай подуу цамц. 100% хөвөн.', 35000, '[]'::jsonb, 'clothing' , '[{"size":"S","stock":10},{"size":"M","stock":10},{"size":"L","stock":10}]'::jsonb, true),
+  ('00000000-0000-0000-0000-000000000002', 'Onoo бүрэн захтай цамц', 'Onoo Hoodie', 'onoo-hoodie', 'Дулаан бүрэн захтай цамц.', 75000, '[]'::jsonb, 'clothing', '[{"size":"M","stock":5},{"size":"L","stock":5}]'::jsonb, true),
+  ('00000000-0000-0000-0000-000000000003', 'Onoo малгай', 'Onoo Cap', 'onoo-cap', 'Тохируулж болох малгай.', 25000, '[]'::jsonb, 'accessories', '[{"size":"OS","stock":20}]'::jsonb, true),
+  ('00000000-0000-0000-0000-000000000004', 'Onoo түлхүүрийн оосор', 'Onoo Keychain', 'onoo-keychain', 'Металл түлхүүрийн оосор.', 10000, '[]'::jsonb, 'accessories', '[]'::jsonb, true)
+ON CONFLICT (id) DO NOTHING;

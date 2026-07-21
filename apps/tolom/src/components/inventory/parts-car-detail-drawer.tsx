@@ -63,7 +63,7 @@ export function PartsCarDetailSheet({
   onOpenChange,
   carId,
 }: PartsCarDetailSheetProps) {
-  const t = useTranslations("partsCars");
+  const t = useTranslations("partsCars") as (key: string, values?: Record<string, string | number>) => string;
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 

@@ -57,7 +57,7 @@ type DialogState =
 // ── Component ──────────────────────────────────────────────
 
 export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
 
   const [state, setState] = useState<DialogState>("form");
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);

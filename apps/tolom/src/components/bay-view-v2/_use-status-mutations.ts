@@ -1,6 +1,7 @@
 "use client";
 
 import { useOrgMutation } from "@zuiio/query";
+import { type QueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
@@ -52,7 +53,7 @@ export function useStatusMutations({
     optimisticQueryKey: orgId && workOrderId
       ? drawerDetailKeys.all(orgId, workOrderId)
       : undefined,
-    onOptimisticUpdate: (qc, vars) => {
+    onOptimisticUpdate: (qc: QueryClient, vars: { status: string; notes?: string }) => {
       if (!orgId || !workOrderId) return undefined;
       const key = drawerDetailKeys.all(orgId, workOrderId);
       const prev = qc.getQueryData<DrawerDetailResponse>(key);

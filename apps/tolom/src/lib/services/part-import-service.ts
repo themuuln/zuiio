@@ -136,7 +136,7 @@ export async function importParts(
     }
   }
 
-  revalidateTag(cacheTags.partsCatalog(orgId));
+  revalidateTag(cacheTags.partsCatalog(orgId), "max");
 
   return results;
 }

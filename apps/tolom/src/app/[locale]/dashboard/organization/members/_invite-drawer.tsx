@@ -42,7 +42,7 @@ interface InviteSheetProps {
   onSubmit: (data: { email: string; roleId: string }) => void;
   roles: Role[];
   defaultRoleId: string;
-  t: ReturnType<typeof useTranslations<"organization.memberManagement">>;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
 export function InviteSheet({

@@ -233,7 +233,7 @@ function WorkOrderRowComponent({
   onClick: () => void;
   onStatusChange: (newStatus: string) => void;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const cfg = getStatusCfg(wo.status);
   const elapsed = timeAgo(wo.created_at, t);
   const jobTimer = wo.started_at ?? wo.created_at;
@@ -361,7 +361,7 @@ function ClockInOutButton({
   onToggle: () => void;
   loading: boolean;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const now = useClientNow();
   const elapsed =
     clockedIn && since
@@ -419,7 +419,7 @@ export function MechanicDashboard({
   avatarUrl?: string | null;
   isAdminView: boolean;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const queryClient = useQueryClient();
   const now = useClientNow();
   const { push } = useRouter();

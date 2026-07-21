@@ -454,7 +454,7 @@ export function VehicleRegistrationForm({
         <div className="flex flex-col gap-3 bg-muted/30 border border-border/60 rounded-lg p-4">
           <Label className="flex items-center gap-2 text-sm font-semibold">
             <Zap className="size-4 text-primary" />
-            {t("assignToBayNumber", { bayNumber })}
+            {t("assignToBayNumber", { bayNumber: String(bayNumber) })}
           </Label>
 
           <Button
@@ -469,10 +469,10 @@ export function VehicleRegistrationForm({
             {activeWorkOrder
               ? activeWorkOrder.bay_number
                 ? t("vehicleAlreadyInBay", {
-                    bayNumber: activeWorkOrder.bay_number,
+                    bayNumber: String(activeWorkOrder.bay_number),
                   })
                 : t("vehicleAlreadyInQueue")
-              : t("assignToBayNumber", { bayNumber })}
+              : t("assignToBayNumber", { bayNumber: String(bayNumber) })}
           </Button>
         </div>
       )}
@@ -795,7 +795,7 @@ export function VehicleRegistrationForm({
           <Typography.Text className="text-sm text-warning-foreground">
             {activeWorkOrder.bay_number
               ? t("vehicleAlreadyInBay", {
-                  bayNumber: activeWorkOrder.bay_number,
+                  bayNumber: String(activeWorkOrder.bay_number),
                 })
               : t("vehicleAlreadyInQueue")}
           </Typography.Text>

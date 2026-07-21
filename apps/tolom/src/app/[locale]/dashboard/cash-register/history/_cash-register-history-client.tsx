@@ -15,7 +15,7 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatCurrency } from "@/lib/utils";
 
 export function CashRegisterHistoryClient() {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
 

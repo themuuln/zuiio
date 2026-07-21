@@ -45,7 +45,7 @@ interface BranchesSectionProps {
 }
 
 export function BranchesSection({ orgId }: BranchesSectionProps) {
-  const t = useTranslations("settings");
+  const t = useTranslations("settings") as (key: string, values?: Record<string, string | number>) => string;
   const { data: branches, isLoading, error } = useBranches(orgId);
   const { settings: orgSettings, isLoading: settingsLoading } =
     useOrgSettings(orgId);

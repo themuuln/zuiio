@@ -27,7 +27,7 @@ export function NavProjects({
   isActive: (href: string) => boolean;
   onNavigate: (href: string) => void;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
 
   if (items.length === 0) return null;
 

@@ -120,6 +120,36 @@ pnpm update-types           # Regenerate Supabase types after migration
 **Pre-merge:** `pnpm lint && npx tsc --noEmit && pnpm build && pnpm test`
 **E2E speed:** Always use production build for E2E. Dev mode lazily compiles (8-9s first request).
 
+
+---
+
+## Local Supabase (Integration Tests)
+
+Integration tests (`src/lib/__tests__/integration/`) require a local Supabase stack via colima:
+
+```bash
+# Start colima (macOS Docker runtime, ~1s if already running)
+colima start --cpu 4 --memory 8
+
+# Start Supabase (skip services not needed for testing)
+supabase start --exclude studio,imgproxy,inbucket,vector,logflare,edge-runtime,meta
+
+# Run full suite with local Supabase credentials
+export SUPABASE_URL=http://127.0.0.1:54321
+export SUPABASE_ANON_KEY=$(supabase status | sed -n '/Publishable/{n;s/.*│ //;s/ │//;p}')
+export SUPABASE_SERVICE_ROLE_KEY=$(supabase status | sed -n '/Secret/{n;s/.*│ //;s/ │//;p}')
+npx vitest run
+
+# Stop when done
+supabase stop
+```
+
+**Key details:**
+- The `--exclude` list avoids ports conflicts with other projects. `inbucket` is excluded by default — if a port conflict occurs, stop the other project first: `supabase stop --project-id <name>`.
+- Migrations (166 files in `supabase/migrations/`) are applied automatically on `supabase start`.
+- Starting fresh: `supabase stop` then `supabase start` resets the DB to a clean migration state.
+- One Supabase project can run at a time per port range. If another project is running, stop it first.
+- pgTAP RLS tests exist in `supabase/tests/` — run with `supabase test db`. The `pgtap` extension is pre-installed in the local DB.
 ---
 
 ## Triage Protocol

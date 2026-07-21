@@ -308,7 +308,7 @@ export function PartForm({
                         form.setValue("category", "");
                       }
                     }}
-                    onCreateNew={handleCreateCategory}
+                    onCreateItem={handleCreateCategory}
                     itemToStringLabel={(item) => item?.name ?? ""}
                     isItemEqualToValue={(a, b) => a?.name === b?.name}
                     placeholder="Select category"

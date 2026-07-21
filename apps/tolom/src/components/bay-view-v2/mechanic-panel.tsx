@@ -80,7 +80,7 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
         <Typography.Muted className="text-xs text-muted-foreground/60 truncate leading-tight">
           {isAvailable
             ? t("availableStatus")
-            : t("activeJobsCount", { count: jobCount })}
+            : t("activeJobsCount", { count: String(jobCount) })}
         </Typography.Muted>
       </div>
     </div>

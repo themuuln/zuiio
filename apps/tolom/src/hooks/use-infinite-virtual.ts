@@ -12,6 +12,7 @@ interface UseInfiniteVirtualOptions<T> {
   estimatedItemHeight?: number;
   overscan?: number;
   sentinelThreshold?: number;
+  _sentinelThreshold?: number;
 }
 
 interface UseInfiniteVirtualResult {

@@ -52,7 +52,7 @@ interface OverviewTabProps {
   mechExportCols: ExportColumn<ReportMechanicKpi>[];
   dateParam: string;
   mechanicFilter: string;
-  t: (key: string) => string;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
 export function OverviewTab({

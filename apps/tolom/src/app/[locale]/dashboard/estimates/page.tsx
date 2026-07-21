@@ -146,8 +146,8 @@ function EstimateCard({
 }
 
 export default function EstimatesPage() {
-  const t = useTranslations("estimates");
-  const commonT = useTranslations("common");
+  const t = useTranslations("estimates") as (key: string, values?: Record<string, string | number>) => string;
+  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
   const router = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;

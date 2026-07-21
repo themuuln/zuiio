@@ -18,7 +18,7 @@ import type { Supplier } from "@/lib/types";
 import { createColumns } from "./_columns";
 
 export default function SuppliersPage() {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
   const now = useClientNow();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;

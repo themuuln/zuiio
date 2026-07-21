@@ -228,7 +228,6 @@ export function StandingsTable({ rows, className, playoffLineAfter = 4 }: Standi
           {rows.map((row, index) => {
             const pointDifference = getPointDifference(row);
             const isExpanded = expandedId === row.team_season_id;
-
             return (
               <>
               <Fragment key={row.team_season_id}>
@@ -356,7 +355,7 @@ export function StandingsTable({ rows, className, playoffLineAfter = 4 }: Standi
               </Fragment>
               {/* Playoff line separator */}
               {index === playoffLineAfter - 1 && index < rows.length - 1 && (
-                <TableRow className="pointer-events-none border-t-0">
+                <TableRow className="pointer-events-none border-t-0" key={`playoff-${index}`}>
                   <TableCell colSpan={11} className="px-0 pt-1 pb-2">
                     <div className="flex items-center gap-3">
                       <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
@@ -368,8 +367,8 @@ export function StandingsTable({ rows, className, playoffLineAfter = 4 }: Standi
                   </TableCell>
                 </TableRow>
               )}
-            </>
-          );
+              </>
+            );
         })}
         </TableBody>
       </Table>

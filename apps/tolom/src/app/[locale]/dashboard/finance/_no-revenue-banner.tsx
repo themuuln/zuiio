@@ -9,7 +9,7 @@ interface NoRevenueBannerProps {
 }
 
 export function NoRevenueBanner({ activeWorkOrders }: NoRevenueBannerProps) {
-  const t = useTranslations("finance");
+  const t = useTranslations("finance") as (key: string, values?: Record<string, string | number>) => string;
 
   return (
     <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
