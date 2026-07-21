@@ -1,35 +1,41 @@
 $ NODE_OPTIONS='--max-old-space-size=12288' next build
-▲ Next.js 16.3.0-preview.5 (Turbopack)
+▲ Next.js 16.3.0-preview.6 (Turbopack)
 - Environments: .env.local
+✓ Running next.config.ts took 281ms
 - Cache Components enabled
 - Experiments (use with caution):
   ✓ inlineCss
   · optimizePackageImports
   · staleTimes
   ✓ turbopackFileSystemCacheForBuild
+  ✓ useTypeScriptCli
   ✓ viewTransition
 
   Creating an optimized production build ...
-✓ Compiled successfully in 2.2s
-  Running next.config.js provided runAfterProductionCompile ...
-[@sentry/nextjs - After Production Compile] Info: Sending telemetry data on issues and performance to Sentry. To disable telemetry, set `options.telemetry` to `false`.
-[@sentry/nextjs - After Production Compile] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
-You seem to be using Turborepo, did you forget to put SENTRY_AUTH_TOKEN in `passThroughEnv`? https://turbo.build/repo/docs/reference/configuration#passthroughenv
-[@sentry/nextjs - After Production Compile] Warning: No auth token provided. Will not upload source maps. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
-You seem to be using Turborepo, did you forget to put SENTRY_AUTH_TOKEN in `passThroughEnv`? https://turbo.build/repo/docs/reference/configuration#passthroughenv
-✓ Completed runAfterProductionCompile in 572ms
-  Running TypeScript ...
-Failed to type check.
 
-./src/app/(dashboard)/budget/budget-content.tsx:56:53
-Type error: Argument of type '"budget"' is not assignable to parameter of type 'EntityType'.
+> Build error occurred
+Error: Turbopack build failed with 1 error:
+./apps/zer/src/app/contact/page.tsx:7:14
+Error: You are attempting to export "metadata" from a component marked with "use client", which is disallowed. "metadata" must be resolved on the server before the page component is rendered. Keep your page as a Server Component and move Client Component logic to a separate file. Read more: https://nextjs.org/docs/app/api-reference/functions/generate-metadata#why-generatemetadata-is-server-component-only
+  [90m 5 |[0m [36mimport[0m { useState } [36mfrom[0m [32m"react"[0m;
+  [90m 6 |[0m
+[31m[1m>[0m [90m 7 |[0m [36mexport[0m [36mconst[0m metadata: [33mMetadata[0m = {
+  [90m   |[0m              [31m[1m^^^^^^^^[0m
+  [90m 8 |[0m   title: [32m"Холбогдох — Zer"[0m,
+  [90m 9 |[0m   description: [32m"Zer-ийн багтай холбогдож, асуулт, санал хүсэлтээ илгээнэ үү."[0m,
+  [90m10 |[0m };
 
-  [90m54 |[0m ...[36murn[0m data;
-  [90m55 |[0m ...
-[31m[1m>[0m [90m56 |[0m ...cess: (data) => { logAuditEvent([32m"created"[0m, [32m"budget"[0m, data.id, [36mundefined[0m, [32m"Төсөв үүсгэсэ...[0m
-  [90m   |[0m                                               [31m[1m^[0m
-  [90m57 |[0m ...or: (e) => { capture(e); toast.error([32m"Алдаа гарлаа."[0m); },
-  [90m58 |[0m ...
-  [90m59 |[0m ...
-Next.js build worker exited with code: 1 and signal: null
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./apps/zer/src/app/contact/page.tsx [Client Component Browser]
+    ./apps/zer/src/app/contact/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/zer/src/app/contact/page.tsx [Client Component SSR]
+    ./apps/zer/src/app/contact/page.tsx [Server Component]
+
+
+    at <unknown> (./apps/zer/src/app/contact/page.tsx:7:14)
 [ELIFECYCLE] Command failed with exit code 1.

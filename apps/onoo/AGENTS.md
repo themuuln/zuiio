@@ -1,30 +1,73 @@
-# @onoo — Agent Instructions
-
 > **Required reading for AI agents:** Before writing any code, load these files:
 >
 > 1. [Root AGENTS.md](../../AGENTS.md) — shared monorepo rules, conventions, and permission boundaries
-> 2. `docs/ROADMAP.md` — feature checklist and implementation status
-> 3. `packages/core/src/index.ts` — core package exports
+> 2. `docs/VISION.md` — product vision, design principles, what we won't do
+> 3. `docs/tasks/INDEX.md` — task queue with status, priority, dependencies (pick work from here)
+> 4. `docs/ROADMAP.md` — feature checklist by phase (tick checkboxes here when done)
+> 5. `packages/core/src/index.ts` — core package exports
+```
+apps/onoo/
+├── packages/core/           ← @onoo/core (events, stats, format, i18n, sync)
+├── src/
+│   ├── app/                 ← Next.js pages (admin, games, teams, players, standings, tracker)
+│   ├── components/          ← Shared components
+│   └── lib/                 ← Utilities, providers, API helpers
+├── supabase/
+│   ├── functions/           ← Edge Functions (derive-game, manual-box-entry)
+│   └── migrations/          ← Database migrations
+├── public/                  ← Static assets, PWA manifest
+└── docs/
+    ├── VISION.md            ← Product vision, design principles, non-goals
+    ├── ROADMAP.md           ← Phase checklist with execution spec links
+    ├── tasks/
+    │   ├── INDEX.md         ← Master task queue (pick work from here)
+    │   ├── TEMPLATE.md      ← Template for creating new task files
+    │   ├── T-1.*.md         ← Phase 1 task files (detailed per-task specs)
+    │   ├── T-2.*.md         ← Phase 2 task files
+    │   ├── T-3.*.md         ← Phase 3 task files
+    │   ├── T-4.*.md         ← Phase 4 task files
+    │   ├── T-5.*.md         ← Phase 5 task files
+    │   └── gaps/            ← Feature gap docs (G-01 through G-16)
+    ├── plans/               ← Execution specs and conventions
+    ├── pm-manifest.yaml     ← Machine-readable project manifest
+    ├── gaps.md              ← Feature gap analysis with P0-P3 priority
+    ├── runbook.md           ← Game-day operational procedures
+    └── ARCHITECTURE.md      ← System architecture
+```
+Key tables: `stat_events` (raw play-by-play), `game_player_stats` (derived per-player), `game_team_stats` (derived per-team), `standings` (league standings). Full list in `docs/ROADMAP.md`.
+
+## Planning & Task Picking
+
+### How to find work
+1. **Read `docs/tasks/INDEX.md`** — the master task queue. It shows every task with status, priority, dependencies.
+2. **Check "Available Work" section** — tasks with `⬜` status and no unresolved blockers. These are ready to start.
+3. **Pick highest priority first** — P0 > P1 > P2 > P3. Within priority, read top-to-bottom (recommended execution order).
+4. **Read the task file** at `docs/tasks/T-<ID>-<name>.md` for full details: goal, files to touch, steps, done-when.
+5. **Read conventions** at `docs/plans/00-conventions.md` before writing code.
+6. **Check permission boundaries** below before starting.
+
+### While working
+- Update task status to `🟡` in INDEX.md when you start.
+- Mark blockers with `🔴` and explain the blocker in the note.
+- Update `docs/plans/EXECUTION-STATUS.md` status ledger in the same commit.
+
+### When done
+- Change task status to `✅` in INDEX.md.
+- Tick the matching checkbox in `docs/ROADMAP.md`.
+- Update `docs/plans/EXECUTION-STATUS.md`.
+- Verify against the task's _Done When_ criteria from the task file.
+- Run the full Definition of Done checklist from `docs/plans/00-conventions.md`.
+- All four updates in the same commit.
+
+### Task file conventions
+- Task IDs in INDEX.md reference files in `docs/tasks/`.
+- Each task file follows the template at `docs/tasks/TEMPLATE.md`.
+- Gap/feature ideas live in `docs/tasks/gaps/G-*.md` — not in the main priority queue.
+- The machine-readable manifest at `docs/pm-manifest.yaml` mirrors INDEX.md in YAML for programmatic queries.
 
 ## Overview
 
 **Onoo** is a sports statistics platform for Mongolian basketball leagues. It provides live game tracking, box score derivation, standings, and player/team statistics.
-
-## Directory Structure
-
-```
-apps/onoo/
-├── packages/core/          ← @onoo/core (events, stats, format, i18n, sync)
-├── src/
-│   ├── app/                ← Next.js pages (admin, games, teams, players, standings, tracker)
-│   ├── components/         ← Shared components
-│   └── lib/                ← Utilities, providers, API helpers
-├── supabase/
-│   ├── functions/          ← Edge Functions (derive-game, manual-box-entry)
-│   └── migrations/         ← Database migrations
-├── public/                 ← Static assets, PWA manifest
-└── docs/                   ← ROADMAP.md (feature checklist)
-```
 
 ## Tech Stack
 
@@ -142,6 +185,7 @@ pnpm test:all               # Unit + Integration (CI gate)
 - **When adding/modifying DB schema, RLS, or API routes: write or update integration tests in `src/app/admin/api/__tests__/*.integration.test.ts`**
 - Verify stat derivations against source events after changes
 - Regenerate Supabase types using CLI/MCP after migrations
+- **Update task status in INDEX.md, EXECUTION-STATUS.md, and ROADMAP.md in same commit as work**
 
 ### ⚠️ Ask First
 - Directly modify `stat_events`, `game_player_stats`, `game_team_stats`, or `standings`
@@ -160,8 +204,6 @@ pnpm test:all               # Unit + Integration (CI gate)
 - Add mock data fallbacks to public pages
 - Use npm or Bun (pnpm only)
 - Force-push the default branch
-
-<!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.

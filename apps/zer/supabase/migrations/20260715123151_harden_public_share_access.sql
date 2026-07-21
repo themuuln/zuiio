@@ -166,7 +166,7 @@ $$;
 
 -- get_public_report_data: validates token hash, checks expiry/revocation
 CREATE OR REPLACE FUNCTION public.get_public_report_data(p_token TEXT)
-RETURNS JSON
+RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public

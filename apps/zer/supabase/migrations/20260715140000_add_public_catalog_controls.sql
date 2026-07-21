@@ -57,7 +57,7 @@ CREATE OR REPLACE FUNCTION public.get_public_products(
   p_page INT DEFAULT 1,
   p_page_size INT DEFAULT 24
 )
-RETURNS JSON
+RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
@@ -144,7 +144,7 @@ $$;
 
 -- ─── get_public_categories ────────────────────
 CREATE OR REPLACE FUNCTION public.get_public_categories(p_slug TEXT)
-RETURNS JSON
+RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
@@ -192,7 +192,7 @@ CREATE OR REPLACE FUNCTION public.get_public_product(
   p_slug TEXT,
   p_product_id UUID
 )
-RETURNS JSON
+RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public

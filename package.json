@@ -1,7 +1,7 @@
 {
   "name": "zuiio",
   "private": true,
-  "packageManager": "pnpm@11.10.0",
+  "packageManager": "pnpm@11.15.1",
   "scripts": {
     "build": "turbo run build",
     "build:zer": "turbo run build --filter=zer",
@@ -38,8 +38,8 @@
     "clean:turbopack": "find . -type d -name turbopack -path '*/.next/*' -exec rm -rf {} + 2>/dev/null; echo 'Turbopack caches cleaned'"
   },
   "devDependencies": {
-    "@lhci/cli": "catalog:",
     "@biomejs/biome": "catalog:",
+    "@lhci/cli": "catalog:",
     "@types/node": "^26.1.1",
     "@types/react": "catalog:",
     "husky": "^9.1.7",

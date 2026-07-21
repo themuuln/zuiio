@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   cacheComponents: true,
   experimental: {
+    useTypeScriptCli: true,
     optimizePackageImports: [
       "lucide-react",
       "recharts",

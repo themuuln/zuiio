@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   // typedRoutes: true,   /* enable once route type inference stabilizes */
   reactCompiler: true,
   experimental: {
+    useTypeScriptCli: true,
     turbopackFileSystemCacheForBuild: true,
     optimizePackageImports: ["date-fns"],
   },

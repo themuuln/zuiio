@@ -283,12 +283,24 @@ AS $$
   );
 $$;
 
+-- Alias for bank_accounts/cash_registers RLS policies that reference this name.
+CREATE OR REPLACE FUNCTION public.get_user_organization_id()
+RETURNS UUID
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT organization_id FROM public.profiles WHERE id = auth.uid()
+$$;
+
 
 -- Missing prefix columns referenced by SECURITY DEFINER number generators
 ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS invoice_number_prefix TEXT DEFAULT 'INV';
 ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS po_number_prefix TEXT DEFAULT 'PO';
 ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS quote_number_prefix TEXT DEFAULT 'Q';
 ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS return_number_prefix TEXT DEFAULT 'R';
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS je_number_prefix TEXT DEFAULT 'JE';
 
 -- Missing sequences referenced by SECURITY DEFINER functions
 CREATE SEQUENCE IF NOT EXISTS public.po_number_seq START 1;

@@ -32,7 +32,7 @@
 		"@zuiio/ai-agent": "workspace:*",
 		"@zuiio/capture": "workspace:*",
 		"@zuiio/core": "workspace:*",
-		"next": "^16.2.10",
+		"next": "catalog:",
 		"qrcode": "^1.5.4",
 		"react": "catalog:",
 		"react-dom": "19.2.7",

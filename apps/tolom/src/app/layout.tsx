@@ -2,7 +2,6 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
 import type { ReactNode } from "react";
 import ThemeProvider from "@/components/theme-provider";
 import "./globals.css";
@@ -55,15 +54,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       )}
       suppressHydrationWarning
     >
-      <head>
-        {process.env.NODE_ENV === "development" && (
-          <Script
-            src="//unpkg.com/react-grab/dist/index.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
-        )}
-      </head>
+      <head
+        dangerouslySetInnerHTML={{
+          __html:
+            process.env.NODE_ENV === "development"
+              ? `<script src="https://unpkg.com/react-grab/dist/index.global.js" crossOrigin="anonymous"></script>`
+              : "",
+        }}
+      />
       <body className="flex min-h-dvh flex-col">
         <ThemeProvider>{children}</ThemeProvider>
         <Analytics />

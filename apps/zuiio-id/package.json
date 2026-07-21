@@ -42,7 +42,7 @@
     "@testing-library/user-event": "catalog:",
     "jsdom": "catalog:",
     "@tailwindcss/postcss": "catalog:",
-    "@types/node": "catalog:",
+    "@types/node": "^26.1.1",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "postcss": "catalog:",

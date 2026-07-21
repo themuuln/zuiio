@@ -232,7 +232,11 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
                         <TableCell>
                           {sub.evidence_url ? (
                             <a
-                              href={sub.evidence_url}
+                              href={
+                                sub.source_type === "official_score_sheet"
+                                  ? `/admin/api/submissions/${sub.id}/evidence`
+                                  : sub.evidence_url
+                              }
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-primary hover:underline"

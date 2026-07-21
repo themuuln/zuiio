@@ -11,7 +11,12 @@ const nextConfig: NextConfig = {
     ],
   },
   reactCompiler: true,
+  // TypeScript validation is handled by `pnpm validate` before build.
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   experimental: {
+    useTypeScriptCli: true,
     inlineCss: true,
     staleTimes: {
       dynamic: 30,

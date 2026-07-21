@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   experimental: {
+    useTypeScriptCli: true,
     turbopackFileSystemCacheForBuild: true,
     turbopackLocalPostcssConfig: true,
   },

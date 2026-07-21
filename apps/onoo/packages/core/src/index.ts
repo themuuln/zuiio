@@ -3,6 +3,7 @@
 
 export * from "./events";
 export * from "./format";
+export * from "./imports/fiba-official-stats";
 export * from "./i18n/stats";
 export * from "./stats/derive";
 export * from "./stats/milestones";

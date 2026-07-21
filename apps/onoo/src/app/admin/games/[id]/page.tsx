@@ -253,7 +253,7 @@ export default function GameDetailPage() {
                 }
                 variant="outline"
               >
-                Box Score оруулах
+                Албан ёсны PDF импортлох
               </Button>
             </CardContent>
           </Card>

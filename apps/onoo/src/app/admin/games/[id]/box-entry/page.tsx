@@ -1,308 +1,140 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { useParams, useRouter } from "next/navigation";
+import type { FormEvent } from "react";
+import { useParams } from "next/navigation";
 import { useState } from "react";
+import type { FibaOfficialStats } from "@onoo/core";
 import { toast } from "sonner";
-import { gamesApi, playersApi } from "@/app/admin/_lib/api";
-import { AdminCardSkeleton } from "@/components/admin/admin-skeleton";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-
-interface PlayerLine {
-  player_id: string;
-  player_name: string;
-  jersey_number: number;
-  pts: number;
-  fgm: number;
-  fga: number;
-  tpm: number;
-  tpa: number;
-  ftm: number;
-  fta: number;
-  oreb: number;
-  dreb: number;
-  ast: number;
-  stl: number;
-  blk: number;
-  tov: number;
-  pf: number;
-  seconds_played: number | null;
-}
-
-const STAT_FIELDS = [
-  "pts",
-  "fgm",
-  "fga",
-  "tpm",
-  "tpa",
-  "ftm",
-  "fta",
-  "oreb",
-  "dreb",
-  "ast",
-  "stl",
-  "blk",
-  "tov",
-  "pf",
-] as const;
-
-function emptyLine(player: {
-  id: string;
-  canonical_name: string;
-  jersey_number?: number | null;
-}): PlayerLine {
-  return {
-    player_id: player.id,
-    player_name: player.canonical_name,
-    jersey_number: player.jersey_number ?? 0,
-    pts: 0,
-    fgm: 0,
-    fga: 0,
-    tpm: 0,
-    tpa: 0,
-    ftm: 0,
-    fta: 0,
-    oreb: 0,
-    dreb: 0,
-    ast: 0,
-    stl: 0,
-    blk: 0,
-    tov: 0,
-    pf: 0,
-    seconds_played: null,
-  };
-}
-
-function StatInput({
-  value,
-  onChange,
-  label,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  label: string;
-}) {
-  return (
-    <div className="flex flex-col items-center">
-      <label htmlFor={label} className="text-xs text-muted-foreground">
-        {label}
-      </label>
-      <input
-        type="number"
-        min={0}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value) || 0)}
-        className="w-12 rounded border bg-background px-1 py-0.5 text-center text-sm"
-      />
-    </div>
-  );
-}
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function BoxEntryPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [result, setResult] = useState<FibaOfficialStats | null>(null);
 
-  const {
-    data: game,
-    isPending,
-    isError,
-  } = useQuery({
-    queryKey: ["admin", "game", params.id],
-    queryFn: () => gamesApi.get(params.id),
-  });
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
 
-  const { data: allPlayers = [] } = useQuery({
-    queryKey: ["admin", "players"],
-    queryFn: () => playersApi.list(),
-  });
-
-  const homeName = game?.home_team_season?.teams?.name ?? "Home";
-  const awayName = game?.away_team_season?.teams?.name ?? "Away";
-
-  const homePlayers = allPlayers
-    .filter(
-      (p) =>
-        !p.position || p.position.startsWith("F") || p.position.startsWith("C"),
-    )
-    .slice(0, 12);
-
-  const awayPlayers = allPlayers
-    .filter((p) => p.position?.startsWith("G"))
-    .concat(
-      allPlayers.filter(
-        (p) =>
-          !p.position ||
-          (!p.position.startsWith("F") &&
-            !p.position.startsWith("G") &&
-            !p.position.startsWith("C")),
-      ),
-    )
-    .slice(0, 12);
-
-  const [homeLines, setHomeLines] = useState<PlayerLine[]>([]);
-  const [awayLines, setAwayLines] = useState<PlayerLine[]>([]);
-  const [saving, setSaving] = useState(false);
-
-  // Initialize lines once players load
-  if (homeLines.length === 0 && homePlayers.length > 0) {
-    setHomeLines(homePlayers.map(emptyLine));
-  }
-  if (awayLines.length === 0 && awayPlayers.length > 0) {
-    setAwayLines(awayPlayers.map(emptyLine));
-  }
-
-  function updateLine(
-    team: "home" | "away",
-    idx: number,
-    field: keyof PlayerLine,
-    value: number | null,
-  ) {
-    const lines = team === "home" ? [...homeLines] : [...awayLines];
-    const line = lines[idx];
-    if (!line) return;
-    const updated = { ...line, [field]: value } as PlayerLine;
-    lines[idx] = updated;
-    if (team === "home") setHomeLines(lines);
-    else setAwayLines(lines);
-  }
-
-  async function handleSubmit() {
-    setSaving(true);
     try {
-      // TODO(spec): Call Edge Function manual-box-entry
-      // For now, show success
-      toast.success("Box score saved (mock — Edge Function not deployed yet)");
-      router.refresh();
-    } catch {
-      toast.error("Failed to save box score");
+      const response = await fetch(
+        `/admin/api/games/${params.id}/official-stats`,
+        {
+          method: "POST",
+          body: new FormData(event.currentTarget),
+        },
+      );
+      const body = (await response.json()) as {
+        error?: string;
+        boxScore?: FibaOfficialStats;
+      };
+
+      if (!response.ok || !body.boxScore) {
+        throw new Error(body.error ?? "Импорт хийж чадсангүй");
+      }
+
+      setResult(body.boxScore);
+      toast.success("Албан ёсны статистикийг хяналтад илгээлээ");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Импорт хийж чадсангүй",
+      );
     } finally {
-      setSaving(false);
+      setIsSubmitting(false);
     }
   }
 
-  function renderTeamTable(
-    label: string,
-    lines: PlayerLine[],
-    team: "home" | "away",
-  ) {
-    const totals = STAT_FIELDS.reduce(
-      (acc, f) => {
-        acc[f] = lines.reduce((sum, l) => sum + (l[f] as number), 0);
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-    return (
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold">{label}</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="px-2 py-1 text-left">#</th>
-                <th className="px-2 py-1 text-left">Player</th>
-                {STAT_FIELDS.map((f) => (
-                  <th key={f} className="px-1 py-1 text-center">
-                    {f.toUpperCase()}
-                  </th>
-                ))}
-                <th className="px-1 py-1 text-center">MIN</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lines.map((line, idx) => (
-                <tr key={line.player_id} className="border-b">
-                  <td className="px-2 py-1">{line.jersey_number}</td>
-                  <td className="px-2 py-1 font-medium">{line.player_name}</td>
-                  {STAT_FIELDS.map((f) => (
-                    <td key={f} className="px-1 py-1">
-                      <StatInput
-                        value={line[f] as number}
-                        onChange={(v) => updateLine(team, idx, f, v)}
-                        label=""
-                      />
-                    </td>
-                  ))}
-                  <td className="px-1 py-1">
-                    <input
-                      type="number"
-                      min={0}
-                      value={line.seconds_played ?? ""}
-                      onChange={(e) =>
-                        updateLine(
-                          team,
-                          idx,
-                          "seconds_played",
-                          e.target.value ? Number(e.target.value) : null,
-                        )
-                      }
-                      placeholder="—"
-                      className="w-14 rounded border bg-background px-1 py-0.5 text-center text-sm"
-                    />
-                  </td>
-                </tr>
-              ))}
-              <tr className="font-bold border-t-2">
-                <td className="px-2 py-1" colSpan={2}>
-                  Total
-                </td>
-                {STAT_FIELDS.map((f) => (
-                  <td key={f} className="px-1 py-1 text-center">
-                    {totals[f]}
-                  </td>
-                ))}
-                <td />
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  }
-
-  if (isPending) {
-    return (
-      <div className="space-y-6">
-        <AdminCardSkeleton />
-      </div>
-    );
-  }
-
-  if (isError || !game) {
-    return (
-      <div className="space-y-6">
-        <Empty>
-          <EmptyMedia variant="icon" />
-          <EmptyHeader>
-            <EmptyTitle>Тоглолт олдсонгүй</EmptyTitle>
-            <EmptyDescription>
-              Энэ тоглолтын мэдээлэл байхгүй байна.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      {renderTeamTable(homeName, homeLines, "home")}
-      {renderTeamTable(awayName, awayLines, "away")}
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={saving}
-        className="rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-      >
-        {saving ? "Түр хүлээнэ үү..." : "Хадгалах"}
-      </button>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold">Албан ёсны статистик импортлох</h1>
+        <p className="text-sm text-muted-foreground">
+          FIBA-ийн “Official Statistics” PDF-г оруулж, тоглогчдын мөр болон
+          эцсийн оноог автоматаар уншуулна.
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>PDF нотолгоо</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            <div className="space-y-2">
+              <Label htmlFor="official-stats-file">FIBA PDF</Label>
+              <Input
+                id="official-stats-file"
+                name="file"
+                type="file"
+                accept="application/pdf,.pdf"
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Сонгогдсон PDF нь нотолгоо хэлбэрээр аюулгүй хадгалагдана.
+              </p>
+            </div>
+
+            <label className="flex items-start gap-3 text-sm">
+              <input
+                name="rightsConfirmed"
+                type="checkbox"
+                value="true"
+                required
+                className="mt-0.5 size-4 accent-primary"
+              />
+              <span>
+                Энэхүү албан ёсны статистикийг ашиглах, хадгалах эрхтэйгээ
+                баталгаажуулж байна.
+              </span>
+            </label>
+
+            <p className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-foreground">
+              Импорт хийсний дараа статистик шууд нийтлэгдэхгүй. “Шалгах” табд
+              PDF болон уншсан үр дүнг баталгаажуулсны дараа л тоглолтын албан
+              ёсны бүртгэлд орно.
+            </p>
+
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Уншиж байна..." : "PDF уншиж, хяналтад илгээх"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {result && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Уншсан үр дүн</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-3xl font-bold tabular-nums">
+              {result.score.home} – {result.score.away}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {result.teams.map((team) => (
+                <div key={team.code} className="rounded-md border p-3">
+                  <p className="font-medium">
+                    {team.name} ({team.code})
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {team.players.length} тоглогчийн мөр уншигдлаа
+                  </p>
+                </div>
+              ))}
+            </div>
+            {result.warnings.length > 0 && (
+              <ul className="list-disc space-y-1 pl-5 text-sm text-amber-700 dark:text-amber-400">
+                {result.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

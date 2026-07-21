@@ -1,6 +1,7 @@
 packages:
   - "packages/*"
   - "apps/*"
+  - "!apps/archive/*"
   - "apps/*/packages/*"
 
 catalog:
@@ -11,17 +12,17 @@ catalog:
   react-dom: ^19.2.7
   "@types/react": ^19.2.17
   # Biome — latest
-  "@biomejs/biome": 2.4.16
+  "@biomejs/biome": 2.5.4
   # Vitest — latest
   vitest: ^4.1.10
   # LHCI
-  "@lhci/cli": ^0.14.0
+  "@lhci/cli": ^0.15.1
   # TanStack Query
   "@tanstack/react-query": ^5.101.2
   # Supabase
   "@supabase/supabase-js": ^2.110.7
   # TypeScript
-  typescript: npm:@typescript/typescript6@^6.0.2
+  typescript: ^7.0.2
   "@types/node": ^24.0.0
   "@types/react-dom": ^19.2.0
   # Tailwind CSS
@@ -33,7 +34,7 @@ catalog:
   # React Hook Form
   "@hookform/resolvers": ^5.4.0
   # Supabase SSR
-  "@supabase/ssr": ^0.10.3
+  "@supabase/ssr": ^0.12.3
   # Testing
   "@testing-library/jest-dom": ^6.9.1
   "@testing-library/react": ^16.3.2

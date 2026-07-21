@@ -1,0 +1,352 @@
+# Onoo — Project Management Manifest
+# Machine-readable project status. For agents: read this file to query
+# project state programmatically. For humans: INDEX.md is more readable.
+apiVersion: v1
+app: onoo
+status: in-development # pre-launch | pilot | live | maintenance
+
+phases:
+  - id: phase-1
+    name: Trusted data foundation
+    status: in-progress # not-started | in-progress | complete
+    tasks:
+      - id: T-1.1
+        name: Local stack proof
+        status: blocked
+        priority: P1
+        effort: M
+        blocker: "Docker not available locally"
+        spec: docs/plans/phase-1-trusted-foundation.md#task-11--local-stack-proof
+        taskFile: docs/tasks/T-1.1-local-stack-proof.md
+      - id: T-1.2
+        name: Ruleset-bound vocabulary
+        status: in-progress
+        priority: P1
+        effort: M
+        spec: docs/plans/phase-1-trusted-foundation.md#task-12--ruleset-bound-event-vocabulary
+        taskFile: docs/tasks/T-1.2-ruleset-vocabulary.md
+      - id: T-1.3
+        name: Submission review UI
+        status: done
+        priority: P1
+        effort: L
+        spec: docs/plans/phase-1-trusted-foundation.md#task-13--submission-review-ui-approval-workflow
+        taskFile: docs/tasks/T-1.3-submission-review-ui.md
+      - id: T-1.4
+        name: Projection rebuild command
+        status: not-started
+        priority: P1
+        effort: M
+        dependsOn: [T-1.3]
+        spec: docs/plans/phase-1-trusted-foundation.md#task-14--projection-rebuild-command
+        taskFile: docs/tasks/T-1.4-projection-rebuild.md
+      - id: T-1.5
+        name: Authorization cutover
+        status: not-started
+        priority: P1
+        effort: M
+        dependsOn: [T-1.4]
+        spec: docs/plans/phase-1-trusted-foundation.md#task-15--authorization-cutover-retire-legacy-write-paths
+        taskFile: docs/tasks/T-1.5-authorization-cutover.md
+      - id: T-1.6
+        name: Journal durability tests
+        status: done
+        priority: P1
+        effort: S
+        spec: docs/plans/phase-1-trusted-foundation.md#task-16--journal-durability-verification
+        taskFile: docs/tasks/T-1.6-journal-durability.md
+      - id: T-1.7
+        name: Handoff UI
+        status: in-progress
+        priority: P1
+        effort: M
+        dependsOn: [T-1.1]
+        spec: docs/plans/phase-1-trusted-foundation.md#task-17--lead-to-backup-scorer-handoff-ui
+        taskFile: docs/tasks/T-1.7-handoff-ui.md
+      - id: T-1.8
+        name: Runbook + paper fallback
+        status: done
+        priority: P1
+        effort: S
+        spec: docs/plans/phase-1-trusted-foundation.md#task-18--game-day-runbook--paper-fallback
+        taskFile: docs/tasks/T-1.8-runbook.md
+      - id: T-1.9
+        name: Ops console
+        status: in-progress
+        priority: P1
+        effort: M
+        dependsOn: [T-1.3]
+        spec: docs/plans/phase-1-trusted-foundation.md#task-19--ops-console
+        taskFile: docs/tasks/T-1.9-ops-console.md
+      - id: T-1.10
+        name: Integration + chaos tests
+        status: not-started
+        priority: P1
+        effort: M
+        dependsOn: [T-1.4, T-1.6]
+        spec: docs/plans/phase-1-trusted-foundation.md#task-110--integration--chaos-tests
+        taskFile: docs/tasks/T-1.10-integration-tests.md
+
+  - id: phase-2
+    name: Player profile as showcase
+    status: in-progress
+    tasks:
+      - id: T-2.1
+        name: Roster onboarding kit
+        status: not-started
+        priority: P1
+        effort: L
+        spec: docs/plans/phase-2-player-showcase.md#task-21--roster-onboarding-kit-photos-logos-placeholder-identity
+        taskFile: docs/tasks/T-2.1-roster-onboarding.md
+      - id: T-2.2
+        name: Consent & takedown
+        status: not-started
+        priority: P1
+        effort: M
+        dependsOn: [T-2.1]
+        spec: docs/plans/phase-2-player-showcase.md#task-22--consent--takedown
+        taskFile: docs/tasks/T-2.2-consent-takedown.md
+      - id: T-2.3
+        name: Hero identity card
+        status: done
+        priority: P1
+        effort: M
+        spec: docs/plans/phase-2-player-showcase.md#task-23--hero-identity-card
+        taskFile: docs/tasks/T-2.3-hero-card.md
+      - id: T-2.4
+        name: Season story arc
+        status: done
+        priority: P1
+        effort: M
+        spec: docs/plans/phase-2-player-showcase.md#task-24--season-story-arc-chart-installs-charts
+        taskFile: docs/tasks/T-2.4-season-arc.md
+      - id: T-2.5
+        name: Shooting profile
+        status: done
+        priority: P1
+        effort: M
+        spec: docs/plans/phase-2-player-showcase.md#task-25--shooting-profile
+        taskFile: docs/tasks/T-2.5-shooting-profile.md
+      - id: T-2.6
+        name: Career highs & milestones
+        status: done
+        priority: P1
+        effort: M
+        spec: docs/plans/phase-2-player-showcase.md#task-26--career-highs--milestones
+        taskFile: docs/tasks/T-2.6-milestones.md
+      - id: T-2.7
+        name: Radar vs league average
+        status: done
+        priority: P1
+        effort: M
+        spec: docs/plans/phase-2-player-showcase.md#task-27--radar-chart-vs-league-average
+        taskFile: docs/tasks/T-2.7-skill-radar.md
+      - id: T-2.8
+        name: Recent games strip
+        status: done
+        priority: P1
+        effort: S
+        spec: docs/plans/phase-2-player-showcase.md#task-28--recent-games-strip
+        taskFile: docs/tasks/T-2.8-recent-games.md
+      - id: T-2.9
+        name: Plain-language summaries
+        status: done
+        priority: P1
+        effort: S
+        spec: docs/plans/phase-2-player-showcase.md#task-29--plain-language-game-summaries
+        taskFile: docs/tasks/T-2.9-game-summaries.md
+      - id: T-2.10
+        name: Report-error intake
+        status: done
+        priority: P1
+        effort: M
+        spec: docs/plans/phase-2-player-showcase.md#task-210--report-a-stat-error-intake
+        taskFile: docs/tasks/T-2.10-report-error.md
+      - id: T-2.11
+        name: Season selector & career
+        status: done
+        priority: P1
+        effort: M
+        spec: docs/plans/phase-2-player-showcase.md#task-211--season-selector--career-view
+        taskFile: docs/tasks/T-2.11-season-selector.md
+      - id: T-2.12
+        name: Box score below fold
+        status: done
+        priority: P1
+        effort: S
+        spec: docs/plans/phase-2-player-showcase.md#task-212--box-score-history-below-the-fold
+        taskFile: docs/tasks/T-2.12-box-score-fold.md
+
+  - id: phase-3
+    name: Discovery & league surfaces
+    status: not-started
+    tasks: &phase3
+      - &t31
+        id: T-3.1
+        name: "Home: tonight's games"
+        status: not-started
+        priority: P1
+        effort: M
+        dependsOn: [T-2.1]
+        spec: docs/plans/phase-3-discovery-league.md#task-31--home-tonights-games
+        taskFile: docs/tasks/T-3.1-home-games.md
+      - &t32
+        id: T-3.2
+        name: Standings redesign
+        status: not-started
+        priority: P1
+        effort: M
+        dependsOn: [T-2.1]
+      - &t33
+        id: T-3.3
+        name: Leaders redesign
+        status: not-started
+        priority: P1
+        effort: M
+        dependsOn: [T-2.1]
+      - &t34
+        id: T-3.4
+        name: Qualification rules
+        status: not-started
+        priority: P2
+        effort: M
+      - &t35
+        id: T-3.5
+        name: Awards & MVP races
+        status: not-started
+        priority: P2
+        effort: L
+        dependsOn: [T-2.1]
+      - &t36
+        id: T-3.6
+        name: Player comparison upgrade
+        status: not-started
+        priority: P2
+        effort: M
+        dependsOn: [T-2.1, T-2.4]
+      - &t37
+        id: T-3.7
+        name: Team pages
+        status: not-started
+        priority: P2
+        effort: M
+        dependsOn: [T-2.1]
+      - &t38
+        id: T-3.8
+        name: Search & browse
+        status: not-started
+        priority: P2
+        effort: M
+        dependsOn: [T-2.2]
+
+  - id: phase-4
+    name: Shareability & reach
+    status: not-started
+    tasks:
+      - id: T-4.1
+        name: OG images
+        status: not-started
+        priority: P2
+        effort: M
+        dependsOn: [T-2.1]
+      - id: T-4.2
+        name: Shareable stat cards
+        status: not-started
+        priority: P2
+        effort: M
+        dependsOn: [T-2.9, T-4.5]
+      - id: T-4.3
+        name: Game recap pages
+        status: not-started
+        priority: P2
+        effort: L
+        dependsOn: [T-3.1, T-5.1]
+      - id: T-4.4
+        name: Embeds
+        status: not-started
+        priority: P3
+        effort: S
+        dependsOn: [T-2.1]
+      - id: T-4.5
+        name: Sponsor placements
+        status: not-started
+        priority: P2
+        effort: L
+        dependsOn: [T-2.1]
+      - id: T-4.6
+        name: League audience dashboard
+        status: not-started
+        priority: P3
+        effort: L
+      - id: T-4.7
+        name: English profile view/export
+        status: not-started
+        priority: P3
+        effort: S
+        dependsOn: [T-2.6, T-2.9]
+      - id: T-4.8
+        name: SEO basics
+        status: not-started
+        priority: P2
+        effort: S
+        dependsOn: [T-2.2, T-3.8]
+
+  - id: phase-5
+    name: Live experience
+    status: not-started
+    tasks:
+      - id: T-5.1
+        name: Public visibility for provisional games
+        status: not-started
+        priority: P1
+        effort: M
+        dependsOn: [T-1.4, T-1.6]
+      - id: T-5.2
+        name: Realtime live game center
+        status: not-started
+        priority: P2
+        effort: XL
+        dependsOn: [T-5.1, T-3.1]
+      - id: T-5.3
+        name: Live player stat lines
+        status: not-started
+        priority: P2
+        effort: M
+        dependsOn: [T-5.2]
+
+dependencyGraph:
+  # Phase 1 chain
+  - from: T-1.1
+    blocks: [T-1.2, T-1.7]
+  - from: T-1.2
+    blocks: [T-1.3]
+  - from: T-1.3
+    blocks: [T-1.4, T-1.9]
+  - from: T-1.4
+    blocks: [T-1.5, T-1.10]
+  - from: T-1.6
+    blocks: [T-1.10]
+  # Phase 2 chain
+  - from: T-2.1
+    blocks: [T-2.2, T-2.3, T-2.4, T-2.8, T-2.11, T-3.1, T-3.2, T-3.3, T-3.5, T-3.6, T-3.7, T-4.1, T-4.4, T-4.5]
+  - from: T-2.2
+    blocks: [T-2.3, T-3.8, T-4.8]
+  - from: T-2.4
+    blocks: [T-2.5, T-2.7, T-3.6]
+  - from: T-2.9
+    blocks: [T-4.2]
+  - from: T-2.6
+    blocks: [T-4.7]
+  # Phase 3 chain
+  - from: T-3.1
+    blocks: [T-4.3]
+  - from: T-3.8
+    blocks: [T-4.8]
+  # Phase 4 chain
+  - from: T-4.5
+    blocks: [T-4.2]
+  # Phase 5 chain
+  - from: T-5.1
+    blocks: [T-4.3, T-5.2]
+  - from: T-5.2
+    blocks: [T-5.3]
