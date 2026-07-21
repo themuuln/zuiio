@@ -249,8 +249,8 @@ test("createDiscount rejects zero value", async () => {
   const result = await createDiscount(undefined, fd);
   assert.ok(result && "error" in result, "should return error");
   assert.ok(
-    String(result.error).includes("Дүн"),
-    `error should mention amount: "${result.error}"`,
+    String(result.error).includes("Утга"),
+    `error should mention value: "${result.error}"`,
   );
 });
 
