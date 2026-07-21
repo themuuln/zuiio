@@ -7,361 +7,33 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
-      agent_audit_log: {
-        Row: {
-          chat_id: number
-          created_at: string | null
-          duration_ms: number | null
-          error: string | null
-          id: string
-          organization_id: string
-          telegram_user_id: number
-          tool_args: Json | null
-          tool_name: string
-          tool_result: Json | null
-          user_id: string
-        }
-        Insert: {
-          chat_id: number
-          created_at?: string | null
-          duration_ms?: number | null
-          error?: string | null
-          id?: string
-          organization_id: string
-          telegram_user_id: number
-          tool_args?: Json | null
-          tool_name: string
-          tool_result?: Json | null
-          user_id: string
-        }
-        Update: {
-          chat_id?: number
-          created_at?: string | null
-          duration_ms?: number | null
-          error?: string | null
-          id?: string
-          organization_id?: string
-          telegram_user_id?: number
-          tool_args?: Json | null
-          tool_name?: string
-          tool_result?: Json | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      agent_briefing_log: {
-        Row: {
-          admin_chat_id: number
-          briefing_text: string
-          delivered_at: string | null
-          events_summary: Json | null
-          id: string
-          organization_id: string
-          overnight_messages: number | null
-          overnight_tool_calls: number | null
-          pending_handoffs: number | null
-        }
-        Insert: {
-          admin_chat_id: number
-          briefing_text: string
-          delivered_at?: string | null
-          events_summary?: Json | null
-          id?: string
-          organization_id: string
-          overnight_messages?: number | null
-          overnight_tool_calls?: number | null
-          pending_handoffs?: number | null
-        }
-        Update: {
-          admin_chat_id?: number
-          briefing_text?: string
-          delivered_at?: string | null
-          events_summary?: Json | null
-          id?: string
-          organization_id?: string
-          overnight_messages?: number | null
-          overnight_tool_calls?: number | null
-          pending_handoffs?: number | null
-        }
-        Relationships: []
-      }
-      agent_customer_memory: {
-        Row: {
-          confidence: number
-          created_at: string | null
-          customer_id: string
-          customer_name: string | null
-          fact: string
-          fact_type: string
-          id: string
-          is_active: boolean | null
-          organization_id: string
-          source_chat_id: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          confidence?: number
-          created_at?: string | null
-          customer_id: string
-          customer_name?: string | null
-          fact: string
-          fact_type?: string
-          id?: string
-          is_active?: boolean | null
-          organization_id: string
-          source_chat_id?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          confidence?: number
-          created_at?: string | null
-          customer_id?: string
-          customer_name?: string | null
-          fact?: string
-          fact_type?: string
-          id?: string
-          is_active?: boolean | null
-          organization_id?: string
-          source_chat_id?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      agent_daily_spend: {
-        Row: {
-          api_calls: number
-          created_at: string | null
-          date: string
-          id: string
-          organization_id: string
-          tokens_used: number
-          updated_at: string | null
-        }
-        Insert: {
-          api_calls?: number
-          created_at?: string | null
-          date: string
-          id?: string
-          organization_id: string
-          tokens_used?: number
-          updated_at?: string | null
-        }
-        Update: {
-          api_calls?: number
-          created_at?: string | null
-          date?: string
-          id?: string
-          organization_id?: string
-          tokens_used?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      agent_handoff_config: {
-        Row: {
-          admin_chat_id: number | null
-          auto_handoff_after_hours: boolean | null
-          created_at: string | null
-          id: string
-          keyword_triggers: string[] | null
-          low_confidence_threshold: number | null
-          organization_id: string
-          sentiment_enabled: boolean | null
-          updated_at: string | null
-        }
-        Insert: {
-          admin_chat_id?: number | null
-          auto_handoff_after_hours?: boolean | null
-          created_at?: string | null
-          id?: string
-          keyword_triggers?: string[] | null
-          low_confidence_threshold?: number | null
-          organization_id: string
-          sentiment_enabled?: boolean | null
-          updated_at?: string | null
-        }
-        Update: {
-          admin_chat_id?: number | null
-          auto_handoff_after_hours?: boolean | null
-          created_at?: string | null
-          id?: string
-          keyword_triggers?: string[] | null
-          low_confidence_threshold?: number | null
-          organization_id?: string
-          sentiment_enabled?: boolean | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      agent_handoff_events: {
-        Row: {
-          admin_chat_id: number | null
-          admin_user_id: number | null
-          bot_response: string | null
-          chat_id: number
-          created_at: string | null
-          customer_query: string | null
-          escalated_by: string | null
-          id: string
-          organization_id: string
-          reason: string | null
-          resolved_at: string | null
-          status: Database["public"]["Enums"]["handoff_status"]
-          updated_at: string | null
-          user_id: number
-        }
-        Insert: {
-          admin_chat_id?: number | null
-          admin_user_id?: number | null
-          bot_response?: string | null
-          chat_id: number
-          created_at?: string | null
-          customer_query?: string | null
-          escalated_by?: string | null
-          id?: string
-          organization_id: string
-          reason?: string | null
-          resolved_at?: string | null
-          status?: Database["public"]["Enums"]["handoff_status"]
-          updated_at?: string | null
-          user_id: number
-        }
-        Update: {
-          admin_chat_id?: number | null
-          admin_user_id?: number | null
-          bot_response?: string | null
-          chat_id?: number
-          created_at?: string | null
-          customer_query?: string | null
-          escalated_by?: string | null
-          id?: string
-          organization_id?: string
-          reason?: string | null
-          resolved_at?: string | null
-          status?: Database["public"]["Enums"]["handoff_status"]
-          updated_at?: string | null
-          user_id?: number
-        }
-        Relationships: []
-      }
-      agent_knowledge_sources: {
-        Row: {
-          content: string
-          created_at: string | null
-          embedding: string | null
-          id: string
-          is_active: boolean | null
-          organization_id: string
-          source_type: string
-          title: string | null
-          updated_at: string | null
-          url: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          embedding?: string | null
-          id?: string
-          is_active?: boolean | null
-          organization_id: string
-          source_type: string
-          title?: string | null
-          updated_at?: string | null
-          url?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          embedding?: string | null
-          id?: string
-          is_active?: boolean | null
-          organization_id?: string
-          source_type?: string
-          title?: string | null
-          updated_at?: string | null
-          url?: string | null
-        }
-        Relationships: []
-      }
-      agent_notification_triggers: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          last_fired_at: string | null
-          message_template: string | null
-          organization_id: string
-          trigger_config: Json
-          trigger_type: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_fired_at?: string | null
-          message_template?: string | null
-          organization_id: string
-          trigger_config?: Json
-          trigger_type: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_fired_at?: string | null
-          message_template?: string | null
-          organization_id?: string
-          trigger_config?: Json
-          trigger_type?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      agent_sessions: {
-        Row: {
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          messages: Json
-          organization_id: string
-          telegram_chat_id: number
-          telegram_user_id: number
-          token_count: number
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          messages?: Json
-          organization_id: string
-          telegram_chat_id: number
-          telegram_user_id: number
-          token_count?: number
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          messages?: Json
-          organization_id?: string
-          telegram_chat_id?: number
-          telegram_user_id?: number
-          token_count?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       app_config: {
         Row: {
           key: string
@@ -638,7 +310,6 @@ export type Database = {
           organization_id: string
           phone: string | null
           settings: Json | null
-          total_visits: number | null
           updated_at: string
           updated_by: string | null
         }
@@ -655,7 +326,6 @@ export type Database = {
           organization_id: string
           phone?: string | null
           settings?: Json | null
-          total_visits?: number | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -672,7 +342,6 @@ export type Database = {
           organization_id?: string
           phone?: string | null
           settings?: Json | null
-          total_visits?: number | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -1150,50 +819,6 @@ export type Database = {
           },
         ]
       }
-      custom_bots: {
-        Row: {
-          bot_token_hash: string
-          bot_username: string
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          organization_id: string
-          product_type: string
-          updated_at: string | null
-          webhook_set_at: string | null
-        }
-        Insert: {
-          bot_token_hash: string
-          bot_username: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          organization_id: string
-          product_type: string
-          updated_at?: string | null
-          webhook_set_at?: string | null
-        }
-        Update: {
-          bot_token_hash?: string
-          bot_username?: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          organization_id?: string
-          product_type?: string
-          updated_at?: string | null
-          webhook_set_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "custom_bots_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       customer_communications: {
         Row: {
           content: string
@@ -1272,6 +897,149 @@ export type Database = {
             columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_followups: {
+        Row: {
+          assigned_to: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          deleted_at: string | null
+          due_at: string
+          estimate_id: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          organization_id: string
+          outcome: string | null
+          outcome_notes: string | null
+          status: string
+          subject: string
+          type: string
+          updated_at: string
+          vehicle_id: string | null
+          work_order_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          deleted_at?: string | null
+          due_at: string
+          estimate_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          organization_id: string
+          outcome?: string | null
+          outcome_notes?: string | null
+          status?: string
+          subject: string
+          type?: string
+          updated_at?: string
+          vehicle_id?: string | null
+          work_order_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          deleted_at?: string | null
+          due_at?: string
+          estimate_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          organization_id?: string
+          outcome?: string | null
+          outcome_notes?: string | null
+          status?: string
+          subject?: string
+          type?: string
+          updated_at?: string
+          vehicle_id?: string | null
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_followups_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_followups_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "mv_customer_lifetime_value"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "customer_followups_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "mv_work_order_summary"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "customer_followups_estimate_id_fkey"
+            columns: ["estimate_id"]
+            isOneToOne: false
+            referencedRelation: "estimates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_followups_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_followups_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_followups_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_followups_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "mv_work_order_summary"
+            referencedColumns: ["work_order_id"]
+          },
+          {
+            foreignKeyName: "customer_followups_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_costs"
+            referencedColumns: ["work_order_id"]
+          },
+          {
+            foreignKeyName: "customer_followups_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -1363,6 +1131,7 @@ export type Database = {
           portal_token: string | null
           source: string | null
           tags: string[] | null
+          telegram_chat_id: number | null
           total_visits: number
           type: string | null
           updated_at: string
@@ -1389,6 +1158,7 @@ export type Database = {
           portal_token?: string | null
           source?: string | null
           tags?: string[] | null
+          telegram_chat_id?: number | null
           total_visits?: number
           type?: string | null
           updated_at?: string
@@ -1415,6 +1185,7 @@ export type Database = {
           portal_token?: string | null
           source?: string | null
           tags?: string[] | null
+          telegram_chat_id?: number | null
           total_visits?: number
           type?: string | null
           updated_at?: string
@@ -1695,6 +1466,7 @@ export type Database = {
           id: string
           notes: string | null
           organization_id: string
+          public_token: string
           status: string
           subtotal: number
           tax_total: number
@@ -1720,6 +1492,7 @@ export type Database = {
           id?: string
           notes?: string | null
           organization_id: string
+          public_token?: string
           status?: string
           subtotal?: number
           tax_total?: number
@@ -1745,6 +1518,7 @@ export type Database = {
           id?: string
           notes?: string | null
           organization_id?: string
+          public_token?: string
           status?: string
           subtotal?: number
           tax_total?: number
@@ -1767,13 +1541,6 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "estimates_converted_work_order_id_fkey"
-            columns: ["converted_work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -2481,8 +2248,8 @@ export type Database = {
           notes: string | null
           organization_id: string
           paid_at: string | null
-          public_token: string | null
-          status: Database["public"]["Enums"]["invoice_status"]
+          public_token: string
+          status: string
           subtotal: number
           tax_total: number
           terms: string | null
@@ -2521,8 +2288,8 @@ export type Database = {
           notes?: string | null
           organization_id: string
           paid_at?: string | null
-          public_token?: string | null
-          status?: Database["public"]["Enums"]["invoice_status"]
+          public_token?: string
+          status?: string
           subtotal?: number
           tax_total?: number
           terms?: string | null
@@ -2561,8 +2328,8 @@ export type Database = {
           notes?: string | null
           organization_id?: string
           paid_at?: string | null
-          public_token?: string | null
-          status?: Database["public"]["Enums"]["invoice_status"]
+          public_token?: string
+          status?: string
           subtotal?: number
           tax_total?: number
           terms?: string | null
@@ -2615,13 +2382,6 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -2750,13 +2510,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mechanic_assignments_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -3048,39 +2801,6 @@ export type Database = {
           },
         ]
       }
-      one_time_tokens: {
-        Row: {
-          created_at: string | null
-          expires_at: string
-          id: string
-          organization_id: string
-          product_type: string
-          token_hash: string
-          used_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at: string
-          id?: string
-          organization_id: string
-          product_type: string
-          token_hash: string
-          used_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string
-          id?: string
-          organization_id?: string
-          product_type?: string
-          token_hash?: string
-          used_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       org_invites: {
         Row: {
           created_at: string
@@ -3143,6 +2863,7 @@ export type Database = {
           created_at: string
           date_format: string | null
           default_currency: string | null
+          default_reminder_channel: string
           default_tax_rate: number | null
           einvoice_api_key: string | null
           einvoice_enabled: boolean | null
@@ -3163,6 +2884,7 @@ export type Database = {
           created_at?: string
           date_format?: string | null
           default_currency?: string | null
+          default_reminder_channel?: string
           default_tax_rate?: number | null
           einvoice_api_key?: string | null
           einvoice_enabled?: boolean | null
@@ -3183,6 +2905,7 @@ export type Database = {
           created_at?: string
           date_format?: string | null
           default_currency?: string | null
+          default_reminder_channel?: string
           default_tax_rate?: number | null
           einvoice_api_key?: string | null
           einvoice_enabled?: boolean | null
@@ -3212,7 +2935,6 @@ export type Database = {
       organization_users: {
         Row: {
           branch_id: string | null
-          is_default: boolean | null
           is_primary: boolean
           joined_at: string
           organization_id: string
@@ -3222,7 +2944,6 @@ export type Database = {
         }
         Insert: {
           branch_id?: string | null
-          is_default?: boolean | null
           is_primary?: boolean
           joined_at?: string
           organization_id: string
@@ -3232,7 +2953,6 @@ export type Database = {
         }
         Update: {
           branch_id?: string | null
-          is_default?: boolean | null
           is_primary?: boolean
           joined_at?: string
           organization_id?: string
@@ -3421,13 +3141,6 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "part_price_history_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -3773,13 +3486,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -4602,13 +4308,6 @@ export type Database = {
             foreignKeyName: "service_completion_data_work_order_id_fkey"
             columns: ["work_order_id"]
             isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_completion_data_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
             referencedRelation: "mv_work_order_summary"
             referencedColumns: ["work_order_id"]
           },
@@ -4706,13 +4405,6 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_price_history_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -4826,13 +4518,6 @@ export type Database = {
             columns: ["service_catalog_id"]
             isOneToOne: false
             referencedRelation: "service_catalog"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_recommendations_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -5016,20 +4701,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "stock_transfers_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "mv_work_order_summary"
-            referencedColumns: ["mechanic_id"]
-          },
-          {
-            foreignKeyName: "stock_transfers_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "stock_transfers_from_branch_id_fkey"
             columns: ["from_branch_id"]
             isOneToOne: false
@@ -5192,7 +4863,6 @@ export type Database = {
       }
       subscription_plans: {
         Row: {
-          auto_renew: boolean
           created_at: string
           expires_at: string | null
           grace_period_end: string | null
@@ -5205,7 +4875,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          auto_renew?: boolean
           created_at?: string
           expires_at?: string | null
           grace_period_end?: string | null
@@ -5218,7 +4887,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          auto_renew?: boolean
           created_at?: string
           expires_at?: string | null
           grace_period_end?: string | null
@@ -5692,13 +5360,6 @@ export type Database = {
             referencedColumns: ["customer_id"]
           },
           {
-            foreignKeyName: "vehicle_owners_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "vehicle_owners_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
@@ -5812,10 +5473,8 @@ export type Database = {
         Row: {
           body_type: string | null
           branch_id: string | null
-          category: string | null
           chassis_number: string | null
           color: string | null
-          country_of_origin: string | null
           created_at: string
           created_by: string | null
           customer_id: string | null
@@ -5825,7 +5484,6 @@ export type Database = {
           fuel_type: string | null
           height: number | null
           id: string
-          import_date: string | null
           inspection_notes: string | null
           last_service_branch_id: string | null
           last_visit_at: string | null
@@ -5841,13 +5499,9 @@ export type Database = {
           odometer: number | null
           organization_id: string
           plate_number: string
-          seats: number | null
-          steering: string | null
           tags: string[] | null
-          total_visits: number | null
           transmission: string | null
           trim: string | null
-          type: string | null
           updated_at: string
           updated_by: string | null
           vin: string | null
@@ -5858,10 +5512,8 @@ export type Database = {
         Insert: {
           body_type?: string | null
           branch_id?: string | null
-          category?: string | null
           chassis_number?: string | null
           color?: string | null
-          country_of_origin?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
@@ -5871,7 +5523,6 @@ export type Database = {
           fuel_type?: string | null
           height?: number | null
           id?: string
-          import_date?: string | null
           inspection_notes?: string | null
           last_service_branch_id?: string | null
           last_visit_at?: string | null
@@ -5887,13 +5538,9 @@ export type Database = {
           odometer?: number | null
           organization_id: string
           plate_number: string
-          seats?: number | null
-          steering?: string | null
           tags?: string[] | null
-          total_visits?: number | null
           transmission?: string | null
           trim?: string | null
-          type?: string | null
           updated_at?: string
           updated_by?: string | null
           vin?: string | null
@@ -5904,10 +5551,8 @@ export type Database = {
         Update: {
           body_type?: string | null
           branch_id?: string | null
-          category?: string | null
           chassis_number?: string | null
           color?: string | null
-          country_of_origin?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
@@ -5917,7 +5562,6 @@ export type Database = {
           fuel_type?: string | null
           height?: number | null
           id?: string
-          import_date?: string | null
           inspection_notes?: string | null
           last_service_branch_id?: string | null
           last_visit_at?: string | null
@@ -5933,13 +5577,9 @@ export type Database = {
           odometer?: number | null
           organization_id?: string
           plate_number?: string
-          seats?: number | null
-          steering?: string | null
           tags?: string[] | null
-          total_visits?: number | null
           transmission?: string | null
           trim?: string | null
-          type?: string | null
           updated_at?: string
           updated_by?: string | null
           vin?: string | null
@@ -6047,13 +5687,6 @@ export type Database = {
             foreignKeyName: "work_order_attachments_work_order_id_fkey"
             columns: ["work_order_id"]
             isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_order_attachments_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
             referencedRelation: "mv_work_order_summary"
             referencedColumns: ["work_order_id"]
           },
@@ -6115,7 +5748,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "work_order_commissions_commission_rule_id_fkey"
+            foreignKeyName: "fk_wo_commissions_rule"
             columns: ["commission_rule_id"]
             isOneToOne: false
             referencedRelation: "mechanic_commission_rules"
@@ -6133,13 +5766,6 @@ export type Database = {
             columns: ["mechanic_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_order_commissions_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -6208,13 +5834,6 @@ export type Database = {
             foreignKeyName: "work_order_helpers_work_order_id_fkey"
             columns: ["work_order_id"]
             isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_order_helpers_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
             referencedRelation: "mv_work_order_summary"
             referencedColumns: ["work_order_id"]
           },
@@ -6265,13 +5884,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_order_notes_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -6378,13 +5990,6 @@ export type Database = {
             columns: ["part_id"]
             isOneToOne: false
             referencedRelation: "parts_catalog"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_order_parts_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -6500,13 +6105,6 @@ export type Database = {
             foreignKeyName: "work_order_services_work_order_id_fkey"
             columns: ["work_order_id"]
             isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_order_services_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
             referencedRelation: "mv_work_order_summary"
             referencedColumns: ["work_order_id"]
           },
@@ -6563,13 +6161,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_order_status_history_work_order_id_fkey"
-            columns: ["work_order_id"]
-            isOneToOne: false
-            referencedRelation: "mv_active_bay_work_orders"
             referencedColumns: ["id"]
           },
           {
@@ -6796,105 +6387,6 @@ export type Database = {
           value?: never
         }
         Relationships: []
-      }
-      mv_active_bay_work_orders: {
-        Row: {
-          bay_number: number | null
-          branch_id: string | null
-          complaint: string | null
-          created_at: string | null
-          customer_company: string | null
-          customer_id: string | null
-          customer_name: string | null
-          customer_phone: string | null
-          description: string | null
-          discount_total: number | null
-          id: string | null
-          labor_cost: number | null
-          labor_hours: number | null
-          loss_reason: string | null
-          mechanic_avatar: string | null
-          mechanic_id: string | null
-          mechanic_name: string | null
-          notes: string | null
-          odometer_at_service: number | null
-          organization_id: string | null
-          parts_count: number | null
-          parts_total: number | null
-          plate_number: string | null
-          queue_order: number | null
-          services_count: number | null
-          services_total: number | null
-          started_at: string | null
-          status: string | null
-          subtotal: number | null
-          total: number | null
-          vehicle_color: string | null
-          vehicle_id: string | null
-          vehicle_make: string | null
-          vehicle_model: string | null
-          vehicle_odometer: number | null
-          vehicle_vin: string | null
-          vehicle_year: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "work_orders_branch_id_fkey"
-            columns: ["branch_id"]
-            isOneToOne: false
-            referencedRelation: "branches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_orders_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_orders_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "mv_customer_lifetime_value"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "work_orders_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "mv_work_order_summary"
-            referencedColumns: ["customer_id"]
-          },
-          {
-            foreignKeyName: "work_orders_mechanic_id_fkey"
-            columns: ["mechanic_id"]
-            isOneToOne: false
-            referencedRelation: "mv_work_order_summary"
-            referencedColumns: ["mechanic_id"]
-          },
-          {
-            foreignKeyName: "work_orders_mechanic_id_fkey"
-            columns: ["mechanic_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_orders_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_orders_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       mv_customer_lifetime_value: {
         Row: {
@@ -7134,7 +6626,7 @@ export type Database = {
         Args: { p_org_id: string; p_period?: string }
         Returns: Json
       }
-      get_public_invoice_by_token: { Args: { p_token: string }; Returns: Json }
+      get_public_estimate_by_token: { Args: { p_token: string }; Returns: Json }
       get_public_stats: { Args: never; Returns: Json }
       get_user_organization_id: { Args: never; Returns: string }
       get_user_organizations: {
@@ -7147,6 +6639,13 @@ export type Database = {
           organization_id: string
           role_id: string
           slug: string
+        }[]
+      }
+      get_users_by_ids: {
+        Args: { user_ids: string[] }
+        Returns: {
+          email: string
+          id: string
         }[]
       }
       get_vehicles_list: {
@@ -7167,10 +6666,6 @@ export type Database = {
         }
         Returns: Json
       }
-      increment_daily_spend: {
-        Args: { p_date: string; p_org_id: string; p_tokens: number }
-        Returns: undefined
-      }
       invoke_check_service_reminders: { Args: never; Returns: undefined }
       invoke_expire_subscriptions: { Args: never; Returns: undefined }
       invoke_telegram_notify_daily: { Args: never; Returns: undefined }
@@ -7190,7 +6685,6 @@ export type Database = {
           revoked_at: string
         }[]
       }
-      lookup_invite_by_token: { Args: { invite_token: string }; Returns: Json }
       lookup_user_by_email: {
         Args: { target_email: string }
         Returns: {
@@ -7221,24 +6715,15 @@ export type Database = {
         Args: { p_part_id: string }
         Returns: undefined
       }
-      register_mechanic_device:
-        | {
-            Args: {
-              p_device_fingerprint: string
-              p_device_name?: string
-              p_org_id: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_device_fingerprint: string
-              p_device_name?: string
-              p_org_id: string
-              p_registration_token: string
-            }
-            Returns: Json
-          }
+      register_mechanic_device: {
+        Args: {
+          p_device_fingerprint: string
+          p_device_name?: string
+          p_org_id: string
+          p_registration_token: string
+        }
+        Returns: Json
+      }
       renew_organization_subscription: {
         Args: { target_org_id: string }
         Returns: Json
@@ -7262,6 +6747,7 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      translate_plate: { Args: { p: string }; Returns: string }
       vault_get_secret: { Args: { p_key: string }; Returns: string }
       vault_migrate_all_secrets: { Args: never; Returns: number }
       vault_migrate_from_app_config: {
@@ -7282,12 +6768,6 @@ export type Database = {
       }
     }
     Enums: {
-      handoff_status:
-        | "bot"
-        | "pending_human"
-        | "human_active"
-        | "human_resolved"
-        | "bot_resumed"
       inventory_movement_type:
         | "purchase"
         | "sale"
@@ -7454,15 +6934,11 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
-      handoff_status: [
-        "bot",
-        "pending_human",
-        "human_active",
-        "human_resolved",
-        "bot_resumed",
-      ],
       inventory_movement_type: [
         "purchase",
         "sale",
@@ -7511,3 +6987,4 @@ export const Constants = {
     },
   },
 } as const
+
