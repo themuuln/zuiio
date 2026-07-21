@@ -27,8 +27,10 @@ class _TamgaAppState extends ConsumerState<TamgaApp> {
   @override
   Widget build(BuildContext context) {
     // Auth state өөрчлөгдөхөд GoRouter redirect-ийг дахин үнэлэх
+    // Use global ValueNotifier directly (no ref.read) to avoid
+    // Riverpod setState during ProviderScope mount (#4781).
     ref.listen<AsyncValue<AuthState>>(authStateProvider, (_, _) {
-      ref.read(routerRefreshProvider).value++;
+      routerRefreshNotifier.value++;
     });
 
     // Сессийн хугацаа дууссан үед re-auth dialog харуулах

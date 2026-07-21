@@ -26,7 +26,12 @@ class _UpdateOverlayState extends ConsumerState<UpdateOverlay> {
   @override
   void initState() {
     super.initState();
-    _checkForUpdate();
+    // Defer to post-frame callback to avoid triggering Riverpod
+    // provider creation during ProviderScope mount (issue #4781).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _checkForUpdate();
+    });
   }
 
   Future<void> _checkForUpdate() async {
@@ -45,7 +50,9 @@ class _UpdateOverlayState extends ConsumerState<UpdateOverlay> {
     final installInProgress = ref.watch(updateInstallInProgressProvider);
     final error = ref.watch(updateErrorProvider);
 
-    return Stack(
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Stack(
       children: [
         widget.child,
         if (!_isChecking && _availableVersion != null && !_dismissed)
@@ -156,7 +163,8 @@ class _UpdateOverlayState extends ConsumerState<UpdateOverlay> {
               ),
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 
