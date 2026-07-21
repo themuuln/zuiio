@@ -19,6 +19,7 @@ import {
   useLocalStorage,
   useLookup,
 } from "@zuiio/hooks";
+import { DynamicProductCreateDrawer } from "@/lib/dynamic-drawers";
 import dynamic from "next/dynamic";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { fetchProductsPage } from "@/app/(dashboard)/shop/actions";
@@ -51,13 +52,7 @@ const CameraScanner = dynamic(
   { ssr: false },
 );
 
-const ProductCreateDrawer = dynamic(
-  () =>
-    import("@/components/products/product-create-drawer").then(
-      (m) => m.ProductCreateDrawer,
-    ),
-  { ssr: false },
-);
+const ProductCreateDrawer = DynamicProductCreateDrawer;
 
 /**
  * Product grid — isolated from CatalogClient so cart mutations

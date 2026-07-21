@@ -10,7 +10,15 @@ import {
   ReceiptIcon,
   UsersIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import dynamic from "next/dynamic";
+import {
+  DynamicCategoryCreateDrawer as CategoryCreateDrawer,
+  DynamicCustomerCreateDrawer as CustomerCreateDrawer,
+  DynamicExpenseCreateDrawer as ExpensesCreateDrawer,
+  DynamicInvoiceDrawer as InvoiceDrawer,
+  DynamicProductCreateDrawer as ProductCreateDrawer,
+  DynamicSaleDrawer as SaleDrawer,
+  DynamicSupplierCreateDrawer as SupplierCreateDrawer,
+} from "@/lib/dynamic-drawers";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,62 +29,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const ProductCreateDrawer = dynamic(
-  () =>
-    import("@/components/products/product-create-drawer").then(
-      (m) => m.ProductCreateDrawer,
-    ),
-  { ssr: false },
-);
-
-const SaleDrawer = dynamic(
-  () =>
-    import("@/components/erp/quick-create-sale-wrapper").then(
-      (m) => m.QuickCreateSaleWrapper,
-    ),
-  { ssr: false },
-);
-
-const InvoiceDrawer = dynamic(
-  () =>
-    import("@/components/erp/quick-create-invoice-wrapper").then(
-      (m) => m.QuickCreateInvoiceWrapper,
-    ),
-  { ssr: false },
-);
-
-const ExpensesCreateDrawer = dynamic(
-  () =>
-    import("@/components/expenses/expense-create-drawer").then(
-      (m) => m.ExpenseCreateDrawer,
-    ),
-  { ssr: false },
-);
-
-const CustomerCreateDrawer = dynamic(
-  () =>
-    import("@/components/customers/customer-create-drawer").then(
-      (m) => m.CustomerCreateDrawer,
-    ),
-  { ssr: false },
-);
-
-const SupplierCreateDrawer = dynamic(
-  () =>
-    import("@/components/suppliers/supplier-create-drawer").then(
-      (m) => m.SupplierCreateDrawer,
-    ),
-  { ssr: false },
-);
-
-const CategoryCreateDrawer = dynamic(
-  () =>
-    import("@/components/categories/category-create-drawer").then(
-      (m) => m.CategoryCreateDrawer,
-    ),
-  { ssr: false },
-);
 
 type ActiveDrawer =
   | "product"
