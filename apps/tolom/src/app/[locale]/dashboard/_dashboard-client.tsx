@@ -85,7 +85,7 @@ function computeTrend(
 }
 
 export default function DashboardPage() {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
   const router = useRouter();
   const { openSheet } = usePageHeader();
   const { isMechanic, loading: roleLoading } = useCurrentUserRole();

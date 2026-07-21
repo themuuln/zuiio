@@ -58,7 +58,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         dangerouslySetInnerHTML={{
           __html:
             process.env.NODE_ENV === "development"
-              ? `<script src="https://unpkg.com/react-grab/dist/index.global.js" crossOrigin="anonymous"></script>`
+              ? `<script src="https://unpkg.com/react-grab/dist/index.global.js" crossorigin="anonymous"></script>`
               : "",
         }}
       />

@@ -3519,6 +3519,8 @@
     "serviceStorageDesc": "Баримт, зураг хадгалах сан",
     "serviceEmail": "И-мэйл",
     "serviceEmailDesc": "И-мэйл илгээх үйлчилгээ",
+    "serviceSms": "SMS",
+    "serviceSmsDesc": "SMS мэдэгдэл харилцагчдад",
     "serviceMessaging": "Мессенжер",
     "serviceMessagingDesc": "Мессенжер (Telegram/чатбот) түгээх үйлчилгээ",
     "serviceEdge": "Edge функцууд",

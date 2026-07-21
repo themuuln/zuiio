@@ -71,7 +71,7 @@ export const columns: ColumnDef<CustomerRow>[] = [
           </div>
           <div className="min-w-0">
             <Typography.Text className="truncate text-sm font-medium">
-              {getCustomerDisplayName(customer, t)}
+              {getCustomerDisplayName(customer, t as (key: string) => string)}
             </Typography.Text>
             <Typography.Muted className="text-xs text-muted-foreground capitalize">
               {customer.type}
@@ -141,7 +141,7 @@ export const columns: ColumnDef<CustomerRow>[] = [
     },
     cell: ({ row }) => {
       const t = useTranslations("customers");
-      const lastVisit = formatDate(row.original.last_visit_at, t);
+      const lastVisit = formatDate(row.original.last_visit_at, t as (key: string, values?: Record<string, number>) => string);
       return lastVisit ? (
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Clock className="size-3.5 shrink-0 text-muted-foreground/50" />
@@ -183,7 +183,7 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
           </div>
           <div className="min-w-0">
             <Typography.Text className="truncate text-sm font-medium">
-              {getCustomerDisplayName(customer, t)}
+              {getCustomerDisplayName(customer, t as (key: string) => string)}
             </Typography.Text>
             <div className="flex items-center gap-1">
               <Typography.Muted className="text-xs text-muted-foreground capitalize">
@@ -252,7 +252,7 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
     },
     cell: ({ row }) => {
       const t = useTranslations("customers");
-      const lastVisit = formatDate(row.original.last_visit_at, t);
+      const lastVisit = formatDate(row.original.last_visit_at, t as (key: string, values?: Record<string, number>) => string);
       return lastVisit ? (
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Clock className="size-3.5 shrink-0 text-muted-foreground/50" />

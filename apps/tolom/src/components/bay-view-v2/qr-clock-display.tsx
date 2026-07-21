@@ -54,7 +54,7 @@ export function QrClockDisplay({
   mechanicId: _mechanicId,
   mechanicName,
 }: QrClockDisplayProps) {
-  const t = useTranslations("clock");
+  const t = (useTranslations as any)("clock") as (key: string, values?: Record<string, string | number>) => string;
   const [state, setState] = useState<QrState>("loading");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
