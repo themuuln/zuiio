@@ -12,7 +12,7 @@ config({ path: resolve(__dirname, ".env.local") });
 // Parse supabase status to extract API keys
 try {
   const output = execSync("supabase status", {
-    cwd: resolve(__dirname, ".."),
+    cwd: __dirname,
     encoding: "utf-8",
     timeout: 10_000,
   });

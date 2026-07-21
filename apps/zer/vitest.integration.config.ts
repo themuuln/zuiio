@@ -2,6 +2,8 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    pool: "forks",
+    fileParallelism: false,
     globals: true,
     environment: "node",
     include: ["src/__integration__/**/*.{test,spec}.{ts,tsx}"],
