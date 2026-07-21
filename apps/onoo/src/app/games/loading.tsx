@@ -1,4 +1,4 @@
-import { Skeleton } from "@zuiio/ui";
+import { Skeleton } from "@/components/ui";
 import { GameCardSkeleton } from "../components/game-card";
 
 export default function GamesLoading() {

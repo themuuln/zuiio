@@ -15,6 +15,9 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:watch": "vitest --config vitest.integration.config.ts",
     "test:all": "vitest run && vitest run --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "npx playwright install --with-deps chromium",
+    "test:e2e:ci": "pnpm test:e2e:install && pnpm test:e2e",
     "clean:dev": "rm -rf .next/cache/turbopack .next/dev/cache/turbopack"
   },
   "dependencies": {
@@ -48,6 +51,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.4",
+    "@playwright/test": "catalog:",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",

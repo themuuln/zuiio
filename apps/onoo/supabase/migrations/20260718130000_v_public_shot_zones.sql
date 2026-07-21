@@ -10,6 +10,13 @@
 -- Zone keys match components/court-heatmap.tsx DEFAULT_SHOT_ZONES ids so the
 -- frontend maps rows to SVG geometry by id. Court geometry (same file):
 --   COURT_WIDTH = 600, COURT_HEIGHT = 550; basket center at (300, 60).
+-- Ensure stat_events has deleted_at column (may be missing on clean schema)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema='public' AND table_name='stat_events' AND column_name='deleted_at') THEN
+    ALTER TABLE public.stat_events ADD COLUMN deleted_at timestamptz;
+  END IF;
+END $$;
+
 --   paint: x in [172, 428], y in [22, 208]
 --   mid-left: x in [22, 170], y in [22, 300]
 --   mid-right: x in [430, 578], y in [22, 300]

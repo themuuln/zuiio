@@ -2,15 +2,15 @@ import { BarChart3, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@zuiio/ui";
-import { Button } from "@zuiio/ui";
+import { Badge } from "@/components/ui";
+import { Button } from "@/components/ui";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@zuiio/ui";
+} from "@/components/ui";
 import { PublicEmptyState } from "../components/public-empty-state";
 import { getStandings } from "../lib/data";
 import { StandingsTable } from "./components/standings-table";

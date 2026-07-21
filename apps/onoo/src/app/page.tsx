@@ -11,15 +11,13 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
-import { Button } from "@zuiio/ui";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@zuiio/ui";
-import { Input } from "@zuiio/ui";
+import { Button } from "@/components/ui"
+import { Card,
+CardAction,
+CardContent,
+CardHeader,
+CardTitle, } from "@/components/ui"
+import { Input } from "@/components/ui"
 import { cn } from "@/lib/utils";
 import { PublicEmptyState } from "./components/public-empty-state";
 import { CountdownTimer } from "./components/countdown-timer";

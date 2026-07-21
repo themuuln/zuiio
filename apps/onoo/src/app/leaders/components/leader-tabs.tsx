@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@zuiio/ui";
-import { Button } from "@zuiio/ui";
+import { Badge } from "@/components/ui";
+import { Button } from "@/components/ui";
 import {
   Card,
   CardAction,
@@ -14,8 +14,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@zuiio/ui";
-import { Skeleton } from "@zuiio/ui";
+} from "@/components/ui";
+import { Skeleton } from "@/components/ui";
 import {
   DndContext,
   closestCenter,

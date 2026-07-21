@@ -6,7 +6,7 @@ import { getLeaders, getPlayerById, getPlayerSeasonAverages } from "@/app/lib/da
 import { FlipStatCard } from "@/app/components/flip-stat-card";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@zuiio/ui";
+import { Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { StatNumber } from "./stat-number";
 

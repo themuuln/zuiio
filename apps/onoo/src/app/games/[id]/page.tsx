@@ -5,8 +5,8 @@ import { notFound } from "next/navigation";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { ReportErrorDialog } from "@/components/report-error-dialog";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@zuiio/ui";
-import { Button } from "@zuiio/ui";
+import { Badge } from "@/components/ui";
+import { Button } from "@/components/ui";
 import {
   Card,
   CardAction,
@@ -14,7 +14,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@zuiio/ui";
+} from "@/components/ui";
 import {
   Table,
   TableBody,
@@ -23,7 +23,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@zuiio/ui";
+} from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { GameStatusBadge } from "../../components/game-status-badge";
 import { PublicEmptyState } from "../../components/public-empty-state";

@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { Button } from "@zuiio/ui";
+import { Button } from "@/components/ui";
 import {
   Empty,
   EmptyContent,

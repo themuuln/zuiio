@@ -1,6 +1,6 @@
 import { CalendarDays, Radio } from "lucide-react";
 import type { Metadata } from "next";
-import { Badge } from "@zuiio/ui";
+import { Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { GameCard } from "../components/game-card";
 import { SwipeableGameCard } from "../components/swipeable-game-card";

@@ -4,6 +4,16 @@
 -- game_revisions, memberships, stat_events) are NOT seeded here because they
 -- require real auth.users rows — create those via the app or a service-key script.
 
+
+-- Schema fixups: add columns that baseline migrations don't have but seed expects
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema='public' AND table_name='season_player_stats' AND column_name='seconds_played') THEN
+    ALTER TABLE public.season_player_stats ADD COLUMN seconds_played integer;
+  END IF;
+  IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema='public' AND table_name='standings' AND column_name='w') THEN
+    ALTER TABLE public.standings ADD COLUMN w smallint, ADD COLUMN IF NOT EXISTS l smallint;
+  END IF;
+END $$;
 -- ============================================================================
 -- SPORTS & EVENT TYPES
 -- ============================================================================
@@ -1052,16 +1062,16 @@ BEGIN
     src_id := gen_random_uuid();
     rev_id := gen_random_uuid();
     INSERT INTO public.source_submissions (id, game_id, source_type, submitted_by, submitted_at, normalized_payload, status, reviewed_by, reviewed_at)
-    VALUES (src_id, tp[1], 'tracker_journal', admin_id, NOW(), '{"periods":4}'::jsonb, 'approved', admin_id, NOW())
+    VALUES (src_id, tp[1]::uuid, 'tracker_journal', admin_id, NOW(), '{"periods":4}'::jsonb, 'approved', admin_id, NOW())
     ON CONFLICT DO NOTHING;
     INSERT INTO public.game_revisions (id, game_id, revision_number, source_submission_id, state, journal, projection, validation_warnings, created_by, created_at, approved_by, approved_at)
-    VALUES (rev_id, tp[1], 1, src_id, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, admin_id, NOW(), admin_id, NOW())
+    VALUES (rev_id, tp[1]::uuid, 1, src_id, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, admin_id, NOW(), admin_id, NOW())
     ON CONFLICT DO NOTHING;
     -- Generate rosters from roster_entries
     INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
-    SELECT tp[1], re.team_season_id, re.player_id, re.jersey_number <= 5
+    SELECT tp[1]::uuid, re.team_season_id, re.player_id, re.jersey_number <= 5
     FROM public.roster_entries re
-    WHERE re.team_season_id IN (tp[2], tp[3]) AND re.left_at IS NULL
+    WHERE re.team_season_id IN (tp[2]::uuid, tp[3]::uuid) AND re.left_at IS NULL
     ON CONFLICT (game_id, player_id) DO NOTHING;
     -- Generate box scores
     INSERT INTO public.game_player_stats (game_id, player_id, team_season_id, revision_id, seconds_played, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf)
@@ -1071,7 +1081,7 @@ BEGIN
     (random() * 3)::int, (random() * 6 + 1)::int, (random() * 5)::int, (random() * 2)::int,
     (random() * 2)::int, (random() * 3)::int, (random() * 3 + 1)::int
     FROM public.game_rosters gr
-    WHERE gr.game_id = tp[1]
+    WHERE gr.game_id = tp[1]::uuid
     ON CONFLICT DO NOTHING;
   END LOOP;
 END $$;

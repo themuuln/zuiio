@@ -18,9 +18,15 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 -- Step 2: Migrate any legacy rows to v2 enum values (safe no-ops if no v1 rows exist)
-UPDATE public.games SET status = 'live_provisional' WHERE status = 'live';
-UPDATE public.games SET status = 'final_pending_review' WHERE status = 'final';
-UPDATE public.games SET status = 'league_verified' WHERE status = 'verified';
+DO $$ BEGIN UPDATE public.games SET status = 'live_provisional' WHERE status = 'live';
+EXCEPTION WHEN invalid_text_representation THEN NULL;
+END $$;
+DO $$ BEGIN UPDATE public.games SET status = 'final_pending_review' WHERE status = 'final';
+EXCEPTION WHEN invalid_text_representation THEN NULL;
+END $$;
+DO $$ BEGIN UPDATE public.games SET status = 'league_verified' WHERE status = 'verified';
+EXCEPTION WHEN invalid_text_representation THEN NULL;
+END $$;
 
 
 -- 2. Create missing tables

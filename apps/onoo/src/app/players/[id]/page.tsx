@@ -31,18 +31,15 @@ import {
   getPlayerCompetitions,
   getPlayerGameLog,
   getPlayerShootingProfile,
+  getPlayerShotScatter,
   getPlayerShotZones,
 } from "../../lib/data";
+import {
+  computeSeasonAdvancedStats,
+  computeStreaks,
+} from "./components/_advanced-helpers";
+import { AdvancedStatsTable } from "./components/advanced-stats-table";
 import { AwardsShelf } from "./components/awards-shelf";
-import { HeroCard } from "./components/hero-card";
-import { Milestones } from "./components/milestones";
-import { RecentGames } from "./components/recent-games";
-import { SeasonSelector } from "./components/season-selector";
-import { ShotChart } from "./components/shot-chart";
-import { StatCard } from "./components/stat-card";
-import { ScrollReveal, StaggerContainer, StaggerItem } from "./components/motion-wrapper";
-import { getPlayerShotScatter } from "../../lib/data";
-
 // Lazy-loaded chart components (recharts) — client-only, ~1.5M+ saved on non-chart pages
 import {
   FormTrends,
@@ -51,6 +48,18 @@ import {
   ShootingProfile,
   SkillRadar,
 } from "./components/chart-sections";
+import { HeroCard } from "./components/hero-card";
+import { Milestones } from "./components/milestones";
+import {
+  ScrollReveal,
+  StaggerContainer,
+  StaggerItem,
+} from "./components/motion-wrapper";
+import { BestWorstGames } from "./components/best-worst-games";
+import { RecentGames } from "./components/recent-games";
+import { SeasonSelector } from "./components/season-selector";
+import { ShotChart } from "./components/shot-chart";
+import { StatCard } from "./components/stat-card";
 
 interface PlayerPageProps {
   params: Promise<{ id: string }>;
@@ -73,8 +82,7 @@ export async function generateMetadata({
   const data = await getPlayerById(id);
   if (!data?.player)
     return {
-      title:
-        "Тоглогч олодсонгүй — Оноо",
+      title: "Тоглогч олодсонгүй — Оноо",
     };
 
   return {
@@ -159,6 +167,8 @@ export default async function PlayerPage({
   const shotScatter = activeCompetitionId
     ? await getPlayerShotScatter(id, activeCompetitionId)
     : [];
+  const advancedStats = computeSeasonAdvancedStats(playerGameLog);
+  const streaks = computeStreaks(playerGameLog);
   const seasonLabel = isCareer
     ? isEn
       ? "Career Total"
@@ -170,9 +180,7 @@ export default async function PlayerPage({
     "@type": "Person",
     name: player.canonical_name,
     alternateName: player.name_latin ?? undefined,
-    jobTitle:
-      player.position ??
-      "Баскетболч",
+    jobTitle: player.position ?? "Баскетболч",
     memberOf: {
       "@type": "SportsTeam",
       name: player.team_name,
@@ -182,9 +190,7 @@ export default async function PlayerPage({
       player.points_per_game != null
         ? `${player.points_per_game.toFixed(1)} нэгэн тоглолтод`
         : null,
-      player.games_played
-        ? `${player.games_played} тоглолт`
-        : null,
+      player.games_played ? `${player.games_played} тоглолт` : null,
     ]
       .filter(Boolean)
       .join(", "),
@@ -209,14 +215,10 @@ export default async function PlayerPage({
               className="inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
-              {isEn
-                ? "Players"
-                : "Тоглочид"}
+              {isEn ? "Players" : "Тоглочид"}
             </Link>
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--brand-sports)]">
-              {isEn
-                ? "Player Profile"
-                : "Тоглогчийн профайл"}
+              {isEn ? "Player Profile" : "Тоглогчийн профайл"}
             </p>
             <p className="text-sm text-muted-foreground">{seasonLabel}</p>
           </div>
@@ -298,6 +300,11 @@ export default async function PlayerPage({
           <RecentGames gameLines={playerGameLog} />
         </ScrollReveal>
 
+
+        {/* ─── Best / Worst game highlight ─── */}
+        {playerGameLog.length >= 3 && (
+          <BestWorstGames gameLines={playerGameLog} locale={locale} />
+        )}
         {/* ─── Main stats grid ─── */}
         <Tabs defaultValue="summary" className="gap-6">
           <TabsList className="grid w-full grid-cols-2 sm:w-fit">
@@ -307,9 +314,7 @@ export default async function PlayerPage({
             </TabsTrigger>
             <TabsTrigger value="gamelog">
               <TableProperties aria-hidden="true" />
-              {isEn
-                ? "All Games"
-                : "Бүх тоглот"}
+              {isEn ? "All Games" : "Бүх тоглот"}
             </TabsTrigger>
           </TabsList>
 
@@ -328,9 +333,7 @@ export default async function PlayerPage({
                     </span>
                     <div>
                       <CardTitle className="text-lg">
-                        {isEn
-                          ? "Season Trend"
-                          : "Улиралын хандлаг"}
+                        {isEn ? "Season Trend" : "Улиралын хандлаг"}
                       </CardTitle>
                       <CardDescription className="mt-1">
                         {isEn
@@ -395,7 +398,78 @@ export default async function PlayerPage({
               className="lg:col-span-12"
             />
 
+            {/* Advanced stats */}
+            {advancedStats && (
+              <AdvancedStatsTable stats={advancedStats} locale={locale} />
+            )}
 
+            {/* Streaks */}
+            {streaks && playerGameLog.length >= 3 && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--brand-sports)]/10 text-[var(--brand-sports)]">
+                      <TrendingUp className="size-5" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <CardTitle className="text-lg">
+                        {isEn ? "Streaks" : "Цуврал амжилтууд"}
+                      </CardTitle>
+                      <CardDescription className="mt-1">
+                        {isEn
+                          ? "Current and season-long runs"
+                          : "Одоогийн болон улирлын хамгийн урт цувралууд"}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        {isEn ? "Current Streak" : "Одоогийн цуврал"}
+                      </span>
+                      <span
+                        className={`text-xl font-bold tabular-nums ${
+                          streaks.currentStreak.type === "W"
+                            ? "text-success"
+                            : streaks.currentStreak.length > 1
+                              ? "text-destructive"
+                              : "text-muted-foreground"
+                        }`}
+                      >
+                        {streaks.currentStreak.type}
+                        {streaks.currentStreak.length}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        {isEn ? "Longest Win Streak" : "Хамгийн урт ялалт"}
+                      </span>
+                      <span className="text-xl font-bold tabular-nums text-success">
+                        W{streaks.longestWinStreak}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        {isEn ? "Active Scoring (10+)" : "Тогтвортой 10+ оноо"}
+                      </span>
+                      <span className="text-xl font-bold tabular-nums text-[var(--brand-sports)]">
+                        {streaks.currentScoringStreak}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        {isEn ? "Best Scoring Run" : "Хамгийн урт 10+ оноо"}
+                      </span>
+                      <span className="text-xl font-bold tabular-nums">
+                        {streaks.longestScoringStreak}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Skill radar + milestones row */}
             <div className="grid gap-6 lg:grid-cols-12">
@@ -409,9 +483,7 @@ export default async function PlayerPage({
                       </span>
                       <div>
                         <CardTitle className="text-lg">
-                          {isEn
-                            ? "Skill Radar"
-                            : "Чадалын супраган"}
+                          {isEn ? "Skill Radar" : "Чадалын супраган"}
                         </CardTitle>
                         <CardDescription className="mt-1">
                           {isEn
@@ -426,15 +498,11 @@ export default async function PlayerPage({
                     <div className="mb-2 flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-2">
                         <span className="size-2 rounded-full bg-[var(--brand-sports)]" />{" "}
-                        {isEn
-                          ? "Player"
-                          : "Тоглогч"}
+                        {isEn ? "Player" : "Тоглогч"}
                       </span>
                       <span className="inline-flex items-center gap-2">
                         <span className="size-2 rounded-full bg-muted-foreground" />{" "}
-                        {isEn
-                          ? "League Average"
-                          : "Лигийн дундаж"}
+                        {isEn ? "League Average" : "Лигийн дундаж"}
                       </span>
                     </div>
                     <SkillRadar
@@ -463,9 +531,7 @@ export default async function PlayerPage({
                     </span>
                     <div>
                       <CardTitle className="text-lg">
-                        {isEn
-                          ? "Career Highs"
-                          : "Онцлох амжилтууд"}
+                        {isEn ? "Career Highs" : "Онцлох амжилтууд"}
                       </CardTitle>
                       <CardDescription className="mt-1">
                         {isEn
@@ -493,16 +559,12 @@ export default async function PlayerPage({
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <CardTitle className="text-lg">
-                      {isEn
-                        ? "Game Log"
-                        : "Тоглоын дэлгэвр"}
+                      {isEn ? "Game Log" : "Тоглоын дэлгэвр"}
                     </CardTitle>
                     <CardDescription className="mt-1">
                       {playerGameLog.length}{" "}
-                      {isEn
-                        ? "verified games"
-                        : "баталгаажсан тогломт"}{" "}
-                      {"·"} {seasonLabel}
+                      {isEn ? "verified games" : "баталгаажсан тогломт"} {"·"}{" "}
+                      {seasonLabel}
                     </CardDescription>
                   </div>
                   <ReportErrorDialog playerId={id} />
@@ -529,12 +591,8 @@ export default async function PlayerPage({
                           <StatHead>{isEn ? "+/−" : "+/−"}</StatHead>
                           <StatHead>{getStatLabel("mpg", locale)}</StatHead>
                           <StatHead>{getStatLabel("pts", locale)}</StatHead>
-                          <StatHead>
-                            {isEn ? "FGM" : "Оруулсан"}
-                          </StatHead>
-                          <StatHead>
-                            {isEn ? "3PT" : "3 хооноо"}
-                          </StatHead>
+                          <StatHead>{isEn ? "FGM" : "Оруулсан"}</StatHead>
+                          <StatHead>{isEn ? "3PT" : "3 хооноо"}</StatHead>
                           <StatHead>{getStatLabel("reb", locale)}</StatHead>
                           <StatHead>{getStatLabel("ast", locale)}</StatHead>
                           <StatHead>{getStatLabel("stl", locale)}</StatHead>
@@ -575,12 +633,8 @@ export default async function PlayerPage({
                               </Badge>
                             </td>
                             <StatCell
-                              strong={
-                                line.team_score - line.opponent_score > 0
-                              }
-                              muted={
-                                line.team_score - line.opponent_score < 0
-                              }
+                              strong={line.team_score - line.opponent_score > 0}
+                              muted={line.team_score - line.opponent_score < 0}
                             >
                               {line.team_score - line.opponent_score > 0
                                 ? "+"
@@ -613,9 +667,7 @@ export default async function PlayerPage({
                       aria-hidden="true"
                     />
                     <h2 className="mt-3 font-semibold">
-                      {isEn
-                        ? "No game records"
-                        : "Тоглоны бүртцэ байна"}
+                      {isEn ? "No game records" : "Тоглоны бүртцэ байна"}
                     </h2>
                     <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                       {isEn

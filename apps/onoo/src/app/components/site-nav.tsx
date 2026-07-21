@@ -5,7 +5,7 @@ import { CircleDot, Search, Trophy } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Button } from "@zuiio/ui";
+import { Button } from "@/components/ui";
 import { SearchCommand } from "./search-command";
 
 const NAV_ITEMS = [

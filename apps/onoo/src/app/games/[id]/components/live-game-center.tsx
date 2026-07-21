@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@zuiio/ui";
+} from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 

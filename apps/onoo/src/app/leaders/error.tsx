@@ -1,14 +1,14 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { Button } from "@zuiio/ui";
+import { Button } from "@/components/ui";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@zuiio/ui";
+} from "@/components/ui";
 
 export default function LeadersError({
   _error,

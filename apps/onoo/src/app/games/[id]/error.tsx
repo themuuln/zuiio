@@ -2,7 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@zuiio/ui";
+import { Button } from "@/components/ui";
 import {
   Empty,
   EmptyContent,

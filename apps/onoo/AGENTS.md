@@ -62,6 +62,36 @@ apps/onoo/
 - Always check existing tables before creating new ones
 - RLS policies on all tables
 
+### Testing — mandatory for every change
+Every new feature, bug fix, or refactor MUST include tests AND be verified by running them.
+
+| Change type | Required test | Tool |
+|---|---|---|
+| Pure utility / helper / math | Unit test | `vitest` |
+| React component | Component test | Vitest + RTL |
+| API route / Server Action | Integration test (real DB) | `vitest --config vitest.integration.config.ts` |
+| RLS policy | Integration test proving user isolation | `vitest --config vitest.integration.config.ts` |
+| Database query / aggregation | Integration test (real DB) | `vitest --config vitest.integration.config.ts` |
+| Auth flow | Integration test via Supabase JS client | `vitest --config vitest.integration.config.ts` |
+| Critical user flow (login, browse) | E2E (sparingly) | Playwright |
+
+**FastGate — agent verification contract:**
+Before declaring any change complete, you MUST run `pnpm test:all`.
+1. If tests pass → done.
+2. If tests fail → diagnose the failure, fix it, re-run `pnpm test:all`.
+3. If still failing after 3 attempts → ESCALATE. Do NOT work around the gate.
+
+**Pre-requisites for running integration tests:**
+- `colima start --cpu 4 --memory 8 --dns 8.8.8.8` (one-time)
+- `supabase start --exclude studio,imgproxy,logflare,edge-runtime,vector,analytics`
+- The above must be running BEFORE `pnpm test:all`
+
+**Mock rule:** Never mock Supabase for integration tests. Use the real Postgres + Auth stack via `supabase start`. Mock-based unit tests are acceptable ONLY for pure logic (formatting, validation, date math).
+
+**Three test layers:**
+1. **Unit** (`pnpm test:unit`) — 231 tests, no DB needed, runs in CI first
+2. **Integration** (`pnpm test:integration`) — 12 tests, requires Supabase stack
+3. **E2E** (`pnpm test:e2e`) — 4 tests, requires Supabase + `@zuiio/ui` build
 ## Core Package (@onoo/core)
 
 Framework-agnostic. Import from barrel: `import { deriveBoxScore } from "@onoo/core"`
@@ -96,7 +126,10 @@ pnpm -F @onoo/core test     # Run core package tests
 pnpm validate:types         # Type-check
 pnpm lint                   # Biome lint
 pnpm format                 # Biome format
-```
+pnpm test:unit              # Fast unit tests (231 tests)
+pnpm test:integration       # Real Supabase integration tests (12 tests)
+pnpm test:e2e               # Playwright E2E tests (4 tests)
+pnpm test:all               # Unit + Integration (CI gate)
 
 ## Permission Boundaries
 
@@ -105,6 +138,8 @@ pnpm format                 # Biome format
 - Preserve stat event immutability (append-only journal)
 - Keep league/org isolation in every query
 - Use pnpm and app-scoped commands (`pnpm build`, not root build)
+- **Run `pnpm test:all` and confirm all 243 tests pass before finishing any change**
+- **When adding/modifying DB schema, RLS, or API routes: write or update integration tests in `src/app/admin/api/__tests__/*.integration.test.ts`**
 - Verify stat derivations against source events after changes
 - Regenerate Supabase types using CLI/MCP after migrations
 

@@ -143,17 +143,13 @@ export function computeSeasonAdvancedStats(
     avgGameScore: safe(avgGameScore),
     astTovRatio: safe(astTov),
     tovPct: safe(tovPctVal),
-    ptsPer36: safe(
-      totals.minutes > 0 ? (totals.pts / totals.minutes) * 36 : 0,
-    ),
+    ptsPer36: safe(totals.minutes > 0 ? (totals.pts / totals.minutes) * 36 : 0),
     rebPer36: safe(
       totals.minutes > 0
         ? ((totals.oreb + totals.dreb) / totals.minutes) * 36
         : 0,
     ),
-    astPer36: safe(
-      totals.minutes > 0 ? (totals.ast / totals.minutes) * 36 : 0,
-    ),
+    astPer36: safe(totals.minutes > 0 ? (totals.ast / totals.minutes) * 36 : 0),
     mpg: safe(totals.minutes / gp),
     gp,
   };
@@ -182,10 +178,7 @@ export function computeHomeAwaySplits(
 ): { home: HomeAwaySplit; away: HomeAwaySplit } | null {
   if (gameLines.length === 0) return null;
 
-  function splitStats(
-    games: PlayerGameLine[],
-    label: string,
-  ): HomeAwaySplit {
+  function splitStats(games: PlayerGameLine[], label: string): HomeAwaySplit {
     if (games.length === 0) {
       return {
         label,
@@ -236,9 +229,7 @@ export function computeHomeAwaySplits(
       losses: gp - wins,
       winPct: gp > 0 ? wins / gp : 0,
       ppg: safe(totalPts / gp),
-      rpg: safe(
-        games.reduce((s, g) => s + g.oreb + g.dreb, 0) / gp,
-      ),
+      rpg: safe(games.reduce((s, g) => s + g.oreb + g.dreb, 0) / gp),
       apg: safe(games.reduce((s, g) => s + g.ast, 0) / gp),
       tsPct: safe(calcTsPct(totalPts, totalFga, totalFta)),
       efgPct: safe(calcEfgPct(totalFgm, totalFga, totalTpm)),
@@ -247,7 +238,88 @@ export function computeHomeAwaySplits(
   }
 
   return {
-    home: splitStats(gameLines.filter((g) => g.is_home), "Гэр"),
-    away: splitStats(gameLines.filter((g) => !g.is_home), "Зочид"),
+    home: splitStats(
+      gameLines.filter((g) => g.is_home),
+      "Гэр",
+    ),
+    away: splitStats(
+      gameLines.filter((g) => !g.is_home),
+      "Зочид",
+    ),
+  };
+}
+// ---------------------------------------------------------------------------
+// Streaks
+// ---------------------------------------------------------------------------
+
+export interface PlayerStreaks {
+  /** Current streak type ("W" or "L") and length */
+  currentStreak: { type: "W" | "L"; length: number };
+  /** Longest win streak this season */
+  longestWinStreak: number;
+  /** Longest loss streak this season */
+  longestLossStreak: number;
+  /** Longest streak of games with 10+ points */
+  longestScoringStreak: number;
+  /** Current consecutive games with 10+ points */
+  currentScoringStreak: number;
+}
+
+export function computeStreaks(
+  gameLines: Pick<PlayerGameLine, "result" | "pts">[],
+): PlayerStreaks {
+  // Work from most recent backward (gameLines is chronological)
+  const recent = [...gameLines].reverse();
+
+  // Current W/L streak
+  let currentType: "W" | "L" | null = null;
+  let currentLen = 0;
+  for (const g of recent) {
+    if (currentType === null) currentType = g.result;
+    if (g.result === currentType) currentLen++;
+    else break;
+  }
+
+  // Longest streaks
+  let winStreak = 0;
+  let lossStreak = 0;
+  let curWin = 0;
+  let curLoss = 0;
+  for (const g of gameLines) {
+    if (g.result === "W") {
+      curWin++;
+      curLoss = 0;
+      winStreak = Math.max(winStreak, curWin);
+    } else {
+      curLoss++;
+      curWin = 0;
+      lossStreak = Math.max(lossStreak, curLoss);
+    }
+  }
+
+  // Scoring streaks (10+ pts)
+  let longestSc = 0;
+  let curSc = 0;
+  let currentSc = 0;
+  for (const g of gameLines) {
+    if (g.pts >= 10) {
+      curSc++;
+      longestSc = Math.max(longestSc, curSc);
+    } else {
+      curSc = 0;
+    }
+  }
+  // Current scoring streak (from most recent forward)
+  for (const g of recent) {
+    if (g.pts >= 10) currentSc++;
+    else break;
+  }
+
+  return {
+    currentStreak: { type: currentType ?? "W", length: currentLen },
+    longestWinStreak: winStreak,
+    longestLossStreak: lossStreak,
+    longestScoringStreak: longestSc,
+    currentScoringStreak: currentSc,
   };
 }

@@ -8,8 +8,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@zuiio/ui";
-import { Skeleton } from "@zuiio/ui";
+} from "@/components/ui";
+import { Skeleton } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { GameWithTeams } from "../lib/shared";
 import { formatGameTime } from "../lib/shared";

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarDays, Trophy, Users } from "lucide-react";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@zuiio/ui";
+import { Badge } from "@/components/ui";
 import { PublicEmptyState } from "../../components/public-empty-state";
 import {
   getCompetition,

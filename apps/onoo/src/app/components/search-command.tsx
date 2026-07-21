@@ -9,8 +9,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@zuiio/ui";
-import { Input } from "@zuiio/ui";
+} from "@/components/ui";
+import { Input } from "@/components/ui";
 
 // ---------------------------------------------------------------------------
 // Types

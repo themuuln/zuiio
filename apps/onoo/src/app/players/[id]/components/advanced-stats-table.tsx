@@ -57,7 +57,9 @@ function StatCell({
       <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
-      <span className="text-base sm:text-xl font-bold tabular-nums">{value}</span>
+      <span className="text-base sm:text-xl font-bold tabular-nums">
+        {value}
+      </span>
       {benchmark != null && (
         <span className="text-xs text-muted-foreground">
           {isEn ? "Lg avg" : "Лигийн"}: {pct(benchmark)}
@@ -118,11 +120,7 @@ export function AdvancedStatsTable({
             value={ratio(stats.astTovRatio)}
             isEn={isEn}
           />
-          <StatCell
-            label="TOV%"
-            value={pct(stats.tovPct)}
-            isEn={isEn}
-          />
+          <StatCell label="TOV%" value={pct(stats.tovPct)} isEn={isEn} />
         </div>
         <div className="mt-5 grid grid-cols-3 gap-3 sm:gap-6 border-t pt-5">
           <StatCell

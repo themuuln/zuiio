@@ -1,5 +1,5 @@
-import { Skeleton } from "@zuiio/ui";
-import { Card, CardContent, CardHeader } from "@zuiio/ui";
+import { Skeleton } from "@/components/ui";
+import { Card, CardContent, CardHeader } from "@/components/ui";
 import { LeaderTabsSkeleton } from "./components/leader-tabs";
 
 export default function LeadersLoading() {
