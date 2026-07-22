@@ -1,6 +1,5 @@
 {
-  "regions": ["sin1"],
-  "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile --ignore-scripts",
-  "buildCommand": "cd ../.. && pnpm --filter onoo-web build",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm exec turbo run build --filter=onoo-web",
   "outputDirectory": ".next"
 }
