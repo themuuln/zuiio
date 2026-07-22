@@ -23,7 +23,9 @@ describe("env", () => {
     });
 
     it("throws when env var is missing", () => {
-      expect(() => env("NONEXISTENT_VAR")).toThrow("Missing env var: NONEXISTENT_VAR");
+      expect(() => env("NONEXISTENT_VAR")).toThrow(
+        "Missing env var: NONEXISTENT_VAR",
+      );
     });
 
     it("throws when env var is empty string", () => {

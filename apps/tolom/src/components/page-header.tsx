@@ -99,7 +99,10 @@ export function PageHeader({
   onTabChange,
   actions,
 }: PageHeaderProps) {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { push } = useRouter();
   const { searchItems } = useNavigation();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -406,7 +409,10 @@ export function PageHeader({
 }
 
 function SettingsShortcut() {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const pathname = usePathname();
   const isActive = pathname === "/dashboard/settings";
 
@@ -437,7 +443,10 @@ function SettingsShortcut() {
 }
 
 function QuickCreateHeader() {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const {
     setNewCustomerDialogOpen,
     setNewVehicleDialogOpen,

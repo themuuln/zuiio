@@ -56,4 +56,3 @@ export function useDashboard(
     retry: 0,
   });
 }
-

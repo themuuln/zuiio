@@ -12,8 +12,6 @@
 **/node_modules/
 
 # Sibling applications (not part of agent-gateway's build graph)
-apps/zer/
-apps/tolom/
 apps/onoo/
 apps/tamga/
 apps/khosuud/

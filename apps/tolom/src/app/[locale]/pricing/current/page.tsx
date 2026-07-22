@@ -117,9 +117,18 @@ function FeatureIcon({ status }: { status: FeatureStatus }) {
 }
 
 export default function PricingCurrentPage() {
-  const t = useTranslations("pricingCurrent") as (key: string, values?: Record<string, string | number>) => string;
-  const appT = useTranslations("app") as (key: string, values?: Record<string, string | number>) => string;
-  const authT = useTranslations("auth") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("pricingCurrent") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const appT = useTranslations("app") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const authT = useTranslations("auth") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [annual, setAnnual] = useState(false);
 
   return (

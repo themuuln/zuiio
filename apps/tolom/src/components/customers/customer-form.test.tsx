@@ -1,7 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "@/test/test-utils";
 import { CustomerForm } from "./customer-form";
@@ -108,9 +107,7 @@ describe("CustomerForm", () => {
       renderForm({ mode: "quick" });
       await user.click(screen.getByRole("button", { name: /create/i }));
       await waitFor(() => {
-        expect(
-          screen.getByText(/first name is required/i),
-        ).toBeInTheDocument();
+        expect(screen.getByText(/first name is required/i)).toBeInTheDocument();
       });
     });
 
@@ -144,9 +141,9 @@ describe("CustomerForm", () => {
         mode: "full",
         initialData: { firstName: "Jane", lastName: "Doe", phone: "99112233" },
       });
-      expect(q("firstName")!.value).toBe("Jane");
-      expect(q("lastName")!.value).toBe("Doe");
-      expect(phoneInput()!.value).toBe("99112233");
+      expect(q("firstName")?.value).toBe("Jane");
+      expect(q("lastName")?.value).toBe("Doe");
+      expect(phoneInput()?.value).toBe("99112233");
     });
 
     it("preserves typed values across renders", async () => {

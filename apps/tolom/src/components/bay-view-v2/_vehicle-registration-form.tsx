@@ -35,7 +35,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { formatPlateInput } from "@/lib/form-ux";
-import { normalizeMongolianPlate, transliterateMongolianPlate } from "@/lib/form-validation";
+import {
+  normalizeMongolianPlate,
+  transliterateMongolianPlate,
+} from "@/lib/form-validation";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { reportServerError } from "@/lib/sentry-report-server";
 import {
@@ -49,7 +52,6 @@ import { StatusTimeline } from "./_status-timeline";
 import {
   EMPTY_LOOKUP,
   type LookupResult,
-  resolveQueueIds,
   type SearchVehicleResult,
   type VehicleRegistrationFormValues,
   vehicleRegistrationSchema,
@@ -158,28 +160,33 @@ export function VehicleRegistrationForm({
   }, [lookupResult, form]);
 
   // ── Lookup handler ────────────────────────────────────────
-  const handleLookup = useCallback(async (plateOverride?: string) => {
-    const plateToSearch = plateOverride ?? plate;
-    if (!plateToSearch.trim()) return;
-    setLookupLoading(true);
-    setLookupError(null);
-    setLookupDone(false);
-    setSaveSuccess(false);
-    setSaveError(null);
+  const handleLookup = useCallback(
+    async (plateOverride?: string) => {
+      const plateToSearch = plateOverride ?? plate;
+      if (!plateToSearch.trim()) return;
+      setLookupLoading(true);
+      setLookupError(null);
+      setLookupDone(false);
+      setSaveSuccess(false);
+      setSaveError(null);
 
-    try {
-      const result = await lookupVehicleByPlate(plateToSearch.trim().toUpperCase());
-      setLookupResult(result);
-      setLookupDone(true);
-    } catch (err) {
-      reportServerError("Unexpected error", err);
-      setLookupError(
-        err instanceof Error ? err.message : t("common.somethingWentWrong"),
-      );
-    } finally {
-      setLookupLoading(false);
-    }
-  }, [plate, t]);
+      try {
+        const result = await lookupVehicleByPlate(
+          plateToSearch.trim().toUpperCase(),
+        );
+        setLookupResult(result);
+        setLookupDone(true);
+      } catch (err) {
+        reportServerError("Unexpected error", err);
+        setLookupError(
+          err instanceof Error ? err.message : t("common.somethingWentWrong"),
+        );
+      } finally {
+        setLookupLoading(false);
+      }
+    },
+    [plate, t],
+  );
 
   // ── Vehicle search (debounced) ────────────────────────────
   const handleSearch = useCallback((term: string) => {
@@ -290,7 +297,16 @@ export function VehicleRegistrationForm({
         setSaving(false);
       }
     },
-    [plate, getSavePayload, t, branchId, assignBayNumber, onRefresh, onAssigned, onQueued],
+    [
+      plate,
+      getSavePayload,
+      t,
+      branchId,
+      assignBayNumber,
+      onRefresh,
+      onAssigned,
+      onQueued,
+    ],
   );
 
   // ── Existing vehicle queue handler ────────────────────────
@@ -325,7 +341,15 @@ export function VehicleRegistrationForm({
     } catch (err) {
       reportServerError("Unexpected error", err);
     }
-  }, [lookupResult, branchId, assignBayNumber, onRefresh, onAssigned, onQueued, form]);
+  }, [
+    lookupResult,
+    branchId,
+    assignBayNumber,
+    onRefresh,
+    onAssigned,
+    onQueued,
+    form,
+  ]);
 
   // ── Derived state ─────────────────────────────────────────
   const formValues = form.watch();
@@ -525,9 +549,7 @@ export function VehicleRegistrationForm({
               <Field data-invalid={!!form.formState.errors.year}>
                 <FieldContent>
                   <NumericInput
-                    value={
-                      formValues.year ? parseInt(formValues.year, 10) : 0
-                    }
+                    value={formValues.year ? parseInt(formValues.year, 10) : 0}
                     onChange={(val) =>
                       form.setValue("year", val?.toString() ?? "", {
                         shouldValidate: true,
@@ -627,17 +649,13 @@ export function VehicleRegistrationForm({
                   <User className="size-4 text-primary" />
                 </div>
                 <div>
-                  <span className="text-sm font-medium">
-                    {t("ownerInfo")}
-                  </span>
+                  <span className="text-sm font-medium">{t("ownerInfo")}</span>
                   {formValues.custFirstName || formValues.custPhone ? (
                     <p className="text-xs text-muted-foreground">
                       {[formValues.custFirstName, formValues.custLastName]
                         .filter(Boolean)
                         .join(" ") || t("unknown")}
-                      {formValues.custPhone
-                        ? ` · ${formValues.custPhone}`
-                        : ""}
+                      {formValues.custPhone ? ` · ${formValues.custPhone}` : ""}
                     </p>
                   ) : (
                     <p className="text-xs text-muted-foreground">
@@ -672,30 +690,22 @@ export function VehicleRegistrationForm({
               <DetailDrawer.Body>
                 <div className="flex flex-col gap-4">
                   <div className="grid grid-cols-2 gap-2">
-                    <Field
-                      data-invalid={!!form.formState.errors.custFirstName}
-                    >
+                    <Field data-invalid={!!form.formState.errors.custFirstName}>
                       <FieldContent>
                         <Input
                           placeholder="e.g. Bat"
                           className="text-xs"
-                          aria-invalid={
-                            !!form.formState.errors.custFirstName
-                          }
+                          aria-invalid={!!form.formState.errors.custFirstName}
                           {...form.register("custFirstName")}
                         />
                       </FieldContent>
                     </Field>
-                    <Field
-                      data-invalid={!!form.formState.errors.custLastName}
-                    >
+                    <Field data-invalid={!!form.formState.errors.custLastName}>
                       <FieldContent>
                         <Input
                           placeholder="e.g. Erdene"
                           className="text-xs"
-                          aria-invalid={
-                            !!form.formState.errors.custLastName
-                          }
+                          aria-invalid={!!form.formState.errors.custLastName}
                           {...form.register("custLastName")}
                         />
                       </FieldContent>
@@ -759,12 +769,7 @@ export function VehicleRegistrationForm({
           </div>
 
           {/* ── Save Button (inline for new vehicles) ── */}
-          <Button
-            type="submit"
-            disabled={saving}
-            size="lg"
-            className="w-full"
-          >
+          <Button type="submit" disabled={saving} size="lg" className="w-full">
             {saving ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
@@ -827,8 +832,7 @@ export function VehicleRegistrationForm({
                       {lookupResult.vehicle.plate_number}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {lookupResult.vehicle.make}{" "}
-                      {lookupResult.vehicle.model}
+                      {lookupResult.vehicle.make} {lookupResult.vehicle.model}
                       {lookupResult.vehicle.year
                         ? ` · ${lookupResult.vehicle.year}`
                         : ""}

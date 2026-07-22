@@ -6,10 +6,10 @@ import {
   ClipboardList,
   Eye,
   Gauge,
+  Loader2,
   Package,
   Pencil,
   Plus,
-  Loader2,
   Star,
   Trash2,
   Upload,
@@ -87,8 +87,14 @@ export function PartsTab({
   onNavigate,
 }: PartsTabProps) {
   const locale = useLocale();
-  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
-  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const commonT = useTranslations("common") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const now = useClientNow();
   const qc = useQueryClient();
 
@@ -124,7 +130,9 @@ export function PartsTab({
   const [thresholdValue, setThresholdValue] = useState("");
   const [showDefaultThreshold, setShowDefaultThreshold] = useState(false);
   const [defaultThresholdValue, setDefaultThresholdValue] = useState("5");
-  const [deletingPart, setDeletingPart] = useState<PartsCatalogItem | null>(null);
+  const [deletingPart, setDeletingPart] = useState<PartsCatalogItem | null>(
+    null,
+  );
 
   // Local sorting
   const [sortKey, setSortKey] = useState<SortKey>("popularity");
@@ -949,7 +957,9 @@ export function PartsTab({
                 <CardContent className="p-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-muted-foreground">{t("price")}</span>
+                      <span className="text-muted-foreground">
+                        {t("price")}
+                      </span>
                       <p className="font-medium">
                         {viewingPart.default_price
                           ? formatMNT(viewingPart.default_price)
@@ -957,22 +967,30 @@ export function PartsTab({
                       </p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t("onHand")}</span>
+                      <span className="text-muted-foreground">
+                        {t("onHand")}
+                      </span>
                       <p className="font-medium">
-                        {balanceMap.get(viewingPart.id)?.quantity_on_hand ?? 0} {viewingPart.unit ?? "piece"}
+                        {balanceMap.get(viewingPart.id)?.quantity_on_hand ?? 0}{" "}
+                        {viewingPart.unit ?? "piece"}
                       </p>
                     </div>
                     {viewingPart.category && (
                       <div>
-                        <span className="text-muted-foreground">{t("category")}</span>
+                        <span className="text-muted-foreground">
+                          {t("category")}
+                        </span>
                         <p className="font-medium">{viewingPart.category}</p>
                       </div>
                     )}
                     {thresholdMap[viewingPart.id] != null && (
                       <div>
-                        <span className="text-muted-foreground">{t("minThreshold")}</span>
+                        <span className="text-muted-foreground">
+                          {t("minThreshold")}
+                        </span>
                         <p className="font-medium">
-                          {thresholdMap[viewingPart.id]} {viewingPart.unit ?? "piece"}
+                          {thresholdMap[viewingPart.id]}{" "}
+                          {viewingPart.unit ?? "piece"}
                         </p>
                       </div>
                     )}
@@ -1021,13 +1039,11 @@ export function PartsTab({
               <Pencil className="size-4" />
               {t("edit")}
             </Button>
-            <Link 
+            <Link
               href={`/dashboard/inventory/parts/${viewingPart?.id}`}
               className="flex-1"
             >
-              <Button
-                className="w-full gap-1.5"
-              >
+              <Button className="w-full gap-1.5">
                 <Eye className="size-4" />
                 {t("viewFull")}
               </Button>

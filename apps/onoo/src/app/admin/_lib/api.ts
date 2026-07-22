@@ -282,10 +282,7 @@ export interface ShopProductRow {
   category?: string;
 }
 
-export const shopProductsApi = {
-  list: () =>
-    fetch("/admin/api/products").then((r) => r.json()) as Promise<ShopProductRow[]>,
-};
+export const shopProductsApi = createEntityApi<ShopProductRow>(`${BASE}/products`);
 
 // ── Shop: Orders ──
 

@@ -47,7 +47,10 @@ const roleColors: Record<string, string> = {
 };
 
 export default function RolesPage() {
-  const t = useTranslations("organization.roles") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("organization.roles") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: orgInfo } = useCurrentOrg();
   const orgId = orgInfo?.orgId ?? "";
 

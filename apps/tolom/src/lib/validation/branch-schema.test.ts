@@ -28,18 +28,23 @@ describe("branchSchema", () => {
   });
 
   it("rejects invalid email", () => {
-    const result = branchSchema.safeParse({ name: "Branch", email: "not-an-email" });
+    const result = branchSchema.safeParse({
+      name: "Branch",
+      email: "not-an-email",
+    });
     expect(result.success).toBe(false);
   });
 
   it("accepts empty email string", () => {
-    expect(
-      branchSchema.safeParse({ name: "Branch", email: "" }).success,
-    ).toBe(true);
+    expect(branchSchema.safeParse({ name: "Branch", email: "" }).success).toBe(
+      true,
+    );
   });
 
   it("rejects missing name", () => {
-    expect(branchSchema.safeParse({ email: "test@test.com" }).success).toBe(false);
+    expect(branchSchema.safeParse({ email: "test@test.com" }).success).toBe(
+      false,
+    );
   });
   it("accepts missing email (email is optional)", () => {
     expect(branchSchema.safeParse({ name: "Branch" }).success).toBe(true);

@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { serviceSchema, addWorkOrderServiceSchema } from "./service-schema";
+import { addWorkOrderServiceSchema, serviceSchema } from "./service-schema";
 
 describe("serviceSchema", () => {
   it("accepts valid service", () => {
     expect(
-      serviceSchema.safeParse({ name: "Oil Change", defaultPrice: "30000" }).success,
+      serviceSchema.safeParse({ name: "Oil Change", defaultPrice: "30000" })
+        .success,
     ).toBe(true);
   });
 
@@ -28,7 +29,9 @@ describe("serviceSchema", () => {
   });
 
   it("rejects missing name", () => {
-    expect(serviceSchema.safeParse({ defaultPrice: "10000" }).success).toBe(false);
+    expect(serviceSchema.safeParse({ defaultPrice: "10000" }).success).toBe(
+      false,
+    );
   });
 
   it("rejects missing defaultPrice", () => {
@@ -43,19 +46,22 @@ describe("serviceSchema", () => {
 
   it("rejects non-numeric defaultPrice", () => {
     expect(
-      serviceSchema.safeParse({ name: "Service", defaultPrice: "free" }).success,
+      serviceSchema.safeParse({ name: "Service", defaultPrice: "free" })
+        .success,
     ).toBe(false);
   });
 
   it("rejects negative defaultPrice", () => {
     expect(
-      serviceSchema.safeParse({ name: "Service", defaultPrice: "-100" }).success,
+      serviceSchema.safeParse({ name: "Service", defaultPrice: "-100" })
+        .success,
     ).toBe(false);
   });
 
   it("accepts zero defaultPrice", () => {
     expect(
-      serviceSchema.safeParse({ name: "Free Service", defaultPrice: "0" }).success,
+      serviceSchema.safeParse({ name: "Free Service", defaultPrice: "0" })
+        .success,
     ).toBe(true);
   });
 });

@@ -76,9 +76,9 @@ describe("safeFetch", () => {
     const networkError = new Error("Network failure");
     vi.mocked(fetch).mockRejectedValue(networkError);
 
-    await expect(
-      safeFetch("https://api.example.com/data"),
-    ).rejects.toThrow("Network failure");
+    await expect(safeFetch("https://api.example.com/data")).rejects.toThrow(
+      "Network failure",
+    );
     expect(mockRedirectToLogin).not.toHaveBeenCalled();
   });
 

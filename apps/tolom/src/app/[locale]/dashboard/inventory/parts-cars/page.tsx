@@ -23,7 +23,10 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatMNT } from "@/lib/utils";
 
 export default function PartsCarsListPage() {
-  const t = useTranslations("partsCars") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("partsCars") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: cars = [], isPending } = usePartsCars(orgId);

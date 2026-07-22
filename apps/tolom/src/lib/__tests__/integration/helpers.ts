@@ -130,10 +130,7 @@ export async function addUserToOrg(
 /**
  * Create a test branch for an organization.
  */
-export async function createTestBranch(
-  admin: SupabaseClient,
-  orgId: string,
-) {
+export async function createTestBranch(admin: SupabaseClient, orgId: string) {
   const { data, error } = await admin
     .from("branches")
     .insert({
@@ -150,10 +147,7 @@ export async function createTestBranch(
 /**
  * Create a test customer for an organization.
  */
-export async function createTestCustomer(
-  admin: SupabaseClient,
-  orgId: string,
-) {
+export async function createTestCustomer(admin: SupabaseClient, orgId: string) {
   const { data, error } = await admin
     .from("customers")
     .insert({
@@ -181,7 +175,7 @@ export async function createTestVehicle(
     .insert({
       organization_id: orgId,
       customer_id: customerId,
-      plate_number: `${String(Math.floor(1000 + Math.random() * 9000))}${['УБХ', 'УБЯ', 'УБТ', 'УБЦ', 'УБС', 'ХАА', 'ХБУ', 'ХАС'][Math.floor(Math.random() * 8)]}`,
+      plate_number: `${String(Math.floor(1000 + Math.random() * 9000))}${["УБХ", "УБЯ", "УБТ", "УБЦ", "УБС", "ХАА", "ХБУ", "ХАС"][Math.floor(Math.random() * 8)]}`,
       make: "Toyota",
       model: "Camry",
     })

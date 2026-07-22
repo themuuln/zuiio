@@ -1,7 +1,6 @@
 "use client";
 
 import { Loader2, Save } from "lucide-react";
-import type { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";

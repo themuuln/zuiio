@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  quickVehicleSchema,
-  vehicleSchema,
   partsCarSchema,
+  quickVehicleSchema,
   vehicleRegistrationSchema,
+  vehicleSchema,
 } from "./vehicle-schema";
 
 describe("quickVehicleSchema", () => {
@@ -19,25 +19,41 @@ describe("quickVehicleSchema", () => {
 
   it("rejects empty plateNumber", () => {
     expect(
-      quickVehicleSchema.safeParse({ plateNumber: "", make: "Toyota", model: "Camry" }).success,
+      quickVehicleSchema.safeParse({
+        plateNumber: "",
+        make: "Toyota",
+        model: "Camry",
+      }).success,
     ).toBe(false);
   });
 
   it("rejects invalid plate format", () => {
     expect(
-      quickVehicleSchema.safeParse({ plateNumber: "ABC", make: "Toyota", model: "Camry" }).success,
+      quickVehicleSchema.safeParse({
+        plateNumber: "ABC",
+        make: "Toyota",
+        model: "Camry",
+      }).success,
     ).toBe(false);
   });
 
   it("rejects empty make", () => {
     expect(
-      quickVehicleSchema.safeParse({ plateNumber: "4444УНА", make: "", model: "Camry" }).success,
+      quickVehicleSchema.safeParse({
+        plateNumber: "4444УНА",
+        make: "",
+        model: "Camry",
+      }).success,
     ).toBe(false);
   });
 
   it("rejects empty model", () => {
     expect(
-      quickVehicleSchema.safeParse({ plateNumber: "4444УНА", make: "Toyota", model: "" }).success,
+      quickVehicleSchema.safeParse({
+        plateNumber: "4444УНА",
+        make: "Toyota",
+        model: "",
+      }).success,
     ).toBe(false);
   });
 
@@ -103,11 +119,15 @@ describe("partsCarSchema", () => {
   });
 
   it("rejects empty make", () => {
-    expect(partsCarSchema.safeParse({ make: "", model: "Civic" }).success).toBe(false);
+    expect(partsCarSchema.safeParse({ make: "", model: "Civic" }).success).toBe(
+      false,
+    );
   });
 
   it("rejects empty model", () => {
-    expect(partsCarSchema.safeParse({ make: "Honda", model: "" }).success).toBe(false);
+    expect(partsCarSchema.safeParse({ make: "Honda", model: "" }).success).toBe(
+      false,
+    );
   });
 });
 

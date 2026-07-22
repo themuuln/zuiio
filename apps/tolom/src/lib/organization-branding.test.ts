@@ -21,7 +21,10 @@ describe("readOrganizationBrandConfig", () => {
       branding: { theme: "custom", primary: "#ff0000" },
     };
     const result = readOrganizationBrandConfig(settings as any);
-    expect(mockResolveBrandConfig).toHaveBeenCalledWith({ theme: "custom", primary: "#ff0000" });
+    expect(mockResolveBrandConfig).toHaveBeenCalledWith({
+      theme: "custom",
+      primary: "#ff0000",
+    });
     expect(result).toEqual({ theme: "custom", primary: "#ff0000" });
   });
 
@@ -105,9 +108,12 @@ describe("writeOrganizationBrandConfig", () => {
       brand_color: "#ff0000",
       name: "My Shop",
     };
-    const result = writeOrganizationBrandConfig(settings as any, {
-      theme: "custom",
-    } as any);
+    const result = writeOrganizationBrandConfig(
+      settings as any,
+      {
+        theme: "custom",
+      } as any,
+    );
 
     expect(result.branding).toEqual({ theme: "custom" });
     expect(result).not.toHaveProperty("theme");
@@ -116,12 +122,16 @@ describe("writeOrganizationBrandConfig", () => {
   });
 
   it("handles null settings", () => {
-    const result = writeOrganizationBrandConfig(null, { theme: "custom" } as any);
+    const result = writeOrganizationBrandConfig(null, {
+      theme: "custom",
+    } as any);
     expect(result.branding).toEqual({ theme: "custom" });
   });
 
   it("handles undefined settings", () => {
-    const result = writeOrganizationBrandConfig(undefined, { theme: "custom" } as any);
+    const result = writeOrganizationBrandConfig(undefined, {
+      theme: "custom",
+    } as any);
     expect(result.branding).toEqual({ theme: "custom" });
   });
 });

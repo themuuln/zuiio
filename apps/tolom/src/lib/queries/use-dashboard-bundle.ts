@@ -1,8 +1,10 @@
 "use client";
 
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+
 // Re-export for convenience — consumers use one import
 export type { DashboardPeriod } from "./use-dashboard";
+
 import type { DashboardData, SubscriptionStatus } from "@/lib/types";
 import { dashboardKeys } from "./keys";
 
@@ -27,7 +29,10 @@ export interface DashboardBundle {
  */
 export function useDashboardBundle(
   orgId: string | undefined,
-  options: { period?: "today" | "week" | "month" | "all"; branchId?: string | null } = {},
+  options: {
+    period?: "today" | "week" | "month" | "all";
+    branchId?: string | null;
+  } = {},
 ): UseQueryResult<DashboardBundle, Error> {
   const { period = "month", branchId = null } = options;
 
@@ -36,7 +41,9 @@ export function useDashboardBundle(
     queryFn: async () => {
       if (!orgId) throw new Error("Organization is required");
       const params = new URLSearchParams({ period, branch: branchId ?? "all" });
-      const res = await fetch(`/api/organizations/${orgId}/dashboard-bundle?${params}`);
+      const res = await fetch(
+        `/api/organizations/${orgId}/dashboard-bundle?${params}`,
+      );
       if (!res.ok) throw new Error("Failed to load dashboard");
       const body = await res.json();
       // API handler wraps in { data: { dashboard, subscription } }
@@ -44,6 +51,6 @@ export function useDashboardBundle(
     },
     enabled: !!orgId,
     staleTime: 300_000, // 5 min — realtime keeps it fresh
-    retry: 0,           // UI shows retry button instead
+    retry: 0, // UI shows retry button instead
   });
 }

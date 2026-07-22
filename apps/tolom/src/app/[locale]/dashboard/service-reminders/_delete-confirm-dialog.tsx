@@ -29,7 +29,10 @@ export function DeleteConfirmDialog({
   onConfirm,
   isPending,
 }: DeleteConfirmDialogProps) {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

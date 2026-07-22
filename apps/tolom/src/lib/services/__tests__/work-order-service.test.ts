@@ -10,7 +10,8 @@ vi.mock("@/lib/cache/keys", () => ({
     workOrders: (orgId: string) => `work_orders:${orgId}`,
     workOrder: (id: string) => `work_order:${id}`,
     workOrderDetail: (id: string) => `work_order_detail:${id}`,
-    dailyWorkOrders: (orgId: string, date: string) => `daily_work_orders:${orgId}:${date}`,
+    dailyWorkOrders: (orgId: string, date: string) =>
+      `daily_work_orders:${orgId}:${date}`,
   },
 }));
 vi.mock("@/lib/capture", () => ({ capture: vi.fn() }));
@@ -38,31 +39,33 @@ import { logAuditAfter } from "@/lib/audit";
 import { capture } from "@/lib/capture";
 import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
-import { addPartToWorkOrder, addServiceToWorkOrder } from "../work-order-items-service";
 import { getWorkOrderDetail as _getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
 import { resolveBranchId } from "@/lib/supabase/with-branch";
+import {
+  addPartToWorkOrder,
+  addServiceToWorkOrder,
+} from "../work-order-items-service";
 
 const mockRevalidateTag = vi.mocked(revalidateTag);
 const mockLogAudit = vi.mocked(logAuditAfter);
-const mockCapture = vi.mocked(capture);
+const _mockCapture = vi.mocked(capture);
 const mockReportServerError = vi.mocked(reportServerError);
 const mockGetWorkOrderDetail = vi.mocked(_getWorkOrderDetail);
 const mockResolveBranchId = vi.mocked(resolveBranchId);
-const mockAddPart = vi.mocked(addPartToWorkOrder);
+const _mockAddPart = vi.mocked(addPartToWorkOrder);
 const mockAddService = vi.mocked(addServiceToWorkOrder);
 
 // ── Imports under test ────────────────────────────────────────────
 
 import {
+  cancelWorkOrder,
+  createWorkOrder,
+  getWorkOrder,
   getWorkOrders,
   getWorkOrdersFast,
-  getWorkOrder,
-  createWorkOrder,
-  recalculateWorkOrderTotals,
   getWorkOrderTotals,
-  cancelWorkOrder,
+  recalculateWorkOrderTotals,
 } from "../work-order-service";
-
 
 const ORG_ID = "org-1";
 const WO_ID = "wo-1";
@@ -182,7 +185,11 @@ describe("getWorkOrders", () => {
   });
 
   it("applies status filter (array)", async () => {
-    db.__qb.resolveOnce({ data: [makeWorkOrderRow()], error: null, count: null });
+    db.__qb.resolveOnce({
+      data: [makeWorkOrderRow()],
+      error: null,
+      count: null,
+    });
     db.__qb.resolveOnce({ data: [makeCostRow()], error: null });
 
     const result = await getWorkOrders(db as never, ORG_ID, {
@@ -193,7 +200,11 @@ describe("getWorkOrders", () => {
   });
 
   it("applies search filter", async () => {
-    db.__qb.resolveOnce({ data: [makeWorkOrderRow()], error: null, count: null });
+    db.__qb.resolveOnce({
+      data: [makeWorkOrderRow()],
+      error: null,
+      count: null,
+    });
     db.__qb.resolveOnce({ data: [makeCostRow()], error: null });
 
     const result = await getWorkOrders(db as never, ORG_ID, {
@@ -204,7 +215,11 @@ describe("getWorkOrders", () => {
   });
 
   it("applies date filter", async () => {
-    db.__qb.resolveOnce({ data: [makeWorkOrderRow()], error: null, count: null });
+    db.__qb.resolveOnce({
+      data: [makeWorkOrderRow()],
+      error: null,
+      count: null,
+    });
     db.__qb.resolveOnce({ data: [makeCostRow()], error: null });
 
     const result = await getWorkOrders(db as never, ORG_ID, {
@@ -282,9 +297,19 @@ describe("getWorkOrders", () => {
       error: null,
       count: null,
     });
-    db.__qb.resolveOnce({ data: [makeCostRow(), makeCostRow({ work_order_id: "wo-2" })], error: null });
+    db.__qb.resolveOnce({
+      data: [makeCostRow(), makeCostRow({ work_order_id: "wo-2" })],
+      error: null,
+    });
 
-    const result = await getWorkOrders(db as never, ORG_ID, undefined, undefined, undefined, 2);
+    const result = await getWorkOrders(
+      db as never,
+      ORG_ID,
+      undefined,
+      undefined,
+      undefined,
+      2,
+    );
     expect(result).toHaveLength(2);
   });
 });
@@ -651,9 +676,9 @@ describe("cancelWorkOrder", () => {
   it("throws NotFoundError when work order missing", async () => {
     db.__qb.resolveOnce({ data: null, error: null });
 
-    await expect(
-      cancelWorkOrder(db as never, WO_ID, ORG_ID),
-    ).rejects.toThrow("not found");
+    await expect(cancelWorkOrder(db as never, WO_ID, ORG_ID)).rejects.toThrow(
+      "not found",
+    );
   });
 
   it("throws ValidationError when already Completed", async () => {
@@ -662,9 +687,9 @@ describe("cancelWorkOrder", () => {
       error: null,
     });
 
-    await expect(
-      cancelWorkOrder(db as never, WO_ID, ORG_ID),
-    ).rejects.toThrow("Cannot cancel");
+    await expect(cancelWorkOrder(db as never, WO_ID, ORG_ID)).rejects.toThrow(
+      "Cannot cancel",
+    );
   });
 
   it("throws ValidationError when already Cancelled", async () => {
@@ -673,9 +698,9 @@ describe("cancelWorkOrder", () => {
       error: null,
     });
 
-    await expect(
-      cancelWorkOrder(db as never, WO_ID, ORG_ID),
-    ).rejects.toThrow("Cannot cancel");
+    await expect(cancelWorkOrder(db as never, WO_ID, ORG_ID)).rejects.toThrow(
+      "Cannot cancel",
+    );
   });
 
   it("captures error when fetch fails but continues gracefully", async () => {
@@ -684,8 +709,8 @@ describe("cancelWorkOrder", () => {
       error: new Error("Fetch error"),
     });
 
-    await expect(
-      cancelWorkOrder(db as never, WO_ID, ORG_ID),
-    ).rejects.toThrow("not found");
+    await expect(cancelWorkOrder(db as never, WO_ID, ORG_ID)).rejects.toThrow(
+      "not found",
+    );
   });
 });

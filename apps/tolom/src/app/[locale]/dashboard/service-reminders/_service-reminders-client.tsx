@@ -61,7 +61,10 @@ import { formatVehicleLabel, getScheduleDueStatus } from "./_utils";
 type DueStatus = "overdue" | "due-soon" | "scheduled" | "no-date";
 
 export default function ServiceRemindersPageClient() {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const selectedBranchId = useSelectedBranchId();

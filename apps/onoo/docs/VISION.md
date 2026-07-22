@@ -8,32 +8,36 @@
 
 ## What We're Building
 
-Onoo is an **athlete-first sports statistics platform** for Mongolian basketball leagues.
+Onoo is the **complete basketball operating system** for Mongolian leagues, clubs, teams, academies, athletes, and families.
 
-The core product is the **public player profile** — anyone (fan, family, scout, teammate) opens a player's page and sees their stats presented beautifully, visually, and creatively. The sidebar includes game results, standings, and league leaders, but the player is always the hero.
+It connects the full basketball lifecycle: organizations and membership, competitions and schedules, team and academy operations, trusted game records, player development, payments, and public discovery. Onoo remains basketball-specific rather than becoming a generic ERP or multi-sport platform.
 
-Accurate trusted records are the **foundation**, not the destination. The public showcase is the destination.
+The core public experience is the **athlete profile**. It composes approved competition and development records into one trusted basketball identity that players, families, fans, scouts, and sponsors can understand and share.
+
+Accurate trusted records are the foundation. Useful daily operations create the data. The athlete’s complete basketball story is the destination.
 
 ## Why It Exists
 
-Mongolia has thousands of basketball players — school, university, amateur, semi-pro — but zero stats infrastructure. When a parent wants to see their child's season, they get a WhatsApp message with a photo of a hand-written scoresheet. When a scout looks for Mongolian talent, there's no data. When a league needs sponsors, there's no audience proof.
+Mongolian basketball is fragmented across paper scoresheets, spreadsheets, chat groups, bank-transfer screenshots, and disconnected league tools. Players lose their history between academies, teams, and competitions. Team staff repeat roster and payment work. Leagues cannot produce trusted records or audience proof.
 
-Onoo exists to make every player's season visible, every game countable, and every league marketable.
+Onoo exists to give every basketball organization one operational system, every game a trusted record, and every athlete a continuous story from development to competition.
 
 ## Who It's For
 
 | Audience | Need | Surface |
-|----------|------|---------|
-| **Players** | See their own stats, share them | Player profile, shareable cards |
-| **Families & fans** | Follow the season, understand performance | Player profile, game recaps |
-| **Leagues & organizers** | Run the competition, prove audience | Ops console, audience dashboard |
-| **Scouts** | Discover talent | English export, player comparison |
-| **Sponsors** | Reach engaged audiences | Sponsor placements, audience data |
-| **Scorekeepers** | Record games accurately | Tracker, handoff, runbook |
+| --- | --- | --- |
+| **Players** | Keep one identity across development and competition | Athlete profile, timeline, shareable cards |
+| **Families and fans** | Register, pay, follow, and understand progress | Guardian operations, athlete profile, game recaps |
+| **Teams and clubs** | Manage rosters, staff, training, logistics, and performance | Team operations |
+| **Academies and coaches** | Manage programs, enrollment, consent, attendance, and development | Academy operations |
+| **Leagues and federations** | Run competitions, govern eligibility, and prove audience | League operations, audience dashboard |
+| **Scorekeepers and officials** | Record and verify games accurately | Tracker, review queue, runbook |
+| **Scouts** | Discover talent through trusted history | English export, athlete comparison |
+| **Sponsors** | Reach measurable basketball audiences | Sponsor placements, audience data |
 
 ## Design Principles
 
-1. **Athlete-first, always.** The player profile is the heart of the product. Every game tracked exists to make a player's story richer.
+1. **Athlete-first, end to end.** League, team, and academy workflows exist to improve basketball operations and build one trustworthy athlete story.
 
 2. **Stats as story, not spreadsheet.** Numbers should feel like a highlight reel — visual, animated, shareable. Charts over tables. Badges over footnotes.
 
@@ -49,25 +53,52 @@ Onoo exists to make every player's season visible, every game countable, and eve
 
 ## Success Measures
 
-- A non-technical fan can find a player and understand their season in **under 30 seconds**.
-- Player pages are **shared organically** (links, screenshots) by players and family.
+### Platform outcomes
+
+- One athlete keeps a continuous, consented identity across academy, team, and league participation.
+- League, team, and academy operators complete their core basketball workflows without parallel spreadsheets.
+- Every confirmed payment, roster decision, game result, and consent action has an accountable source record.
+- Private organization, guardian, medical, and payment data never leaks into public composition.
+- Each paid module renews because it removes measurable operational work or revenue leakage.
+
+### Current league paid proof
+
+- A non-technical fan finds an athlete and understands their season in **under 30 seconds**.
+- Athlete pages are **shared organically** through links and screenshots.
 - **100% final-score accuracy** and **0 unrecoverable tracker events**.
-- Final whistle → shareable recap in **under 5 minutes**.
-- Scorer/admin satisfaction **≥8/10**.
+- Final whistle to shareable recap takes **under 5 minutes**.
+- Scorer and administrator satisfaction is **at least 8 out of 10**.
 
-## What We Won't Do (Frozen Scope)
+## Current sequencing boundaries
 
-- **Native mobile app** until the web product is proven (PWA covers mobile for now).
-- **Push notifications, follows, or athlete claims** (Phase 3 consumer features, deferred).
-- **Unsupported historical imports** (data must go through the tracker or structured CSV import with review).
-- **Social features** (comments, likes, direct messages).
-- **Non-basketball sports** (Onoo is basketball-only. Other sports are separate products).
-- **General-purpose coach/scout tools** beyond stat display. We show the numbers; coaches use their own tools.
+The complete-product direction does not authorize every module at once.
+
+- **Trusted records first.** Finish the current league paid-pilot foundation before academy or team operations consume committed engineering capacity.
+- **Web first.** Native mobile waits until measured browser limitations justify it.
+- **No unsupported imports.** Historical data enters through reviewed tracker, command, or structured-import workflows.
+- **No unmoderated social network.** Comments, likes, and direct messages require a separate safety and moderation decision.
+- **Basketball only.** Other sports remain separate products.
+- **No generic ERP scope.** Build basketball-specific team, league, academy, athlete, payment, and communication workflows only.
+- **Measured expansion.** Push, follows, claims, messaging, and public development metrics enter through explicit commercial, privacy, and safety gates.
 
 ## Architecture Principles
 
-### Data flow
+### Product domains
+
+```text
+Shared identity and organizations
+  ├─ League and competition operations
+  ├─ Team and academy operations
+  ├─ Trusted game records and statistics
+  ├─ Payments and provider workflows
+  └─ Athlete and public experiences
 ```
+
+Each domain owns its source records. Cross-domain surfaces compose versioned, authorized projections rather than rewriting another domain’s data.
+
+### Trusted-record data flow
+
+```text
 Tracker (journal) → Events (stat_events) → Commands (cmd_*) → Derived tables (rebuildable)
                                                                       ↓
                                                             Public views (v_public_*)
@@ -76,16 +107,23 @@ Tracker (journal) → Events (stat_events) → Commands (cmd_*) → Derived tabl
 ```
 
 ### Key rules
-- **Append-only journal**: `stat_events` never deletes or rewrites. Corrections use void + replacement with provenance.
+
+- **Canonical identity**: Organizations, teams, users, and athletes use shared identifiers with explicit scoped memberships.
+- **Bounded authority**: League, team, academy, payment, and public domains declare their source of truth and mutation owner.
+- **Append-only journal**: `stat_events` never deletes or rewrites. Corrections use void plus replacement with provenance.
 - **Curated views for public**: Public pages read `v_public_*` views only. No direct table access.
-- **Commands for mutations**: Every write goes through a `cmd_*` Postgres RPC. No direct `.insert()`, `.update()`, or `.delete()` from app code.
-- **Derived tables are projections**: `game_player_stats`, `game_team_stats`, `season_player_stats`, `standings` — all rebuildable from the journal.
+- **Commands for mutations**: Every write goes through a reviewed command. No direct client insert, update, or delete against protected records.
+- **Derived tables are projections**: Game, season, standing, reporting, and combined athlete views remain rebuildable.
+- **Private by default**: Guardian, minor, medical, payment, and internal team data never become public through domain composition.
 
 ## Commercial Context
 
-Onoo is currently in a **web-first paid-pilot phase**. Revenue comes from league subscriptions for the tracker + showcase. Sponsorship placements are a planned revenue stream. Consumer monetization is deferred.
+Onoo is currently in a **league-first, web-first paid-pilot phase**. That is the entry wedge, not the final product boundary.
 
-The pilot gate model:
+Long-term revenue comes from modular league, club, team, and academy subscriptions, plus approved payment services and sponsorship placements. Consumer viewing remains free; consumer monetization is deferred.
+
+The current league pilot gate model:
+
 | Gate | Criteria |
 |------|----------|
 | Discovery | Contracted pilot, deposit, one-season agreement |
@@ -95,4 +133,4 @@ The pilot gate model:
 
 ---
 
-_Last updated: 2026-07-21_
+_Last updated: 2026-07-22_

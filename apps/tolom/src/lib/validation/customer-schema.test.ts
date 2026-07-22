@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { quickCustomerSchema, customerSchema } from "./customer-schema";
+import { customerSchema, quickCustomerSchema } from "./customer-schema";
 
 describe("quickCustomerSchema", () => {
   it("accepts valid customer with phone", () => {
@@ -94,9 +94,7 @@ describe("customerSchema", () => {
   });
 
   it("accepts minimal data (email only)", () => {
-    expect(
-      customerSchema.safeParse({ email: "" }).success,
-    ).toBe(true);
+    expect(customerSchema.safeParse({ email: "" }).success).toBe(true);
   });
 
   it("accepts individual type default", () => {
@@ -108,8 +106,8 @@ describe("customerSchema", () => {
   });
 
   it("rejects invalid email", () => {
-    expect(
-      customerSchema.safeParse({ email: "bad-email" }).success,
-    ).toBe(false);
+    expect(customerSchema.safeParse({ email: "bad-email" }).success).toBe(
+      false,
+    );
   });
 });

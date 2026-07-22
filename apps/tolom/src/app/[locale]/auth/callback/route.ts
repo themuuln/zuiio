@@ -22,12 +22,14 @@ export async function GET(request: NextRequest) {
     if (!error) {
       try {
         // Check if this is a new SSO user that should be linked to existing account
-        const { data: { user } } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
         if (user?.email) {
           await linkExistingAccountIfNeeded(user.email, user.id);
         }
-        
+
         await finalizeSignup(supabase);
       } catch (finalizeError) {
         reportServerError(
@@ -68,29 +70,23 @@ async function linkExistingAccountIfNeeded(
 ): Promise<void> {
   try {
     const admin = await createServiceRoleClient();
-    
+
     // Find existing user with this email (excluding the current SSO user)
-    const { data: existingUsers } = await admin.auth.admin.listUsers({ perPage: 50 });
+    const { data: existingUsers } = await admin.auth.admin.listUsers({
+      perPage: 50,
+    });
     const existingUser = existingUsers?.users?.find(
-      (u) => u.email === email && u.id !== ssoUserId && !String(u.app_metadata?.provider ?? "").includes("custom:zuiio")
+      (u) =>
+        u.email === email &&
+        u.id !== ssoUserId &&
+        !String(u.app_metadata?.provider ?? "").includes("custom:zuiio"),
     );
-    
+
     if (!existingUser) {
       // No existing local account, or already linked
       return;
     }
-    
-    // Found a local account - we need to handle this case
-    // For now, we'll add metadata to indicate this SSO user should be treated
-    // as the same person. In production, you'd want to:
-    // 1. Merge the accounts in auth.users
-    // 2. Transfer data from old account to new
-    // 3. Or link them via a identities table
-    
-    console.log(`[SSO Link] Found existing account for ${email}: ${existingUser.id}`);
-    console.log(`[SSO Link] SSO user: ${ssoUserId}`);
-    console.log(`[SSO Link] TODO: Implement account merging in production`);
-    
+
     // Update the SSO user's metadata to reference the original account
     await admin.auth.admin.updateUserById(ssoUserId, {
       user_metadata: {
@@ -99,7 +95,6 @@ async function linkExistingAccountIfNeeded(
         linked_at: new Date().toISOString(),
       },
     });
-    
   } catch (err) {
     // Don't fail the login if linking fails
     reportServerError("SSO account linking failed:", err);

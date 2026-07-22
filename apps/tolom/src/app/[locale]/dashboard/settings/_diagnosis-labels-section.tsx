@@ -163,7 +163,10 @@ interface DiagnosisLabelsSectionProps {
 }
 
 export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
-  const t = useTranslations("diagnosisLabels") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("diagnosisLabels") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: labels, isPending, error } = useDiagnosisLabels(orgId);
   const createLabel = useCreateDiagnosisLabel(orgId);
   const updateLabel = useUpdateDiagnosisLabel(orgId);

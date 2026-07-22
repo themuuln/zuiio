@@ -58,7 +58,10 @@ export function CreateTransferSheet({
   branches,
   currentBranchId,
 }: CreateTransferSheetProps) {
-  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const createTransfer = useCreateTransfer(orgId);
   const { data: parts = [] } = usePartsCatalog(orgId);
 

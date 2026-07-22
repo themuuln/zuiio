@@ -20,7 +20,10 @@ const ChartsSectionContent = dynamic(
 const STORAGE_KEY = "dashboard-charts-collapsed";
 
 export default function ChartsSection({ data }: { data: DashboardData }) {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [collapsed, setCollapsed] = useState(false);
 
   // Restore state from localStorage on mount

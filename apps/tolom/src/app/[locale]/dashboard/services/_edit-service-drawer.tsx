@@ -27,7 +27,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import { useForm } from "@/lib/hooks/use-form";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { ServiceCatalog } from "@/lib/types";
@@ -63,8 +63,14 @@ export function EditServiceSheet({
   open,
   onOpenChange,
 }: EditServiceSheetProps) {
-  const t = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
-  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("services") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const commonT = useTranslations("common") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 

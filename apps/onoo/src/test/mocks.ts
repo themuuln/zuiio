@@ -1,3 +1,5 @@
+import type { NextRequest } from "next/server";
+
 /**
  * Shared test utilities and mocks for admin tests.
  */
@@ -30,13 +32,13 @@ export function createMockRequest(
   body?: Record<string, unknown>,
   url = "http://localhost:3000/admin/api/test",
   method = "GET",
-) {
+): NextRequest {
   return {
     json: () => Promise.resolve(body ?? {}),
     nextUrl: new URL(url),
     method,
     headers: new Headers(),
-  };
+  } as unknown as NextRequest;
 }
 
 /** Creates a mock params Promise for Next.js route handlers */

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { withBranchFilter, resolveBranchId } from "./with-branch";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
+import { resolveBranchId, withBranchFilter } from "./with-branch";
 
 describe("withBranchFilter", () => {
   it("applies eq filter when branchId is provided", () => {
@@ -82,12 +82,9 @@ describe("resolveBranchId", () => {
       error: null,
     });
 
-    const result = await resolveBranchId(
-      mockSupabase as any,
-      "org-1",
-      null,
-      { strict: false },
-    );
+    const result = await resolveBranchId(mockSupabase as any, "org-1", null, {
+      strict: false,
+    });
     expect(result).toBeNull();
   });
 });

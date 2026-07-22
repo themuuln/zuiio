@@ -213,7 +213,10 @@ export function ServiceModelPricesSheet({
 
     if (failures.length > 0) {
       toast.error(
-        t("pricesFailed", { count: String(failures.length), total: String(changedIds.size) }),
+        t("pricesFailed", {
+          count: String(failures.length),
+          total: String(changedIds.size),
+        }),
       );
       return;
     }
@@ -238,7 +241,10 @@ export function ServiceModelPricesSheet({
           <div className="flex items-center justify-between">
             <DrawerTitle>{t("modelSpecificPrices")}</DrawerTitle>
             <Badge variant="secondary" className="shrink-0">
-              {t("customCount", { count: String(customCount), total: String(totalModels) })}
+              {t("customCount", {
+                count: String(customCount),
+                total: String(totalModels),
+              })}
             </Badge>
           </div>
           <DrawerDescription>

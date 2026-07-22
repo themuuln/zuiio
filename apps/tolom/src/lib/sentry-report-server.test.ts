@@ -15,8 +15,8 @@ vi.mock("@/lib/logger", () => ({
   },
 }));
 
-import { reportServerError } from "./sentry-report-server";
 import { logger } from "@/lib/logger";
+import { reportServerError } from "./sentry-report-server";
 
 describe("reportServerError", () => {
   beforeEach(() => {

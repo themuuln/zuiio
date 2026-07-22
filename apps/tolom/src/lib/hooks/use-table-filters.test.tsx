@@ -4,7 +4,7 @@ import { useTableFilters } from "./use-table-filters";
 
 // Mock nuqs — useTableFilters depends on useQueryState which needs a Next.js adapter
 vi.mock("nuqs", () => {
-  const mockState = vi.fn();
+  const _mockState = vi.fn();
   const mockSetState = vi.fn();
 
   return {

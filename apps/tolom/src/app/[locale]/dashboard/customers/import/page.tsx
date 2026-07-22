@@ -195,7 +195,10 @@ function PreviewCard({
 export default function ImportCustomersPage() {
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? null;
-  const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("customers") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<ImportState>({ status: "idle" });
   const [dragOver, setDragOver] = useState(false);

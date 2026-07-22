@@ -10,7 +10,9 @@ describe("useDraftSave", () => {
     diagnosisLabelId: "label-1",
     description: "Check engine",
     selectedMechanicId: "mech-1",
-    serviceLines: [{ serviceName: "Oil Change", quantity: 1, unitPrice: 30000 }],
+    serviceLines: [
+      { serviceName: "Oil Change", quantity: 1, unitPrice: 30000 },
+    ],
     partLines: [{ partName: "Filter", quantity: 1, unitPrice: 5000 }],
   } as any;
 
@@ -28,7 +30,10 @@ describe("useDraftSave", () => {
   });
 
   it("discardDraft removes draft from localStorage", () => {
-    localStorage.setItem("wizard-draft-org-123", JSON.stringify({ savedAt: Date.now() }));
+    localStorage.setItem(
+      "wizard-draft-org-123",
+      JSON.stringify({ savedAt: Date.now() }),
+    );
 
     const { result } = renderHook(() => useDraftSave("org-123", mockDeps));
 

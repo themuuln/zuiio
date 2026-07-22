@@ -1,6 +1,5 @@
 import { created, createRouteHandler, ok } from "@/lib/api-response";
 import {
-
   createCustomerNote,
   getCustomerNotes,
 } from "@/lib/services/customer-note-service";

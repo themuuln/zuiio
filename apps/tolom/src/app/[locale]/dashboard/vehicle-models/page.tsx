@@ -133,7 +133,10 @@ function variantBodyTypeLabel(
 // ── Page component ────────────────────────────────────────────
 
 export default function VehicleModelsPage() {
-  const t = useTranslations("vehicleModels") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("vehicleModels") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const now = useClientNow();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;

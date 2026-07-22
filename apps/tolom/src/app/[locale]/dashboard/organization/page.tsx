@@ -22,6 +22,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
+import { PushNotificationSettings } from "@/components/push-notification-settings";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -46,7 +47,6 @@ import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { PushNotificationSettings } from "@/components/push-notification-settings";
 
 const orgEditSchema = z.object({
   name: z
@@ -62,9 +62,18 @@ const fetchOrgDetail = createOrgQuery<Organization>("");
 const fetchSubscription = createOrgQuery<SubscriptionPlanInfo>("/subscription");
 
 export default function OrganizationPage() {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
-  const orgT = useTranslations("organization") as (key: string, values?: Record<string, string | number>) => string;
-  const pageT = useTranslations("organization.page") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const orgT = useTranslations("organization") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const pageT = useTranslations("organization.page") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const orgInfoQuery = useCurrentOrg();
   const orgId = orgInfoQuery.data?.orgId;
 

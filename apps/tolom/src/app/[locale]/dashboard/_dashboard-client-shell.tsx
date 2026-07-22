@@ -33,18 +33,19 @@ export default function DashboardClientShell({
 
   return (
     <AuthWrapper>
-        <PageHeaderProvider>
-          <SidebarProvider defaultOpen={sidebarDefaultOpen} className="h-svh overflow-hidden">
-            <AppSidebar />
-            <SidebarInset className="min-h-0 min-w-0 w-auto overflow-hidden">
-              <GlobalDialogs />
-              <DashboardHeader />
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                {children}
-              </div>
-            </SidebarInset>
-          </SidebarProvider>
-        </PageHeaderProvider>
+      <PageHeaderProvider>
+        <SidebarProvider
+          defaultOpen={sidebarDefaultOpen}
+          className="h-svh overflow-hidden"
+        >
+          <AppSidebar />
+          <SidebarInset className="min-h-0 min-w-0 w-auto overflow-hidden">
+            <GlobalDialogs />
+            <DashboardHeader />
+            <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+          </SidebarInset>
+        </SidebarProvider>
+      </PageHeaderProvider>
     </AuthWrapper>
   );
 }

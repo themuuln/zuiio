@@ -1,7 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import {
-
   createExpenseCategory,
   getExpenseCategories as getCategories,
   seedDefaultExpenseCategories,

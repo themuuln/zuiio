@@ -633,7 +633,9 @@ export function VehicleRegistrationDrawer({
                     <MessageSquarePlus className="size-4 text-primary" />
                   )}
                   {assignBayNumber
-                    ? t("assignToBayNumber", { bayNumber: String(assignBayNumber) })
+                    ? t("assignToBayNumber", {
+                        bayNumber: String(assignBayNumber),
+                      })
                     : t("addToWaitingQueue")}
                 </Label>
 
@@ -659,7 +661,9 @@ export function VehicleRegistrationDrawer({
                   {queueSaving
                     ? t("addingToQueue")
                     : assignBayNumber
-                      ? t("assignToBayNumber", { bayNumber: String(assignBayNumber) })
+                      ? t("assignToBayNumber", {
+                          bayNumber: String(assignBayNumber),
+                        })
                       : t("addQueueButton")}
                 </Button>
               </div>
@@ -1064,7 +1068,9 @@ export function VehicleRegistrationDrawer({
                 ? t("saving")
                 : assignBayNumber
                   ? isExistingVehicle
-                    ? t("assignToBayNumber", { bayNumber: String(assignBayNumber) })
+                    ? t("assignToBayNumber", {
+                        bayNumber: String(assignBayNumber),
+                      })
                     : t("saveAndAssignToBay", {
                         bayNumber: String(assignBayNumber),
                       })

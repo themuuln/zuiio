@@ -14,7 +14,10 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ counts }: SummaryCardsProps) {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

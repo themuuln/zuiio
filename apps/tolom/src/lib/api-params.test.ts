@@ -1,6 +1,6 @@
+import type { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import { parseListParams } from "./api-params";
-import type { NextRequest } from "next/server";
 
 function createMockRequest(searchParams: Record<string, string>): NextRequest {
   const url = new URL("https://api.tolom.app/api/test");
@@ -35,7 +35,9 @@ describe("parseListParams", () => {
   });
 
   it("parses branch_id", () => {
-    const result = parseListParams(createMockRequest({ branch_id: "branch-1" }));
+    const result = parseListParams(
+      createMockRequest({ branch_id: "branch-1" }),
+    );
     expect(result.branchId).toBe("branch-1");
   });
 
@@ -46,7 +48,12 @@ describe("parseListParams", () => {
 
   it("handles all params together", () => {
     const result = parseListParams(
-      createMockRequest({ q: "test", page: "3", pageSize: "25", branch_id: "b-1" }),
+      createMockRequest({
+        q: "test",
+        page: "3",
+        pageSize: "25",
+        branch_id: "b-1",
+      }),
     );
     expect(result).toEqual({
       q: "test",

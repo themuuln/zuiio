@@ -1,7 +1,5 @@
 # Onoo — Athlete Stats Showcase Roadmap
 
-Onoo is an **athlete-first stats platform** for Mongolian basketball. The core product is the public experience: anyone — fans, family, scouts, teammates — can open a player's page and see their stats presented in a beautiful, creative way. Accurate trusted records are the foundation, not the destination.
-
 ## Product thesis
 
 - The **player profile is the heart** of the product. Every game tracked exists to make a player's story richer.
@@ -66,9 +64,33 @@ Turn `players/[id]` from a data page into a portrait of the athlete:
 - [ ] **Season selector & career view** — profiles aggregate across seasons with clear season-vs-career stats and defined rollover behavior when a new season starts.
 - [ ] Full box-score history stays available, one tap below the visual layer.
 
-### Phase 3 — Discovery & league surfaces
+### Phase 3 — Final-Whistle Pack
 
-> Execution spec: [plans/phase-3-discovery-league.md](plans/phase-3-discovery-league.md)
+> The single highest-leverage feature. Within 5 minutes of game end, Onoo automatically produces every publishable asset — recaps, share images, sponsor-branded cards, standings updates — with zero manual work. This directly serves the paid-proof gate (whistle-to-recap under 5 minutes) and gives leagues their strongest renewal argument.
+>
+> See `docs/STRATEGY.md` for the full rationale.
+
+- [ ] **Game recap pages** — final score, top performers, and lead-change flow presented visually. Mobile-first, sponsor-branded, one-tap share.
+- [ ] **Shareable stat cards** — downloadable/exportable image of a player's game or season line (uses existing `api/export/pdf` groundwork). Sponsor logo baked in.
+- [ ] **OG images** — auto-generated social cards for player pages and game results (player photo + key stat lines), so links look great in chats/social.
+- [ ] **Sponsor placements** — "presented by" slots on standings/leaders/game pages and sponsor logos baked into shared stat cards, recaps, and award graphics. Turns every published surface into sellable league inventory.
+- [ ] **Awards & MVP races** — automated Player of the Week / season MVP race derived from leaders data, presented as shareable award graphics with sponsor slots. Leagues hand them out, players share them.
+- [ ] **Provisional-final publication** — `v_public_live_games` view with "Урьдчилсан" badge; after tracker ends or PDF is approved, game goes live on public surfaces with provisional status, upgradable to verified without breaking links.
+- [ ] **Auto Mongolian recap text** — deterministic template-generated game narrative (not AI-dependent): final score, top performer, lead changes, career milestones. Ready to copy-paste or auto-post.
+- [ ] **One-click share/download** — every publishable asset has a download button and share link. Measurable via link tracking.
+
+### Phase 4 — League proof & renewal
+
+Give leagues the evidence they need to renew and the numbers they need to sell sponsors:
+
+- [ ] **League audience dashboard** — views per game, most-viewed players, share counts, placement impressions. Proof-of-audience numbers league owners put in front of sponsors. Distinct from the private ops telemetry console (T-1.9).
+- [ ] **Sponsor intelligence report** — per-sponsor summary: impressions, link clicks, placement visibility across the season. Exportable PDF.
+- [ ] **Season report PDF** — beautiful downloadable season summary per team: stats, streaks, milestones, standings journey. Sponsor logos on report. League hands this to sponsors at season end.
+- [ ] **Monthly league report** — automated email/Slack-compatible summary: games completed, standings movement, leaderboard changes, top performances.
+- [ ] **Embeddable widgets** — standings table, leaderboards, game schedule — embeddable on any website with sponsor slots. Leagues put live data on their own sites.
+- [ ] **English profile view/export** — scout-facing English toggle and printable stat record for players pursuing opportunities abroad. No local incumbent offers this.
+
+### Phase 5 — Discovery & organic growth
 
 Let people find tonight's game, follow the league, and argue about players:
 
@@ -76,44 +98,36 @@ Let people find tonight's game, follow the league, and argue about players:
 - [ ] **Standings redesign** — form guide (last 5), movement indicators, team-color rows; the most-screenshotted league surface.
 - [x] **Leaders redesign** — top-10 leaderboards as visual podiums/cards with player photos, not table rows.
 - [ ] **Qualification rules** — minimum games/minutes thresholds for leaderboards and league-average comparisons, so one hot game can't top the PPG board; show "N games to qualify" states.
-- [ ] **Awards & MVP races** — automated Player of the Week / season MVP race derived from leaders data, presented as shareable award graphics. Leagues hand them out, players share them, sponsors can sponsor them.
 - [ ] **Player comparison** — side-by-side visual duel view (existing `players/compare` + `api/stats/compare-players`), with mirrored bar charts and radar overlay.
 - [x] **Team pages** — roster grid of mini player cards; team identity (colors, form guide) applied throughout.
 - [ ] **Search & browse** — find any player by name/team/league in two taps from anywhere.
-
-### Phase 4 — Shareability & reach
-
-> Execution spec: [plans/phase-4-shareability-reach.md](plans/phase-4-shareability-reach.md)
-
-Stats people can show off:
-
-- [ ] **OG images** — auto-generated social cards for player pages and game results (player photo + key stat lines), so links look great in chats/social.
-- [ ] **Shareable stat cards** — downloadable/exportable image of a player's game or season line (uses existing `api/export/pdf` groundwork).
-- [ ] **Game recap pages** — final score, top performers, and lead-change flow presented visually.
-- [ ] **Embeds** — lightweight embeddable player/game widgets for league and team websites.
-- [ ] **Sponsor placements** — "presented by" slots on standings/leaders/game pages and sponsor logos baked into shared stat cards, recaps, and award graphics. Turns public surfaces into sellable league inventory — the strongest renewal argument.
-- [ ] **League audience dashboard** — views per game, most-viewed players, share counts. Proof-of-audience numbers league owners can put in front of sponsors (distinct from the private ops telemetry console).
-- [ ] **English profile view/export** — scout-facing English toggle and exportable stat record for players pursuing opportunities abroad; no local incumbent offers this.
 - [ ] **SEO basics** — sitemap, per-page metadata, and indexable player/team/game pages so profiles surface in Google and Facebook search, not just via shared links.
 
-### Phase 5 — Live experience
+### Phase 6 — Live experience
 
-> Execution spec: [plans/phase-5-live-experience.md](plans/phase-5-live-experience.md)
+> Build only after Phase 3-5 traffic and league interviews prove that live viewing matters. Prioritize publication speed over elaborate live animations.
 
-- [ ] Public visibility for provisional games — `v_public_live_games` view with an explicit "Урьдчилсан" badge everywhere it surfaces (prerequisite for live scores and the <5-minute recap).
+- [ ] Public visibility for provisional games — `v_public_live_games` view with an explicit "Урьдчилсан" badge everywhere it surfaces.
 - [ ] Live game center with real-time score, on-fire player indicators, and play-by-play feed driven by the tracker journal.
 - [ ] Live-updating player stat lines during games (Supabase Realtime on curated views).
 
-### Phase 6 — Shop V1
+### Phase 7 — Team Insights (design-partner beta)
 
-> Execution spec: [plans/phase-6-shop.md](plans/phase-6-shop.md)
+> Read-only B2B beta for paid design partners only. Not a broad release. Onoo shows the numbers; coaches use their own tools.
 
-One complete commerce release for Onoo merchandise and future league products:
+- [ ] **Efficiency metrics** — ORtg, DRtg, NETRTG, PIE, Four Factors, pace — computed from existing data with transparent formulas and coverage labels. See `docs/STRATEGY.md` for the data capability ladder.
+- [ ] **Team performance dashboard** — offensive/defensive rating trends, Q-by-Q scoring, home/away splits, warm/cold player indicators.
+- [ ] **Player development timeline** — month-over-month stat progression with league-average overlay.
+- [ ] **Opponent scout card** — one-page auto-generated profile of next opponent: tendencies, top scorers, weaknesses — from public game data only.
 
-- [ ] Public `/shop` catalogue and product detail pages — Mongolian-first, mobile-first, and account-free.
-- [ ] Product variants, inventory reservation, and private orders with curated public product data only.
-- [ ] QPay invoice → QR → verified callback → paid order flow; no manual payment checking.
-- [ ] Authenticated admin Products and Orders pages, with paid orders advanced to shipped.
+### Frozen — Shop
+
+> Commerce adds inventory, payment, fulfillment, and support work without strengthening the league subscription loop. Revisit after Phase 4 is proven.
+
+- [ ] Public `/shop` catalogue and product detail pages
+- [ ] Product variants, inventory reservation, and private orders
+- [ ] QPay invoice → QR → verified callback → paid order flow
+- [ ] Authenticated admin Products and Orders pages
 
 ## Design principles for public surfaces
 
@@ -124,7 +138,6 @@ One complete commerce release for Onoo merchandise and future league products:
 - Server Components + curated `v_public_*` views; no mock fallbacks on public pages.
 - Viewing is never gated: no signup, login, or app-install prompts on any public surface.
 - Performance budget: fast p75 loads on mid-range Android over mobile data — small images, light JS, no autoplaying media.
-- Cold-start friendly: every surface must look intentional with zero or few games — design empty and small-sample states, not just full-season layouts.
 
 ## Explicitly deferred
 

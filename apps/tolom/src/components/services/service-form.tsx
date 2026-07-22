@@ -18,7 +18,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreateService } from "@/lib/queries/use-wizard-data";
-import { reportServerError } from "@/lib/sentry-report-server";
 import type { CreateServiceCatalogParams, ServiceCatalog } from "@/lib/types";
 import { serviceSchema as sharedServiceSchema } from "@/lib/validation/service-schema";
 

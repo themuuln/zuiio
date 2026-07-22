@@ -11,7 +11,10 @@ import {
 } from "@/components/ui/empty";
 
 export function EmptyFinanceState() {
-  const t = useTranslations("finance") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("finance") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return (
     <Empty>
       <EmptyHeader>

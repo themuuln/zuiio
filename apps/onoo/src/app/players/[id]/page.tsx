@@ -252,6 +252,7 @@ export default async function PlayerPage({
           playerId={id}
           competitionId={activeCompetitionId}
           careerTotals={isCareer ? careerTotals : null}
+          advancedStats={advancedStats}
           locale={locale}
         />
 

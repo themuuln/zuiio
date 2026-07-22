@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import { apiError, ok } from "@/lib/api-response";
+import { ok } from "@/lib/api-response";
 import { createFollowup, listFollowups } from "@/lib/services/followup-service";
 /**
  * GET /api/organizations/[id]/followups

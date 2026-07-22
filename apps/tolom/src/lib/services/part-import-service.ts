@@ -22,7 +22,7 @@ interface ParsedRow {
   location?: string;
 }
 
-const EXPECTED_HEADERS = [
+const _EXPECTED_HEADERS = [
   "name",
   "name_mn",
   "part_number",

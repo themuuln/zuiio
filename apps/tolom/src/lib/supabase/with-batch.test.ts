@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { batchUpsert, checkThenUpsert } from "./with-batch";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
+import { batchUpsert, checkThenUpsert } from "./with-batch";
 
 describe("batchUpsert", () => {
   let mockSupabase: ReturnType<typeof createMockSupabaseClient>;

@@ -60,7 +60,10 @@ export function WorkOrderDetailDrawer({
   assignMechanicMutation: drawerAssignMechanicMutation,
   assignCustomerMutation: drawerAssignCustomerMutation,
 }: WorkOrderDetailDrawerProps) {
-  const t = useTranslations("bayView") as (key: string, values?: Record<string, string | number | Date>) => string;
+  const t = useTranslations("bayView") as (
+    key: string,
+    values?: Record<string, string | number | Date>,
+  ) => string;
 
   const queryClient = useQueryClient();
 
@@ -265,7 +268,8 @@ export function WorkOrderDetailDrawer({
 
   // ── Per-button loading state ──
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const isSaving = saving || completeMutation.isPending || pendingAction !== null;
+  const isSaving =
+    saving || completeMutation.isPending || pendingAction !== null;
 
   // ── Local-only state ──
 

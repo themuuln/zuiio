@@ -25,9 +25,18 @@ const SERVICES = [
 ];
 
 export default function StatusPage() {
-  const t = useTranslations("status") as (key: string, values?: Record<string, string | number>) => string;
-  const appT = useTranslations("app") as (key: string, values?: Record<string, string | number>) => string;
-  const _authT = useTranslations("auth") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("status") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const appT = useTranslations("app") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const _authT = useTranslations("auth") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 

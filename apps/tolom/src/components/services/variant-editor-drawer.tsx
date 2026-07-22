@@ -164,7 +164,8 @@ export function VariantEditorSheet({
         <div className="flex items-center justify-between">
           <DrawerTitle>{t("manageVariants")}</DrawerTitle>
           <Badge variant="secondary" className="shrink-0">
-            {variants.length} {t("variantCount", { count: String(variants.length) })}
+            {variants.length}{" "}
+            {t("variantCount", { count: String(variants.length) })}
           </Badge>
         </div>
         <DrawerDescription>

@@ -142,7 +142,10 @@ function PaymentMiniCard({
 }
 
 export default function EodClosePage() {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const locale = useLocale();
   const localeTag = locale === "mn" ? "mn-MN" : "en-US";
   const { data: org, isPending: orgLoading } = useCurrentOrg();

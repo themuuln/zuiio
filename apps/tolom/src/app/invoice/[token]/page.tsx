@@ -189,7 +189,10 @@ function InvoiceError({
 // ── Main page ────────────────────────────────────────────
 
 export default function PublicInvoicePage() {
-  const t = useTranslations("invoice") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("invoice") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const params = useParams();
   const token = params.token as string;
 

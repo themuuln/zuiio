@@ -51,7 +51,10 @@ export function PaymentMethodField({
   error,
   transferBankError,
 }: PaymentMethodFieldProps) {
-  const t = useTranslations("bayView") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("bayView") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const feePercent = fees[value] ?? 0;
   const feeAmount = computePaymentFeeAmount(subtotal, value, fees);
   const totalDue = computePaymentTotal(subtotal, value, fees);

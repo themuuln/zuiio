@@ -67,7 +67,9 @@ export function TeamSwitcher() {
                 <span className="truncate font-medium">{name}</span>
                 <span className="truncate text-xs">{activeBranchName}</span>
               </div>
-              {canShowDropdown && <ChevronsUpDown className="ml-auto size-4 transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0" />}
+              {canShowDropdown && (
+                <ChevronsUpDown className="ml-auto size-4 transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0" />
+              )}
             </DropdownMenuTrigger>
             {canShowDropdown && (
               <DropdownMenuContent

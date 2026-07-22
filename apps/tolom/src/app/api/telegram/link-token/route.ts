@@ -1,6 +1,7 @@
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import { NotFoundError } from "@/lib/errors";
+
 const AGENT_GATEWAY_URL =
   process.env.AGENT_GATEWAY_URL ?? "https://agent.zuiiotech.com";
 
@@ -61,8 +62,7 @@ export const POST = createSimpleRouteHandler(async ({ user, supabase }) => {
   }
 
   const json = generateResult.value;
-  const codeJson =
-    codeResult.status === "fulfilled" ? codeResult.value : null;
+  const codeJson = codeResult.status === "fulfilled" ? codeResult.value : null;
 
   return ok({
     token: json.token,

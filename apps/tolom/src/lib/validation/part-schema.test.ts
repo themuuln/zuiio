@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { partSchema, addWorkOrderPartSchema } from "./part-schema";
+import { addWorkOrderPartSchema, partSchema } from "./part-schema";
 
 describe("partSchema", () => {
   it("accepts valid part with Mongolian name", () => {
-    expect(
-      partSchema.safeParse({ nameMn: "Тосны шүүлтүүр" }).success,
-    ).toBe(true);
+    expect(partSchema.safeParse({ nameMn: "Тосны шүүлтүүр" }).success).toBe(
+      true,
+    );
   });
 
   it("accepts part with all fields", () => {

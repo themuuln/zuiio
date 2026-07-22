@@ -9,17 +9,17 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  addUserToOrg,
   createAdminClient,
   createAnonClient,
-  createTestOrg,
-  createTestUser,
   createTestBranch,
   createTestCustomer,
+  createTestOrg,
+  createTestUser,
   createTestVehicle,
   createTestWorkOrder,
-  addUserToOrg,
-  signInAsUser,
   deleteRecord,
+  signInAsUser,
 } from "./helpers";
 
 // ── Setup: two orgs, two users ───────────────────────────────
@@ -36,8 +36,12 @@ beforeAll(async () => {
   const orgB = await createTestOrg(admin);
   orgBId = orgB.orgId;
 
-  userA = await createTestUser(admin, { email: `user-a-${Date.now()}@rlstest.mn` });
-  userB = await createTestUser(admin, { email: `user-b-${Date.now()}@rlstest.mn` });
+  userA = await createTestUser(admin, {
+    email: `user-a-${Date.now()}@rlstest.mn`,
+  });
+  userB = await createTestUser(admin, {
+    email: `user-b-${Date.now()}@rlstest.mn`,
+  });
 
   await addUserToOrg(admin, orgAId, userA.id);
   await addUserToOrg(admin, orgBId, userB.id);
@@ -45,8 +49,16 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Clean up in reverse dependency order
-  await deleteRecord(admin, "organization_users", `${orgAId},${userA.id}` as any);
-  await deleteRecord(admin, "organization_users", `${orgBId},${userB.id}` as any);
+  await deleteRecord(
+    admin,
+    "organization_users",
+    `${orgAId},${userA.id}` as any,
+  );
+  await deleteRecord(
+    admin,
+    "organization_users",
+    `${orgBId},${userB.id}` as any,
+  );
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
   await deleteRecord(admin, "organizations", orgAId);
@@ -60,19 +72,22 @@ describe("Organizations RLS — cross-org isolation", () => {
     const ua = await signInAsUser(userA.email, userA.password);
     const { data } = await ua.from("organizations").select("id, name");
     expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(orgAId);
+    expect(data?.[0].id).toBe(orgAId);
   });
 
   it("User B sees only Org B", async () => {
     const ub = await signInAsUser(userB.email, userB.password);
     const { data } = await ub.from("organizations").select("id, name");
     expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(orgBId);
+    expect(data?.[0].id).toBe(orgBId);
   });
 
   it("User A cannot see Org B", async () => {
     const ua = await signInAsUser(userA.email, userA.password);
-    const { data } = await ua.from("organizations").select("id").eq("id", orgBId);
+    const { data } = await ua
+      .from("organizations")
+      .select("id")
+      .eq("id", orgBId);
     expect(data).toHaveLength(0);
   });
 });
@@ -99,14 +114,14 @@ describe("Branches RLS — org-scoped", () => {
     const ua = await signInAsUser(userA.email, userA.password);
     const { data } = await ua.from("branches").select("id");
     expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(branchAId);
+    expect(data?.[0].id).toBe(branchAId);
   });
 
   it("User B sees only Org B branches", async () => {
     const ub = await signInAsUser(userB.email, userB.password);
     const { data } = await ub.from("branches").select("id");
     expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(branchBId);
+    expect(data?.[0].id).toBe(branchBId);
   });
 });
 
@@ -132,19 +147,22 @@ describe("Customers RLS — cross-org isolation", () => {
     const ua = await signInAsUser(userA.email, userA.password);
     const { data } = await ua.from("customers").select("id");
     expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(customerAId);
+    expect(data?.[0].id).toBe(customerAId);
   });
 
   it("User B sees only Org B customers", async () => {
     const ub = await signInAsUser(userB.email, userB.password);
     const { data } = await ub.from("customers").select("id");
     expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(customerBId);
+    expect(data?.[0].id).toBe(customerBId);
   });
 
   it("User A cannot read User B's customer", async () => {
     const ua = await signInAsUser(userA.email, userA.password);
-    const { data } = await ua.from("customers").select("id").eq("id", customerBId);
+    const { data } = await ua
+      .from("customers")
+      .select("id")
+      .eq("id", customerBId);
     expect(data).toHaveLength(0);
   });
 
@@ -185,14 +203,14 @@ describe("Vehicles RLS — cross-org isolation", () => {
     const ua = await signInAsUser(userA.email, userA.password);
     const { data } = await ua.from("vehicles").select("id");
     expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(vehicleAId);
+    expect(data?.[0].id).toBe(vehicleAId);
   });
 
   it("User B sees only Org B vehicles", async () => {
     const ub = await signInAsUser(userB.email, userB.password);
     const { data } = await ub.from("vehicles").select("id");
     expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(vehicleBId);
+    expect(data?.[0].id).toBe(vehicleBId);
   });
 });
 
@@ -224,14 +242,14 @@ describe("Work Orders RLS — cross-org isolation", () => {
     const ua = await signInAsUser(userA.email, userA.password);
     const { data } = await ua.from("work_orders").select("id");
     expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(woAId);
+    expect(data?.[0].id).toBe(woAId);
   });
 
   it("User B sees only Org B work orders", async () => {
     const ub = await signInAsUser(userB.email, userB.password);
     const { data } = await ub.from("work_orders").select("id");
     expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(woBId);
+    expect(data?.[0].id).toBe(woBId);
   });
 
   it("User A cannot see User B's work order", async () => {

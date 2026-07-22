@@ -179,7 +179,10 @@ export function WorkOrderDetailSheet({
   onOpenChange,
   workOrderId,
 }: WorkOrderDetailSheetProps) {
-  const t = useTranslations("workOrderDetail") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("workOrderDetail") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const queryClient = useQueryClient();
   const { data: orgData } = useCurrentOrg();
   const orgId = orgData?.orgId;

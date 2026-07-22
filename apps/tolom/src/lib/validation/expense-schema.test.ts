@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { expenseSchema, expenseCategorySchema } from "./expense-schema";
+import { expenseCategorySchema, expenseSchema } from "./expense-schema";
 
 describe("expenseSchema", () => {
   it("accepts valid expense", () => {
@@ -29,23 +29,31 @@ describe("expenseSchema", () => {
 
   it("rejects empty description", () => {
     expect(
-      expenseSchema.safeParse({ description: "", amount: "50000", paid: true }).success,
+      expenseSchema.safeParse({ description: "", amount: "50000", paid: true })
+        .success,
     ).toBe(false);
   });
 
   it("rejects missing description", () => {
-    expect(expenseSchema.safeParse({ amount: "50000", paid: true }).success).toBe(false);
+    expect(
+      expenseSchema.safeParse({ amount: "50000", paid: true }).success,
+    ).toBe(false);
   });
 
   it("rejects invalid amount", () => {
     expect(
-      expenseSchema.safeParse({ description: "Test", amount: "abc", paid: true }).success,
+      expenseSchema.safeParse({
+        description: "Test",
+        amount: "abc",
+        paid: true,
+      }).success,
     ).toBe(false);
   });
 
   it("rejects zero amount", () => {
     expect(
-      expenseSchema.safeParse({ description: "Test", amount: "0", paid: true }).success,
+      expenseSchema.safeParse({ description: "Test", amount: "0", paid: true })
+        .success,
     ).toBe(false);
   });
 
@@ -82,9 +90,9 @@ describe("expenseSchema", () => {
 
 describe("expenseCategorySchema", () => {
   it("accepts valid category", () => {
-    expect(
-      expenseCategorySchema.safeParse({ name: "Office" }).success,
-    ).toBe(true);
+    expect(expenseCategorySchema.safeParse({ name: "Office" }).success).toBe(
+      true,
+    );
   });
 
   it("accepts category with optional fields", () => {

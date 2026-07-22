@@ -23,7 +23,7 @@ describe("createClient", () => {
     mockGetSupabaseKey.mockReturnValue(mockKey);
 
     const { createClient } = await import("../client");
-    const client = createClient();
+    const _client = createClient();
 
     expect(mockCreateBrowserClient).toHaveBeenCalledWith(mockUrl, mockKey);
   });

@@ -229,7 +229,6 @@ export function StandingsTable({ rows, className, playoffLineAfter = 4 }: Standi
             const pointDifference = getPointDifference(row);
             const isExpanded = expandedId === row.team_season_id;
             return (
-              <>
               <Fragment key={row.team_season_id}>
                 <TableRow
                   className={cn(
@@ -352,22 +351,22 @@ export function StandingsTable({ rows, className, playoffLineAfter = 4 }: Standi
                     </TableCell>
                   </TableRow>
                 )}
+
+                {/* Playoff line separator */}
+                {index === playoffLineAfter - 1 && index < rows.length - 1 && (
+                  <TableRow className="pointer-events-none border-t-0">
+                    <TableCell colSpan={11} className="px-0 pt-1 pb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
+                        <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
+                          Плэйоффийн шугам
+                        </span>
+                        <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
               </Fragment>
-              {/* Playoff line separator */}
-              {index === playoffLineAfter - 1 && index < rows.length - 1 && (
-                <TableRow className="pointer-events-none border-t-0" key={`playoff-${index}`}>
-                  <TableCell colSpan={11} className="px-0 pt-1 pb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
-                      <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
-                        Плэйоффийн шугам
-                      </span>
-                      <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-              </>
             );
         })}
         </TableBody>

@@ -2,7 +2,6 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertCircle,
   ArrowLeft,
   CheckCircle2,
   Download,
@@ -72,7 +71,10 @@ function parseCsvLine(line: string): string[] {
 export default function ImportPartsPage() {
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? null;
-  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<ImportState>({ status: "idle" });
   const [dragOver, setDragOver] = useState(false);
@@ -178,7 +180,11 @@ export default function ImportPartsPage() {
     <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon-sm" render={<Link href="/dashboard/inventory" />}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          render={<Link href="/dashboard/inventory" />}
+        >
           <ArrowLeft className="size-4" />
         </Button>
         <div>
@@ -238,9 +244,7 @@ export default function ImportPartsPage() {
           <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
             <Upload className="size-10 text-muted-foreground/40" />
             <div className="text-center">
-              <p className="text-sm font-medium">
-                {t("dragDropCsv")} or
-              </p>
+              <p className="text-sm font-medium">{t("dragDropCsv")} or</p>
               <Button
                 variant="link"
                 size="sm"
@@ -272,16 +276,21 @@ export default function ImportPartsPage() {
           <CardContent className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                {state.totalRows} part{state.totalRows !== 1 ? "s" : ""} found
-                — showing first 5
+                {state.totalRows} part{state.totalRows !== 1 ? "s" : ""} found —
+                showing first 5
               </p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setState({ status: "idle" })}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setState({ status: "idle" })}
+                >
                   Cancel
                 </Button>
                 <Button size="sm" onClick={handleImport}>
                   <Upload className="size-4 mr-1" />
-                  Import {state.totalRows} Part{state.totalRows !== 1 ? "s" : ""}
+                  Import {state.totalRows} Part
+                  {state.totalRows !== 1 ? "s" : ""}
                 </Button>
               </div>
             </div>
@@ -316,9 +325,7 @@ export default function ImportPartsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
             <Loader2 className="size-8 animate-spin text-primary" />
-            <p className="text-sm font-medium">
-              Importing parts...
-            </p>
+            <p className="text-sm font-medium">Importing parts...</p>
           </CardContent>
         </Card>
       )}
@@ -334,7 +341,8 @@ export default function ImportPartsPage() {
               </p>
               {state.errors.length > 0 && (
                 <p className="text-sm text-destructive mt-1">
-                  {state.errors.length} error{state.errors.length !== 1 ? "s" : ""}
+                  {state.errors.length} error
+                  {state.errors.length !== 1 ? "s" : ""}
                 </p>
               )}
             </div>

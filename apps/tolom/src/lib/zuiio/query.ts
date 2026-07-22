@@ -1,6 +1,10 @@
 "use client";
 
-import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import {
+  type QueryClient,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import * as React from "react";
 import { toast } from "sonner";
 import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
@@ -230,7 +234,12 @@ export function useOrgMutation<
           optimisticSnapshot: snapshot,
         };
       }
-      return { previous: previous ?? undefined, snapshots: [], wasOffline: !isOnline, optimisticSnapshot: undefined };
+      return {
+        previous: previous ?? undefined,
+        snapshots: [],
+        wasOffline: !isOnline,
+        optimisticSnapshot: undefined,
+      };
     },
     onError: (error, variables, context) => {
       // Rollback on error — skip if onOptimisticUpdate handles its own rollback

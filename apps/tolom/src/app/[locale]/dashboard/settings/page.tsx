@@ -1,13 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { generateBrandCSS, resolveBrandConfig } from "@zuiio/branding";
 import { useOrgMutation } from "@zuiio/query";
 import { Building2, Search, Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { generateBrandCSS, resolveBrandConfig } from "@zuiio/branding";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +23,6 @@ import { Typography } from "@/components/ui/typography";
 import { createOrgQuery } from "@/lib/queries/factory";
 import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { reportServerError } from "@/lib/sentry-report-server";
 import type { Organization } from "@/lib/types";
 import { setCookie } from "@/lib/utils";
 import { AppearanceCustomization } from "./_appearance-customization";
@@ -104,7 +103,10 @@ function ErrorState({
   readonly message: string;
   readonly onRetry: () => void;
 }) {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   return (
     <div className="flex flex-col items-start gap-3 rounded-lg border border-destructive/20 px-4 py-3">
@@ -223,7 +225,10 @@ export default function SettingsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("general");
-  const t = useTranslations("settings") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("settings") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const settingsSections = useMemo(() => getSettingsSections(t), [t]);
 
   const orgInfoQuery = useCurrentOrg();

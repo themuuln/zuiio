@@ -43,7 +43,10 @@ export function ScheduleRow({
   onDelete,
   onContactStatusChange,
 }: ScheduleRowProps) {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const dueStatus = getScheduleDueStatus(item);
   const customer = item.vehicle?.customer;
   const customerName = customer

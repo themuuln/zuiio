@@ -44,7 +44,10 @@ export function BranchForm({
   onCancel,
   disableFormWrapper,
 }: BranchFormProps) {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: orgInfo } = useCurrentOrg();
   const orgId = orgInfo?.orgId;
   const createBranch = useCreateBranch(orgId);

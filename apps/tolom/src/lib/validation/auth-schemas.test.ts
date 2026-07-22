@@ -1,18 +1,23 @@
 import { describe, expect, it } from "vitest";
 import {
-  loginSchema,
-  signupSchema,
   createOrganizationSchema,
-  forgotPasswordSchema,
-  resetPasswordSchema,
   customerLoginSchema,
   customerSetPasswordSchema,
+  forgotPasswordSchema,
+  loginSchema,
   organizationPinSchema,
+  resetPasswordSchema,
+  signupSchema,
 } from "./auth-schemas";
 
 describe("loginSchema", () => {
   it("accepts valid login", () => {
-    expect(loginSchema.safeParse({ identifier: "test@test.com", password: "pass123" }).success).toBe(true);
+    expect(
+      loginSchema.safeParse({
+        identifier: "test@test.com",
+        password: "pass123",
+      }).success,
+    ).toBe(true);
   });
 
   it("rejects missing identifier", () => {
@@ -20,11 +25,15 @@ describe("loginSchema", () => {
   });
 
   it("rejects missing password", () => {
-    expect(loginSchema.safeParse({ identifier: "test@test.com" }).success).toBe(false);
+    expect(loginSchema.safeParse({ identifier: "test@test.com" }).success).toBe(
+      false,
+    );
   });
 
   it("rejects empty fields", () => {
-    expect(loginSchema.safeParse({ identifier: "", password: "" }).success).toBe(false);
+    expect(
+      loginSchema.safeParse({ identifier: "", password: "" }).success,
+    ).toBe(false);
   });
 });
 
@@ -93,11 +102,15 @@ describe("createOrganizationSchema", () => {
 
 describe("forgotPasswordSchema", () => {
   it("accepts valid identifier", () => {
-    expect(forgotPasswordSchema.safeParse({ identifier: "test@test.com" }).success).toBe(true);
+    expect(
+      forgotPasswordSchema.safeParse({ identifier: "test@test.com" }).success,
+    ).toBe(true);
   });
 
   it("rejects empty identifier", () => {
-    expect(forgotPasswordSchema.safeParse({ identifier: "" }).success).toBe(false);
+    expect(forgotPasswordSchema.safeParse({ identifier: "" }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -124,16 +137,23 @@ describe("resetPasswordSchema", () => {
 describe("customerLoginSchema", () => {
   it("accepts valid customer login", () => {
     expect(
-      customerLoginSchema.safeParse({ email: "customer@test.com", password: "pass123" }).success,
+      customerLoginSchema.safeParse({
+        email: "customer@test.com",
+        password: "pass123",
+      }).success,
     ).toBe(true);
   });
 
   it("rejects missing email", () => {
-    expect(customerLoginSchema.safeParse({ password: "pass123" }).success).toBe(false);
+    expect(customerLoginSchema.safeParse({ password: "pass123" }).success).toBe(
+      false,
+    );
   });
 
   it("rejects missing password", () => {
-    expect(customerLoginSchema.safeParse({ email: "customer@test.com" }).success).toBe(false);
+    expect(
+      customerLoginSchema.safeParse({ email: "customer@test.com" }).success,
+    ).toBe(false);
   });
 });
 
@@ -171,25 +191,41 @@ describe("customerSetPasswordSchema", () => {
 describe("organizationPinSchema", () => {
   it("accepts valid PIN (4-6 digits)", () => {
     expect(
-      organizationPinSchema.safeParse({ organizationId: "org-1", pin: "1234", confirmPin: "1234" }).success,
+      organizationPinSchema.safeParse({
+        organizationId: "org-1",
+        pin: "1234",
+        confirmPin: "1234",
+      }).success,
     ).toBe(true);
   });
 
   it("rejects non-matching PINs", () => {
     expect(
-      organizationPinSchema.safeParse({ organizationId: "org-1", pin: "1234", confirmPin: "5678" }).success,
+      organizationPinSchema.safeParse({
+        organizationId: "org-1",
+        pin: "1234",
+        confirmPin: "5678",
+      }).success,
     ).toBe(false);
   });
 
   it("rejects non-numeric PIN", () => {
     expect(
-      organizationPinSchema.safeParse({ organizationId: "org-1", pin: "abcd", confirmPin: "abcd" }).success,
+      organizationPinSchema.safeParse({
+        organizationId: "org-1",
+        pin: "abcd",
+        confirmPin: "abcd",
+      }).success,
     ).toBe(false);
   });
 
   it("rejects PIN with wrong length (2 digits)", () => {
     expect(
-      organizationPinSchema.safeParse({ organizationId: "org-1", pin: "12", confirmPin: "12" }).success,
+      organizationPinSchema.safeParse({
+        organizationId: "org-1",
+        pin: "12",
+        confirmPin: "12",
+      }).success,
     ).toBe(false);
   });
 });

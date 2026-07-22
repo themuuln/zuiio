@@ -26,7 +26,10 @@ interface VehicleFitmentProps {
 }
 
 export function VehicleFitment({ fitments, isPending }: VehicleFitmentProps) {
-  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   if (isPending) {
     return (

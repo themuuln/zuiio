@@ -103,7 +103,10 @@ export function createMockSupabaseClient() {
   ) => {
     // Use resolveOnce queue if available, else persistent resolveWith
     if (resolveOnceQueue.length > 0) {
-      return Promise.resolve(resolveOnceQueue.shift()!).then(onFulfilled, onRejected);
+      return Promise.resolve(resolveOnceQueue.shift()!).then(
+        onFulfilled,
+        onRejected,
+      );
     }
     return Promise.resolve(thenResolveData).then(onFulfilled, onRejected);
   };

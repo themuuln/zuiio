@@ -41,23 +41,20 @@ vi.mock("@/lib/services/push-triggers", () => ({
 
 import { revalidateTag } from "next/cache";
 import { logAuditAfter } from "@/lib/audit";
-import { reportServerError } from "@/lib/sentry-report-server";
-import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
-import { notifyWorkOrderAssigned } from "@/lib/services/push-triggers";
-import { resolveBranchId } from "@/lib/supabase/with-branch";
 import { logger } from "@/lib/logger";
+import { reportServerError } from "@/lib/sentry-report-server";
+import { notifyWorkOrderAssigned } from "@/lib/services/push-triggers";
+import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
+import { resolveBranchId } from "@/lib/supabase/with-branch";
 
 const mockRevalidateTag = vi.mocked(revalidateTag);
-const mockLogAudit = vi.mocked(logAuditAfter);
-const mockReportServerError = vi.mocked(reportServerError);
+const _mockLogAudit = vi.mocked(logAuditAfter);
+const _mockReportServerError = vi.mocked(reportServerError);
 const mockSyncWorkOrderToSchedules = vi.mocked(syncWorkOrderToSchedules);
 const mockNotifyWorkOrderAssigned = vi.mocked(notifyWorkOrderAssigned);
-const mockResolveBranchId = vi.mocked(resolveBranchId);
+const _mockResolveBranchId = vi.mocked(resolveBranchId);
 
-import {
-  updateWorkOrderStatus,
-  assignMechanic,
-} from "../work-order-workflow";
+import { assignMechanic, updateWorkOrderStatus } from "../work-order-workflow";
 
 const ORG_ID = "org-1";
 const WO_ID = "wo-1";
@@ -128,12 +125,7 @@ describe("updateWorkOrderStatus", () => {
     db.__qb.resolveOnce({ data: currentWO, error: null });
     db.__qb.resolveOnce({ data: updatedRow, error: null });
 
-    const result = await updateWorkOrderStatus(
-      db,
-      WO_ID,
-      ORG_ID,
-      newStatus,
-    );
+    const result = await updateWorkOrderStatus(db, WO_ID, ORG_ID, newStatus);
 
     // Status history was inserted
     expect(db.from).toHaveBeenCalledWith("work_order_status_history");
@@ -157,10 +149,7 @@ describe("updateWorkOrderStatus", () => {
       `dashboard:${ORG_ID}:all`,
       "max",
     );
-    expect(mockRevalidateTag).toHaveBeenCalledWith(
-      `reports:${ORG_ID}`,
-      "max",
-    );
+    expect(mockRevalidateTag).toHaveBeenCalledWith(`reports:${ORG_ID}`, "max");
   });
 
   it("does not record history when status is unchanged", async () => {
@@ -179,14 +168,18 @@ describe("updateWorkOrderStatus", () => {
     await updateWorkOrderStatus(db, WO_ID, ORG_ID, currentStatus);
 
     // Should NOT have inserted status history
-    const fromCalls = (db.from as ReturnType<typeof vi.fn>).mock.calls
-      .map((c: string[]) => c[0]);
+    const fromCalls = (db.from as ReturnType<typeof vi.fn>).mock.calls.map(
+      (c: string[]) => c[0],
+    );
     expect(fromCalls).not.toContain("work_order_status_history");
   });
 
   it("sets started_at when moving to In Progress without one", async () => {
     const newStatus = "In Progress";
-    const updatedRow = makeWorkOrderRow({ status: newStatus, started_at: null });
+    const updatedRow = makeWorkOrderRow({
+      status: newStatus,
+      started_at: null,
+    });
 
     const currentWO = {
       id: WO_ID,
@@ -200,8 +193,9 @@ describe("updateWorkOrderStatus", () => {
     await updateWorkOrderStatus(db, WO_ID, ORG_ID, newStatus);
 
     // Should have set started_at — 3rd work_orders call
-    const fromCalls = (db.from as ReturnType<typeof vi.fn>).mock.calls
-      .map((c: string[]) => c[0]);
+    const fromCalls = (db.from as ReturnType<typeof vi.fn>).mock.calls.map(
+      (c: string[]) => c[0],
+    );
     const workOrderCalls = fromCalls.filter((t: string) => t === "work_orders");
     expect(workOrderCalls.length).toBeGreaterThanOrEqual(3);
   });
@@ -226,8 +220,9 @@ describe("updateWorkOrderStatus", () => {
     await updateWorkOrderStatus(db, WO_ID, ORG_ID, newStatus);
 
     // Only 2 work_orders calls: initial fetch + update+select
-    const fromCalls = (db.from as ReturnType<typeof vi.fn>).mock.calls
-      .map((c: string[]) => c[0]);
+    const fromCalls = (db.from as ReturnType<typeof vi.fn>).mock.calls.map(
+      (c: string[]) => c[0],
+    );
     const workOrderCalls = fromCalls.filter((t: string) => t === "work_orders");
     expect(workOrderCalls.length).toBe(2);
   });
@@ -290,10 +285,7 @@ describe("updateWorkOrderStatus", () => {
       `dashboard:${ORG_ID}:all`,
       "max",
     );
-    expect(mockRevalidateTag).toHaveBeenCalledWith(
-      `reports:${ORG_ID}`,
-      "max",
-    );
+    expect(mockRevalidateTag).toHaveBeenCalledWith(`reports:${ORG_ID}`, "max");
   });
 
   it("warns when deducting more than available stock", async () => {

@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ── Module-level mocks ────────────────────────────────────────────
 
@@ -10,11 +9,8 @@ vi.mock("@/lib/supabase/with-branch", () => ({
   resolveBranchId: vi
     .fn()
     .mockImplementation(
-      (
-        _supabase: unknown,
-        _orgId: string,
-        branchId?: string | null,
-      ) => Promise.resolve(branchId ?? null),
+      (_supabase: unknown, _orgId: string, branchId?: string | null) =>
+        Promise.resolve(branchId ?? null),
     ),
 }));
 
@@ -96,7 +92,8 @@ function createService(
     selectColumnsById:
       overrides.selectColumnsById ??
       "id, name, email, branch_id, organization_id, deleted_at, created_by, updated_by",
-    cacheTagKey: overrides.cacheTagKey ?? ((orgId: string) => `${TABLE_KEY}:${orgId}`),
+    cacheTagKey:
+      overrides.cacheTagKey ?? ((orgId: string) => `${TABLE_KEY}:${orgId}`),
     cacheTagKeyById:
       overrides.cacheTagKeyById ?? ((id: string) => `${TABLE_KEY}:${id}`),
     orderBy: overrides.orderBy ?? { column: "name", direction: "asc" },
@@ -246,16 +243,19 @@ describe("getById", () => {
     });
 
     const svc = createService();
-    await expect(
-      svc.getById(db as never, ORG_ID, "bad-id"),
-    ).rejects.toThrow(/not found/i);
+    await expect(svc.getById(db as never, ORG_ID, "bad-id")).rejects.toThrow(
+      /not found/i,
+    );
   });
 });
 
 // ── create ────────────────────────────────────────────────────────
 
 describe("create", () => {
-  const insertParams: CreateTestParams = { name: "Alice", email: "alice@test.com" };
+  const insertParams: CreateTestParams = {
+    name: "Alice",
+    email: "alice@test.com",
+  };
   const createdRecord: TestRecord = {
     ...DEFAULT_RECORD,
     name: "Alice",
@@ -280,7 +280,9 @@ describe("create", () => {
   });
 
   it("calls beforeCreate hook and merges result", async () => {
-    const beforeCreate = vi.fn().mockResolvedValue({ email: "override@test.com" });
+    const beforeCreate = vi
+      .fn()
+      .mockResolvedValue({ email: "override@test.com" });
     db.__qb.resolveWith({
       data: { ...createdRecord, email: "override@test.com" },
       error: null,
@@ -289,10 +291,13 @@ describe("create", () => {
     const svc = createService({ hooks: { beforeCreate } });
     await svc.create(db as never, ORG_ID, insertParams, USER_ID);
 
-    expect(beforeCreate).toHaveBeenCalledWith(insertParams, expect.objectContaining({
-      orgId: ORG_ID,
-      userId: USER_ID,
-    }));
+    expect(beforeCreate).toHaveBeenCalledWith(
+      insertParams,
+      expect.objectContaining({
+        orgId: ORG_ID,
+        userId: USER_ID,
+      }),
+    );
   });
 
   it("calls afterCreate hook after insert", async () => {
@@ -326,10 +331,15 @@ describe("create", () => {
     });
 
     const svc = createService({ fieldMap });
-    const result = await svc.create(db as never, ORG_ID, {
-      name: "  Alice  ",
-      email: "alice@test.com",
-    }, USER_ID);
+    const result = await svc.create(
+      db as never,
+      ORG_ID,
+      {
+        name: "  Alice  ",
+        email: "alice@test.com",
+      },
+      USER_ID,
+    );
 
     expect(result.name).toBe("Alice");
   });
@@ -342,10 +352,15 @@ describe("create", () => {
     });
 
     const svc = createService();
-    await svc.create(db as never, ORG_ID, {
-      name: "Alice",
-      branchId: "branch-1",
-    }, USER_ID);
+    await svc.create(
+      db as never,
+      ORG_ID,
+      {
+        name: "Alice",
+        branchId: "branch-1",
+      },
+      USER_ID,
+    );
 
     expect(mockResolveBranchId).toHaveBeenCalledWith(
       expect.anything(),

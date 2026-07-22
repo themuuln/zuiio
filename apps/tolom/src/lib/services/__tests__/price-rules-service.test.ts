@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMockSupabaseClient, type MockSupabaseClient } from "@/test/mocks/supabase";
+import {
+  createMockSupabaseClient,
+  type MockSupabaseClient,
+} from "@/test/mocks/supabase";
 
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ logAuditAfter: vi.fn() }));
@@ -36,14 +39,14 @@ const mockLogAudit = vi.mocked(logAuditAfter);
 const mockResolveBranchId = vi.mocked(resolveBranchId);
 
 import {
-  getPriceRules,
+  createPriceRule,
+  deletePriceRule,
   getActivePriceRules,
   getPriceRule,
-  createPriceRule,
-  updatePriceRule,
-  deletePriceRule,
-  resolvePrice,
+  getPriceRules,
   type RuleOperator,
+  resolvePrice,
+  updatePriceRule,
 } from "../price-rules-service";
 
 const ORG_ID = "org-1";
@@ -116,9 +119,14 @@ describe("getPriceRules", () => {
   });
 
   it("throws on database error", async () => {
-    db.__qb.resolveWith({ data: null, error: { message: "Connection failed" } });
+    db.__qb.resolveWith({
+      data: null,
+      error: { message: "Connection failed" },
+    });
 
-    await expect(getPriceRules(db, ORG_ID)).rejects.toThrow("Connection failed");
+    await expect(getPriceRules(db, ORG_ID)).rejects.toThrow(
+      "Connection failed",
+    );
   });
 });
 
@@ -168,13 +176,17 @@ describe("getPriceRule", () => {
   it("throws NotFoundError when rule not found", async () => {
     db.__qb.resolveWith({ data: null, error: null });
 
-    await expect(getPriceRule(db, RULE_ID)).rejects.toThrow("Price rule not found");
+    await expect(getPriceRule(db, RULE_ID)).rejects.toThrow(
+      "Price rule not found",
+    );
   });
 
   it("throws NotFoundError on query error", async () => {
     db.__qb.resolveWith({ data: null, error: { message: "Not found" } });
 
-    await expect(getPriceRule(db, RULE_ID)).rejects.toThrow("Price rule not found");
+    await expect(getPriceRule(db, RULE_ID)).rejects.toThrow(
+      "Price rule not found",
+    );
   });
 });
 
@@ -190,7 +202,11 @@ describe("createPriceRule", () => {
   };
 
   it("creates a price rule with valid params", async () => {
-    const created = makePriceRule({ name: "Winter Discount", operator: "percentage_sub", value: 10 });
+    const created = makePriceRule({
+      name: "Winter Discount",
+      operator: "percentage_sub",
+      value: 10,
+    });
     db.__qb.resolveWith({ data: created, error: null });
 
     const result = await createPriceRule(db, ORG_ID, validParams, USER_ID);
@@ -200,13 +216,17 @@ describe("createPriceRule", () => {
   });
 
   it("trims name and description", async () => {
-    const params = { ...validParams, name: "  My Rule  ", description: "  desc text  " };
+    const params = {
+      ...validParams,
+      name: "  My Rule  ",
+      description: "  desc text  ",
+    };
     db.__qb.resolveWith({ data: makePriceRule(), error: null });
 
     await createPriceRule(db, ORG_ID, params, USER_ID);
 
-    const insertCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0].value
-      .insert as ReturnType<typeof vi.fn>;
+    const insertCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0]
+      .value.insert as ReturnType<typeof vi.fn>;
     expect(insertCall).toHaveBeenCalledWith(
       expect.objectContaining({ name: "My Rule", description: "desc text" }),
     );
@@ -217,8 +237,8 @@ describe("createPriceRule", () => {
 
     await createPriceRule(db, ORG_ID, validParams, USER_ID);
 
-    const insertCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0].value
-      .insert as ReturnType<typeof vi.fn>;
+    const insertCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0]
+      .value.insert as ReturnType<typeof vi.fn>;
     expect(insertCall).toHaveBeenCalledWith(
       expect.objectContaining({ created_by: USER_ID, updated_by: USER_ID }),
     );
@@ -229,9 +249,11 @@ describe("createPriceRule", () => {
 
     await createPriceRule(db, ORG_ID, validParams, USER_ID);
 
-    const insertCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0].value
-      .insert as ReturnType<typeof vi.fn>;
-    expect(insertCall).toHaveBeenCalledWith(expect.objectContaining({ priority: 100 }));
+    const insertCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0]
+      .value.insert as ReturnType<typeof vi.fn>;
+    expect(insertCall).toHaveBeenCalledWith(
+      expect.objectContaining({ priority: 100 }),
+    );
   });
 
   it("throws ValidationError when name is blank", async () => {
@@ -242,13 +264,23 @@ describe("createPriceRule", () => {
 
   it("throws ValidationError when operator is missing", async () => {
     await expect(
-      createPriceRule(db, ORG_ID, { ...validParams, operator: "" as RuleOperator }, USER_ID),
+      createPriceRule(
+        db,
+        ORG_ID,
+        { ...validParams, operator: "" as RuleOperator },
+        USER_ID,
+      ),
     ).rejects.toThrow("Operator is required");
   });
 
   it("throws ValidationError when value is null", async () => {
     await expect(
-      createPriceRule(db, ORG_ID, { ...validParams, value: null as unknown as number }, USER_ID),
+      createPriceRule(
+        db,
+        ORG_ID,
+        { ...validParams, value: null as unknown as number },
+        USER_ID,
+      ),
     ).rejects.toThrow("Value is required");
   });
 
@@ -267,7 +299,10 @@ describe("createPriceRule", () => {
       organization_id: ORG_ID,
       new_data: created,
     });
-    expect(mockRevalidateTag).toHaveBeenCalledWith(`price-rules:${ORG_ID}`, "max");
+    expect(mockRevalidateTag).toHaveBeenCalledWith(
+      `price-rules:${ORG_ID}`,
+      "max",
+    );
   });
 
   it("deep-clones conditions via JSON round-trip", async () => {
@@ -276,8 +311,8 @@ describe("createPriceRule", () => {
 
     await createPriceRule(db, ORG_ID, { ...validParams, conditions }, USER_ID);
 
-    const insertCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0].value
-      .insert as ReturnType<typeof vi.fn>;
+    const insertCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0]
+      .value.insert as ReturnType<typeof vi.fn>;
     const callArg = insertCall.mock.calls[0][0] as Record<string, unknown>;
     expect(callArg.conditions).toEqual(conditions);
     expect(callArg.conditions).not.toBe(conditions);
@@ -286,7 +321,9 @@ describe("createPriceRule", () => {
   it("throws on DB error", async () => {
     db.__qb.resolveWith({ data: null, error: { message: "Insert failed" } });
 
-    await expect(createPriceRule(db, ORG_ID, validParams, USER_ID)).rejects.toThrow("Insert failed");
+    await expect(
+      createPriceRule(db, ORG_ID, validParams, USER_ID),
+    ).rejects.toThrow("Insert failed");
   });
 });
 
@@ -297,13 +334,23 @@ describe("updatePriceRule", () => {
     const updated = makePriceRule({ name: "Updated Name", value: 20 });
     db.__qb.resolveWith({ data: updated, error: null });
 
-    const result = await updatePriceRule(db, RULE_ID, ORG_ID, { name: "Updated Name", value: 20 }, USER_ID);
+    const result = await updatePriceRule(
+      db,
+      RULE_ID,
+      ORG_ID,
+      { name: "Updated Name", value: 20 },
+      USER_ID,
+    );
 
     expect(result).toEqual(updated);
-    const updateCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0].value
-      .update as ReturnType<typeof vi.fn>;
+    const updateCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0]
+      .value.update as ReturnType<typeof vi.fn>;
     expect(updateCall).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Updated Name", value: 20, updated_by: USER_ID }),
+      expect.objectContaining({
+        name: "Updated Name",
+        value: 20,
+        updated_by: USER_ID,
+      }),
     );
   });
 
@@ -313,8 +360,8 @@ describe("updatePriceRule", () => {
 
     await updatePriceRule(db, RULE_ID, ORG_ID, { is_active: false }, USER_ID);
 
-    const updateCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0].value
-      .update as ReturnType<typeof vi.fn>;
+    const updateCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0]
+      .value.update as ReturnType<typeof vi.fn>;
     expect(updateCall).toHaveBeenCalledWith(
       expect.objectContaining({ is_active: false, updated_by: USER_ID }),
     );
@@ -323,13 +370,17 @@ describe("updatePriceRule", () => {
   it("throws NotFoundError when rule not found", async () => {
     db.__qb.resolveWith({ data: null, error: null });
 
-    await expect(updatePriceRule(db, RULE_ID, ORG_ID, { name: "X" }, USER_ID)).rejects.toThrow("Price rule not found");
+    await expect(
+      updatePriceRule(db, RULE_ID, ORG_ID, { name: "X" }, USER_ID),
+    ).rejects.toThrow("Price rule not found");
   });
 
   it("throws NotFoundError on query error", async () => {
     db.__qb.resolveWith({ data: null, error: { message: "Error" } });
 
-    await expect(updatePriceRule(db, RULE_ID, ORG_ID, { name: "X" }, USER_ID)).rejects.toThrow("Price rule not found");
+    await expect(
+      updatePriceRule(db, RULE_ID, ORG_ID, { name: "X" }, USER_ID),
+    ).rejects.toThrow("Price rule not found");
   });
 
   it("calls logAuditAfter and revalidateTag", async () => {
@@ -347,18 +398,31 @@ describe("updatePriceRule", () => {
       organization_id: ORG_ID,
       new_data: updated,
     });
-    expect(mockRevalidateTag).toHaveBeenCalledWith(`price-rules:${ORG_ID}`, "max");
+    expect(mockRevalidateTag).toHaveBeenCalledWith(
+      `price-rules:${ORG_ID}`,
+      "max",
+    );
   });
 
   it("trims string fields before update", async () => {
     db.__qb.resolveWith({ data: makePriceRule(), error: null });
 
-    await updatePriceRule(db, RULE_ID, ORG_ID, { name: "  Trimmed  ", description: "  desc  " }, USER_ID);
+    await updatePriceRule(
+      db,
+      RULE_ID,
+      ORG_ID,
+      { name: "  Trimmed  ", description: "  desc  " },
+      USER_ID,
+    );
 
-    const updateCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0].value
-      .update as ReturnType<typeof vi.fn>;
+    const updateCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0]
+      .value.update as ReturnType<typeof vi.fn>;
     expect(updateCall).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Trimmed", description: "desc", updated_by: USER_ID }),
+      expect.objectContaining({
+        name: "Trimmed",
+        description: "desc",
+        updated_by: USER_ID,
+      }),
     );
   });
 });
@@ -371,10 +435,13 @@ describe("deletePriceRule", () => {
 
     await deletePriceRule(db, RULE_ID, ORG_ID);
 
-    const updateCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0].value
-      .update as ReturnType<typeof vi.fn>;
+    const updateCall = (db.from as ReturnType<typeof vi.fn>).mock.results[0]
+      .value.update as ReturnType<typeof vi.fn>;
     expect(updateCall).toHaveBeenCalledWith(
-      expect.objectContaining({ deleted_at: expect.any(String), updated_by: "test-user-id" }),
+      expect.objectContaining({
+        deleted_at: expect.any(String),
+        updated_by: "test-user-id",
+      }),
     );
 
     // Verify targeting filters
@@ -397,13 +464,18 @@ describe("deletePriceRule", () => {
       user_id: "test-user-id",
       organization_id: ORG_ID,
     });
-    expect(mockRevalidateTag).toHaveBeenCalledWith(`price-rules:${ORG_ID}`, "max");
+    expect(mockRevalidateTag).toHaveBeenCalledWith(
+      `price-rules:${ORG_ID}`,
+      "max",
+    );
   });
 
   it("throws on database error", async () => {
     db.__qb.resolveWith({ data: null, error: { message: "Delete failed" } });
 
-    await expect(deletePriceRule(db, RULE_ID, ORG_ID)).rejects.toThrow("Delete failed");
+    await expect(deletePriceRule(db, RULE_ID, ORG_ID)).rejects.toThrow(
+      "Delete failed",
+    );
   });
 });
 
@@ -427,13 +499,15 @@ describe("resolvePrice", () => {
 
     it("returns specific_price when found for a part with vehicle context", async () => {
       // maybeSingle is on the shared qb, not __qb
-      qb().maybeSingle.mockResolvedValueOnce(
-        { data: { id: "cat-1", default_price: 10000 }, error: null },
-      );
+      qb().maybeSingle.mockResolvedValueOnce({
+        data: { id: "cat-1", default_price: 10000 },
+        error: null,
+      });
       db.__qb.resolveOnce({ data: [{ id: "vm-1" }], error: null });
-      qb().maybeSingle.mockResolvedValueOnce(
-        { data: { specific_price: 12000 }, error: null },
-      );
+      qb().maybeSingle.mockResolvedValueOnce({
+        data: { specific_price: 12000 },
+        error: null,
+      });
 
       const result = await resolvePrice(db, ORG_ID, partInput);
 
@@ -445,9 +519,7 @@ describe("resolvePrice", () => {
     });
 
     it("falls through to default when catalog part is not found", async () => {
-      qb().maybeSingle.mockResolvedValueOnce(
-        { data: null, error: null },
-      );
+      qb().maybeSingle.mockResolvedValueOnce({ data: null, error: null });
       db.__qb.resolveOnce({ data: [], error: null });
 
       const result = await resolvePrice(db, ORG_ID, partInput);
@@ -468,14 +540,18 @@ describe("resolvePrice", () => {
     };
 
     beforeEach(() => {
-      qb().maybeSingle.mockResolvedValueOnce(
-        { data: { id: "cat-1", default_price: 10000 }, error: null },
-      );
+      qb().maybeSingle.mockResolvedValueOnce({
+        data: { id: "cat-1", default_price: 10000 },
+        error: null,
+      });
       db.__qb.resolveOnce({ data: [], error: null });
     });
 
     it("multiply: basePrice * value", async () => {
-      db.__qb.resolveOnce({ data: [makePriceRule({ operator: "multiply", value: 2 })], error: null });
+      db.__qb.resolveOnce({
+        data: [makePriceRule({ operator: "multiply", value: 2 })],
+        error: null,
+      });
 
       const result = await resolvePrice(db, ORG_ID, partInput);
 
@@ -484,7 +560,10 @@ describe("resolvePrice", () => {
     });
 
     it("add_fixed: basePrice + value", async () => {
-      db.__qb.resolveOnce({ data: [makePriceRule({ operator: "add_fixed", value: 5000 })], error: null });
+      db.__qb.resolveOnce({
+        data: [makePriceRule({ operator: "add_fixed", value: 5000 })],
+        error: null,
+      });
 
       const result = await resolvePrice(db, ORG_ID, partInput);
 
@@ -492,7 +571,10 @@ describe("resolvePrice", () => {
     });
 
     it("set_fixed: returns exact value without rounding", async () => {
-      db.__qb.resolveOnce({ data: [makePriceRule({ operator: "set_fixed", value: 9999.9 })], error: null });
+      db.__qb.resolveOnce({
+        data: [makePriceRule({ operator: "set_fixed", value: 9999.9 })],
+        error: null,
+      });
 
       const result = await resolvePrice(db, ORG_ID, partInput);
 
@@ -502,7 +584,10 @@ describe("resolvePrice", () => {
     });
 
     it("percentage_add: basePrice * (1 + value/100)", async () => {
-      db.__qb.resolveOnce({ data: [makePriceRule({ operator: "percentage_add", value: 25 })], error: null });
+      db.__qb.resolveOnce({
+        data: [makePriceRule({ operator: "percentage_add", value: 25 })],
+        error: null,
+      });
 
       const result = await resolvePrice(db, ORG_ID, partInput);
 
@@ -510,7 +595,10 @@ describe("resolvePrice", () => {
     });
 
     it("percentage_sub: basePrice * (1 - value/100)", async () => {
-      db.__qb.resolveOnce({ data: [makePriceRule({ operator: "percentage_sub", value: 15 })], error: null });
+      db.__qb.resolveOnce({
+        data: [makePriceRule({ operator: "percentage_sub", value: 15 })],
+        error: null,
+      });
 
       const result = await resolvePrice(db, ORG_ID, partInput);
 
@@ -518,7 +606,10 @@ describe("resolvePrice", () => {
     });
 
     it("rounds non-set_fixed results to 2 decimal places", async () => {
-      db.__qb.resolveOnce({ data: [makePriceRule({ operator: "multiply", value: 1 / 3 })], error: null });
+      db.__qb.resolveOnce({
+        data: [makePriceRule({ operator: "multiply", value: 1 / 3 })],
+        error: null,
+      });
 
       const result = await resolvePrice(db, ORG_ID, partInput);
 
@@ -537,17 +628,28 @@ describe("resolvePrice", () => {
     };
 
     beforeEach(() => {
-      qb().maybeSingle.mockResolvedValueOnce(
-        { data: { id: "cat-1", default_price: 10000 }, error: null },
-      );
+      qb().maybeSingle.mockResolvedValueOnce({
+        data: { id: "cat-1", default_price: 10000 },
+        error: null,
+      });
       db.__qb.resolveOnce({ data: [], error: null });
     });
 
     it("filters by apply_to (part applies, service does not)", async () => {
       db.__qb.resolveOnce({
         data: [
-          makePriceRule({ apply_to: "part", operator: "add_fixed", value: 1000, id: "r-part" }),
-          makePriceRule({ apply_to: "service", operator: "add_fixed", value: 9999, id: "r-svc" }),
+          makePriceRule({
+            apply_to: "part",
+            operator: "add_fixed",
+            value: 1000,
+            id: "r-part",
+          }),
+          makePriceRule({
+            apply_to: "service",
+            operator: "add_fixed",
+            value: 9999,
+            id: "r-svc",
+          }),
         ],
         error: null,
       });
@@ -560,8 +662,17 @@ describe("resolvePrice", () => {
     it("filters by part category", async () => {
       db.__qb.resolveOnce({
         data: [
-          makePriceRule({ part_category: "Filters", operator: "add_fixed", value: 2000 }),
-          makePriceRule({ part_category: "Brakes", operator: "add_fixed", value: 9999, id: "r-brake" }),
+          makePriceRule({
+            part_category: "Filters",
+            operator: "add_fixed",
+            value: 2000,
+          }),
+          makePriceRule({
+            part_category: "Brakes",
+            operator: "add_fixed",
+            value: 9999,
+            id: "r-brake",
+          }),
         ],
         error: null,
       });
@@ -574,8 +685,17 @@ describe("resolvePrice", () => {
     it("filters by part name pattern (wildcard)", async () => {
       db.__qb.resolveOnce({
         data: [
-          makePriceRule({ part_name_pattern: "Oil*", operator: "add_fixed", value: 3000 }),
-          makePriceRule({ part_name_pattern: "Brake*", operator: "add_fixed", value: 9999, id: "r-brake" }),
+          makePriceRule({
+            part_name_pattern: "Oil*",
+            operator: "add_fixed",
+            value: 3000,
+          }),
+          makePriceRule({
+            part_name_pattern: "Brake*",
+            operator: "add_fixed",
+            value: 9999,
+            id: "r-brake",
+          }),
         ],
         error: null,
       });
@@ -604,15 +724,22 @@ describe("resolvePrice", () => {
     };
 
     beforeEach(() => {
-      qb().maybeSingle.mockResolvedValueOnce(
-        { data: { id: "cat-1", default_price: 10000 }, error: null },
-      );
+      qb().maybeSingle.mockResolvedValueOnce({
+        data: { id: "cat-1", default_price: 10000 },
+        error: null,
+      });
       db.__qb.resolveOnce({ data: [], error: null });
     });
 
     it("matches vehicle makes (case-insensitive)", async () => {
       db.__qb.resolveOnce({
-        data: [makePriceRule({ conditions: { makes: ["toyota"] }, operator: "add_fixed", value: 5000 })],
+        data: [
+          makePriceRule({
+            conditions: { makes: ["toyota"] },
+            operator: "add_fixed",
+            value: 5000,
+          }),
+        ],
         error: null,
       });
 
@@ -623,7 +750,13 @@ describe("resolvePrice", () => {
 
     it("matches vehicle models", async () => {
       db.__qb.resolveOnce({
-        data: [makePriceRule({ conditions: { models: ["Camry"] }, operator: "add_fixed", value: 5000 })],
+        data: [
+          makePriceRule({
+            conditions: { models: ["Camry"] },
+            operator: "add_fixed",
+            value: 5000,
+          }),
+        ],
         error: null,
       });
 
@@ -634,7 +767,13 @@ describe("resolvePrice", () => {
 
     it("matches vehicle year within range", async () => {
       db.__qb.resolveOnce({
-        data: [makePriceRule({ conditions: { years: { start: 2015, end: 2025 } }, operator: "add_fixed", value: 3000 })],
+        data: [
+          makePriceRule({
+            conditions: { years: { start: 2015, end: 2025 } },
+            operator: "add_fixed",
+            value: 3000,
+          }),
+        ],
         error: null,
       });
 
@@ -645,7 +784,13 @@ describe("resolvePrice", () => {
 
     it("matches vehicle class", async () => {
       db.__qb.resolveOnce({
-        data: [makePriceRule({ conditions: { classes: ["standard"] }, operator: "add_fixed", value: 2000 })],
+        data: [
+          makePriceRule({
+            conditions: { classes: ["standard"] },
+            operator: "add_fixed",
+            value: 2000,
+          }),
+        ],
         error: null,
       });
 
@@ -656,7 +801,13 @@ describe("resolvePrice", () => {
 
     it("matches body type", async () => {
       db.__qb.resolveOnce({
-        data: [makePriceRule({ conditions: { body_types: ["sedan"] }, operator: "add_fixed", value: 2000 })],
+        data: [
+          makePriceRule({
+            conditions: { body_types: ["sedan"] },
+            operator: "add_fixed",
+            value: 2000,
+          }),
+        ],
         error: null,
       });
 
@@ -667,7 +818,13 @@ describe("resolvePrice", () => {
 
     it("matches fuel type", async () => {
       db.__qb.resolveOnce({
-        data: [makePriceRule({ conditions: { fuel_types: ["gasoline"] }, operator: "add_fixed", value: 2000 })],
+        data: [
+          makePriceRule({
+            conditions: { fuel_types: ["gasoline"] },
+            operator: "add_fixed",
+            value: 2000,
+          }),
+        ],
         error: null,
       });
 
@@ -678,7 +835,13 @@ describe("resolvePrice", () => {
 
     it("excludes rules with non-matching conditions", async () => {
       db.__qb.resolveOnce({
-        data: [makePriceRule({ conditions: { makes: ["Honda"] }, operator: "add_fixed", value: 5000 })],
+        data: [
+          makePriceRule({
+            conditions: { makes: ["Honda"] },
+            operator: "add_fixed",
+            value: 5000,
+          }),
+        ],
         error: null,
       });
 
@@ -690,8 +853,18 @@ describe("resolvePrice", () => {
     it("picks first matching rule by priority when multiple match", async () => {
       db.__qb.resolveOnce({
         data: [
-          makePriceRule({ priority: 100, operator: "add_fixed", value: 1000, id: "r-high" }),
-          makePriceRule({ priority: 200, operator: "add_fixed", value: 5000, id: "r-low" }),
+          makePriceRule({
+            priority: 100,
+            operator: "add_fixed",
+            value: 1000,
+            id: "r-high",
+          }),
+          makePriceRule({
+            priority: 200,
+            operator: "add_fixed",
+            value: 5000,
+            id: "r-low",
+          }),
         ],
         error: null,
       });
@@ -713,9 +886,10 @@ describe("resolvePrice", () => {
         vehicle: { make: "Toyota", model: "Camry" },
       };
 
-      qb().maybeSingle.mockResolvedValueOnce(
-        { data: { id: "cat-1", default_price: 10000 }, error: null },
-      );
+      qb().maybeSingle.mockResolvedValueOnce({
+        data: { id: "cat-1", default_price: 10000 },
+        error: null,
+      });
       db.__qb.resolveOnce({ data: [], error: null }); // no vehicle_models
       db.__qb.resolveOnce({ data: [], error: null }); // getActivePriceRules returns empty
       db.__qb.resolveOnce({ data: [{ unit_price: 9000 }], error: null }); // part_price_history
@@ -756,9 +930,10 @@ describe("resolvePrice", () => {
         part: { name: "Oil Filter" },
       };
 
-      qb().maybeSingle.mockResolvedValueOnce(
-        { data: { id: "cat-1", default_price: 10000 }, error: null },
-      );
+      qb().maybeSingle.mockResolvedValueOnce({
+        data: { id: "cat-1", default_price: 10000 },
+        error: null,
+      });
       db.__qb.resolveOnce({ data: [], error: null }); // getActivePriceRules
 
       const result = await resolvePrice(db, ORG_ID, input);

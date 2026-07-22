@@ -4,9 +4,9 @@ import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
+import { notifyWorkOrderAssigned } from "@/lib/services/push-triggers";
 import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
 import type { MechanicAssignment, WorkOrder } from "@/lib/types";
-import { notifyWorkOrderAssigned } from "@/lib/services/push-triggers";
 
 // ── Helper: insert status history ──────────────────────────────
 async function insertStatusHistory(

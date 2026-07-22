@@ -31,28 +31,28 @@ import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
-	{ key: "step1", icon: ClipboardList },
-	{ key: "step2", icon: Wrench },
-	{ key: "step3", icon: Check },
+  { key: "step1", icon: ClipboardList },
+  { key: "step2", icon: Wrench },
+  { key: "step3", icon: Check },
 ] as const;
 
 const WORKFLOW_PILLARS = [
-	{ key: "workflowFrontDesk", icon: ClipboardList },
-	{ key: "workflowWorkshop", icon: Wrench },
-	{ key: "workflowManagement", icon: LineChart },
+  { key: "workflowFrontDesk", icon: ClipboardList },
+  { key: "workflowWorkshop", icon: Wrench },
+  { key: "workflowManagement", icon: LineChart },
 ] as const;
 
 const DIFFERENTIATORS = [
-	{ key: "differenceTablet", icon: Check },
-	{ key: "differencePricing", icon: Tag },
-	{ key: "differenceVisibility", icon: Users },
-	{ key: "differenceScalability", icon: Store },
+  { key: "differenceTablet", icon: Check },
+  { key: "differencePricing", icon: Tag },
+  { key: "differenceVisibility", icon: Users },
+  { key: "differenceScalability", icon: Store },
 ] as const;
 
 const PRICING_TIERS = [
-	{ key: "pricingTier1", popular: false },
-	{ key: "pricingTier2", popular: true },
-	{ key: "pricingTier3", popular: false },
+  { key: "pricingTier1", popular: false },
+  { key: "pricingTier2", popular: true },
+  { key: "pricingTier3", popular: false },
 ] as const;
 
 export function HowItWorksSection() {

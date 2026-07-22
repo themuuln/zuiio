@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getCardStatusStyle, CARD_STATUS_STYLES } from "./card-status-styles";
+import { CARD_STATUS_STYLES, getCardStatusStyle } from "./card-status-styles";
 
 describe("CARD_STATUS_STYLES", () => {
   it("has all estimate statuses", () => {

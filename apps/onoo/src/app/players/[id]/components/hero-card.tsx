@@ -14,6 +14,12 @@ interface HeroCardProps {
   playerId: string;
   competitionId: string | null;
   careerTotals?: { gp: number; pts: number; reb: number; ast: number } | null;
+  advancedStats?: {
+    tsPct: number;
+    efgPct: number;
+    avgGameScore: number;
+    astTovRatio: number;
+  } | null;
   locale?: "mn" | "en";
   className?: string;
 }
@@ -35,6 +41,7 @@ export async function HeroCard({
   playerId,
   competitionId,
   careerTotals,
+  advancedStats,
   locale = "mn",
   className,
 }: HeroCardProps) {
@@ -264,6 +271,42 @@ export async function HeroCard({
           </div>
         )}
       </div>
+
+        {/* Efficiency metrics strip */}
+        {!careerTotals && advancedStats && (
+          <div className="relative border-t border-sidebar-border/50 px-5 py-3 backdrop-blur-sm sm:px-8 lg:px-10">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+              <StatNumber
+                value={advancedStats.efgPct * 100}
+                label={isEn ? "eFG%" : "ҮШ%"}
+                precision={1}
+                size="sm"
+                inverse
+              />
+              <StatNumber
+                value={advancedStats.tsPct * 100}
+                label={isEn ? "TS%" : "ЧШ%"}
+                precision={1}
+                size="sm"
+                inverse
+              />
+              <StatNumber
+                value={advancedStats.avgGameScore}
+                label={isEn ? "GmSc" : "Тогл.үнэлгээ"}
+                precision={1}
+                size="sm"
+                inverse
+              />
+              <StatNumber
+                value={advancedStats.astTovRatio}
+                label={isEn ? "AST/TO" : "АШ/АЛ"}
+                precision={2}
+                size="sm"
+                inverse
+              />
+            </div>
+          </div>
+        )}
     </section>
   );
 }

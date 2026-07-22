@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
-  getOrganizationSubscription,
   checkSubscriptionStatus,
   createSubscription,
+  getOrganizationSubscription,
 } from "./subscription-service";
 
 describe("subscription-service", () => {
@@ -29,23 +29,33 @@ describe("subscription-service", () => {
         settings: { max_users: 10 },
         organization_id: orgId,
       };
-      mockSupabase.from("subscription_plans").maybeSingle.mockResolvedValueOnce({
-        data: mockPlan,
-        error: null,
-      });
+      mockSupabase
+        .from("subscription_plans")
+        .maybeSingle.mockResolvedValueOnce({
+          data: mockPlan,
+          error: null,
+        });
 
-      const result = await getOrganizationSubscription(mockSupabase as any, orgId);
+      const result = await getOrganizationSubscription(
+        mockSupabase as any,
+        orgId,
+      );
       expect(result).not.toBeNull();
       expect(result?.planType).toBe("pro");
     });
 
     it("returns null when no subscription found", async () => {
-      mockSupabase.from("subscription_plans").maybeSingle.mockResolvedValueOnce({
-        data: null,
-        error: null,
-      });
+      mockSupabase
+        .from("subscription_plans")
+        .maybeSingle.mockResolvedValueOnce({
+          data: null,
+          error: null,
+        });
 
-      const result = await getOrganizationSubscription(mockSupabase as any, orgId);
+      const result = await getOrganizationSubscription(
+        mockSupabase as any,
+        orgId,
+      );
       expect(result).toBeNull();
     });
   });
@@ -73,8 +83,9 @@ describe("subscription-service", () => {
         settings: {},
         organization_id: orgId,
       };
-      mockSupabase.from("subscription_plans").maybeSingle
-        .mockResolvedValueOnce({ data: newPlan, error: null })
+      mockSupabase
+        .from("subscription_plans")
+        .maybeSingle.mockResolvedValueOnce({ data: newPlan, error: null })
         .mockResolvedValueOnce({ data: newPlan, error: null });
 
       const result = await createSubscription(mockSupabase as any, orgId);

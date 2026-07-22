@@ -123,7 +123,10 @@ interface CommissionRulesSectionProps {
 }
 
 export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
-  const t = useTranslations("settings") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("settings") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: rules, isPending, error } = useCommissionRules(orgId);
   const createRule = useCreateCommissionRule(orgId);
   const updateRule = useUpdateCommissionRule(orgId);

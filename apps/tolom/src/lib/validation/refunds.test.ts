@@ -108,9 +108,7 @@ describe("refundListParamsSchema", () => {
 
   it("accepts all statuses", () => {
     for (const status of ["pending", "completed", "failed", "cancelled"]) {
-      expect(
-        refundListParamsSchema.safeParse({ status }).success,
-      ).toBe(true);
+      expect(refundListParamsSchema.safeParse({ status }).success).toBe(true);
     }
   });
 
@@ -121,20 +119,18 @@ describe("refundListParamsSchema", () => {
   });
 
   it("accepts valid limit", () => {
-    expect(
-      refundListParamsSchema.safeParse({ limit: 50 }).success,
-    ).toBe(true);
+    expect(refundListParamsSchema.safeParse({ limit: 50 }).success).toBe(true);
   });
 
   it("rejects limit over 100", () => {
-    expect(
-      refundListParamsSchema.safeParse({ limit: 200 }).success,
-    ).toBe(false);
+    expect(refundListParamsSchema.safeParse({ limit: 200 }).success).toBe(
+      false,
+    );
   });
 
   it("rejects negative offset", () => {
-    expect(
-      refundListParamsSchema.safeParse({ offset: -1 }).success,
-    ).toBe(false);
+    expect(refundListParamsSchema.safeParse({ offset: -1 }).success).toBe(
+      false,
+    );
   });
 });

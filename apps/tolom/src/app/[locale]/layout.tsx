@@ -32,7 +32,10 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale: locale as "en" | "mn", namespace: "home" });
+  const t = await getTranslations({
+    locale: locale as "en" | "mn",
+    namespace: "home",
+  });
   return {
     title: { default: t("title"), template: "%s | TOLOM" },
     description: t("subtitle"),

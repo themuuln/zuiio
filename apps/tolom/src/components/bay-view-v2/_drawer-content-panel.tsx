@@ -253,7 +253,10 @@ export function DrawerContentPanel({
   onComplete,
   onCreateInvoice,
 }: DrawerContentPanelProps) {
-  const t = useTranslations("bayView") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("bayView") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const locale = useLocale();
 
   // ── Decompose wo into field-level references ──
@@ -349,7 +352,10 @@ export function DrawerContentPanel({
                           : "Нэмэгдсэн Өртөгт Татвар"}
                       </span>
                     </div>
-                    <Switch checked={nuatEnabled} onCheckedChange={onNuatToggle} />
+                    <Switch
+                      checked={nuatEnabled}
+                      onCheckedChange={onNuatToggle}
+                    />
                   </div>
                   <TotalsSummary
                     servicesTotal={servicesTotal}

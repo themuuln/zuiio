@@ -44,7 +44,10 @@ function formatTime(iso: string) {
 
 // ── Main Page ──────────────────────────────────────────────────
 export default function AppointmentsPage() {
-  const t = useTranslations("appointments") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("appointments") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");

@@ -1,7 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { createRouteHandlers, withAuth } from "@/lib/supabase/admin-route";
-import { createClient } from "@/lib/supabase/server";
+import { createRouteHandlers } from "@/lib/supabase/admin-route";
 
 const productsRoute = createRouteHandlers("products", {
   select: "*",
@@ -29,33 +26,3 @@ export const POST = productsRoute.create((body) => {
   };
 });
 
-export async function PATCH(request: NextRequest) {
-  return withAuth(async (supabase) => {
-    const body = await request.json();
-    const { id, ...updates } = body;
-    if (!id) {
-      return NextResponse.json({ error: "ID required" }, { status: 400 });
-    }
-    const { data, error } = await supabase
-      .from("products")
-      .update(updates)
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    return NextResponse.json(data);
-  });
-}
-
-export async function DELETE(request: NextRequest) {
-  return withAuth(async (supabase) => {
-    const body = await request.json();
-    const { id } = body;
-    if (!id) {
-      return NextResponse.json({ error: "ID required" }, { status: 400 });
-    }
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) throw error;
-    return NextResponse.json({ success: true });
-  });
-}

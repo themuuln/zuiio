@@ -18,7 +18,10 @@ export function RevenueSplitBar({
   parts,
   loading,
 }: RevenueSplitBarProps) {
-  const t = useTranslations("finance") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("finance") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   if (loading) return <Skeleton className="h-16 w-full rounded-xl" />;
   if (total === 0) return null;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getVariantGroups } from "./catalog-variant-service";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
+import { getVariantGroups } from "./catalog-variant-service";
 
 describe("catalog-variant-service", () => {
   describe("getVariantGroups", () => {

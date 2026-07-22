@@ -69,7 +69,10 @@ export function ReadyForPickupForm({
   onConfirm,
   onBack,
 }: ReadyForPickupFormProps) {
-  const t = useTranslations("bayView") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("bayView") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const defaultTransferBank = getDefaultTransferBank(transferBanks);

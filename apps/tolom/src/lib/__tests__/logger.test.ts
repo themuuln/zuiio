@@ -11,7 +11,9 @@ describe("logger production mode", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const { logger } = await import("../logger");
     logger.info({ userId: "u1" }, "test message");
-    expect(JSON.parse(vi.mocked(console.log).mock.calls[0][0]).level).toBe("info");
+    expect(JSON.parse(vi.mocked(console.log).mock.calls[0][0]).level).toBe(
+      "info",
+    );
   });
 
   it("redacts sensitive fields", async () => {
@@ -29,7 +31,9 @@ describe("logger production mode", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     const { logger } = await import("../logger");
     logger.warn({ code: 429 }, "rate limited");
-    expect(JSON.parse(vi.mocked(console.warn).mock.calls[0][0]).level).toBe("warn");
+    expect(JSON.parse(vi.mocked(console.warn).mock.calls[0][0]).level).toBe(
+      "warn",
+    );
   });
 
   it("logs error via console.error", async () => {
@@ -37,7 +41,9 @@ describe("logger production mode", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const { logger } = await import("../logger");
     logger.error({}, "failed");
-    expect(JSON.parse(vi.mocked(console.error).mock.calls[0][0]).level).toBe("error");
+    expect(JSON.parse(vi.mocked(console.error).mock.calls[0][0]).level).toBe(
+      "error",
+    );
   });
 
   it("logs string-only message", async () => {
@@ -45,7 +51,9 @@ describe("logger production mode", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const { logger } = await import("../logger");
     logger.info("hello");
-    expect(JSON.parse(vi.mocked(console.log).mock.calls[0][0]).msg).toBe("hello");
+    expect(JSON.parse(vi.mocked(console.log).mock.calls[0][0]).msg).toBe(
+      "hello",
+    );
   });
 
   it("child logger merges base context", async () => {

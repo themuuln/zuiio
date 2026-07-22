@@ -25,7 +25,7 @@ vi.mock("react-email", () => ({
 vi.mock("./templates/confirm", () => ({ ConfirmEmail: () => null }));
 vi.mock("./templates/welcome", () => ({ WelcomeEmail: () => null }));
 
-import { sendWelcomeEmail, sendConfirmEmail } from "./send";
+import { sendConfirmEmail, sendWelcomeEmail } from "./send";
 
 describe("sendWelcomeEmail", () => {
   it("sends welcome email with correct params", async () => {

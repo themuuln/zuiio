@@ -6,13 +6,22 @@ vi.mock("@/lib/audit", () => ({ logAuditAfter: vi.fn() }));
 vi.mock("@/lib/capture", () => ({ capture: vi.fn() }));
 vi.mock("@/lib/errors", () => ({
   ConflictError: class extends Error {
-    constructor(msg: string) { super(msg); this.name = "ConflictError"; }
+    constructor(msg: string) {
+      super(msg);
+      this.name = "ConflictError";
+    }
   },
   NotFoundError: class extends Error {
-    constructor(msg: string) { super(msg); this.name = "NotFoundError"; }
+    constructor(msg: string) {
+      super(msg);
+      this.name = "NotFoundError";
+    }
   },
   ValidationError: class extends Error {
-    constructor(msg: string) { super(msg); this.name = "ValidationError"; }
+    constructor(msg: string) {
+      super(msg);
+      this.name = "ValidationError";
+    }
   },
 }));
 vi.mock("@/lib/supabase/with-branch", () => ({
@@ -34,13 +43,13 @@ const mockResolveBranchId = vi.mocked(resolveBranchId);
 const mockEnsureVehicleModel = vi.mocked(ensureVehicleModel);
 
 import {
-  getVehicles,
-  getVehiclesFast,
-  getVehicle,
   createVehicle,
-  getVehicleServiceHistory,
   getCustomerVehicles,
   getCustomerWorkOrders,
+  getVehicle,
+  getVehicleServiceHistory,
+  getVehicles,
+  getVehiclesFast,
 } from "../vehicle-service";
 
 const ORG_ID = "org-1";
@@ -101,7 +110,10 @@ describe("getVehicles", () => {
   });
 
   it("returns null owner_name when no owners", async () => {
-    db.__qb.resolveWith({ data: [makeVehicleRow({ vehicle_owners: [] })], error: null });
+    db.__qb.resolveWith({
+      data: [makeVehicleRow({ vehicle_owners: [] })],
+      error: null,
+    });
     const r = await getVehicles(db as never, ORG_ID);
     expect(r[0].owner_name).toBeNull();
   });
@@ -116,8 +128,13 @@ describe("getVehicles", () => {
 
 describe("getVehiclesFast", () => {
   const rpcRow = {
-    id: VEHICLE_ID, plate_number: "0001УБА", make: "Toyota", model: "Camry",
-    year: 2020, color: "White", vin: "JTDBE32K600",
+    id: VEHICLE_ID,
+    plate_number: "0001УБА",
+    make: "Toyota",
+    model: "Camry",
+    year: 2020,
+    color: "White",
+    vin: "JTDBE32K600",
     created_at: "2025-01-15T10:00:00Z",
     customer: { full_name: "John Doe", phone: "99112233" },
     work_orders_count: 3,
@@ -134,17 +151,25 @@ describe("getVehiclesFast", () => {
     db.rpc.mockResolvedValue({ data: [rpcRow], error: null });
     await getVehiclesFast(db as never, ORG_ID, { search: "0001", limit: 25 });
     expect(db.rpc).toHaveBeenCalledWith("get_vehicles_list", {
-      p_org_id: ORG_ID, p_search: "0001", p_limit: 25, p_offset: 0,
+      p_org_id: ORG_ID,
+      p_search: "0001",
+      p_limit: 25,
+      p_offset: 0,
     });
   });
 
   it("throws on RPC error", async () => {
     db.rpc.mockResolvedValue({ data: null, error: new Error("RPC fail") });
-    await expect(getVehiclesFast(db as never, ORG_ID)).rejects.toThrow("RPC fail");
+    await expect(getVehiclesFast(db as never, ORG_ID)).rejects.toThrow(
+      "RPC fail",
+    );
   });
 
   it("handles null customer", async () => {
-    db.rpc.mockResolvedValue({ data: [{ ...rpcRow, customer: null }], error: null });
+    db.rpc.mockResolvedValue({
+      data: [{ ...rpcRow, customer: null }],
+      error: null,
+    });
     const r = await getVehiclesFast(db as never, ORG_ID);
     expect(r[0].owner_name).toBeNull();
   });
@@ -158,11 +183,29 @@ describe("getVehicle", () => {
     db.__qb.resolveOnce({ data: makeVehicleRow(), error: null });
     // 2) Promise.all([owners, workOrders]) — each needs qb.then
     db.__qb.resolveOnce({
-      data: [{ customer_id: CUST_ID, is_primary: true, customers: { first_name: "John", last_name: "Doe", phone: "99112233" } }],
+      data: [
+        {
+          customer_id: CUST_ID,
+          is_primary: true,
+          customers: {
+            first_name: "John",
+            last_name: "Doe",
+            phone: "99112233",
+          },
+        },
+      ],
       error: null,
     });
     db.__qb.resolveOnce({
-      data: [{ id: "wo-1", status: "Completed", complaint: "Noise", total: 100, created_at: "2025-01-15T10:00:00Z" }],
+      data: [
+        {
+          id: "wo-1",
+          status: "Completed",
+          complaint: "Noise",
+          total: 100,
+          created_at: "2025-01-15T10:00:00Z",
+        },
+      ],
       error: null,
     });
 
@@ -175,7 +218,9 @@ describe("getVehicle", () => {
 
   it("throws NotFound when vehicle missing", async () => {
     db.__qb.resolveOnce({ data: null, error: null });
-    await expect(getVehicle(db as never, "x", ORG_ID)).rejects.toThrow("not found");
+    await expect(getVehicle(db as never, "x", ORG_ID)).rejects.toThrow(
+      "not found",
+    );
   });
 });
 
@@ -183,14 +228,22 @@ describe("getVehicle", () => {
 
 describe("createVehicle", () => {
   beforeEach(() => {
-    db.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null });
+    db.auth.getUser.mockResolvedValue({
+      data: { user: { id: USER_ID } },
+      error: null,
+    });
   });
 
   it("creates vehicle, links owner, ensures model, audit, cache", async () => {
     // Duplicate check uses maybeSingle (built-in) — no resolveOnce consumed
     // Insert with .single() → consumes resolveOnce #1
     db.__qb.resolveOnce({
-      data: { id: VEHICLE_ID, organization_id: ORG_ID, plate_number: "0001УБА", make: "Toyota" },
+      data: {
+        id: VEHICLE_ID,
+        organization_id: ORG_ID,
+        plate_number: "0001УБА",
+        make: "Toyota",
+      },
       error: null,
     });
     // Owner link insert → consumes resolveOnce #2
@@ -206,7 +259,10 @@ describe("createVehicle", () => {
   it("throws ConflictError on duplicate plate (maybeSingle returns existing)", async () => {
     // Override maybeSingle on the qb
     const q = db.from("vehicles").select("id, plate_number") as any;
-    q.maybeSingle = vi.fn().mockResolvedValue({ data: { id: "existing", plate_number: "0001УБА" }, error: null });
+    q.maybeSingle = vi.fn().mockResolvedValue({
+      data: { id: "existing", plate_number: "0001УБА" },
+      error: null,
+    });
 
     await expect(
       createVehicle(db as never, ORG_ID, createParams, USER_ID),
@@ -215,17 +271,31 @@ describe("createVehicle", () => {
 
   it("rejects empty plate", async () => {
     await expect(
-      createVehicle(db as never, ORG_ID, { ...createParams, plateNumber: "" }, USER_ID),
+      createVehicle(
+        db as never,
+        ORG_ID,
+        { ...createParams, plateNumber: "" },
+        USER_ID,
+      ),
     ).rejects.toThrow("Plate number is required");
   });
 
   it("skips owner link when no customerId", async () => {
     db.__qb.resolveOnce({
-      data: { id: VEHICLE_ID, organization_id: ORG_ID, plate_number: "0001УБА" },
+      data: {
+        id: VEHICLE_ID,
+        organization_id: ORG_ID,
+        plate_number: "0001УБА",
+      },
       error: null,
     });
 
-    const r = await createVehicle(db as never, ORG_ID, { ...createParams, customerId: undefined } as never, USER_ID);
+    const r = await createVehicle(
+      db as never,
+      ORG_ID,
+      { ...createParams, customerId: undefined } as never,
+      USER_ID,
+    );
     expect(r).toBeDefined();
   });
 });
@@ -235,7 +305,15 @@ describe("createVehicle", () => {
 describe("getVehicleServiceHistory", () => {
   it("returns service history array", async () => {
     db.__qb.resolveWith({
-      data: [{ id: "wo-1", status: "Completed", created_at: "2025-01-15T10:00:00Z", work_order_services: [], work_order_parts: [] }],
+      data: [
+        {
+          id: "wo-1",
+          status: "Completed",
+          created_at: "2025-01-15T10:00:00Z",
+          work_order_services: [],
+          work_order_parts: [],
+        },
+      ],
       error: null,
     });
     const r = await getVehicleServiceHistory(db as never, ORG_ID, VEHICLE_ID);
@@ -258,11 +336,14 @@ describe("getCustomerVehicles", () => {
 describe("getCustomerWorkOrders", () => {
   it("returns work orders for customer's vehicles", async () => {
     db.__qb.resolveWith({
-      data: [{
-        id: "wo-1", status: "In Progress",
-        vehicle: { plate_number: "0001УБА", make: "Toyota", model: "Camry" },
-        work_order_services: [],
-      }],
+      data: [
+        {
+          id: "wo-1",
+          status: "In Progress",
+          vehicle: { plate_number: "0001УБА", make: "Toyota", model: "Camry" },
+          work_order_services: [],
+        },
+      ],
       error: null,
     });
     const r = await getCustomerWorkOrders(db as never, ORG_ID, CUST_ID);

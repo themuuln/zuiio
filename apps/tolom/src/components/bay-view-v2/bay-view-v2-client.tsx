@@ -36,7 +36,10 @@ import { BayViewViews } from "./_view-renderer";
 import { BayCardDragPreview } from "./bay-card";
 
 export function BayViewV2Client() {
-  const t = useTranslations("bayView") as (key: string, values?: Record<string, string | number | Date>) => string;
+  const t = useTranslations("bayView") as (
+    key: string,
+    values?: Record<string, string | number | Date>,
+  ) => string;
   const selectedBranchId = useSelectedBranchId();
   const setSelectedBranchId = useSetSelectedBranchId();
   const branchFilter =

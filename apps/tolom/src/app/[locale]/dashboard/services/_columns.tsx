@@ -31,7 +31,10 @@ export function createColumns(
       id: "name",
       accessorKey: "name",
       header: ({ column }) => {
-        const t = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
+        const t = useTranslations("services") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return <DataTableColumnHeader column={column} title={t("name")} />;
       },
       cell: ({ row }) => {
@@ -65,11 +68,17 @@ export function createColumns(
       id: "category",
       accessorKey: "category",
       header: ({ column }) => {
-        const t = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
+        const t = useTranslations("services") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return <DataTableColumnHeader column={column} title={t("category")} />;
       },
       cell: ({ row }) => {
-        const t = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
+        const t = useTranslations("services") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         const cat = row.original.category;
         return cat ? (
           <Badge variant="outline" className="text-xs">
@@ -87,7 +96,10 @@ export function createColumns(
       accessorKey: "default_price",
       meta: { align: "right" } as const,
       header: ({ column }) => {
-        const t = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
+        const t = useTranslations("services") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return <DataTableColumnHeader column={column} title={t("price")} />;
       },
       cell: ({ row }) => (
@@ -101,7 +113,10 @@ export function createColumns(
       accessorKey: "default_cost",
       meta: { align: "right" } as const,
       header: ({ column }) => {
-        const t = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
+        const t = useTranslations("services") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return <DataTableColumnHeader column={column} title={t("cost")} />;
       },
       cell: ({ row }) => {
@@ -122,7 +137,10 @@ export function createColumns(
       id: "margin",
       meta: { align: "right" } as const,
       header: () => {
-        const t = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
+        const t = useTranslations("services") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return (
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {t("margin")}
@@ -153,7 +171,10 @@ export function createColumns(
       id: "last_used_price",
       meta: { align: "right" } as const,
       header: () => {
-        const t = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
+        const t = useTranslations("services") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return (
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {t("lastUsed")}
@@ -180,7 +201,10 @@ export function createColumns(
       header: "",
       enableSorting: false,
       cell: ({ row }) => {
-        const t = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
+        const t = useTranslations("services") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         const s = row.original;
         const count = data.modelPriceCounts[s.id] ?? 0;
         return (
@@ -209,7 +233,10 @@ export function createColumns(
       enableSorting: false,
       cell: ({ row }) => {
         const s = row.original;
-        const t = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
+        const t = useTranslations("common") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return (
           <div className="flex items-center gap-1">
             <Button

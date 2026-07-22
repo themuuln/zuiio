@@ -46,7 +46,10 @@ import { createColumns } from "./_columns";
 import { EditServiceSheet } from "./_edit-service-drawer";
 
 export default function ServicesPageClient() {
-  const st = useTranslations("services") as (key: string, values?: Record<string, string | number>) => string;
+  const st = useTranslations("services") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const now = useClientNow();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;

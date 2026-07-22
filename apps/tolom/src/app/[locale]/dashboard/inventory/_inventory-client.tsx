@@ -26,7 +26,10 @@ import { useSelectedBranchId } from "@/lib/stores";
 import { PartsTab } from "./_components/parts-tab";
 
 function InventoryPage() {
-  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId ?? null;
   const selectedBranchId = useSelectedBranchId();

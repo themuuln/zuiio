@@ -19,7 +19,9 @@ describe("getCompactName", () => {
   });
 
   it("returns first initial and rest for multi-part name", () => {
-    expect(getCompactName("Temuulen Enkhbold Ganbaatar")).toBe("T. Enkhbold Ganbaatar");
+    expect(getCompactName("Temuulen Enkhbold Ganbaatar")).toBe(
+      "T. Enkhbold Ganbaatar",
+    );
   });
 
   it("handles leading/trailing whitespace", () => {

@@ -50,7 +50,10 @@ export function RoleEditorDrawer({
   saving,
   deleting = false,
 }: RoleEditorDrawerProps) {
-  const t = useTranslations("organization.roles") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("organization.roles") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const isEditMode = role !== null;
 
   const form = useForm<RoleFormValues>({

@@ -94,7 +94,10 @@ function TabBar({
   value: Tab;
   onChange: (t: Tab) => void;
 }) {
-  const t = useTranslations("finance") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("finance") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const tabs: { key: Tab; labelKey: string; icon: typeof DollarSign }[] = [
     { key: "overview", labelKey: "tabOverview", icon: BarChart3 },
     { key: "transactions", labelKey: "tabTransactions", icon: ClipboardList },
@@ -176,7 +179,10 @@ const invoiceStatusConfig: Record<
 };
 
 function InvoiceStatusBadge({ status }: { status: string }) {
-  const t = useTranslations("finance") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("finance") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const cfg = invoiceStatusConfig[status] ?? invoiceStatusConfig.draft;
   return (
     <Badge variant="outline" className={cfg.className}>
@@ -213,7 +219,10 @@ interface InvoiceStats {
 }
 
 function InvoicesTab({ orgId }: { orgId: string | null }) {
-  const t = useTranslations("finance") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("finance") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const now = useClientNow();
   const {
     search,
@@ -506,7 +515,10 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
 
 // ── Expenses Tab ──────────────────────────────────
 function ExpensesTab({ orgId }: { orgId: string | null }) {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: expenses, isPending: expLoading } = useExpenses(
     orgId ?? undefined,
   );
@@ -671,7 +683,10 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
 }
 
 export default function FinancePage() {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: subMonths(new Date(), 3),
     to: new Date(),

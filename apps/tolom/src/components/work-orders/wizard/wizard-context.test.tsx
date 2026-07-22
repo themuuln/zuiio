@@ -71,14 +71,11 @@ const mockToastError = vi.fn();
 const mockToastSuccess = vi.fn();
 
 vi.mock("sonner", () => ({
-  toast: Object.assign(
-    (message: string) => ({ message }),
-    {
-      error: (...args: unknown[]) => mockToastError(...args),
-      success: (...args: unknown[]) => mockToastSuccess(...args),
-      dismiss: vi.fn(),
-    },
-  ),
+  toast: Object.assign((message: string) => ({ message }), {
+    error: (...args: unknown[]) => mockToastError(...args),
+    success: (...args: unknown[]) => mockToastSuccess(...args),
+    dismiss: vi.fn(),
+  }),
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -272,7 +269,7 @@ describe("WizardProvider — form data persistence", () => {
   describe("localStorage draft save", () => {
     it("reads existing draft on mount", () => {
       const getItemSpy = vi.fn();
-      const origGetItem = globalThis.localStorage.getItem.bind(
+      const _origGetItem = globalThis.localStorage.getItem.bind(
         globalThis.localStorage,
       );
       globalThis.localStorage.getItem = getItemSpy;
@@ -286,7 +283,7 @@ describe("WizardProvider — form data persistence", () => {
 
     it("clears draft from localStorage after successful work order creation", () => {
       const removeItemSpy = vi.fn();
-      const origRemoveItem = globalThis.localStorage.removeItem.bind(
+      const _origRemoveItem = globalThis.localStorage.removeItem.bind(
         globalThis.localStorage,
       );
       globalThis.localStorage.removeItem = removeItemSpy;

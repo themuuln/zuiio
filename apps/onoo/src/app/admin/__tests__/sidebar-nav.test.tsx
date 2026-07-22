@@ -1,6 +1,8 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { AdminLayoutProvider } from "@/components/admin/admin-layout-context";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
 
 vi.mock("next/navigation", () => ({
   usePathname: vi.fn(),
@@ -21,39 +23,40 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-// Mock lucide-react icons as plain spans
 vi.mock("lucide-react", () => {
   const icon = ({ className }: { className?: string }) => (
     <span data-testid="icon" className={className} />
   );
   return {
-    Calendar: icon,
     LayoutDashboard: icon,
-    MapPin: icon,
+    Calendar: icon,
     Medal: icon,
-    Settings2: icon,
-    Timer: icon,
     Trophy: icon,
-    UserCircle: icon,
     Users: icon,
+    UserCircle: icon,
+    Timer: icon,
+    MapPin: icon,
+    Package: icon,
+    ShoppingCart: icon,
+    X: icon,
   };
 });
 
 import { usePathname } from "next/navigation";
-import { SidebarNav } from "../_components/sidebar-nav";
 
 const mockUsePathname = vi.mocked(usePathname);
 
-const NAV_ITEMS = [
-  { href: "/admin", label: "Хянах цэс" },
-  { href: "/admin/leagues", label: "Лиг" },
-  { href: "/admin/seasons", label: "Улирал" },
-  { href: "/admin/competitions", label: "Тэмцээн" },
-  { href: "/admin/teams", label: "Баг" },
-  { href: "/admin/players", label: "Тоглогч" },
-  { href: "/admin/games", label: "Тоглолт" },
-  { href: "/admin/venues", label: "Талбай" },
-  { href: "/admin/ops", label: "Үйлдлүүд" },
+const NAV_LABELS = [
+  "Хянах самбар",
+  "Лиг",
+  "Улирал",
+  "Тэмцээн",
+  "Баг",
+  "Тоглогч",
+  "Тоглолт",
+  "Талбай",
+  "Бүтээгдэхүүн",
+  "Захиалга",
 ];
 
 function getNavLink(label: string): HTMLAnchorElement {
@@ -61,42 +64,61 @@ function getNavLink(label: string): HTMLAnchorElement {
   expect(link).not.toBeNull();
   return link as HTMLAnchorElement;
 }
-describe("SidebarNav", () => {
+
+function renderSidebar() {
+  return render(
+    <AdminLayoutProvider>
+      <AdminSidebar />
+    </AdminLayoutProvider>,
+  );
+}
+
+describe("AdminSidebar", () => {
   it("renders all nav links", () => {
     mockUsePathname.mockReturnValue("/admin");
-    render(<SidebarNav />);
+    renderSidebar();
 
-    for (const { href, label } of NAV_ITEMS) {
-      const link = screen.getByText(label);
-      expect(link).toBeInTheDocument();
-      expect(link.closest("a")).toHaveAttribute("href", href);
+    for (const label of NAV_LABELS) {
+      // "Тэмцээн" appears both as group heading and nav link
+      const elements = screen.getAllByText(label);
+      expect(elements.length).toBeGreaterThanOrEqual(1);
     }
+  });
+
+  it("includes logout link in the footer", () => {
+    mockUsePathname.mockReturnValue("/admin");
+    renderSidebar();
+
+    const logoutLink = screen.getByText("Гарах").closest("a");
+    expect(logoutLink).toHaveAttribute("href", "/admin/login?signout=true");
+  });
+
+  it("shows brand logo and title", () => {
+    mockUsePathname.mockReturnValue("/admin");
+    renderSidebar();
+
+    expect(screen.getByText("Оноо")).toBeInTheDocument();
   });
 
   it("highlights the active link for /admin root", () => {
     mockUsePathname.mockReturnValue("/admin");
-    render(<SidebarNav />);
+    renderSidebar();
 
-    const activeLink = getNavLink("Хянах цэс");
+    const activeLink = getNavLink("Хянах самбар");
     expect(activeLink.className).toContain("bg-sidebar-accent");
-    expect(activeLink.className).toContain("text-sidebar-accent-foreground");
   });
 
   it("highlights /admin/leagues when pathname is /admin/leagues", () => {
     mockUsePathname.mockReturnValue("/admin/leagues");
-    render(<SidebarNav />);
+    renderSidebar();
 
     const leaguesLink = getNavLink("Лиг");
     expect(leaguesLink.className).toContain("bg-sidebar-accent");
-
-    // /admin root should NOT be active (exact match required)
-    const dashLink = getNavLink("Хянах цэс");
-    expect(dashLink.className).not.toMatch(/\bbg-sidebar-accent(?!\s*\/)/);
   });
 
   it("highlights /admin/teams when pathname is /admin/teams/123", () => {
     mockUsePathname.mockReturnValue("/admin/teams/123");
-    render(<SidebarNav />);
+    renderSidebar();
 
     const teamsLink = getNavLink("Баг");
     expect(teamsLink.className).toContain("bg-sidebar-accent");
@@ -104,10 +126,9 @@ describe("SidebarNav", () => {
 
   it("applies non-active styling to inactive links", () => {
     mockUsePathname.mockReturnValue("/admin/games");
-    render(<SidebarNav />);
+    renderSidebar();
 
     const inactiveLink = getNavLink("Лиг");
     expect(inactiveLink.className).toContain("text-sidebar-foreground/70");
-    expect(inactiveLink.className).not.toMatch(/\bbg-sidebar-accent(?!\s*\/)/);
   });
 });

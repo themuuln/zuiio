@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
   checkSubscriptionExpired,
   invalidateSubscriptionCache,
   requireActiveSubscription,
 } from "./subscription-enforcement";
-import { createMockSupabaseClient } from "@/test/mocks/supabase";
 
 const { mockCreateClient } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
@@ -41,7 +41,11 @@ describe("subscription-enforcement", () => {
 
     it("returns expired state from RPC result", async () => {
       mockSupabase.rpc.mockResolvedValue({
-        data: { expired: true, message: "Subscription ended", status: "expired" },
+        data: {
+          expired: true,
+          message: "Subscription ended",
+          status: "expired",
+        },
         error: null,
       });
 

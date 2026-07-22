@@ -32,7 +32,14 @@ describe("matchRoutes", () => {
   });
 
   it("classifies public pages", () => {
-    const paths = ["/features", "/about", "/contact", "/faq", "/blog", "/services"];
+    const paths = [
+      "/features",
+      "/about",
+      "/contact",
+      "/faq",
+      "/blog",
+      "/services",
+    ];
     for (const p of paths) {
       expect(matchRoutes(p).isPublicRoute).toBe(true);
     }

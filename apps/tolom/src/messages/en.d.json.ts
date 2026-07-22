@@ -3522,6 +3522,8 @@ declare const messages: {
     "serviceStorageDesc": "File storage for docs and images",
     "serviceEmail": "Email",
     "serviceEmailDesc": "Email delivery service",
+    "serviceSms": "SMS",
+    "serviceSmsDesc": "SMS notifications for customers",
     "serviceMessaging": "Messaging",
     "serviceMessagingDesc": "Messaging delivery (Telegram/chatbot)",
     "serviceEdge": "Edge Functions",

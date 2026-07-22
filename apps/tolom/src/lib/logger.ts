@@ -67,10 +67,8 @@ function createLogger(baseContext?: Record<string, unknown>): Logger {
   const merge = (ctx: Record<string, unknown> | undefined) =>
     baseContext ? { ...baseContext, ...ctx } : ctx;
 
-  const log = (
-    level: string,
-    fn: typeof console.log,
-  ): LogFn =>
+  const log =
+    (level: string, fn: typeof console.log): LogFn =>
     (ctxOrMsg, msg?) => {
       if (typeof ctxOrMsg === "string") {
         fn(formatMessage(level, baseContext, ctxOrMsg));

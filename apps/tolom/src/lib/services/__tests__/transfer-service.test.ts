@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMockSupabaseClient, type MockSupabaseClient } from "@/test/mocks/supabase";
+import {
+  createMockSupabaseClient,
+  type MockSupabaseClient,
+} from "@/test/mocks/supabase";
 
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ logAuditAfter: vi.fn() }));
@@ -29,13 +32,13 @@ const mockLogAudit = vi.mocked(logAuditAfter);
 const mockReportServerError = vi.mocked(reportServerError);
 
 import {
-  getTransfers,
-  getTransfer,
-  createTransfer,
   approveTransfer,
+  cancelTransfer,
+  createTransfer,
+  getTransfer,
+  getTransfers,
   markInTransit,
   receiveTransfer,
-  cancelTransfer,
 } from "../transfer-service";
 
 const ORG_ID = "org-1";
@@ -71,7 +74,14 @@ function makeTransferRow(overrides: Record<string, unknown> = {}) {
     to_branch: { name: "Store B" },
     creator: { full_name: "John Doe" },
     items: [
-      { id: "item-1", transfer_id: TRANSFER_ID, part_id: PART_ID, quantity: 5, unit_cost: 10, part: { name: "Brake Pad", part_number: "BP-001", unit: "pcs" } },
+      {
+        id: "item-1",
+        transfer_id: TRANSFER_ID,
+        part_id: PART_ID,
+        quantity: 5,
+        unit_cost: 10,
+        part: { name: "Brake Pad", part_number: "BP-001", unit: "pcs" },
+      },
     ],
     ...overrides,
   };
@@ -129,9 +139,12 @@ describe("getTransfers", () => {
       expect.any(String),
       { count: "exact" },
     );
-    expect(db.from("stock_transfers").order).toHaveBeenCalledWith("created_at", {
-      ascending: false,
-    });
+    expect(db.from("stock_transfers").order).toHaveBeenCalledWith(
+      "created_at",
+      {
+        ascending: false,
+      },
+    );
     expect(db.from("stock_transfers").range).toHaveBeenCalledWith(0, 19);
   });
 
@@ -143,7 +156,7 @@ describe("getTransfers", () => {
     const eqCalls = db.from("stock_transfers").eq.mock.calls;
     const statusEq = eqCalls.find((c: string[]) => c[0] === "status");
     expect(statusEq).toBeDefined();
-    expect(statusEq![1]).toBe("pending");
+    expect(statusEq?.[1]).toBe("pending");
   });
 
   it("should skip status filter when status is 'all'", async () => {
@@ -197,9 +210,14 @@ describe("getTransfers", () => {
   });
 
   it("should throw on query error", async () => {
-    db.__qb.resolveWith({ data: null, error: { message: "DB connection failed" } });
+    db.__qb.resolveWith({
+      data: null,
+      error: { message: "DB connection failed" },
+    });
 
-    await expect(getTransfers(db, ORG_ID)).rejects.toThrow("DB connection failed");
+    await expect(getTransfers(db, ORG_ID)).rejects.toThrow(
+      "DB connection failed",
+    );
   });
 
   it("should map nested objects to flat field names", async () => {
@@ -251,12 +269,18 @@ describe("getTransfer", () => {
     expect(result.from_branch_name).toBe("Warehouse A");
     expect(result.to_branch_name).toBe("Store B");
     expect(result.created_by_name).toBe("John Doe");
-    expect(result.items![0].part_name).toBe("Brake Pad");
-    expect(result.items![0].part_number).toBe("BP-001");
-    expect(result.items![0].unit).toBe("pcs");
-    expect((result.items![0] as unknown as { part: unknown }).part).toBeUndefined();
-    expect((result as unknown as { from_branch: unknown }).from_branch).toBeUndefined();
-    expect((result as unknown as { to_branch: unknown }).to_branch).toBeUndefined();
+    expect(result.items?.[0].part_name).toBe("Brake Pad");
+    expect(result.items?.[0].part_number).toBe("BP-001");
+    expect(result.items?.[0].unit).toBe("pcs");
+    expect(
+      (result.items?.[0] as unknown as { part: unknown }).part,
+    ).toBeUndefined();
+    expect(
+      (result as unknown as { from_branch: unknown }).from_branch,
+    ).toBeUndefined();
+    expect(
+      (result as unknown as { to_branch: unknown }).to_branch,
+    ).toBeUndefined();
     expect((result as unknown as { creator: unknown }).creator).toBeUndefined();
   });
 
@@ -301,9 +325,9 @@ describe("getTransfer", () => {
 
     const result = await getTransfer(db, TRANSFER_ID, ORG_ID);
 
-    expect(result.items![0].part_name).toBe("Unknown");
-    expect(result.items![0].part_number).toBeNull();
-    expect(result.items![0].unit).toBe("pcs");
+    expect(result.items?.[0].part_name).toBe("Unknown");
+    expect(result.items?.[0].part_number).toBeNull();
+    expect(result.items?.[0].unit).toBe("pcs");
   });
 });
 
@@ -334,7 +358,12 @@ describe("createTransfer", () => {
     });
     // Second insert = items array
     expect(insertCalls[1][0]).toEqual([
-      { transfer_id: TRANSFER_ID, part_id: PART_ID, quantity: 5, unit_cost: 10 },
+      {
+        transfer_id: TRANSFER_ID,
+        part_id: PART_ID,
+        quantity: 5,
+        unit_cost: 10,
+      },
     ]);
 
     expect(mockRevalidateTag).toHaveBeenCalled();
@@ -342,7 +371,12 @@ describe("createTransfer", () => {
 
   it("should throw ValidationError when to_branch_id is missing", async () => {
     await expect(
-      createTransfer(db, ORG_ID, { ...createParams, to_branch_id: "" }, USER_ID),
+      createTransfer(
+        db,
+        ORG_ID,
+        { ...createParams, to_branch_id: "" },
+        USER_ID,
+      ),
     ).rejects.toThrow("Destination branch is required");
   });
 
@@ -354,19 +388,43 @@ describe("createTransfer", () => {
 
   it("should throw ValidationError when item has no part_id", async () => {
     await expect(
-      createTransfer(db, ORG_ID, { ...createParams, items: [{ part_id: "", quantity: 5, unit_cost: 10 }] }, USER_ID),
+      createTransfer(
+        db,
+        ORG_ID,
+        {
+          ...createParams,
+          items: [{ part_id: "", quantity: 5, unit_cost: 10 }],
+        },
+        USER_ID,
+      ),
     ).rejects.toThrow("Part is required for each item");
   });
 
   it("should throw ValidationError when item quantity is zero", async () => {
     await expect(
-      createTransfer(db, ORG_ID, { ...createParams, items: [{ part_id: PART_ID, quantity: 0, unit_cost: 10 }] }, USER_ID),
+      createTransfer(
+        db,
+        ORG_ID,
+        {
+          ...createParams,
+          items: [{ part_id: PART_ID, quantity: 0, unit_cost: 10 }],
+        },
+        USER_ID,
+      ),
     ).rejects.toThrow("Quantity must be positive");
   });
 
   it("should throw ValidationError when item quantity is negative", async () => {
     await expect(
-      createTransfer(db, ORG_ID, { ...createParams, items: [{ part_id: PART_ID, quantity: -1, unit_cost: 10 }] }, USER_ID),
+      createTransfer(
+        db,
+        ORG_ID,
+        {
+          ...createParams,
+          items: [{ part_id: PART_ID, quantity: -1, unit_cost: 10 }],
+        },
+        USER_ID,
+      ),
     ).rejects.toThrow("Quantity must be positive");
   });
 
@@ -380,7 +438,10 @@ describe("createTransfer", () => {
 
   it("should rollback transfer and throw when items insert fails", async () => {
     db.__qb.resolveOnce({ data: { id: TRANSFER_ID }, error: null }); // insert transfer succeeds
-    db.__qb.resolveOnce({ data: null, error: { message: "Item insert failed" } }); // insert items fails
+    db.__qb.resolveOnce({
+      data: null,
+      error: { message: "Item insert failed" },
+    }); // insert items fails
     db.__qb.resolveOnce({ data: null, error: null }); // rollback delete
 
     await expect(
@@ -389,7 +450,10 @@ describe("createTransfer", () => {
 
     // Verify rollback
     expect(db.from("stock_transfers").delete).toHaveBeenCalled();
-    expect(db.from("stock_transfers").delete().eq).toHaveBeenCalledWith("id", TRANSFER_ID);
+    expect(db.from("stock_transfers").delete().eq).toHaveBeenCalledWith(
+      "id",
+      TRANSFER_ID,
+    );
     expect(mockReportServerError).toHaveBeenCalledWith(
       "Failed to add transfer items, rolled back transfer",
       expect.objectContaining({ message: "Item insert failed" }),
@@ -419,7 +483,10 @@ describe("createTransfer", () => {
 
 describe("approveTransfer", () => {
   it("should approve a pending transfer", async () => {
-    const row = makeTransferRow({ status: "pending", from_branch_id: BRANCH_ID });
+    const row = makeTransferRow({
+      status: "pending",
+      from_branch_id: BRANCH_ID,
+    });
 
     db.__qb.resolveOnce({ data: row, error: null }); // fetch transfer
     db.__qb.resolveOnce({ data: { quantity_on_hand: 10 }, error: null }); // inventory check
@@ -484,7 +551,10 @@ describe("approveTransfer", () => {
   });
 
   it("should throw ValidationError when stock is insufficient", async () => {
-    const row = makeTransferRow({ status: "pending", from_branch_id: BRANCH_ID });
+    const row = makeTransferRow({
+      status: "pending",
+      from_branch_id: BRANCH_ID,
+    });
 
     db.__qb.resolveOnce({ data: row, error: null }); // fetch
     db.__qb.resolveOnce({ data: { quantity_on_hand: 2 }, error: null }); // only 2, need 5
@@ -495,7 +565,10 @@ describe("approveTransfer", () => {
   });
 
   it("should treat null inventory_balance as 0 (insufficient)", async () => {
-    const row = makeTransferRow({ status: "pending", from_branch_id: BRANCH_ID });
+    const row = makeTransferRow({
+      status: "pending",
+      from_branch_id: BRANCH_ID,
+    });
 
     db.__qb.resolveOnce({ data: row, error: null }); // fetch
     db.__qb.resolveOnce({ data: null, error: null }); // no balance row exists
@@ -833,8 +906,8 @@ describe("cancelTransfer", () => {
     const updateCall = db.from("stock_transfers").update.mock.calls[0];
     expect(updateCall[0].status).toBe("cancelled");
     expect(typeof updateCall[0].cancelled_at).toBe("string");
-    expect(new Date(updateCall[0].cancelled_at).getTime()).toBeGreaterThanOrEqual(
-      before,
-    );
+    expect(
+      new Date(updateCall[0].cancelled_at).getTime(),
+    ).toBeGreaterThanOrEqual(before);
   });
 });

@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMockSupabaseClient, type MockSupabaseClient } from "@/test/mocks/supabase";
+import {
+  createMockSupabaseClient,
+  type MockSupabaseClient,
+} from "@/test/mocks/supabase";
 
 // ── Module-level mocks ────────────────────────────────────────────
 
@@ -29,8 +32,8 @@ import { revalidateTag } from "next/cache";
 import { logAuditAfter } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
-import { withBranchFilter } from "@/lib/supabase/with-branch";
 import { sendReminderEmail } from "@/lib/services/email-service";
+import { withBranchFilter } from "@/lib/supabase/with-branch";
 
 const mockRevalidateTag = vi.mocked(revalidateTag);
 const mockLogAudit = vi.mocked(logAuditAfter);
@@ -42,16 +45,16 @@ const mockSendReminderEmail = vi.mocked(sendReminderEmail);
 // ── Imports under test ────────────────────────────────────────────
 
 import {
-  getServiceSchedules,
-  getServiceSchedule,
-  createServiceSchedule,
-  updateServiceSchedule,
-  deleteServiceSchedule,
-  syncWorkOrderToSchedules,
   backfillSchedulesFromHistory,
-  getReminderLogs,
-  sendPendingReminders,
   createReminderLog,
+  createServiceSchedule,
+  deleteServiceSchedule,
+  getReminderLogs,
+  getServiceSchedule,
+  getServiceSchedules,
+  sendPendingReminders,
+  syncWorkOrderToSchedules,
+  updateServiceSchedule,
 } from "../service-reminder-service";
 
 const ORG_ID = "org-1";
@@ -271,9 +274,7 @@ describe("createServiceSchedule", () => {
         interval_months: undefined,
         interval_km: undefined,
       }),
-    ).rejects.toThrow(
-      "At least one interval type (months or km) must be set",
-    );
+    ).rejects.toThrow("At least one interval type (months or km) must be set");
   });
 
   it("throws on database error", async () => {
@@ -463,7 +464,11 @@ describe("syncWorkOrderToSchedules", () => {
     db.__qb.resolveOnce({ data: woRow, error: null });
     db.__qb.resolveOnce({ data: [serviceRow], error: null });
     // maybeSingle returns a pre-resolved promise (not via qb.then), so override it
-    (db.from("vehicle_service_schedules").maybeSingle as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (
+      db.from("vehicle_service_schedules").maybeSingle as unknown as ReturnType<
+        typeof vi.fn
+      >
+    ).mockResolvedValueOnce({
       data: { id: "existing-1" },
       error: null,
     });
@@ -517,7 +522,10 @@ describe("syncWorkOrderToSchedules", () => {
 describe("backfillSchedulesFromHistory", () => {
   it("syncs all completed work orders and returns total count", async () => {
     // Fetch completed work orders
-    db.__qb.resolveOnce({ data: [{ id: "wo-1" }, { id: "wo-2" }], error: null });
+    db.__qb.resolveOnce({
+      data: [{ id: "wo-1" }, { id: "wo-2" }],
+      error: null,
+    });
     // wo-1: work_orders query (first sync function starts)
     db.__qb.resolveOnce({
       data: {
@@ -791,6 +799,8 @@ describe("createReminderLog", () => {
       error: { message: "Insert failed" },
     });
 
-    await expect(createReminderLog(db, ORG_ID, params)).rejects.toThrow("Insert failed");
+    await expect(createReminderLog(db, ORG_ID, params)).rejects.toThrow(
+      "Insert failed",
+    );
   });
 });

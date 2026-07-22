@@ -111,7 +111,10 @@ function NavItemRow({
   isActive: (href: string) => boolean;
   onNavigate: (href: string) => void;
 }) {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const Icon = item.icon;
 
   return (
@@ -141,7 +144,10 @@ function CollapsibleNavItem({
   isActive: (href: string) => boolean;
   onNavigate: (href: string) => void;
 }) {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const Icon = item.icon;
   const defaultOpen =
     isActive(item.href) ||

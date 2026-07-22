@@ -6,7 +6,6 @@
  */
 "use client";
 
-import dynamic from "next/dynamic";
 import { subDays } from "date-fns";
 import {
   BarChart3,
@@ -16,6 +15,7 @@ import {
   type LucideIcon,
   TrendingUp,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
@@ -48,10 +48,9 @@ import { ReportsSkeleton } from "./_reports-skeleton";
 import { ReportsTabBar } from "./_reports-tab-bar";
 
 // Lazy-load tab content — only the active tab's code is fetched
-const EodView = dynamic(
-  () => import("./_eod-view").then((m) => m.EodView),
-  { ssr: false },
-);
+const EodView = dynamic(() => import("./_eod-view").then((m) => m.EodView), {
+  ssr: false,
+});
 const FinanceTab = dynamic(
   () => import("./_finance-tab").then((m) => m.FinanceTab),
   { ssr: false },
@@ -63,7 +62,10 @@ const OverviewTab = dynamic(
 // ── Main Reports Page ─────────────────────────────────────
 
 export default function ReportsPage() {
-  const t = useTranslations("reports") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("reports") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const locale = useLocale();
   // ── State ────────────────────────────────────────────
   const [mechanicFilter, setMechanicFilter] = useState("");

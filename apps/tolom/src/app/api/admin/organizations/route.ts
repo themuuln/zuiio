@@ -2,7 +2,6 @@ import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { ForbiddenError } from "@/lib/errors";
 import {
-
   checkSuperAdmin,
   listOrganizations,
 } from "@/lib/services/admin-service";

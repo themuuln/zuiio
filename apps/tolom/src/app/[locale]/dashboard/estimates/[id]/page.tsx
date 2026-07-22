@@ -120,8 +120,14 @@ function getCustomerName(estimate: EstimateDetail) {
 }
 
 export default function EstimateDetailPage() {
-  const t = useTranslations("estimates") as (key: string, values?: Record<string, string | number>) => string;
-  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("estimates") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const commonT = useTranslations("common") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const params = useParams();
   const estimateId = params.id as string;
   const router = useRouter();

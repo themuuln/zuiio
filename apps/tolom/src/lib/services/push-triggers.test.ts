@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
-  notifyWorkOrderAssigned,
   notifyInvoiceSent,
   notifyPaymentReceived,
+  notifyWorkOrderAssigned,
 } from "./push-triggers";
-import { createMockSupabaseClient } from "@/test/mocks/supabase";
 
 vi.mock("./push-service", () => ({
   sendPushToUser: vi.fn().mockResolvedValue(undefined),

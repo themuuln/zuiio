@@ -1,9 +1,8 @@
 "use client";
 
-import { Building2, Globe, Plus, Upload, User, Users, X } from "lucide-react";
+import { Building2, Globe, Plus, Upload, User, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { Link } from "@/lib/i18n/navigation";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListPageShell } from "@/components/list-page-shell";
@@ -20,19 +19,23 @@ import {
 } from "@/components/ui/empty";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useClientNow } from "@/hooks/use-client-now";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
 import { useTableFilters } from "@/lib/hooks/use-table-filters";
+import { Link } from "@/lib/i18n/navigation";
 import { useCustomers, useSharedCustomers } from "@/lib/queries/use-customers";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { CustomerRow } from "./_columns";
-import { CustomerDetailPanel } from "./_customer-detail-panel";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { columns, sharedColumns } from "./_columns";
+import { CustomerDetailPanel } from "./_customer-detail-panel";
 
 export default function CustomersPage() {
-  const t = useTranslations("customers") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("customers") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const isMobile = useIsMobile();
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
     null,
@@ -193,7 +196,11 @@ export default function CustomersPage() {
             actions={
               activeView === "my" ? (
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" render={<Link href={"/dashboard/customers/import"} />}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    render={<Link href={"/dashboard/customers/import"} />}
+                  >
                     <Upload className="size-4" />
                     {t("importCustomers")}
                   </Button>

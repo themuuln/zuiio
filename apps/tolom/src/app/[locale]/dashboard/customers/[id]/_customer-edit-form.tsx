@@ -1,6 +1,5 @@
 "use client";
 
-import type { useTranslations } from "next-intl";
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";

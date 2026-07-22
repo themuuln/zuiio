@@ -23,7 +23,7 @@ function createWrapper(options?: WrapperOptions) {
     return (
       <QueryClientProvider client={queryClient}>
         <NextIntlClientProvider
-          locale={options?.locale as "en" | "mn" ?? "mn"}
+          locale={(options?.locale as "en" | "mn") ?? "mn"}
           messages={options?.messages ?? {}}
         >
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

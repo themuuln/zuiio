@@ -18,7 +18,10 @@ interface DataSharingFormProps {
 }
 
 export function DataSharingForm({ organization }: DataSharingFormProps) {
-  const t = useTranslations("settings") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("settings") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [sharingEnabled, setSharingEnabled] = useState(
     organization?.sharing_enabled ?? false,
   );

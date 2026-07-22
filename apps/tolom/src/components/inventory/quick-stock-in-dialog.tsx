@@ -38,7 +38,10 @@ export function QuickStockInDialog({
   branchId,
   preselectedPartId,
 }: QuickStockInDialogProps) {
-  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   const [partId, setPartId] = useState(preselectedPartId ?? "");
   const [quantity, setQuantity] = useState("");

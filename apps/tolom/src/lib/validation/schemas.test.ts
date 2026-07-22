@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  phoneSchema,
   amountSchema,
-  plateSchema,
   dateSchema,
-  percentageSchema,
   emailSchema,
+  percentageSchema,
+  phoneSchema,
+  plateSchema,
 } from "./schemas";
 
 describe("phoneSchema", () => {

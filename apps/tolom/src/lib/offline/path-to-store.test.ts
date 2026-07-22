@@ -15,7 +15,9 @@ describe("getStoreForPath", () => {
     expect(getStoreForPath("/customers/123")).toBe("customers");
     expect(getStoreForPath("/vehicles/456/parts")).toBe("vehicles");
     expect(getStoreForPath("/inventory/parts/789")).toBe("inventory-parts");
-    expect(getStoreForPath("/inventory/movements/abc")).toBe("inventory-movements");
+    expect(getStoreForPath("/inventory/movements/abc")).toBe(
+      "inventory-movements",
+    );
     expect(getStoreForPath("/payroll/records/111")).toBe("payroll");
     expect(getStoreForPath("/service-reminders/222")).toBe("service-reminders");
   });
@@ -34,7 +36,9 @@ describe("getStoreForPath", () => {
     expect(getStoreForPath("/inventory/parts")).toBe("inventory-parts");
     expect(getStoreForPath("/inventory/movements")).toBe("inventory-movements");
     expect(getStoreForPath("/inventory/suppliers")).toBe("inventory-suppliers");
-    expect(getStoreForPath("/inventory/purchase-orders")).toBe("inventory-purchase-orders");
+    expect(getStoreForPath("/inventory/purchase-orders")).toBe(
+      "inventory-purchase-orders",
+    );
   });
 
   it("returns correct store for /users path", () => {

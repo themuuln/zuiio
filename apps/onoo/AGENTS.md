@@ -3,8 +3,9 @@
 > 1. [Root AGENTS.md](../../AGENTS.md) — shared monorepo rules, conventions, and permission boundaries
 > 2. `docs/VISION.md` — product vision, design principles, what we won't do
 > 3. `docs/tasks/INDEX.md` — task queue with status, priority, dependencies (pick work from here)
-> 4. `docs/ROADMAP.md` — feature checklist by phase (tick checkboxes here when done)
-> 5. `packages/core/src/index.ts` — core package exports
+> 4. `docs/STRATEGY.md` — monetization & analytics strategy, revenue model, reshuffled roadmap
+> 5. `docs/ROADMAP.md` — feature checklist by phase (tick checkboxes here when done)
+> 6. `packages/core/src/index.ts` — core package exports
 ```
 apps/onoo/
 ├── packages/core/           ← @onoo/core (events, stats, format, i18n, sync)

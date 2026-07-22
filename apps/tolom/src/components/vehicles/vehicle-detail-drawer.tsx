@@ -230,8 +230,14 @@ export function VehicleDetailSheet({
   onOpenChange,
   vehicleId,
 }: VehicleDetailSheetProps) {
-  const t = useTranslations("vehicles") as (key: string, values?: Record<string, string | number>) => string;
-  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("vehicles") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const commonT = useTranslations("common") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
   const queryClient = useQueryClient();
@@ -790,7 +796,10 @@ function VehicleEditForm({
   form: VehicleFormState;
   onChange: (updater: (prev: VehicleFormState) => VehicleFormState) => void;
 }) {
-  const t = useTranslations("vehicles") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("vehicles") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [showMore, setShowMore] = useState(false);
 
   const setField = (field: keyof VehicleFormState, value: string) => {

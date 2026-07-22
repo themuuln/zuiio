@@ -17,10 +17,10 @@ import {
 import { Typography } from "@/components/ui/typography";
 
 const VALUES = [
-	{ key: "value1", icon: "🎯" },
-	{ key: "value2", icon: "👁️" },
-	{ key: "value3", icon: "🔒" },
-	{ key: "value4", icon: "📈" },
+  { key: "value1", icon: "🎯" },
+  { key: "value2", icon: "👁️" },
+  { key: "value3", icon: "🔒" },
+  { key: "value4", icon: "📈" },
 ] as const;
 
 export default function AboutPage() {

@@ -27,9 +27,7 @@ describe("logger", () => {
   });
 
   it("info with context does not throw", () => {
-    expect(() =>
-      logger.info({ userId: "123" }, "user action"),
-    ).not.toThrow();
+    expect(() => logger.info({ userId: "123" }, "user action")).not.toThrow();
   });
 
   it("error call does not throw", () => {
@@ -38,7 +36,10 @@ describe("logger", () => {
 
   it("error with context does not throw", () => {
     expect(() =>
-      logger.error({ err: new Error("fail"), route: "/api/test" }, "route error"),
+      logger.error(
+        { err: new Error("fail"), route: "/api/test" },
+        "route error",
+      ),
     ).not.toThrow();
   });
 

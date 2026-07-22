@@ -101,8 +101,14 @@ export function NewEstimateSheet({
   open,
   onOpenChange,
 }: NewEstimateSheetProps) {
-  const t = useTranslations("estimates") as (key: string, values?: Record<string, string | number>) => string;
-  const commonT = useTranslations("common") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("estimates") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const commonT = useTranslations("common") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const locale = useLocale();
   const router = useRouter();
   const { data: org } = useCurrentOrg();

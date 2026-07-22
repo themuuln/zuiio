@@ -94,7 +94,10 @@ export function ChangeStatusSheet({
   workOrderId,
   currentStatus,
 }: ChangeStatusSheetProps) {
-  const t = useTranslations("workOrders") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("workOrders") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const queryClient = useQueryClient();
   const { data: orgData } = useCurrentOrg();
   const orgId = orgData?.orgId;

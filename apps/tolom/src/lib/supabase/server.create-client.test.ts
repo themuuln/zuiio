@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted: mock fns and mutable state ──────────────────────
 
-const { mockCreateServerClient, mockWithCapture, mockCookies } =
-  vi.hoisted(() => {
+const { mockCreateServerClient, mockWithCapture, mockCookies } = vi.hoisted(
+  () => {
     const cookiesImpl = vi.fn(() => {
       throw new Error("cookies not mocked for this test");
     });
@@ -18,7 +18,8 @@ const { mockCreateServerClient, mockWithCapture, mockCookies } =
       /** Mutable reference — set in beforeEach to control per-test behavior. */
       mockCookies: cookiesImpl,
     };
-  });
+  },
+);
 
 // ── Module mocks (hoisted to top, before imports) ─────────────
 
@@ -184,8 +185,7 @@ describe("createClient — env present and cookies() works", () => {
   });
 
   it("prefers publishable key over anon key", async () => {
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY =
-      "sb_publishable_test";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_test";
     const { createClient } = await import("./server");
     await createClient();
     expect(lastCallKey()).toBe("sb_publishable_test");

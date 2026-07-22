@@ -11,7 +11,10 @@ interface DetailsFormProps {
 }
 
 export function DetailsForm({ part, onSuccess }: DetailsFormProps) {
-  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   return (
     <Card>

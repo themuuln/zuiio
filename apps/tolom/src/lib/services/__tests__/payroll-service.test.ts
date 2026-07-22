@@ -15,18 +15,17 @@ vi.mock("@/lib/errors", () => ({
 
 import { revalidateTag } from "next/cache";
 import { logAuditAfter } from "@/lib/audit";
-import { capture } from "@/lib/capture";
 
 const mockRevalidateTag = vi.mocked(revalidateTag);
 const mockLogAudit = vi.mocked(logAuditAfter);
 
 import {
-  getPayRate,
-  upsertPayRate,
-  listPayRates,
   calculateMonthlyPayroll,
+  getPayRate,
   getPayrollRecords,
+  listPayRates,
   updatePayrollRecordStatus,
+  upsertPayRate,
 } from "../payroll-service";
 
 const ORG_ID = "org-1";
@@ -90,7 +89,9 @@ describe("getPayRate", () => {
 
   it("returns null on DB error", async () => {
     const q = db.from("mechanic_pay_rates") as ReturnType<typeof db.from>;
-    q.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: new Error("DB fail") });
+    q.maybeSingle = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: new Error("DB fail") });
 
     const r = await getPayRate(db as never, ORG_ID, MECHANIC_ID);
 
@@ -128,7 +129,13 @@ describe("upsertPayRate", () => {
     db.__qb.resolveOnce({ data: null, error: null });
     db.__qb.resolveOnce({ data: inserted, error: null });
 
-    const r = await upsertPayRate(db as never, ORG_ID, MECHANIC_ID, HOURLY_RATE, EFFECTIVE_FROM);
+    const r = await upsertPayRate(
+      db as never,
+      ORG_ID,
+      MECHANIC_ID,
+      HOURLY_RATE,
+      EFFECTIVE_FROM,
+    );
 
     expect(r).toEqual(inserted);
   });
@@ -142,12 +149,22 @@ describe("upsertPayRate", () => {
     db.__qb.resolveOnce({ data: null, error: null });
     db.__qb.resolveOnce({ data: inserted, error: null });
 
-    await upsertPayRate(db as never, ORG_ID, MECHANIC_ID, HOURLY_RATE, EFFECTIVE_FROM);
+    await upsertPayRate(
+      db as never,
+      ORG_ID,
+      MECHANIC_ID,
+      HOURLY_RATE,
+      EFFECTIVE_FROM,
+    );
 
     expect(db.from).toHaveBeenCalledWith("mechanic_pay_rates");
     // The update chain
-    const updateChain = db.from("mechanic_pay_rates") as ReturnType<typeof db.from>;
-    expect(updateChain.update).toHaveBeenCalledWith({ effective_to: "2026-01-31" });
+    const updateChain = db.from("mechanic_pay_rates") as ReturnType<
+      typeof db.from
+    >;
+    expect(updateChain.update).toHaveBeenCalledWith({
+      effective_to: "2026-01-31",
+    });
     expect(updateChain.eq).toHaveBeenCalledWith("organization_id", ORG_ID);
     expect(updateChain.eq).toHaveBeenCalledWith("mechanic_id", MECHANIC_ID);
     expect(updateChain.is).toHaveBeenCalledWith("effective_to", null);
@@ -162,9 +179,17 @@ describe("upsertPayRate", () => {
     db.__qb.resolveOnce({ data: null, error: null }); // update
     db.__qb.resolveOnce({ data: inserted, error: null }); // insert
 
-    await upsertPayRate(db as never, ORG_ID, MECHANIC_ID, HOURLY_RATE, EFFECTIVE_FROM);
+    await upsertPayRate(
+      db as never,
+      ORG_ID,
+      MECHANIC_ID,
+      HOURLY_RATE,
+      EFFECTIVE_FROM,
+    );
 
-    const insertChain = db.from("mechanic_pay_rates") as ReturnType<typeof db.from>;
+    const insertChain = db.from("mechanic_pay_rates") as ReturnType<
+      typeof db.from
+    >;
     expect(insertChain.insert).toHaveBeenCalledWith({
       organization_id: ORG_ID,
       mechanic_id: MECHANIC_ID,
@@ -180,7 +205,13 @@ describe("upsertPayRate", () => {
     db.__qb.resolveOnce({ data: null, error: new Error("Insert failed") }); // insert
 
     await expect(
-      upsertPayRate(db as never, ORG_ID, MECHANIC_ID, HOURLY_RATE, EFFECTIVE_FROM),
+      upsertPayRate(
+        db as never,
+        ORG_ID,
+        MECHANIC_ID,
+        HOURLY_RATE,
+        EFFECTIVE_FROM,
+      ),
     ).rejects.toThrow("Insert failed");
   });
 
@@ -193,7 +224,13 @@ describe("upsertPayRate", () => {
     db.__qb.resolveOnce({ data: null, error: null }); // update
     db.__qb.resolveOnce({ data: inserted, error: null }); // insert
 
-    await upsertPayRate(db as never, ORG_ID, MECHANIC_ID, HOURLY_RATE, EFFECTIVE_FROM);
+    await upsertPayRate(
+      db as never,
+      ORG_ID,
+      MECHANIC_ID,
+      HOURLY_RATE,
+      EFFECTIVE_FROM,
+    );
 
     expect(mockLogAudit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -215,7 +252,13 @@ describe("upsertPayRate", () => {
     db.__qb.resolveOnce({ data: null, error: null }); // update
     db.__qb.resolveOnce({ data: inserted, error: null }); // insert
 
-    await upsertPayRate(db as never, ORG_ID, MECHANIC_ID, HOURLY_RATE, EFFECTIVE_FROM);
+    await upsertPayRate(
+      db as never,
+      ORG_ID,
+      MECHANIC_ID,
+      HOURLY_RATE,
+      EFFECTIVE_FROM,
+    );
 
     expect(mockRevalidateTag).toHaveBeenCalled();
   });
@@ -231,8 +274,12 @@ describe("upsertPayRate", () => {
 
     await upsertPayRate(db as never, ORG_ID, MECHANIC_ID, 17000, "2026-03-01");
 
-    const updateChain = db.from("mechanic_pay_rates") as ReturnType<typeof db.from>;
-    expect(updateChain.update).toHaveBeenCalledWith({ effective_to: "2026-02-28" });
+    const updateChain = db.from("mechanic_pay_rates") as ReturnType<
+      typeof db.from
+    >;
+    expect(updateChain.update).toHaveBeenCalledWith({
+      effective_to: "2026-02-28",
+    });
   });
 });
 
@@ -328,7 +375,13 @@ describe("calculateMonthlyPayroll", () => {
   it("calculates payroll for a single mechanic with no existing record", async () => {
     const hoursData = [makeHoursRow(MECHANIC_ID, 160)];
     const profiles = [{ id: MECHANIC_ID, full_name: "Alice" }];
-    const ratesData = [{ mechanic_id: MECHANIC_ID, hourly_rate: 15000, effective_from: "2026-01-01" }];
+    const ratesData = [
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 15000,
+        effective_from: "2026-01-01",
+      },
+    ];
     const existingRecords: Array<Record<string, unknown>> = [];
     const insertedRecord = makePayrollRecord({ id: "pr-new" });
 
@@ -365,7 +418,13 @@ describe("calculateMonthlyPayroll", () => {
   it("returns empty when branch has no mechanics", async () => {
     db.__qb.resolveOnce({ data: [], error: null });
 
-    const r = await calculateMonthlyPayroll(db as never, ORG_ID, YEAR, MONTH, BRANCH_ID);
+    const r = await calculateMonthlyPayroll(
+      db as never,
+      ORG_ID,
+      YEAR,
+      MONTH,
+      BRANCH_ID,
+    );
 
     expect(r).toEqual([]);
   });
@@ -373,9 +432,25 @@ describe("calculateMonthlyPayroll", () => {
   it("upserts existing payroll records instead of inserting new", async () => {
     const hoursData = [makeHoursRow(MECHANIC_ID, 160)];
     const profiles = [{ id: MECHANIC_ID, full_name: "Alice" }];
-    const ratesData = [{ mechanic_id: MECHANIC_ID, hourly_rate: 15000, effective_from: "2026-01-01" }];
-    const existingRecords = [{ id: "pr-existing", mechanic_id: MECHANIC_ID, status: "draft", paid_at: null }];
-    const updatedRecord = makePayrollRecord({ id: "pr-existing", total_hours: 160 });
+    const ratesData = [
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 15000,
+        effective_from: "2026-01-01",
+      },
+    ];
+    const existingRecords = [
+      {
+        id: "pr-existing",
+        mechanic_id: MECHANIC_ID,
+        status: "draft",
+        paid_at: null,
+      },
+    ];
+    const updatedRecord = makePayrollRecord({
+      id: "pr-existing",
+      total_hours: 160,
+    });
 
     // 1. hours query
     // 2. profiles fetch
@@ -398,23 +473,40 @@ describe("calculateMonthlyPayroll", () => {
   });
 
   it("handles multiple mechanics", async () => {
-    const hoursData = [
-      makeHoursRow("mech-1", 160),
-      makeHoursRow("mech-2", 80),
-    ];
+    const hoursData = [makeHoursRow("mech-1", 160), makeHoursRow("mech-2", 80)];
     const profiles = [
       { id: "mech-1", full_name: "Alice" },
       { id: "mech-2", full_name: "Bob" },
     ];
     const ratesData = [
-      { mechanic_id: "mech-1", hourly_rate: 15000, effective_from: "2026-01-01" },
-      { mechanic_id: "mech-2", hourly_rate: 12000, effective_from: "2026-01-01" },
+      {
+        mechanic_id: "mech-1",
+        hourly_rate: 15000,
+        effective_from: "2026-01-01",
+      },
+      {
+        mechanic_id: "mech-2",
+        hourly_rate: 12000,
+        effective_from: "2026-01-01",
+      },
     ];
     const existingRecords: Array<Record<string, unknown>> = [];
     // Insert for mech-1
-    const inserted1 = makePayrollRecord({ id: "pr-1", mechanic_id: "mech-1", total_hours: 160, hourly_rate: 15000, gross_pay: 2400000 });
+    const inserted1 = makePayrollRecord({
+      id: "pr-1",
+      mechanic_id: "mech-1",
+      total_hours: 160,
+      hourly_rate: 15000,
+      gross_pay: 2400000,
+    });
     // Insert for mech-2
-    const inserted2 = makePayrollRecord({ id: "pr-2", mechanic_id: "mech-2", total_hours: 80, hourly_rate: 12000, gross_pay: 960000 });
+    const inserted2 = makePayrollRecord({
+      id: "pr-2",
+      mechanic_id: "mech-2",
+      total_hours: 80,
+      hourly_rate: 12000,
+      gross_pay: 960000,
+    });
 
     db.__qb.resolveOnce({ data: hoursData, error: null });
     db.__qb.resolveOnce({ data: profiles, error: null });
@@ -459,9 +551,19 @@ describe("calculateMonthlyPayroll", () => {
   it("names mechanics as null when profile missing", async () => {
     const hoursData = [makeHoursRow(MECHANIC_ID, 80)];
     const profiles: Array<Record<string, unknown>> = [];
-    const ratesData = [{ mechanic_id: MECHANIC_ID, hourly_rate: 10000, effective_from: "2026-01-01" }];
+    const ratesData = [
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 10000,
+        effective_from: "2026-01-01",
+      },
+    ];
     const existingRecords: Array<Record<string, unknown>> = [];
-    const insertedRecord = makePayrollRecord({ id: "pr-unknown", mechanic_id: MECHANIC_ID, hourly_rate: 10000 });
+    const insertedRecord = makePayrollRecord({
+      id: "pr-unknown",
+      mechanic_id: MECHANIC_ID,
+      hourly_rate: 10000,
+    });
 
     db.__qb.resolveOnce({ data: hoursData, error: null });
     db.__qb.resolveOnce({ data: profiles, error: null });
@@ -478,9 +580,19 @@ describe("calculateMonthlyPayroll", () => {
   it("uses 'Unknown' when profile has null full_name", async () => {
     const hoursData = [makeHoursRow(MECHANIC_ID, 80)];
     const profiles = [{ id: MECHANIC_ID, full_name: null }];
-    const ratesData = [{ mechanic_id: MECHANIC_ID, hourly_rate: 10000, effective_from: "2026-01-01" }];
+    const ratesData = [
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 10000,
+        effective_from: "2026-01-01",
+      },
+    ];
     const existingRecords: Array<Record<string, unknown>> = [];
-    const insertedRecord = makePayrollRecord({ id: "pr-unknown", mechanic_id: MECHANIC_ID, hourly_rate: 10000 });
+    const insertedRecord = makePayrollRecord({
+      id: "pr-unknown",
+      mechanic_id: MECHANIC_ID,
+      hourly_rate: 10000,
+    });
 
     db.__qb.resolveOnce({ data: hoursData, error: null });
     db.__qb.resolveOnce({ data: profiles, error: null });
@@ -498,9 +610,19 @@ describe("calculateMonthlyPayroll", () => {
     const branchMechanics = [{ id: MECHANIC_ID }];
     const hoursData = [makeHoursRow(MECHANIC_ID, 120)];
     const profiles = [{ id: MECHANIC_ID, full_name: "Alice" }];
-    const ratesData = [{ mechanic_id: MECHANIC_ID, hourly_rate: 14000, effective_from: "2026-01-01" }];
+    const ratesData = [
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 14000,
+        effective_from: "2026-01-01",
+      },
+    ];
     const existingRecords: Array<Record<string, unknown>> = [];
-    const insertedRecord = makePayrollRecord({ id: "pr-branch", mechanic_id: MECHANIC_ID, hourly_rate: 14000 });
+    const insertedRecord = makePayrollRecord({
+      id: "pr-branch",
+      mechanic_id: MECHANIC_ID,
+      hourly_rate: 14000,
+    });
 
     // 1. branch query
     // 2. hours query
@@ -515,7 +637,13 @@ describe("calculateMonthlyPayroll", () => {
     db.__qb.resolveOnce({ data: existingRecords, error: null });
     db.__qb.resolveOnce({ data: insertedRecord, error: null });
 
-    const r = await calculateMonthlyPayroll(db as never, ORG_ID, YEAR, MONTH, BRANCH_ID);
+    const r = await calculateMonthlyPayroll(
+      db as never,
+      ORG_ID,
+      YEAR,
+      MONTH,
+      BRANCH_ID,
+    );
 
     expect(r).toHaveLength(1);
     expect(r[0].mechanic_id).toBe(MECHANIC_ID);
@@ -524,7 +652,13 @@ describe("calculateMonthlyPayroll", () => {
   it("calls revalidateTag after calculation", async () => {
     const hoursData = [makeHoursRow(MECHANIC_ID, 40)];
     const profiles = [{ id: MECHANIC_ID, full_name: "Alice" }];
-    const ratesData = [{ mechanic_id: MECHANIC_ID, hourly_rate: 10000, effective_from: "2026-01-01" }];
+    const ratesData = [
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 10000,
+        effective_from: "2026-01-01",
+      },
+    ];
     const existingRecords: Array<Record<string, unknown>> = [];
     const insertedRecord = makePayrollRecord({ id: "pr-cache" });
 
@@ -543,11 +677,23 @@ describe("calculateMonthlyPayroll", () => {
     const hoursData = [makeHoursRow(MECHANIC_ID, 100)];
     const profiles = [{ id: MECHANIC_ID, full_name: "Alice" }];
     const ratesData = [
-      { mechanic_id: MECHANIC_ID, hourly_rate: 15000, effective_from: "2026-01-01" },
-      { mechanic_id: MECHANIC_ID, hourly_rate: 18000, effective_from: "2026-01-15" },
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 15000,
+        effective_from: "2026-01-01",
+      },
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 18000,
+        effective_from: "2026-01-15",
+      },
     ];
     const existingRecords: Array<Record<string, unknown>> = [];
-    const insertedRecord = makePayrollRecord({ id: "pr-rate", mechanic_id: MECHANIC_ID, hourly_rate: 18000 });
+    const insertedRecord = makePayrollRecord({
+      id: "pr-rate",
+      mechanic_id: MECHANIC_ID,
+      hourly_rate: 18000,
+    });
 
     db.__qb.resolveOnce({ data: hoursData, error: null });
     db.__qb.resolveOnce({ data: profiles, error: null });
@@ -570,7 +716,11 @@ describe("getPayrollRecords", () => {
   it("returns payroll records for the period", async () => {
     const records = [
       makePayrollRecord({ id: "pr-1", mechanic_id: "mech-1" }),
-      makePayrollRecord({ id: "pr-2", mechanic_id: "mech-2", hourly_rate: 12000 }),
+      makePayrollRecord({
+        id: "pr-2",
+        mechanic_id: "mech-2",
+        hourly_rate: 12000,
+      }),
     ];
     const profiles = [
       { id: "mech-1", full_name: "Alice" },
@@ -596,7 +746,13 @@ describe("getPayrollRecords", () => {
     db.__qb.resolveOnce({ data: records, error: null });
     db.__qb.resolveOnce({ data: profiles, error: null });
 
-    const r = await getPayrollRecords(db as never, ORG_ID, YEAR, MONTH, BRANCH_ID);
+    const r = await getPayrollRecords(
+      db as never,
+      ORG_ID,
+      YEAR,
+      MONTH,
+      BRANCH_ID,
+    );
 
     expect(r).toHaveLength(1);
     expect(r[0].mechanic_id).toBe("mech-1");
@@ -605,7 +761,13 @@ describe("getPayrollRecords", () => {
   it("returns empty array when branch has no mechanics", async () => {
     db.__qb.resolveOnce({ data: [], error: null });
 
-    const r = await getPayrollRecords(db as never, ORG_ID, YEAR, MONTH, BRANCH_ID);
+    const r = await getPayrollRecords(
+      db as never,
+      ORG_ID,
+      YEAR,
+      MONTH,
+      BRANCH_ID,
+    );
 
     expect(r).toEqual([]);
   });
@@ -639,7 +801,12 @@ describe("updatePayrollRecordStatus", () => {
     const updated = makePayrollRecord({ status: "approved" });
     db.__qb.resolveOnce({ data: updated, error: null });
 
-    const r = await updatePayrollRecordStatus(db as never, ORG_ID, RECORD_ID, "approved");
+    const r = await updatePayrollRecordStatus(
+      db as never,
+      ORG_ID,
+      RECORD_ID,
+      "approved",
+    );
 
     expect(r.status).toBe("approved");
     expect(r.paid_at).toBeNull();
@@ -647,22 +814,35 @@ describe("updatePayrollRecordStatus", () => {
 
   it("sets paid_at when status is paid", async () => {
     const now = new Date();
-    const updated = makePayrollRecord({ status: "paid", paid_at: now.toISOString() });
+    const updated = makePayrollRecord({
+      status: "paid",
+      paid_at: now.toISOString(),
+    });
     db.__qb.resolveOnce({ data: updated, error: null });
 
-    const r = await updatePayrollRecordStatus(db as never, ORG_ID, RECORD_ID, "paid");
+    const r = await updatePayrollRecordStatus(
+      db as never,
+      ORG_ID,
+      RECORD_ID,
+      "paid",
+    );
 
     expect(r.status).toBe("paid");
     expect(r.paid_at).toBe(now.toISOString());
   });
 
   it("sends correct update payload for paid status", async () => {
-    const updated = makePayrollRecord({ status: "paid", paid_at: new Date().toISOString() });
+    const updated = makePayrollRecord({
+      status: "paid",
+      paid_at: new Date().toISOString(),
+    });
     db.__qb.resolveOnce({ data: updated, error: null });
 
     await updatePayrollRecordStatus(db as never, ORG_ID, RECORD_ID, "paid");
 
-    const updateChain = db.from("payroll_records") as ReturnType<typeof db.from>;
+    const updateChain = db.from("payroll_records") as ReturnType<
+      typeof db.from
+    >;
     expect(updateChain.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "paid",
@@ -679,7 +859,9 @@ describe("updatePayrollRecordStatus", () => {
 
     await updatePayrollRecordStatus(db as never, ORG_ID, RECORD_ID, "draft");
 
-    const updateChain = db.from("payroll_records") as ReturnType<typeof db.from>;
+    const updateChain = db.from("payroll_records") as ReturnType<
+      typeof db.from
+    >;
     expect(updateChain.update).toHaveBeenCalledWith({ status: "draft" });
   });
 
@@ -706,7 +888,9 @@ describe("updatePayrollRecordStatus", () => {
 
     await updatePayrollRecordStatus(db as never, ORG_ID, RECORD_ID, "approved");
 
-    const updateChain = db.from("payroll_records") as ReturnType<typeof db.from>;
+    const updateChain = db.from("payroll_records") as ReturnType<
+      typeof db.from
+    >;
     expect(updateChain.select).toHaveBeenCalled();
     expect(updateChain.single).toHaveBeenCalled();
   });

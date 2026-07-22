@@ -1,7 +1,6 @@
 "use client";
 
 import { MoreHorizontal, Pencil, UserMinus, Users } from "lucide-react";
-import type { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

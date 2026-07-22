@@ -5,11 +5,11 @@ import { ok } from "@/lib/api-response";
 import { ForbiddenError } from "@/lib/errors";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
-
   checkSuperAdmin,
   extendSubscriptionTrial,
   updateOrgSubscription,
 } from "@/lib/services/admin-service";
+
 async function guard(request: Request, supabase: SupabaseClient) {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await mutationRateLimiter.check(ip);

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  PLAN_FEATURES,
   FEATURE_KEYS,
+  getNextPlanWithFeature,
   getPlanFeatures,
   isPlanFeatureEnabled,
-  getNextPlanWithFeature,
+  PLAN_FEATURES,
 } from "./plan-features";
 
 describe("FEATURE_KEYS", () => {
@@ -53,7 +53,9 @@ describe("getPlanFeatures", () => {
 
 describe("isPlanFeatureEnabled", () => {
   it("returns true for core features on starter", () => {
-    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.WORK_ORDERS)).toBe(true);
+    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.WORK_ORDERS)).toBe(
+      true,
+    );
     expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.CUSTOMERS)).toBe(true);
   });
 
@@ -63,7 +65,9 @@ describe("isPlanFeatureEnabled", () => {
   });
 
   it("returns true for all features on enterprise", () => {
-    expect(isPlanFeatureEnabled("enterprise", FEATURE_KEYS.INVENTORY)).toBe(true);
+    expect(isPlanFeatureEnabled("enterprise", FEATURE_KEYS.INVENTORY)).toBe(
+      true,
+    );
     expect(isPlanFeatureEnabled("enterprise", FEATURE_KEYS.PAYROLL)).toBe(true);
   });
 });

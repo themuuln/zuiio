@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  createMockParams,
   createMockRequest,
   parseResponse,
 } from "@/test/mocks";
@@ -17,13 +18,12 @@ import { createClient } from "@/lib/supabase/server";
 import {
   GET as GETProducts,
   POST as POSTProducts,
-  PATCH,
-  DELETE,
 } from "../admin/api/products/route";
 import {
-  GET as GETOrders,
-  POST as POSTOrders,
-} from "../admin/api/orders/route";
+  PUT as PUTProduct,
+  DELETE as DELETEProduct,
+} from "../admin/api/products/[id]/route";
+import { GET as GETOrders, POST as POSTOrders } from "../admin/api/orders/route";
 
 const mockCreateClient = vi.mocked(createClient);
 
@@ -204,7 +204,7 @@ describe("Admin Products API", () => {
     });
   });
 
-  describe("PATCH /admin/api/products", () => {
+  describe("PUT /admin/api/products/:id", () => {
     it("updates an existing product", async () => {
       const updated = {
         id: "p1",
@@ -214,8 +214,9 @@ describe("Admin Products API", () => {
       };
       setQueryResult(mock, "products", updated);
 
-      const res = await PATCH(
-        createMockRequest({ id: "p1", name: "Updated", price_mnt: 2000 }),
+      const res = await PUTProduct(
+        createMockRequest({ name: "Updated", price_mnt: 2000 }),
+        { params: createMockParams("p1") },
       );
       const body = await parseResponse(res);
 
@@ -223,21 +224,12 @@ describe("Admin Products API", () => {
       expect(body).toEqual(updated);
     });
 
-    it("rejects update with missing id", async () => {
-      const res = await PATCH(
-        createMockRequest({ name: "No Id" }),
-      );
-      const body = await parseResponse(res);
-
-      expect(res.status).toBe(400);
-      expect(body.error).toBe("ID required");
-    });
-
     it("returns 500 when the database update fails", async () => {
       setQueryResult(mock, "products", null, new Error("update constraint"));
 
-      const res = await PATCH(
-        createMockRequest({ id: "p1", name: "Fail" }),
+      const res = await PUTProduct(
+        createMockRequest({ name: "Fail" }),
+        { params: createMockParams("p1") },
       );
       const body = await parseResponse(res);
 
@@ -246,29 +238,23 @@ describe("Admin Products API", () => {
     });
   });
 
-  describe("DELETE /admin/api/products", () => {
+  describe("DELETE /admin/api/products/:id", () => {
     it("deletes an existing product", async () => {
       setQueryResult(mock, "products", { id: "p1" });
 
-      const res = await DELETE(createMockRequest({ id: "p1" }));
-      const body = await parseResponse(res);
+      const res = await DELETEProduct(createMockRequest(undefined), {
+        params: createMockParams("p1"),
+      });
 
-      expect(res.status).toBe(200);
-      expect(body).toEqual({ success: true });
-    });
-
-    it("rejects delete with missing id", async () => {
-      const res = await DELETE(createMockRequest({}));
-      const body = await parseResponse(res);
-
-      expect(res.status).toBe(400);
-      expect(body.error).toBe("ID required");
+      expect(res.status).toBe(204);
     });
 
     it("returns 500 when the database delete fails", async () => {
       setQueryResult(mock, "products", null, new Error("delete denied"));
 
-      const res = await DELETE(createMockRequest({ id: "p1" }));
+      const res = await DELETEProduct(createMockRequest(undefined), {
+        params: createMockParams("p1"),
+      });
       const body = await parseResponse(res);
 
       expect(res.status).toBe(500);

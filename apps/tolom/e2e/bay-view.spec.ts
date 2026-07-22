@@ -55,7 +55,9 @@ test.describe("Bay View", () => {
       ).toBeVisible({ timeout: 5000 });
     });
 
-    test("renders bay regions for occupied and empty bays", async ({ page }) => {
+    test("renders bay regions for occupied and empty bays", async ({
+      page,
+    }) => {
       await waitForBayViewReady(page);
 
       // Occupied bays show vehicle plate after bay number
@@ -87,7 +89,7 @@ test.describe("Bay View", () => {
       await waitForBayViewReady(page);
 
       // The three view toggles (grid/kanban/list) are aria-pressed buttons
-      const toggles = page.locator('button[aria-pressed]');
+      const toggles = page.locator("button[aria-pressed]");
       await expect(toggles.first()).toBeVisible({ timeout: 5000 });
       expect(await toggles.count()).toBeGreaterThanOrEqual(2);
 
@@ -185,8 +187,7 @@ test.describe("Bay View", () => {
 
       // Sidebar uses buttons, not links
       await expect(
-        page
-          .getByRole("button", { name: /bay view|засварын булан/i }),
+        page.getByRole("button", { name: /bay view|засварын булан/i }),
       ).toBeVisible({ timeout: 5000 });
     });
   });
@@ -195,21 +196,21 @@ test.describe("Bay View", () => {
     test("navigates to bay-view-v3 route and loads", async ({ page }) => {
       await page.goto("/dashboard/bay-view-v3");
       // v3 is dynamically imported (ssr:false) — wait for real content, not skeleton
-      await expect(
-        page.getByText("Нийт бэй", { exact: false }),
-      ).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByText("Нийт бэй", { exact: false })).toBeVisible({
+        timeout: 20_000,
+      });
     });
 
     test("bay-view-v3 shows KPI strip and filter pills", async ({ page }) => {
       await page.goto("/dashboard/bay-view-v3");
-      await expect(
-        page.getByText("Нийт бэй", { exact: false }),
-      ).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByText("Нийт бэй", { exact: false })).toBeVisible({
+        timeout: 20_000,
+      });
 
       // v3 filter pills (mock data) render client-side
-      await expect(
-        page.getByRole("button", { name: /Бүгд/i }),
-      ).toBeVisible({ timeout: 5000 });
+      await expect(page.getByRole("button", { name: /Бүгд/i })).toBeVisible({
+        timeout: 5000,
+      });
     });
   });
 });

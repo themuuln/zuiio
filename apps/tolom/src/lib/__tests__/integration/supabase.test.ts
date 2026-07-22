@@ -9,13 +9,13 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  addUserToOrg,
   createAdminClient,
   createAnonClient,
   createTestOrg,
   createTestUser,
-  addUserToOrg,
-  signInAsUser,
   deleteRecord,
+  signInAsUser,
 } from "./helpers";
 
 // ── Connectivity ─────────────────────────────────────────────
@@ -24,14 +24,20 @@ describe("Supabase connectivity", () => {
   const admin = createAdminClient();
 
   it("can connect to Supabase with service-role key", async () => {
-    const { data, error } = await admin.from("organizations").select("id").limit(1);
+    const { data, error } = await admin
+      .from("organizations")
+      .select("id")
+      .limit(1);
     expect(error).toBeNull();
     expect(data).toBeDefined();
   });
 
   it("can connect to Supabase with anon key", async () => {
     const anon = createAnonClient();
-    const { data, error } = await anon.from("organizations").select("id").limit(1);
+    const { data, error } = await anon
+      .from("organizations")
+      .select("id")
+      .limit(1);
     // Anon gets empty data (RLS filters), not a connectivity error
     expect(error).toBeNull();
     expect(data).toEqual([]);
@@ -88,7 +94,11 @@ describe("Organization CRUD", () => {
   });
 
   afterAll(async () => {
-    await deleteRecord(admin, "organization_users", `${orgId},${testUser.id}` as any);
+    await deleteRecord(
+      admin,
+      "organization_users",
+      `${orgId},${testUser.id}` as any,
+    );
     await admin.auth.admin.deleteUser(testUser.id);
     await deleteRecord(admin, "organizations", orgId);
   });
@@ -106,7 +116,7 @@ describe("Organization CRUD", () => {
 
     expect(error).toBeNull();
     expect(data).toBeDefined();
-    expect(data!.name).toContain("Test Org");
+    expect(data?.name).toContain("Test Org");
   });
 
   it("admin can update the organization", async () => {
@@ -127,7 +137,7 @@ describe("Organization CRUD", () => {
 
     expect(error).toBeNull();
     expect(data).toBeDefined();
-    expect(data!.id).toBe(orgId);
+    expect(data?.id).toBe(orgId);
   });
 
   it("anon user cannot read organizations", async () => {
@@ -157,7 +167,11 @@ describe("Customers CRUD", () => {
   });
 
   afterAll(async () => {
-    await deleteRecord(admin, "organization_users", `${orgId},${testUser.id}` as any);
+    await deleteRecord(
+      admin,
+      "organization_users",
+      `${orgId},${testUser.id}` as any,
+    );
     await admin.auth.admin.deleteUser(testUser.id);
     await deleteRecord(admin, "organizations", orgId);
   });
@@ -175,7 +189,7 @@ describe("Customers CRUD", () => {
 
     expect(error).toBeNull();
     expect(data).toBeDefined();
-    customerId = data!.id;
+    customerId = data?.id;
   });
 
   it("authenticated user can read customers in their org", async () => {
@@ -187,7 +201,7 @@ describe("Customers CRUD", () => {
       .single();
 
     expect(error).toBeNull();
-    expect(data!.first_name).toBe("Test User");
+    expect(data?.first_name).toBe("Test User");
   });
 
   it("authenticated user can update customers in their org", async () => {

@@ -68,7 +68,10 @@ describe("importParts", () => {
     // null for blank optional fields
     expect(inserted[1].barcode).toBeNull();
 
-    expect(revalidateTag).toHaveBeenCalledWith(cacheTags.partsCatalog("org-1"));
+    expect(revalidateTag).toHaveBeenCalledWith(
+      cacheTags.partsCatalog("org-1"),
+      "max",
+    );
   });
 
   it("uses name_mn as the display name when name is blank", async () => {
@@ -130,7 +133,10 @@ describe("importParts", () => {
     expect(result.imported).toBe(0);
     expect(result.errors).toHaveLength(0);
     expect(qb.insert).not.toHaveBeenCalled();
-    expect(revalidateTag).toHaveBeenCalledWith(cacheTags.partsCatalog("org-1"));
+    expect(revalidateTag).toHaveBeenCalledWith(
+      cacheTags.partsCatalog("org-1"),
+      "max",
+    );
   });
 
   it("falls back to per-row insert when the batch insert fails, counting successes and failures", async () => {

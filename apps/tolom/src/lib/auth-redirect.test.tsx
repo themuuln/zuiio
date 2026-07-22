@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { redirectToLogin, handleAuthRedirect } from "./auth-redirect";
+import { handleAuthRedirect, redirectToLogin } from "./auth-redirect";
 
 describe("redirectToLogin", () => {
   beforeEach(() => {

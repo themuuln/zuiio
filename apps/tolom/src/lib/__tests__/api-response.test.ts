@@ -25,9 +25,9 @@ vi.mock("../api-handler", () => ({
 
 import {
   apiError,
+  created,
   createRouteHandler,
   createSimpleRouteHandler,
-  created,
   noContent,
   ok,
 } from "../api-response";
@@ -58,10 +58,7 @@ describe("ok", () => {
 describe("created", () => {
   it("returns 201 with data wrapped in response", () => {
     created({ id: 1 });
-    expect(mockJson).toHaveBeenCalledWith(
-      { data: { id: 1 } },
-      { status: 201 },
-    );
+    expect(mockJson).toHaveBeenCalledWith({ data: { id: 1 } }, { status: 201 });
   });
 
   it("returns 201 for falsy data", () => {
