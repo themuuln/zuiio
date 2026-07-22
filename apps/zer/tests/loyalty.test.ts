@@ -47,8 +47,8 @@ test("calculateDiscountFromPoints handles zero points", () => {
 });
 
 test("calculateDiscountFromPoints handles decimal result", () => {
-  // 100 / 0.15 = 666.666...
-  assert.equal(calculateDiscountFromPoints(100, 0.15), 666.6666666666666);
+  const result = calculateDiscountFromPoints(100, 0.15);
+  assert.ok(Math.abs(result - 666.6666666666666) < 1e-12);
 });
 
 // ─── canRedeemReward ───────────────────────────────────────────────

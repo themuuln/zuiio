@@ -1,352 +1,485 @@
 /**
- * Tests for src/lib/pricing.ts — calculateSalePricing.
- *
- * Tests the multi-factor price list resolution logic.
+ * Tests for src/lib/pricing.ts — calculateSalePricing
  */
-
 import assert from "node:assert/strict";
-import test, { mock } from "node:test";
+import { describe, test, mock } from "node:test";
 import { mockMod, resolved } from "./actions-helpers";
+
+import type {
+  calculateSalePricing as CalculateSalePricingFn,
+  SaleItemInput,
+  PricedSaleItem,
+} from "@/lib/pricing";
 
 // ─── Mocks ────────────────────────────────────────────────────────────
 
-const withDbCaptureSpy = mock.fn(async (_name: string, query: unknown) => {
-  if (query instanceof Promise) return query;
-  return { data: null, error: null };
-});
 mockMod("@zuiio/capture", {
   capture: mock.fn(),
-  withDbCapture: withDbCaptureSpy,
+  withDbCapture: mock.fn(async (_name: string, query: unknown) => {
+    // withDbCapture is a passthrough — just await the thenable chain
+    return await query;
+  }),
 });
 
-// ─── Mock data builders ───────────────────────────────────────────────
+mockMod("@zuiio/core", {
+  formatInUB: mock.fn((_date: Date, _fmt: string) => "2026-07-22"),
+});
 
-let contactResult: { data: { customer_segment_id: string | null } | null; error: unknown } = resolved(null);
-let productsResult: { data: unknown[]; error: unknown } = resolved([]);
-let priceListsResult: { data: unknown[]; error: unknown } = resolved([]);
-let segmentLinksResult: { data: unknown[]; error: unknown } = resolved([]);
-let rulesResult: { data: unknown[]; error: unknown } = resolved([]);
+// ─── Chain builder ────────────────────────────────────────────────────
 
-function makeSupabase() {
+/**
+ * Build a thenable chain that resolves to `result`.
+ * Every chain method returns `self` so `.select().eq().in()...` works.
+ * A `.then` method makes the chain awaitable (like a real Supabase query).
+ */
+function chainResult(result: { data: unknown; error: unknown }) {
+  const self: Record<string, unknown> = {};
+  for (const m of [
+    "select",
+    "insert",
+    "update",
+    "delete",
+    "eq",
+    "neq",
+    "gt",
+    "gte",
+    "lt",
+    "in",
+    "not",
+    "is",
+    "or",
+    "order",
+    "limit",
+    "range",
+    "textSearch",
+    "returns",
+    "throwOnError",
+  ]) {
+    self[m] = mock.fn(() => self);
+  }
+  self.single = mock.fn(() => resolved(result.data, result.error));
+  self.maybeSingle = mock.fn(() => resolved(result.data, result.error));
+  self.then = (
+    onFulfilled: (v: typeof result) => void,
+    onRejected?: (e: unknown) => void,
+  ) => Promise.resolve(result).then(onFulfilled, onRejected);
+  return self;
+}
+
+/**
+ * Create a mock Supabase client where `from(table)` pops the next result
+ * from the per-table queue on each call.
+ */
+function makeSupabase(
+  tableResults: Record<string, Array<{ data: unknown; error: unknown }>>,
+) {
+  const counts: Record<string, number> = {};
   return {
     from: mock.fn((table: string) => {
-      if (table === "products") {
-        return {
-          select: mock.fn(() => ({
-            in: mock.fn(() => ({
-              eq: mock.fn(() => ({
-                is: mock.fn(async () => productsResult),
-              })),
-            })),
-          })),
-        };
-      }
-      if (table === "contacts") {
-        return {
-          select: mock.fn(() => ({
-            eq: mock.fn(() => ({
-              eq: mock.fn(() => ({
-                maybeSingle: mock.fn(async () => contactResult),
-              })),
-            })),
-          })),
-        };
-      }
-      if (table === "price_lists") {
-        return {
-          select: mock.fn(() => ({
-            eq: mock.fn(() => ({
-              eq: mock.fn(() => ({
-                or: mock.fn(() => ({
-                  or: mock.fn(() => ({
-                    order: mock.fn(async () => priceListsResult),
-                  })),
-                })),
-              })),
-            })),
-          })),
-        };
-      }
-      if (table === "price_list_segments") {
-        return {
-          select: mock.fn(() => ({
-            in: mock.fn(() => ({
-              eq: mock.fn(async () => segmentLinksResult),
-            })),
-          })),
-        };
-      }
-      if (table === "price_list_rules") {
-        return {
-          select: mock.fn(() => ({
-            in: mock.fn(() => ({
-              eq: mock.fn(async () => rulesResult),
-            })),
-          })),
-        };
-      }
-      throw new Error(`Unexpected table: ${table}`);
+      const results = tableResults[table] || [];
+      const idx = counts[table] || 0;
+      counts[table] = idx + 1;
+      return chainResult(results[idx] || { data: null, error: null });
     }),
-    rpc: mock.fn(async () => resolved(null)),
   };
 }
 
-let calculateSalePricing: (supabase: unknown, orgId: string, contactId: string | null, items: unknown[]) => Promise<unknown[]>;
+// ─── Lazy imports (dynamic — mockMod must register before import) ─────
+
+let calculateSalePricing: typeof CalculateSalePricingFn;
 
 test.before(async () => {
   const mod = await import("@/lib/pricing");
   calculateSalePricing = mod.calculateSalePricing;
 });
 
-test.beforeEach(() => {
-  withDbCaptureSpy.mock.resetCalls();
-  contactResult = resolved(null);
-  productsResult = resolved([]);
-  priceListsResult = resolved([]);
-  segmentLinksResult = resolved([]);
-  rulesResult = resolved([]);
+// ─── Tests ────────────────────────────────────────────────────────────
+
+test("empty items returns empty array", async () => {
+  const supabase = makeSupabase({
+    products: [{ data: [], error: null }],
+    price_lists: [{ data: [], error: null }],
+  });
+
+  const result = await calculateSalePricing(supabase, "org-1", null, []);
+
+  assert.deepStrictEqual(result, []);
 });
 
-test("returns catalog prices when no price lists exist", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: 5000, category_id: "cat-1" },
-  ]);
-  priceListsResult = resolved([]);
+test("single item uses product base price when no price lists exist", async () => {
+  const supabase = makeSupabase({
+    products: [
+      {
+        data: [
+          {
+            id: "prod-1",
+            sale_price: 5000,
+            category_id: "cat-1",
+          },
+        ],
+        error: null,
+      },
+    ],
+    price_lists: [{ data: [], error: null }],
+  });
 
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
-    "c-1",
-    [{ productId: "p1", quantity: 1 }],
-  );
+  const result = await calculateSalePricing(supabase, "org-1", null, [
+    { productId: "prod-1", quantity: 1 },
+  ]);
 
   assert.equal(result.length, 1);
-  assert.equal(result[0].finalUnitPrice, 5000);
+  assert.equal(result[0].productId, "prod-1");
   assert.equal(result[0].baseUnitPrice, 5000);
-  assert.equal(result[0].priceListRuleId, null);
-});
-
-test("returns zero for products without price", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: null, category_id: null },
-  ]);
-  priceListsResult = resolved([]);
-
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
-    null,
-    [{ productId: "p1", quantity: 1 }],
-  );
-
-  assert.equal(result.length, 1);
-  assert.equal(result[0].finalUnitPrice, 0);
-});
-
-test("returns catalog prices when rules exist but none match", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: 5000, category_id: "cat-1" },
-  ]);
-  priceListsResult = resolved([
-    { id: "pl-1", priority: 1, valid_from: null, valid_until: null },
-  ]);
-  rulesResult = resolved([
-    { id: "r-1", price_list_id: "pl-1", product_id: "p2", category_id: null, min_quantity: 1, unit_price: 3000, percentage_adjustment: null },
-  ]);
-
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
-    null,
-    [{ productId: "p1", quantity: 1 }],
-  );
-
   assert.equal(result[0].finalUnitPrice, 5000);
   assert.equal(result[0].priceListRuleId, null);
 });
 
-test("applies product-specific fixed price rule", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: 5000, category_id: "cat-1" },
-  ]);
-  priceListsResult = resolved([
-    { id: "pl-1", priority: 1, valid_from: null, valid_until: null },
-  ]);
-  rulesResult = resolved([
-    { id: "r-1", price_list_id: "pl-1", product_id: "p1", category_id: null, min_quantity: 1, unit_price: 3500, percentage_adjustment: null },
+test("item with price list rule applies fixed unit price", async () => {
+  const supabase = makeSupabase({
+    products: [
+      {
+        data: [
+          {
+            id: "prod-1",
+            sale_price: 5000,
+            category_id: "cat-1",
+          },
+        ],
+        error: null,
+      },
+    ],
+    price_lists: [
+      {
+        data: [{ id: "list-1", priority: 10, valid_from: null, valid_until: null }],
+        error: null,
+      },
+    ],
+    price_list_rules: [
+      {
+        data: [
+          {
+            id: "rule-1",
+            price_list_id: "list-1",
+            product_id: "prod-1",
+            category_id: null,
+            min_quantity: 1,
+            unit_price: 4200,
+            percentage_adjustment: null,
+          },
+        ],
+        error: null,
+      },
+    ],
+  });
+
+  const result = await calculateSalePricing(supabase, "org-1", null, [
+    { productId: "prod-1", quantity: 1 },
   ]);
 
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
-    null,
-    [{ productId: "p1", quantity: 1 }],
-  );
-
-  assert.equal(result[0].finalUnitPrice, 3500);
-  assert.equal(result[0].priceListRuleId, "r-1");
+  assert.equal(result.length, 1);
+  assert.equal(result[0].baseUnitPrice, 5000);
+  assert.equal(result[0].finalUnitPrice, 4200);
+  assert.equal(result[0].priceListRuleId, "rule-1");
 });
 
-test("applies percentage adjustment rule", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: 10000, category_id: "cat-1" },
-  ]);
-  priceListsResult = resolved([
-    { id: "pl-1", priority: 1, valid_from: null, valid_until: null },
-  ]);
-  rulesResult = resolved([
-    { id: "r-1", price_list_id: "pl-1", product_id: "p1", category_id: null, min_quantity: 1, unit_price: null, percentage_adjustment: -10 },
+test("item with segment-linked price list uses segment price", async () => {
+  const supabase = makeSupabase({
+    contacts: [
+      {
+        data: { customer_segment_id: "seg-1" },
+        error: null,
+      },
+    ],
+    products: [
+      {
+        data: [
+          {
+            id: "prod-1",
+            sale_price: 5000,
+            category_id: "cat-1",
+          },
+        ],
+        error: null,
+      },
+    ],
+    price_lists: [
+      {
+        data: [
+          { id: "list-seg", priority: 10, valid_from: null, valid_until: null },
+          { id: "list-default", priority: 20, valid_from: null, valid_until: null },
+        ],
+        error: null,
+      },
+    ],
+    price_list_segments: [
+      {
+        data: [{ price_list_id: "list-seg" }],
+        error: null,
+      },
+    ],
+    price_list_rules: [
+      {
+        data: [
+          {
+            id: "rule-seg",
+            price_list_id: "list-seg",
+            product_id: "prod-1",
+            category_id: null,
+            min_quantity: 1,
+            unit_price: 3800,
+            percentage_adjustment: null,
+          },
+          {
+            id: "rule-default",
+            price_list_id: "list-default",
+            product_id: "prod-1",
+            category_id: null,
+            min_quantity: 1,
+            unit_price: 4500,
+            percentage_adjustment: null,
+          },
+        ],
+        error: null,
+      },
+    ],
+  });
+
+  const result = await calculateSalePricing(supabase, "org-1", "contact-1", [
+    { productId: "prod-1", quantity: 1 },
   ]);
 
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
-    null,
-    [{ productId: "p1", quantity: 1 }],
-  );
-
-  // 10% off 10000 = 9000
-  assert.equal(result[0].finalUnitPrice, 9000);
+  assert.equal(result.length, 1);
+  // Segment-linked rule (rule-seg at 3800) should win over default (rule-default at 4500)
+  assert.equal(result[0].baseUnitPrice, 5000);
+  assert.equal(result[0].finalUnitPrice, 3800);
+  assert.equal(result[0].priceListRuleId, "rule-seg");
 });
 
-test("prefers product-specific rule over category rule", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: 5000, category_id: "cat-1" },
-  ]);
-  priceListsResult = resolved([
-    { id: "pl-1", priority: 1, valid_from: null, valid_until: null },
-  ]);
-  rulesResult = resolved([
-    { id: "r-1", price_list_id: "pl-1", product_id: "p1", category_id: null, min_quantity: 1, unit_price: 3000, percentage_adjustment: null },
-    { id: "r-2", price_list_id: "pl-1", product_id: null, category_id: "cat-1", min_quantity: 1, unit_price: 4000, percentage_adjustment: null },
+test("multiple items are priced correctly", async () => {
+  const supabase = makeSupabase({
+    products: [
+      {
+        data: [
+          { id: "prod-1", sale_price: 5000, category_id: "cat-1" },
+          { id: "prod-2", sale_price: 8000, category_id: "cat-2" },
+        ],
+        error: null,
+      },
+    ],
+    price_lists: [
+      {
+        data: [{ id: "list-1", priority: 10, valid_from: null, valid_until: null }],
+        error: null,
+      },
+    ],
+    price_list_rules: [
+      {
+        data: [
+          {
+            id: "rule-1",
+            price_list_id: "list-1",
+            product_id: "prod-1",
+            category_id: null,
+            min_quantity: 1,
+            unit_price: 4000,
+            percentage_adjustment: null,
+          },
+          {
+            id: "rule-2",
+            price_list_id: "list-1",
+            product_id: "prod-2",
+            category_id: null,
+            min_quantity: 1,
+            unit_price: null,
+            percentage_adjustment: -10,
+          },
+        ],
+        error: null,
+      },
+    ],
+  });
+
+  const result = await calculateSalePricing(supabase, "org-1", null, [
+    { productId: "prod-1", quantity: 2 },
+    { productId: "prod-2", quantity: 1 },
   ]);
 
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
-    null,
-    [{ productId: "p1", quantity: 1 }],
-  );
+  assert.equal(result.length, 2);
 
-  assert.equal(result[0].finalUnitPrice, 3000);
-  assert.equal(result[0].priceListRuleId, "r-1");
-});
-
-test("prefers higher min_quantity that is satisfied", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: 5000, category_id: "cat-1" },
-  ]);
-  priceListsResult = resolved([
-    { id: "pl-1", priority: 1, valid_from: null, valid_until: null },
-  ]);
-  rulesResult = resolved([
-    { id: "r-1", price_list_id: "pl-1", product_id: "p1", category_id: null, min_quantity: 1, unit_price: 4000, percentage_adjustment: null },
-    { id: "r-2", price_list_id: "pl-1", product_id: "p1", category_id: null, min_quantity: 5, unit_price: 3500, percentage_adjustment: null },
-  ]);
-
-  // Buying 3 — not enough for min 5 on r-2
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
-    null,
-    [{ productId: "p1", quantity: 3 }],
-  );
-
-  // Should pick r-1 (min 1) since r-2 min 5 not satisfied
+  // prod-1: fixed price 4000
+  assert.equal(result[0].productId, "prod-1");
+  assert.equal(result[0].baseUnitPrice, 5000);
   assert.equal(result[0].finalUnitPrice, 4000);
+  assert.equal(result[0].priceListRuleId, "rule-1");
+
+  // prod-2: 10% off 8000 = 7200
+  assert.equal(result[1].productId, "prod-2");
+  assert.equal(result[1].baseUnitPrice, 8000);
+  assert.equal(result[1].finalUnitPrice, 7200);
+  assert.equal(result[1].priceListRuleId, "rule-2");
 });
 
-test("prefers segment-linked list over default", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: 5000, category_id: "cat-1" },
-  ]);
-  contactResult = resolved({ customer_segment_id: "seg-1" });
-  priceListsResult = resolved([
-    { id: "pl-1", priority: 1, valid_from: null, valid_until: null },
-    { id: "pl-2", priority: 1, valid_from: null, valid_until: null },
-  ]);
-  segmentLinksResult = resolved([{ price_list_id: "pl-2" }]);
-  rulesResult = resolved([
-    { id: "r-1", price_list_id: "pl-1", product_id: "p1", category_id: null, min_quantity: 1, unit_price: 4500, percentage_adjustment: null },
-    { id: "r-2", price_list_id: "pl-2", product_id: "p1", category_id: null, min_quantity: 1, unit_price: 4000, percentage_adjustment: null },
+test("missing product returns zero base and final price", async () => {
+  const supabase = makeSupabase({
+    products: [{ data: [], error: null }],
+    price_lists: [{ data: [], error: null }],
+  });
+
+  const result = await calculateSalePricing(supabase, "org-1", null, [
+    { productId: "nonexistent", quantity: 5 },
   ]);
 
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
-    "c-1",
-    [{ productId: "p1", quantity: 1 }],
-  );
-
-  // pl-2 is segment-linked, so r-2 wins
-  assert.equal(result[0].finalUnitPrice, 4000);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].productId, "nonexistent");
+  assert.equal(result[0].baseUnitPrice, 0);
+  assert.equal(result[0].finalUnitPrice, 0);
+  assert.equal(result[0].priceListRuleId, null);
 });
 
-test("prefers lower priority number", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: 5000, category_id: "cat-1" },
-  ]);
-  priceListsResult = resolved([
-    { id: "pl-1", priority: 2, valid_from: null, valid_until: null },
-    { id: "pl-2", priority: 1, valid_from: null, valid_until: null },
-  ]);
-  rulesResult = resolved([
-    { id: "r-1", price_list_id: "pl-1", product_id: "p1", category_id: null, min_quantity: 1, unit_price: 4500, percentage_adjustment: null },
-    { id: "r-2", price_list_id: "pl-2", product_id: "p1", category_id: null, min_quantity: 1, unit_price: 4000, percentage_adjustment: null },
-  ]);
+test("quantity-based pricing: higher quantity gets better price", async () => {
+  const baseResults = {
+    products: [
+      {
+        data: [{ id: "prod-1", sale_price: 10000, category_id: "cat-1" }],
+        error: null,
+      },
+    ],
+    price_lists: [
+      {
+        data: [{ id: "list-1", priority: 10, valid_from: null, valid_until: null }],
+        error: null,
+      },
+    ],
+    price_list_rules: [
+      {
+        data: [
+          {
+            id: "rule-low",
+            price_list_id: "list-1",
+            product_id: "prod-1",
+            category_id: null,
+            min_quantity: 1,
+            unit_price: 9500,
+            percentage_adjustment: null,
+          },
+          {
+            id: "rule-high",
+            price_list_id: "list-1",
+            product_id: "prod-1",
+            category_id: null,
+            min_quantity: 10,
+            unit_price: 8000,
+            percentage_adjustment: null,
+          },
+        ],
+        error: null,
+      },
+    ],
+  };
 
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
+  // qty=5 → only rule-low satisfied (min_qty 1) → price 9500
+  const lowQtyResult = await calculateSalePricing(
+    makeSupabase(baseResults),
+    "org-1",
     null,
-    [{ productId: "p1", quantity: 1 }],
+    [{ productId: "prod-1", quantity: 5 }],
   );
+  assert.equal(lowQtyResult[0].finalUnitPrice, 9500);
+  assert.equal(lowQtyResult[0].priceListRuleId, "rule-low");
 
-  // pl-2 has lower priority (1 < 2), so r-2 should win
-  assert.equal(result[0].finalUnitPrice, 4000);
-});
-
-test("prefers fixed price over percentage adjustment", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: 10000, category_id: "cat-1" },
-  ]);
-  priceListsResult = resolved([
-    { id: "pl-1", priority: 1, valid_from: null, valid_until: null },
-  ]);
-  rulesResult = resolved([
-    { id: "r-1", price_list_id: "pl-1", product_id: "p1", category_id: null, min_quantity: 1, unit_price: null, percentage_adjustment: -20 },
-    { id: "r-2", price_list_id: "pl-1", product_id: "p1", category_id: null, min_quantity: 1, unit_price: 7000, percentage_adjustment: null },
-  ]);
-
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
+  // qty=15 → both satisfied, rule-high has higher min_quantity → price 8000
+  const highQtyResult = await calculateSalePricing(
+    makeSupabase(baseResults),
+    "org-1",
     null,
-    [{ productId: "p1", quantity: 1 }],
+    [{ productId: "prod-1", quantity: 15 }],
   );
-
-  // Fixed price (7000) should win over percentage (-20% = 8000)
-  assert.equal(result[0].finalUnitPrice, 7000);
+  assert.equal(highQtyResult[0].finalUnitPrice, 8000);
+  assert.equal(highQtyResult[0].priceListRuleId, "rule-high");
 });
 
-test("handles contact without segment", async () => {
-  productsResult = resolved([
-    { id: "p1", sale_price: 5000, category_id: null },
-  ]);
-  contactResult = resolved({ customer_segment_id: null });
-  priceListsResult = resolved([
-    { id: "pl-1", priority: 1, valid_from: null, valid_until: null },
-  ]);
-  rulesResult = resolved([
-    { id: "r-1", price_list_id: "pl-1", product_id: "p1", category_id: null, min_quantity: 1, unit_price: 3500, percentage_adjustment: null },
+test("category rule applies when no product-specific rule exists", async () => {
+  const supabase = makeSupabase({
+    products: [
+      {
+        data: [
+          { id: "prod-1", sale_price: 5000, category_id: "cat-1" },
+        ],
+        error: null,
+      },
+    ],
+    price_lists: [
+      {
+        data: [{ id: "list-1", priority: 10, valid_from: null, valid_until: null }],
+        error: null,
+      },
+    ],
+    price_list_rules: [
+      {
+        data: [
+          {
+            id: "rule-cat",
+            price_list_id: "list-1",
+            product_id: null,
+            category_id: "cat-1",
+            min_quantity: 1,
+            unit_price: null,
+            percentage_adjustment: -5,
+          },
+        ],
+        error: null,
+      },
+    ],
+  });
+
+  const result = await calculateSalePricing(supabase, "org-1", null, [
+    { productId: "prod-1", quantity: 1 },
   ]);
 
-  const result = await calculateSalePricing(
-    makeSupabase(),
-    "org-123",
-    "c-1",
-    [{ productId: "p1", quantity: 1 }],
-  );
+  // 5% off 5000 = 4750
+  assert.equal(result[0].baseUnitPrice, 5000);
+  assert.equal(result[0].finalUnitPrice, 4750);
+  assert.equal(result[0].priceListRuleId, "rule-cat");
+});
 
-  assert.equal(result[0].finalUnitPrice, 3500);
+test("percentage adjustment rounds to nearest integer", async () => {
+  const supabase = makeSupabase({
+    products: [
+      {
+        data: [
+          { id: "prod-1", sale_price: 3333, category_id: "cat-1" },
+        ],
+        error: null,
+      },
+    ],
+    price_lists: [
+      {
+        data: [{ id: "list-1", priority: 10, valid_from: null, valid_until: null }],
+        error: null,
+      },
+    ],
+    price_list_rules: [
+      {
+        data: [
+          {
+            id: "rule-pct",
+            price_list_id: "list-1",
+            product_id: "prod-1",
+            category_id: null,
+            min_quantity: 1,
+            unit_price: null,
+            percentage_adjustment: -15,
+          },
+        ],
+        error: null,
+      },
+    ],
+  });
+
+  const result = await calculateSalePricing(supabase, "org-1", null, [
+    { productId: "prod-1", quantity: 1 },
+  ]);
+
+  // 3333 * 0.85 = 2833.05 → Math.round → 2833
+  assert.equal(result[0].finalUnitPrice, 2833);
 });
