@@ -10,6 +10,7 @@ const FOOTER_LINKS = [
   { href: "/players", label: "Тоглогчид" },
   { href: "/leaders", label: "Тэргүүлэгчид" },
   { href: "/awards", label: "Наградууд" },
+  { href: "/docs", label: "Баримт бичиг" },
 ];
 
 const LEAGUE_INFO = [
