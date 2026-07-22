@@ -342,14 +342,63 @@ export type ShotZoneStat = {
   attempted: number;
 };
 
+/** Format a Date to YYYY-MM-DD in Asia/Ulaanbaatar timezone. */
+export function formatDateULAT(date: Date): string {
+  return date.toLocaleDateString("en-CA", {
+    timeZone: "Asia/Ulaanbaatar",
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Pure helper functions (no server-side imports)
 // ---------------------------------------------------------------------------
 
 /** Return today's date string in Asia/Ulaanbaatar timezone (UTC+8). */
 export function getUlaanbaatarDate(): string {
-  return new Date().toLocaleDateString("sv-SE", {
-    timeZone: "Asia/Ulaanbaatar",
+  return formatDateULAT(new Date());
+}
+
+/** Shift a YYYY-MM-DD date string by `days` calendar days, returning YYYY-MM-DD. */
+export function shiftDate(dateStr: string, days: number): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const d = new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1));
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Rolling window of date strings for the scorebar's date pills. Defaults to the
+ * 2 previous days, today, and the next 5 days (8 total). Pure — no DB access.
+ */
+export function getDateRange(
+  today: string,
+  { past = 2, future = 5 }: { past?: number; future?: number } = {},
+): string[] {
+  const dates: string[] = [];
+  for (let offset = -past; offset <= future; offset++) {
+    dates.push(shiftDate(today, offset));
+  }
+  return dates;
+}
+
+// Sort weight for the scorebar strip: live first, upcoming next, finals last.
+const SCOREBAR_STATUS_RANK: Record<string, number> = {
+  live_provisional: 0,
+  scheduled: 1,
+  postponed: 1,
+  final_pending_review: 2,
+  league_verified: 2,
+  official: 2,
+  cancelled: 3,
+};
+
+/** Order games for the scorebar strip: live → upcoming → finals, then by time. */
+export function orderScorebarGames(games: GameWithTeams[]): GameWithTeams[] {
+  return [...games].sort((a, b) => {
+    const rankA = SCOREBAR_STATUS_RANK[a.status] ?? 2;
+    const rankB = SCOREBAR_STATUS_RANK[b.status] ?? 2;
+    if (rankA !== rankB) return rankA - rankB;
+    return a.scheduled_at.localeCompare(b.scheduled_at);
   });
 }
 
@@ -400,3 +449,8 @@ export function statusVariant(
     return "secondary";
   return "outline";
 }
+export type {
+  TeamAdvancedStatsPerGame,
+  TeamGameStatsRow,
+  TeamSeasonAggregates,
+} from "./types/team-stats";

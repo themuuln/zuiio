@@ -10,8 +10,10 @@
  * new code to avoid pulling server-only imports into client bundles.
  */
 
-import { createClient } from "@/lib/supabase/server";
+import type { GameRoster, SportConfig, StatEvent } from "@onoo/core/types";
 import { captureError } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@/lib/supabase/types";
 // Import shared types for internal use + re-export for backward compatibility
 import type {
   BoxScoreRow,
@@ -29,11 +31,16 @@ import type {
   TeamRosterRow,
 } from "./shared";
 
+import { orderScorebarGames, shiftDate } from "./shared";
+
 export {
   formatDate,
   formatGameTime,
   formatMinutes,
+  getDateRange,
   getUlaanbaatarDate,
+  orderScorebarGames,
+  shiftDate,
   statusLabel,
   statusVariant,
 } from "./shared";
@@ -83,17 +90,84 @@ export async function getGamesByDate(
   dateStr: string,
 ): Promise<GameWithTeams[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("v_public_games")
-    .select("*")
-    .gte("scheduled_at", `${dateStr}T00:00:00`)
-    .lt("scheduled_at", `${dateStr}T23:59:59`)
-    .order("scheduled_at");
-  if (error || !data) {
-    captureError("getGamesByDate", error);
-    return [];
+  const start = `${dateStr}T00:00:00`;
+  const end = `${dateStr}T23:59:59`;
+
+  // Query both views in parallel — verified (v_public_games) and live/provisional (v_public_live_games)
+  const [{ data: verified, error: err1 }, { data: live, error: err2 }] =
+    await Promise.all([
+      supabase
+        .from("v_public_games")
+        .select("*")
+        .gte("scheduled_at", start)
+        .lt("scheduled_at", end)
+        .order("scheduled_at"),
+      supabase
+        .from("v_public_live_games")
+        .select("*")
+        .gte("scheduled_at", start)
+        .lt("scheduled_at", end)
+        .order("scheduled_at"),
+    ]);
+
+  if (err1) captureError("getGamesByDate/v_public_games", err1);
+  if (err2) captureError("getGamesByDate/v_public_live_games", err2);
+
+  const verifiedRows = (verified ?? []).map((r) =>
+    mapGameRow(r as Record<string, unknown>),
+  );
+  const liveRows = (live ?? []).map((r) =>
+    mapGameRow(r as Record<string, unknown>),
+  );
+
+  // Merge: verified takes priority for same id, live games fill the rest
+  const seen = new Set(verifiedRows.map((g) => g.id));
+  const merged = [...verifiedRows, ...liveRows.filter((g) => !seen.has(g.id))];
+
+  // Restore sort order by scheduled_at
+  merged.sort(
+    (a, b) =>
+      new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime(),
+  );
+  return merged;
+}
+
+export interface ScorebarStrip {
+  /** Games for `activeDate`, ordered live → upcoming → finals. */
+  games: GameWithTeams[];
+  /** Date whose games are shown — `today`, or the fallback match day. */
+  activeDate: string;
+  /** True when today had no games and an earlier match day is shown instead. */
+  isFallback: boolean;
+}
+
+/**
+ * Games for the site-wide scorebar strip. Returns today's games; if today has
+ * none, walks back up to 7 days to surface the most recent match day so the bar
+ * is never empty during sparse schedules. Bounded to at most 8 lightweight
+ * queries (1 in the common case).
+ */
+export async function getScorebarGames(today: string): Promise<ScorebarStrip> {
+  const todayGames = await getGamesByDate(today);
+  if (todayGames.length > 0) {
+    return {
+      games: orderScorebarGames(todayGames),
+      activeDate: today,
+      isFallback: false,
+    };
   }
-  return data.map((row: Record<string, unknown>) => mapGameRow(row));
+  for (let back = 1; back <= 7; back++) {
+    const date = shiftDate(today, -back);
+    const games = await getGamesByDate(date);
+    if (games.length > 0) {
+      return {
+        games: orderScorebarGames(games),
+        activeDate: date,
+        isFallback: true,
+      };
+    }
+  }
+  return { games: [], activeDate: today, isFallback: false };
 }
 
 export async function getLiveGames(): Promise<GameWithTeams[]> {
@@ -108,10 +182,19 @@ export async function getGameById(id: string): Promise<GameWithTeams | null> {
     .from("v_public_games")
     .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) return null;
-  return mapGameRow(data as Record<string, unknown>);
+  if (!error && data) return mapGameRow(data as Record<string, unknown>);
+
+  // Fall back to live/provisional view
+  const { data: live, error: liveErr } = await supabase
+    .from("v_public_live_games")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (liveErr || !live) return null;
+  return mapGameRow(live as Record<string, unknown>);
 }
 
 function mapStandingRow(row: Record<string, unknown>): StandingRow {
@@ -465,10 +548,7 @@ export async function getPlayerShotScatter(
   const supabase = await createClient();
 
   // Get game IDs for this competition
-  let gameQuery = supabase
-    .from("games")
-    .select("id")
-    .eq("status", "official");
+  let gameQuery = supabase.from("games").select("id").eq("status", "official");
 
   if (competitionId) {
     gameQuery = gameQuery.eq("competition_id", competitionId);
@@ -684,9 +764,7 @@ export async function getPlayerCareerTotals(playerId: string): Promise<{
  * EFF = pts + reb + 1.5×ast + 2×stl + 2×blk − tov per game.
  * Returns top 5 qualified players ranked by EFF.
  */
-export async function getMvpRace(
-  competitionId: string,
-): Promise<MvpRaceRow[]> {
+export async function getMvpRace(competitionId: string): Promise<MvpRaceRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_leaders")
@@ -704,15 +782,16 @@ export async function getMvpRace(
     const blk = (row.blk as number) ?? 0;
     const tov = (row.tov as number) ?? 0;
     const gp = (row.gp as number) ?? 0;
-    const eff = gp > 0
-      ? (pts + reb + 1.5 * ast + 2 * stl + 2 * blk - tov) / gp
-      : 0;
+    const eff =
+      gp > 0 ? (pts + reb + 1.5 * ast + 2 * stl + 2 * blk - tov) / gp : 0;
 
     return {
       player_id: row.player_id as string,
       canonical_name: row.player_name as string,
       team_short_code: row.team_short_code as string,
-      photo_url: (row.player_photo_url as string | null) ?? (row.photo_url as string | null),
+      photo_url:
+        (row.player_photo_url as string | null) ??
+        (row.photo_url as string | null),
       eff: Math.round(eff * 10) / 10,
       pts,
       reb,
@@ -867,18 +946,383 @@ export async function searchPlayersAndTeams(
   ]);
 
   return {
-    players: (playersRes.data ?? []).map(
-      (row: Record<string, unknown>) => ({
-        id: row.id as string,
-        name: (row.canonical_name as string) ?? "",
-        team: (row.team_name as string) ?? null,
-        photo_url: (row.photo_url as string) ?? null,
-      }),
-    ),
+    players: (playersRes.data ?? []).map((row: Record<string, unknown>) => ({
+      id: row.id as string,
+      name: (row.canonical_name as string) ?? "",
+      team: (row.team_name as string) ?? null,
+      photo_url: (row.photo_url as string) ?? null,
+    })),
     teams: (teamsRes.data ?? []).map((row: Record<string, unknown>) => ({
       slug: row.slug as string,
       name: (row.name as string) ?? "",
       short_code: (row.short_code as string) ?? null,
     })),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Live game helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Convert public PlayByPlayRow rows to StatEvent format for the LiveGameCenter
+ * client component. Fills missing DB-required fields with safe defaults.
+ */
+export function convertPlayByPlayToStatEvents(
+  rows: PlayByPlayRow[],
+): StatEvent[] {
+  return rows.map((row) => ({
+    id: row.event_id,
+    game_id: row.game_id,
+    operation_id: row.operation_id,
+    local_seq: row.local_seq,
+    event_type: row.event_type,
+    period: row.period,
+    clock_seconds: row.clock_seconds,
+    team_season_id: row.team_season_id ?? "",
+    player_id: row.player_id,
+    payload: row.payload as Json,
+    created_at: row.created_at,
+    // Fields not exposed in the public view — safe defaults
+    client_id: "",
+    created_by: "",
+    deleted_at: null,
+    superseded_by: null,
+    tracker_session_id: "",
+    void_reason: null,
+    voided_at: null,
+    voided_by: null,
+  }));
+}
+
+/** Fetch game roster entries for a given game. */
+export async function getGameRosters(gameId: string): Promise<GameRoster[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("game_rosters")
+    .select("*")
+    .eq("game_id", gameId);
+
+  if (error || !data) return [];
+  return data as GameRoster[];
+}
+
+/** Build a player_id → canonical_name map from already-fetched game rosters. */
+export async function getPlayerNameMap(
+  rosters: { player_id: string }[],
+): Promise<Record<string, string>> {
+  if (!rosters || rosters.length === 0) return {};
+
+  const supabase = await createClient();
+  const playerIds = rosters.map((r) => r.player_id);
+  const { data: players } = await supabase
+    .from("players")
+    .select("id, canonical_name")
+    .in("id", playerIds);
+
+  if (!players) return {};
+
+  const map: Record<string, string> = {};
+  for (const p of players) {
+    map[p.id] = p.canonical_name ?? p.id.slice(0, 8);
+  }
+  return map;
+}
+
+/**
+ * Get the sport config for a game by resolving its ruleset.
+ * Returns null when the game has no ruleset or the rules are malformed.
+ */
+export async function getGameSportConfig(
+  gameId: string,
+): Promise<SportConfig | null> {
+  const supabase = await createClient();
+
+  // We need the ruleset_id from the raw games table
+  const { data: game } = await supabase
+    .from("games")
+    .select("ruleset_id")
+    .eq("id", gameId)
+    .maybeSingle();
+
+  if (!game?.ruleset_id) return null;
+
+  const { data: ruleset } = await supabase
+    .from("basketball_rulesets")
+    .select("rules")
+    .eq("id", game.ruleset_id)
+    .maybeSingle();
+
+  if (!ruleset?.rules) return null;
+
+  // Attempt to parse as SportConfig
+  const r = ruleset.rules as Record<string, unknown>;
+  if (
+    typeof r.periods === "number" &&
+    typeof r.period_minutes === "number" &&
+    typeof r.overtime_minutes === "number" &&
+    typeof r.fouls_to_bonus === "number" &&
+    typeof r.personal_foul_limit === "number" &&
+    typeof r.players_on_court === "number"
+  ) {
+    return r as unknown as SportConfig;
+  }
+  return null;
+}
+
+/** Fetch all data needed by LiveGameCenter for a live game. */
+export async function getLiveGameData(gameId: string): Promise<{
+  events: StatEvent[];
+  rosters: GameRoster[];
+  sportConfig: SportConfig | null;
+  playerNameMap: Record<string, string>;
+}> {
+  const [playByPlay, rosters] = await Promise.all([
+    getPlayByPlay(gameId),
+    getGameRosters(gameId),
+  ]);
+
+  const events = convertPlayByPlayToStatEvents(playByPlay);
+
+  const [playerNameMap, sportConfig] = await Promise.all([
+    getPlayerNameMap(rosters),
+    getGameSportConfig(gameId),
+  ]);
+
+  return { events, rosters, sportConfig, playerNameMap };
+}
+
+// ---------------------------------------------------------------------------
+// Team advanced stats (Phase 7 — Team performance dashboard)
+// ---------------------------------------------------------------------------
+import { calculateTeamAdvancedStats } from "@onoo/core/stats";
+import type {
+  TeamAdvancedStatsPerGame,
+  TeamGameStatsRow,
+  TeamSeasonAggregates,
+} from "../lib/types/team-stats";
+
+/**
+ * Fetch per-game team advanced stats for a team season.
+ * Computes ORtg, DRtg, NetRtg, Pace, eFG%, TOV%, OREB%, FTA Rate, PIE
+ * for each game using @onoo/core pure functions.
+ */
+export async function getTeamGameStats(
+  teamSeasonId: string,
+): Promise<TeamAdvancedStatsPerGame[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_team_game_stats")
+    .select("*")
+    .eq("team_season_id", teamSeasonId)
+    .order("scheduled_at", { ascending: true });
+
+  if (error || !data) return [];
+
+  return (data as unknown as TeamGameStatsRow[]).map((row) => {
+    const teamStats = {
+      pts: row.team_pts,
+      fgm: row.team_fgm,
+      fga: row.team_fga,
+      tpm: row.team_tpm,
+      tpa: row.team_tpa,
+      ftm: row.team_ftm,
+      fta: row.team_fta,
+      oreb: row.team_oreb,
+      dreb: row.team_dreb,
+      ast: row.team_ast,
+      stl: row.team_stl,
+      blk: row.team_blk,
+      tov: row.team_tov,
+      pf: row.team_pf,
+    };
+    const oppStats = {
+      pts: row.opp_pts,
+      fgm: row.opp_fgm,
+      fga: row.opp_fga,
+      tpm: row.opp_tpm,
+      tpa: row.opp_tpa,
+      ftm: row.opp_ftm,
+      fta: row.opp_fta,
+      oreb: row.opp_oreb,
+      dreb: row.opp_dreb,
+      ast: row.opp_ast,
+      stl: row.opp_stl,
+      blk: row.opp_blk,
+      tov: row.opp_tov,
+      pf: row.opp_pf,
+    };
+
+    const adv = calculateTeamAdvancedStats(teamStats, oppStats);
+
+    return {
+      game_id: row.game_id,
+      scheduled_at: row.scheduled_at,
+      opponent_name: row.opp_team_name,
+      opponent_slug: row.opp_team_slug,
+      home_away: row.home_away,
+      team_score: row.team_pts,
+      opp_score: row.opp_pts,
+      result: row.team_pts > row.opp_pts ? "W" : "L",
+      ortg: Math.round(adv.ortg * 10) / 10,
+      drtg: Math.round(adv.drtg * 10) / 10,
+      net_rtg: Math.round(adv.netRtg * 10) / 10,
+      pace: Math.round(adv.pace * 10) / 10,
+      efg: Math.round(adv.efg * 1000) / 10,
+      tov_pct: Math.round(adv.tovPct * 1000) / 10,
+      oreb_pct: Math.round(adv.orebPct * 1000) / 10,
+      fta_rate: Math.round(adv.ftaRate * 1000) / 10,
+      pie: Math.round(adv.pie * 1000) / 10,
+    };
+  });
+}
+
+/**
+ * Compute season aggregates from per-game advanced stats.
+ */
+export function aggregateTeamStats(
+  games: TeamAdvancedStatsPerGame[],
+): TeamSeasonAggregates {
+  if (games.length === 0) {
+    return {
+      games_played: 0,
+      avg_ortg: 0,
+      avg_drtg: 0,
+      avg_net_rtg: 0,
+      avg_pace: 0,
+      avg_efg: 0,
+      avg_tov_pct: 0,
+      avg_oreb_pct: 0,
+      avg_fta_rate: 0,
+      avg_pie: 0,
+      wins: 0,
+      losses: 0,
+    };
+  }
+
+  const count = games.length;
+  const wins = games.filter((g) => g.result === "W").length;
+  const sum = (key: keyof TeamAdvancedStatsPerGame) =>
+    games.reduce((acc, g) => acc + (g[key] as number), 0);
+
+  return {
+    games_played: count,
+    avg_ortg: sum("ortg") / count,
+    avg_drtg: sum("drtg") / count,
+    avg_net_rtg: sum("net_rtg") / count,
+    avg_pace: sum("pace") / count,
+    avg_efg: sum("efg") / count,
+    avg_tov_pct: sum("tov_pct") / count,
+    avg_oreb_pct: sum("oreb_pct") / count,
+    avg_fta_rate: sum("fta_rate") / count,
+    avg_pie: sum("pie") / count,
+    wins,
+    losses: count - wins,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Player development (Phase 7 — Player development timeline)
+// ---------------------------------------------------------------------------
+
+export interface MonthlyStatRow {
+  month: string; // "2026-01"
+  monthLabel: string; // "2026 оны 1-р сар"
+  gamesPlayed: number;
+  avgPts: number;
+  avgReb: number;
+  avgAst: number;
+  avgStl: number;
+  avgBlk: number;
+  avgTov: number;
+  avgMpg: number;
+  avgEff: number;
+  fgp: number | null; // FG%
+  tpp: number | null; // 3P%
+  ftp: number | null; // FT%
+}
+
+/**
+ * Aggregate a player's game log into monthly averages.
+ * Groups by YYYY-MM, computes per-game averages for each stat.
+ */
+export function aggregateMonthlyStats(
+  games: PlayerGameLine[],
+): MonthlyStatRow[] {
+  if (games.length === 0) return [];
+
+  const months = new Map<string, PlayerGameLine[]>();
+
+  for (const game of games) {
+    const monthKey = game.game_date.slice(0, 7); // "2026-01"
+    const existing = months.get(monthKey) ?? [];
+    existing.push(game);
+    months.set(monthKey, existing);
+  }
+
+  const monthNames: Record<string, string> = {
+    "01": "1-р сар",
+    "02": "2-р сар",
+    "03": "3-р сар",
+    "04": "4-р сар",
+    "05": "5-р сар",
+    "06": "6-р сар",
+    "07": "7-р сар",
+    "08": "8-р сар",
+    "09": "9-р сар",
+    "10": "10-р сар",
+    "11": "11-р сар",
+    "12": "12-р сар",
+  };
+
+  return Array.from(months.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([monthKey, monthGames]) => {
+      const count = monthGames.length;
+      const year = monthKey.slice(0, 4);
+      const monthNum = monthKey.slice(5, 7);
+      const monthLabel = `${year} оны ${monthNames[monthNum] ?? monthNum}`;
+
+      const sum = <K extends keyof PlayerGameLine>(key: K): number =>
+        monthGames.reduce((acc, g) => acc + ((g[key] as number) ?? 0), 0);
+
+      const avg = (val: number) => (count > 0 ? val / count : 0);
+      const avgRounded = (val: number) => Math.round(avg(val) * 10) / 10;
+
+      const totalPts = sum("pts");
+      const totalReb = sum("oreb") + sum("dreb");
+      const totalFgm = sum("fgm");
+      const totalFga = sum("fga");
+      const totalTpm = sum("tpm");
+      const totalTpa = sum("tpa");
+      const totalFtm = sum("ftm");
+      const totalFta = sum("fta");
+      const totalEff =
+        totalPts +
+        totalReb +
+        1.5 * sum("ast") +
+        2 * sum("stl") +
+        2 * sum("blk") -
+        sum("tov");
+
+      return {
+        month: monthKey,
+        monthLabel,
+        gamesPlayed: count,
+        avgPts: avgRounded(totalPts),
+        avgReb: avgRounded(totalReb),
+        avgAst: avgRounded(sum("ast")),
+        avgStl: avgRounded(sum("stl")),
+        avgBlk: avgRounded(sum("blk")),
+        avgTov: avgRounded(sum("tov")),
+        avgMpg: avgRounded(sum("seconds_played") / 60),
+        avgEff: avgRounded(totalEff),
+        fgp:
+          totalFga > 0 ? Math.round((totalFgm / totalFga) * 1000) / 10 : null,
+        tpp:
+          totalTpa > 0 ? Math.round((totalTpm / totalTpa) * 1000) / 10 : null,
+        ftp:
+          totalFta > 0 ? Math.round((totalFtm / totalFta) * 1000) / 10 : null,
+      };
+    });
 }

@@ -4,21 +4,33 @@ import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { formatDateULAT, shiftDate } from "../../lib/shared";
 
-function shiftDate(dateStr: string, days: number): string {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const d = new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1));
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
+// Deterministic Mongolian short date formatter — avoids hydration mismatch
+// caused by Node.js servers missing mn-MN ICU locale data when using
+// toLocaleDateString("mn-MN", …).
+const WEEKDAYS_SHORT = ["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"] as const;
+const MONTHS_GENITIVE = [
+  "1-р сарын",
+  "2-р сарын",
+  "3-р сарын",
+  "4-р сарын",
+  "5-р сарын",
+  "6-р сарын",
+  "7-р сарын",
+  "8-р сарын",
+  "9-р сарын",
+  "10-р сарын",
+  "11-р сарын",
+  "12-р сарын",
+] as const;
 
 function formatShort(dateStr: string): string {
   const d = new Date(`${dateStr}T12:00:00`);
-  return d.toLocaleDateString("mn-MN", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
+  const wd = WEEKDAYS_SHORT[d.getUTCDay()];
+  const mo = MONTHS_GENITIVE[d.getUTCMonth()];
+  const day = d.getUTCDate();
+  return `${mo} ${day}. ${wd}`;
 }
 
 interface DateNavProps {
@@ -27,12 +39,7 @@ interface DateNavProps {
 }
 
 export function DateNav({ currentDate, className }: DateNavProps) {
-  const today = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Ulaanbaatar",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+  const today = formatDateULAT(new Date());
   const prev = shiftDate(currentDate, -1);
   const next = shiftDate(currentDate, 1);
   const isToday = currentDate === today;

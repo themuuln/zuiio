@@ -1,203 +1,190 @@
-# Onoo Design System
+---
+> **English summary:** Onoo design language — dark-first, broadcast-energy aesthetic. OKLch color system with brand-orange (`oklch(0.68 0.20 40)`) and brand-purple (`oklch(0.55 0.24 285)`), stepped dark surfaces (`--surface-1` through `--surface-3`), semantic tokens for sports (positive=green, negative=red, live-pulse=#ff4444). Design principles: stats as story (charts > tables), athlete-first, Mongolia-ready (360px width, Cyrillic text spacing), cold-start friendly empty states, no signup gating.
+---
 
-> **Dark canvas. Broadcast energy. Stats as story.**
+# Оноо Design System
 
-Onoo is a sports statistics platform for Mongolian basketball. The design language is **powerful, immersive, and honest** — a near-black canvas that makes every stat feel like a highlight-reel moment.
+> **Харанхуй canvas. Broadcast energy. Stat-ууд бол түүх.**
+
+Onoo бол Монголын сагсан бөмбөгийн статистикийн платформ. Design language нь **хүчтэй, immersive, шударга** байх ёстой — near-black canvas дээр бүх stat highlight reel шиг харагдана.
 
 ---
 
-## Design Principles
+## Дизайн зарчим
 
-1. **Stats as story, not spreadsheet.** Numbers should feel like a highlight reel — visual, animated, shareable. Charts over tables. Badges over footnotes.
+1. **Stat бол spreadsheet биш, түүх.** Тоо баримт нь визуал, хөдөлгөөнтэй, хуваалцахад амар highlight reel шиг байх ёстой. Table-ээс илүү chart, footnote-оос илүү badge хэрэглэнэ.
 
-2. **Broadcast energy.** The visual language draws from sports broadcasts, not enterprise dashboards. Dark backgrounds, high-contrast stat displays, punchy accent colors.
+2. **Broadcast energy.** Сайн спортын дэлгэцийн адил one-screen glance дээр ойлгогдох ёстой.
 
-3. **Athlete-first.** Every visual decision serves the athlete profile. The page should feel like a portrait, not a database query.
+3. **Монгол хэлний уншигдах чадвар.** Кирилл Монгол текст илүү өргөн байдаг тул layout-аа түүнд тааруулна.
 
-4. **Mobile-first, Mongolia-ready.** Every surface works at 360px width, loads fast on mid-range Android, and looks intentional at every size.
+4. **Харанхуй canvas.** Background нь бараан, surfaces нь шаталсан, acccent нь тод байна.
 
-5. **Cold-start friendly.** Zero games or few games should still look intentional. Every surface has a designed empty state.
-
-6. **Never gate viewing.** No signup, no login, no app-install prompt on any public surface.
+5. **Empty state ч гэсэн дизайнтай.** Өгөгдөлгүй үед ч систем бэлэн мэт харагдана.
 
 ---
 
-## Color System
+## Өнгөний систем
 
-Onoo uses **OKLch** for all colors — perceptual uniformity, predictable light/dark behavior, and accurate interpolation.
+Onoo бүх өнгөнд **OKLch** ашиглана — perceptual uniformity, dark/light behavior, smooth interpolation.
 
-### Brand Palette
+### Brand palette
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--brand-sports` | `oklch(0.72 0.22 40)` | Primary brand accent — vibrant orange for CTAs, emphasis, highlights |
-| `--brand-sports-light` | `oklch(0.82 0.18 40)` | Hover states, lighter accent fills |
-| `--brand-sports-dim` | `oklch(0.55 0.18 40)` | Muted orange, secondary accent |
-| `--brand-purple` | `oklch(0.55 0.24 285)` | Secondary brand accent — depth, premium feel |
-| `--brand-purple-light` | `oklch(0.65 0.20 285)` | Purple highlights, lighter fills |
+| `--brand-orange` | `oklch(0.68 0.20 40)` | Гол action color, sports energy |
+| `--brand-orange-light` | `oklch(0.78 0.16 40)` | Light highlights |
+| `--brand-purple` | `oklch(0.55 0.24 285)` | Premium accent |
+| `--brand-purple-light` | `oklch(0.65 0.20 285)` | Lighter purple fills |
 
-### Surface Hierarchy
+### Surface hierarchy
 
-A stepped dark surface system. Each level gets progressively lighter to convey depth without shadows:
+Шаталсан dark surface system ашиглана. Өндөр түвшин бүр илүү тод болж гүн мэдрэмж өгнө.
 
-| Level | Value | Used for |
-|-------|-------|----------|
-| `--surface-1` | `oklch(0.07 0.003 60)` | Cards, popovers — subtle lift from the canvas |
-| `--surface-2` | `oklch(0.10 0.004 60)` | Elevated surfaces — navigation, sidebars |
-| `--surface-3` | `oklch(0.14 0.005 60)` | Hovered states, active surfaces |
-| `--ink` | `oklch(0.98 0.005 60)` | Primary text — bright white on dark canvas |
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--bg` | `oklch(0.09 0.005 60)` | Global background |
+| `--surface-1` | `oklch(0.11 0.005 60)` | Cards, panels |
+| `--surface-2` | `oklch(0.12 0.005 60)` | Elevated surfaces |
+| `--surface-3` | `oklch(0.14 0.005 60)` | Hover / active states |
+| `--ink` | `oklch(0.98 0.005 60)` | Primary text |
 
-### Semantic Tokens (Dark Mode — Default)
+### Semantic tokens (dark mode — default)
 
-Onoo is **dark-first**. The dark palette is the default experience.
+Onoo нь **dark-first**.
 
-| Token | Value | Used for |
-|-------|-------|----------|
-| `--background` | `oklch(0.02 0.002 60)` | Page canvas — near-black, powerful |
-| `--foreground` | `oklch(0.98 0.005 60)` | Primary text |
-| `--card` | `oklch(0.07 0.003 60)` | Card surfaces |
-| `--primary` | `oklch(0.72 0.22 40)` | **Vibrant orange** — CTAs, links, active states |
-| `--secondary` | `oklch(0.50 0.24 285)` | **Purple** — secondary actions, premium accents |
-| `--muted` | `oklch(0.12 0.005 60)` | Muted surfaces |
-| `--muted-foreground` | `oklch(0.55 0.01 60)` | Secondary text, placeholders |
-| `--accent` | `oklch(0.72 0.22 40 / 15%)` | Orange-tinted hover/tint surfaces |
-| `--accent-foreground` | `oklch(0.88 0.14 40)` | Text on accent surfaces |
-| `--destructive` | `oklch(0.50 0.22 25)` | Destructive actions |
-| `--success` | `oklch(0.65 0.18 145)` | Positive outcomes, completed states |
-| `--warning` | `oklch(0.78 0.18 55)` | Attention needed |
-| `--info` | `oklch(0.60 0.15 240)` | Information, help |
-| `--border` | `oklch(1 0 0 / 10%)` | Subtle white borders on dark |
-| `--input` | `oklch(1 0 0 / 15%)` | Form input borders |
-| `--ring` | `oklch(0.72 0.22 40)` | Focus rings — orange |
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--primary` | `oklch(0.68 0.20 40)` | Primary CTA, links |
+| `--primary-foreground` | `oklch(0.98 0.005 60)` | Text on primary |
+| `--secondary` | `oklch(0.55 0.24 285)` | Secondary accent |
+| `--secondary-foreground` | `oklch(0.98 0.005 60)` | Text on secondary |
+| `--muted` | `oklch(0.14 0.005 60)` | Muted panels |
+| `--muted-foreground` | `oklch(0.72 0.01 60)` | Helper text |
+| `--accent` | `oklch(0.18 0.01 60)` | Hover states |
+| `--accent-foreground` | `oklch(0.98 0.005 60)` | Accent text |
+| `--destructive` | `oklch(0.63 0.20 25)` | Errors / dangerous actions |
+| `--border` | `oklch(1 0 0 / 8%)` | Soft borders |
+| `--input` | `oklch(1 0 0 / 15%)` | Input borders |
+| `--ring` | `oklch(0.72 0.22 40)` | Focus ring |
 
-### Chart Palette
+### Chart palette
 
-Designed for stat visualizations — orange as primary series, purple as secondary:
+Stat visualization-д зориулагдсан.
 
-| Token | Value | Series |
-|-------|-------|--------|
-| `--chart-1` | `oklch(0.72 0.22 40)` | Primary — **orange** |
-| `--chart-2` | `oklch(0.55 0.24 285)` | Secondary — **purple** |
-| `--chart-3` | `oklch(0.82 0.18 40)` | Tertiary — light orange |
-| `--chart-4` | `oklch(0.65 0.20 285)` | Quaternary — light purple |
-| `--chart-5` | `oklch(0.78 0.18 55)` | Quinary — warm amber |
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--chart-1` | `oklch(0.68 0.20 40)` | Primary series |
+| `--chart-2` | `oklch(0.55 0.24 285)` | Secondary series |
+| `--chart-3` | `oklch(0.78 0.18 55)` | Warm accent |
+| `--chart-4` | `oklch(0.65 0.20 285)` | Light purple |
+| `--chart-5` | `oklch(0.78 0.18 55)` | Amber |
 
-### Color Psychology
+### Өнгөний утга
 
-- **Orange (40°)** — the primary action color. Energy, competition, heat. Derived from the basketball court's amber floor tones and Mongolian sports broadcasting tradition. High-contrast against the near-black canvas. Used for: CTAs, links, emphasis, leader highlights, stat callouts.
-- **Purple (285°)** — the premium accent. Depth, quality, authority. Used for: secondary navigation, premium badges, secondary chart series, alternate section backgrounds.
-- **Near-black background** — power, focus, immersion. Every stat stands forward. The canvas disappears so the data speaks.
+- **Orange (40°)** — гол action өнгө. Energy, competition, heat. Basketball court-ийн amber floor ба Монголын спортын broadcast уламжлалаас санаа авсан.
+- **Purple (285°)** — premium accent. Depth, quality, authority.
+- **Near-black background** — төвлөрөл, immersion. Stat бүр урдаас гарч ирнэ.
 
-### Token Usage Rules
+### Token usage rules
 
-- `--primary` is fill-only. Never render primary as text directly on the page background. Always pair with `--primary-foreground` for text on primary fills.
-- `--brand-purple` is for chrome and accents, never for interactive elements. Use `--secondary` for interactive purple.
-- All borders use `oklch(1 0 0 / 10%)` (white at low opacity) rather than gray tones — feels more intentional on dark surfaces.
-- Never stack `shadow` + `border` on the same element. On a dark canvas, subtle surface steps (surface-1, surface-2, surface-3) replace shadows for depth.
+- `--primary`-г fill-only болгон ашиглана. Background дээр text болгон дангаар нь бүү хэрэглэ.
+- `--brand-purple`-ийг chrome болон accent-д ашиглана, interactive element-д биш.
+- Interactive purple хэрэгтэй бол `--secondary` ашиглана.
 
 ---
 
 ## Typography
 
-Onoo uses three typefaces, each with a distinct role:
+Onoo гурван typeface ашиглана.
 
-| Role | Family | Weight | Size range | Usage |
-|------|--------|--------|------------|-------|
-| Display | **Oswald** | 600–800 | 24–72px | Scores, stat numbers, hero headlines — condensed power |
-| Body | **Inter** | 400–600 | 12–18px | All UI text, descriptions, labels — excellent Cyrillic |
-| Stat | **JetBrains Mono** | 700 | 14–48px | Tabular numerals, stat displays, leaderboards |
+| Role | Font | Weight | Size | Usage |
+|------|------|--------|------|-------|
+| Display | **Oswald** | 600–800 | 24–60px | Hero, leaderboard, stat number |
+| Body | **Inter** | 400–600 | 12–18px | Бүх UI текст |
+| Stat | **JetBrains Mono** | 700 | 14–48px | Tabular numerals, stat display |
 
-### Font Selection Rationale
+### Font сонголтын шалтгаан
 
-**Oswald** — condensed, bold, athletic. Inspired by sports jersey typography and broadcast score overlays. Its narrow proportions allow big stat numbers without consuming excessive horizontal space, critical at 360px mobile widths. Excellent Cyrillic support.
+**Oswald** — condensed, bold, athletic. Jersey typography ба broadcast score overlay-оос санаа авсан. 360px mobile дээр том stat-ыг зай бага ашиглан харуулахад тохиромжтой.
 
-**Inter** — clean, highly legible, excellent Cyrillic glyphs. The body workhorse for all UI text, form labels, and navigation. Variable font with a wide weight range.
+**Inter** — цэвэр, маш сайн уншигддаг, Кирилл glyph сайн. Бүх UI текстийн үндсэн font.
 
-**JetBrains Mono** — tabular numerals for stat displays. Every digit occupies the same width, making stat columns and leaderboards visually aligned. Weight 700 for impact.
+**JetBrains Mono** — табличлагдсан тоонуудаар stat column-уудыг тэнцүүлнэ.
 
 ### Scale
 
 ```css
 --text-xs:   0.75rem  (12px)  — Labels, metadata, timestamps
---text-sm:   0.875rem (14px)  — Body text, descriptions
+--text-sm:   0.875rem (14px)  — Secondary body text
 --text-base: 1rem     (16px)  — Default body
---text-lg:   1.125rem (18px)  — Lead body
---text-xl:   1.25rem  (20px)  — Large body, stat labels
---text-2xl:  1.5rem   (24px)  — Section headings
---text-3xl:  1.875rem (30px)  — Page headings
---text-4xl:  2.25rem  (36px)  — Hero stat display
---text-5xl:  3rem     (48px)  — Large hero stat display
+--text-lg:   1.125rem (18px)  — Section lead text
+--text-xl:   1.25rem  (20px)  — Card titles
+--text-2xl:  1.5rem   (24px)  — Subheadings
+--text-3xl:  1.875rem (30px)  — Hero stat numbers
+--text-4xl:  2.25rem  (36px)  — Large score headers
+--text-5xl:  3rem     (48px)  — Display numbers
 --text-6xl:  3.75rem  (60px)  — Score numbers
 ```
 
-### Type Classes
+### Type classes
 
 ```css
 .type-display  — Oswald 800, letter-spacing -0.02em, line-height 1.1
-.type-heading  — Oswald 700, letter-spacing -0.01em, line-height 1.2
-.type-body     — Inter 400, line-height 1.6
-.type-label    — Inter 600, letter-spacing 0.05em, text-transform uppercase, font-size 0.75rem
+.type-body     — Inter 400/500, line-height 1.6
+.type-label    — Inter 600, uppercase, letter-spacing 0.08em
 .type-score    — JetBrains Mono 700, tabular-nums, letter-spacing -0.03em
 ```
 
-### Usage Rules
+### Usage rules
 
-- **Oswald display** is for impact moments — stat numbers, hero sections, leaderboard rankings. Never for body text or UI labels.
-- **Inter body** handles everything functional. 14px for dense UI (tables, sidebars), 16px for reading content.
-- **JetBrains Mono stats** is for data displays — scores, shooting percentages, stat lines. Always use `tabular-nums` to keep digits aligned.
-- Mongolian Cyrillic text is ~1.5–2x wider than English. Apply `truncate` on labels that might overflow. Use `flex-shrink-0` on stat labels in flex layouts.
+- **Oswald display** — impact moments, hero sections, leaderboard rankings. Body text-д бүү хэрэглэ.
+- **Inter body** — бүх functional UI-д.
+- **JetBrains Mono stats** — scores, shooting percentages, stat lines.
+- Монгол кирилл текст нь англиас ~1.5–2x урт байж болно. Орон зай давчуу бол `truncate` болон `flex-shrink-0` хэрэглэ.
 
 ---
 
 ## Spacing
 
-4px base unit. All spacing is multiples of 4.
+4px base unit. Бүх spacing нь 4-ийн үржвэр байна.
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `space-1` | 4px | Tight micro-gaps |
-| `space-2` | 8px | Component internal (icon + text) |
-| `space-3` | 12px | Between related elements |
-| `space-4` | 16px | Card padding, form spacing |
-| `space-5` | 20px | Generous internal spacing |
-| `space-6` | 24px | Between distinct UI blocks |
-| `space-8` | 32px | Section separation |
-| `space-10` | 40px | Major section breaks |
-| `space-12` | 48px | Page-level spacing |
-| `space-16` | 64px | Hero sections |
-| `space-20` | 80px | Marketing page spreads |
-| `space-24` | 96px | Full bleed sections |
+```css
+--space-1: 0.25rem  (4px)
+--space-2: 0.5rem   (8px)
+--space-3: 0.75rem  (12px)
+--space-4: 1rem     (16px)
+--space-6: 1.5rem   (24px)
+--space-8: 2rem     (32px)
+--space-12: 3rem    (48px)
+--space-16: 4rem    (64px)
+```
 
 ---
 
-## Border Radius
+## Border radius
 
 | Token | Value | Used for |
 |-------|-------|----------|
-| `--radius-sm` | 4px | Inputs, tags, badges |
-| `--radius-md` | 8px | Cards, modals (default `--radius`) |
-| `--radius-lg` | 12px | Panels, sheets |
-| `--radius-xl` | 16px | Large surfaces, hero cards |
-| `--radius-full` | 9999px | Pills, avatars, toggles |
-
-On a dark canvas, border-radius creates containment without relying on shadow depth. Cards use `--radius-md` (8px) as the default — visible enough to define the card boundary, subtle enough to not compete with content.
+| `--radius-sm` | `0.5rem` | Inputs, pills |
+| `--radius-md` | `0.75rem` | Cards, panels |
+| `--radius-lg` | `1rem` | Large cards |
+| `--radius-xl` | `1.5rem` | Hero surfaces |
+| `--radius-full` | `9999px` | Chips, avatars |
 
 ---
 
 ## Shadows
 
-On a near-black canvas, traditional shadows (dark on dark) don't work. Instead, Onoo uses **surface elevation steps** + **very subtle light glows**:
+Near-black canvas дээр ердийн shadow сайн ажиллахгүй. Тиймээс Onoo нь **surface elevation** + маш зөөлөн glow ашиглана.
 
-| Token | Value | Used for |
-|-------|-------|----------|
-| `--shadow-xs` | `0 1px 2px oklch(0 0 0 / 0.05)` | Inputs, tags |
-| `--shadow-sm` | `0 1px 3px oklch(0 0 0 / 0.10), 0 1px 2px -1px …` | Cards at rest |
-| `--shadow-md` | `0 4px 6px -1px oklch(0 0 0 / 0.10)` | Cards raised |
-| `--shadow-lg` | `0 10px 15px -3px oklch(0 0 0 / 0.10)` | Modals, drawers |
-| `--shadow-xl` | `0 20px 25px -5px oklch(0 0 0 / 0.10)` | Large overlays |
-| `--shadow-card-hover` | `0 4px 12px oklch(0 0 0 / 0.25)` | Card hover lift |
-
-**Rule:** Never pair `shadow` + `border` on the same element. Use the surface hierarchy (`surface-1` → `surface-2` → `surface-3`) for depth between levels.
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--shadow-1` | `0 1px 2px rgb(0 0 0 / 0.3)` | Tiny separation |
+| `--shadow-2` | `0 8px 24px rgb(0 0 0 / 0.45)` | Cards, dialogs |
+| `--shadow-3` | `0 16px 48px rgb(0 0 0 / 0.55)` | Modals, drawers |
+| `--glow-primary` | `0 0 0 1px rgb(255 148 0 / 0.2), 0 0 32px rgb(255 148 0 / 0.18)` | Primary highlight |
+| `--glow-secondary` | `0 0 0 1px rgb(171 92 255 / 0.2), 0 0 32px rgb(171 92 255 / 0.16)` | Secondary highlight |
 
 ---
 
@@ -207,145 +194,94 @@ On a near-black canvas, traditional shadows (dark on dark) don't work. Instead, 
 
 | Token | Value | Used for |
 |-------|-------|----------|
-| `--duration-fast` | 150ms | Micro-interactions, hovers, toggles |
-| `--duration-normal` | 250ms | Standard transitions, drawer open/close |
-| `--duration-slow` | 400ms | Page transitions, emphasis animations |
+| `--duration-fast` | 150ms | Hover, small transitions |
+| `--duration-normal` | 250ms | Standard transitions |
+| `--duration-slow` | 400ms | Page transitions, emphasis |
 
 ### Easing
 
 | Token | Value | Character |
 |-------|-------|-----------|
-| `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Bouncy, confident |
-| `--ease-sport` | `cubic-bezier(0.22, 1, 0.36, 1)` | Athletic, decisive |
+| `--ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` | Entering |
+| `--ease-in` | `cubic-bezier(0.7, 0, 0.84, 0)` | Exiting |
+| `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Playful snap |
 
-### Live Indicators
+### Principles
 
-- **Live pulse animation**: A pulsing circle/indicator during active games. Uses `opacity` animation (performant, no layout thrash).
-- **Count-up numbers**: Stat numbers on hero cards animate from 0 to their value on page load.
-- **Flip digits**: Score changes use a flip animation (translate/rotate with `transform`).
+- Motion purpose-тэй байх ёстой: state change, attention, confirmation.
+- `prefers-reduced-motion`-ийг үргэлж дагана.
+- Drawer, modal зэрэг physical UI-д spring мэдрэмж ашиглана.
 
-### Rules
+---
 
-- Prefer `transform` and `opacity` for animations — never animate `width`, `height`, or `position`.
-- Respect `prefers-reduced-motion` — all animations degrade gracefully.
-- Stats (count-ups, flip digits) animate once on load. Never animate on every render.
+## Component patterns
+
+### Cards
+
+- Dark card background дээр subtle top border highlight хэрэглэнэ.
+- Padding: `24px` standard, `16px` compact.
+- Hover дээр elevation болон border intensity бага зэрэг нэмэгдэнэ.
+
+### Buttons
+
+- Primary button = orange fill.
+- Secondary button = purple or outline.
+- Focus ring тод, accessibility-тэй байна.
+
+### Badges
+
+- Pill shape, жижиг uppercase label, tabular numbers хэрэглэнэ.
+- Status badge-ууд color meaning-ээ consistent байлгана.
+
+### Tables
+
+- Sticky header, zebra row, compact density.
+- Mobile дээр шаардлагагүй column-уудыг нуух.
+
+### Empty states
+
+- Icon + heading + тайлбар + нэг primary CTA.
+- Орчуулга нь Монгол хэл дээр байх ёстой.
+
+---
+
+## Responsive rules
+
+- Mobile-first.
+- 360px width дээр бүх surface ажиллах ёстой.
+- Table-ийг card, stack, collapse pattern рүү шилжүүлж болно.
+- Mongolian text-д line-clamp / truncate хэрэгтэй бол ашиглана.
+
+---
+
+## Accessibility
+
+- Focus state үргэлж харагдана.
+- Color alone-оор meaning дамжуулахгүй.
+- Contrast өндөр, touch target дор хаяж 44px.
+- Icon-only control-д aria-label өгнө.
+
+---
+
+## Non-goals
+
+- Figma sync байхгүй.
+- Image generation байхгүй.
+- Framer Motion ашиглахгүй.
+- Hardcoded hex болон arbitrary Tailwind value ашиглахгүй.
 
 ---
 
 ## Components
 
-### shadcn/ui
+(none yet)
 
-Onoo uses **shadcn/ui** components with the **base-nova** style, built on **Base UI** (migrated from Radix). All components reference theme tokens via Tailwind utility classes.
+## Decisions
 
-Key component behaviors:
+- 2026-07-22 — Dark-first system, orange/purple brand palette, Oswald + Inter + JetBrains Mono stack.
 
-| Component | Pattern | Details |
-|-----------|---------|---------|
-| Button | `size` variants (`sm`/`md`/`lg`/`xl`) | Primary uses `--color-primary` (orange) |
-| Card | `bg-card` with `border` | Dark card on near-black canvas |
-| Dialog | Center-modal for confirmations | Uses `--color-background` |
-| Sheet | Right-side panel for forms | Uses `--color-background` |
-| Drawer | Bottom sheet on mobile, right panel on desktop | Base UI Drawer |
-| Badge | Size variants | Destructive (red), Success (green), Outline |
-| Table | Sticky header, zebra rows | Data tables for stats, leaderboards |
-| Tabs | Underline style | Stat category switching |
-| Skeleton | Pulse animation | Content loading states |
+## Implementation notes
 
-### Sport-Specific Components
-
-| Component | Description |
-|-----------|-------------|
-| Player Hero Card | Large stat display with jersey number, position, season averages |
-| Court Baseline Motif | Subtle half-court line + center circle decoration |
-| Stat Number | Large condensed tabular numeral — the signature Onoo stat display |
-| Podium Card | Top-3 leader display with gold/silver/bronze styling |
-| Live Game Center | Real-time score display with team colors, period, clock |
-| Form Guide | Last 5 games: win/loss indicator strip |
-
-### Empty States
-
-Every list/detail surface has a designed empty state in Mongolian that explains what belongs here and provides a single primary CTA.
-
-Example pattern:
-```
-[Icon]
-Энэ өдөр тоглолт товлоогүй байна
-→ Тоглолт нэмэх
-```
-
----
-
-## Player Showcase — Signature Surface
-
-The player profile page is Onoo's signature surface. It composes:
-
-```
-Header ─────── Hero identity card (jersey, name, position, team colors)
-                └── Season averages as animated stat numbers
-
-Body  ──────── Season arc chart (PTS/R/AST trend across games)
-                └── Per-game stat table
-                └── Career stats
-                └── Milestones and badges
-```
-
-The visual hierarchy reads top-to-bottom like a sports broadcast graphic: hero first, narrative second, details third.
-
-### Player Showcase Hero
-
-A full-bleed hero section with:
-- **Radial gradient glow** using `--brand-sports` (orange) from the upper-left
-- **Radial gradient glow** using `--brand-purple` from the lower-right
-- **Court baseline motif** as a subtle background texture
-- **Stat numbers** in Oswald 800 with count-up animation
-
----
-
-## Dark-First Decisions
-
-Onoo is a **dark-first** product. Unlike most apps that treat dark mode as an afterthought, Onoo's default experience is the dark palette. Key decisions:
-
-1. **Near-black canvas** (`oklch 0.02`) — not pure black, but close. Pure black creates harsh contrast with cards; the 2% lightness step gives the page depth while maintaining the "dark and powerful" feel.
-
-2. **Surface elevation, not shadows** — On a near-black background, traditional box-shadows are invisible. Onoo uses stepped surface lightness (surface-1, surface-2, surface-3) to convey depth.
-
-3. **White borders at low opacity** (`oklch(1 0 0 / 10%)`) — borders on dark surfaces use white with transparency rather than gray. This feels more intentional and consistent across the dark palette.
-
-4. **No light mode transition planned** — Onoo is a targeted sports platform, not a general-purpose app. Users expect and prefer the broadcast-dark aesthetic. If light mode is added later, it will be an explicit design project, not a CSS variable flip.
-
----
-
-## Implementation
-
-### Where Tokens Live
-
-All design tokens are defined in CSS custom properties:
-
-| File | What it defines |
-|------|----------------|
-| `packages/branding/globals.css` | Base tokens, Tailwind v4 theme registration via `@theme inline` |
-| `src/app/globals.css` | Onoo overrides — dark-first palette, orange-purple accent, surface hierarchy |
-
-### Using Tokens in Code
-
-```tsx
-// Tailwind utilities (preferred)
-<div className="bg-card text-card-foreground">…</div>
-<Button variant="primary" size="lg">Тоглогч харах</Button>
-
-// CSS variable reference (for custom styling)
-<div className="bg-[var(--surface-2)]">…</div>
-<p className="text-[var(--ink)]">…</p>
-```
-
-### Code Architecture
-
-- **Tailwind v4** with `@theme inline` for utility generation
-- **Var() indirection** pattern: `@theme inline { --color-card: var(--card); }` → `.dark { --card: …; }` — enables `.dark` class overrides through CSS variable cascade
-- All values in **OKLch** for perceptual uniformity
-- **No hardcoded hex/rgb** in component code — always reference CSS variables
-
----
-
-_Last updated: 2026-07-22_
+- Tokens нь `src/styles/globals.css` дотор байх ёстой.
+- Tailwind config нь эдгээр CSS variables-тай таарна.
+- New component бүр design tokens дээр тогтоно.

@@ -1,112 +1,116 @@
-# Onoo — Product Vision
+---
+> **English summary:** Onoo is a basketball operations platform for leagues, clubs, teams, academies, athletes, and families in Mongolia. Target users: league operators (paying B2B), scorekeepers, players/parents (free). Revenue: league subscription + per-game fees (paid pilot). Architecture: append-only journal with curated public views. Non-goals: mobile rollout, streaming, athlete claims, broad consumer analytics until roadmap gates pass.
+---
 
-> **For AI agents:** This document is the outermost layer of the product planning chain. Read it before significant tasks to understand what we're building, why, and what we won't do. Then proceed to `docs/ROADMAP.md` → `docs/tasks/INDEX.md` → the relevant task file.
+# Оноо — Бүтээгдэхүүний алсын хараа
+
+> **AI агентуудад:** Энэ баримт нь бүтээгдэхүүний төлөвлөлтийн хэлхээний хамгийн гаднах давхарга. Юу бүтээж байгаа, яагаад бүтээж байгаа, юуг хийхгүйгээ ойлгохын тулд эхлээд үүнийг уншаад дараа нь `docs/ROADMAP.md` → `docs/tasks/INDEX.md` → тухайн даалгаврын файлыг унш.
 >
-> Decision hierarchy: Vision (this doc) → ROADMAP (what) → task files (how) → conventions (rules) → AGENTS.md (permission boundaries). If unsure, move up a layer.
+> Шийдвэрийн шатлал: Vision (энэ баримт) → ROADMAP (юу) → task файлууд (яаж) → conventions (дүрэм) → AGENTS.md (эрх мэдлийн хязгаар). Эргэлзээ гарвал дээд давхарга руу буц.
 
 ---
 
-## What We're Building
+## Юу бүтээж байна вэ
 
-Onoo is the **complete basketball operating system** for Mongolian leagues, clubs, teams, academies, athletes, and families.
+Оноо бол Монголын лиг, клуб, баг, академи, тамирчин, гэр бүлийнхэнд зориулсан **сагсан бөмбөгийн бүрэн үйлдлийн систем**.
 
-It connects the full basketball lifecycle: organizations and membership, competitions and schedules, team and academy operations, trusted game records, player development, payments, and public discovery. Onoo remains basketball-specific rather than becoming a generic ERP or multi-sport platform.
+Энэ нь сагсан бөмбөгийн бүх амьдралын мөчлөгийг холбодог: байгууллага ба гишүүнчлэл, тэмцээн ба хуваарь, баг ба академийн ажиллагаа, баталгаатай тоглолтын бүртгэл, тоглогчийн хөгжил, төлбөр, олон нийтэд нээлттэй мэдээлэл. Оноо нь ерөнхий ERP эсвэл олон спортын платформ болохгүй — сагсан бөмбөгт төвлөрсөн хэвээр байна.
 
-The core public experience is the **athlete profile**. It composes approved competition and development records into one trusted basketball identity that players, families, fans, scouts, and sponsors can understand and share.
+Олон нийтэд харагдах хамгийн чухал туршлага бол **тамирчны профиль**. Энэ нь баталгаажсан тэмцээний болон хөгжлийн бүртгэлүүдийг нэгтгэж, тоглогч, гэр бүл, фен, скаут, ивээн тэтгэгчдэд ойлгомжтой, хуваалцахад бэлэн нэг сагсан бөмбөгийн түүх болгон харуулна.
 
-Accurate trusted records are the foundation. Useful daily operations create the data. The athlete’s complete basketball story is the destination.
+Итгэл даах бүртгэл бол суурь. Өдөр тутмын хэрэгтэй ажиллагаа тэр өгөгдлийг бий болгодог. Тамирчны сагсан бөмбөгийн бүрэн түүх бол эцсийн зорилго.
 
-## Why It Exists
+## Яагаад хэрэгтэй вэ
 
-Mongolian basketball is fragmented across paper scoresheets, spreadsheets, chat groups, bank-transfer screenshots, and disconnected league tools. Players lose their history between academies, teams, and competitions. Team staff repeat roster and payment work. Leagues cannot produce trusted records or audience proof.
+Монголын сагсан бөмбөг цаасны scoresheet, spreadsheet, чат групп, банк шилжүүлгийн зураг, хоорондоо холбоогүй лигийн хэрэгслүүдэд задран хуваагдсан. Тоглогчид академи, баг, тэмцээний хооронд түүхээ алдаж байна. Багийн ажилтан бүртгэл, төлбөрийн ажлаа дахин дахин хийж байна. Лигүүд итгэлтэй бүртгэл болон үзэгчдийн баталгаа гаргаж чаддаггүй.
 
-Onoo exists to give every basketball organization one operational system, every game a trusted record, and every athlete a continuous story from development to competition.
+Оноо нь сагсан бөмбөгийн байгууллага бүрт нэг үйлдлийн систем, тоглолт бүрт нэг баталгаатай бүртгэл, тамирчин бүрт хөгжилөөс тэмцээн хүртэл үргэлжлэх нэг түүх өгөх гэж оршиж байна.
 
-## Who It's For
+## Хэнд зориулсан бэ
 
 | Audience | Need | Surface |
 | --- | --- | --- |
-| **Players** | Keep one identity across development and competition | Athlete profile, timeline, shareable cards |
-| **Families and fans** | Register, pay, follow, and understand progress | Guardian operations, athlete profile, game recaps |
-| **Teams and clubs** | Manage rosters, staff, training, logistics, and performance | Team operations |
-| **Academies and coaches** | Manage programs, enrollment, consent, attendance, and development | Academy operations |
-| **Leagues and federations** | Run competitions, govern eligibility, and prove audience | League operations, audience dashboard |
-| **Scorekeepers and officials** | Record and verify games accurately | Tracker, review queue, runbook |
-| **Scouts** | Discover talent through trusted history | English export, athlete comparison |
-| **Sponsors** | Reach measurable basketball audiences | Sponsor placements, audience data |
+| **Тоглогчид** | Хөгжил ба тэмцээний хооронд нэг identity-тэй байх | Тамирчны профиль, timeline, хуваалцах карт |
+| **Гэр бүл ба фенүүд** | Бүртгүүлэх, төлөх, дагах, ахиц ойлгох | Асран хамгаалагчийн ажиллагаа, тамирчны профиль, тоглолтын recap |
+| **Баг ба клубүүд** | Рoster, ажилтан, бэлтгэл, логистик, performance удирдах | Багийн ажиллагаа |
+| **Академи ба дасгалжуулагчид** | Хөтөлбөр, бүртгэл, зөвшөөрөл, attendance, хөгжил удирдах | Академийн ажиллагаа |
+| **Лиг ба холбоод** | Тэмцээн явуулах, eligibility удирдах, үзэгчдийг нотлох | Лигийн ажиллагаа, audience dashboard |
+| **Scorekeeper ба шүүгчид** | Тоглолтыг зөв бүртгэж, баталгаажуулах | Tracker, review queue, runbook |
+| **Скаутууд** | Итгэлтэй түүхээс авьяас олох | Англи export, тамирчин харьцуулалт |
+| **Ивээн тэтгэгчид** | Хэмжигдэхүйц сагсан бөмбөгийн үзэгчдэд хүрэх | Ивээн тэтгэгчийн байршуулалт, audience data |
 
-## Design Principles
+## Дизайн зарчим
 
-1. **Athlete-first, end to end.** League, team, and academy workflows exist to improve basketball operations and build one trustworthy athlete story.
+1. **Тамирчин төвтэй, төгсгөл хүртэл.** Лиг, баг, академийн workflow-ууд нь сагсан бөмбөгийн ажиллагааг сайжруулж, нэг итгэлтэй тамирчны түүх бүтээхийн төлөө оршино.
 
-2. **Stats as story, not spreadsheet.** Numbers should feel like a highlight reel — visual, animated, shareable. Charts over tables. Badges over footnotes.
+2. **Статистик бол spreadsheet биш, түүх.** Тоо баримт highlight reel шиг мэдрэмж төрүүлэх ёстой — харагдахуйц, хөдөлгөөнтэй, хуваалцахад амар. Table-ээс chart дээр, footnote-оос badge дээр төвлөрнө.
 
-3. **Mobile-first, Mongolia-ready.** Every surface works at 360px width. Loads fast on mid-range Android over mobile data. Small images, light JS, no autoplay.
+3. **Mobile-first, Монголд тохирсон.** Бүх surface 360px өргөн дээр ажиллана. Дунд түвшний Android дээр, mobile data-гаар хурдан ачаална. Жижиг зураг, хөнгөн JS, autoplay байхгүй.
 
-4. **Mongolian-first.** UI copy in Mongolian. Stat labels in Mongolian. Summaries in Mongolian. English is an export view for scouts, not the primary experience.
+4. **Монгол хэл нэгдүгээрт.** UI copy Монгол хэл дээр. Stat label-ууд Монгол хэл дээр. Summary-ууд Монгол хэл дээр. Англи хэл нь скаутуудад зориулсан export view, үндсэн туршлага биш.
 
-5. **Cold-start friendly.** Every surface looks intentional with zero games or few games. Empty states are designed, not broken. Small-sample states are honest.
+5. **Cold-start-д бэлэн.** Тоглолтгүй эсвэл цөөн тоглолттой үед ч бүх surface санаатай, бэлэн харагдана. Empty state-ууд нь эвдэрсэн биш, загвартай байна. Жижиг sample-ийг үнэнээр нь харуулна.
 
-6. **Never gate viewing.** No signup, no login, no app-install prompt on any public surface. Viewing is always free.
+6. **Харах эрхийг хэзээ ч битгий хаа.** Олон нийтийн surface дээр signup, login, app-install prompt байхгүй. Харах нь үргэлж үнэгүй.
 
-7. **Trusted records are non-negotiable.** 100% final-score accuracy. Zero unrecoverable tracker events. Derived tables are rebuildable projections from a journal. The journal is append-only.
+7. **Итгэл даах бүртгэл бол заавал мөрдөх зүйл.** Эцсийн онооны 100% зөв байдал. Tracker event-үүдийг сэргээшгүй алдахгүй. Derived хүснэгтүүд нь journal-аас дахин бүтээж болдог projection байна. Journal нь append-only.
 
-## Success Measures
+## Амжилтын хэмжүүр
 
-### Platform outcomes
+### Платформын үр дүн
 
-- One athlete keeps a continuous, consented identity across academy, team, and league participation.
-- League, team, and academy operators complete their core basketball workflows without parallel spreadsheets.
-- Every confirmed payment, roster decision, game result, and consent action has an accountable source record.
-- Private organization, guardian, medical, and payment data never leaks into public composition.
-- Each paid module renews because it removes measurable operational work or revenue leakage.
+- Нэг тамирчин академи, баг, лигийн оролцооны хооронд зөвшөөрөгдсөн, тасралтгүй identity-тай байна.
+- Лиг, баг, академийн ажилтанууд үндсэн ажлаа parallel spreadsheet-гүй хийж чадна.
+- Баталгаажсан төлбөр, roster-ийн шийдвэр, тоглолтын үр дүн, consent-ийн үйлдэл бүр accountable source record-той байна.
+- Хувийн байгууллага, асран хамгаалагч, эрүүл мэнд, төлбөрийн өгөгдөл public composition-д хэзээ ч алдагдахгүй.
+- Төлбөртэй модулиуд нь хэмжигдэхүйц operational ажил эсвэл орлогын алдагдлыг бууруулдаг тул дахин renew хийнэ.
 
-### Current league paid proof
+### Одоогийн лигийн paid proof
 
-- A non-technical fan finds an athlete and understands their season in **under 30 seconds**.
-- Athlete pages are **shared organically** through links and screenshots.
-- **100% final-score accuracy** and **0 unrecoverable tracker events**.
-- Final whistle to shareable recap takes **under 5 minutes**.
-- Scorer and administrator satisfaction is **at least 8 out of 10**.
+- Техникийн бус фен тамирчныг олж, тухайн улирлыг **30 секундээс бага** хугацаанд ойлгоно.
+- Тамирчны хуудсууд холбоос, screenshot-оор **органикаар хуваалцагдана**.
+- Эцсийн онооны **100% зөв байдал** ба **0 сэргээшгүй tracker event**.
+- Final whistle-ээс shareable recap хүртэл **5 минутаас бага** хугацаа.
+- Scorekeeper ба administrator-ын сэтгэл ханамж **8/10-аас дээш**.
 
-## Current sequencing boundaries
+## Одоогийн дарааллын хязгаар
 
-The complete-product direction does not authorize every module at once.
+Бүтээгдэхүүний бүрэн чиглэл нь бүх модулийг нэг дор хийхийг зөвшөөрөхгүй.
 
-- **Trusted records first.** Finish the current league paid-pilot foundation before academy or team operations consume committed engineering capacity.
-- **Web first.** Native mobile waits until measured browser limitations justify it.
-- **No unsupported imports.** Historical data enters through reviewed tracker, command, or structured-import workflows.
-- **No unmoderated social network.** Comments, likes, and direct messages require a separate safety and moderation decision.
-- **Basketball only.** Other sports remain separate products.
-- **No generic ERP scope.** Build basketball-specific team, league, academy, athlete, payment, and communication workflows only.
-- **Measured expansion.** Push, follows, claims, messaging, and public development metrics enter through explicit commercial, privacy, and safety gates.
+- **Итгэлтэй бүртгэл эхэнд.** Академи эсвэл багийн ажиллагаа committed engineering capacity-г идэж эхлэхээс өмнө одоогийн league paid-pilot foundation-ийг дуусга.
+- **Web first.** Native mobile нь browser-ийн хэмжигдсэн хязгаарлалт үндэслэл болох хүртэл хүлээнэ.
+- **Дэмжигдээгүй import байхгүй.** Түүхэн өгөгдөл нь review хийсэн tracker, command, эсвэл structured-import workflow-оор орно.
+- **Хяналтгүй social network байхгүй.** Comment, like, direct message-д тусдаа аюулгүй байдал ба moderation шийдвэр шаардлагатай.
+- **Зөвхөн сагсан бөмбөг.** Бусад спорт тусдаа бүтээгдэхүүн хэвээр.
+- **Ерөнхий ERP scope байхгүй.** Зөвхөн сагсан бөмбөгийн баг, лиг, академи, тамирчин, төлбөр, communication workflow-уудыг бүтээнэ.
+- **Хэмжээтэй өргөтгөл.** Push, follow, claim, messaging, public development metrics нь тусдаа арилжаа, нууцлал, аюулгүй байдлын босгоор орж ирнэ.
 
-## Architecture Principles
+## Архитектурын зарчим
 
-### Product domains
+### Бүтээгдэхүүний домайн
 
 ```text
-Shared identity and organizations
-  ├─ League and competition operations
-  ├─ Team and academy operations
-  ├─ Trusted game records and statistics
-  ├─ Payments and provider workflows
-  └─ Athlete and public experiences
+Нэгтгэсэн identity ба байгууллагууд
+  ├─ Лиг ба тэмцээний ажиллагаа
+  ├─ Баг ба академийн ажиллагаа
+  ├─ Итгэлтэй тоглолтын бүртгэл ба статистик
+  ├─ Төлбөр ба provider workflow
+  └─ Тамирчин ба олон нийтийн туршлага
 ```
 
-Each domain owns its source records. Cross-domain surfaces compose versioned, authorized projections rather than rewriting another domain’s data.
+Домайн бүр өөрийн source record-оо эзэмшинэ. Хөндлөн surface-үүд нь өөр домайны өгөгдлийг дахин бичихгүй, харин хувилбаржсан, эрхтэй projection-уудыг нийлүүлж харуулна.
 
-| Record or decision | Authoritative domain |
+| Бүртгэл эсвэл шийдвэр | Эрх мэдэлтэй домайн |
 | --- | --- |
-| Users, organizations, teams, memberships, and canonical athlete identity | Identity and organizations |
-| Competition entries, eligibility, official roster snapshots, and schedules | League operations |
-| Team staff, roster intent, availability, training, and logistics | Team operations |
-| Programs, enrollment, guardians, consent, and training attendance | Academy operations |
-| Invoices, payment events, refunds, settlement, and provider reconciliation | Commerce |
-| Official game events, revisions, statistics, and standings | Trusted game records |
-| Combined athlete timelines and public pages | Read-only composed projections |
+| Хэрэглэгч, байгууллага, баг, гишүүнчлэл, canonical athlete identity | Identity ба байгууллагууд |
+| Тэмцээний бүртгэл, eligibility, official roster snapshot, хуваарь | Лигийн ажиллагаа |
+| Багийн ажилтан, roster intent, availability, бэлтгэл, логистик | Багийн ажиллагаа |
+| Хөтөлбөр, бүртгэл, асран хамгаалагч, consent, бэлтгэлийн attendance | Академийн ажиллагаа |
+| Нэхэмжлэх, төлбөрийн event, буцаалт, settlement, provider reconciliation | Commerce |
+| Албан ёсны тоглолтын event, revision, статистик, standings | Итгэлтэй тоглолтын бүртгэл |
+| Нэгтгэсэн тамирчны timeline ба public page | Зөвхөн унших composed projection |
 
-### Trusted-record data flow
+### Итгэлтэй бүртгэлийн өгөгдлийн урсгал
 
 ```text
 Tracker (journal) → Events (stat_events) → Commands (cmd_*) → Derived tables (rebuildable)
@@ -116,30 +120,30 @@ Tracker (journal) → Events (stat_events) → Commands (cmd_*) → Derived tabl
                                                             Public pages (read-only)
 ```
 
-### Key rules
+### Гол дүрэм
 
-- **Canonical identity**: Organizations, teams, users, and athletes use shared identifiers with explicit scoped memberships.
-- **Bounded authority**: League, team, academy, payment, and public domains declare their source of truth and mutation owner.
-- **Append-only journal**: `stat_events` never deletes or rewrites. Corrections use void plus replacement with provenance.
-- **Curated views for public**: Public pages read `v_public_*` views only. No direct table access.
-- **Commands for mutations**: Every write goes through a reviewed command. No direct client insert, update, or delete against protected records.
-- **Derived tables are projections**: Game, season, standing, reporting, and combined athlete views remain rebuildable.
-- **Private by default**: Guardian, minor, medical, payment, and internal team data never become public through domain composition.
+- **Canonical identity**: байгууллага, баг, хэрэглэгч, тамирчин shared identifier-тай, тодорхой scoped membership-тэй байна.
+- **Хязгаарлагдсан эрх**: лиг, баг, академи, төлбөр, public домайн бүр source of truth ба mutation owner-оо тодорхойлно.
+- **Append-only journal**: `stat_events`-ийг устгах, дахин бичихгүй. Засвар нь void + replacement хэлбэртэй, provenance-той байна.
+- **Олон нийтэд curated view**: Public page зөвхөн `v_public_*` view уншина. Шууд table access байхгүй.
+- **Command-оор mutation хийнэ**: Бүх write нь review хийгдсэн command-оор дамжина. Client-аас protected record дээр шууд insert/update/delete байхгүй.
+- **Derived tables бол projection**: Game, season, standing, reporting, нэгтгэсэн тамирчны view-үүд дахин бүтээж болдог хэвээр байна.
+- **Анхнаасаа private**: Асран хамгаалагч, minor, medical, payment, дотоод багийн өгөгдөл нь domain composition-оор public болохгүй.
 
-## Commercial Context
+## Арилжааны нөхцөл
 
-Onoo is currently in a **league-first, web-first paid-pilot phase**. That is the entry wedge, not the final product boundary.
+Оноо одоогоор **лиг-эхлэлтэй, web-first paid-pilot** шатанд байна. Энэ нь орж ирэх хаалга болохоос эцсийн хүрээ биш.
 
-Long-term revenue comes from modular league, club, team, and academy subscriptions, plus approved payment services and sponsorship placements. Consumer viewing remains free; consumer monetization is deferred.
+Урт хугацааны орлого нь модульчилсан лиг, клуб, баг, академийн subscription болон зөвшөөрөгдсөн төлбөрийн үйлчилгээ, sponsor placement-үүдээс бүрдэнэ. Олон нийтийн харах туршлага үнэ төлбөргүй хэвээр; consumer monetization хойшлогдоно.
 
-The current league pilot gate model:
+Одоогийн лигийн pilot gate model:
 
-| Gate | Criteria |
+| Gate | Шалгуур |
 |------|----------|
-| Discovery | Contracted pilot, deposit, one-season agreement |
-| Paid proof | 100% accuracy, zero unrecoverable events, <5 min recap |
-| Full season | Satisfaction ≥8/10, season contract within 14 days |
-| Expansion | Mobile, follows, push, claims — only after renewal |
+| Discovery | Contracted pilot, deposit, нэг улирлын гэрээ |
+| Paid proof | 100% accuracy, 0 сэргээшгүй event, <5 min recap |
+| Full season | Satisfaction ≥8/10, улирлын гэрээ 14 хоногийн дотор |
+| Expansion | Mobile, follows, push, claims — зөвхөн renew-ээс хойш |
 
 ---
 
