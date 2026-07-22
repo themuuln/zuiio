@@ -37,9 +37,14 @@ interface NavGroup {
 }
 
 const navGroups: NavGroup[] = [
+
   {
     label: "Үндсэн",
-    items: [{ href: "/admin", label: "Хянах самбар", icon: LayoutDashboard }],
+    items: [
+      { href: "/admin", label: "Хянах самбар", icon: LayoutDashboard },
+      { href: "/admin/org", label: "Байгууллага", icon: Trophy },
+      { href: "/admin/org/members", label: "Гишүүд", icon: Users },
+    ],
   },
   {
     label: "Тэмцээн",
@@ -85,6 +90,7 @@ const navGroups: NavGroup[] = [
     ],
   },
 ];
+
 
 function SidebarNavItem({
   item,
