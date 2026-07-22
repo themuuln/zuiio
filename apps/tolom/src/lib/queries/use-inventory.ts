@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type {
   GlobalPartCatalog,
@@ -76,7 +76,7 @@ export function usePartsCatalog(
   branchId?: string | null,
 ) {
   return useQuery({
-    queryKey: inventoryKeys.parts(orgId ?? "", branchId),
+    queryKey: inventoryKeys.parts(orgId ?? ""),
     queryFn: () => fetchPartsCatalog(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 300_000, // 5 min — catalog rarely changes after setup
@@ -126,6 +126,7 @@ export function useInventoryBalances(
         params: branchId ? { branch_id: branchId } : { fast: "true" },
       }),
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
@@ -148,6 +149,7 @@ export function useInventoryMovements(
         },
       }),
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
@@ -172,6 +174,7 @@ export function usePurchaseOrders(
         params: branchId ? { branch_id: branchId } : undefined,
       }),
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
@@ -203,6 +206,7 @@ export function useStockThresholds(
         params: branchId ? { branch_id: branchId } : undefined,
       }),
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 }
@@ -214,6 +218,7 @@ export function usePartsCars(orgId: string | undefined) {
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
     queryFn: () => fetchPartsCars(orgId ?? ""),
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }

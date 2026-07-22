@@ -92,13 +92,14 @@ export async function updatePartsCar(
   orgId: string,
   carId: string,
   params: Partial<PartsCarsUpdate>,
+  userId_?: string,
 ): Promise<PartsCars> {
   const supabase = db;
   const { data, error } = await supabase
     .from("parts_cars")
     .update({
       ...params,
-      updated_by: (await supabase.auth.getUser()).data.user?.id,
+      updated_by: userId_ ?? (await supabase.auth.getUser()).data.user?.id,
     })
     .eq("id", carId)
     .eq("organization_id", orgId)
@@ -115,13 +116,14 @@ export async function deletePartsCar(
   db: SupabaseClient,
   orgId: string,
   carId: string,
+  userId_?: string,
 ): Promise<void> {
   const supabase = db;
   const { error } = await supabase
     .from("parts_cars")
     .update({
       deleted_at: new Date().toISOString(),
-      updated_by: (await supabase.auth.getUser()).data.user?.id,
+      updated_by: userId_ ?? (await supabase.auth.getUser()).data.user?.id,
     })
     .eq("id", carId)
     .eq("organization_id", orgId);

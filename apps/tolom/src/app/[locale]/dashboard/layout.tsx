@@ -5,21 +5,18 @@ import { generateBrandCSS } from "@zuiio/branding";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { readOrganizationBrandConfig } from "@/lib/organization-branding";
-import { getCurrentUserProfile } from "@/lib/services/user-service";
 import { createClient } from "@/lib/supabase/server";
+import { getCachedProfile, PrefetchDashboard } from "@/lib/queries/prefetch-dashboard";
 import DashboardClientShell from "./_dashboard-client-shell";
 
-/**
- * Fetches org branding via cookies() and emits a <style> tag.
- * Isolated in its own async component so the layout shell stays static
- * for instant navigation — cookies() streams in behind a Suspense boundary.
- */
+/** Fetches org branding and emits a <style> tag. Profile fetch is
+ * deduplicated with PrefetchDashboard via React.cache(). */
 async function BrandThemeLoader() {
-  const supabase = await createClient();
-  const profile = await getCurrentUserProfile(supabase);
+  const profile = await getCachedProfile();
 
   if (!profile?.organizationId) return null;
 
+  const supabase = await createClient();
   const { data: org } = await supabase
     .from("organizations")
     .select("settings")
@@ -41,9 +38,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <Suspense fallback={null}>
         <BrandThemeLoader />
       </Suspense>
-      <Suspense fallback={null}>
-        <DashboardClientShell>{children}</DashboardClientShell>
-      </Suspense>
+      <PrefetchDashboard>
+        <Suspense fallback={null}>
+          <DashboardClientShell>{children}</DashboardClientShell>
+        </Suspense>
+      </PrefetchDashboard>
     </>
   );
 }

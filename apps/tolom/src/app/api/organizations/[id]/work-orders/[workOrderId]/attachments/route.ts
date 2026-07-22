@@ -29,7 +29,7 @@ export const GET = createRouteHandler(
 );
 
 export const POST = createRouteHandler(
-  async ({ request, params, orgId, supabase }) => {
+  async ({ request, params, orgId, supabase, user }) => {
     const { workOrderId } = params;
     const body = await parseBody(request, createAttachmentSchema);
     const attachment = await createAttachment(
@@ -37,6 +37,7 @@ export const POST = createRouteHandler(
       orgId,
       workOrderId,
       body,
+      user.id,
     );
     return created(attachment);
   },
@@ -48,7 +49,7 @@ export const POST = createRouteHandler(
 );
 
 export const DELETE = createRouteHandler(
-  async ({ request, params, orgId, supabase }) => {
+  async ({ request, params, orgId, supabase, user }) => {
     const { workOrderId } = params;
     const { searchParams } = new URL(request.url);
     const attachmentId = searchParams.get("attachmentId");
@@ -59,7 +60,7 @@ export const DELETE = createRouteHandler(
         400,
       );
     }
-    await deleteAttachment(supabase, orgId, workOrderId, attachmentId);
+    await deleteAttachment(supabase, orgId, workOrderId, attachmentId, user.id);
     return ok(null);
   },
   {

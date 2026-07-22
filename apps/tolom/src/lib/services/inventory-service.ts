@@ -190,9 +190,10 @@ export async function updatePart(
   id: string,
   orgId: string,
   params: UpdatePartParams,
+  userId_?: string,
 ): Promise<PartsCatalogItem> {
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
 
   const { data: existingRecord } = await supabase
     .from("parts_catalog")
@@ -234,9 +235,10 @@ export async function deletePart(
   db: SupabaseClient,
   id: string,
   orgId: string,
+  userId_?: string,
 ): Promise<void> {
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
   const { error } = await supabase
     .from("parts_catalog")
     .update({ deleted_at: new Date().toISOString(), updated_by: userId })
@@ -548,10 +550,11 @@ export async function setStockThreshold(
   db: SupabaseClient,
   orgId: string,
   params: CreateStockThresholdParams,
+  userId_?: string,
 ): Promise<StockThreshold> {
   if (!params.part_id) throw new ValidationError("Part is required");
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
 
   const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
     strict: false,

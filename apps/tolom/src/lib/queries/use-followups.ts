@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import { useMemo } from "react";
 
@@ -96,6 +96,7 @@ export function useFollowups(orgId: string, filters: FollowupFilters = {}) {
       return res.json();
     },
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 

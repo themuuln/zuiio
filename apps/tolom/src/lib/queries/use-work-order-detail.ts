@@ -66,7 +66,7 @@ export function useWorkOrderDetail(orgId: string | undefined, woId: string) {
       return fetchWorkOrder(orgId);
     },
     enabled: !!orgId,
-    staleTime: 15_000,
+    staleTime: 30_000,
   });
 }
 

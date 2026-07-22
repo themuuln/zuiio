@@ -203,6 +203,7 @@ export async function updateOrganization(
   db: SupabaseClient,
   orgId: string,
   params: UpdateOrganizationParams,
+  userId_?: string,
 ): Promise<Organization> {
   const supabase = db;
 
@@ -219,7 +220,7 @@ export async function updateOrganization(
   };
 
   const updates = buildUpdates(params, fieldMap);
-  updates.updated_by = (await supabase.auth.getUser()).data.user?.id;
+  updates.updated_by = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
 
   if (Object.keys(updates).length <= 1) {
     throw new ValidationError("No fields to update");

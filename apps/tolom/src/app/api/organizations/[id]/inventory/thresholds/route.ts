@@ -11,9 +11,9 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
 });
 
 export const POST = createRouteHandler(
-  async ({ request, orgId, supabase }) => {
+  async ({ request, orgId, supabase, user }) => {
     const body = await request.json();
-    const threshold = await setStockThreshold(supabase, orgId, body);
+    const threshold = await setStockThreshold(supabase, orgId, body, user.id);
     return created(threshold);
   },
   {

@@ -30,14 +30,14 @@ export const POST = createRouteHandler(
 );
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, supabase }) => {
+  async ({ request, orgId, supabase, user }) => {
     const { searchParams } = new URL(request.url);
     const itemId = searchParams.get("partId") ?? searchParams.get("id");
     if (!itemId) {
       return apiError("VALIDATION", "partId required", 400);
     }
     const body = await request.json();
-    const part = await updatePart(supabase, itemId, orgId, body);
+    const part = await updatePart(supabase, itemId, orgId, body, user.id);
     return ok(part);
   },
   { rateLimit: true, subscription: true },

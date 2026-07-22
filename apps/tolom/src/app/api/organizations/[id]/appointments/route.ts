@@ -23,9 +23,9 @@ export const GET = createRouteHandler(
 );
 
 export const POST = createRouteHandler(
-  async ({ request, supabase }) => {
+  async ({ request, supabase, user }) => {
     const body = await request.json();
-    const appointment = await createAppointment(supabase, body);
+    const appointment = await createAppointment(supabase, body, user.id);
     return created(appointment);
   },
   {

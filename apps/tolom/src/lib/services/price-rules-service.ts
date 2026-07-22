@@ -262,12 +262,13 @@ export async function deletePriceRule(
   db: SupabaseClient,
   id: string,
   orgId: string,
+  userId_?: string,
 ): Promise<void> {
   const supabase = db;
 
-  const {
-    data: { user: currentUser },
-  } = await supabase.auth.getUser();
+  const currentUser = userId_
+    ? { id: userId_ }
+    : (await supabase.auth.getUser()).data.user;
 
   const { error } = await supabase
     .from("price_rules")

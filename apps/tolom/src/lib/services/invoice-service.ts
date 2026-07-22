@@ -277,11 +277,11 @@ export async function createInvoiceFromWorkOrder(
     terms?: string;
     userId?: string;
   },
+  userId_?: string,
 ): Promise<InvoiceWithItems> {
   const supabase = db;
   const userId =
-    options?.userId ?? (await supabase.auth.getUser()).data.user?.id;
-
+    options?.userId ?? userId_ ?? (await supabase.auth.getUser()).data.user?.id;
   // Fetch work order with all dependencies
   const { data: wo } = await supabase
     .from("work_orders")
@@ -290,8 +290,7 @@ export async function createInvoiceFromWorkOrder(
     )
     .eq("id", workOrderId)
     .is("deleted_at", null)
-    .single();
-
+    .single()
   if (!wo) throw new NotFoundError("Work order not found");
   if (wo.status !== "Completed" && wo.status !== "Ready for Pickup") {
     throw new ValidationError(
@@ -677,9 +676,10 @@ export async function updateInvoiceStatus(
   orgId: string,
   status: string,
   _notes?: string,
+  userId_?: string,
 ): Promise<Invoice> {
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
 
   const { data: oldInvoice, error: oldInvoiceErr } = await supabase
     .from("invoices")
@@ -798,6 +798,7 @@ export async function markInvoiceEmailed(
   db: SupabaseClient,
   id: string,
   orgId: string,
+  userId_?: string,
 ): Promise<Invoice> {
   const supabase = db;
 
@@ -806,7 +807,7 @@ export async function markInvoiceEmailed(
     .update({
       email_sent_at: new Date().toISOString(),
       status: "sent",
-      updated_by: (await supabase.auth.getUser()).data.user?.id,
+      updated_by: userId_ ?? (await supabase.auth.getUser()).data.user?.id,
     })
     .eq("id", id)
     .eq("organization_id", orgId)
@@ -877,9 +878,10 @@ export async function recordPayment(
     reference?: string;
     notes?: string;
   },
+  userId_?: string,
 ): Promise<InvoicePayment[]> {
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
 
   // Get current invoice
   const { data: invoice } = await supabase
@@ -1265,9 +1267,10 @@ export async function deleteInvoice(
   db: SupabaseClient,
   id: string,
   orgId: string,
+  userId_?: string,
 ): Promise<void> {
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
 
   const { error } = await supabase
     .from("invoices")

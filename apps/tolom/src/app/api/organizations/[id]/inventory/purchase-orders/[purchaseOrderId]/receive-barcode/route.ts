@@ -3,7 +3,7 @@ import { apiError, ok } from "@/lib/api-response";
 import { receiveByBarcode } from "@/lib/services/purchase-order-service";
 
 export const POST = createRouteHandler(
-  async ({ request, params, orgId, supabase }) => {
+  async ({ request, params, orgId, supabase, user }) => {
     const body = await request.json().catch(() => ({}));
     const barcode = typeof body?.barcode === "string" ? body.barcode : "";
     if (!barcode.trim()) {
@@ -14,6 +14,7 @@ export const POST = createRouteHandler(
       params.purchaseOrderId,
       orgId,
       barcode,
+      user.id,
     );
     return ok(item);
   },

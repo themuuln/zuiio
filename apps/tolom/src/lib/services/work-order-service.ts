@@ -281,11 +281,12 @@ export async function createWorkOrder(
   db: SupabaseClient,
   orgId: string,
   params: CreateWorkOrderParams,
+  userId_?: string,
 ): Promise<WorkOrderDetail> {
   if (!params.vehicle_id) throw new ValidationError("Vehicle is required");
-
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const userId = userId_ ?? authUser?.id;
 
   const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
     strict: false,
@@ -508,15 +509,16 @@ export async function getDailyWorkOrders(
   return getWorkOrders(db, orgId, { date }, 1, 200, 200);
 }
 
-// ── Cancel Work Order ──────────────────────────────────────────
 export async function cancelWorkOrder(
   db: SupabaseClient,
   id: string,
   orgId: string,
   reason?: string,
+  userId_?: string,
 ): Promise<void> {
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const userId = userId_ ?? authUser?.id;
 
   const { data: existing, error: existingError } = await supabase
     .from("work_orders")

@@ -77,7 +77,7 @@ export function useMechanicEod(
       return mechanic ?? null;
     },
     enabled: !!orgId && !!userId,
-    staleTime: 15_000,
+    staleTime: 30_000,
     refetchInterval: 30_000,
     placeholderData: (prev) => prev,
   });
@@ -116,7 +116,7 @@ export function useMechanicWorkOrders(
       return (json.data as WorkOrderRow[]) ?? [];
     },
     enabled: !!orgId && !!userId,
-    staleTime: 15_000,
+    staleTime: 30_000,
     refetchInterval: 30_000,
     placeholderData: (prev) => prev,
   });

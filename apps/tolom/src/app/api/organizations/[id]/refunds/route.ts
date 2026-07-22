@@ -54,7 +54,7 @@ export const GET = createRouteHandler(
 );
 
 export const POST = createRouteHandler(
-  async ({ request, orgId, supabase }) => {
+  async ({ request, orgId, supabase, user }) => {
     const body = await request.json();
     const params = validate(recordRefundSchema, body);
 
@@ -64,7 +64,7 @@ export const POST = createRouteHandler(
       reason: params.reason,
       reference: params.reference,
       notes: params.notes,
-    });
+    }, user.id);
 
     return created(refunds);
   },

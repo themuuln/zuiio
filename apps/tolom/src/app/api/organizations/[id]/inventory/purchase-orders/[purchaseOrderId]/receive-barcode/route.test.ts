@@ -100,6 +100,7 @@ describe("POST /api/organizations/[id]/inventory/purchase-orders/[purchaseOrderI
       PO_ID,
       ORG_ID,
       "1234567890",
+      "test-user-id",
     );
   });
 

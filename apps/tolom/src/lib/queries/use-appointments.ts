@@ -1,6 +1,6 @@
 "use client";
 
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import { type UseQueryResult, useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type { AppointmentDetail } from "@/lib/types";
 import { createOrgQuery } from "./factory";
@@ -39,6 +39,7 @@ export function useAppointments(
         },
       }),
     enabled: !!orgId && (!!date || !!dateRange),
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }

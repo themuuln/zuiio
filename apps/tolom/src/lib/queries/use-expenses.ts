@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type {
   CreateExpenseCategoryParams,
@@ -47,6 +47,7 @@ export function useExpenses(
       });
     },
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
@@ -89,6 +90,7 @@ export function useExpenseStats(
       });
     },
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 }

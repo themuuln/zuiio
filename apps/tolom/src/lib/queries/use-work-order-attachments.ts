@@ -15,7 +15,7 @@ export function useAttachments(orgId: string | undefined, woId: string) {
       return fetchAttachments(orgId);
     },
     enabled: !!orgId && !!woId,
-    staleTime: 15_000,
+    staleTime: 30_000,
   });
 }
 

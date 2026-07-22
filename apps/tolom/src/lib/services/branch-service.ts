@@ -54,8 +54,9 @@ export async function createBranch(
   db: SupabaseClient,
   orgId: string,
   params: CreateBranchParams,
+  userId_?: string,
 ): Promise<Branch> {
-  const userId = (await db.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
   if (!userId) throw new NotFoundError("Not authenticated");
   return crud.create(db, orgId, params, userId);
 }
@@ -79,8 +80,9 @@ export async function updateBranch(
   branchId: string,
   orgId: string,
   params: UpdateBranchParams,
+  userId_?: string,
 ): Promise<Branch> {
-  const userId = (await db.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
   if (!userId) throw new NotFoundError("Not authenticated");
   return crud.update(db, orgId, branchId, params, userId);
 }
@@ -92,8 +94,9 @@ export async function deleteBranch(
   db: SupabaseClient,
   branchId: string,
   orgId: string,
+  userId_?: string,
 ): Promise<void> {
-  const userId = (await db.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
   if (!userId) throw new NotFoundError("Not authenticated");
   await crud.softDelete(db, orgId, branchId, userId);
 }

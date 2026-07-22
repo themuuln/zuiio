@@ -77,7 +77,7 @@ export const GET = createRouteHandler(async ({ params, supabase }) => {
 });
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, params, supabase }) => {
+  async ({ request, orgId, params, supabase, user }) => {
     const { invoiceId } = params;
     const body = await request.json();
 
@@ -91,7 +91,7 @@ export const PATCH = createRouteHandler(
     }
 
     if (body.action === "mark_emailed") {
-      const invoice = await markInvoiceEmailed(supabase, invoiceId, orgId);
+      const invoice = await markInvoiceEmailed(supabase, invoiceId, orgId, user.id);
       return ok(invoice);
     }
 
@@ -103,6 +103,7 @@ export const PATCH = createRouteHandler(
         orgId,
         parsed.status,
         parsed.notes,
+        user.id,
       );
       return ok(invoice);
     }
@@ -114,7 +115,7 @@ export const PATCH = createRouteHandler(
         method: parsed.method,
         reference: parsed.reference,
         notes: parsed.notes,
-      });
+      }, user.id);
       return ok(payments);
     }
 
@@ -179,9 +180,9 @@ export const PATCH = createRouteHandler(
 );
 
 export const DELETE = createRouteHandler(
-  async ({ orgId, params, supabase }) => {
+  async ({ orgId, params, supabase, user }) => {
     const { invoiceId } = params;
-    await deleteInvoice(supabase, invoiceId, orgId);
+    await deleteInvoice(supabase, invoiceId, orgId, user.id);
     return ok(null);
   },
   { rateLimit: true, subscription: true },

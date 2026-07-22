@@ -32,14 +32,14 @@ export const POST = createRouteHandler(
 );
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, supabase }) => {
+  async ({ request, orgId, supabase, user }) => {
     const { searchParams } = new URL(request.url);
     const poId = searchParams.get("poId") ?? searchParams.get("id");
     if (!poId) {
       return apiError("VALIDATION", "poId required", 400);
     }
     const body = await request.json();
-    const po = await updatePurchaseOrder(supabase, poId, orgId, body);
+    const po = await updatePurchaseOrder(supabase, poId, orgId, body, user.id);
     return ok(po);
   },
   { rateLimit: true, subscription: true },

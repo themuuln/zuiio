@@ -25,9 +25,9 @@ export const GET = createRouteHandler(
 );
 
 export const POST = createRouteHandler(
-  async ({ request, orgId, supabase }) => {
+  async ({ request, orgId, supabase, user }) => {
     const body = await request.json();
-    const estimate = await createEstimate(supabase, orgId, body);
+    const estimate = await createEstimate(supabase, orgId, body, user.id);
     return created(estimate);
   },
   {

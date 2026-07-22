@@ -163,8 +163,9 @@ export async function updatePurchaseOrder(
   id: string,
   orgId: string,
   params: UpdatePurchaseOrderParams,
+  userId_?: string,
 ): Promise<PurchaseOrder> {
-  const userId = (await db.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
   if (!userId) throw new NotFoundError("Not authenticated");
   return updateCrud.update(db, orgId, id, params, userId);
 }
@@ -177,8 +178,9 @@ export async function receivePurchaseOrder(
   db: SupabaseClient,
   id: string,
   orgId: string,
+  userId_?: string,
 ): Promise<PurchaseOrder> {
-  const userId = (await db.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
 
   // Get PO items
   const { data: items } = await db
@@ -287,8 +289,9 @@ export async function receiveByBarcode(
   poId: string,
   orgId: string,
   barcode: string,
+  userId_?: string,
 ): Promise<PurchaseOrderItem> {
-  const userId = (await db.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
 
   // Find part by barcode
   const { data: part, error: partError } = await db

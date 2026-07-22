@@ -25,7 +25,7 @@ export const GET = createRouteHandler(
 );
 
 export const PATCH = createRouteHandler(
-  async ({ request, params, orgId, supabase }) => {
+  async ({ request, params, orgId, supabase, user }) => {
     const { workOrderId } = params;
     const body = await parseBody(request, updateWorkOrderSchema);
 
@@ -36,7 +36,7 @@ export const PATCH = createRouteHandler(
       body.notes !== undefined;
 
     if (hasFieldUpdate) {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const userId = user.id;
       const updates: Record<string, unknown> = { updated_by: userId };
       if (body.complaint !== undefined) updates.complaint = body.complaint;
       if (body.diagnosis !== undefined) updates.diagnosis = body.diagnosis;
@@ -64,6 +64,7 @@ export const PATCH = createRouteHandler(
         body.status,
         body.notes ?? undefined,
         body.loss_reason ?? undefined,
+        user.id,
       );
       return ok(wo);
     }
@@ -74,12 +75,13 @@ export const PATCH = createRouteHandler(
         workOrderId,
         orgId,
         body.mechanic_id as string,
+        user.id,
       );
       return ok(assignment);
     }
 
     if (body.nuat_enabled !== undefined) {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const userId = user.id;
       const { error } = await supabase
         .from("work_orders")
         .update({
@@ -98,7 +100,7 @@ export const PATCH = createRouteHandler(
     }
 
     if (body.customer_id !== undefined) {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const userId = user.id;
       const { error } = await supabase
         .from("work_orders")
         .update({
@@ -126,9 +128,9 @@ export const PATCH = createRouteHandler(
 );
 
 export const DELETE = createRouteHandler(
-  async ({ params, orgId, supabase }) => {
+  async ({ params, orgId, supabase, user }) => {
     const { workOrderId } = params;
-    await cancelWorkOrder(supabase, workOrderId, orgId);
+    await cancelWorkOrder(supabase, workOrderId, orgId, user.id);
     return ok(null);
   },
   {

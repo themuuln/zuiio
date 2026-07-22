@@ -224,7 +224,7 @@ export async function prefetchDrawerData(
       if (json.error) throw new Error(json.error.message);
       return json.data as DrawerDetailResponse;
     },
-    staleTime: 15_000,
+    staleTime: 30_000,
   });
 }
 
@@ -270,7 +270,7 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
       return json.data as DrawerDetailResponse;
     },
     enabled: !!orgId && !!woId,
-    staleTime: 15_000,
+    staleTime: 30_000,
     retry: false,
   });
 

@@ -154,6 +154,7 @@ export default function DashboardPage() {
     data,
     isPending: dashboardLoading,
     isFetching: dashboardFetching,
+    isPlaceholderData,
     error: dashboardError,
     refetch: refetchDashboard,
   } = useDashboard(effectiveOrgId, {
@@ -167,7 +168,12 @@ export default function DashboardPage() {
     if (data) setHasLoadedOnce(true);
   }, [data]);
 
-  const isDataLoading = !data || dashboardFetching;
+  // Show skeletons only during initial load or when stale data was never loaded
+  // During period switching, keepPreviousData shows old data — show subtle indicator instead
+  const isInitialLoad = !data && dashboardLoading;
+  const isPeriodSwitch = data && dashboardFetching;
+  const showSkeletons = isInitialLoad || (!hasLoadedOnce && !data);
+
   const summary = data?.summary ?? null;
   const comparison = data?.summaryComparison ?? null;
   const insights = data?.insights ?? [];
@@ -267,7 +273,7 @@ export default function DashboardPage() {
         percent: Math.round(summary?.marginPercent ?? 0),
       }),
       icon: PiggyBank,
-      loading: isDataLoading,
+      loading: showSkeletons,
     },
     {
       key: "serviceRevenue",
@@ -275,7 +281,7 @@ export default function DashboardPage() {
       value: formatCurrency(summary?.serviceRevenue ?? 0),
       sub: t("dashboard.ofRevenue", { percent: servicePct }),
       icon: TrendingUp,
-      loading: isDataLoading,
+      loading: showSkeletons,
     },
     {
       key: "partsRevenue",
@@ -283,7 +289,7 @@ export default function DashboardPage() {
       value: formatCurrency(summary?.partsRevenue ?? 0),
       sub: t("dashboard.ofRevenue", { percent: partsPct }),
       icon: DollarSign,
-      loading: isDataLoading,
+      loading: showSkeletons,
     },
     {
       key: "totalVehicles",
@@ -291,13 +297,22 @@ export default function DashboardPage() {
       value: String(summary?.totalVehicles ?? 0),
       sub: null,
       icon: Car,
-      loading: isDataLoading,
+      loading: showSkeletons,
     },
   ];
 
   // ── Always render page structure, skeleton-load values ──
   return (
-    <div className="flex flex-col gap-8 pb-8">
+    <div className="relative">
+      {/* Subtle loading bar during period switches — data stays visible via keepPreviousData */}
+      {isPeriodSwitch && (
+        <div className="absolute top-0 left-0 right-0 z-50">
+          <div className="h-0.5 bg-muted overflow-hidden">
+            <div className="h-full w-full bg-primary animate-pulse" />
+          </div>
+        </div>
+      )}
+      <div className="flex flex-col gap-8 pb-8">
       {/* Inline error banner */}
       {hasError && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive flex items-center justify-between">
@@ -369,7 +384,7 @@ export default function DashboardPage() {
           label={t("dashboard.totalRevenue")}
           value={formatCurrency(summary?.totalRevenue ?? 0)}
           icon={DollarSign}
-          loading={isDataLoading}
+          loading={showSkeletons}
           accentKey="totalRevenue"
           trend={revenueTrendKpi}
           comparisonLabel={revenueTrendKpi ? vsPrevLabel : undefined}
@@ -382,14 +397,14 @@ export default function DashboardPage() {
           label={t("dashboard.activeWorkOrders")}
           value={String(summary?.activeWorkOrders ?? 0)}
           icon={Clock}
-          loading={isDataLoading}
+          loading={showSkeletons}
           accentKey="activeWorkOrders"
         />
         <KpiCard
           label={t("dashboard.totalCustomers")}
           value={String(summary?.totalCustomers ?? 0)}
           icon={Users}
-          loading={isDataLoading}
+          loading={showSkeletons}
           accentKey="totalCustomers"
           sparklineData={
             data?.customerAcquisitionTrend?.map((p) => ({
@@ -402,7 +417,7 @@ export default function DashboardPage() {
           label={t("dashboard.avgRepairOrder")}
           value={formatCurrency(summary?.avgRepairOrderValue ?? 0)}
           icon={TrendingUp}
-          loading={isDataLoading}
+          loading={showSkeletons}
           accentKey="avgRepairOrder"
           trend={aroTrendKpi}
           comparisonLabel={aroTrendKpi ? vsPrevLabel : undefined}
@@ -505,6 +520,7 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+      </div>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { created } from "@/lib/api-response";
 import { ValidationError } from "@/lib/errors";
 import { recordPayment } from "@/lib/services/invoice-service";
 export const POST = createRouteHandler(
-  async ({ request, orgId, params, supabase }) => {
+  async ({ request, orgId, params, supabase, user }) => {
     const { invoiceId } = params;
     const body = await request.json();
 
@@ -16,7 +16,7 @@ export const POST = createRouteHandler(
       method: body.method ?? "cash",
       reference: body.reference ?? undefined,
       notes: body.notes ?? undefined,
-    });
+    }, user.id);
 
     return created(payments);
   },
