@@ -6,58 +6,54 @@
 
 ---
 
-## What is Onoo?
+## Brandbook & Design System
 
-Onoo connects the full basketball lifecycle:
-
-| For | Onoo delivers |
-|-----|---------------|
-| **Leagues** | Trusted game records, verified statistics, audience dashboards, sponsorship proof |
-| **Teams & clubs** | Roster management, game tracking, season analytics, operational tools |
-| **Academies** | Program management, enrollment, attendance, player development tracking |
-| **Players** | One trusted identity across competitions, shareable athlete profiles, career history |
-| **Families & fans** | Live scores, player stats, standings, game recaps — free, no signup |
-| **Scorekeepers** | Mobile-first game tracker with offline support, revision workflow, paper fallback |
-| **Scouts** | Verified career statistics, English export, athlete comparison |
-
----
-
-## Design Philosophy
+> [Full design system documentation →](docs/DESIGN.md)
 
 Onoo's visual language is **dark, powerful, and broadcast-inspired** — a near-black canvas that makes every stat feel like a highlight-reel moment.
 
-- **Color:** Vibrant orange primary × purple secondary on a dark canvas
-- **Typography:** Oswald (condensed athletic), Inter (clean Cyrillic), JetBrains Mono (tabular stats)
-- **Philosophy:** Stats as story, not spreadsheet
+**Color palette:** Vibrant orange primary × purple secondary on a near-black canvas.
+**Typography:** Oswald (condensed athletic), Inter (clean Cyrillic), JetBrains Mono (tabular stats).
+**Philosophy:** Stats as story, not spreadsheet. Every number feels like a highlight reel.
 
-→ [Full design system →](docs/DESIGN.md)
+The design system covers:
+- Color system with full OKLch token tables
+- Surface hierarchy (card, elevated, hovered)
+- Typography scale and usage rules
+- Spacing, border radius, shadow system
+- Motion tokens and animation patterns
+- Component patterns (shadcn/ui on Base UI)
+- Sport-specific components (player hero card, court motif, live game center)
+- Player showcase — Onoo's signature surface
 
 ---
 
-## Current Roadmap
+## Features
 
-### Phase 1 — Trusted data foundation ✅ *(in progress)*
-Clean V2 schema, event journal with proven provenance, revisioned approval workflow, durable tracker with offline support, command-authorized mutations, game-day runbook.
+> [Complete features list with status →](docs/FEATURES.md)
 
-### Phase 2 — Player showcase 🟡 *(active)*
-Hero identity card with animated stat numbers, season arc charts, photo/logo onboarding kit, player comparison, team identity pages, consent & takedown.
+### Shipped — What's Live Now
 
-### Phase 3 — Discovery & league surfaces
-Home page with tonight's games, redesigned standings with form guide, visual leader podiums, player comparison, team pages with roster grid.
+| Area | Features |
+|------|----------|
+| **Player profiles** | Hero card with animated stats, season arc charts, shooting profile, career milestones, radar vs league average, game summaries, stat error reporting |
+| **Teams** | Team pages with roster grid, photo/logo onboarding, player placeholders |
+| **Standings & leaders** | League standings, visual leader podiums |
+| **Game tracking** | Offline-first tracker, append-only event journal, auto box score derivation |
+| **Trust & accuracy** | Evidence-backed corrections, verified projections, command-authorized mutations, tenant-isolated RLS |
+| **Design** | Dark-first theme, 360px responsive, Mongolian-first UI, cold-start empty states |
 
-### Phase 4 — Shareability & reach
-Shareable game recaps, embeddable player cards, English export for scouts, SEO, sponsor placements.
+### In Progress
 
-### Phase 5 — Live experience
-Live game center with real-time scores, play-by-play feed, live stat lines via Supabase Realtime.
+Ruleset-bound vocabulary, tracker handoff UI, ops console, consent & takedown, integration tests.
 
-### Phase 6 — Shop & commerce
-Merchandise catalogue, checkout, payment integration (QPay).
+### Up Next
 
-### Phase 7 — Team insights
-Read-only team analysis from trusted competition data — first team-facing module.
+Game recaps, shareable stat cards, OG images, sponsor placements, awards & MVP races, live game center, standings redesign, player comparison, search, SEO.
 
-→ [Full roadmap with checkboxes →](docs/ROADMAP.md)
+### Backlog
+
+Team operations, academy management (student enrollment, attendance, payments, guardians), unified athlete journey, federation network.
 
 ---
 
@@ -107,19 +103,20 @@ Tracker (journal) → Events → Commands → Derived tables → Public views �
 
 ---
 
-## Key Docs
+## All Docs
 
 | Document | What it covers |
 |----------|---------------|
-| [DESIGN.md](docs/DESIGN.md) | Color system, typography, components, motion |
-| [VISION.md](docs/VISION.md) | Product vision, design principles, success measures |
-| [ROADMAP.md](docs/ROADMAP.md) | Feature roadmap by phase with completion tracking |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture, data flow, security model |
-| [gaps.md](docs/gaps.md) | Feature gap analysis and prioritization |
-| [runbook.md](docs/runbook.md) | Game-day operational procedures |
-| [tasks/](docs/tasks/INDEX.md) | Detailed implementation tasks by phase |
-| [plans/](docs/plans/) | Execution specs with file paths, steps, done-criteria |
-| [features/](docs/features/) | Deep-dive feature research and design docs |
+| [📐 DESIGN.md](docs/DESIGN.md) | **Brandbook** — color system, typography, components, motion, player showcase |
+| [✨ FEATURES.md](docs/FEATURES.md) | **Features** — shipped, in progress, up next, backlog |
+| [🎯 VISION.md](docs/VISION.md) | Product vision, design principles, success measures, scope boundaries |
+| [🗺️ ROADMAP.md](docs/ROADMAP.md) | Detailed roadmap by phase with completion tracking |
+| [🏗️ ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture, data flow, security model |
+| [📋 gaps.md](docs/gaps.md) | Feature gap analysis and prioritization |
+| [📖 runbook.md](docs/runbook.md) | Game-day operational procedures |
+| [📝 tasks/](docs/tasks/INDEX.md) | Detailed implementation tasks by phase |
+| [📋 plans/](docs/plans/) | Execution specs with file paths, steps, done-criteria |
+| [🔬 features/](docs/features/) | Deep-dive feature research and design docs |
 
 ---
 
