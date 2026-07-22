@@ -22,14 +22,35 @@ const PDF_LINES = [
   "2 . BILGEERDEM 17:42 6/13 46.2 5/6 83.3 1/7 14.3 7/13 53.8 1 4 5 0 0 4 2 1 0 0 +14 20",
 ];
 
-function createRequest(file: File | null, rightsConfirmed = true): NextRequest {
-  const formData = new FormData();
-  if (file) formData.set("file", file);
-  if (rightsConfirmed) formData.set("rightsConfirmed", "true");
-  return new Request("http://localhost/admin/api/games/game-1/official-stats", {
+function createRequest(
+  file: File | null,
+  rightsConfirmed = true,
+): NextRequest {
+  const request = new Request("http://localhost/", {
     method: "POST",
-    body: formData,
   }) as NextRequest;
+  const map = new Map<string, FormDataEntryValue>();
+  if (file) map.set("file", file);
+  if (rightsConfirmed) map.set("rightsConfirmed", "true");
+  request.formData = vi.fn().mockResolvedValue(
+    Promise.resolve({
+      append: vi.fn(),
+      delete: vi.fn(),
+      entries: vi.fn(),
+      forEach: vi.fn(),
+      get: (key: string) => map.get(key) ?? null,
+      getAll: vi.fn(),
+      has: (key: string) => map.has(key),
+      keys: vi.fn(),
+      set: vi.fn(),
+      values: vi.fn(),
+    } as unknown as FormData),
+  );
+  return request;
+}
+
+function makeFile(name = "official.pdf"): File {
+  return new File(["pdf"], name, { type: "application/pdf" });
 }
 
 describe("official statistics import API", () => {
@@ -44,7 +65,7 @@ describe("official statistics import API", () => {
     vi.clearAllMocks();
     upload.mockResolvedValue({ error: null });
     remove.mockResolvedValue({ error: null });
-    rpc.mockResolvedValue({ data: { id: "submission-1" }, error: null });
+    rpc.mockResolvedValue({ data: { submission_id: "submission-1" }, error: null });
     mockGetDocumentProxy.mockResolvedValue({} as never);
     mockExtractTextItems.mockResolvedValue({
       items: [
@@ -52,6 +73,20 @@ describe("official statistics import API", () => {
       ],
       totalPages: 1,
     } as never);
+    // Chainable supabase.from() mock for games and rosters queries
+    const singleFn = vi.fn().mockResolvedValue({
+      data: { home_team_season_id: "season-home-1", away_team_season_id: "season-away-1" },
+      error: null,
+    });
+    const chainableSelect = vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ single: singleFn }) });
+    const chainableEq = vi.fn().mockReturnValue({ select: chainableSelect });
+    const fromFn = vi.fn((table: string) => {
+      if (table === "games") {
+        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ single: singleFn }) }) };
+      }
+      // game_rosters
+      return { select: vi.fn().mockReturnValue({ eq: chainableEq }) };
+    });
     mockCreateClient.mockResolvedValue({
       auth: {
         getUser: vi.fn().mockResolvedValue({
@@ -61,16 +96,16 @@ describe("official statistics import API", () => {
       storage: {
         from: vi.fn().mockReturnValue({ upload, remove }),
       },
+      from: fromFn,
       rpc,
     } as never);
   });
 
   it("stores a FIBA PDF as evidence and submits parsed values through cmd_submit_source", async () => {
     const response = await POST(
-      createRequest(new File(["pdf"], "official.pdf", { type: "application/pdf" })),
+      createRequest(makeFile()),
       { params: Promise.resolve({ id: "game-1" }) },
     );
-
     expect(response.status).toBe(201);
     expect(upload).toHaveBeenCalledWith(
       expect.stringMatching(/^game-1\/.+\.pdf$/),
@@ -78,15 +113,15 @@ describe("official statistics import API", () => {
       expect.objectContaining({ contentType: "application/pdf" }),
     );
     expect(rpc).toHaveBeenCalledWith(
-      "cmd_submit_source",
+      "cmd_submit_official_stats",
       expect.objectContaining({
         p_game_id: "game-1",
-        p_source_type: "official_score_sheet",
-        p_rights_confirmed: true,
-        p_confidence: 0.75,
+        p_home_score: 31,
+        p_away_score: 56,
       }),
     );
     await expect(response.json()).resolves.toMatchObject({
+      synced: true,
       submissionId: "submission-1",
       boxScore: { score: { home: 31, away: 56 } },
     });
@@ -100,7 +135,7 @@ describe("official statistics import API", () => {
     } as never);
 
     const response = await POST(
-      createRequest(new File(["pdf"], "official.pdf", { type: "application/pdf" })),
+      createRequest(makeFile()),
       { params: Promise.resolve({ id: "game-1" }) },
     );
 
@@ -113,10 +148,7 @@ describe("official statistics import API", () => {
       params: Promise.resolve({ id: "game-1" }),
     });
     const noRights = await POST(
-      createRequest(
-        new File(["pdf"], "official.pdf", { type: "application/pdf" }),
-        false,
-      ),
+      createRequest(makeFile(), false),
       { params: Promise.resolve({ id: "game-1" }) },
     );
 
