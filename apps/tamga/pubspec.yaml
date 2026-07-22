@@ -105,6 +105,9 @@ dependencies:
   country_flags: ^4.1.0
   animation_kit: ^0.0.2
   email_validator: ^3.0.0
+
+  # AI-agent driven UI testing (debug mode only)
+  marionette_flutter: ^0.6.0
   web: ^1.1.1
 dev_dependencies:
   flutter_test:

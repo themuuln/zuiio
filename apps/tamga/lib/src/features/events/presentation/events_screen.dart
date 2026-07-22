@@ -70,7 +70,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Уралдаан'),
+        title: const Text('Арга хэмжээ'),
         leading: IconButton(
           onPressed: () => Navigator.of(ctx).pop(),
           icon: const Icon(Icons.arrow_back_ios_new),

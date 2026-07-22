@@ -36,7 +36,7 @@ class LineageHomeScreen extends ConsumerWidget {
       slivers: [
         // ── Minimal header ──
         SliverAppBar(
-          title: const Text('Tamga'),
+          title: const Text('Угшил'),
           actions: [
             IconButton(
               onPressed: () => context.go('/lineage/coi'),

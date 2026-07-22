@@ -18,7 +18,7 @@ function createMockSupabase(): MockBuilder {
   self.limit = vi.fn(() => self);
   self.single = vi.fn(() => ({ data: null, error: null }));
   self.maybeSingle = vi.fn(() => ({ data: null, error: null }));
-  self.rpc = vi.fn(() => ({ data: null, error: null }));
+  self.rpc = vi.fn(() => self);
   return { from: vi.fn(() => self), rpc: self.rpc, _builder: self };
 }
 

@@ -27,31 +27,26 @@ class SyncSetupPage extends StatelessWidget {
     return Column(
       children: [
         // ── Header ──
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.section,
-            AppSpacing.lg,
-            0,
-          ),
+        const SizedBox(height: AppSpacing.page),
+        Center(
           child: Column(
             children: [
-              // Back button
-              GestureDetector(
-                onTap: onBack,
-                child: SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Icon(Icons.chevron_left, size: 28, color: tc.primary),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
               Text(
                 'Синк тохиргоо',
                 style: TextStyle(
-                  fontSize: 17,
+                  fontSize: 34,
                   fontWeight: FontWeight.w600,
                   color: tc.onSurface,
+                  letterSpacing: 0.37,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Өөрийнхөө мэдээллийг хянах боломжтой',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  color: tc.onSurfaceVariant,
                 ),
               ),
             ],
@@ -136,30 +131,44 @@ class SyncSetupPage extends StatelessWidget {
           ),
         ),
 
-        // ── CTA area ──
+        // ── Bottom actions — back + continue ──
         SafeArea(
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
-              0,
+              AppSpacing.sm,
               AppSpacing.lg,
               AppSpacing.lg,
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: double.infinity,
                   height: 48,
-                  child: FilledButton(
-                    onPressed: onStart,
-                    child: const Text(
-                      'Эхлэх',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: onBack,
+                        icon: Icon(Icons.chevron_left, color: tc.primary),
+                        style: IconButton.styleFrom(
+                          backgroundColor: tc.surfaceContainerLow,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: onStart,
+                          child: const Text(
+                            'Эхлэх',
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),

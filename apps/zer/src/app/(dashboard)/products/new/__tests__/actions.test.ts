@@ -15,6 +15,7 @@ vi.mock("@/lib/erp", () => ({
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 

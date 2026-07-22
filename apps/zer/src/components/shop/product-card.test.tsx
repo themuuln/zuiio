@@ -1,3 +1,14 @@
+// Mock IntersectionObserver for jsdom
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+Object.defineProperty(window, "IntersectionObserver", {
+  writable: true,
+  value: MockIntersectionObserver,
+});
+
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,14 +17,25 @@ const mockUpdateQuantity = vi.fn();
 const mockRemoveItem = vi.fn();
 const mockAddItem = vi.fn();
 
-vi.mock("@/app/(dashboard)/shop/cart-context", () => ({
-  useCart: () => ({
-    addItem: mockAddItem,
-    updateQuantity: mockUpdateQuantity,
-    removeItem: mockRemoveItem,
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({
+    prefetchQuery: vi.fn(),
+    getQueryData: vi.fn(),
+    setQueryData: vi.fn(),
   }),
+  useQuery: vi.fn(() => ({ data: undefined, isPending: false })),
+  QueryClient: vi.fn(),
 }));
 
+vi.mock("@/app/(dashboard)/shop/cart-context", () => ({
+  useCart: () => ({
+    cartItems: [],
+    addItem: mockAddItem,
+    removeItem: mockRemoveItem,
+    updateQuantity: mockUpdateQuantity,
+    clearCart: vi.fn(),
+  }),
+}));
 // trackStock off => never out of stock, no max restriction.
 vi.mock("@/lib/org-settings-context", () => ({
   useOrgSettings: () => ({ trackStock: false }),
@@ -67,8 +89,8 @@ describe("ProductCard stepper", () => {
     render(
       <ProductCard product={baseProduct} cartQuantity={2} variant="tile" />,
     );
-    // Quantity shown in stepper
-    expect(screen.getByText("2")).toBeTruthy();
+    // Quantity shown in stepper (may appear in multiple elements)
+    expect(screen.getAllByText("2").length).toBeGreaterThan(0);
     // No standalone add button text
     expect(screen.queryByText("Нэмэх")).toBeNull();
     expect(screen.queryByText("Дахин нэмэх")).toBeNull();

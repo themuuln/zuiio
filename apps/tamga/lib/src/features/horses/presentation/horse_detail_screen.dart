@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../nutrition/presentation/feed_log_screen.dart';
 import '../../nutrition/presentation/feed_schedule_screen.dart';
@@ -85,6 +86,7 @@ class HorseDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext ctx, WidgetRef ref) {
     final theme = Theme.of(ctx);
+    final tamgaColors = TamgaColors.of(ctx);
 
     return DefaultTabController(
       length: 8,
@@ -121,25 +123,50 @@ class HorseDetailScreen extends ConsumerWidget {
                 title: Text(
                   horse.name,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: Colors.white,
+                    letterSpacing: -0.3,
                   ),
                 ),
                 background: _HorsePhotoHeader(horse: horse),
               ),
-              bottom: TabBar(
-                isScrollable: true,
-                onTap: (_) => HapticFeedback.selectionClick(),
-                tabs: [
-                  const Tab(text: 'Мэдээлэл'),
-                  const Tab(text: 'Эрүүл мэнд'),
-                  const Tab(text: 'Дасгалжуулалт'),
-                  const Tab(text: 'Гүйцэтгэл'),
-                  const Tab(text: 'Тэжээлийн хуваарь'),
-                  const Tab(text: 'Тэжээлийн бүртгэл'),
-                  const Tab(text: 'Уралдаан'),
-                  const Tab(text: 'Угшил'),
-                ],
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(48),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: tamgaColors.surfaceContainerLowest,
+                    border: Border(
+                      top: BorderSide(color: tamgaColors.border, width: 0.5),
+                    ),
+                  ),
+                  child: TabBar(
+                    isScrollable: true,
+                    onTap: (_) => HapticFeedback.selectionClick(),
+                    indicatorColor: tamgaColors.primary,
+                    indicatorWeight: 2.5,
+                    labelColor: tamgaColors.primary,
+                    unselectedLabelColor: tamgaColors.mutedForeground,
+                    labelStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    splashFactory: NoSplash.splashFactory,
+                    tabs: [
+                      const Tab(text: 'Мэдээлэл'),
+                      const Tab(text: 'Эрүүл мэнд'),
+                      const Tab(text: 'Дасгалжуулалт'),
+                      const Tab(text: 'Гүйцэтгэл'),
+                      const Tab(text: 'Тэжээлийн хуваарь'),
+                      const Tab(text: 'Тэжээлийн бүртгэл'),
+                      const Tab(text: 'Уралдаан'),
+                      const Tab(text: 'Угшил'),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
