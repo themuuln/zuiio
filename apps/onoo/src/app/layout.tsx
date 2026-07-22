@@ -45,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="mn">
+    <html lang="mn" className="dark">
       <body
         className={`${oswald.variable} ${inter.variable} ${jetbrainsMono.variable} flex min-h-screen flex-col font-sans antialiased`}
       >

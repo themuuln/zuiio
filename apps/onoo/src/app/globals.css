@@ -4,25 +4,26 @@
 
 /*
  * Onoo — Sports Stats Platform
- * Product accent: amber (hue 80°) — energetic, competitive
- * Primary: brand indigo (inherited from @zuiio/branding)
+ * Dark-first design: near-black canvas, orange primary, purple secondary
  */
-
 :root {
-  /* Brand sports accent */
-  --brand-sports: oklch(0.78 0.16 80);
-  --brand-sports-light: oklch(0.88 0.1 80);
-  --brand-sports-dim: oklch(0.55 0.14 80);
+  /* Ink — bright text on dark canvas */
+  --ink: oklch(0.98 0.005 60);
 
-  /* Surface hierarchy — card depth without heavy shadows */
-  --surface-1: oklch(1 0 0);
-  --surface-2: oklch(0.97 0.005 80);
-  --surface-3: oklch(0.94 0.008 80);
+  /* ─── Onoo accent — orange (intermediate vars for var() cascade) ─── */
+  --accent: oklch(0.88 0.14 40);
+  --accent-foreground: oklch(0.15 0.005 60);
 
-  /* Ink — warm dark gray, not pure black */
-  --ink: oklch(0.18 0.005 80);
+  /* ─── Sidebar — very dark with purple hint ─── */
+  --sidebar: oklch(0.06 0.01 265);
+  --sidebar-foreground: oklch(0.96 0.005 60);
+  --sidebar-primary: oklch(0.72 0.22 40);
+  --sidebar-primary-foreground: oklch(0.15 0.005 60);
+  --sidebar-accent: oklch(0.12 0.008 265);
+  --sidebar-accent-foreground: oklch(0.96 0.005 60);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.72 0.22 40);
 }
-
 @theme inline {
   --spacing: 0.25rem;
   /* Display font — condensed, bold, athletic energy */
@@ -34,34 +35,81 @@
   /* Stats/mono font — tabular numerals, data display */
   --font-stat: var(--font-jetbrains), "JetBrains Mono", monospace;
 
-  /* Override accent to amber for sports identity */
-  --color-accent: oklch(0.95 0.04 80);
-  --color-accent-foreground: oklch(0.3 0.1 80);
+  /* Override accent — var() preserves .dark cascade */
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 
-  /* Sidebar — lighter dark surface */
-  --color-sidebar: oklch(0.2 0.012 265);
-  --color-sidebar-foreground: oklch(0.96 0.005 265);
-  --color-sidebar-primary: oklch(0.78 0.16 80);
-  --color-sidebar-primary-foreground: oklch(0.2 0.012 265);
-  --color-sidebar-accent: oklch(0.26 0.015 265);
-  --color-sidebar-accent-foreground: oklch(0.96 0.005 265);
-  --color-sidebar-border: oklch(1 0 0 / 10%);
-  --color-sidebar-ring: oklch(0.78 0.16 80);
+  /* Sidebar — var() preserves .dark cascade */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 .dark {
-  --color-accent: oklch(0.78 0.16 80 / 15%);
-  --color-accent-foreground: oklch(0.9 0.06 80);
+  /* Background — near-black, powerful canvas */
+  --background: oklch(0.02 0.002 60);
+  --foreground: oklch(0.98 0.005 60);
 
-  --surface-1: oklch(0.13 0.003 80);
-  --surface-2: oklch(0.16 0.004 80);
-  --surface-3: oklch(0.2 0.005 80);
-  --ink: oklch(0.98 0.005 80);
+  /* Card — dark card on near-black canvas */
+  --card: oklch(0.07 0.003 60);
+  --card-foreground: oklch(0.98 0.005 60);
 
-  /* Dark mode — enhanced sports accent range */
-  --brand-sports: oklch(0.82 0.18 80);
-  --brand-sports-light: oklch(0.72 0.14 80);
-  --brand-sports-dim: oklch(0.5 0.12 80);
+  --popover: oklch(0.07 0.003 60);
+  --popover-foreground: oklch(0.98 0.005 60);
+
+  /* Primary — vibrant orange (CTA, links, emphasis) */
+  --primary: oklch(0.72 0.22 40);
+  --primary-foreground: oklch(0.15 0.005 60);
+
+  /* Secondary — purple (premium, depth) */
+  --secondary: oklch(0.50 0.24 285);
+  --secondary-foreground: oklch(0.98 0.005 80);
+
+  --muted: oklch(0.12 0.005 60);
+  --muted-foreground: oklch(0.55 0.01 60);
+
+  --accent: oklch(0.72 0.22 40 / 15%);
+  --accent-foreground: oklch(0.88 0.14 40);
+
+  --destructive: oklch(0.50 0.22 25);
+  --destructive-foreground: oklch(0.98 0.005 60);
+  --destructive-text: oklch(0.65 0.18 25);
+
+  --success: oklch(0.65 0.18 145);
+  --success-foreground: oklch(0.02 0.002 60);
+  --warning: oklch(0.78 0.18 55);
+  --warning-foreground: oklch(0.02 0.002 60);
+  --info: oklch(0.60 0.15 240);
+  --info-foreground: oklch(0.98 0.005 60);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.72 0.22 40);
+
+  /* Charts — orange-purple palette */
+  --chart-1: oklch(0.72 0.22 40);
+  --chart-2: oklch(0.55 0.24 285);
+  --chart-3: oklch(0.82 0.18 40);
+  --chart-4: oklch(0.65 0.20 285);
+  --chart-5: oklch(0.78 0.18 55);
+
+  /* Surface overrides — full dark */
+  --surface-1: oklch(0.07 0.003 60);
+  --surface-2: oklch(0.10 0.004 60);
+  --surface-3: oklch(0.14 0.005 60);
+  --ink: oklch(0.98 0.005 60);
+
+  /* Brand accent overrides — orange */
+  --brand-sports: oklch(0.72 0.22 40);
+  --brand-sports-light: oklch(0.82 0.18 40);
+  --brand-sports-dim: oklch(0.55 0.18 40);
+  --brand-purple: oklch(0.55 0.24 285);
+  --brand-purple-light: oklch(0.65 0.20 285);
 }
 
 /* ─── Player showcase hero ─── */
