@@ -70,13 +70,15 @@ export function useServiceSchedules(
       vehicleId,
       branchId ?? "all",
     ),
-    queryFn: () =>
-      fetchSchedules(orgId!, {
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchSchedules(orgId, {
         params: {
           ...(vehicleId ? { vehicle_id: vehicleId } : {}),
           ...(branchId ? { branch_id: branchId } : {}),
         },
-      }),
+      });
+    },
     enabled: !!orgId,
     staleTime: 15_000,
   });
@@ -91,7 +93,10 @@ export function useServiceSchedule(
   );
   return useQuery({
     queryKey: serviceReminderKeys.detail(orgId ?? "", id),
-    queryFn: () => fetchSchedule(orgId!),
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchSchedule(orgId);
+    },
     enabled: !!orgId && !!id,
     staleTime: 30_000,
   });
@@ -112,13 +117,15 @@ export function useReminderLogs(
       vehicleId,
       branchId ?? "all",
     ),
-    queryFn: () =>
-      fetchReminderLogs(orgId!, {
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchReminderLogs(orgId, {
         params: {
           ...(vehicleId ? { vehicle_id: vehicleId } : {}),
           ...(branchId ? { branch_id: branchId } : {}),
         },
-      }),
+      });
+    },
     enabled: !!orgId,
     staleTime: 30_000,
   });

@@ -42,7 +42,6 @@ export function ResponsiveFormModal({
   children,
   className,
   useDialogOnDesktop = false,
-  sheetSize = "xl",
   footer,
 }: ResponsiveFormModalProps) {
   const isMobile = useIsMobile();

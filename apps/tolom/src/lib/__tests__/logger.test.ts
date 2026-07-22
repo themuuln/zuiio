@@ -11,6 +11,7 @@ describe("logger production mode", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const { logger } = await import("../logger");
     logger.info({ userId: "u1" }, "test message");
+    // biome-ignore lint/suspicious/noConsole: testing structured logger output via console
     expect(JSON.parse(vi.mocked(console.log).mock.calls[0][0]).level).toBe(
       "info",
     );
@@ -21,6 +22,7 @@ describe("logger production mode", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const { logger } = await import("../logger");
     logger.info({ password: "s3cret", token: "abc" }, "login");
+    // biome-ignore lint/suspicious/noConsole: testing structured logger output via console
     const msg = JSON.parse(vi.mocked(console.log).mock.calls[0][0]);
     expect(msg.password).toBe("[REDACTED]");
     expect(msg.token).toBe("[REDACTED]");
@@ -51,6 +53,7 @@ describe("logger production mode", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const { logger } = await import("../logger");
     logger.info("hello");
+    // biome-ignore lint/suspicious/noConsole: testing structured logger output via console
     expect(JSON.parse(vi.mocked(console.log).mock.calls[0][0]).msg).toBe(
       "hello",
     );
@@ -62,6 +65,7 @@ describe("logger production mode", () => {
     const { logger } = await import("../logger");
     const child = logger.child({ orgId: "org-1" });
     child.info({}, "test");
+    // biome-ignore lint/suspicious/noConsole: testing structured logger output via console
     const msg = JSON.parse(vi.mocked(console.log).mock.calls[0][0]);
     expect(msg.orgId).toBe("org-1");
   });

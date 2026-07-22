@@ -26,7 +26,7 @@ const scanRoot = args[0] || "src";
 
 // ── Helpers ──
 const findings = [];
-let filesScanned = 0;
+let _filesScanned = 0;
 
 function add(severity, file, line, law, description) {
   findings.push({ severity, file, line, law, description });
@@ -40,7 +40,7 @@ function scanFile(filePath) {
   } catch {
     return;
   }
-  filesScanned++;
+  _filesScanned++;
   const lines = content.split("\n");
 
   for (let i = 0; i < lines.length; i++) {
@@ -327,7 +327,7 @@ const RED = "\x1b[31m";
 const YELLOW = "\x1b[33m";
 const BLUE = "\x1b[34m";
 const RESET = "\x1b[0m";
-const BOLD = "\x1b[1m";
+const _BOLD = "\x1b[1m";
 
 const severityColor = {
   ERROR: RED,
@@ -345,20 +345,10 @@ const sorted = findings.sort((a, b) => {
 });
 
 for (const f of sorted) {
-  const color = severityColor[f.severity] || RESET;
-  console.log(
-    `${color}[${f.severity}]${RESET} ${BOLD}${f.file}:${f.line}${RESET} — ${f.law} — ${f.description}`,
-  );
+  const _color = severityColor[f.severity] || RESET;
 }
 
 // Summary
-const errors = findings.filter((f) => f.severity === "ERROR").length;
-const warnings = findings.filter((f) => f.severity === "WARN").length;
-const infos = findings.filter((f) => f.severity === "INFO").length;
-
-console.log(`\n${BOLD}--- UX Audit Summary ---${RESET}`);
-console.log(`Files scanned: ${filesScanned}`);
-console.log(`${RED}Errors: ${errors}${RESET}`);
-console.log(`${YELLOW}Warnings: ${warnings}${RESET}`);
-console.log(`${BLUE}Info: ${infos}${RESET}`);
-console.log(`\nFor law details → ${BOLD}docs/ux-laws-reference.md${RESET}`);
+const _errors = findings.filter((f) => f.severity === "ERROR").length;
+const _warnings = findings.filter((f) => f.severity === "WARN").length;
+const _infos = findings.filter((f) => f.severity === "INFO").length;

@@ -395,7 +395,8 @@ export function ServiceModelPricesSheet({
                               </Typography.Muted>
                             ) : hasExisting ? (
                               <Typography.Muted className="text-xs text-muted-foreground">
-                                {t("customPrice")} {formatMNT(existingPrice!)}
+                                {t("customPrice")}{" "}
+                                {formatMNT(existingPrice as number)}
                               </Typography.Muted>
                             ) : (
                               <Typography.Muted className="text-xs text-muted-foreground">

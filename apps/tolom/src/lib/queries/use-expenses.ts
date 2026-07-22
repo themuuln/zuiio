@@ -40,10 +40,12 @@ export function useExpenses(
 
   return useQuery({
     queryKey: expenseKeys.list(orgId ?? "", filters),
-    queryFn: () =>
-      fetchExpenses(orgId!, {
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchExpenses(orgId, {
         params: Object.keys(filters).length ? filters : undefined,
-      }),
+      });
+    },
     enabled: !!orgId,
     staleTime: 30_000,
   });
@@ -59,7 +61,10 @@ export function useExpense(
   );
   return useQuery({
     queryKey: expenseKeys.detail(orgId ?? "", expenseId ?? ""),
-    queryFn: () => fetchExpense(orgId!),
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchExpense(orgId);
+    },
     enabled: !!orgId && !!expenseId,
     staleTime: 30_000,
   });
@@ -74,13 +79,15 @@ export function useExpenseStats(
 ) {
   return useQuery({
     queryKey: expenseKeys.stats(orgId ?? "", branchId ?? "all"),
-    queryFn: () =>
-      fetchExpenseStats(orgId!, {
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchExpenseStats(orgId, {
         params: {
           type: "stats",
           ...(branchId ? { branch_id: branchId } : {}),
         },
-      }),
+      });
+    },
     enabled: !!orgId,
     staleTime: 60_000,
   });
@@ -94,7 +101,10 @@ const fetchExpenseCategories = createOrgQuery<ExpenseCategory[]>(
 export function useExpenseCategories(orgId: string | undefined) {
   return useQuery({
     queryKey: expenseKeys.categories(orgId ?? ""),
-    queryFn: () => fetchExpenseCategories(orgId!),
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchExpenseCategories(orgId);
+    },
     enabled: !!orgId,
     staleTime: 5 * 60_000,
   });

@@ -19,7 +19,7 @@ The complete basketball-platform direction is fixed in [the product vision](../V
 3. **Architecture:** Share canonical identity and organization records while isolating private operational data behind bounded-context commands
 4. **Expansion:** Add the remaining team, league, guardian, competition, and federation modules through measured delivery gates
 
-A product owner must record each approved delivery decision in a dated decision log before implementation tasks enter the roadmap. The log names the decision owner, approver, date, rationale, and review trigger.
+A product owner must record each approved delivery decision in a dated decision log before executable tasks enter Onoo’s task queue. The log names the decision owner, approver, date, rationale, and review trigger.
 
 ## Recommendation
 
@@ -40,10 +40,11 @@ Academy management is Onoo’s training and development operations module. It co
 | Identity and organizations | All actors | Users, organizations, memberships, roles, teams, and canonical athlete identity |
 | League operations | League and federation staff | Seasons, competitions, schedules, eligibility, officials, standings, and governance |
 | Trusted game records | Scorekeepers and league reviewers | Tracker journal, box scores, corrections, verification, and derived statistics |
-| Team operations | Club and team staff | Rosters, staff, availability, training schedule, logistics, and team payments |
-| Academy operations | Academy staff, coaches, guardians | Programs, enrollment, consent, attendance, development, and tuition |
+| Team operations | Club and team staff | Rosters, staff, availability, training schedule, and logistics |
+| Academy operations | Academy staff, coaches, guardians | Programs, enrollment, consent, attendance, and development |
+| Commerce | Organization staff and guardians | Subscriptions, prices, invoices, payments, refunds, and reconciliation |
 | Athlete experience | Players, families, scouts | Unified development and competition timeline, profiles, exports, and sharing |
-| Public and commercial surfaces | Fans, sponsors, customers | Public discovery, content, audience proof, subscriptions, and approved commerce |
+| Public and audience surfaces | Fans, sponsors, customers | Public discovery, content, audience proof, and sponsor inventory |
 
 ### Shared platform contract
 
@@ -123,7 +124,7 @@ Observe at least two real registration, attendance, and payment-reconciliation w
 Proceed to architecture implementation only when all conditions pass:
 
 - A product owner, budget approver, and operational support owner accept named accountability
-- The dated decision log records all five decisions in this plan
+- The dated decision log records all four delivery decisions in this plan
 - At least one academy signs a paid design-partner agreement
 - At least two additional academies sign written pilot intent at a stated price
 - The design partner provides a real roster, schedule, and payment workflow for testing
@@ -535,7 +536,7 @@ Calendar estimates start only after the preceding gate passes.
 
 ### Gate 2: Operational pilot
 
-**Entry:** Architecture and risk approval is complete. The academy verification gate passes against an empty test project before any real child data is imported. Passing tests must cover the role matrix, cross-tenant denial, private storage, guardian-link scope and replay protection, consent immutability, medical-access audit, retention, anonymization, break-glass access, and backup restore.
+**Entry:** Onoo’s Horizon A league paid-proof gate, Roadmap Phase 8 shared foundations, and Academy Gate 1 all pass. The academy verification gate passes against an empty test environment before any real child data is imported. Discovery and architecture may run in parallel with Horizon A, but academy production implementation may not begin before league paid proof. Passing tests must cover the role matrix, cross-tenant denial, private storage, guardian-link scope and replay protection, consent immutability, medical-access audit, retention, anonymization, break-glass access, and backup restore.
 
 **Scope:** Staff administration, roster, program versions, offerings, enrollment, sessions, offline attendance, consent, and invoice ledger.
 
@@ -567,7 +568,9 @@ Calendar estimates start only after the preceding gate passes.
 
 ### Gate 4: Unified athlete experience
 
-**Entry:** The academy renews or signs an extension that values a unified athlete record. Onoo’s authorization cutover and consent-and-takedown tasks are complete and verified in `docs/tasks/INDEX.md`, `docs/ROADMAP.md`, `docs/plans/EXECUTION-STATUS.md`, and `docs/pm-manifest.yaml`. The cross-domain identity and profile work receives its own task specification before code changes begin.
+**Roadmap mapping:** This gate is part of Roadmap Phase 12 in Horizon C, not Academy Phase 10 in Horizon B. Phase 10 may create only a private identity-link record.
+
+**Entry:** Horizon C entry criteria pass and the academy renews or signs an extension that values a unified athlete record. Onoo’s authorization cutover and consent-and-takedown tasks are complete and verified in `docs/tasks/INDEX.md`, `docs/ROADMAP.md`, `docs/plans/EXECUTION-STATUS.md`, and `docs/pm-manifest.yaml`. The cross-domain identity and profile work receives its own task specification before code changes begin.
 
 **Scope:** Explicit identity linking and a consent-filtered athlete profile that composes development and competition records.
 
@@ -815,7 +818,7 @@ If the recommendation is accepted:
 5. Complete the privacy, consent, and retention review
 6. Verify QPay production assumptions with a provider-backed spike
 7. Write one paid-pilot task queue with testable done criteria
-8. Start implementation only after Gate 1 approval
+8. Start production implementation only after the Gate 2 entry conditions pass
 
 If discovery fails, keep academy management in Onoo’s long-term platform map but pause implementation and revalidate the buyer, workflow, and timing before scheduling it.
 

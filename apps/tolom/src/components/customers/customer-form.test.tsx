@@ -62,6 +62,11 @@ function phoneInput(): HTMLInputElement | null {
   return document.querySelector('input[placeholder="phonePlaceholder"]');
 }
 
+function required<T>(value: T | null | undefined, name: string): T {
+  if (!value) throw new Error(`Expected ${name} input in DOM`);
+  return value;
+}
+
 // ── Tests ─────────────────────────────────────────────────────────
 
 describe("CustomerForm", () => {
@@ -114,7 +119,7 @@ describe("CustomerForm", () => {
     it("shows phone error when phone is empty", async () => {
       const user = userEvent.setup();
       renderForm({ mode: "quick" });
-      await user.type(q("firstName")!, "John");
+      await user.type(required(q("firstName"), "firstName"), "John");
       await user.click(screen.getByRole("button", { name: /create/i }));
       await waitFor(() => {
         expect(screen.getByText(/phone is required/i)).toBeInTheDocument();
@@ -149,12 +154,12 @@ describe("CustomerForm", () => {
     it("preserves typed values across renders", async () => {
       const user = userEvent.setup();
       renderForm({ mode: "full" });
-      const first = q("firstName")!;
+      const first = required(q("firstName"), "firstName");
       await user.type(first, "John");
       expect(first.value).toBe("John");
       await user.type(first, "athan");
       expect(first.value).toBe("Johnathan");
-      const last = q("lastName")!;
+      const last = required(q("lastName"), "lastName");
       await user.type(last, "Doe");
       expect(last.value).toBe("Doe");
       expect(first.value).toBe("Johnathan");
@@ -169,10 +174,10 @@ describe("CustomerForm", () => {
       const user = userEvent.setup();
       renderForm({ mode: "full" });
 
-      await user.type(q("firstName")!, "John");
-      await user.type(q("lastName")!, "Doe");
-      await user.type(phoneInput()!, "99112233");
-      await user.type(q("email")!, "john@example.com");
+      await user.type(required(q("firstName"), "firstName"), "John");
+      await user.type(required(q("lastName"), "lastName"), "Doe");
+      await user.type(required(phoneInput(), "phone"), "99112233");
+      await user.type(required(q("email"), "email"), "john@example.com");
       await user.click(screen.getByRole("button", { name: /create/i }));
 
       await waitFor(() => {
@@ -197,8 +202,8 @@ describe("CustomerForm", () => {
       const onSuccess = vi.fn();
       renderForm({ mode: "quick", onSuccess });
 
-      await user.type(q("firstName")!, "John");
-      await user.type(phoneInput()!, "99112233");
+      await user.type(required(q("firstName"), "firstName"), "John");
+      await user.type(required(phoneInput(), "phone"), "99112233");
       await user.click(screen.getByRole("button", { name: /create/i }));
 
       await waitFor(() => {

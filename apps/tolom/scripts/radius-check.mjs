@@ -97,5 +97,3 @@ if (errors > 0) {
   );
   process.exit(1);
 }
-
-console.log("✅ No border-radius hierarchy violations found.");

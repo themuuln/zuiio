@@ -52,7 +52,7 @@ const props = defineProps({
 
 // VitePress base path (e.g. "/guide/") — prepend to image paths from public/
 const baseUrl = import.meta.env.BASE_URL || "/";
-const resolvedImage = computed(() => {
+const _resolvedImage = computed(() => {
   const img = props.image;
   // If image already starts with http or the base path, use as-is
   if (img.startsWith("http") || img.startsWith(baseUrl)) return img;

@@ -29,7 +29,7 @@ export function useAppointments(
   return useQuery({
     queryKey: appointmentKeys.list(orgId ?? "", date, branchId, dateRange),
     queryFn: () =>
-      fetchAppointments(orgId!, {
+      fetchAppointments(orgId as string, {
         params: {
           date,
           ...(dateRange

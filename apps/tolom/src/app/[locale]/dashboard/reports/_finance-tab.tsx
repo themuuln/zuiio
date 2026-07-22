@@ -18,12 +18,11 @@ interface FinanceTabProps {
   financeQ: { data: FinanceSummary | undefined; isPending: boolean };
   t: (key: string) => string;
 }
-
 export function FinanceTab({
   financePeriod,
   onPeriodChange,
   financeQ,
-  _t,
+  t: _t,
 }: FinanceTabProps) {
   const financeSummary = financeQ.data;
 

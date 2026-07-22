@@ -827,7 +827,6 @@ export default function WorkOrderDetailPage() {
                       rel="noopener noreferrer"
                       className="block size-full"
                     >
-                      {/* biome-ignore lint/performance/noImgElement: dynamic user-uploaded URLs, Image component not suitable */}
                       <img
                         src={att.public_url ?? ""}
                         alt={att.file_name}

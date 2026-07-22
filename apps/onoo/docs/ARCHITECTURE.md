@@ -1,8 +1,12 @@
-# Onoo V2 Architecture
+# Onoo trusted-game-record architecture
 
-## Purpose
+## Purpose and scope
 
-Onoo V2 produces a trusted, reviewable basketball record for a contracted web-first pilot. It does not treat browser state, direct table writes, or derived statistics as authoritative.
+This document defines the trusted-game-record bounded context used by Onoo’s current league-first web pilot. It is one architecture slice inside the complete basketball operating system described in [the product vision](VISION.md).
+
+This context owns game journals, evidence, revisions, official statistics, standings, and their curated publication projections. It does not own canonical organizations and athlete identity, team operating rosters, academy enrollment, guardians, consent, or commerce. Those domains integrate through reviewed commands, events, and projections.
+
+The trusted-record context does not treat browser state, direct table writes, or derived statistics as authoritative.
 
 ## Authoritative data flow
 
@@ -22,12 +26,12 @@ flowchart LR
 
 | Layer | Authoritative content | Mutation rule |
 | --- | --- | --- |
-| Setup | league, season, roster, ruleset, assignments | authorized operations only |
+| Competition snapshot | league, season, official roster snapshot, ruleset, assignments | league operations submit through reviewed commands; the game stores the accepted snapshot |
 | Journal | ordered scorer operations and acknowledgement receipts | command-only, idempotent |
 | Source | tracker journal, official sheet, import, or manual evidence | submit then review |
 | Revision | normalized input, journal, projection, warnings | create then approve |
 | Projection | box score, standings, leaders | rebuilt from an approved revision only |
-| Publication | curated public views | verified/official and approved only |
+| Publication | curated public views | provisional only from a closed `final_pending_review` snapshot with explicit labeling; verified/official only from an approved revision |
 
 ## Authorization
 
@@ -44,8 +48,8 @@ The tracker persists every operation in IndexedDB before network delivery. Each 
 
 ## Publication and corrections
 
-A public game must have a reviewed source and approved revision. Curated views expose the revision number, source type, review timestamp, and approved projection. Corrections create new evidence and revisions rather than rewriting history.
+A provisional public game must come from the closed-snapshot contract, expose `final_pending_review`, source and revision identity, and display an explicit provisional label. League verification promotes an approved revision to verified or official without changing the stable public URL. Curated views expose status, revision number, source type, review timestamp, and the appropriate projection. Corrections create new evidence and revisions rather than rewriting history.
 
-## Non-goals during the pilot
+## Non-goals during the league pilot
 
-Mobile rollout, push/follows, athlete claims, broad consumer analytics, and unreviewed historical imports are frozen until paid-proof gates are met.
+Team operations, academy operations, commerce, guardian self-service, mobile rollout, push and follows, athlete claims, broad consumer analytics, and unreviewed historical imports remain outside this architecture slice until their roadmap gates pass.

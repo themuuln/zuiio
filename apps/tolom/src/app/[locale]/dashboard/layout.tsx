@@ -32,7 +32,6 @@ async function BrandThemeLoader() {
   const css = generateBrandCSS(config);
   if (!css) return null;
 
-  // biome-ignore lint/security/noDangerouslySetInnerHtml: Brand theme CSS from org settings
   return <style id="brand-theme" dangerouslySetInnerHTML={{ __html: css }} />;
 }
 

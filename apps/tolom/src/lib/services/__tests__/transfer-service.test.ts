@@ -273,7 +273,7 @@ describe("getTransfer", () => {
     expect(result.items?.[0].part_number).toBe("BP-001");
     expect(result.items?.[0].unit).toBe("pcs");
     expect(
-      (result.items?.[0] as unknown as { part: unknown }).part,
+      ((result.items ?? [])[0] as unknown as { part: unknown }).part,
     ).toBeUndefined();
     expect(
       (result as unknown as { from_branch: unknown }).from_branch,

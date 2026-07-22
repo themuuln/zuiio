@@ -104,12 +104,11 @@ function QueueItem({
   }, [workOrder.created_at]);
 
   return (
-    <div
+    <button
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      role="button"
-      tabIndex={0}
+      type="button"
       style={style}
       onClick={() => onItemClick?.(workOrder)}
       onKeyDown={(e) => {
@@ -118,7 +117,7 @@ function QueueItem({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
-        "flex items-center gap-2 border border-border/60 bg-card px-3 py-2 cursor-pointer select-none transition-colors touch-manipulation relative",
+        "flex items-center gap-2 border border-border/60 bg-card px-3 py-2 select-none transition-colors touch-manipulation relative",
         isDragging && "opacity-50 shadow-xl z-50",
         !isDragging && "hover:border-border hover:bg-muted/20",
         waitInfo.urgent &&
@@ -224,7 +223,7 @@ function QueueItem({
           {waitInfo.text}
         </span>
       </div>
-    </div>
+    </button>
   );
 }
 

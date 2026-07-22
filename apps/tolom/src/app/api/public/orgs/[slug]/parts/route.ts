@@ -174,12 +174,14 @@ export async function GET(
       if (!part?.is_active || part?.deleted_at) continue;
 
       // Brand aggregation
-      if (!makeSet.has(vm.make)) {
-        makeSet.set(vm.make, new Map());
+      let modelMap = makeSet.get(vm.make);
+      if (!modelMap) {
+        modelMap = new Map();
+        makeSet.set(vm.make, modelMap);
       }
-      const modelMap = makeSet.get(vm.make)!;
-      if (!modelMap.has(vm.id)) {
-        modelMap.set(vm.id, {
+      let entry = modelMap.get(vm.id);
+      if (!entry) {
+        entry = {
           id: vm.id,
           make: vm.make,
           model: vm.model,
@@ -187,14 +189,15 @@ export async function GET(
           year_start: vm.year_start,
           year_end: vm.year_end,
           part_count: 0,
-        });
+        };
+        modelMap.set(vm.id, entry);
       }
-      const entry = modelMap.get(vm.id)!;
       entry.part_count++;
 
       // Model aggregation (deduplicated)
-      if (!modelSet.has(vm.id)) {
-        modelSet.set(vm.id, {
+      let modelEntry = modelSet.get(vm.id);
+      if (!modelEntry) {
+        modelEntry = {
           id: vm.id,
           make: vm.make,
           model: vm.model,
@@ -202,9 +205,9 @@ export async function GET(
           year_start: vm.year_start,
           year_end: vm.year_end,
           part_count: 0,
-        });
+        };
+        modelSet.set(vm.id, modelEntry);
       }
-      const modelEntry = modelSet.get(vm.id)!;
       modelEntry.part_count++;
 
       // Parts with pricing logic

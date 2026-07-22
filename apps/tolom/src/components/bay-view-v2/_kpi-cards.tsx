@@ -365,7 +365,8 @@ export const KpiCards = React.memo(function KpiCards({
                 </span>
                 <div className="flex flex-col gap-1">
                   {activeBaySlots.map((bay) => {
-                    const wo = bay.workOrder!;
+                    if (!bay.workOrder) return null;
+                    const wo = bay.workOrder;
                     const elapsed = elapsedMinutes(wo.started_at);
                     return (
                       <button

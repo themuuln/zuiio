@@ -17,10 +17,12 @@ export function useVehicles(
 
   return useQuery({
     queryKey: vehicleKeys.list(orgId ?? "", query, branchId ?? null),
-    queryFn: () =>
-      fetchVehicles(orgId!, {
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchVehicles(orgId, {
         params: Object.keys(params).length ? params : undefined,
-      }),
+      });
+    },
     enabled: !!orgId,
     staleTime: 30_000,
     // Keep previous data visible while fetching new search results
@@ -35,7 +37,10 @@ export function useVehicle(
   const fetchVehicle = createOrgQuery<Vehicle>(`/vehicles/${vehicleId ?? ""}`);
   return useQuery({
     queryKey: vehicleKeys.detail(orgId ?? "", vehicleId ?? ""),
-    queryFn: () => fetchVehicle(orgId!),
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchVehicle(orgId);
+    },
     enabled: !!orgId && !!vehicleId,
     staleTime: 30_000,
   });

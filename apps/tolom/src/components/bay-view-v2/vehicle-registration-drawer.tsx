@@ -141,7 +141,6 @@ export function VehicleRegistrationDrawer({
   }, []);
 
   // Reset on open
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only reset on open toggle
   useEffect(() => {
     if (!open) return;
     setPlate("");

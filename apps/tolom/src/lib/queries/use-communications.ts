@@ -22,7 +22,10 @@ export function useCustomerCommunications(
   );
   return useQuery({
     queryKey: customerCommunicationKeys.list(orgId ?? "", customerId ?? ""),
-    queryFn: () => fetchCommunications(orgId!),
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchCommunications(orgId);
+    },
     enabled: !!orgId && !!customerId,
     staleTime: 30_000,
   });

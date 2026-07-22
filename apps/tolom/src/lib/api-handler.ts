@@ -122,7 +122,7 @@ export function createRouteHandler(
       const supabase = await createClient();
       const {
         data: { user },
-        error: getUserError,
+        error: _getUserError,
       } = await supabase.auth.getUser();
 
       if (!user) throw new UnauthorizedError();
@@ -231,7 +231,7 @@ export function createSimpleRouteHandler(
       let user: User | null = null;
 
       if (requireAuth) {
-        const { data, error: getUserError } = await supabase.auth.getUser();
+        const { data, error: _getUserError } = await supabase.auth.getUser();
 
         if (!data.user) throw new UnauthorizedError();
         user = data.user;

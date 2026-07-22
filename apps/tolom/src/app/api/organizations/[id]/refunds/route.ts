@@ -38,12 +38,10 @@ export const GET = createRouteHandler(
       | "failed"
       | "cancelled"
       | undefined;
-    const limit = searchParams.get("limit")
-      ? Number.parseInt(searchParams.get("limit")!, 10)
-      : 20;
-    const offset = searchParams.get("offset")
-      ? Number.parseInt(searchParams.get("offset")!, 10)
-      : 0;
+    const limitParam = searchParams.get("limit");
+    const limit = limitParam ? Number.parseInt(limitParam, 10) : 20;
+    const offsetParam = searchParams.get("offset");
+    const offset = offsetParam ? Number.parseInt(offsetParam, 10) : 0;
 
     const refunds = await getRefunds(supabase, orgId, {
       status,

@@ -92,7 +92,7 @@ export function CrudFormDrawer<T extends Record<string, unknown>>({
   defaultValues,
   onSubmit,
   isPending = false,
-  size = "md",
+  size: _size = "md",
   cancelLabel = "Cancel",
   submitLabel = { create: "Create", edit: "Save" },
   formClassName,

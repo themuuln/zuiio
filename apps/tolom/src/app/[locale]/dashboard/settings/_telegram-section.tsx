@@ -187,7 +187,6 @@ export function TelegramSection() {
         {deepLink && qrDataUrl ? (
           <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/20 p-3 sm:flex-row sm:items-start">
             <div className="flex shrink-0 items-center justify-center rounded-md bg-background p-1">
-              {/* biome-ignore lint/performance/noImgElement: QR codes use inline data URIs, next/Image is not suitable */}
               <img src={qrDataUrl} alt={t("qrCodeAlt")} className="size-28" />
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">

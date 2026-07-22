@@ -29,7 +29,6 @@ Deno.serve({ timeout: 300000 }, async () => {
   }
 
   if (!expired || expired.length === 0) {
-    console.log("No expired subscriptions found");
     return new Response(JSON.stringify({ expired: 0 }), {
       headers: { "Content-Type": "application/json" },
     });
@@ -49,8 +48,6 @@ Deno.serve({ timeout: 300000 }, async () => {
       headers: { "Content-Type": "application/json" },
     });
   }
-
-  console.log(`Expired ${ids.length} subscriptions`);
   return new Response(JSON.stringify({ expired: ids.length }), {
     headers: { "Content-Type": "application/json" },
   });

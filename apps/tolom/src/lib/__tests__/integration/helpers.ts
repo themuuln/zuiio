@@ -12,13 +12,13 @@
  */
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/database.types";
+import type { Database } from "@/lib/types";
 
 // ── Environment ──────────────────────────────────────────────
 
 const supabaseUrl = process.env.SUPABASE_URL ?? "http://127.0.0.1:54321";
-const anonKey = process.env.SUPABASE_ANON_KEY!;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const anonKey = process.env.SUPABASE_ANON_KEY ?? "";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
 // ── Client Factories ─────────────────────────────────────────
 

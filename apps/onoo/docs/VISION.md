@@ -96,6 +96,16 @@ Shared identity and organizations
 
 Each domain owns its source records. Cross-domain surfaces compose versioned, authorized projections rather than rewriting another domain’s data.
 
+| Record or decision | Authoritative domain |
+| --- | --- |
+| Users, organizations, teams, memberships, and canonical athlete identity | Identity and organizations |
+| Competition entries, eligibility, official roster snapshots, and schedules | League operations |
+| Team staff, roster intent, availability, training, and logistics | Team operations |
+| Programs, enrollment, guardians, consent, and training attendance | Academy operations |
+| Invoices, payment events, refunds, settlement, and provider reconciliation | Commerce |
+| Official game events, revisions, statistics, and standings | Trusted game records |
+| Combined athlete timelines and public pages | Read-only composed projections |
+
 ### Trusted-record data flow
 
 ```text
