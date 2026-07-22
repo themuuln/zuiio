@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { createContext, useContext, useRef } from "react";
-import { cn } from "@/lib/utils";
 import { useInView } from "@/lib/animations";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // All animations are intentionally subtle: small opacity + translateY shifts,
@@ -62,7 +62,8 @@ export function AnimatedCounter({
       )}
       style={{ transitionDuration: "0.4s" }}
     >
-      {formatted}{suffix}
+      {formatted}
+      {suffix}
     </span>
   );
 }

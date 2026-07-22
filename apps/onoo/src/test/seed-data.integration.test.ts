@@ -214,7 +214,7 @@ describe("seed data integrity", () => {
       cityCounts.set(row.city, (cityCounts.get(row.city) ?? 0) + 1);
     }
     // Ulaanbaatar has multiple venues
-    expect((cityCounts.get("Улаанбаатар") ?? 0)).toBeGreaterThanOrEqual(5);
+    expect(cityCounts.get("Улаанбаатар") ?? 0).toBeGreaterThanOrEqual(5);
     // All capacities are positive or null
     for (const row of rows) {
       if (row.capacity !== null) {

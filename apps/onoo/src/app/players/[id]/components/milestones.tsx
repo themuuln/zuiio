@@ -110,11 +110,7 @@ export function Milestones({
 
   return (
     <section
-      aria-label={
-        locale === "mn"
-          ? "Амжилтууд"
-          : "Milestones"
-      }
+      aria-label={locale === "mn" ? "Амжилтууд" : "Milestones"}
       className={cn("space-y-4", className)}
     >
       {/* Achievement count */}

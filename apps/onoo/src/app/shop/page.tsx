@@ -3,8 +3,6 @@ import { getShopProducts } from "@/app/lib/data-shop";
 import { ShopCatalogueClient } from "./components/shop-catalogue-client";
 import { ShopPageSkeleton } from "./components/shop-skeleton";
 
-export const instant = false;
-
 export const metadata = {
   title: "Дэлгүүр | Onoo",
   description: "Onoo брэндийн бүтээгдэхүүн худалдан авах",

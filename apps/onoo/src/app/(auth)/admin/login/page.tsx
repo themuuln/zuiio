@@ -22,7 +22,8 @@ export default function LoginPage() {
   const AUTH_ERRORS: Record<string, string> = {
     "Invalid login credentials": "Имэйл эсвэл нууц үг буруу байна",
     "Email not confirmed": "Имэйл баталгаажаагүй байна",
-    "Rate limit exceeded": "Хэт олон удаа оролдсон. Түр хүлээгээд дахин оролдоно уу",
+    "Rate limit exceeded":
+      "Хэт олон удаа оролдсон. Түр хүлээгээд дахин оролдоно уу",
     "Invalid email": "Имэйл хаяг буруу байна",
   };
 

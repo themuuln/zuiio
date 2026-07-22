@@ -18,7 +18,11 @@ export function RevenueSplitBar({
   parts,
   loading,
 }: RevenueSplitBarProps) {
-  const t = useTranslations("finance") as (
+  const financeT = useTranslations("finance") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const t = useTranslations() as (
     key: string,
     values?: Record<string, string | number>,
   ) => string;
@@ -33,7 +37,7 @@ export function RevenueSplitBar({
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold">
-          {t("revenueBreakdown")}
+          {financeT("revenueBreakdown")}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">

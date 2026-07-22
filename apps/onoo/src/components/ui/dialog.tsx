@@ -50,10 +50,32 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onOpenAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
 }) {
+  const handleOpenAutoFocus = (
+    e: Parameters<NonNullable<typeof onOpenAutoFocus>>[0],
+  ) => {
+    // Call any user-supplied handler first
+    onOpenAutoFocus?.(e);
+    if (e.defaultPrevented) return;
+
+    // Auto-focus the first form input when dialog opens
+    const container = e.currentTarget as HTMLElement | null;
+    if (!container) return;
+    const firstInput = container.querySelector<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >(
+      'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])',
+    );
+    if (firstInput) {
+      e.preventDefault();
+      firstInput.focus();
+    }
+  };
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
@@ -63,6 +85,7 @@ function DialogContent({
           "fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
           className,
         )}
+        onOpenAutoFocus={handleOpenAutoFocus}
         {...props}
       >
         {children}

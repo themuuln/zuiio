@@ -1,12 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { CircleDot, Search, Trophy } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui";
-import { SearchCommand } from "./search-command";
+import { cn } from "@/lib/utils";
+
+// Lazy-load the search dialog — saves ~10K + Dialog/Input/icon code from every page
+const SearchCommand = dynamic(
+  () => import("./search-command").then((m) => ({ default: m.SearchCommand })),
+  { ssr: false },
+);
 
 const NAV_ITEMS = [
   { href: "/", label: "Нүүр хуудас" },

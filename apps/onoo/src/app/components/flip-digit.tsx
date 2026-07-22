@@ -28,10 +28,7 @@ export function FlipDigit({ value, className }: FlipDigitProps) {
 
   return (
     <span
-      className={cn(
-        "relative inline-block overflow-hidden",
-        className,
-      )}
+      className={cn("relative inline-block overflow-hidden", className)}
       aria-hidden="true"
     >
       <span

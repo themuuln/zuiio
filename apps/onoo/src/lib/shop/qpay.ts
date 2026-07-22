@@ -56,8 +56,7 @@ export function getQPayConfig(): QPayConfig {
   return {
     clientId: requireEnv("QPAY_CLIENT_ID"),
     clientSecret: requireEnv("QPAY_CLIENT_SECRET"),
-    baseUrl:
-      process.env.QPAY_BASE_URL || "https://merchant-sandbox.qpay.mn",
+    baseUrl: process.env.QPAY_BASE_URL || "https://merchant-sandbox.qpay.mn",
     invoiceCode: requireEnv("QPAY_INVOICE_CODE"),
   };
 }
@@ -124,17 +123,14 @@ export async function getAccessToken(config: QPayConfig): Promise<string> {
 
   const credentials = btoa(`${config.clientId}:${config.clientSecret}`);
 
-  const response = await fetch(
-    `${config.baseUrl}/auth/token`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${credentials}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({}),
+  const response = await fetch(`${config.baseUrl}/auth/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({}),
+  });
 
   if (!response.ok) {
     const body = await response.text();
@@ -210,23 +206,20 @@ export async function checkPayment(
 ): Promise<QPayPaymentStatus> {
   const token = await getAccessToken(config);
 
-  const response = await qpayFetch(
-    `${config.baseUrl}/payment/check`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        object_type: "INVOICE",
-        object_id: invoiceId,
-        offset: {
-          page_number: 1,
-          page_limit: 100,
-        },
-      }),
+  const response = await qpayFetch(`${config.baseUrl}/payment/check`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
     },
-  );
+    body: JSON.stringify({
+      object_type: "INVOICE",
+      object_id: invoiceId,
+      offset: {
+        page_number: 1,
+        page_limit: 100,
+      },
+    }),
+  });
 
   const data = await response.json();
 
@@ -237,7 +230,7 @@ export async function checkPayment(
   const firstRow = rows[0] as Record<string, unknown> | undefined;
 
   return {
-    status: isPaid ? (firstRow?.status as string) ?? "PAID" : "UNPAID",
+    status: isPaid ? ((firstRow?.status as string) ?? "PAID") : "UNPAID",
     paidAmount: data.paid_amount ?? data.paidAmount ?? 0,
     currency: data.currency ?? "MNT",
     invoiceId: data.invoice_id ?? data.invoiceId ?? invoiceId,

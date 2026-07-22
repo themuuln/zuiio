@@ -30,7 +30,7 @@ export const COURT_ZONES: CourtZone[] = [
     cy: 460,
     r: 60,
     label: "Paint",
-    weight2pt: 0.40,
+    weight2pt: 0.4,
     weight3pt: 0,
   },
   // Left block
@@ -41,7 +41,7 @@ export const COURT_ZONES: CourtZone[] = [
     cy: 430,
     r: 35,
     label: "Left Block",
-    weight2pt: 0.10,
+    weight2pt: 0.1,
     weight3pt: 0,
   },
   // Right block
@@ -52,7 +52,7 @@ export const COURT_ZONES: CourtZone[] = [
     cy: 430,
     r: 35,
     label: "Right Block",
-    weight2pt: 0.10,
+    weight2pt: 0.1,
     weight3pt: 0,
   },
   // Mid-range left
@@ -119,7 +119,7 @@ export const COURT_ZONES: CourtZone[] = [
     r: 40,
     label: "Top of Key 3",
     weight2pt: 0,
-    weight3pt: 0.30,
+    weight3pt: 0.3,
   },
   // Left corner 3
   {
@@ -130,7 +130,7 @@ export const COURT_ZONES: CourtZone[] = [
     r: 30,
     label: "Left Corner 3",
     weight2pt: 0,
-    weight3pt: 0.10,
+    weight3pt: 0.1,
   },
   // Right corner 3
   {
@@ -141,6 +141,6 @@ export const COURT_ZONES: CourtZone[] = [
     r: 30,
     label: "Right Corner 3",
     weight2pt: 0,
-    weight3pt: 0.10,
+    weight3pt: 0.1,
   },
 ];

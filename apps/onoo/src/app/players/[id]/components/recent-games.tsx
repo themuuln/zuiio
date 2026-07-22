@@ -47,24 +47,18 @@ export function RecentGames({ gameLines, className }: RecentGamesProps) {
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--brand-sports)]">
-            {
-              "Тоглолтын хэмнэл"
-            }
+            {"Тоглолтын хэмнэл"}
           </p>
           <h2
             id="recent-heading"
             className="mt-1 text-xl font-bold tracking-tight"
           >
-            {
-              "Сүүлийн тоглотууд"
-            }
+            {"Сүүлийн тоглотууд"}
           </h2>
         </div>
         {lastFive.length > 0 && (
           <span className="text-xs text-muted-foreground">
-            {
-              "Шинэ → хуучин"
-            }
+            {"Шинэ → хуучин"}
           </span>
         )}
       </div>
@@ -162,14 +156,10 @@ export function RecentGames({ gameLines, className }: RecentGamesProps) {
             aria-hidden="true"
           />
           <h3 className="mt-3 font-semibold">
-            {
-              "Тоглолтын мэдээл хараахан алга"
-            }
+            {"Тоглолтын мэдээл хараахан алга"}
           </h3>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            {
-              "Баталгаажсан тоглолтын дараа сүүлийн форм энд харгагдана."
-            }
+            {"Баталгаажсан тоглолтын дараа сүүлийн форм энд харгагдана."}
           </p>
         </div>
       )}

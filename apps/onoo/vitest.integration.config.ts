@@ -13,7 +13,7 @@ export default defineConfig({
     env: {
       INTEGRATION_DATABASE_URL:
         process.env.INTEGRATION_DATABASE_URL ||
-        "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
+        "postgresql://postgres:postgres@127.0.0.1:54323/postgres",
     },
   },
   resolve: {

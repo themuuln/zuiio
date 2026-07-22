@@ -63,9 +63,7 @@ function GaugeRing({
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div
-        className="relative w-full max-w-24 aspect-square"
-      >
+      <div className="relative w-full max-w-24 aspect-square">
         <RadialBarChart
           width={GAUGE_SIZE}
           height={GAUGE_SIZE}
@@ -153,9 +151,7 @@ function PointsBreakdown({
   return (
     <div className="space-y-3 pt-3">
       <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        {
-          "Онооны бүтцэл"
-        }
+        {"Онооны бүтцэл"}
       </p>
       <div
         className="flex h-3 overflow-hidden rounded-full"
@@ -213,15 +209,9 @@ export function ShootingProfile({
     return (
       <Card className={className}>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">
-            {
-              "Пүршилтийн профиль"
-            }
-          </CardTitle>
+          <CardTitle className="text-lg">{"Пүршилтийн профиль"}</CardTitle>
           <CardDescription>
-            {
-              "Орололт, гурвалжин, шийдлийн нарийвчлал"
-            }
+            {"Орололт, гурвалжин, шийдлийн нарийвчлал"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -231,14 +221,10 @@ export function ShootingProfile({
               aria-hidden="true"
             />
             <p className="mt-3 font-semibold">
-              {
-                "Шидэлтийн мэдээл хараахан алга"
-              }
+              {"Шидэлтийн мэдээл хараахан алга"}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {
-                "Баталгаажсан оролдлогын дараа харьца энд гарна."
-              }
+              {"Баталгаажсан оролдлогын дараа харьца энд гарна."}
             </p>
           </div>
         </CardContent>
@@ -249,15 +235,9 @@ export function ShootingProfile({
   return (
     <Card className={cn("h-full", className)}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg">
-          {
-            "Пүршилтийн профиль"
-          }
-        </CardTitle>
+        <CardTitle className="text-lg">{"Пүршилтийн профиль"}</CardTitle>
         <CardDescription>
-          {
-            "Орололт, гурвалжин, шийдлийн нарийвчлал"
-          }
+          {"Орололт, гурвалжин, шийдлийн нарийвчлал"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">

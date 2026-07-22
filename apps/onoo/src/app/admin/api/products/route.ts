@@ -25,4 +25,3 @@ export const POST = productsRoute.create((body) => {
     is_available: body.is_available ?? true,
   };
 });
-

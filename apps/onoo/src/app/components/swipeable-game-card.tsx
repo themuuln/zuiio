@@ -4,8 +4,8 @@ import { BarChart3, ListOrdered, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { GameCard } from "./game-card";
 import type { GameWithTeams } from "../lib/shared";
+import { GameCard } from "./game-card";
 
 interface SwipeableGameCardProps {
   game: GameWithTeams;
@@ -109,7 +109,7 @@ export function SwipeableGameCard({
         className="transition-transform duration-200 ease-out"
         style={{ transform: `translateX(-${offset}px)` }}
       >
-        <GameCard game={game} featured={featured} />
+        <GameCard game={game} />
       </div>
     </div>
   );

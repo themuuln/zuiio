@@ -140,7 +140,6 @@
     "lightningcss-darwin-arm64": "^1.32.0",
     "msw": "^2.15.0",
     "react-doctor": "^0.8.1",
-    "react-grab": "^0.1.48",
     "shadcn": "^4.13.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",

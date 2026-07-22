@@ -16,6 +16,7 @@ import { FAQ } from "@/components/landing/faq";
 import { Features } from "@/components/landing/features";
 import { Hero } from "@/components/landing/hero";
 import { Pricing } from "@/components/landing/pricing";
+import { Sponsors } from "@/components/landing/sponsors";
 import { Stats } from "@/components/landing/stats";
 import { Testimonials } from "@/components/landing/testimonials";
 
@@ -24,6 +25,7 @@ export default function LandingPage() {
     <>
       <Hero />
       <Features />
+      <Sponsors />
       <Stats />
       <Testimonials />
       <Pricing />

@@ -11,7 +11,7 @@ interface FlipScoreProps {
 
 function getDigits(n: number): number[] {
   if (n < 10) return [n];
-  return String(n).split('').map(Number);
+  return String(n).split("").map(Number);
 }
 
 export function FlipScore({ homeScore, awayScore, className }: FlipScoreProps) {
@@ -22,13 +22,23 @@ export function FlipScore({ homeScore, awayScore, className }: FlipScoreProps) {
     <div className={cn("flex items-center gap-2 tabular-nums", className)}>
       <div className="flex gap-0.5">
         {homeDigits.map((d, i) => (
-          <FlipDigit key={`h-${i}`} value={d} className="stat-number text-4xl sm:text-6xl lg:text-7xl" />
+          <FlipDigit
+            key={`h-${i}`}
+            value={d}
+            className="stat-number text-4xl sm:text-6xl lg:text-7xl"
+          />
         ))}
       </div>
-      <span className="stat-number text-4xl text-sidebar-foreground/30 sm:text-6xl lg:text-7xl">–</span>
+      <span className="stat-number text-4xl text-sidebar-foreground/30 sm:text-6xl lg:text-7xl">
+        –
+      </span>
       <div className="flex gap-0.5">
         {awayDigits.map((d, i) => (
-          <FlipDigit key={`a-${i}`} value={d} className="stat-number text-4xl sm:text-6xl lg:text-7xl" />
+          <FlipDigit
+            key={`a-${i}`}
+            value={d}
+            className="stat-number text-4xl sm:text-6xl lg:text-7xl"
+          />
         ))}
       </div>
     </div>

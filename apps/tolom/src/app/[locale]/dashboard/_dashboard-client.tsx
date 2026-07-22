@@ -373,6 +373,10 @@ export default function DashboardPage() {
           accentKey="totalRevenue"
           trend={revenueTrendKpi}
           comparisonLabel={revenueTrendKpi ? vsPrevLabel : undefined}
+          sparklineData={
+            data?.revenueTrend?.map((p) => ({ value: p.revenue })) ?? undefined
+          }
+          sparklineColor="var(--chart-1)"
         />
         <KpiCard
           label={t("dashboard.activeWorkOrders")}
@@ -387,6 +391,12 @@ export default function DashboardPage() {
           icon={Users}
           loading={isDataLoading}
           accentKey="totalCustomers"
+          sparklineData={
+            data?.customerAcquisitionTrend?.map((p) => ({
+              value: p.newCustomers,
+            })) ?? undefined
+          }
+          sparklineColor="var(--chart-2)"
         />
         <KpiCard
           label={t("dashboard.avgRepairOrder")}

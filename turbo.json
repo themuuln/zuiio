@@ -26,19 +26,6 @@
       ],
       "passThroughEnv": [
         "AGENT_GATEWAY_URL",
-        "OPENCODE_API_KEY",
-        "OPENCODE_BASE_URL",
-        "OPENCODE_MODEL",
-        "TELEGRAM_BOT_TOKEN",
-        "TELEGRAM_BOT_USERNAME",
-        "TELEGRAM_WEBHOOK_SECRET",
-        "TOKEN_SIGNING_SECRET",
-        "TOLOM_SUPABASE_URL",
-        "TOLOM_SUPABASE_SERVICE_ROLE_KEY",
-        "FB_APP_SECRET",
-        "FB_VERIFY_TOKEN",
-        "SUPABASE_SERVICE_ROLE_KEY",
-        "SUPABASE_URL",
         "GROQ_API_KEY"
       ]
     },

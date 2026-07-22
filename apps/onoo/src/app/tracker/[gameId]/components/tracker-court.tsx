@@ -38,24 +38,21 @@ export function TrackerCourt({
   const svgRef = useRef<SVGSVGElement>(null);
   const [dot, setDot] = useState<{ x: number; y: number } | null>(null);
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent<SVGSVGElement>) => {
-      const svg = svgRef.current;
-      if (!svg) return;
+  const handleClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    const svg = svgRef.current;
+    if (!svg) return;
 
-      const pt = svg.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      const svgPt = pt.matrixTransform(svg.getScreenCTM()!.inverse());
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgPt = pt.matrixTransform(svg.getScreenCTM()?.inverse());
 
-      // Clamp to court bounds
-      const x = Math.max(20, Math.min(580, Math.round(svgPt.x)));
-      const y = Math.max(20, Math.min(530, Math.round(svgPt.y)));
+    // Clamp to court bounds
+    const x = Math.max(20, Math.min(580, Math.round(svgPt.x)));
+    const y = Math.max(20, Math.min(530, Math.round(svgPt.y)));
 
-      setDot({ x, y });
-    },
-    [],
-  );
+    setDot({ x, y });
+  }, []);
 
   const confirm = useCallback(() => {
     if (dot) onShotLocation(dot.x, dot.y);
@@ -69,7 +66,6 @@ export function TrackerCourt({
         ref={svgRef}
         viewBox={`0 0 ${COURT_WIDTH} ${COURT_HEIGHT}`}
         className="w-full max-w-[280px] cursor-crosshair touch-none select-none"
-        role="button"
         aria-label="Shot location picker"
         onClick={handleClick}
       >

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 const SHOP = "/shop";
 const PRODUCT_URL = "/shop/onoo-t-shirt";
@@ -6,7 +6,8 @@ const ADMIN_PRODUCTS = "/admin/products";
 const ADMIN_ORDERS = "/admin/orders";
 const LOGIN_URL = "/auth/login";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54325";
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54325";
 const ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
@@ -120,7 +121,17 @@ test.describe("Shop — checkout flow", () => {
   test("opens order dialog", async ({ page }) => {
     await page.route("**/api/shop/orders", async (route) => {
       if (route.request().method() === "POST")
-        await route.fulfill({ status: 200, json: { orderId: "o1", totalMnt: 35000, qrImage: "data:qr", qrText: "qpay://t", merchantInvoiceId: "M1", expiresIn: 300 } });
+        await route.fulfill({
+          status: 200,
+          json: {
+            orderId: "o1",
+            totalMnt: 35000,
+            qrImage: "data:qr",
+            qrText: "qpay://t",
+            merchantInvoiceId: "M1",
+            expiresIn: 300,
+          },
+        });
     });
     await page.getByText("Худалдаж авах").click();
     await expect(page.getByText("Захиалга баталгаажуулах")).toBeVisible();
@@ -141,7 +152,17 @@ test.describe("Shop — checkout flow", () => {
     await page.route("**/api/shop/orders", async (route) => {
       if (route.request().method() === "POST") {
         postedBody = route.request().postDataJSON();
-        await route.fulfill({ status: 200, json: { orderId: "o2", totalMnt: 35000, qrImage: "data:qr", qrText: "qpay://o2", merchantInvoiceId: "M2", expiresIn: 300 } });
+        await route.fulfill({
+          status: 200,
+          json: {
+            orderId: "o2",
+            totalMnt: 35000,
+            qrImage: "data:qr",
+            qrText: "qpay://o2",
+            merchantInvoiceId: "M2",
+            expiresIn: 300,
+          },
+        });
       }
     });
     await page.getByText("Худалдаж авах").click();
@@ -155,7 +176,10 @@ test.describe("Shop — checkout flow", () => {
   test("shows error toast on API failure", async ({ page }) => {
     await page.route("**/api/shop/orders", async (route) => {
       if (route.request().method() === "POST")
-        await route.fulfill({ status: 400, json: { error: "Бараа дууссан байна" } });
+        await route.fulfill({
+          status: 400,
+          json: { error: "Бараа дууссан байна" },
+        });
     });
     await page.getByText("Худалдаж авах").click();
     await page.getByPlaceholder("Таны нэр").fill("Бат");
@@ -179,7 +203,9 @@ test.describe("Admin — shop", () => {
     await signInAsAdmin(page);
     await page.goto(ADMIN_PRODUCTS);
     await page.waitForLoadState("networkidle");
-    await expect(page.getByText("Бүтээгдэхүүн")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Бүтээгдэхүүн")).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("shows orders page", async ({ page }) => {

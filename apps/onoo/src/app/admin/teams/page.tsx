@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import { leaguesApi, type TeamRow, teamsApi } from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
+import { PhotoUploader } from "@/components/admin/photo-uploader";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -47,6 +48,8 @@ const teamSchema = z.object({
 });
 
 export default function TeamsPage() {
+  const queryClient = useQueryClient();
+
   const [leagueFilter, setLeagueFilter] = useState<string>("all");
 
   const { data: leagues = [] } = useQuery({
@@ -118,7 +121,7 @@ export default function TeamsPage() {
               <TableHead>Нэр</TableHead>
               <TableHead>Товчлол</TableHead>
               <TableHead>Өнгө</TableHead>
-              <TableHead>Лиг</TableHead>
+              <TableHead>Лого</TableHead>
               <TableHead className="w-[100px]">Үйлдэл</TableHead>
             </TableRow>
           </TableHeader>
@@ -136,6 +139,18 @@ export default function TeamsPage() {
                       team.primary_color
                         ? `Өнгө: ${team.primary_color}`
                         : "Өнгө сонгогдоогүй"
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <PhotoUploader
+                    entityId={team.id}
+                    entityType="team"
+                    currentUrl={team.logo_url}
+                    onUploaded={() =>
+                      queryClient.invalidateQueries({
+                        queryKey: ["admin", "teams"],
+                      })
                     }
                   />
                 </TableCell>

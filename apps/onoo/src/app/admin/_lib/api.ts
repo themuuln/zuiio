@@ -263,6 +263,14 @@ export const revisionsApi = {
     if (error) throw new Error(error.message);
     return data as RevisionRow;
   },
+  rebuildProjection: async (gameId: string) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("cmd_rebuild_projection", {
+      p_game_id: gameId,
+    });
+    if (error) throw new Error(error.message);
+    return data as { id: string };
+  },
 };
 
 // ── Shop: Products ──
@@ -282,7 +290,9 @@ export interface ShopProductRow {
   category?: string;
 }
 
-export const shopProductsApi = createEntityApi<ShopProductRow>(`${BASE}/products`);
+export const shopProductsApi = createEntityApi<ShopProductRow>(
+  `${BASE}/products`,
+);
 
 // ── Shop: Orders ──
 
@@ -312,4 +322,117 @@ export const shopOrdersApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "cancel", orderId }),
     }).then((r) => r.json()),
+};
+
+// ── Awards ──
+
+export interface AwardRow {
+  id: string;
+  competition_id: string;
+  award_type: "player_of_week" | "mvp" | "top_scorer";
+  period_start: string | null;
+  period_end: string | null;
+  player_id: string;
+  note: string | null;
+  granted_at: string;
+  players?: {
+    canonical_name: string;
+    photo_url: string | null;
+    short_code: string | null;
+  } | null;
+  profiles?: { display_name: string } | null;
+}
+
+export const awardsApi = {
+  list: () => request<AwardRow[]>(`${BASE}/awards`),
+  grant: (data: {
+    competition_id: string;
+    award_type: string;
+    player_id: string;
+    period_start?: string;
+    period_end?: string;
+    note?: string;
+  }) =>
+    request<AwardRow>(`${BASE}/awards`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+// ── Academy: Profiles ──
+
+export interface AcademyProfileRow {
+  id: string;
+  organization_id: string;
+  name: string;
+  logo_url: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  timezone: string;
+  settings: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Academy: Programs ──
+
+export interface AcademyProgramRow {
+  id: string;
+  academy_id: string;
+  name: string;
+  description: string | null;
+  age_group: string | null;
+  price_mnt: number | null;
+  duration_weeks: number | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+// ── Academy: Trainers ──
+
+export interface AcademyTrainerRow {
+  id: string;
+  academy_id: string;
+  name: string;
+  photo_url: string | null;
+  specialties: string[];
+  bio: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+// ── Academy: Locations ──
+
+export interface AcademyLocationRow {
+  id: string;
+  academy_id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  hours: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+// ── Academy: API ──
+
+export const academyApi = {
+  profile: {
+    get: () => request<AcademyProfileRow[]>(`${BASE}/academy/profile`),
+    getById: (id: string) =>
+      request<AcademyProfileRow>(`${BASE}/academy/profile/${id}`),
+    update: (id: string, data: Partial<AcademyProfileRow>) =>
+      request<AcademyProfileRow>(`${BASE}/academy/profile/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    seed: (name?: string) =>
+      request<AcademyProfileRow>(`${BASE}/academy/profile`, {
+        method: "POST",
+        body: JSON.stringify({ action: "seed", name }),
+      }),
+  },
+  programs: createEntityApi<AcademyProgramRow>(`${BASE}/academy/programs`),
+  trainers: createEntityApi<AcademyTrainerRow>(`${BASE}/academy/trainers`),
+  locations: createEntityApi<AcademyLocationRow>(`${BASE}/academy/locations`),
 };

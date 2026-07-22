@@ -1,16 +1,21 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { createMockRequest, parseResponse } from "@/test/mocks";
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
 }));
 
-import { createClient } from "@/lib/supabase/server";
 import { POST as OrdersPost } from "@/app/api/shop/orders/route";
 import { POST as CallbackPost } from "@/app/api/shop/qpay/callback/route";
+import { createClient } from "@/lib/supabase/server";
 
 interface MockSupabaseClient {
-  rpc: Mock<(name: string, params?: Record<string, unknown>) => Promise<{ data: unknown; error: Error | null }>>;
+  rpc: Mock<
+    (
+      name: string,
+      params?: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: Error | null }>
+  >;
 }
 
 const mockCreateClient = vi.mocked(createClient);

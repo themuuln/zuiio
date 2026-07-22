@@ -157,6 +157,22 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
     },
   });
 
+  const rebuildProjection = useMutation({
+    mutationFn: () => revisionsApi.rebuildProjection(gameId),
+    onSuccess: () => {
+      toast.success("Төсөөллийг дахин бүтээлээ");
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "game", gameId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "game", gameId, "revisions"],
+      });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Алдаа гарлаа");
+    },
+  });
+
   function handleApproveSubmission(sub: SubmissionRow) {
     if (!window.confirm("Илгээлтийг зөвшөөрөх үү? Энэ нь бүхнийг зөвшөөрнө."))
       return;
@@ -446,6 +462,27 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
               )}
             </div>
           )}
+
+          <div className="flex justify-end border-t pt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={rebuildProjection.isPending}
+              onClick={() => {
+                if (
+                  !window.confirm(
+                    "Баталгаажсан нэмэлтээс төсөөллийг дахин бүтээх үү?",
+                  )
+                )
+                  return;
+                rebuildProjection.mutate();
+              }}
+              aria-label="Төсөөллийг дахин бүтээх"
+            >
+              <span className="mr-1">⟳</span>
+              Төсөөллийг дахин бүтээх
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

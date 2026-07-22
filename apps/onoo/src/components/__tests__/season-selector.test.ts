@@ -7,9 +7,13 @@ interface Competition {
   season: string;
 }
 
-function deriveCompetitions<T extends { competition_id: string; competition_name: string; season_name?: string }>(
-  data: T[],
-): Competition[] {
+function deriveCompetitions<
+  T extends {
+    competition_id: string;
+    competition_name: string;
+    season_name?: string;
+  },
+>(data: T[]): Competition[] {
   const map = new Map<string, Competition>();
   for (const row of data) {
     if (!map.has(row.competition_id)) {
@@ -32,9 +36,24 @@ function filterByCompetition<T extends { competition_id: string }>(
 
 describe("Season/Competition Selector", () => {
   const data = [
-    { competition_id: "c1", competition_name: "League A", season_name: "2024", player_id: "p1" },
-    { competition_id: "c1", competition_name: "League A", season_name: "2024", player_id: "p2" },
-    { competition_id: "c2", competition_name: "League B", season_name: "2024", player_id: "p3" },
+    {
+      competition_id: "c1",
+      competition_name: "League A",
+      season_name: "2024",
+      player_id: "p1",
+    },
+    {
+      competition_id: "c1",
+      competition_name: "League A",
+      season_name: "2024",
+      player_id: "p2",
+    },
+    {
+      competition_id: "c2",
+      competition_name: "League B",
+      season_name: "2024",
+      player_id: "p3",
+    },
   ];
 
   it("derives unique competitions", () => {

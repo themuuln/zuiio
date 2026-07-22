@@ -1,8 +1,8 @@
 "use client";
 
-import { format } from "date-fns";
-import { Loader2, Package, Ship, XCircle } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { Loader2, Ship, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { ShopOrderRow } from "@/app/admin/_lib/api";
 import { shopOrdersApi } from "@/app/admin/_lib/api";
@@ -10,7 +10,13 @@ import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const statusLabels: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
   pending: { label: "Хүлээгдэж буй", variant: "secondary" },
   paid: { label: "Төлөгдсөн", variant: "default" },
   shipped: { label: "Хүргэгдсэн", variant: "outline" },

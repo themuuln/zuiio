@@ -9,8 +9,8 @@ vi.mock("unpdf", () => ({
   extractTextItems: vi.fn(),
 }));
 
-import { createClient } from "@/lib/supabase/server";
 import { extractTextItems, getDocumentProxy } from "unpdf";
+import { createClient } from "@/lib/supabase/server";
 import { POST } from "../games/[id]/official-stats/route";
 
 const PDF_LINES = [
@@ -22,10 +22,7 @@ const PDF_LINES = [
   "2 . BILGEERDEM 17:42 6/13 46.2 5/6 83.3 1/7 14.3 7/13 53.8 1 4 5 0 0 4 2 1 0 0 +14 20",
 ];
 
-function createRequest(
-  file: File | null,
-  rightsConfirmed = true,
-): NextRequest {
+function createRequest(file: File | null, rightsConfirmed = true): NextRequest {
   const request = new Request("http://localhost/", {
     method: "POST",
   }) as NextRequest;
@@ -65,7 +62,10 @@ describe("official statistics import API", () => {
     vi.clearAllMocks();
     upload.mockResolvedValue({ error: null });
     remove.mockResolvedValue({ error: null });
-    rpc.mockResolvedValue({ data: { submission_id: "submission-1" }, error: null });
+    rpc.mockResolvedValue({
+      data: { submission_id: "submission-1" },
+      error: null,
+    });
     mockGetDocumentProxy.mockResolvedValue({} as never);
     mockExtractTextItems.mockResolvedValue({
       items: [
@@ -75,14 +75,23 @@ describe("official statistics import API", () => {
     } as never);
     // Chainable supabase.from() mock for games and rosters queries
     const singleFn = vi.fn().mockResolvedValue({
-      data: { home_team_season_id: "season-home-1", away_team_season_id: "season-away-1" },
+      data: {
+        home_team_season_id: "season-home-1",
+        away_team_season_id: "season-away-1",
+      },
       error: null,
     });
-    const chainableSelect = vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ single: singleFn }) });
+    const chainableSelect = vi
+      .fn()
+      .mockReturnValue({ eq: vi.fn().mockReturnValue({ single: singleFn }) });
     const chainableEq = vi.fn().mockReturnValue({ select: chainableSelect });
     const fromFn = vi.fn((table: string) => {
       if (table === "games") {
-        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ single: singleFn }) }) };
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({ single: singleFn }),
+          }),
+        };
       }
       // game_rosters
       return { select: vi.fn().mockReturnValue({ eq: chainableEq }) };
@@ -102,10 +111,9 @@ describe("official statistics import API", () => {
   });
 
   it("stores a FIBA PDF as evidence and submits parsed values through cmd_submit_source", async () => {
-    const response = await POST(
-      createRequest(makeFile()),
-      { params: Promise.resolve({ id: "game-1" }) },
-    );
+    const response = await POST(createRequest(makeFile()), {
+      params: Promise.resolve({ id: "game-1" }),
+    });
     expect(response.status).toBe(201);
     expect(upload).toHaveBeenCalledWith(
       expect.stringMatching(/^game-1\/.+\.pdf$/),
@@ -134,10 +142,9 @@ describe("official statistics import API", () => {
       },
     } as never);
 
-    const response = await POST(
-      createRequest(makeFile()),
-      { params: Promise.resolve({ id: "game-1" }) },
-    );
+    const response = await POST(createRequest(makeFile()), {
+      params: Promise.resolve({ id: "game-1" }),
+    });
 
     expect(response.status).toBe(401);
     expect(mockGetDocumentProxy).not.toHaveBeenCalled();
@@ -147,10 +154,9 @@ describe("official statistics import API", () => {
     const noFile = await POST(createRequest(null), {
       params: Promise.resolve({ id: "game-1" }),
     });
-    const noRights = await POST(
-      createRequest(makeFile(), false),
-      { params: Promise.resolve({ id: "game-1" }) },
-    );
+    const noRights = await POST(createRequest(makeFile(), false), {
+      params: Promise.resolve({ id: "game-1" }),
+    });
 
     expect(noFile.status).toBe(400);
     expect(noRights.status).toBe(400);

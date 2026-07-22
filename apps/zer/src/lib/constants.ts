@@ -2,6 +2,7 @@ export const APP_NAME = "Zer";
 export const APP_DESCRIPTION = "Small business ERP system";
 
 export const PUBLIC_ROUTES = [
+  "/",
   "/landing",
   "/login",
   "/register",

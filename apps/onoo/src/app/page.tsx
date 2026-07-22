@@ -11,17 +11,21 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
-import { Button } from "@/components/ui"
-import { Card,
-CardAction,
-CardContent,
-CardHeader,
-CardTitle, } from "@/components/ui"
-import { Input } from "@/components/ui"
+import {
+  Button,
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+} from "@/components/ui";
+import { ViewBeacon } from "@/components/view-beacon";
 import { cn } from "@/lib/utils";
-import { PublicEmptyState } from "./components/public-empty-state";
 import { CountdownTimer } from "./components/countdown-timer";
 import { FlipScore } from "./components/flip-score";
+import { PublicEmptyState } from "./components/public-empty-state";
+import { Sponsors } from "./components/sponsors";
 import {
   getBoxScore,
   getGamesByDate,
@@ -72,6 +76,10 @@ export default async function HomePage() {
 
   return (
     <main className="flex flex-col">
+      <ViewBeacon
+        entityType="home"
+        entityId="00000000-0000-0000-0000-000000000000"
+      />
       {/* ── Hero: full-width dramatic scoreboard ── */}
       <section
         aria-labelledby="hero-heading"
@@ -191,14 +199,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-        {/* ── Countdown to next game ── */}
-        {!liveGame && heroGame && heroGame.status === "scheduled" && (
-          <CountdownTimer
-            targetIso={heroGame.scheduled_at}
-            label="Дараагийн тоглолт хүртэл"
-            className="border-b bg-[var(--surface-1)]"
-          />
-        )}
+      {/* ── Countdown to next game ── */}
+      {!liveGame && heroGame && heroGame.status === "scheduled" && (
+        <CountdownTimer
+          targetIso={heroGame.scheduled_at}
+          label="Дараагийн тоглолт хүртэл"
+          className="border-b bg-[var(--surface-1)]"
+        />
+      )}
 
       {/* ── Tonight's games ticker ── */}
       {tonightGames.length > 0 && (
@@ -720,6 +728,8 @@ export default async function HomePage() {
             </div>
           </section>
         )}
+
+        <Sponsors />
       </div>
     </main>
   );

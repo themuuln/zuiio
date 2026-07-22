@@ -1,44 +1,51 @@
 "use client";
 
-import { ArrowLeftRight, ArrowRight, GripVertical, Medal, Scale, Trophy } from "lucide-react";
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  horizontalListSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  ArrowLeftRight,
+  ArrowRight,
+  GripVertical,
+  Medal,
+  Scale,
+  Trophy,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@/components/ui";
-import { Button } from "@/components/ui";
 import {
+  Badge,
+  Button,
   Card,
   CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  Skeleton,
 } from "@/components/ui";
-import { Skeleton } from "@/components/ui";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  horizontalListSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { useState, useEffect } from "react";
-import { DraggablePlayerCard } from "./draggable-player-card";
-import { DragCompareZone } from "./drag-compare-zone";
 import { cn } from "@/lib/utils";
 import { PublicEmptyState } from "../../components/public-empty-state";
 import type { LeaderRow } from "../../lib/shared";
+import { DragCompareZone } from "./drag-compare-zone";
+import { DraggablePlayerCard } from "./draggable-player-card";
 
 interface CategoryConfig {
   key: string;
@@ -101,8 +108,14 @@ function SortableTabTrigger({
   isActive: boolean;
   onClick: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -146,7 +159,7 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
   const [activeTab, setActiveTab] = useState(categoryOrder[0]);
   const [compareMode, setCompareMode] = useState(false);
   const [comparePlayers, setComparePlayers] = useState<string[]>([]);
-  const [isDraggingPlayer, setIsDraggingPlayer] = useState(false);
+  const [isDraggingPlayer, _setIsDraggingPlayer] = useState(false);
   const router = useRouter();
 
   // Load saved order from localStorage
@@ -222,7 +235,11 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
           items={categoryOrder}
           strategy={horizontalListSortingStrategy}
         >
-          <div className="overflow-x-auto pb-1" role="tablist" aria-label="Ангилал сонгох">
+          <div
+            className="overflow-x-auto pb-1"
+            role="tablist"
+            aria-label="Ангилал сонгох"
+          >
             {orderedCategories.map((category) => (
               <SortableTabTrigger
                 key={category.key}
@@ -267,10 +284,7 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
         )}
       </div>
 
-      <DragCompareZone
-        players={comparePlayers}
-        isDragging={isDraggingPlayer}
-      />
+      <DragCompareZone players={comparePlayers} isDragging={isDraggingPlayer} />
 
       {/* Tab content */}
       {orderedCategories.map((category) => {
@@ -312,7 +326,8 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                         "h-full overflow-hidden shadow-none transition-[box-shadow,transform] group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none",
                         index === 0 ? "bg-sidebar text-sidebar-foreground" : "",
                         compareMode && "cursor-pointer",
-                        comparePlayers.includes(leader.player_id) && "ring-2 ring-[var(--brand-sports)]",
+                        comparePlayers.includes(leader.player_id) &&
+                          "ring-2 ring-[var(--brand-sports)]",
                       )}
                     >
                       <CardHeader>
@@ -384,13 +399,16 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                             className={cn(
                               "grid grid-cols-12 items-center gap-3 rounded-lg p-3 transition-colors hover:bg-accent/50",
                               compareMode && "cursor-pointer",
-                              comparePlayers.includes(leader.player_id) && "ring-2 ring-[var(--brand-sports)]",
+                              comparePlayers.includes(leader.player_id) &&
+                                "ring-2 ring-[var(--brand-sports)]",
                             )}
                             onClick={() => {
                               if (compareMode) {
                                 setComparePlayers((prev) => {
                                   if (prev.includes(leader.player_id)) {
-                                    return prev.filter((id) => id !== leader.player_id);
+                                    return prev.filter(
+                                      (id) => id !== leader.player_id,
+                                    );
                                   }
                                   if (prev.length >= 2) return prev;
                                   return [...prev, leader.player_id];
@@ -402,7 +420,11 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                               {index + 4}
                             </span>
                             <Link
-                              href={compareMode ? "#" : `/players/${leader.player_id}`}
+                              href={
+                                compareMode
+                                  ? "#"
+                                  : `/players/${leader.player_id}`
+                              }
                               className={cn(
                                 "col-span-9 sm:col-span-7 flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                 compareMode && "pointer-events-none",
@@ -429,7 +451,11 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                               {category.getValue(leader).toFixed(1)}
                             </span>
                             <Link
-                              href={compareMode ? "#" : `/players/compare?players=${leader.player_id}`}
+                              href={
+                                compareMode
+                                  ? "#"
+                                  : `/players/compare?players=${leader.player_id}`
+                              }
                               aria-label={`${leader.player_name} тоглогчийг харьцуулах`}
                               onClick={(e) => {
                                 if (compareMode) e.preventDefault();
@@ -451,13 +477,11 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
 
             <Card className="shadow-none">
               <CardHeader>
-                <CardTitle className="text-base">
-                  Эрэмбийн шаардлага
-                </CardTitle>
+                <CardTitle className="text-base">Эрэмбийн шаардлага</CardTitle>
                 <CardDescription>
                   Нэг удаагийн өндөр үзүүлэлтээр хүснэгтийг тэргүүлэхээс
-                  сэргийлж багийн тоглолтын тооны дор хаяж 50%-тай тэнцүү
-                  тооны тоглолтод оролцсон байна.
+                  сэргийлж багийн тоглолтын тооны дор хаяж 50%-тай тэнцүү тооны
+                  тоглолтод оролцсон байна.
                 </CardDescription>
                 <CardAction>
                   <Link

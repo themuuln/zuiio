@@ -255,7 +255,7 @@ describe("price authority", () => {
     const browserProvidedPrice = 1000; // tampered client value
 
     const order = createOrderSnapshot(product, 0, "Бат", "99112233");
-    const snapshotPrice = order.items[0]!.priceMnt;
+    const snapshotPrice = order.items[0]?.priceMnt;
 
     expect(snapshotPrice).toBe(product.price_mnt);
     expect(snapshotPrice).not.toBe(browserProvidedPrice);
@@ -290,9 +290,7 @@ describe("item snapshot immutability", () => {
       id: crypto.randomUUID(),
       name: "Onoo Cap",
       price_mnt: 15000,
-      variants: [
-        { size: "One Size", stock: 20 },
-      ],
+      variants: [{ size: "One Size", stock: 20 }],
     };
 
     // Create order — snapshot is captured

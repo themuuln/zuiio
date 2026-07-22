@@ -1,12 +1,7 @@
-#!/usr/bin/env tsx
-/**
- * Apply all Supabase migrations to the test database.
- * Usage: npx tsx src/test/apply-migrations.ts
- */
-
 import fs from "node:fs";
 import path from "node:path";
 import { Pool } from "pg";
+import { SEED_ADMIN_ID } from "./seed-constants";
 
 const DB_URL =
   process.env.INTEGRATION_DATABASE_URL ||
@@ -116,14 +111,11 @@ async function main() {
       "ALTER TABLE public.season_player_stats ADD COLUMN IF NOT EXISTS seconds_played integer",
     );
     await pool.query(
-      "ALTER TABLE public.standings ADD COLUMN IF NOT EXISTS w smallint, ADD COLUMN IF NOT EXISTS l smallint",
-    );
-
     // ── Seed data ──
     await pool.query(
-      "INSERT INTO auth.users (id, email) VALUES ('397692e0-915f-4361-9f75-f84d0883ba80', 'seed-admin@onoo-test.mn') ON CONFLICT (id) DO NOTHING",
+      "INSERT INTO auth.users (id, email) VALUES ($1, 'seed-admin@onoo-test.mn') ON CONFLICT (id) DO NOTHING",
+      [SEED_ADMIN_ID],
     );
-
     const seedPath = path.resolve(__dirname, "../../supabase/seed.sql");
     if (fs.existsSync(seedPath)) {
       console.log("🌱 Applying seed data...");

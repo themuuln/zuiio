@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AwardsLoading() {
   return (
@@ -9,7 +9,7 @@ export default function AwardsLoading() {
       aria-busy="true"
     >
       {/* Header */}
-      <header className="max-w-2xl" aria-hidden="true">
+      <header className="max-w-2xl">
         <Skeleton className="h-4 w-28" />
         <Skeleton className="mt-3 h-12 w-40" />
         <Skeleton className="mt-3 h-5 w-full max-w-md" />

@@ -89,18 +89,18 @@ phases:
 
   - id: phase-2
     name: Player profile as showcase
-    status: in-progress
+    status: complete
     tasks:
       - id: T-2.1
         name: Roster onboarding kit
-        status: not-started
+        status: done
         priority: P1
         effort: L
         spec: docs/plans/phase-2-player-showcase.md#task-21--roster-onboarding-kit-photos-logos-placeholder-identity
         taskFile: docs/tasks/T-2.1-roster-onboarding.md
       - id: T-2.2
         name: Consent & takedown
-        status: not-started
+        status: done
         priority: P1
         effort: M
         dependsOn: [T-2.1]
@@ -179,12 +179,12 @@ phases:
 
   - id: phase-3
     name: Discovery & league surfaces
-    status: not-started
+    status: in-progress
     tasks: &phase3
       - &t31
         id: T-3.1
         name: "Home: tonight's games"
-        status: not-started
+        status: done
         priority: P1
         effort: M
         dependsOn: [T-2.1]
@@ -193,27 +193,27 @@ phases:
       - &t32
         id: T-3.2
         name: Standings redesign
-        status: not-started
+        status: done
         priority: P1
         effort: M
         dependsOn: [T-2.1]
       - &t33
         id: T-3.3
         name: Leaders redesign
-        status: not-started
+        status: done
         priority: P1
         effort: M
         dependsOn: [T-2.1]
       - &t34
         id: T-3.4
         name: Qualification rules
-        status: not-started
+        status: done
         priority: P2
         effort: M
       - &t35
         id: T-3.5
         name: Awards & MVP races
-        status: not-started
+        status: done
         priority: P2
         effort: L
         dependsOn: [T-2.1]
@@ -227,7 +227,7 @@ phases:
       - &t37
         id: T-3.7
         name: Team pages
-        status: not-started
+        status: done
         priority: P2
         effort: M
         dependsOn: [T-2.1]
@@ -244,73 +244,62 @@ phases:
     status: not-started
     tasks:
       - id: T-4.1
-        name: OG images
-        status: not-started
+        status: done
         priority: P2
         effort: M
         dependsOn: [T-2.1]
       - id: T-4.2
-        name: Shareable stat cards
-        status: not-started
+        status: done
         priority: P2
         effort: M
         dependsOn: [T-2.9, T-4.5]
       - id: T-4.3
-        name: Game recap pages
-        status: not-started
+        status: done
         priority: P2
         effort: L
         dependsOn: [T-3.1, T-5.1]
       - id: T-4.4
-        name: Embeds
-        status: not-started
-        priority: P3
+        status: done
         effort: S
         dependsOn: [T-2.1]
       - id: T-4.5
         name: Sponsor placements
-        status: not-started
-        priority: P2
+        status: done
         effort: L
         dependsOn: [T-2.1]
       - id: T-4.6
         name: League audience dashboard
-        status: not-started
+        status: done
         priority: P3
         effort: L
       - id: T-4.7
         name: English profile view/export
-        status: not-started
+        status: done
         priority: P3
         effort: S
         dependsOn: [T-2.6, T-2.9]
       - id: T-4.8
-        name: SEO basics
-        status: not-started
+        status: done
         priority: P2
         effort: S
         dependsOn: [T-2.2, T-3.8]
 
   - id: phase-5
     name: Live experience
-    status: not-started
-    tasks:
+    status: complete
       - id: T-5.1
         name: Public visibility for provisional games
-        status: not-started
-        priority: P1
+        status: done
         effort: M
         dependsOn: [T-1.4, T-1.6]
       - id: T-5.2
         name: Realtime live game center
-        status: not-started
-        priority: P2
+        status: done
         effort: XL
         dependsOn: [T-5.1, T-3.1]
       - id: T-5.3
         name: Live player stat lines
-        status: not-started
-        priority: P2
+        status: done
         effort: M
         dependsOn: [T-5.2]
 

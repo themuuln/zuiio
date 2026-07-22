@@ -27,9 +27,9 @@ export function QrDisplay({
         <div>
           <p className="font-medium">QPay-аар төлөх</p>
           <p className="text-muted-foreground">
-            Доорх QR кодыг QPay апп-аар уншуулж, ₮
-            {totalMnt.toLocaleString()} төлбөрийг төлнө үү. QR код{" "}
-            {Math.floor(expiresIn / 60)} минутын дотор хүчингүй болно.
+            Доорх QR кодыг QPay апп-аар уншуулж, ₮{totalMnt.toLocaleString()}{" "}
+            төлбөрийг төлнө үү. QR код {Math.floor(expiresIn / 60)} минутын
+            дотор хүчингүй болно.
           </p>
         </div>
       </div>

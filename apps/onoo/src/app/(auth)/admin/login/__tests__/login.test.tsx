@@ -1,5 +1,11 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // vi.hoisted ensures mock functions exist before vi.mock factories run (hoisted)
@@ -32,7 +38,7 @@ const SUBMIT_BUTTON = () => screen.getByRole("button", { name: "Нэвтрэх" 
 describe("LoginPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.NODE_ENV = "test";
+    Object.assign(process.env, { NODE_ENV: "test" });
   });
 
   it("renders login form with email, password fields and submit button", () => {
@@ -124,9 +130,7 @@ describe("LoginPage", () => {
       fireEvent.click(SUBMIT_BUTTON());
 
       await waitFor(() => {
-        expect(mockToast.error).toHaveBeenCalledWith(
-          "Имэйл хаяг буруу байна",
-        );
+        expect(mockToast.error).toHaveBeenCalledWith("Имэйл хаяг буруу байна");
       });
     });
 
@@ -209,9 +213,7 @@ describe("LoginPage", () => {
       });
 
       await waitFor(() => {
-        expect(
-          screen.getByText("Түр хүлээнэ үү..."),
-        ).toBeInTheDocument();
+        expect(screen.getByText("Түр хүлээнэ үү...")).toBeInTheDocument();
       });
     });
   });

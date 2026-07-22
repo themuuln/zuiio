@@ -319,7 +319,7 @@ $$;
 
 -- ============================================================================
 -- 2. Helper functions for edge functions
---    derive-game and manual-box-entry edge functions call these via supabase.rpc()
+--    derive-game edge function calls these via supabase.rpc()
 -- ============================================================================
 
 -- is_league_admin: returns true if the current auth.uid() has admin role in the league

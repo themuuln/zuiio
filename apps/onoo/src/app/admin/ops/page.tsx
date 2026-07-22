@@ -10,18 +10,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { ErrorReportActions } from "./_components/error-report-actions";
+export const dynamic = "force-dynamic";
 
 export default async function OpsConsolePage() {
-  const supabase = await createClient();
+  // Use service-role client to bypass RLS for admin telemetry
+  const supabase = createServiceRoleClient();
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const [
     { data: activeSessions },
     { count: pendingSubmissions },
     { count: pendingRevisions },
-    { data: auditRows },
+    { data: auditRaw },
     { data: staleGames },
     { data: errorReports },
   ] = await Promise.all([
@@ -56,6 +58,14 @@ export default async function OpsConsolePage() {
       .order("created_at", { ascending: false })
       .limit(50),
   ]);
+  const auditRows = auditRaw as unknown as Array<{
+    id: string;
+    actor_id: string | null;
+    action: string;
+    entity: string;
+    entity_id: string | null;
+    created_at: string;
+  }> | null;
 
   const sessions = activeSessions ?? [];
   const auditLog = auditRows ?? [];
@@ -138,10 +148,10 @@ export default async function OpsConsolePage() {
                         {r.contact ?? "—"}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
-                        {new Date(r.created_at).toLocaleString("mn-MN")}
+                        {new Date(r.created_at!).toLocaleString("mn-MN")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <ErrorReportActions reportId={r.id} />
+                        <ErrorReportActions reportId={r.id!} />
                       </TableCell>
                     </TableRow>
                   ))}

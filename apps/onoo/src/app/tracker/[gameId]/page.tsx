@@ -13,6 +13,7 @@ import type {
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { HandoffDialog } from "./components/handoff-dialog";
 import { TrackerCourt } from "./components/tracker-court";
 
 // Types
@@ -79,6 +80,8 @@ export default function TrackerPage() {
   const [trackerSession, setTrackerSession] =
     useState<TrackerSessionInfo | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
+  const [superseded, setSuperseded] = useState(false);
+  const [handoffOpen, setHandoffOpen] = useState(false);
   const localSeqRef = useRef(1);
 
   // Clock state
@@ -326,6 +329,9 @@ export default function TrackerPage() {
           setSessionError("Зөвшөөрөлгүй. Нэвтэрч орно уу.");
         } else if (error.message?.includes("ONOO_ROSTER_MISMATCH")) {
           setSessionError("Тоглогч багийн жагсаалтанд байхгүй.");
+        } else if (error.message?.includes("ONOO_SESSION_SUPERSEDED")) {
+          setSuperseded(true);
+          setSessionError("Session has been handed off.");
         }
         return null;
       }
@@ -387,11 +393,16 @@ export default function TrackerPage() {
       const { eventType } = pendingShotLocation;
       const made = eventType.includes("made");
 
-      const newEvent = await createEvent(eventType, selectedTeam, selectedPlayer, {
-        x,
-        y,
-        made,
-      });
+      const newEvent = await createEvent(
+        eventType,
+        selectedTeam,
+        selectedPlayer,
+        {
+          x,
+          y,
+          made,
+        },
+      );
 
       setPendingShotLocation(null);
       setSelectedPlayer(null);
@@ -670,7 +681,6 @@ export default function TrackerPage() {
             >
               Үе дуусгах
             </button>
-
             <button
               type="button"
               onClick={handleGameEnd}
@@ -678,8 +688,43 @@ export default function TrackerPage() {
             >
               Тоглолт дуусгах
             </button>
+
+            <button
+              type="button"
+              onClick={() => setHandoffOpen(true)}
+              className="rounded bg-blue-600 px-4 py-2 font-bold hover:bg-blue-700"
+            >
+              Гар шилжүүлэх
+            </button>
           </>
         )}
+
+        {superseded && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-900/95">
+            <div className="text-center">
+              <p className="mb-4 text-2xl font-bold">
+                Session has been handed off
+              </p>
+              <p className="text-gray-400">
+                This tracker is now read-only. The new scorer has taken over.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {trackerSession && (
+          <HandoffDialog
+            open={handoffOpen}
+            onOpenChange={setHandoffOpen}
+            gameId={gameId}
+            sessionId={trackerSession.id}
+            onHandoffComplete={() => {
+              setHandoffOpen(false);
+              setSuperseded(true);
+            }}
+          />
+        )}
+
         {/* Session error banner */}
         {sessionError && (
           <div className="bg-red-900/50 px-4 py-2 text-sm text-red-200">

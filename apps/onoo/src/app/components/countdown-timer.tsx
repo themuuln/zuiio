@@ -19,7 +19,7 @@ export function CountdownTimer({
   className,
 }: CountdownTimerProps) {
   const [remaining, setRemaining] = useState(() =>
-    Math.max(0, new Date(targetIso).getTime() - Date.now())
+    Math.max(0, new Date(targetIso).getTime() - Date.now()),
   );
 
   useEffect(() => {
@@ -48,10 +48,7 @@ export function CountdownTimer({
 
   return (
     <div
-      className={cn(
-        "flex items-center justify-center gap-4 py-3",
-        className,
-      )}
+      className={cn("flex items-center justify-center gap-4 py-3", className)}
       role="timer"
       aria-label={`${label}: ${days} өдөр, ${hours} цаг, ${minutes} минут, ${seconds} секунд`}
     >

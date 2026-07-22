@@ -67,7 +67,12 @@ function TeamRow({
       </span>
       <span className="min-w-0 flex-1 truncate">{team.name}</span>
       {team.score != null && (
-        <span className={cn("tabular-nums", isWinner && "text-[var(--brand-sports)]")}>
+        <span
+          className={cn(
+            "tabular-nums",
+            isWinner && "text-[var(--brand-sports)]",
+          )}
+        >
           {team.score}
         </span>
       )}

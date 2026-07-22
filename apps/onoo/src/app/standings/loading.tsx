@@ -1,9 +1,5 @@
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
 
 export default function StandingsLoading() {
   const raceCards = ["rank-1", "rank-2", "rank-3"];
@@ -16,7 +12,7 @@ export default function StandingsLoading() {
       aria-busy="true"
     >
       {/* Header */}
-      <header className="flex flex-col gap-4" aria-hidden="true">
+      <header className="flex flex-col gap-4">
         <div>
           <Skeleton className="h-4 w-32" />
           <Skeleton className="mt-3 h-12 w-48" />

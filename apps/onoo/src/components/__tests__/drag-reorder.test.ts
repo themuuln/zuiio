@@ -8,13 +8,13 @@ function reorderArray<T>(array: T[], fromIndex: number, toIndex: number): T[] {
   return result;
 }
 
-function saveOrder(key: string, order: string[]): void {
+function _saveOrder(_key: string, order: string[]): void {
   // In real app, this would use localStorage
   // For testing, we just validate the logic
   expect(order.length).toBeGreaterThan(0);
 }
 
-function loadOrder(key: string, validKeys: string[]): string[] | null {
+function loadOrder(_key: string, _validKeys: string[]): string[] | null {
   // In real app, this would read from localStorage
   // For testing, we return null (no saved order)
   return null;

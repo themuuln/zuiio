@@ -28,8 +28,11 @@ vi.mock("lucide-react", () => {
     <span data-testid="icon" className={className} />
   );
   return {
+    Activity: icon,
+    Award: icon,
     LayoutDashboard: icon,
     Calendar: icon,
+    CreditCard: icon,
     Medal: icon,
     Trophy: icon,
     Users: icon,
@@ -37,6 +40,8 @@ vi.mock("lucide-react", () => {
     Timer: icon,
     MapPin: icon,
     Package: icon,
+    School: icon,
+    BookOpen: icon,
     ShoppingCart: icon,
     X: icon,
   };
@@ -45,18 +50,23 @@ vi.mock("lucide-react", () => {
 import { usePathname } from "next/navigation";
 
 const mockUsePathname = vi.mocked(usePathname);
-
 const NAV_LABELS = [
   "Хянах самбар",
   "Лиг",
-  "Улирал",
   "Тэмцээн",
+  "Шагнал",
   "Баг",
   "Тоглогч",
   "Тоглолт",
   "Талбай",
+  "Үйлдлүүд",
   "Бүтээгдэхүүн",
   "Захиалга",
+  "Профайл",
+  "Хөтөлбөр",
+  "Дасгалжуулагч",
+  "Төлбөр",
+  "Байршил",
 ];
 
 function getNavLink(label: string): HTMLAnchorElement {

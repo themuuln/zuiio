@@ -4,8 +4,8 @@
  * All mutations go through cmd_* database commands with server-side price authority.
  */
 
-import { createClient } from "@/lib/supabase/server";
 import { captureError } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
 
 // ---------------------------------------------------------------------------
 // Types

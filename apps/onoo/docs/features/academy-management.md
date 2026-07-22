@@ -14,12 +14,46 @@ Onoo is the complete technology solution for basketball leagues, clubs, teams, a
 
 The complete basketball-platform direction is fixed in [the product vision](../VISION.md). This plan requests approval for four delivery decisions:
 
-1. **Sequencing:** Finish Onoo’s trusted-record foundation while validating the academy workflow and buyer
+1. **Sequencing:** Finish Onoo's trusted-record foundation while validating the academy workflow and buyer
 2. **Pilot scope:** Start academy operations with roster, enrollment, scheduling, attendance, consent, and payment reconciliation
 3. **Architecture:** Share canonical identity and organization records while isolating private operational data behind bounded-context commands
 4. **Expansion:** Add the remaining team, league, guardian, competition, and federation modules through measured delivery gates
 
-A product owner must record each approved delivery decision in a dated decision log before executable tasks enter Onoo’s task queue. The log names the decision owner, approver, date, rationale, and review trigger.
+A product owner must record each approved delivery decision in a dated decision log before executable tasks enter Onoo's task queue. The log names the decision owner, approver, date, rationale, and review trigger.
+
+## Delivery sequence
+
+Academy operations (Roadmap Phase 10) ships in four sub-phases. Each sub-phase must pass review before the next begins. The first sub-phase is deliberately minimal:
+
+| Sub-phase | What ships | What doesn't |
+|-----------|-----------|--------------|
+| **10a — Foundation** | Admin dashboard, auth, basic info pages, basic QPay payments | Enrollment, attendance, consent, waivers, offline |
+| **10b — Student & enrollment** | Student profiles, guardian info, enrollment, capacity, basic attendance | Offline sync, consent workflow, waitlists |
+| **10c — Full operations** | Offline attendance, consent/waivers, invoice ledger, waitlists, reports | Guardian self-service, verified QPay |
+| **10d — Advanced** | Guardian OTP, verified QPay callbacks, QR check-in, multi-location scheduling | Unified athlete profile (Phase 12) |
+
+Phase 11 (guardian self-service), Phase 12 (unified athlete identity), and Phase 13 (federation) are separate roadmap phases outside this document's scope.
+
+### Phase 10a scope — academy foundation MVP
+
+The first academy module ships nothing more than:
+
+- **Academy admin dashboard**: name, logo, contact, timezone, branding — all editable from `/admin`
+- **Auth**: extend existing Onoo auth — club staff log in with existing accounts and see "Academy" in navigation
+- **Info pages**: programs listing (read-only from admin), trainers list with photos and specialties, locations/courts with addresses and hours
+- **Payments**: basic QPay checkout reusing the shop integration. Simple: enter amount, generate invoice, show QR, mark paid
+- **Dashboard stats banner**: total students (count only), total trainers, total locations
+
+**Explicitly not in 10a:**
+- Student enrollment flows
+- Attendance tracking (online or offline)
+- Consent or waiver management
+- Guardian auth or self-service
+- Offline support
+- Waitlists
+- Any student-facing public profile
+
+Every deferred item has a sub-phase owner.
 
 ## Recommendation
 

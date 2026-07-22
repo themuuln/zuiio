@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-
 import { VariantEditorSheet } from "@/components/services/variant-editor-drawer";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +29,8 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "@/lib/hooks/use-form";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import type { ServiceCatalog } from "@/lib/types";
+import { useCreateService } from "@/lib/queries/use-wizard-data";
+import type { CreateServiceCatalogParams, ServiceCatalog } from "@/lib/types";
 
 // ── Schema ─────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ export function EditServiceSheet({
     },
   });
 
-  // Reset form when service changes
+  // Reset form when service changes or when opening for create
   useEffect(() => {
     if (service) {
       form.reset({
@@ -101,8 +101,19 @@ export function EditServiceSheet({
         description: service.description ?? "",
       });
       setCategoryInput("");
+    } else if (open) {
+      // Opening in create mode — reset to defaults
+      form.reset({
+        name: "",
+        nameMn: "",
+        defaultPrice: "",
+        defaultCost: "",
+        category: "",
+        description: "",
+      });
+      setCategoryInput("");
     }
-  }, [service, form]);
+  }, [service, form, open]);
 
   const watchedCategory = form.watch("category");
 
@@ -126,9 +137,28 @@ export function EditServiceSheet({
     },
   });
 
+  const createMutation = useCreateService(orgId ?? undefined);
+  const isCreating = service === null;
+
   const handleSave = form.handleSubmit((data) => {
-    if (!service) return;
-    updateMutation.mutate({ serviceId: service.id, data });
+    if (isCreating) {
+      const payload: CreateServiceCatalogParams = {
+        name: data.name.trim(),
+        name_mn: data.nameMn?.trim() || undefined,
+        default_price: Number(data.defaultPrice),
+        default_cost: data.defaultCost ? Number(data.defaultCost) : undefined,
+        category: data.category?.trim() || undefined,
+        description: data.description?.trim() || undefined,
+      };
+      createMutation.mutate(payload, {
+        onSuccess: () => {
+          onOpenChange(false);
+          form.reset();
+        },
+      });
+    } else if (service) {
+      updateMutation.mutate({ serviceId: service.id, data });
+    }
   });
 
   const handleOpenChange = (open: boolean) => {
@@ -166,7 +196,9 @@ export function EditServiceSheet({
           </Button>
         }
       >
-        <DetailDrawer.Title>{t("editService")}</DetailDrawer.Title>
+        <DetailDrawer.Title>
+          {isCreating ? t("addService") : t("editService")}
+        </DetailDrawer.Title>
         <DetailDrawer.Description>
           {t("editServiceDescription")}
         </DetailDrawer.Description>
@@ -317,13 +349,21 @@ export function EditServiceSheet({
             size="lg"
             className="flex-1"
             onClick={handleSave}
-            disabled={updateMutation.isPending}
+            disabled={
+              isCreating ? createMutation.isPending : updateMutation.isPending
+            }
           >
-            {updateMutation.isPending ? (
+            {(
+              isCreating
+                ? createMutation.isPending
+                : updateMutation.isPending
+            ) ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" />
                 {t("saving")}
               </span>
+            ) : isCreating ? (
+              t("createService")
             ) : (
               commonT("save")
             )}

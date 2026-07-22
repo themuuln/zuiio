@@ -17,7 +17,9 @@ interface BracketMatchup {
   position: number;
 }
 
-function groupByRound(matchups: BracketMatchup[]): Map<number, BracketMatchup[]> {
+function groupByRound(
+  matchups: BracketMatchup[],
+): Map<number, BracketMatchup[]> {
   const rounds = new Map<number, BracketMatchup[]>();
   for (const m of matchups) {
     const existing = rounds.get(m.round) ?? [];

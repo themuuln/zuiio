@@ -2,8 +2,12 @@ import { getStatLabel } from "@onoo/core";
 import { CalendarDays, MapPin, Ruler, Weight } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { getLeaders, getPlayerById, getPlayerSeasonAverages } from "@/app/lib/data";
 import { FlipStatCard } from "@/app/components/flip-stat-card";
+import {
+  getLeaders,
+  getPlayerById,
+  getPlayerSeasonAverages,
+} from "@/app/lib/data";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui";
@@ -55,18 +59,36 @@ export async function HeroCard({
   const leaders = competitionId ? await getLeaders(true) : [];
 
   // Compute ranks for each stat
-  function getRank(statKey: 'pts' | 'reb' | 'ast'): number | null {
+  function getRank(statKey: "pts" | "ast"): number | null {
     if (!competitionId || leaders.length === 0) return null;
-    const competitionLeaders = leaders.filter(l => l.competition_id === competitionId);
-    const sorted = [...competitionLeaders].sort((a, b) => (b[statKey] ?? 0) - (a[statKey] ?? 0));
-    const rank = sorted.findIndex(l => l.player_id === playerId);
+    const competitionLeaders = leaders.filter(
+      (l) => l.competition_id === competitionId,
+    );
+    const sorted = [...competitionLeaders].sort(
+      (a, b) => (b[statKey] ?? 0) - (a[statKey] ?? 0),
+    );
+    const rank = sorted.findIndex((l) => l.player_id === playerId);
     return rank >= 0 ? rank + 1 : null;
   }
 
-  const ptsRank = getRank('pts');
-  const rebRank = getRank('reb');
-  const astRank = getRank('ast');
+  /** Rebounds is computed from oreb + dreb, not a direct field on LeaderRow. */
+  function getRebRank(): number | null {
+    if (!competitionId || leaders.length === 0) return null;
+    const competitionLeaders = leaders.filter(
+      (l) => l.competition_id === competitionId,
+    );
+    const rebKey = (l: (typeof competitionLeaders)[number]) =>
+      (l.oreb ?? 0) + (l.dreb ?? 0);
+    const sorted = [...competitionLeaders].sort(
+      (a, b) => rebKey(b) - rebKey(a),
+    );
+    const rank = sorted.findIndex((l) => l.player_id === playerId);
+    return rank >= 0 ? rank + 1 : null;
+  }
 
+  const ptsRank = getRank("pts");
+  const rebRank = getRebRank();
+  const astRank = getRank("ast");
 
   if (!data?.player) return null;
 
@@ -90,12 +112,8 @@ export async function HeroCard({
   const factLabels = {
     height: isEn ? "Height" : "Ӣндөр",
     weight: isEn ? "Weight" : "Жин",
-    dob: isEn
-      ? "Date of Birth"
-      : "Төрсөн өдөр",
-    nationality: isEn
-      ? "Nationality"
-      : "Харьяалал",
+    dob: isEn ? "Date of Birth" : "Төрсөн өдөр",
+    nationality: isEn ? "Nationality" : "Харьяалал",
   };
 
   return (
@@ -241,20 +259,17 @@ export async function HeroCard({
               value={averages?.ppg ?? null}
               label={getStatLabel("pts", locale)}
               backLabel={ptsRank ? `#${ptsRank} лигт` : "—"}
-              inverse
               accent
             />
             <FlipStatCard
               value={averages?.rpg ?? null}
               label={getStatLabel("reb", locale)}
               backLabel={rebRank ? `#${rebRank} лигт` : "—"}
-              inverse
             />
             <FlipStatCard
               value={averages?.apg ?? null}
               label={getStatLabel("ast", locale)}
               backLabel={astRank ? `#${astRank} лигт` : "—"}
-              inverse
             />
             <StatNumber
               value={averages?.spg ?? null}
@@ -272,41 +287,41 @@ export async function HeroCard({
         )}
       </div>
 
-        {/* Efficiency metrics strip */}
-        {!careerTotals && advancedStats && (
-          <div className="relative border-t border-sidebar-border/50 px-5 py-3 backdrop-blur-sm sm:px-8 lg:px-10">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-              <StatNumber
-                value={advancedStats.efgPct * 100}
-                label={isEn ? "eFG%" : "ҮШ%"}
-                precision={1}
-                size="sm"
-                inverse
-              />
-              <StatNumber
-                value={advancedStats.tsPct * 100}
-                label={isEn ? "TS%" : "ЧШ%"}
-                precision={1}
-                size="sm"
-                inverse
-              />
-              <StatNumber
-                value={advancedStats.avgGameScore}
-                label={isEn ? "GmSc" : "Тогл.үнэлгээ"}
-                precision={1}
-                size="sm"
-                inverse
-              />
-              <StatNumber
-                value={advancedStats.astTovRatio}
-                label={isEn ? "AST/TO" : "АШ/АЛ"}
-                precision={2}
-                size="sm"
-                inverse
-              />
-            </div>
+      {/* Efficiency metrics strip */}
+      {!careerTotals && advancedStats && (
+        <div className="relative border-t border-sidebar-border/50 px-5 py-3 backdrop-blur-sm sm:px-8 lg:px-10">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+            <StatNumber
+              value={advancedStats.efgPct * 100}
+              label={isEn ? "eFG%" : "ҮШ%"}
+              precision={1}
+              size="sm"
+              inverse
+            />
+            <StatNumber
+              value={advancedStats.tsPct * 100}
+              label={isEn ? "TS%" : "ЧШ%"}
+              precision={1}
+              size="sm"
+              inverse
+            />
+            <StatNumber
+              value={advancedStats.avgGameScore}
+              label={isEn ? "GmSc" : "Тогл.үнэлгээ"}
+              precision={1}
+              size="sm"
+              inverse
+            />
+            <StatNumber
+              value={advancedStats.astTovRatio}
+              label={isEn ? "AST/TO" : "АШ/АЛ"}
+              precision={2}
+              size="sm"
+              inverse
+            />
           </div>
-        )}
+        </div>
+      )}
     </section>
   );
 }

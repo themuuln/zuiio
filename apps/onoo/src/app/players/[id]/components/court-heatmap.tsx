@@ -57,11 +57,13 @@ const COURT_FILL = "none";
 function zoneColor(made: number, attempted: number): string {
   if (attempted === 0) return "transparent";
   const pct = made / attempted;
-  if (pct >= 0.6) return "var(--brand-sports)";                    // hot amber
-  if (pct >= 0.5) return "var(--brand-sports-dim)";               // deep amber
-  if (pct >= 0.4) return "color-mix(in srgb, var(--brand-sports) 55%, #f59e0b 45%)";  // orange-amber
-  if (pct >= 0.3) return "color-mix(in srgb, var(--color-muted-foreground) 40%, var(--brand-sports) 25%)";  // muted warm
-  return "color-mix(in srgb, var(--color-muted-foreground) 30%, transparent)";  // cool gray
+  if (pct >= 0.6) return "var(--brand-sports)"; // hot amber
+  if (pct >= 0.5) return "var(--brand-sports-dim)"; // deep amber
+  if (pct >= 0.4)
+    return "color-mix(in srgb, var(--brand-sports) 55%, #f59e0b 45%)"; // orange-amber
+  if (pct >= 0.3)
+    return "color-mix(in srgb, var(--color-muted-foreground) 40%, var(--brand-sports) 25%)"; // muted warm
+  return "color-mix(in srgb, var(--color-muted-foreground) 30%, transparent)"; // cool gray
 }
 
 function zoneOpacity(made: number, attempted: number): number {
@@ -93,7 +95,12 @@ export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
         aria-label="Шидэлтийн бүсийн зураглал"
       >
         {/* Court outline */}
-        <g stroke={COURT_STROKE} fill={COURT_FILL} strokeWidth={2.5} opacity={0.55}>
+        <g
+          stroke={COURT_STROKE}
+          fill={COURT_FILL}
+          strokeWidth={2.5}
+          opacity={0.55}
+        >
           {/* Outer boundary */}
           <rect x={20} y={20} width={560} height={510} rx={4} />
 
@@ -217,23 +224,50 @@ export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
       <div className="mt-2 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
         <span className="mr-1">FG%:</span>
         <span className="flex items-center gap-0.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "color-mix(in srgb, var(--color-muted-foreground) 30%, transparent)", opacity: 0.55 }} />
+          <span
+            className="inline-block h-2.5 w-2.5 rounded-full"
+            style={{
+              background:
+                "color-mix(in srgb, var(--color-muted-foreground) 30%, transparent)",
+              opacity: 0.55,
+            }}
+          />
           <span>&lt;30%</span>
         </span>
         <span className="flex items-center gap-0.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "color-mix(in srgb, var(--color-muted-foreground) 40%, var(--brand-sports) 25%)", opacity: 0.65 }} />
+          <span
+            className="inline-block h-2.5 w-2.5 rounded-full"
+            style={{
+              background:
+                "color-mix(in srgb, var(--color-muted-foreground) 40%, var(--brand-sports) 25%)",
+              opacity: 0.65,
+            }}
+          />
           <span>30-39%</span>
         </span>
         <span className="flex items-center gap-0.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "color-mix(in srgb, var(--brand-sports) 55%, #f59e0b 45%)", opacity: 0.75 }} />
+          <span
+            className="inline-block h-2.5 w-2.5 rounded-full"
+            style={{
+              background:
+                "color-mix(in srgb, var(--brand-sports) 55%, #f59e0b 45%)",
+              opacity: 0.75,
+            }}
+          />
           <span>40-49%</span>
         </span>
         <span className="flex items-center gap-0.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "var(--brand-sports-dim)", opacity: 0.82 }} />
+          <span
+            className="inline-block h-2.5 w-2.5 rounded-full"
+            style={{ background: "var(--brand-sports-dim)", opacity: 0.82 }}
+          />
           <span>50-59%</span>
         </span>
         <span className="flex items-center gap-0.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "var(--brand-sports)", opacity: 0.9 }} />
+          <span
+            className="inline-block h-2.5 w-2.5 rounded-full"
+            style={{ background: "var(--brand-sports)", opacity: 0.9 }}
+          />
           <span>≥60%</span>
         </span>
       </div>
@@ -258,7 +292,7 @@ export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
         </div>
       )}
       {/* Shot tooltip */}
-      {hoveredShot !== null && shots && shots[hoveredShot] && (
+      {hoveredShot && shots?.[hoveredShot] && (
         <div
           className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-lg bg-foreground px-3 py-2 text-sm text-background shadow-lg"
           role="tooltip"

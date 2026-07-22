@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 
 interface AdminLayoutContextValue {
   /** Whether the mobile sidebar is open */
@@ -30,10 +25,7 @@ export function AdminLayoutProvider({
     [],
   );
 
-  const closeMobileSidebar = useCallback(
-    () => setMobileSidebarOpen(false),
-    [],
-  );
+  const closeMobileSidebar = useCallback(() => setMobileSidebarOpen(false), []);
 
   return (
     <AdminLayoutContext.Provider

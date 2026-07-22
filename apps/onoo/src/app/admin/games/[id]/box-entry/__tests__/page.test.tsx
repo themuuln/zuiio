@@ -1,7 +1,8 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
 import {
-  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -10,8 +11,6 @@ import {
   type Mock,
   vi,
 } from "vitest";
-import React from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 
@@ -24,6 +23,7 @@ vi.mock("sonner", () => ({
 }));
 
 import { toast } from "sonner";
+
 const mockToast = vi.mocked(toast);
 
 let PageComponent: React.ComponentType;
@@ -59,16 +59,84 @@ const makeBoxScore = (overrides = {}) => ({
   score: { home: 38, away: 31 },
   teams: [
     {
-      name: "Khuleguud", code: "KHL",
+      name: "Khuleguud",
+      code: "KHL",
       players: [
-        { jerseyNumber: 7, name: "Б.Тэмүүлэн", dnp: false, secondsPlayed: 1440, pts: 24, fgm: 10, fga: 18, tpm: 2, tpa: 5, ftm: 2, fta: 3, oreb: 3, dreb: 5, reb: 8, ast: 7, stl: 2, blk: 1, tov: 3, pf: 2, plusMinus: 12, dnpReason: null },
-        { jerseyNumber: 11, name: "О.Гантөгс", dnp: false, secondsPlayed: 1320, pts: 14, fgm: 5, fga: 11, tpm: 3, tpa: 7, ftm: 1, fta: 1, oreb: 1, dreb: 3, reb: 4, ast: 2, stl: 0, blk: 0, tov: 1, pf: 4, plusMinus: 5, dnpReason: null },
+        {
+          jerseyNumber: 7,
+          name: "Б.Тэмүүлэн",
+          dnp: false,
+          secondsPlayed: 1440,
+          pts: 24,
+          fgm: 10,
+          fga: 18,
+          tpm: 2,
+          tpa: 5,
+          ftm: 2,
+          fta: 3,
+          oreb: 3,
+          dreb: 5,
+          reb: 8,
+          ast: 7,
+          stl: 2,
+          blk: 1,
+          tov: 3,
+          pf: 2,
+          plusMinus: 12,
+          dnpReason: null,
+        },
+        {
+          jerseyNumber: 11,
+          name: "О.Гантөгс",
+          dnp: false,
+          secondsPlayed: 1320,
+          pts: 14,
+          fgm: 5,
+          fga: 11,
+          tpm: 3,
+          tpa: 7,
+          ftm: 1,
+          fta: 1,
+          oreb: 1,
+          dreb: 3,
+          reb: 4,
+          ast: 2,
+          stl: 0,
+          blk: 0,
+          tov: 1,
+          pf: 4,
+          plusMinus: 5,
+          dnpReason: null,
+        },
       ],
     },
     {
-      name: "SG Apes", code: "APE",
+      name: "SG Apes",
+      code: "APE",
       players: [
-        { jerseyNumber: 23, name: "Д.Амарбат", dnp: false, secondsPlayed: 1500, pts: 31, fgm: 12, fga: 22, tpm: 4, tpa: 9, ftm: 3, fta: 4, oreb: 4, dreb: 8, reb: 12, ast: 1, stl: 1, blk: 2, tov: 4, pf: 3, plusMinus: -7, dnpReason: null },
+        {
+          jerseyNumber: 23,
+          name: "Д.Амарбат",
+          dnp: false,
+          secondsPlayed: 1500,
+          pts: 31,
+          fgm: 12,
+          fga: 22,
+          tpm: 4,
+          tpa: 9,
+          ftm: 3,
+          fta: 4,
+          oreb: 4,
+          dreb: 8,
+          reb: 12,
+          ast: 1,
+          stl: 1,
+          blk: 2,
+          tov: 4,
+          pf: 3,
+          plusMinus: -7,
+          dnpReason: null,
+        },
       ],
     },
   ],
@@ -77,10 +145,18 @@ const makeBoxScore = (overrides = {}) => ({
 });
 
 const makeSubmission = (overrides = {}) => ({
-  id: "s-1", game_id: GAME_ID, source_type: "official_score_sheet",
-  evidence_url: "ev.pdf", submitted_by: "u1", submitted_at: "2026-01-15T19:00:00Z",
-  normalized_payload: {}, confidence: 0.9, status: "approved",
-  reviewed_by: null, reviewed_at: null, review_note: null,
+  id: "s-1",
+  game_id: GAME_ID,
+  source_type: "official_score_sheet",
+  evidence_url: "ev.pdf",
+  submitted_by: "u1",
+  submitted_at: "2026-01-15T19:00:00Z",
+  normalized_payload: {},
+  confidence: 0.9,
+  status: "approved",
+  reviewed_by: null,
+  reviewed_at: null,
+  review_note: null,
   ...overrides,
 });
 
@@ -105,20 +181,35 @@ function mockBasicFetch(overrides?: {
 }) {
   const gameData = overrides?.gameData ?? makeGameData();
   const submissions = overrides?.submissions ?? [];
-  return vi.mocked(globalThis.fetch).mockImplementation((url: string | Request | URL) => {
-    if (url === `/admin/api/games/${GAME_ID}`) {
-      return Promise.resolve(new Response(JSON.stringify(gameData), { status: 200, headers: { "Content-Type": "application/json" } }));
-    }
-    if (url === `/admin/api/games/${GAME_ID}/submissions`) {
-      return Promise.resolve(new Response(JSON.stringify(submissions), { status: 200, headers: { "Content-Type": "application/json" } }));
-    }
-    return Promise.reject(new Error(`unexpected fetch: ${url}`));
-  });
+  return vi
+    .mocked(globalThis.fetch)
+    .mockImplementation((url: string | Request | URL) => {
+      if (url === `/admin/api/games/${GAME_ID}`) {
+        return Promise.resolve(
+          new Response(JSON.stringify(gameData), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+      if (url === `/admin/api/games/${GAME_ID}/submissions`) {
+        return Promise.resolve(
+          new Response(JSON.stringify(submissions), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+      return Promise.reject(new Error(`unexpected fetch: ${url}`));
+    });
 }
 
 async function selectPdf() {
   const input = screen.getByTestId("pdf-file-input") as HTMLInputElement;
-  await userEvent.upload(input, new File(["%PDF-1.4"], "report.pdf", { type: "application/pdf" }));
+  await userEvent.upload(
+    input,
+    new File(["%PDF-1.4"], "report.pdf", { type: "application/pdf" }),
+  );
 }
 
 // ── Tests ───────────────────────────────────────────────────────────────────
@@ -135,9 +226,16 @@ describe("BoxEntryPage", () => {
   // ── Loading state ─────────────────────────────────────────────────────────
 
   it("shows loading skeleton while game data loads", async () => {
-    fetchSpy.mockImplementation(() => new Promise(() => { /* never */ }));
+    fetchSpy.mockImplementation(
+      () =>
+        new Promise(() => {
+          /* never */
+        }),
+    );
     renderPage();
-    expect(screen.getByRole("heading", { name: /импортлох/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /импортлох/i }),
+    ).toBeInTheDocument();
     expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
   });
 
@@ -149,12 +247,16 @@ describe("BoxEntryPage", () => {
     expect(await screen.findByText("MNBL 2025/2026")).toBeInTheDocument();
     expect(screen.getByText("Khuleguud")).toBeInTheDocument();
     expect(screen.getByText("SG Apes")).toBeInTheDocument();
-    expect(screen.getByText("UB Sports Palace, Ulaanbaatar")).toBeInTheDocument();
+    expect(
+      screen.getByText("UB Sports Palace, Ulaanbaatar"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Албан ёсны")).toBeInTheDocument();
   });
 
   it("renders venue name when city is null", async () => {
-    mockBasicFetch({ gameData: makeGameData({ venues: { name: "Gym 1", city: null } }) });
+    mockBasicFetch({
+      gameData: makeGameData({ venues: { name: "Gym 1", city: null } }),
+    });
     renderPage();
     expect(await screen.findByText("Gym 1")).toBeInTheDocument();
   });
@@ -164,10 +266,14 @@ describe("BoxEntryPage", () => {
   it("renders empty upload zone with drag-and-drop prompt", async () => {
     mockBasicFetch();
     renderPage();
-    expect(await screen.findByText(/PDF-г энд чирж авчирна уу/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/PDF-г энд чирж авчирна уу/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/товшоод файл сонгох/i)).toBeInTheDocument();
     // The hidden text is inside the drop zone — use a more specific query
-    expect(screen.getByText(/Зөвхөн FIBA Official Statistics PDF/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Зөвхөн FIBA Official Statistics PDF/i),
+    ).toBeInTheDocument();
   });
 
   it("shows file details after selecting a PDF", async () => {
@@ -204,8 +310,14 @@ describe("BoxEntryPage", () => {
     renderPage();
     await screen.findByText(/PDF-г энд чирж авчирна уу/i);
     const outerCard = document.querySelector('[class*="border-dashed"]')!;
-    fireEvent.drop(outerCard, { dataTransfer: { files: [new File(["x"], "img.png", { type: "image/png" })] } });
-    expect(mockToast.error).toHaveBeenCalledWith("Зөвхөн PDF файл ачаалах боломжтой");
+    fireEvent.drop(outerCard, {
+      dataTransfer: {
+        files: [new File(["x"], "img.png", { type: "image/png" })],
+      },
+    });
+    expect(mockToast.error).toHaveBeenCalledWith(
+      "Зөвхөн PDF файл ачаалах боломжтой",
+    );
   });
 
   // ── File input existence ──────────────────────────────────────────────────
@@ -226,7 +338,9 @@ describe("BoxEntryPage", () => {
     mockBasicFetch();
     renderPage();
     await screen.findByText(/PDF-г энд чирж авчирна уу/i);
-    const btn = screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i });
+    const btn = screen.getByRole("button", {
+      name: /PDF-с статистик шинэчлэх/i,
+    });
     expect(btn).toBeDisabled();
     await selectPdf();
     expect(btn).not.toBeDisabled();
@@ -237,13 +351,36 @@ describe("BoxEntryPage", () => {
   it("submits the PDF and shows parsed result with sync badge", async () => {
     fetchSpy.mockImplementation((url: string, init?: RequestInit) => {
       if (url === `/admin/api/games/${GAME_ID}`) {
-        return Promise.resolve(new Response(JSON.stringify(makeGameData()), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify(makeGameData()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
       if (url === `/admin/api/games/${GAME_ID}/submissions`) {
-        return Promise.resolve(new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
-      if (url === `/admin/api/games/${GAME_ID}/official-stats` && init?.method === "POST") {
-        return Promise.resolve(new Response(JSON.stringify({ boxScore: makeBoxScore(), synced: true, submissionId: "sub-1", revisionId: "rev-1" }), { status: 200, headers: { "Content-Type": "application/json" } }));
+      if (
+        url === `/admin/api/games/${GAME_ID}/official-stats` &&
+        init?.method === "POST"
+      ) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              boxScore: makeBoxScore(),
+              synced: true,
+              submissionId: "sub-1",
+              revisionId: "rev-1",
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+        );
       }
       return Promise.reject(new Error(`unexpected: ${url}`));
     });
@@ -252,7 +389,9 @@ describe("BoxEntryPage", () => {
     await screen.findByText(/PDF-г энд чирж авчирна уу/i);
     await selectPdf();
     await userEvent.click(screen.getByRole("checkbox"));
-    await userEvent.click(screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }),
+    );
 
     expect(await screen.findByText("38")).toBeInTheDocument();
     // "31" appears in the scoreboard AND in player stats — use getAllByText
@@ -260,20 +399,48 @@ describe("BoxEntryPage", () => {
     expect(screen.getByText("Статистик шинэчлэгдсэн")).toBeInTheDocument();
     expect(screen.getByText("Тоглолт руу очих")).toBeInTheDocument();
     expect(screen.getByText("Д.Амарбат")).toBeInTheDocument();
-    expect(screen.queryByText(/PDF-г энд чирж авчирна уу/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/PDF-г энд чирж авчирна уу/i),
+    ).not.toBeInTheDocument();
     expect(screen.getByText(/амжилттай импортлогдсон/i)).toBeInTheDocument();
   });
 
   it("shows warning when there are unmatched players", async () => {
     fetchSpy.mockImplementation((url: string, init?: RequestInit) => {
       if (url === `/admin/api/games/${GAME_ID}`) {
-        return Promise.resolve(new Response(JSON.stringify(makeGameData()), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify(makeGameData()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
       if (url === `/admin/api/games/${GAME_ID}/submissions`) {
-        return Promise.resolve(new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
-      if (url === `/admin/api/games/${GAME_ID}/official-stats` && init?.method === "POST") {
-        return Promise.resolve(new Response(JSON.stringify({ boxScore: makeBoxScore(), synced: true, submissionId: "s2", revisionId: "r2", unmatchedPlayers: [{ teamCode: "KHL", jerseyNumber: 99, name: "Т.Тэст" }] }), { status: 200, headers: { "Content-Type": "application/json" } }));
+      if (
+        url === `/admin/api/games/${GAME_ID}/official-stats` &&
+        init?.method === "POST"
+      ) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              boxScore: makeBoxScore(),
+              synced: true,
+              submissionId: "s2",
+              revisionId: "r2",
+              unmatchedPlayers: [
+                { teamCode: "KHL", jerseyNumber: 99, name: "Т.Тэст" },
+              ],
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+        );
       }
       return Promise.reject(new Error(`unexpected: ${url}`));
     });
@@ -282,9 +449,13 @@ describe("BoxEntryPage", () => {
     await screen.findByText(/PDF-г энд чирж авчирна уу/i);
     await selectPdf();
     await userEvent.click(screen.getByRole("checkbox"));
-    await userEvent.click(screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }),
+    );
 
-    expect(await screen.findByText(/Тохироогүй тоглогчид/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Тохироогүй тоглогчид/i),
+    ).toBeInTheDocument();
     expect(screen.getByText("#99 Т.Тэст (KHL)")).toBeInTheDocument();
   });
 
@@ -293,13 +464,31 @@ describe("BoxEntryPage", () => {
   it("shows error toast when API returns error", async () => {
     fetchSpy.mockImplementation((url: string, init?: RequestInit) => {
       if (url === `/admin/api/games/${GAME_ID}`) {
-        return Promise.resolve(new Response(JSON.stringify(makeGameData()), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify(makeGameData()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
       if (url === `/admin/api/games/${GAME_ID}/submissions`) {
-        return Promise.resolve(new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
-      if (url === `/admin/api/games/${GAME_ID}/official-stats` && init?.method === "POST") {
-        return Promise.resolve(new Response(JSON.stringify({ error: "PDF parse failed: no stats found" }), { status: 422, headers: { "Content-Type": "application/json" } }));
+      if (
+        url === `/admin/api/games/${GAME_ID}/official-stats` &&
+        init?.method === "POST"
+      ) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ error: "PDF parse failed: no stats found" }),
+            { status: 422, headers: { "Content-Type": "application/json" } },
+          ),
+        );
       }
       return Promise.reject(new Error(`unexpected: ${url}`));
     });
@@ -308,23 +497,45 @@ describe("BoxEntryPage", () => {
     await screen.findByText(/PDF-г энд чирж авчирна уу/i);
     await selectPdf();
     await userEvent.click(screen.getByRole("checkbox"));
-    await userEvent.click(screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }),
+    );
 
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("PDF parse failed: no stats found");
+      expect(mockToast.error).toHaveBeenCalledWith(
+        "PDF parse failed: no stats found",
+      );
     });
   });
 
   it("shows generic error when response has no boxScore", async () => {
     fetchSpy.mockImplementation((url: string, init?: RequestInit) => {
       if (url === `/admin/api/games/${GAME_ID}`) {
-        return Promise.resolve(new Response(JSON.stringify(makeGameData()), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify(makeGameData()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
       if (url === `/admin/api/games/${GAME_ID}/submissions`) {
-        return Promise.resolve(new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
-      if (url === `/admin/api/games/${GAME_ID}/official-stats` && init?.method === "POST") {
-        return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } }));
+      if (
+        url === `/admin/api/games/${GAME_ID}/official-stats` &&
+        init?.method === "POST"
+      ) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ ok: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
       return Promise.reject(new Error(`unexpected: ${url}`));
     });
@@ -333,7 +544,9 @@ describe("BoxEntryPage", () => {
     await screen.findByText(/PDF-г энд чирж авчирна уу/i);
     await selectPdf();
     await userEvent.click(screen.getByRole("checkbox"));
-    await userEvent.click(screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }),
+    );
 
     await waitFor(() => {
       expect(mockToast.error).toHaveBeenCalledWith("Импорт хийж чадсангүй");
@@ -343,12 +556,25 @@ describe("BoxEntryPage", () => {
   it("shows error toast on network failure", async () => {
     fetchSpy.mockImplementation((url: string, init?: RequestInit) => {
       if (url === `/admin/api/games/${GAME_ID}`) {
-        return Promise.resolve(new Response(JSON.stringify(makeGameData()), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify(makeGameData()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
       if (url === `/admin/api/games/${GAME_ID}/submissions`) {
-        return Promise.resolve(new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
-      if (url === `/admin/api/games/${GAME_ID}/official-stats` && init?.method === "POST") {
+      if (
+        url === `/admin/api/games/${GAME_ID}/official-stats` &&
+        init?.method === "POST"
+      ) {
         return Promise.reject(new TypeError("Failed to fetch"));
       }
       return Promise.reject(new Error(`unexpected: ${url}`));
@@ -358,7 +584,9 @@ describe("BoxEntryPage", () => {
     await screen.findByText(/PDF-г энд чирж авчирна уу/i);
     await selectPdf();
     await userEvent.click(screen.getByRole("checkbox"));
-    await userEvent.click(screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }),
+    );
 
     await waitFor(() => {
       expect(mockToast.error).toHaveBeenCalledWith("Failed to fetch");
@@ -368,12 +596,25 @@ describe("BoxEntryPage", () => {
   it("shows generic error when response JSON parsing fails", async () => {
     fetchSpy.mockImplementation((url: string, init?: RequestInit) => {
       if (url === `/admin/api/games/${GAME_ID}`) {
-        return Promise.resolve(new Response(JSON.stringify(makeGameData()), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify(makeGameData()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
       if (url === `/admin/api/games/${GAME_ID}/submissions`) {
-        return Promise.resolve(new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
-      if (url === `/admin/api/games/${GAME_ID}/official-stats` && init?.method === "POST") {
+      if (
+        url === `/admin/api/games/${GAME_ID}/official-stats` &&
+        init?.method === "POST"
+      ) {
         return Promise.resolve(new Response("not json", { status: 500 }));
       }
       return Promise.reject(new Error(`unexpected: ${url}`));
@@ -383,7 +624,9 @@ describe("BoxEntryPage", () => {
     await screen.findByText(/PDF-г энд чирж авчирна уу/i);
     await selectPdf();
     await userEvent.click(screen.getByRole("checkbox"));
-    await userEvent.click(screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }),
+    );
 
     await waitFor(() => {
       expect(mockToast.error).toHaveBeenCalledWith(
@@ -405,17 +648,45 @@ describe("BoxEntryPage", () => {
     let callCount = 0;
     fetchSpy.mockImplementation((url: string, init?: RequestInit) => {
       if (url === `/admin/api/games/${GAME_ID}`) {
-        return Promise.resolve(new Response(JSON.stringify(makeGameData()), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify(makeGameData()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
       if (url === `/admin/api/games/${GAME_ID}/submissions`) {
         callCount++;
         if (callCount === 1) {
-          return Promise.resolve(new Response(JSON.stringify([makeSubmission()]), { status: 200, headers: { "Content-Type": "application/json" } }));
+          return Promise.resolve(
+            new Response(JSON.stringify([makeSubmission()]), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }),
+          );
         }
-        return Promise.resolve(new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
-      if (url === `/admin/api/games/${GAME_ID}/official-stats` && init?.method === "POST") {
-        return Promise.resolve(new Response(JSON.stringify({ boxScore: makeBoxScore(), synced: true, submissionId: "s3", revisionId: "r3" }), { status: 200, headers: { "Content-Type": "application/json" } }));
+      if (
+        url === `/admin/api/games/${GAME_ID}/official-stats` &&
+        init?.method === "POST"
+      ) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              boxScore: makeBoxScore(),
+              synced: true,
+              submissionId: "s3",
+              revisionId: "r3",
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+        );
       }
       return Promise.reject(new Error(`unexpected: ${url}`));
     });
@@ -424,7 +695,9 @@ describe("BoxEntryPage", () => {
     expect(await screen.findByText(/Ымнөх импортууд/i)).toBeInTheDocument();
     await selectPdf();
     await userEvent.click(screen.getByRole("checkbox"));
-    await userEvent.click(screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }),
+    );
 
     await waitFor(() => {
       expect(screen.queryByText(/Ымнөх импортууд/i)).not.toBeInTheDocument();
@@ -435,17 +708,44 @@ describe("BoxEntryPage", () => {
 
   it("shows loading text on button while submitting", async () => {
     let resolveSubmit: (v: unknown) => void;
-    const submitP = new Promise((resolve) => { resolveSubmit = resolve; });
+    const submitP = new Promise((resolve) => {
+      resolveSubmit = resolve;
+    });
 
     fetchSpy.mockImplementation((url: string, init?: RequestInit) => {
       if (url === `/admin/api/games/${GAME_ID}`) {
-        return Promise.resolve(new Response(JSON.stringify(makeGameData()), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify(makeGameData()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
       if (url === `/admin/api/games/${GAME_ID}/submissions`) {
-        return Promise.resolve(new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } }));
+        return Promise.resolve(
+          new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
-      if (url === `/admin/api/games/${GAME_ID}/official-stats` && init?.method === "POST") {
-        return submitP.then(() => Promise.resolve(new Response(JSON.stringify({ boxScore: makeBoxScore(), synced: true, submissionId: "s4", revisionId: "r4" }), { status: 200, headers: { "Content-Type": "application/json" } })));
+      if (
+        url === `/admin/api/games/${GAME_ID}/official-stats` &&
+        init?.method === "POST"
+      ) {
+        return submitP.then(() =>
+          Promise.resolve(
+            new Response(
+              JSON.stringify({
+                boxScore: makeBoxScore(),
+                synced: true,
+                submissionId: "s4",
+                revisionId: "r4",
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
+          ),
+        );
       }
       return Promise.reject(new Error(`unexpected: ${url}`));
     });
@@ -454,10 +754,12 @@ describe("BoxEntryPage", () => {
     await screen.findByText(/PDF-г энд чирж авчирна уу/i);
     await selectPdf();
     await userEvent.click(screen.getByRole("checkbox"));
-    await userEvent.click(screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /PDF-с статистик шинэчлэх/i }),
+    );
 
     expect(screen.getByRole("button", { name: /Уншиж байна/i })).toBeDisabled();
-    resolveSubmit!(undefined);
+    resolveSubmit?.(undefined);
     await waitFor(() => {
       expect(screen.getByText("38")).toBeInTheDocument();
     });
@@ -471,6 +773,8 @@ describe("BoxEntryPage", () => {
     await screen.findByText(/PDF-г энд чирж авчирна уу/i);
     const cb = screen.getByRole("checkbox");
     expect(cb).toBeRequired();
-    expect(screen.getByText(/ашиглах, хадгалах эрхтэйгээ баталгаажуулж/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/ашиглах, хадгалах эрхтэйгээ баталгаажуулж/i),
+    ).toBeInTheDocument();
   });
 });

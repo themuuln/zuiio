@@ -28,82 +28,7 @@
 
 ---
 
-## Available Work (Ready to Start)
-
-_Tasks with ⬜ status and no unresolved blockers. Pick from here._
-
-| ID | Task | Priority | Effort | Depends On |
-|----|------|----------|--------|------------|
-| T-1.4 | Projection rebuild command | P1 | M | T-1.3 |
-| T-1.5 | Authorization cutover | P1 | M | T-1.4 |
-| T-1.10 | Integration + chaos tests | P1 | M | T-1.4, T-1.6 |
-| T-2.1 | Roster onboarding kit | P1 | L | — |
-| T-2.2 | Consent & takedown | P1 | M | T-2.1 |
-| T-3.1 | Home: tonight's games | P1 | M | T-2.1 |
-| T-3.2 | Standings redesign | P1 | M | T-2.1 |
-| T-3.3 | Leaders redesign | P1 | M | T-2.1 |
-| T-3.4 | Qualification rules | P2 | M | — |
-| T-3.5 | Awards & MVP races | P2 | L | T-2.1 |
-| T-3.6 | Player comparison upgrade | P2 | M | T-2.1, T-2.4 |
-| T-3.7 | Team pages | P2 | M | T-2.1 |
-| T-3.8 | Search & browse | P2 | M | T-2.2 |
-| T-4.1 | OG images | P2 | M | T-2.1 |
-| T-4.2 | Shareable stat cards | P2 | M | T-2.9, T-4.5 |
-| T-4.3 | Game recap pages | P2 | L | T-3.1, T-5.1 |
-| T-4.4 | Embeds | P3 | S | T-2.1 |
-| T-4.5 | Sponsor placements | P2 | L | T-2.1 |
-| T-4.6 | Audience dashboard | P3 | L | — |
-| T-4.7 | English profile view/export | P3 | S | T-2.6, T-2.9 |
-| T-4.8 | SEO basics | P2 | S | T-2.2, T-3.8 |
-| T-5.1 | Public visibility for provisional games | P1 | M | Phase 1 |
-| T-5.2 | Realtime live game center | P2 | XL | T-5.1, T-3.1 |
-| T-5.3 | Live player stat lines | P2 | M | T-5.2 |
-
-## In Progress
-
-| ID | Task | Priority | Assignee | Started | Notes |
-|----|------|----------|----------|---------|-------|
-| T-1.2 | Ruleset-bound vocabulary | 🟡 P1 | — | — | Core tests done 🟡 RPC-side unverified — blocked on Docker |
-| T-1.7 | Handoff UI | 🟡 P1 | — | — | Dialog written 🟡 needs integration verification |
-| T-1.9 | Ops console | 🟡 P1 | — | — | Page built 🟡 needs integration verification |
-
-## Blocked
-
-| ID | Task | Priority | Blocker | Since |
-|----|------|----------|---------|-------|
-| T-1.1 | Local stack proof | 🔴 P1 | Docker not available locally | 2026-07-15 |
-
-## Done
-
-| ID | Task | Priority | Completed |
-|----|------|----------|-----------|
-| T-1.3 | Submission review UI | ✅ P1 | 2026-07-18 |
-| T-1.6 | Journal durability tests | ✅ P1 | 2026-07-18 |
-| T-1.8 | Runbook + paper fallback | ✅ P1 | 2026-07-18 |
-| T-2.3 | Hero identity card | ✅ P1 | 2026-07-18 |
-| T-2.4 | Season story arc | ✅ P1 | 2026-07-18 |
-| T-2.5 | Shooting profile | ✅ P1 | 2026-07-18 |
-| T-2.6 | Career highs & milestones | ✅ P1 | 2026-07-18 |
-| T-2.7 | Radar vs league average | ✅ P1 | 2026-07-18 |
-| T-2.8 | Recent games strip | ✅ P1 | 2026-07-18 |
-| T-2.9 | Plain-language summaries | ✅ P1 | 2026-07-18 |
-| T-2.10 | Report-error intake | ✅ P1 | 2026-07-18 |
-| T-2.11 | Season selector & career | ✅ P1 | 2026-07-18 |
-| T-2.12 | Box score below fold | ✅ P1 | 2026-07-18 |
-
----
-
-## Phase Summary
-
-| Phase | Status | Done | In Progress | Blocked | Not Started |
-|-------|--------|------|-------------|---------|-------------|
-| 1 — Trusted data foundation | 🟡 In progress | 3 | 3 | 1 | 3 |
-| 2 — Player profile as showcase | ✅ Mostly done | 10 | 0 | 0 | 2 |
-| 3 — Discovery & league surfaces | ⬜ Not started | 1* | 0 | 0 | 7 |
-| 4 — Shareability & reach | ⬜ Not started | 0 | 0 | 0 | 8 |
-| 5 — Live experience | ⬜ Not started | 0 | 0 | 0 | 3 |
-
-*Phase 3 task 3.1 is partially implemented (homepage data fetchers exist per spec header)
+_All Horizon A tasks (Phases 1–7) are complete. Academy Phase 10a foundation is also complete (DB schema, admin CRUD, QPay payments, sidebar nav). Phase 8+ are Horizon B._
 
 ---
 
@@ -113,26 +38,26 @@ _Tasks with ⬜ status and no unresolved blockers. Pick from here._
 
 | ID | Task | Priority | Status | Effort | Deps | Spec |
 |----|------|----------|--------|--------|------|------|
-| T-1.1 | Local stack proof | P1 | 🔴 | M | — | [spec](../plans/phase-1-trusted-foundation.md#task-11--local-stack-proof) |
-| T-1.2 | Ruleset-bound vocabulary | P1 | 🟡 | M | T-1.1 | [spec](../plans/phase-1-trusted-foundation.md#task-12--ruleset-bound-event-vocabulary) |
+| T-1.1 | Local stack proof | P1 | ✅ | M | — | [spec](../plans/phase-1-trusted-foundation.md#task-11--local-stack-proof) |
+| T-1.2 | Ruleset-bound vocabulary | P1 | ✅ | M | T-1.1 | [spec](../plans/phase-1-trusted-foundation.md#task-12--ruleset-bound-event-vocabulary) |
 | T-1.3 | Submission review UI | P1 | ✅ | L | T-1.2 | [spec](../plans/phase-1-trusted-foundation.md#task-13--submission-review-ui-approval-workflow) |
-| T-1.4 | Projection rebuild command | P1 | ⬜ | M | T-1.3 | [spec](../plans/phase-1-trusted-foundation.md#task-14--projection-rebuild-command) |
-| T-1.5 | Authorization cutover | P1 | ⬜ | M | T-1.4 | [spec](../plans/phase-1-trusted-foundation.md#task-15--authorization-cutover-retire-legacy-write-paths) |
+| T-1.4 | Projection rebuild command | P1 | ✅ | M | T-1.3 | [spec](../plans/phase-1-trusted-foundation.md#task-14--projection-rebuild-command) |
+| T-1.5 | Authorization cutover | P1 | ✅ | M | T-1.4 | [spec](../plans/phase-1-trusted-foundation.md#task-15--authorization-cutover-retire-legacy-write-paths) |
 | T-1.6 | Journal durability tests | P1 | ✅ | S | — | [spec](../plans/phase-1-trusted-foundation.md#task-16--journal-durability-verification) |
-| T-1.7 | Handoff UI | P1 | 🟡 | M | T-1.1 | [spec](../plans/phase-1-trusted-foundation.md#task-17--lead-to-backup-scorer-handoff-ui) |
+| T-1.7 | Handoff UI | P1 | ✅ | M | T-1.1 | [spec](../plans/phase-1-trusted-foundation.md#task-17--lead-to-backup-scorer-handoff-ui) |
 | T-1.8 | Runbook + paper fallback | P1 | ✅ | S | — | [spec](../plans/phase-1-trusted-foundation.md#task-18--game-day-runbook--paper-fallback) |
-| T-1.9 | Ops console | P1 | 🟡 | M | T-1.3 | [spec](../plans/phase-1-trusted-foundation.md#task-19--ops-console) |
-| T-1.10 | Integration + chaos tests | P1 | ⬜ | M | T-1.4, T-1.6 | [spec](../plans/phase-1-trusted-foundation.md#task-110--integration--chaos-tests) |
+| T-1.9 | Ops console | P1 | ✅ | M | T-1.3 | [spec](../plans/phase-1-trusted-foundation.md#task-19--ops-console) |
+| T-1.10 | Integration + chaos tests | P1 | ✅ | M | T-1.4, T-1.6 | [spec](../plans/phase-1-trusted-foundation.md#task-110--integration--chaos-tests) |
 
 ### Phase 2 — Player profile as showcase
 
 | ID | Task | Priority | Status | Effort | Deps | Spec |
 |----|------|----------|--------|--------|------|------|
-| T-2.1 | Roster onboarding kit | P1 | ⬜ | L | — | [spec](../plans/phase-2-player-showcase.md#task-21--roster-onboarding-kit-photos-logos-placeholder-identity) |
-| T-2.2 | Consent & takedown | P1 | ⬜ | M | T-2.1 | [spec](../plans/phase-2-player-showcase.md#task-22--consent--takedown) |
+| T-2.1 | Roster onboarding kit | P1 | ✅ | L | — | [spec](../plans/phase-2-player-showcase.md#task-21--roster-onboarding-kit-photos-logos-placeholder-identity) |
+| T-2.2 | Consent & takedown | P1 | ✅ | M | T-2.1 | [spec](../plans/phase-2-player-showcase.md#task-22--consent--takedown) |
 | T-2.3 | Hero identity card | P1 | ✅ | M | T-2.1, T-2.2 | [spec](../plans/phase-2-player-showcase.md#task-23--hero-identity-card) |
 | T-2.4 | Season story arc | P1 | ✅ | M | T-2.1, T-2.2 | [spec](../plans/phase-2-player-showcase.md#task-24--season-story-arc-chart-installs-charts) |
-| T-2.5 | Shooting profile | P1 | ✅ | M | T-2.4 | [spec](../plans/phase-2-player-showcase.md#task-25--shooting-profile) |
+| T-2.5 | Shooting profile | P1 | ✅ | M | T-2.1, T-2.2 | [spec](../plans/phase-2-player-showcase.md#task-25--shooting-profile) |
 | T-2.6 | Career highs & milestones | P1 | ✅ | M | — | [spec](../plans/phase-2-player-showcase.md#task-26--career-highs--milestones) |
 | T-2.7 | Radar vs league average | P1 | ✅ | M | T-2.4, T-3.4 | [spec](../plans/phase-2-player-showcase.md#task-27--radar-chart-vs-league-average) |
 | T-2.8 | Recent games strip | P1 | ✅ | S | T-2.1 | [spec](../plans/phase-2-player-showcase.md#task-28--recent-games-strip) |
@@ -141,88 +66,116 @@ _Tasks with ⬜ status and no unresolved blockers. Pick from here._
 | T-2.11 | Season selector & career | P1 | ✅ | M | T-2.1 | [spec](../plans/phase-2-player-showcase.md#task-211--season-selector--career-view) |
 | T-2.12 | Box score below fold | P1 | ✅ | S | — | [spec](../plans/phase-2-player-showcase.md#task-212--box-score-history-below-the-fold) |
 
-### Phase 3 — Discovery & league surfaces
+### Phase 3 — Final-Whistle Pack
 
 | ID | Task | Priority | Status | Effort | Deps | Spec |
 |----|------|----------|--------|--------|------|------|
-| T-3.1 | Home: tonight's games | P1 | ⬜ | M | T-2.1 | [spec](../plans/phase-3-discovery-league.md#task-31--home-tonights-games) |
-| T-3.2 | Standings redesign | P1 | ⬜ | M | T-2.1 | [spec](../plans/phase-3-discovery-league.md#task-32--standings-redesign) |
-| T-3.3 | Leaders redesign | P1 | ⬜ | M | T-2.1 | [spec](../plans/phase-3-discovery-league.md#task-33--leaders-redesign) |
-| T-3.4 | Qualification rules | P2 | ⬜ | M | — | [spec](../plans/phase-3-discovery-league.md#task-34--leaderboard-qualification-rules) |
-| T-3.5 | Awards & MVP races | P2 | ⬜ | L | T-2.1 | [spec](../plans/phase-3-discovery-league.md#task-35--awards--mvp-races) |
-| T-3.6 | Player comparison upgrade | P2 | ⬜ | M | T-2.1, T-2.4 | [spec](../plans/phase-3-discovery-league.md#task-36--player-comparison-upgrade) |
-| T-3.7 | Team pages | P2 | ⬜ | M | T-2.1 | [spec](../plans/phase-3-discovery-league.md#task-37--team-pages) |
-| T-3.8 | Search & browse | P2 | ⬜ | M | T-2.2 | [spec](../plans/phase-3-discovery-league.md#task-38--search--browse) |
+| T-3.1 | Game recap pages | P2 | ✅ | L | T-2.1 | [spec](../plans/phase-4-shareability-reach.md#task-43--game-recap-pages) |
+| T-3.2 | Shareable stat cards | P2 | ✅ | M | T-2.9, T-4.5 | [spec](../plans/phase-4-shareability-reach.md#task-42--shareable-stat-cards-download) |
+| T-3.3 | Sponsor placements | P2 | ✅ | L | T-2.1 | [spec](../plans/phase-4-shareability-reach.md#task-45--sponsor-placements) |
+| T-3.4 | Awards & MVP races | P2 | ✅ | L | T-2.1 | [spec](../plans/phase-3-discovery-league.md#task-35--awards--mvp-races) |
+| T-3.5 | Provisional-final publication | P1 | ✅ | M | Phase 1 done | [spec](../plans/phase-5-live-experience.md#task-51--public-visibility-for-provisional-games) |
+| T-3.6 | Auto Mongolian recap text | P2 | ✅ | S | T-2.9 | Inline in recap components |
+| T-3.7 | One-click share/download | P2 | ✅ | S | T-4.2 | StatCard download button |
 
-### Phase 4 — Shareability & reach
-
-| ID | Task | Priority | Status | Effort | Deps | Spec |
-|----|------|----------|--------|--------|------|------|
-| T-4.1 | OG images | P2 | ⬜ | M | T-2.1 | [spec](../plans/phase-4-shareability-reach.md#task-41--og-images) |
-| T-4.2 | Shareable stat cards | P2 | ⬜ | M | T-2.9, T-4.5 | [spec](../plans/phase-4-shareability-reach.md#task-42--shareable-stat-cards-download) |
-| T-4.3 | Game recap pages | P2 | ⬜ | L | T-3.1, T-5.1 | [spec](../plans/phase-4-shareability-reach.md#task-43--game-recap-pages) |
-| T-4.4 | Embeds | P3 | ⬜ | S | T-2.1 | [spec](../plans/phase-4-shareability-reach.md#task-44--embeds) |
-| T-4.5 | Sponsor placements | P2 | ⬜ | L | T-2.1 | [spec](../plans/phase-4-shareability-reach.md#task-45--sponsor-placements) |
-| T-4.6 | Audience dashboard | P3 | ⬜ | L | — | [spec](../plans/phase-4-shareability-reach.md#task-46--league-audience-dashboard) |
-| T-4.7 | English profile view/export | P3 | ⬜ | S | T-2.6, T-2.9 | [spec](../plans/phase-4-shareability-reach.md#task-47--english-profile-viewexport) |
-| T-4.8 | SEO basics | P2 | ⬜ | S | T-2.2, T-3.8 | [spec](../plans/phase-4-shareability-reach.md#task-48--seo-basics) |
-
-### Phase 5 — Live experience
+### Phase 4 — League proof & renewal
 
 | ID | Task | Priority | Status | Effort | Deps | Spec |
 |----|------|----------|--------|--------|------|------|
-| T-5.1 | Public visibility for provisional games | P1 | ⬜ | M | Phase 1 done | [spec](../plans/phase-5-live-experience.md#task-51--public-visibility-for-provisional-games) |
-| T-5.2 | Realtime live game center | P2 | ⬜ | XL | T-5.1, T-3.1 | [spec](../plans/phase-5-live-experience.md#task-52--realtime-live-game-center) |
-| T-5.3 | Live player stat lines | P2 | ⬜ | M | T-5.2 | [spec](../plans/phase-5-live-experience.md#task-53--live-player-stat-lines) |
+| T-4.1 | OG images | P2 | ✅ | M | T-2.1 | [spec](../plans/phase-4-shareability-reach.md#task-41--og-images) |
+| T-4.2 | Shareable stat cards | P2 | ✅ | M | T-2.9, T-4.5 | [spec](../plans/phase-4-shareability-reach.md#task-42--shareable-stat-cards-download) |
+| T-4.3 | Game recap pages | P2 | ✅ | L | T-3.1, T-5.1 | [spec](../plans/phase-4-shareability-reach.md#task-43--game-recap-pages) |
+| T-4.4 | Embeds | P3 | ✅ | S | T-2.1 | [spec](../plans/phase-4-shareability-reach.md#task-44--embeds) |
+| T-4.5 | Sponsor placements | P2 | ✅ | L | T-2.1 | [spec](../plans/phase-4-shareability-reach.md#task-45--sponsor-placements) |
+| T-4.6 | Audience dashboard | P3 | ✅ | L | — | [spec](../plans/phase-4-shareability-reach.md#task-46--league-audience-dashboard) |
+| T-4.7 | English profile view/export | P3 | ✅ | S | T-2.6, T-2.9 | [spec](../plans/phase-4-shareability-reach.md#task-47--english-profile-viewexport) |
+| T-4.8 | SEO basics | P2 | ✅ | S | T-2.2, T-3.8 | [spec](../plans/phase-4-shareability-reach.md#task-48--seo-basics) |
+
+### Phase 5 — Discovery & organic growth
+
+| ID | Task | Priority | Status | Effort | Deps | Spec |
+|----|------|----------|--------|--------|------|------|
+| T-5.1 | Standings redesign | P1 | ✅ | M | T-2.1 | [spec](../plans/phase-3-discovery-league.md#task-32--standings-redesign) |
+| T-5.2 | Leaders redesign | P1 | ✅ | M | T-2.1 | [spec](../plans/phase-3-discovery-league.md#task-33--leaders-redesign) |
+| T-5.3 | Qualification rules | P2 | ✅ | M | — | [spec](../plans/phase-3-discovery-league.md#task-34--leaderboard-qualification-rules) |
+| T-5.4 | Home: tonight's games | P1 | ✅ | M | T-2.1 | [spec](../plans/phase-3-discovery-league.md#task-31--home-tonights-games) |
+| T-5.5 | Team pages | P2 | ✅ | M | T-2.1 | [spec](../plans/phase-3-discovery-league.md#task-37--team-pages) |
+| T-5.6 | Search & browse | P2 | ✅ | M | T-2.2 | [spec](../plans/phase-3-discovery-league.md#task-38--search--browse) |
+| T-5.7 | SEO basics | P2 | ✅ | S | T-2.2, T-5.6 | [spec](../plans/phase-4-shareability-reach.md#task-48--seo-basics) |
+
+### Phase 6 — Live experience
+
+| ID | Task | Priority | Status | Effort | Deps | Spec |
+|----|------|----------|--------|--------|------|------|
+| T-6.1 | Public visibility for provisional games | P1 | ✅ | M | Phase 1 done | [spec](../plans/phase-5-live-experience.md#task-51--public-visibility-for-provisional-games) |
+| T-6.2 | Realtime live game center | P2 | ✅ | XL | T-6.1, T-5.4 | [spec](../plans/phase-5-live-experience.md#task-52--realtime-live-game-center) |
+| T-6.3 | Live player stat lines | P2 | ✅ | M | T-6.2 | [spec](../plans/phase-5-live-experience.md#task-53--live-player-stat-lines) |
+
+### Phase 7 — Team insights (design-partner beta)
+
+| ID | Task | Priority | Status | Effort | Deps | Spec |
+|----|------|----------|--------|--------|------|------|
+| T-7.1 | Efficiency metrics | P2 | ✅ | M | Phase 2 done | `packages/core/src/stats/team-advanced.ts` — ORtg, DRtg, NETRTG, PIE, Four Factors, pace |
+| T-7.2 | Team performance dashboard | P2 | ✅ | L | T-7.1 | `teams/[slug]/analytics/` — efficiency chart, Four Factors, per-game table, stat summary |
+| T-7.3 | Player development timeline | P2 | ✅ | M | — | `MonthlyProgression` on player page — month-over-month stat chart |
+| T-7.4 | Opponent scout card | P2 | ✅ | S | — | `teams/[slug]/scout/` — VS header, stat duel, opponent players, recent form |
 
 ---
 
-## Feature Gaps (from gaps.md)
+### Phase 8 — Shared basketball organization foundation
 
-_Enhancement ideas with no assigned phase. Priority per gaps.md analysis._
+| ID | Task | Priority | Status | Effort | Deps | Spec |
+|----|------|----------|--------|--------|------|------|
+| T-8.1 | Canonical org identity | P1 | ⬜ | L | — | Organizations, memberships, roles |
+| T-8.2 | Roster snapshots & eligibility | P2 | ⬜ | M | T-8.1 | Official rosters, transfers |
+| T-8.3 | Least-privilege org roles | P1 | ⬜ | M | T-8.1 | Role-based access |
+| T-8.4 | Private storage & audit | P2 | ⬜ | M | T-8.1 | Tenant-isolated storage |
+| T-8.5 | Consent & retention | P2 | ⬜ | S | T-8.1 | Data retention policies |
+| T-8.6 | Break-glass support | P3 | ⬜ | S | T-8.1 | Emergency access |
 
-| ID | Feature | Priority | Effort | DB Ready | Frontend Only |
-|----|---------|----------|--------|----------|---------------|
-| G-01 | Score flip animation | P0 | S | ✅ | ✅ |
-| G-02 | Skill radar league overlay | P0 | S | ✅ | ✅ |
-| G-03 | Season arc brush selection | P0 | S | ✅ | ✅ |
-| G-04 | Multi-category leaderboard strip | P0 | S | ✅ | ✅ |
-| G-05 | Standings row expansion | P1 | S | ✅ | ✅ |
-| G-06 | Card flip stats | P1 | S | ✅ | ✅ |
-| G-07 | Drag-to-compare players | P1 | M | ✅ | ⚠️ (needs @dnd-kit) |
-| G-08 | Tournament hub pages | P1 | M | ⚠️ | ✅ |
-| G-09 | Tournament bracket visualization | P1 | M | ⚠️ | ✅ |
-| G-10 | Swipeable game cards | P2 | S | ✅ | ✅ |
-| G-11 | Drag-to-reorder leader categories | P2 | S | ✅ | ✅ (needs @dnd-kit) |
-| G-12 | Court heatmap | P2 | M | ⚠️ | ✅ |
-| G-13 | Season/competition selector | P2 | S | ✅ | ✅ |
-| G-14 | Countdown timer for next game | P2 | S | ✅ | ✅ |
-| G-15 | Shareable stat cards | P3 | M | ✅ | ⚠️ (needs @vercel/og) |
-| G-16 | Live court animation | P3 | XL | ⚠️ | ⚠️ |
+### Phase 9 — Team operations
 
-See [`docs/gaps.md`](../gaps.md) for full analysis of each feature.
+| ID | Task | Priority | Status | Effort | Deps | Spec |
+|----|------|----------|--------|--------|------|------|
+| T-9.1 | Staff roles | P2 | ⬜ | M | Phase 8 | Coach, manager, finance roles |
+| T-9.2 | Roster intent & availability | P3 | ⬜ | L | T-9.1 | Availability scheduling |
+| T-9.3 | Training schedule | P3 | ⬜ | M | T-9.1 | Session planning |
+| T-9.4 | Team dues & expenses | P3 | ⬜ | M | T-9.1 | Payment workflows |
+| T-9.5 | Opponent prep tools | P3 | ⬜ | S | T-9.1 | Scout card integration |
 
----
+### Phase 10 — Academy operations
 
-## How to Use This Queue
+| ID | Task | Priority | Status | Effort | Deps | Spec |
+|----|------|----------|--------|--------|------|------|
+| T-10a.1 | Academy profiles DB schema + migration | P1 | ✅ | M | — | `supabase/migrations/` + RLS + seed |
+| T-10a.2 | Academy admin CRUD (profile, programs, trainers, locations) | P1 | ✅ | L | T-10a.1 | Admin pages + API routes |
+| T-10a.3 | Academy payments (QPay) | P1 | ✅ | M | T-10a.2 | QPay invoice → QR → poll |
+| T-10a.4 | Academy sidebar nav | P1 | ✅ | S | T-10a.2 | Admin sidebar group |
+| T-10a.5 | Academy tests (28 integration + 40 unit) | P1 | ✅ | L | T-10a.1–4 | Schema, CRUD, payments, RLS |
+| T-10b.1 | Student profiles with guardian info | P2 | ⬜ | L | Phase 8 | Student records, photo upload, medical |
+| T-10b.2 | Enrollment management | P2 | ⬜ | L | T-10b.1 | Registration, program assignment, dates |
+| T-10b.3 | Attendance tracking | P2 | ⬜ | M | T-10b.2 | Present/absent/late states |
+| T-10b.4 | Consent & waivers | P2 | ⬜ | M | T-10b.1 | Signed templates, withdrawal |
+| T-10b.5 | CSV import/export | P3 | ⬜ | S | T-10b.1 | Batch roster operations |
+| T-10c.1 | Offline-safe attendance with IndexedDB | P3 | ⬜ | L | T-10b.3 | Queue + replay |
+| T-10c.2 | Attendance reports | P3 | ⬜ | M | T-10c.1 | Student, offering, coach, date range |
+| T-10c.3 | Payment history & receipts | P3 | ⬜ | L | T-10a.3 | Per-student ledger |
+| T-10c.4 | Ordered waitlists | P3 | ⬜ | S | T-10b.2 | Promotion rules |
+| T-10d.1 | Guardian OTP & multi-child dashboard | P3 | ⬜ | L | Phase 11 | Phone auth |
+| T-10d.2 | Verified QPay callbacks | P3 | ⬜ | M | T-10a.3 | Server-side verification |
+| T-10d.3 | Multi-location scheduling | P3 | ⬜ | M | T-10b.2 | Location-aware offerings |
+| T-10d.4 | Extended reporting | P3 | ⬜ | M | T-10c.2 | Financial + attendance analytics |
 
-### For Agents
+### Phase 11 — Guardian self-service
 
-1. **Start here.** Read `INDEX.md` first to see what's available.
-2. **Check "Available Work"** section — those tasks have ⬜ status and no blockers.
-3. **Pick highest priority** (P0 → P1 → P2 → P3). Within priority, tasks are listed in recommended order.
-4. **Read the task file** at `docs/tasks/T-<ID>-<name>.md` for full details.
-5. **Read conventions** at `docs/plans/00-conventions.md` before writing code.
-6. **Update as you go:** Change status to `🟡` when you start, `✅` when done. Tick ROADMAP.md checkbox. Update EXECUTION-STATUS.md.
-7. **Verify** against the task's _Done When_ criteria before marking complete.
+| ID | Task | Priority | Status | Effort | Deps | Spec |
+|----|------|----------|--------|--------|------|------|
+| T-11.1 | Multi-child dashboard | P3 | ⬜ | L | Phase 8 | Guardian view of all children |
+| T-11.2 | Invoice/payment history & receipts | P3 | ⬜ | M | T-10a.3 | Self-service billing |
+| T-11.3 | Registration & consent management | P3 | ⬜ | M | T-10b.4 | Self-service consent |
+| T-11.4 | Announcements & reminders | P3 | ⬜ | S | T-11.1 | Notifications |
 
-### For Humans
 
-1. **Review completed tasks** by checking the task file + ROADMAP.md.
-2. **Add new tasks** by copying `TEMPLATE.md` and creating a new file in `docs/tasks/`.
-3. **Update status** in this INDEX and in EXECUTION-STATUS.md.
-4. **Resolve blockers** — if T-1.1 becomes unblocked (Docker available), move it to Available Work.
+_Last updated: 2026-07-22_
 
----
-
-_Last updated: 2026-07-21_
+_Last updated: 2026-07-22_

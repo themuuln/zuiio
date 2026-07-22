@@ -23,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -66,9 +65,15 @@ function TeamStatsTable({ teamLabel, players, side }: TeamStatsTableProps) {
               <TableHead className="w-8 text-xs">#</TableHead>
               <TableHead className="min-w-32 text-xs">Тоглогч</TableHead>
               <TableHead className="text-xs">Min</TableHead>
-              <TableHead className="text-xs" colSpan={2}>FG</TableHead>
-              <TableHead className="text-xs" colSpan={2}>3P</TableHead>
-              <TableHead className="text-xs" colSpan={2}>FT</TableHead>
+              <TableHead className="text-xs" colSpan={2}>
+                FG
+              </TableHead>
+              <TableHead className="text-xs" colSpan={2}>
+                3P
+              </TableHead>
+              <TableHead className="text-xs" colSpan={2}>
+                FT
+              </TableHead>
               <TableHead className="text-xs">OREB</TableHead>
               <TableHead className="text-xs">DREB</TableHead>
               <TableHead className="text-xs">REB</TableHead>
@@ -196,7 +201,10 @@ const SUB_STATUS_LABELS: Record<string, string> = {
   rejected: "Татгалзсан",
 };
 
-const SUB_STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+const SUB_STATUS_VARIANTS: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   pending: "default",
   approved: "secondary",
   rejected: "destructive",
@@ -212,7 +220,11 @@ export default function BoxEntryPage() {
     submissionId: string;
     revisionId: string;
     synced: boolean;
-    unmatchedPlayers?: Array<{ teamCode: string; jerseyNumber: number; name: string }>;
+    unmatchedPlayers?: Array<{
+      teamCode: string;
+      jerseyNumber: number;
+      name: string;
+    }>;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -254,12 +266,15 @@ export default function BoxEntryPage() {
     }
   }, []);
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    if (selected) setFile(selected);
-    // Reset so the same file can be re-selected
-    e.target.value = "";
-  }, []);
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selected = e.target.files?.[0];
+      if (selected) setFile(selected);
+      // Reset so the same file can be re-selected
+      e.target.value = "";
+    },
+    [],
+  );
 
   const clearFile = useCallback(() => {
     setFile(null);
@@ -277,9 +292,9 @@ export default function BoxEntryPage() {
       const fd = new FormData();
       fd.append("file", file);
       // Collect the checkbox
-      const rightsCheckbox = (event.currentTarget as HTMLFormElement).querySelector(
-        'input[name="rightsConfirmed"]',
-      ) as HTMLInputElement;
+      const rightsCheckbox = (
+        event.currentTarget as HTMLFormElement
+      ).querySelector('input[name="rightsConfirmed"]') as HTMLInputElement;
       if (rightsCheckbox?.checked) {
         fd.append("rightsConfirmed", "true");
       }
@@ -293,7 +308,11 @@ export default function BoxEntryPage() {
         synced?: boolean;
         submissionId?: string;
         revisionId?: string;
-        unmatchedPlayers?: Array<{ teamCode: string; jerseyNumber: number; name: string }>;
+        unmatchedPlayers?: Array<{
+          teamCode: string;
+          jerseyNumber: number;
+          name: string;
+        }>;
       };
 
       if (!response.ok || !body.boxScore) {
@@ -371,7 +390,8 @@ export default function BoxEntryPage() {
                 {game.venues && (
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <MapPin className="size-3.5" />
-                    {game.venues.name}{game.venues.city ? `, ${game.venues.city}` : ""}
+                    {game.venues.name}
+                    {game.venues.city ? `, ${game.venues.city}` : ""}
                   </div>
                 )}
               </>
@@ -411,9 +431,7 @@ export default function BoxEntryPage() {
                       <Upload className="size-8 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium">
-                        PDF-г энд чирж авчирна уу
-                      </p>
+                      <p className="font-medium">PDF-г энд чирж авчирна уу</p>
                       <p className="mt-1 text-sm text-muted-foreground">
                         эсвэл товшоод файл сонгох
                       </p>
@@ -528,7 +546,9 @@ export default function BoxEntryPage() {
                   score={result.score.home}
                   highlight={result.score.home > result.score.away}
                 />
-                <span className="text-3xl font-bold text-muted-foreground">:</span>
+                <span className="text-3xl font-bold text-muted-foreground">
+                  :
+                </span>
                 <ScoreBadge
                   label={result.teams[1]?.name ?? "Away"}
                   score={result.score.away}
@@ -571,31 +591,42 @@ export default function BoxEntryPage() {
           )}
 
           {/* Unmatched players warning */}
-          {syncInfo?.unmatchedPlayers && syncInfo.unmatchedPlayers.length > 0 && (
-            <Card className="border-amber-500/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
-                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
-                  </svg>
-                  Тохироогүй тоглогчид ({syncInfo.unmatchedPlayers.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Дараах тоглогчдын дугаар тохирохгүй байна — гараар шалгана уу:
-                </p>
-                <ul className="list-disc space-y-0.5 pl-5 text-sm text-amber-700 dark:text-amber-400">
-                  {syncInfo.unmatchedPlayers.map((p) => (
-                    <li key={`${p.teamCode}-${p.jerseyNumber}`}>
-                      #{p.jerseyNumber} {p.name} ({p.teamCode})
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
+          {syncInfo?.unmatchedPlayers &&
+            syncInfo.unmatchedPlayers.length > 0 && (
+              <Card className="border-amber-500/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+                    <svg
+                      className="size-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z"
+                      />
+                    </svg>
+                    Тохироогүй тоглогчид ({syncInfo.unmatchedPlayers.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Дараах тоглогчдын дугаар тохирохгүй байна — гараар шалгана
+                    уу:
+                  </p>
+                  <ul className="list-disc space-y-0.5 pl-5 text-sm text-amber-700 dark:text-amber-400">
+                    {syncInfo.unmatchedPlayers.map((p) => (
+                      <li key={`${p.teamCode}-${p.jerseyNumber}`}>
+                        #{p.jerseyNumber} {p.name} ({p.teamCode})
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
 
           {/* Player stats per team */}
           {result.teams.map((team, idx) => (
@@ -674,7 +705,9 @@ export default function BoxEntryPage() {
                       {format(new Date(sub.submitted_at), "yyyy-MM-dd HH:mm")}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={SUB_STATUS_VARIANTS[sub.status] ?? "outline"}>
+                      <Badge
+                        variant={SUB_STATUS_VARIANTS[sub.status] ?? "outline"}
+                      >
                         {SUB_STATUS_LABELS[sub.status] ?? sub.status}
                       </Badge>
                     </TableCell>
@@ -684,7 +717,7 @@ export default function BoxEntryPage() {
                           href={
                             sub.source_type === "official_score_sheet"
                               ? `/admin/api/submissions/${sub.id}/evidence`
-                              : sub.evidence_url ?? "#"
+                              : (sub.evidence_url ?? "#")
                           }
                           target="_blank"
                           className="inline-flex items-center gap-1"

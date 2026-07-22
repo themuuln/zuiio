@@ -16,14 +16,17 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import { createClient } from "@/lib/supabase/server";
 import {
+  GET as GETOrders,
+  POST as POSTOrders,
+} from "../admin/api/orders/route";
+import {
+  DELETE as DELETEProduct,
+  PUT as PUTProduct,
+} from "../admin/api/products/[id]/route";
+import {
   GET as GETProducts,
   POST as POSTProducts,
 } from "../admin/api/products/route";
-import {
-  PUT as PUTProduct,
-  DELETE as DELETEProduct,
-} from "../admin/api/products/[id]/route";
-import { GET as GETOrders, POST as POSTOrders } from "../admin/api/orders/route";
 
 const mockCreateClient = vi.mocked(createClient);
 
@@ -227,10 +230,9 @@ describe("Admin Products API", () => {
     it("returns 500 when the database update fails", async () => {
       setQueryResult(mock, "products", null, new Error("update constraint"));
 
-      const res = await PUTProduct(
-        createMockRequest({ name: "Fail" }),
-        { params: createMockParams("p1") },
-      );
+      const res = await PUTProduct(createMockRequest({ name: "Fail" }), {
+        params: createMockParams("p1"),
+      });
       const body = await parseResponse(res);
 
       expect(res.status).toBe(500);
@@ -387,9 +389,7 @@ describe("Admin Orders API", () => {
     });
 
     it("returns error when action or orderId is missing", async () => {
-      const res = await POSTOrders(
-        createMockRequest({ action: "ship" }),
-      );
+      const res = await POSTOrders(createMockRequest({ action: "ship" }));
       const body = await parseResponse(res);
 
       expect(res.status).toBe(400);

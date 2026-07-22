@@ -59,9 +59,13 @@ export async function POST(request: NextRequest) {
 
     if (!qpayRes.ok) {
       // Cancel the order — release stock
-      await supabase.rpc("cmd_cancel_shop_order", {
-        p_order_id: orderId,
-      }).catch(() => {});
+      try {
+        await supabase.rpc("cmd_cancel_shop_order", {
+          p_order_id: orderId,
+        });
+      } catch {
+        // Best-effort cancellation — order will be cleaned up by cron
+      }
 
       return NextResponse.json(
         { error: "QPay системд алдаа гарлаа. Дахиж оролдоно уу." },

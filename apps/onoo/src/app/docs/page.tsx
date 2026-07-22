@@ -1,40 +1,40 @@
+import { ArrowRight, Eye, Layout, ListChecks, Route } from "lucide-react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Eye, Route, Layout, ListChecks } from "lucide-react";
 
 const DOCS_CARDS = [
   {
     href: "/docs/vision",
-    title: "Product Vision",
+    title: "Бүтээгдэхүүний алсын хараа",
     description:
-      "Why Onoo exists, who it's for, design principles, and success measures.",
+      "Оноо яагаад оршин байдаг, хэнд зориулагдсан, ямар зарчим баримталдаг, ямар үр дүнг хэмждэг.",
     icon: Eye,
   },
   {
     href: "/docs/architecture",
-    title: "Architecture",
+    title: "Архитектур",
     description:
-      "System architecture, data flow, security model, and tenant isolation.",
+      "Системийн бүтэц, өгөгдлийн урсгал, аюулгүй байдлын загвар, олон байгууллагын тусгаарлалт.",
     icon: Route,
   },
   {
     href: "/docs/design",
-    title: "Brandbook & Design System",
+    title: "Брэнд ба дизайн систем",
     description:
-      "Color system, typography, components, motion, and the player showcase.",
+      "Өнгөний систем, typography, компонентууд, motion, болон player showcase.",
     icon: Layout,
   },
   {
     href: "/docs/features",
-    title: "Feature Inventory",
+    title: "Фичерийн бүртгэл",
     description:
-      "Everything shipped, in progress, planned, and in the backlog.",
+      "Хийсэн, ажиллаж буй, төлөвлөсөн, backlog-т байгаа бүх боломжууд.",
     icon: ListChecks,
   },
   {
     href: "/docs/roadmap",
-    title: "Roadmap",
+    title: "Замын зураг",
     description:
-      "Phased execution plan with commercial gates and success measures.",
+      "Арилжааны босго болон амжилтын хэмжүүртэй үе шаттай гүйцэтгэлийн төлөвлөгөө.",
     icon: ArrowRight,
   },
 ];
@@ -44,11 +44,11 @@ export default function DocsIndexPage() {
     <div>
       <div className="mb-10">
         <h1 className="mb-3 text-4xl font-black tracking-tight text-foreground">
-          Documentation
+          Баримт бичиг
         </h1>
         <p className="max-w-2xl text-lg text-muted-foreground">
-          Everything you need to know about Onoo — the product, design system,
-          architecture, features, and roadmap.
+          Оноо-ийн бүтээгдэхүүн, дизайн систем, архитектур, фичерүүд, замын
+          зурагтай холбоотой бүх чухал мэдээлэл.
         </p>
       </div>
 
@@ -65,7 +65,7 @@ export default function DocsIndexPage() {
                 <Icon className="size-5" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="mb-1 font-semibold text-foreground group-hover:text-[var(--brand-sports)] transition-colors">
+                <h2 className="mb-1 font-semibold text-foreground transition-colors group-hover:text-[var(--brand-sports)]">
                   {card.title}
                 </h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">

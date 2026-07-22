@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 // ---------------------------------------------------------------------------
@@ -95,7 +95,11 @@ interface MappedError {
 
 function mapQPayError(code: string, details?: string): MappedError {
   // Timeout errors
-  if (code === "HTTP_408" || code?.includes("TIMEOUT") || code?.includes("timeout")) {
+  if (
+    code === "HTTP_408" ||
+    code?.includes("TIMEOUT") ||
+    code?.includes("timeout")
+  ) {
     return {
       code: "TIMEOUT",
       message: `QPay request timed out: ${details ?? "No response"}`,
@@ -168,7 +172,6 @@ function mapQPayError(code: string, details?: string): MappedError {
       userMessage: "Төлбөрийн систем алдаатай байна. Дахиж оролдоно уу.",
     };
   }
-
 
   // Default / unknown
   return {
@@ -754,7 +757,7 @@ describe("Form Validation", () => {
         );
         expect(customerNameIssues.length).toBeGreaterThan(0);
       }
-    })
+    });
     it("rejects empty string name", () => {
       const result = createOrderSchema.safeParse({
         ...validPayload,

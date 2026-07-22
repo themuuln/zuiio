@@ -2,15 +2,16 @@ import { BarChart3, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@/components/ui";
-import { Button } from "@/components/ui";
 import {
+  Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { ViewBeacon } from "@/components/view-beacon";
 import { PublicEmptyState } from "../components/public-empty-state";
 import { getStandings } from "../lib/data";
 import { StandingsTable } from "./components/standings-table";
@@ -54,6 +55,10 @@ export default async function StandingsPage({
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <ViewBeacon
+        entityType="standings"
+        entityId="00000000-0000-0000-0000-000000000000"
+      />
       <header className="flex flex-col gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -187,9 +192,10 @@ export default async function StandingsPage({
               <CardContent className="p-0">
                 <StandingsTable rows={standings} />
               </CardContent>
-            <p className="md:hidden text-xs text-muted-foreground text-center mt-2">
-              Ширээ бага зэрэг гүйлгэж бүтэн хүснэгтийг үзнэ үү. Мөр дээр дарж дэлгэрэнгүй үзнэ.
-            </p>
+              <p className="md:hidden text-xs text-muted-foreground text-center mt-2">
+                Ширээ бага зэрэг гүйлгэж бүтэн хүснэгтийг үзнэ үү. Мөр дээр дарж
+                дэлгэрэнгүй үзнэ.
+              </p>
             </Card>
             <p className="text-sm leading-relaxed text-muted-foreground">
               Я — ялалт, Х — хожигдол, GB — тэргүүлэгчээс хоцорч буй тоглолт.

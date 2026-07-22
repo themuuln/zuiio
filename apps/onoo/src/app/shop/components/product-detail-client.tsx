@@ -38,7 +38,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         <div className="flex aspect-square items-center justify-center rounded-lg bg-muted">
           {(product.images?.length ?? 0) > 0 && !imgError ? (
             <img
-              src={product.images![0]}
+              src={product.images?.[0]}
               alt={product.name}
               className="h-full w-full rounded-lg object-cover"
               onError={() => setImgError(true)}

@@ -4,7 +4,14 @@ import { describe, expect, it } from "vitest";
 function computeRank(
   playerId: string,
   statKey: "pts" | "reb" | "ast" | "stl" | "blk",
-  leaders: Array<{ player_id: string; pts?: number; reb?: number; ast?: number; stl?: number; blk?: number }>,
+  leaders: Array<{
+    player_id: string;
+    pts?: number;
+    reb?: number;
+    ast?: number;
+    stl?: number;
+    blk?: number;
+  }>,
   competitionId?: string,
 ): number | null {
   const filtered = competitionId

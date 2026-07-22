@@ -59,18 +59,21 @@ export function CompareBars({
                 <span
                   className={cn(
                     "text-lg font-black tabular-nums",
-                    leftWins ? "text-[var(--brand-sports)]" : "text-muted-foreground",
+                    leftWins
+                      ? "text-[var(--brand-sports)]"
+                      : "text-muted-foreground",
                   )}
                 >
                   {stat.left.toFixed(1)}
                 </span>
-                <div className="relative h-3 w-full max-w-[12rem]" aria-hidden="true">
+                <div
+                  className="relative h-3 w-full max-w-[12rem]"
+                  aria-hidden="true"
+                >
                   <div
                     className={cn(
                       "absolute right-0 top-0 h-full rounded-l-full transition-all duration-500",
-                      leftWins
-                        ? "bg-[var(--brand-sports)]"
-                        : "bg-muted",
+                      leftWins ? "bg-[var(--brand-sports)]" : "bg-muted",
                     )}
                     style={{ width: `${leftPct}%` }}
                   />
@@ -84,13 +87,14 @@ export function CompareBars({
 
               {/* Right player bar + value */}
               <div className="flex items-center gap-2">
-                <div className="relative h-3 w-full max-w-[12rem]" aria-hidden="true">
+                <div
+                  className="relative h-3 w-full max-w-[12rem]"
+                  aria-hidden="true"
+                >
                   <div
                     className={cn(
                       "absolute left-0 top-0 h-full rounded-r-full transition-all duration-500",
-                      rightWins
-                        ? "bg-[var(--brand-sports)]"
-                        : "bg-muted",
+                      rightWins ? "bg-[var(--brand-sports)]" : "bg-muted",
                     )}
                     style={{ width: `${rightPct}%` }}
                   />

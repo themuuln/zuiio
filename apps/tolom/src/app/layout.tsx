@@ -54,14 +54,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       )}
       suppressHydrationWarning
     >
-      <head
-        dangerouslySetInnerHTML={{
-          __html:
-            process.env.NODE_ENV === "development"
-              ? `<script src="https://unpkg.com/react-grab/dist/index.global.js" crossorigin="anonymous"></script>`
-              : "",
-        }}
-      />
+      <head />
       <body className="flex min-h-dvh flex-col">
         <ThemeProvider>{children}</ThemeProvider>
         <Analytics />

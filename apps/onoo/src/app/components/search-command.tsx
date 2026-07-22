@@ -1,16 +1,16 @@
 "use client";
 
-import { Search, SearchX, Shield, Users } from "lucide-react";
-import Image from "next/image";
+import { Search, SearchX, Shield } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PlayerAvatar } from "@/components/player-avatar";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  Input,
 } from "@/components/ui";
-import { Input } from "@/components/ui";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -91,10 +91,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         }
       })
       .catch((err: unknown) => {
-        if (
-          err instanceof DOMException &&
-          err.name === "AbortError"
-        ) {
+        if (err instanceof DOMException && err.name === "AbortError") {
           return;
         }
         if (!controller.signal.aborted) {
@@ -124,8 +121,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   }, [open]);
 
   const hasResults =
-    results &&
-    (results.players.length > 0 || results.teams.length > 0);
+    results && (results.players.length > 0 || results.teams.length > 0);
 
   const noResults =
     results &&
@@ -158,7 +154,10 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         <DialogHeader className="border-b px-4 py-3">
           <DialogTitle className="sr-only">Хайх</DialogTitle>
           <div className="flex items-center gap-2">
-            <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <Search
+              className="size-4 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+            />
             <Input
               ref={inputRef}
               value={query}
@@ -188,7 +187,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                   <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Тоглогчид
                   </p>
-                  <ul role="listbox" aria-label="Тоглогчдын үр дүн">
+                  <ul aria-label="Тоглогчдын үр дүн">
                     {results.players.map((player) => (
                       <li key={player.id}>
                         <Link
@@ -197,19 +196,12 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                           className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           role="option"
                         >
-                          {player.photo_url ? (
-                            <Image
-                              src={player.photo_url}
-                              alt=""
-                              width={32}
-                              height={32}
-                              className="size-8 shrink-0 rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-                              <Users className="size-3.5" aria-hidden="true" />
-                            </span>
-                          )}
+                          <PlayerAvatar
+                            photoUrl={player.photo_url}
+                            name={player.name}
+                            primaryColor="#1e293b"
+                            size="sm"
+                          />
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-medium">
                               {player.name}
@@ -233,7 +225,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                   <p className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Багууд
                   </p>
-                  <ul role="listbox" aria-label="Багуудын үр дүн">
+                  <ul aria-label="Багуудын үр дүн">
                     {results.teams.map((team) => (
                       <li key={team.slug}>
                         <Link
@@ -246,9 +238,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                             <Shield className="size-3.5" aria-hidden="true" />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-medium">
-                              {team.name}
-                            </p>
+                            <p className="truncate font-medium">{team.name}</p>
                             {team.short_code && (
                               <p className="truncate text-xs text-muted-foreground">
                                 {team.short_code}
@@ -276,19 +266,21 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
           {!results && query.length < 2 && !loading && (
             <div className="flex flex-col items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
               <p>Тоглогч эсвэл баг нэрээр хайна уу</p>
-              <p className="text-xs">
-                Дор хаяж 2 тэмдэгт бичнэ үү
-              </p>
+              <p className="text-xs">Дор хаяж 2 тэмдэгт бичнэ үү</p>
             </div>
           )}
         </div>
 
         {/* Keyboard hint footer */}
         <div className="border-t px-4 py-2 text-xs text-muted-foreground">
-          <span className="mr-1 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">↵</span>
+          <span className="mr-1 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">
+            ↵
+          </span>
           нэвтрэх
           <span className="mx-1.5">·</span>
-          <span className="mr-1 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">Esc</span>
+          <span className="mr-1 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">
+            Esc
+          </span>
           хаах
         </div>
       </DialogContent>

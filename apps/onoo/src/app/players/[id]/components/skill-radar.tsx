@@ -115,18 +115,9 @@ export function SkillRadar({
           className="size-6 text-muted-foreground"
           aria-hidden="true"
         />
-        <p className="mt-3 font-semibold">
-          Харьцуулах
-          мэдээлэл
-          хурэлцэхгүй
-        </p>
+        <p className="mt-3 font-semibold">Харьцуулах мэдээлэл хурэлцэхгүй</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Лигийн тав ба
-          түунээс олон
-          тоглоттой
-          нэмэгдэхэд
-          зураглал
-          гарна.
+          Лигийн тав ба түунээс олон тоглоттой нэмэгдэхэд зураглал гарна.
         </p>
       </div>
     );
@@ -146,9 +137,7 @@ export function SkillRadar({
               : "border-sidebar-border/50 bg-transparent text-sidebar-foreground/40 hover:bg-sidebar-accent/30",
           )}
           aria-label={
-            showLeague
-              ? "Лигийн дундаж нуух"
-              : "Лигийн дундаж харуулах"
+            showLeague ? "Лигийн дундаж нуух" : "Лигийн дундаж харуулах"
           }
         >
           {showLeague ? (
@@ -156,8 +145,7 @@ export function SkillRadar({
           ) : (
             <EyeOff className="size-3" aria-hidden="true" />
           )}
-          Лигийн
-          дундаж
+          Лигийн дундаж
         </button>
       </div>
 
@@ -179,12 +167,14 @@ export function SkillRadar({
               <ChartTooltipContent
                 formatter={(value, name, item) => {
                   const point = item.payload as Record<string, unknown>;
-                  const isPlayer =
-                    name === "Тоглогч";
+                  const isPlayer = name === "Тоглогч";
                   const actual = isPlayer
                     ? (point.playerActual as number)
                     : (point.leagueActual as number);
-                  return [`${actual.toFixed(1)} (${value}%)`, decodeEscapedUnicode(String(name))];
+                  return [
+                    `${actual.toFixed(1)} (${value}%)`,
+                    decodeEscapedUnicode(String(name)),
+                  ];
                 }}
               />
             }

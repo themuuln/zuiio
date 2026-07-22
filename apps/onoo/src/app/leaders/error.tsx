@@ -1,8 +1,8 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,

@@ -1,14 +1,10 @@
+import { CalendarDays, Trophy, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, Trophy, Users } from "lucide-react";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui";
 import { PublicEmptyState } from "../../components/public-empty-state";
-import {
-  getCompetition,
-  getStandings,
-  getLeaders,
-} from "../../lib/data";
+import { getCompetition, getLeaders, getStandings } from "../../lib/data";
 
 export async function generateMetadata({
   params,
@@ -51,12 +47,8 @@ export default async function TournamentPage({
     );
   }
 
-  const standings = allStandings.filter(
-    (row) => row.competition_id === id,
-  );
-  const leaders = allLeaders.filter(
-    (row) => row.competition_id === id,
-  );
+  const standings = allStandings.filter((row) => row.competition_id === id);
+  const leaders = allLeaders.filter((row) => row.competition_id === id);
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
@@ -70,7 +62,8 @@ export default async function TournamentPage({
             {competition.name}
           </h1>
           <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">
-            {competition.season} улирлын бүрэн статистик, байрлал болон шилдгүүд.
+            {competition.season} улирлын бүрэн статистик, байрлал болон
+            шилдгүүд.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

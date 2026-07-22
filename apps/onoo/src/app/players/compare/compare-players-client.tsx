@@ -6,10 +6,15 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CompareBars } from "./components/compare-bars";
+
 const CompareRadar = dynamic(
-  () => import("./components/compare-radar").then((m) => ({ default: m.CompareRadar })),
+  () =>
+    import("./components/compare-radar").then((m) => ({
+      default: m.CompareRadar,
+    })),
   { ssr: false },
 );
+
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui/badge";
@@ -220,12 +225,28 @@ function ComparisonResult({ players, className }: ComparisonResultProps) {
   const barStats = [
     { label: "Оноо", left: left.stats.points, right: right.stats.points },
     { label: "Буулт", left: left.stats.rebounds, right: right.stats.rebounds },
-    { label: "Дамжуулалт", left: left.stats.assists, right: right.stats.assists },
+    {
+      label: "Дамжуулалт",
+      left: left.stats.assists,
+      right: right.stats.assists,
+    },
     { label: "Булчих", left: left.stats.steals, right: right.stats.steals },
     { label: "Хаалт", left: left.stats.blocks, right: right.stats.blocks },
-    { label: "FG%", left: left.stats.fieldGoalPercent, right: right.stats.fieldGoalPercent },
-    { label: "3P%", left: left.stats.threePointPercent, right: right.stats.threePointPercent },
-    { label: "FT%", left: left.stats.freeThrowPercent, right: right.stats.freeThrowPercent },
+    {
+      label: "FG%",
+      left: left.stats.fieldGoalPercent,
+      right: right.stats.fieldGoalPercent,
+    },
+    {
+      label: "3P%",
+      left: left.stats.threePointPercent,
+      right: right.stats.threePointPercent,
+    },
+    {
+      label: "FT%",
+      left: left.stats.freeThrowPercent,
+      right: right.stats.freeThrowPercent,
+    },
   ];
 
   const leftRadar: Record<string, number> = {

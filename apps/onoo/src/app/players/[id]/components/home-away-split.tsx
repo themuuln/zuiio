@@ -84,7 +84,10 @@ function SplitColumn({
   return (
     <div className="flex-1 space-y-2">
       <div className="flex items-center gap-2 text-sm font-semibold">
-        <Icon className="size-4 text-[var(--brand-sports)]" aria-hidden="true" />
+        <Icon
+          className="size-4 text-[var(--brand-sports)]"
+          aria-hidden="true"
+        />
         {split.label}
       </div>
       <div className="space-y-1.5">
@@ -122,9 +125,7 @@ export function HomeAwaySplitCard({
               {isEn ? "Home / Away Splits" : "Гэр / Зочин статистик"}
             </CardTitle>
             <CardDescription className="mt-1">
-              {isEn
-                ? "Performance by venue"
-                : "Талбай бүрийн гүйцэтгэл"}
+              {isEn ? "Performance by venue" : "Талбай бүрийн гүйцэтгэл"}
             </CardDescription>
           </div>
         </div>

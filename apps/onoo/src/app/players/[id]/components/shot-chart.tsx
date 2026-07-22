@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/card";
 import type { ShotZoneStat } from "../../../lib/shared";
 import type { ShotDataPoint, ShotZone } from "./court-heatmap";
-import type { ShootingData } from "./shooting-profile";
 import { CourtHeatmap, DEFAULT_SHOT_ZONES } from "./court-heatmap";
 import { COURT_ZONES } from "./court-zones";
+import type { ShootingData } from "./shooting-profile";
 
 interface ShotChartProps {
   /** Aggregated made/attempted per zone (from v_public_shot_zones). */
@@ -85,7 +85,6 @@ export function ShotChart({
 
         return { ...zone, made: zoneMade, attempted: zoneAttempts };
       });
-
 
   const fgPct = pct(safe(fgm), fg);
   const twoPct = pct(twoMade, twoAttempts);

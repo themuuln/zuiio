@@ -16,7 +16,10 @@ let pool: Pool | null = null;
 
 /** Database URL — defaults to local Supabase Postgres. */
 function dbUrl(): string {
-  return process.env.INTEGRATION_DATABASE_URL || "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+  return (
+    process.env.INTEGRATION_DATABASE_URL ||
+    "postgresql://postgres:postgres@127.0.0.1:54323/postgres"
+  );
 }
 
 /** Get or create the singleton connection pool. */

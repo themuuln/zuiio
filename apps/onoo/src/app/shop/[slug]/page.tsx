@@ -2,8 +2,6 @@ import { notFound } from "next/navigation";
 import { getShopProductBySlug } from "@/app/lib/data-shop";
 import { ProductDetailClient } from "../components/product-detail-client";
 
-export const instant = false;
-
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }

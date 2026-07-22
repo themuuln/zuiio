@@ -538,3 +538,29 @@ The `stat_events.payload` column is JSON, so `x,y` values are stored when presen
 | Celebration effects | `bay-view-v2/_drawer-celebration.tsx` | Milestone achievement animation |
 | Touch-optimized interactions | `bay-view-v2/_types.tsx` TouchSensor/PointerSensor | Swipeable cards, court taps |
 | View mode switching | `bay-view-v2/_view-selector.tsx` Grid/Kanban/List | Court view modes (heatmap/list/raw) |
+
+
+---
+
+## Testing & Infrastructure Gaps
+
+> Research findings from 2026-07-22: compared against Next.js + Supabase testing best practices.
+
+### CI Pipeline for Local Supabase Tests
+
+**Context:** All tests (unit, integration, pgTAP, E2E) only run on a developer machine. No GitHub Actions workflow exists.
+
+**What industry does:** A `.github/workflows/ci.yml` that starts Supabase locally in the runner, extracts credentials via `supabase status -o json | jq`, and runs all tests on every push.
+
+**Implementation:**
+- Create `.github/workflows/ci.yml`
+- `supabase/setup-cli@v3` action
+- `supabase start --exclude studio,imgproxy,inbucket,vector,logflare,edge-runtime,meta`
+- `supabase status -o json | jq` to inject `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `DATABASE_URL`
+- Run `pnpm test:all` and `supabase test db`
+
+**Complexity:** Low. ~30 lines of YAML.
+
+**Priority:** P2 (deferred — solo dev, free-tier CI minutes)
+
+**Evidence:** Supabase docs, Chayut architecture report, 3/3 reference implementations.

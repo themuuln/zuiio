@@ -2,10 +2,11 @@
 >
 > 1. [Root AGENTS.md](../../AGENTS.md) — shared monorepo rules, conventions, and permission boundaries
 > 2. `docs/VISION.md` — product vision, design principles, what we won't do
-> 3. `docs/tasks/INDEX.md` — task queue with status, priority, dependencies (pick work from here)
-> 4. `docs/STRATEGY.md` — monetization & analytics strategy, revenue model, reshuffled roadmap
-> 5. `docs/ROADMAP.md` — feature checklist by phase (tick checkboxes here when done)
-> 6. `packages/core/src/index.ts` — core package exports
+> 3. `docs/ROADMAP.md` — phase checklist with commercial gates (what we're building)
+> 4. `docs/ARCHITECTURE.md` — system architecture, data flow, authorization model (how it works)
+> 5. `docs/tasks/INDEX.md` — task queue with status, priority, dependencies (pick work from here)
+> 6. `docs/plans/00-conventions.md` — coding conventions, design decisions (read before writing code)
+> 7. `packages/core/src/index.ts` — core package exports
 ```
 apps/onoo/
 ├── packages/core/           ← @onoo/core (events, stats, format, i18n, sync)
@@ -19,7 +20,11 @@ apps/onoo/
 ├── public/                  ← Static assets, PWA manifest
 └── docs/
     ├── VISION.md            ← Product vision, design principles, non-goals
-    ├── ROADMAP.md           ← Phase checklist with execution spec links
+    ├── ROADMAP.md           ← Phase checklist with commercial gates
+    ├── ARCHITECTURE.md      ← System architecture
+    ├── gaps.md              ← Feature gap ideas with P0-P3 priority
+    ├── archive/
+    │   └── schema-recovery-record.md ← Historical recovery note
     ├── tasks/
     │   ├── INDEX.md         ← Master task queue (pick work from here)
     │   ├── TEMPLATE.md      ← Template for creating new task files
@@ -29,42 +34,46 @@ apps/onoo/
     │   ├── T-4.*.md         ← Phase 4 task files
     │   ├── T-5.*.md         ← Phase 5 task files
     │   └── gaps/            ← Feature gap docs (G-01 through G-16)
-    ├── plans/               ← Execution specs and conventions
-    ├── pm-manifest.yaml     ← Machine-readable project manifest
-    ├── gaps.md              ← Feature gap analysis with P0-P3 priority
-    ├── runbook.md           ← Game-day operational procedures
-    └── ARCHITECTURE.md      ← System architecture
+    ├── plans/               ← Execution specs and phase plans
+    │   └── EXECUTION-STATUS.md ← Environment + migration notes only (per-task status in INDEX.md)
+    ├── features/            ← Product architecture for forward-looking features
+    │   └── academy-management.md
+    ├── pm-manifest.yaml     ← Machine-readable project manifest (optional, not consumed by tooling)
+    ├── notes/               ← Research notes
+    │   └── fantasy-research.md
+    └── runbook.md           ← Game-day operational procedures
 ```
 Key tables: `stat_events` (raw play-by-play), `game_player_stats` (derived per-player), `game_team_stats` (derived per-team), `standings` (league standings). Full list in `docs/ROADMAP.md`.
 
-## Planning & Task Picking
+## Planning & Task Picking (Project Management)
 
-### How to find work
-1. **Read `docs/tasks/INDEX.md`** — the master task queue. It shows every task with status, priority, dependencies.
-2. **Check "Available Work" section** — tasks with `⬜` status and no unresolved blockers. These are ready to start.
-3. **Pick highest priority first** — P0 > P1 > P2 > P3. Within priority, read top-to-bottom (recommended execution order).
-4. **Read the task file** at `docs/tasks/T-<ID>-<name>.md` for full details: goal, files to touch, steps, done-when.
-5. **Read conventions** at `docs/plans/00-conventions.md` before writing code.
-6. **Check permission boundaries** below before starting.
+> **Must-follow workflow.** Onoo uses `docs/tasks/INDEX.md` as its project management system. Every commit belongs to a tracked task.
 
-### While working
-- Update task status to `🟡` in INDEX.md when you start.
-- Mark blockers with `🔴` and explain the blocker in the note.
-- Update `docs/plans/EXECUTION-STATUS.md` status ledger in the same commit.
+### Pick work
+1. **Read `docs/tasks/INDEX.md`** → check **"Available Work"** (⬜ tasks with no blockers).
+2. **Pick highest priority first** (P0 → P1 → P2 → P3). Top-to-bottom within priority.
+3. **Read the task file** at `docs/tasks/T-<ID>-<name>.md` — full spec, steps, done-when.
+4. **Read conventions** at `docs/plans/00-conventions.md` before writing code.
+5. **Mark it 🟡** in INDEX.md — first edit of the session.
 
-### When done
-- Change task status to `✅` in INDEX.md.
-- Tick the matching checkbox in `docs/ROADMAP.md`.
-- Update `docs/plans/EXECUTION-STATUS.md`.
-- Verify against the task's _Done When_ criteria from the task file.
-- Run the full Definition of Done checklist from `docs/plans/00-conventions.md`.
-- All four updates in the same commit.
+### Build
+- Keep the task's 🟡 status in INDEX.md while working.
+- Each commit message must reference the task ID: `T-1.4: <what changed>`.
+- Mark blockers 🔴 with explanation in INDEX.md.
+- Keep `docs/plans/EXECUTION-STATUS.md` in sync.
 
-### Task file conventions
-- Task IDs in INDEX.md reference files in `docs/tasks/`.
-- Each task file follows the template at `docs/tasks/TEMPLATE.md`.
-- Gap/feature ideas live in `docs/tasks/gaps/G-*.md` — not in the main priority queue.
-- The machine-readable manifest at `docs/pm-manifest.yaml` mirrors INDEX.md in YAML for programmatic queries.
+### Complete
+1. **Verify** against the task's _Done When_ criteria + Definition of Done from `docs/plans/00-conventions.md`.
+2. **Update 4 files in the same commit:**
+   - `docs/tasks/INDEX.md` → set status to `✅`
+   - `docs/ROADMAP.md` → tick matching `[ ]` → `[x]`
+   - `docs/plans/EXECUTION-STATUS.md` → update environment notes if conditions changed
+   - `docs/pm-manifest.yaml` → update task status
+3. Do NOT skip any of the four. Verify each took effect before yielding.
+
+### New tasks & gaps
+- New tasks: copy `docs/tasks/TEMPLATE.md`, add to INDEX.md + ROADMAP.md + pm-manifest.yaml.
+- Gap ideas live in `docs/tasks/gaps/G-*.md`. Promote to a task when ready to build.
 
 ## Overview
 
@@ -186,7 +195,8 @@ pnpm test:all               # Unit + Integration (CI gate)
 - **When adding/modifying DB schema, RLS, or API routes: write or update integration tests in `src/app/admin/api/__tests__/*.integration.test.ts`**
 - Verify stat derivations against source events after changes
 - Regenerate Supabase types using CLI/MCP after migrations
-- **Update task status in INDEX.md, EXECUTION-STATUS.md, and ROADMAP.md in same commit as work**
+- **Before writing code: read `docs/tasks/INDEX.md`, pick the highest-priority ⬜ task from Available Work, mark it 🟡, read its task file and conventions, and reference the task ID in every commit**
+- **When completing a task: update INDEX.md → ✅, tick ROADMAP.md → [x], update pm-manifest.yaml; update EXECUTION-STATUS.md only if environment conditions changed. Run Definition of Done checklist first.**
 
 ### ⚠️ Ask First
 - Directly modify `stat_events`, `game_player_stats`, `game_team_stats`, or `standings`

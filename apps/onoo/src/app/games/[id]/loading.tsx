@@ -1,5 +1,4 @@
-import { Card, CardContent, CardHeader } from "@/components/ui";
-import { Skeleton } from "@/components/ui";
+import { Card, CardContent, CardHeader, Skeleton } from "@/components/ui";
 
 export default function GameDetailLoading() {
   return (

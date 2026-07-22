@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
 import {
+  Activity,
+  Award,
+  BookOpen,
   Calendar,
+  CreditCard,
   LayoutDashboard,
   MapPin,
   Medal,
   Package,
+  School,
   ShoppingCart,
   Timer,
   Trophy,
@@ -16,6 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAdminLayout } from "./admin-layout-context";
@@ -40,8 +45,8 @@ const navGroups: NavGroup[] = [
     label: "Тэмцээн",
     items: [
       { href: "/admin/leagues", label: "Лиг", icon: Trophy },
-      { href: "/admin/seasons", label: "Улирал", icon: Calendar },
       { href: "/admin/competitions", label: "Тэмцээн", icon: Medal },
+      { href: "/admin/awards", label: "Шагнал", icon: Award },
     ],
   },
   {
@@ -59,15 +64,35 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Хяналт",
+    items: [{ href: "/admin/ops", label: "Үйлдлүүд", icon: Activity }],
+  },
+  {
     label: "Худалдаа",
     items: [
       { href: "/admin/products", label: "Бүтээгдэхүүн", icon: Package },
       { href: "/admin/orders", label: "Захиалга", icon: ShoppingCart },
     ],
   },
+  {
+    label: "Академи",
+    items: [
+      { href: "/admin/academy", label: "Профайл", icon: School },
+      { href: "/admin/academy/programs", label: "Хөтөлбөр", icon: BookOpen },
+      { href: "/admin/academy/trainers", label: "Дасгалжуулагч", icon: Users },
+      { href: "/admin/academy/locations", label: "Байршил", icon: MapPin },
+      { href: "/admin/academy/payments", label: "Төлбөр", icon: CreditCard },
+    ],
+  },
 ];
 
-function SidebarNavItem({ item, onNav }: { item: NavItem; onNav?: () => void }) {
+function SidebarNavItem({
+  item,
+  onNav,
+}: {
+  item: NavItem;
+  onNav?: () => void;
+}) {
   const pathname = usePathname();
   const isActive =
     item.href === "/admin"

@@ -19,12 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -391,14 +386,16 @@ function OpenSessionDialog({
   });
   const balance = form.watch("balance");
   const openSession = useOpenSession(orgId);
+  const formId = "open-session-form";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("cashRegister.openSession")}</DialogTitle>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>{t("cashRegister.openSession")}</DetailDrawer.Title>
+      </DetailDrawer.Header>
+      <DetailDrawer.Body>
         <form
+          id={formId}
           onSubmit={form.handleSubmit(async (data) => {
             await openSession.mutateAsync(
               { opening_balance: data.balance, branch_id: branchId },
@@ -435,22 +432,38 @@ function OpenSessionDialog({
               Count the cash in the drawer and enter the amount.
             </Typography.Muted>
           </div>
+        </form>
+      </DetailDrawer.Body>
+      <DetailDrawer.Footer>
+        <DetailDrawer.FooterActions>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+          >
+            {t("common.cancel")}
+          </Button>
           <Button
             type="submit"
+            form={formId}
             disabled={openSession.isPending || balance === 0}
+            className="flex-1"
           >
             {openSession.isPending ? (
-              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {t("common.saving")}
+              </>
             ) : (
-              <CheckCircle2 className="mr-1.5 size-3.5" />
+              <>
+                <CheckCircle2 className="size-4" />
+                {t("cashRegister.openSession")}
+              </>
             )}
-            {openSession.isPending
-              ? t("common.saving")
-              : t("cashRegister.openSession")}
           </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DetailDrawer.FooterActions>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }
 
@@ -484,6 +497,7 @@ function CloseSessionDialog({
   });
   const balanceValue = form.watch("balance");
   const closeSession = useCloseSession(orgId);
+  const formId = "close-session-form";
 
   const expectedBalance =
     session.expected_balance ??
@@ -492,14 +506,15 @@ function CloseSessionDialog({
   const _hasDiscrepancy = balanceValue > 0 && discrepancy !== 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("cashRegister.closeSession")}</DialogTitle>
-        </DialogHeader>
-
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>
+          {t("cashRegister.closeSession")}
+        </DetailDrawer.Title>
+      </DetailDrawer.Header>
+      <DetailDrawer.Body>
         {/* Summary before closing */}
-        <div className="rounded-lg border bg-muted/50 p-3 text-sm">
+        <div className="rounded-lg border bg-muted/50 p-3 text-sm mb-4">
           <div className="flex justify-between">
             <span className="text-muted-foreground">
               {t("cashRegister.openingBalance")}
@@ -534,6 +549,7 @@ function CloseSessionDialog({
         </div>
 
         <form
+          id={formId}
           onSubmit={form.handleSubmit(async (data) => {
             await closeSession.mutateAsync(
               {
@@ -622,26 +638,42 @@ function CloseSessionDialog({
               rows={2}
             />
           </div>
+        </form>
+      </DetailDrawer.Body>
+      <DetailDrawer.Footer>
+        <DetailDrawer.FooterActions>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+          >
+            {t("common.cancel")}
+          </Button>
           <Button
             type="submit"
+            form={formId}
             disabled={closeSession.isPending || balanceValue === 0}
+            className="flex-1"
           >
             {closeSession.isPending ? (
-              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {t("common.saving")}
+              </>
             ) : (
-              <CheckCircle2 className="mr-1.5 size-3.5" />
+              <>
+                <CheckCircle2 className="size-4" />
+                {t("cashRegister.closeSession")}
+              </>
             )}
-            {closeSession.isPending
-              ? t("common.saving")
-              : t("cashRegister.closeSession")}
           </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DetailDrawer.FooterActions>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }
 
-// ── Cash Out Dialog ────────────────────────────────────────
+// ── Cash Out Drawer ────────────────────────────────────────
 
 const cashOutSchema = z.object({
   amount: z.number().min(1, "Amount must be at least 1"),
@@ -672,14 +704,16 @@ function CashOutDialog({
   const amount = form.watch("amount");
   const description = form.watch("description");
   const cashOut = useCashOut(orgId);
+  const formId = "cash-out-form";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("cashRegister.addCashOut")}</DialogTitle>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>{t("cashRegister.addCashOut")}</DetailDrawer.Title>
+      </DetailDrawer.Header>
+      <DetailDrawer.Body>
         <form
+          id={formId}
           onSubmit={form.handleSubmit(async (data) => {
             await cashOut.mutateAsync(
               {
@@ -727,21 +761,37 @@ function CashOutDialog({
               placeholder={t("cashRegister.cashOutDescriptionPlaceholder")}
             />
           </div>
+        </form>
+      </DetailDrawer.Body>
+      <DetailDrawer.Footer>
+        <DetailDrawer.FooterActions>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+          >
+            {t("common.cancel")}
+          </Button>
           <Button
             type="submit"
+            form={formId}
             disabled={cashOut.isPending || amount <= 0 || !description.trim()}
+            className="flex-1"
           >
             {cashOut.isPending ? (
-              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {t("common.saving")}
+              </>
             ) : (
-              <MinusCircle className="mr-1.5 size-3.5" />
+              <>
+                <MinusCircle className="size-4" />
+                {t("cashRegister.addCashOut")}
+              </>
             )}
-            {cashOut.isPending
-              ? t("common.saving")
-              : t("cashRegister.addCashOut")}
           </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DetailDrawer.FooterActions>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

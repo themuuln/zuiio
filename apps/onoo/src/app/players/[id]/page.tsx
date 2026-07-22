@@ -22,7 +22,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ViewBeacon } from "@/components/view-beacon";
 import {
+  aggregateMonthlyStats,
   formatMinutes,
   getLeagueAverages,
   getPlayerAwards,
@@ -33,6 +35,7 @@ import {
   getPlayerShootingProfile,
   getPlayerShotScatter,
   getPlayerShotZones,
+  getPlayers,
 } from "../../lib/data";
 import {
   computeSeasonAdvancedStats,
@@ -40,22 +43,19 @@ import {
 } from "./components/_advanced-helpers";
 import { AdvancedStatsTable } from "./components/advanced-stats-table";
 import { AwardsShelf } from "./components/awards-shelf";
+import { BestWorstGames } from "./components/best-worst-games";
 // Lazy-loaded chart components (recharts) — client-only, ~1.5M+ saved on non-chart pages
 import {
   FormTrends,
   HomeAwaySplits,
+  MonthlyProgression,
   SeasonArc,
   ShootingProfile,
   SkillRadar,
 } from "./components/chart-sections";
 import { HeroCard } from "./components/hero-card";
 import { Milestones } from "./components/milestones";
-import {
-  ScrollReveal,
-  StaggerContainer,
-  StaggerItem,
-} from "./components/motion-wrapper";
-import { BestWorstGames } from "./components/best-worst-games";
+import { ScrollReveal } from "./components/motion-wrapper";
 import { RecentGames } from "./components/recent-games";
 import { SeasonSelector } from "./components/season-selector";
 import { ShotChart } from "./components/shot-chart";
@@ -88,6 +88,7 @@ export async function generateMetadata({
   return {
     title: `${data.player.canonical_name} — Оноо`,
     description: `${data.player.canonical_name} (${data.player.name_latin}) тоглогчийн мэдээл ба статистик.`,
+    alternates: { canonical: `https://onoo.mn/players/${id}` },
   };
 }
 
@@ -169,6 +170,7 @@ export default async function PlayerPage({
     : [];
   const advancedStats = computeSeasonAdvancedStats(playerGameLog);
   const streaks = computeStreaks(playerGameLog);
+  const monthlyStats = aggregateMonthlyStats(playerGameLog);
   const seasonLabel = isCareer
     ? isEn
       ? "Career Total"
@@ -198,6 +200,7 @@ export default async function PlayerPage({
 
   return (
     <>
+      <ViewBeacon entityType="player" entityId={id} />
       <script
         type="application/ld+json"
         // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO
@@ -301,7 +304,6 @@ export default async function PlayerPage({
           <RecentGames gameLines={playerGameLog} />
         </ScrollReveal>
 
-
         {/* ─── Best / Worst game highlight ─── */}
         {playerGameLog.length >= 3 && (
           <BestWorstGames gameLines={playerGameLog} locale={locale} />
@@ -399,6 +401,13 @@ export default async function PlayerPage({
               className="lg:col-span-12"
             />
 
+            {/* Monthly progression */}
+            {monthlyStats.length >= 2 && (
+              <MonthlyProgression
+                monthlyStats={monthlyStats}
+                className="lg:col-span-12"
+              />
+            )}
             {/* Advanced stats */}
             {advancedStats && (
               <AdvancedStatsTable stats={advancedStats} locale={locale} />

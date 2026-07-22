@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { PlayerGameLine } from "@/app/lib/shared";
 import {
   computeSeasonAdvancedStats,
   computeStreaks,
 } from "../_advanced-helpers";
-import type { PlayerGameLine } from "@/app/lib/shared";
 
 function makeGame(overrides: Partial<PlayerGameLine> = {}): PlayerGameLine {
   return {
@@ -59,15 +59,15 @@ describe("computeSeasonAdvancedStats", () => {
     const stats = computeSeasonAdvancedStats([makeGame()]);
 
     expect(stats).not.toBeNull();
-    expect(stats!.gp).toBe(1);
-    expect(stats!.mpg).toBeCloseTo(20, 1); // 1200s = 20 min
-    expect(stats!.efgPct).toBeCloseTo((8 + 0.5 * 2) / 15, 5);
-    expect(stats!.tsPct).toBeCloseTo(20 / (2 * (15 + 0.44 * 3)), 5);
-    expect(stats!.avgGameScore).toBeGreaterThan(0);
-    expect(stats!.astTovRatio).toBeCloseTo(4 / 3, 5);
-    expect(stats!.ptsPer36).toBeCloseTo((20 / 20) * 36, 5);
-    expect(stats!.rebPer36).toBeCloseTo(((2 + 5) / 20) * 36, 5);
-    expect(stats!.astPer36).toBeCloseTo((4 / 20) * 36, 5);
+    expect(stats?.gp).toBe(1);
+    expect(stats?.mpg).toBeCloseTo(20, 1); // 1200s = 20 min
+    expect(stats?.efgPct).toBeCloseTo((8 + 0.5 * 2) / 15, 5);
+    expect(stats?.tsPct).toBeCloseTo(20 / (2 * (15 + 0.44 * 3)), 5);
+    expect(stats?.avgGameScore).toBeGreaterThan(0);
+    expect(stats?.astTovRatio).toBeCloseTo(4 / 3, 5);
+    expect(stats?.ptsPer36).toBeCloseTo((20 / 20) * 36, 5);
+    expect(stats?.rebPer36).toBeCloseTo(((2 + 5) / 20) * 36, 5);
+    expect(stats?.astPer36).toBeCloseTo((4 / 20) * 36, 5);
   });
 
   it("aggregates across multiple games", () => {
@@ -85,10 +85,10 @@ describe("computeSeasonAdvancedStats", () => {
     const stats = computeSeasonAdvancedStats([game1, game2]);
 
     expect(stats).not.toBeNull();
-    expect(stats!.gp).toBe(2);
+    expect(stats?.gp).toBe(2);
     // Total 50 pts over 2700s = 45 min → per 36
-    expect(stats!.ptsPer36).toBeCloseTo((50 / 45) * 36, 3);
-    expect(stats!.astTovRatio).toBeCloseTo(8 / 6, 5);
+    expect(stats?.ptsPer36).toBeCloseTo((50 / 45) * 36, 3);
+    expect(stats?.astTovRatio).toBeCloseTo(8 / 6, 5);
   });
 
   it("handles players with no shot attempts", () => {
@@ -105,16 +105,16 @@ describe("computeSeasonAdvancedStats", () => {
     });
 
     const stats = computeSeasonAdvancedStats([defensive]);
-    expect(stats!.efgPct).toBe(0);
-    expect(stats!.tsPct).toBe(0);
-    expect(stats!.astTovRatio).toBe(0);
+    expect(stats?.efgPct).toBe(0);
+    expect(stats?.tsPct).toBe(0);
+    expect(stats?.astTovRatio).toBe(0);
   });
 
   it("handles perfect AST/TO when no turnovers", () => {
     const noTov = makeGame({ tov: 0, ast: 7 });
 
     const stats = computeSeasonAdvancedStats([noTov]);
-    expect(stats!.astTovRatio).toBe(7); // All AST, zero TOV
+    expect(stats?.astTovRatio).toBe(7); // All AST, zero TOV
   });
 
   it("handles DNP (zero minutes)", () => {
@@ -122,8 +122,8 @@ describe("computeSeasonAdvancedStats", () => {
 
     const stats = computeSeasonAdvancedStats([dnp, makeGame()]);
     expect(stats).not.toBeNull();
-    expect(stats!.mpg).toBeCloseTo(20 / 2, 1); // Only one game with minutes
-    expect(stats!.ptsPer36).toBeGreaterThan(0); // Still computes from non-DNP games
+    expect(stats?.mpg).toBeCloseTo(20 / 2, 1); // Only one game with minutes
+    expect(stats?.ptsPer36).toBeGreaterThan(0); // Still computes from non-DNP games
   });
 });
 

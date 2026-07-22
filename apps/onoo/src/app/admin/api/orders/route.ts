@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createRouteHandlers, withAuth } from "@/lib/supabase/admin-route";
-import { createClient } from "@/lib/supabase/server";
 
 const ordersRoute = createRouteHandlers("orders", {
   select: "*",
@@ -11,7 +10,7 @@ export const GET = ordersRoute.list((query) =>
 );
 
 export async function POST(request: NextRequest) {
-  return withAuth(async (supabase) => {
+  return withAuth(async (supabase): Promise<NextResponse> => {
     const body = await request.json();
     const { action, orderId } = body;
 
@@ -27,7 +26,10 @@ export async function POST(request: NextRequest) {
         p_order_id: orderId,
       });
       if (error) throw error;
-      return NextResponse.json({ status: "shipped" });
+      return NextResponse.json({ status: "shipped" } as unknown as Record<
+        string,
+        string
+      >);
     }
 
     if (action === "cancel") {
@@ -35,7 +37,10 @@ export async function POST(request: NextRequest) {
         p_order_id: orderId,
       });
       if (error) throw error;
-      return NextResponse.json({ status: "cancelled" });
+      return NextResponse.json({ status: "cancelled" } as unknown as Record<
+        string,
+        string
+      >);
     }
 
     return NextResponse.json(

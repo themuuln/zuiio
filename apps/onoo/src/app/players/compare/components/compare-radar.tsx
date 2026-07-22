@@ -23,7 +23,16 @@ interface CompareRadarProps {
   readonly className?: string;
 }
 
-const STAT_KEYS = ["pts", "reb", "ast", "stl", "blk", "fg", "tp", "ft"] as const;
+const STAT_KEYS = [
+  "pts",
+  "reb",
+  "ast",
+  "stl",
+  "blk",
+  "fg",
+  "tp",
+  "ft",
+] as const;
 type StatKey = (typeof STAT_KEYS)[number];
 
 const STAT_LABELS_MN: Record<StatKey, string> = {
@@ -37,7 +46,7 @@ const STAT_LABELS_MN: Record<StatKey, string> = {
   ft: "FT%",
 };
 
-const chartConfig = {
+const _chartConfig = {
   player1: {
     label: "",
     color: "var(--brand-sports)",
@@ -89,14 +98,22 @@ export function CompareRadar({
         Чадварын профиль харьцуулалт
       </h2>
 
-      <ChartContainer config={config} className="aspect-square w-full max-w-md mx-auto">
+      <ChartContainer
+        config={config}
+        className="aspect-square w-full max-w-md mx-auto"
+      >
         <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
           <PolarGrid stroke="var(--color-border)" />
           <PolarAngleAxis
             dataKey="stat"
             tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
           />
-          <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} tickCount={5} />
+          <PolarRadiusAxis
+            angle={90}
+            domain={[0, 100]}
+            tick={false}
+            tickCount={5}
+          />
           <ChartTooltip
             content={
               <ChartTooltipContent
@@ -106,7 +123,10 @@ export function CompareRadar({
                   const actual = isP1
                     ? (point.player1Actual as number)
                     : (point.player2Actual as number);
-                  return [`${actual.toFixed(1)} (${value}%)`, decodeEscapedUnicode(String(name))];
+                  return [
+                    `${actual.toFixed(1)} (${value}%)`,
+                    decodeEscapedUnicode(String(name)),
+                  ];
                 }}
               />
             }
@@ -133,7 +153,11 @@ export function CompareRadar({
       </ChartContainer>
 
       {/* Legend */}
-      <div className="mt-4 flex justify-center gap-6 text-sm" role="list" aria-label="Тоглогчдын тэмдэглэгээ">
+      <div
+        className="mt-4 flex justify-center gap-6 text-sm"
+        role="list"
+        aria-label="Тоглогчдын тэмдэглэгээ"
+      >
         <span role="listitem" className="inline-flex items-center gap-2">
           <span
             className="inline-block size-3 rounded-full"

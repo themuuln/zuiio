@@ -26,7 +26,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="mb-4 flex aspect-square items-center justify-center rounded-md bg-muted">
         {(product.images?.length ?? 0) > 0 && !imgError ? (
           <img
-            src={product.images![0]}
+            src={product.images?.[0]}
             alt={product.name}
             className="h-full w-full rounded-md object-cover"
             onError={() => setImgError(true)}

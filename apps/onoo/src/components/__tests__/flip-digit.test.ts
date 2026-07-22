@@ -7,9 +7,7 @@ function formatDigit(value: number): string {
 
 function splitIntoDigits(value: number): number[] {
   if (value < 10) return [value];
-  return String(value)
-    .split("")
-    .map(Number);
+  return String(value).split("").map(Number);
 }
 
 describe("FlipDigit", () => {
@@ -38,9 +36,7 @@ describe("FlipScore digit extraction", () => {
   // FlipScore uses getDigits to split a score into individual digits
   function getDigits(n: number): number[] {
     if (n < 10) return [n];
-    return String(n)
-      .split("")
-      .map(Number);
+    return String(n).split("").map(Number);
   }
 
   it("extracts digits from score", () => {

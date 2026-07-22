@@ -1,13 +1,13 @@
 "use client";
 
-import { Edit, Plus, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { z } from "zod";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Edit, Plus, Trash2 } from "lucide-react";
+import { z } from "zod";
 import type { ShopProductRow } from "@/app/admin/_lib/api";
 import { shopProductsApi } from "@/app/admin/_lib/api";
-import { AdminPageLayout } from "@/components/admin/page-layout";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
@@ -131,10 +131,7 @@ export default function AdminProductsPage() {
             size="icon"
             className="text-destructive"
             onClick={() =>
-              crud.handleDelete(
-                row.original,
-                "Бүтээгдэхүүнийг устгах уу?",
-              )
+              crud.handleDelete(row.original, "Бүтээгдэхүүнийг устгах уу?")
             }
             title="Устгах"
           >
@@ -163,16 +160,11 @@ export default function AdminProductsPage() {
         <DataTable columns={columns} data={products} />
       </AdminPageLayout>
 
-      <Dialog
-        open={crud.dialogOpen}
-        onOpenChange={crud.handleDialogOpenChange}
-      >
+      <Dialog open={crud.dialogOpen} onOpenChange={crud.handleDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {crud.editingItem
-                ? "Бүтээгдэхүүн засах"
-                : "Шинэ бүтээгдэхүүн"}
+              {crud.editingItem ? "Бүтээгдэхүүн засах" : "Шинэ бүтээгдэхүүн"}
             </DialogTitle>
           </DialogHeader>
           <Form {...crud.form}>
@@ -213,11 +205,7 @@ export default function AdminProductsPage() {
                   <FormItem>
                     <FormLabel>Үнэ (₮)</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="10000"
-                        {...field}
-                      />
+                      <Input type="number" placeholder="10000" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

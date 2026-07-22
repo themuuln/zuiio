@@ -5,44 +5,105 @@
     {
       "name": "NBA.com",
       "urls": [
-        {"url": "https://www.nba.com", "method": "firecrawl-scrape", "status": "complete"},
-        {"url": "https://www.nba.com/stats/leaders", "method": "firecrawl-scrape", "status": "complete"},
-        {"url": "https://www.nba.com", "method": "browser", "status": "blocked"}
+        {
+          "url": "https://www.nba.com",
+          "method": "firecrawl-scrape",
+          "status": "complete"
+        },
+        {
+          "url": "https://www.nba.com/stats/leaders",
+          "method": "firecrawl-scrape",
+          "status": "complete"
+        },
+        {
+          "url": "https://www.nba.com",
+          "method": "browser",
+          "status": "blocked"
+        }
       ],
       "coverage": "full"
     },
     {
       "name": "Basketball-Reference.com",
       "urls": [
-        {"url": "https://www.basketball-reference.com", "method": "firecrawl-scrape", "status": "complete"},
-        {"url": "https://www.basketball-reference.com/leaders/", "method": "firecrawl-scrape", "status": "complete"},
-        {"url": "https://www.basketball-reference.com", "method": "browser-screenshot", "status": "complete"},
-        {"url": "https://www.basketball-reference.com/leaders/", "method": "browser-screenshot", "status": "complete"}
+        {
+          "url": "https://www.basketball-reference.com",
+          "method": "firecrawl-scrape",
+          "status": "complete"
+        },
+        {
+          "url": "https://www.basketball-reference.com/leaders/",
+          "method": "firecrawl-scrape",
+          "status": "complete"
+        },
+        {
+          "url": "https://www.basketball-reference.com",
+          "method": "browser-screenshot",
+          "status": "complete"
+        },
+        {
+          "url": "https://www.basketball-reference.com/leaders/",
+          "method": "browser-screenshot",
+          "status": "complete"
+        }
       ],
       "coverage": "full"
     },
     {
       "name": "FIBA.basketball",
       "urls": [
-        {"url": "https://www.fiba.basketball", "method": "firecrawl-scrape", "status": "complete"},
-        {"url": "https://www.fiba.basketball/en/events/fiba-u17-womens-basketball-world-cup-2026", "method": "firecrawl-scrape", "status": "complete"},
-        {"url": "https://www.fiba.basketball/en/ranking/men", "method": "firecrawl-scrape", "status": "complete"}
+        {
+          "url": "https://www.fiba.basketball",
+          "method": "firecrawl-scrape",
+          "status": "complete"
+        },
+        {
+          "url": "https://www.fiba.basketball/en/events/fiba-u17-womens-basketball-world-cup-2026",
+          "method": "firecrawl-scrape",
+          "status": "complete"
+        },
+        {
+          "url": "https://www.fiba.basketball/en/ranking/men",
+          "method": "firecrawl-scrape",
+          "status": "complete"
+        }
       ],
       "coverage": "full"
     },
     {
       "name": "MaxPreps.com",
       "urls": [
-        {"url": "https://www.maxpreps.com", "method": "firecrawl-scrape", "status": "complete"},
-        {"url": "https://www.maxpreps.com/basketball/stat-leaders/", "method": "firecrawl-scrape", "status": "complete"},
-        {"url": "https://www.maxpreps.com/basketball/rankings/1/", "method": "firecrawl-scrape", "status": "complete"}
+        {
+          "url": "https://www.maxpreps.com",
+          "method": "firecrawl-scrape",
+          "status": "complete"
+        },
+        {
+          "url": "https://www.maxpreps.com/basketball/stat-leaders/",
+          "method": "firecrawl-scrape",
+          "status": "complete"
+        },
+        {
+          "url": "https://www.maxpreps.com/basketball/rankings/1/",
+          "method": "firecrawl-scrape",
+          "status": "complete"
+        }
       ],
       "coverage": "full"
     }
   ],
   "local_references": [
-    {"file": "src/app/page.tsx", "purpose": "Current Onoo landing page structure"},
-    {"file": "DESIGN.md", "purpose": "Onoo design system and component inventory"},
-    {"file": "PRODUCT.md", "purpose": "Onoo product context and brand personality"}
+    {
+      "file": "src/app/page.tsx",
+      "purpose": "Current Onoo landing page structure"
+    },
+    {
+      "file": "DESIGN.md",
+      "purpose": "Onoo design system and component inventory"
+    },
+    {
+      "file": "PRODUCT.md",
+      "purpose": "Onoo product context and brand personality"
+    }
   ]
 }

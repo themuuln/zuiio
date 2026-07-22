@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
+import { AdminHeader } from "@/components/admin/admin-header";
+import { AdminLayoutProvider } from "@/components/admin/admin-layout-context";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { createClient } from "@/lib/supabase/server";
 import { AdminLayoutClient } from "./_components/layout-client";
-import { AdminLayoutProvider } from "@/components/admin/admin-layout-context";
-import { AdminHeader } from "@/components/admin/admin-header";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
 
 export default async function AdminLayout({
   children,

@@ -11,7 +11,11 @@ interface AwardsShelfProps {
 
 const AWARD_TYPE_CONFIG: Record<
   "mvp" | "player_of_week" | "top_scorer",
-  { icon: typeof Trophy; label: string; variant: "default" | "secondary" | "outline" }
+  {
+    icon: typeof Trophy;
+    label: string;
+    variant: "default" | "secondary" | "outline";
+  }
 > = {
   mvp: {
     icon: Trophy,
@@ -30,10 +34,7 @@ const AWARD_TYPE_CONFIG: Record<
   },
 };
 
-function formatPeriod(
-  start: string | null,
-  end: string | null,
-): string | null {
+function formatPeriod(start: string | null, end: string | null): string | null {
   if (!start && !end) return null;
   const fmt = (d: string) =>
     new Date(`${d}T12:00:00`).toLocaleDateString("mn-MN", {

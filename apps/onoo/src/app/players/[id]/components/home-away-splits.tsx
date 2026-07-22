@@ -1,19 +1,8 @@
 "use client";
 
 import { Home, Plane } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import type { PlayerGameLine } from "@/app/lib/shared";
 import {
   Card,
   CardContent,
@@ -21,8 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { PlayerGameLine } from "@/app/lib/shared";
-import { cn } from "@/lib/utils";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -106,11 +99,17 @@ export function HomeAwaySplits({
   const awayGames = away.length;
   const homeWinPct =
     home.length > 0
-      ? ((home.filter((l) => l.result === "W").length / home.length) * 100).toFixed(0)
+      ? (
+          (home.filter((l) => l.result === "W").length / home.length) *
+          100
+        ).toFixed(0)
       : "—";
   const awayWinPct =
     away.length > 0
-      ? ((away.filter((l) => l.result === "W").length / away.length) * 100).toFixed(0)
+      ? (
+          (away.filter((l) => l.result === "W").length / away.length) *
+          100
+        ).toFixed(0)
       : "—";
 
   return (
@@ -119,7 +118,9 @@ export function HomeAwaySplits({
         <div className="flex items-center gap-3">
           <span
             className="flex size-10 items-center justify-center rounded-xl text-[var(--brand-sports)]"
-            style={{ backgroundColor: `color-mix(in srgb, ${BRAND} 10%, transparent)` }}
+            style={{
+              backgroundColor: `color-mix(in srgb, ${BRAND} 10%, transparent)`,
+            }}
           >
             <Home className="size-5" aria-hidden="true" />
           </span>
@@ -139,7 +140,10 @@ export function HomeAwaySplits({
         {/* Win% badges */}
         <div className="flex flex-wrap gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
-            <Home className="size-3.5 text-[var(--color-chart-2)]" aria-hidden="true" />
+            <Home
+              className="size-3.5 text-[var(--color-chart-2)]"
+              aria-hidden="true"
+            />
             <span className="text-xs text-muted-foreground">
               {locale === "mn" ? "Гэр" : "Home"}
             </span>
@@ -151,7 +155,10 @@ export function HomeAwaySplits({
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
-            <Plane className="size-3.5 text-[var(--color-chart-5)]" aria-hidden="true" />
+            <Plane
+              className="size-3.5 text-[var(--color-chart-5)]"
+              aria-hidden="true"
+            />
             <span className="text-xs text-muted-foreground">
               {locale === "mn" ? "Зочин" : "Away"}
             </span>

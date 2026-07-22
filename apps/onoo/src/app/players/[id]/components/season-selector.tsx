@@ -52,20 +52,12 @@ export function SeasonSelector({
           "w-full border-sidebar-border bg-sidebar-accent/50 text-sidebar-foreground sm:w-72",
           className,
         )}
-        aria-label={
-          "Улирал сонгох"
-        }
+        aria-label={"Улирал сонгох"}
       >
-        <SelectValue
-          placeholder={
-            "Улирал сонгох"
-          }
-        />
+        <SelectValue placeholder={"Улирал сонгох"} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={CAREER_VALUE}>
-          {"Карьер"}
-        </SelectItem>
+        <SelectItem value={CAREER_VALUE}>{"Карьер"}</SelectItem>
         {competitions.map((c) => (
           <SelectItem key={c.competition_id} value={c.competition_id}>
             {c.season_name} — {c.competition_name}

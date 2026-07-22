@@ -15,7 +15,8 @@ export const SeasonArc = dynamic(
 );
 
 export const ShootingProfile = dynamic(
-  () => import("./shooting-profile").then((m) => ({ default: m.ShootingProfile })),
+  () =>
+    import("./shooting-profile").then((m) => ({ default: m.ShootingProfile })),
   { ssr: false },
 );
 
@@ -25,6 +26,15 @@ export const SkillRadar = dynamic(
 );
 
 export const HomeAwaySplits = dynamic(
-  () => import("./home-away-splits").then((m) => ({ default: m.HomeAwaySplits })),
+  () =>
+    import("./home-away-splits").then((m) => ({ default: m.HomeAwaySplits })),
+  { ssr: false },
+);
+
+export const MonthlyProgression = dynamic(
+  () =>
+    import("./monthly-progression").then((m) => ({
+      default: m.MonthlyProgression,
+    })),
   { ssr: false },
 );

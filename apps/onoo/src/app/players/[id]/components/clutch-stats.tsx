@@ -38,9 +38,7 @@ export function ClutchStats({
           </span>
           <div>
             <CardTitle className="text-lg">
-              {isEn
-                ? "Clutch Performance"
-                : "Шийдвэрлэх үеийн статистик"}
+              {isEn ? "Clutch Performance" : "Шийдвэрлэх үеийн статистик"}
             </CardTitle>
             <CardDescription className="mt-1">
               {isEn
@@ -74,13 +72,18 @@ export function ClutchStats({
                 {isEn ? "Win %" : "Ялалтын %"}
               </span>
               <span className="text-base sm:text-xl font-bold tabular-nums">
-                {clutchWinPct != null ? `${(clutchWinPct * 100).toFixed(0)}%` : "—"}
+                {clutchWinPct != null
+                  ? `${(clutchWinPct * 100).toFixed(0)}%`
+                  : "—"}
               </span>
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-            <Lock className="size-8 text-muted-foreground/40" aria-hidden="true" />
+            <Lock
+              className="size-8 text-muted-foreground/40"
+              aria-hidden="true"
+            />
             <p className="max-w-sm text-sm text-muted-foreground">
               {note ??
                 (isEn

@@ -12,7 +12,10 @@ interface Leader {
   blk?: number;
 }
 
-type StatKey = keyof Pick<Leader, "pts" | "rebounds_per_game" | "ast" | "stl" | "blk">;
+type StatKey = keyof Pick<
+  Leader,
+  "pts" | "rebounds_per_game" | "ast" | "stl" | "blk"
+>;
 
 function getTopPerformers(
   leaders: Leader[],
@@ -30,10 +33,46 @@ function hasData(leaders: Leader[], statKey: StatKey): boolean {
 
 describe("Multi-Category Leaderboard", () => {
   const leaders: Leader[] = [
-    { player_id: "p1", player_name: "Player 1", team_name: "Team A", pts: 25, rebounds_per_game: 8, ast: 5, stl: 2, blk: 1 },
-    { player_id: "p2", player_name: "Player 2", team_name: "Team B", pts: 22, rebounds_per_game: 9, ast: 6, stl: 1, blk: 2 },
-    { player_id: "p3", player_name: "Player 3", team_name: "Team C", pts: 18, rebounds_per_game: 7, ast: 4, stl: 3, blk: 0 },
-    { player_id: "p4", player_name: "Player 4", team_name: "Team D", pts: 15, rebounds_per_game: 10, ast: 3, stl: 0, blk: 0 },
+    {
+      player_id: "p1",
+      player_name: "Player 1",
+      team_name: "Team A",
+      pts: 25,
+      rebounds_per_game: 8,
+      ast: 5,
+      stl: 2,
+      blk: 1,
+    },
+    {
+      player_id: "p2",
+      player_name: "Player 2",
+      team_name: "Team B",
+      pts: 22,
+      rebounds_per_game: 9,
+      ast: 6,
+      stl: 1,
+      blk: 2,
+    },
+    {
+      player_id: "p3",
+      player_name: "Player 3",
+      team_name: "Team C",
+      pts: 18,
+      rebounds_per_game: 7,
+      ast: 4,
+      stl: 3,
+      blk: 0,
+    },
+    {
+      player_id: "p4",
+      player_name: "Player 4",
+      team_name: "Team D",
+      pts: 15,
+      rebounds_per_game: 10,
+      ast: 3,
+      stl: 0,
+      blk: 0,
+    },
   ];
 
   it("gets top 3 by points", () => {

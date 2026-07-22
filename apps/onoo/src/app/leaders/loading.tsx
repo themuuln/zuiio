@@ -1,5 +1,4 @@
-import { Skeleton } from "@/components/ui";
-import { Card, CardContent, CardHeader } from "@/components/ui";
+import { Card, CardContent, CardHeader, Skeleton } from "@/components/ui";
 import { LeaderTabsSkeleton } from "./components/leader-tabs";
 
 export default function LeadersLoading() {
@@ -10,7 +9,7 @@ export default function LeadersLoading() {
       aria-busy="true"
     >
       {/* Header */}
-      <header className="max-w-2xl" aria-hidden="true">
+      <header className="max-w-2xl">
         <Skeleton className="h-4 w-36" />
         <Skeleton className="mt-3 h-12 w-48" />
         <Skeleton className="mt-3 h-5 w-full max-w-md" />
@@ -42,7 +41,10 @@ export default function LeadersLoading() {
             </CardHeader>
             <CardContent className="space-y-1">
               {Array.from({ length: 5 }, (_, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-lg px-3 py-2.5">
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+                >
                   <Skeleton className="size-7 shrink-0 rounded-full" />
                   <Skeleton className="size-8 shrink-0 rounded-full" />
                   <div className="flex-1 flex flex-col gap-1">

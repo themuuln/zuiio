@@ -1,16 +1,14 @@
 import {
-  type FibaTextItem,
   type FibaPlayerStatLine,
-  type Json,
+  type FibaTextItem,
   fibaTextItemsToLines,
+  type Json,
   parseFibaOfficialStats,
 } from "@onoo/core";
 import * as Sentry from "@sentry/nextjs";
 import { type NextRequest, NextResponse } from "next/server";
-import { extractTextItems, getDocumentProxy } from "unpdf";
 import { createClient } from "@/lib/supabase/server";
 
-export const runtime = "nodejs";
 const MAX_PDF_SIZE = 10 * 1024 * 1024;
 
 /** A game roster row returned by Supabase, with a nested jersey_number via the join. */
@@ -34,19 +32,40 @@ interface PlayerStatLine {
   player_id: string;
   team_season_id: string;
   seconds_played: number;
-  pts: number; fgm: number; fga: number;
-  tpm: number; tpa: number; ftm: number; fta: number;
-  oreb: number; dreb: number;
-  ast: number; stl: number; blk: number; tov: number; pf: number;
+  pts: number;
+  fgm: number;
+  fga: number;
+  tpm: number;
+  tpa: number;
+  ftm: number;
+  fta: number;
+  oreb: number;
+  dreb: number;
+  ast: number;
+  stl: number;
+  blk: number;
+  tov: number;
+  pf: number;
 }
 
 /** Per-team stat line for the projection. */
 interface TeamStatLine {
   team_season_id: string;
-  pts: number; fgm: number; fga: number;
-  tpm: number; tpa: number; ftm: number; fta: number;
-  oreb: number; dreb: number; team_reb: number;
-  ast: number; stl: number; blk: number; tov: number; pf: number;
+  pts: number;
+  fgm: number;
+  fga: number;
+  tpm: number;
+  tpa: number;
+  ftm: number;
+  fta: number;
+  oreb: number;
+  dreb: number;
+  team_reb: number;
+  ast: number;
+  stl: number;
+  blk: number;
+  tov: number;
+  pf: number;
 }
 
 function buildPlayerStats(
@@ -71,11 +90,20 @@ function buildPlayerStats(
       player_id: playerId ?? "00000000-0000-0000-0000-000000000000",
       team_season_id: teamSeasonId,
       seconds_played: player.secondsPlayed ?? 0,
-      pts: player.pts, fgm: player.fgm, fga: player.fga,
-      tpm: player.tpm, tpa: player.tpa, ftm: player.ftm, fta: player.fta,
-      oreb: player.oreb, dreb: player.dreb,
-      ast: player.ast, stl: player.stl, blk: player.blk,
-      tov: player.tov, pf: player.pf,
+      pts: player.pts,
+      fgm: player.fgm,
+      fga: player.fga,
+      tpm: player.tpm,
+      tpa: player.tpa,
+      ftm: player.ftm,
+      fta: player.fta,
+      oreb: player.oreb,
+      dreb: player.dreb,
+      ast: player.ast,
+      stl: player.stl,
+      blk: player.blk,
+      tov: player.tov,
+      pf: player.pf,
     });
   }
 
@@ -88,27 +116,45 @@ function computeTeamTotals(
 ): TeamStatLine {
   const totals: TeamStatLine = {
     team_season_id: teamSeasonId,
-    pts: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0,
-    oreb: 0, dreb: 0, team_reb: 0, ast: 0, stl: 0, blk: 0, tov: 0, pf: 0,
+    pts: 0,
+    fgm: 0,
+    fga: 0,
+    tpm: 0,
+    tpa: 0,
+    ftm: 0,
+    fta: 0,
+    oreb: 0,
+    dreb: 0,
+    team_reb: 0,
+    ast: 0,
+    stl: 0,
+    blk: 0,
+    tov: 0,
+    pf: 0,
   };
 
   for (const p of playerStats) {
     totals.pts += p.pts;
-    totals.fgm += p.fgm; totals.fga += p.fga;
-    totals.tpm += p.tpm; totals.tpa += p.tpa;
-    totals.ftm += p.ftm; totals.fta += p.fta;
-    totals.oreb += p.oreb; totals.dreb += p.dreb;
-    totals.ast += p.ast; totals.stl += p.stl; totals.blk += p.blk;
-    totals.tov += p.tov; totals.pf += p.pf;
+    totals.fgm += p.fgm;
+    totals.fga += p.fga;
+    totals.tpm += p.tpm;
+    totals.tpa += p.tpa;
+    totals.ftm += p.ftm;
+    totals.fta += p.fta;
+    totals.oreb += p.oreb;
+    totals.dreb += p.dreb;
+    totals.ast += p.ast;
+    totals.stl += p.stl;
+    totals.blk += p.blk;
+    totals.tov += p.tov;
+    totals.pf += p.pf;
   }
 
   return totals;
 }
 
 /** Extract the jersey number from a roster_entries value that may be an object or array. */
-function getJerseyNumber(
-  entry: GameRosterWithJersey,
-): number | null {
+function getJerseyNumber(entry: GameRosterWithJersey): number | null {
   const val = entry.roster_entries;
   if (Array.isArray(val)) {
     return val[0]?.jersey_number ?? null;
@@ -158,9 +204,9 @@ export async function POST(
       { status: 400 },
     );
   }
-
   try {
-    // ── 1. Parse PDF ────────────────────────────────────────────────
+    // Dynamic import unpdf — only loaded when this route is hit, saving 1.6 MB from the critical server bundle
+    const { extractTextItems, getDocumentProxy } = await import("unpdf");
     const pdf = await getDocumentProxy(
       new Uint8Array(await file.arrayBuffer()),
     );
@@ -194,10 +240,7 @@ export async function POST(
       .single();
 
     if (gameError || !game) {
-      return NextResponse.json(
-        { error: "Тоглолт олдсонгүй" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Тоглолт олдсонгүй" }, { status: 404 });
     }
 
     const { data: rosterEntries, error: rosterError } = await supabase
@@ -307,10 +350,7 @@ export async function POST(
 
     if (rpcError) {
       await supabase.storage.from("evidence").remove([evidencePath]);
-      return NextResponse.json(
-        { error: rpcError.message },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: rpcError.message }, { status: 500 });
     }
 
     // ── 6. Return result ────────────────────────────────────────────

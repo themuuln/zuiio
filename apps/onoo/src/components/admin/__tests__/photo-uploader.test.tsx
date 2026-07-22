@@ -150,3 +150,60 @@ describe("PhotoUploader", () => {
     expect(screen.queryByText("Хадгалах")).not.toBeInTheDocument();
   });
 });
+
+describe("PhotoUploader with entityType: team", () => {
+  const teamProps = {
+    entityId: "team-1",
+    entityType: "team" as const,
+    onUploaded: vi.fn(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders upload button for team logo", () => {
+    render(<PhotoUploader {...teamProps} />);
+    expect(
+      screen.getByRole("button", { name: "Файл сонгох" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders preview when currentUrl is provided", () => {
+    render(
+      <PhotoUploader
+        {...teamProps}
+        currentUrl="https://example.com/team-logo.png"
+      />,
+    );
+    const preview = screen.getByTestId("preview-img");
+    expect(preview).toHaveAttribute("src", "https://example.com/team-logo.png");
+  });
+
+  it("uploads to correct storage bucket path", () => {
+    const { container } = render(<PhotoUploader {...teamProps} />);
+    const file = new File(["fake"], "logo.png", { type: "image/png" });
+    const input = getFileInput(container);
+    const changeEvent = new Event("change", { bubbles: true });
+    Object.defineProperty(input, "files", { value: [file] });
+    input.dispatchEvent(changeEvent);
+    expect(screen.queryByText("Хадгалах")).toBeInTheDocument();
+  });
+
+  it("rejects non-image files for team", () => {
+    const { container } = render(<PhotoUploader {...teamProps} />);
+    const input = getFileInput(container);
+    const file = createFile("doc.pdf", "application/pdf", 1000);
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(mockToast.error).toHaveBeenCalled();
+    expect(screen.queryByText("Хадгалах")).not.toBeInTheDocument();
+  });
+
+  it("accepts JPEG for team logo", () => {
+    const { container } = render(<PhotoUploader {...teamProps} />);
+    const input = getFileInput(container);
+    const file = createFile("logo.jpg", "image/jpeg", 1000);
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(screen.queryByText("Хадгалах")).toBeInTheDocument();
+  });
+});

@@ -51,11 +51,12 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
+        <div className="h-5 w-0.5 rounded-full bg-primary/60" />
         <Button
           variant="ghost"
           size="sm"
           onClick={toggle}
-          className="rounded-xl px-2 text-muted-foreground hover:text-foreground"
+          className="rounded-xl px-2 text-muted-foreground hover:text-foreground -ml-1"
           aria-expanded={!collapsed}
           aria-controls="charts-content"
         >

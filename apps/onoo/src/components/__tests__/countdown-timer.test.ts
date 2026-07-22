@@ -50,7 +50,9 @@ describe("CountdownTimer", () => {
   });
 
   it("calculates hours and minutes correctly", () => {
-    const twoHours30Min = new Date(Date.now() + 2 * 3600000 + 30 * 60000).toISOString();
+    const twoHours30Min = new Date(
+      Date.now() + 2 * 3600000 + 30 * 60000,
+    ).toISOString();
     const remaining = calculateTimeRemaining(twoHours30Min);
 
     expect(remaining.hours).toBe(2);

@@ -72,15 +72,9 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
           className="size-6 text-muted-foreground"
           aria-hidden="true"
         />
-        <p className="mt-3 font-semibold">
-          {
-            "Хандлага хараахан үусээгүй"
-          }
-        </p>
+        <p className="mt-3 font-semibold">{"Хандлага хараахан үусээгүй"}</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          {
-            "Хоёр ба түунээс олон тоглотын дараа график гарна."
-          }
+          {"Хоёр ба түунээс олон тоглотын дараа график гарна."}
         </p>
       </div>
     );
@@ -113,12 +107,8 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
       >
         <TabsList variant="line">
           <TabsTrigger value="pts">{"Оноо"}</TabsTrigger>
-          <TabsTrigger value="reb">
-            {"Буулт"}
-          </TabsTrigger>
-          <TabsTrigger value="ast">
-            {"Дамжуулалт"}
-          </TabsTrigger>
+          <TabsTrigger value="reb">{"Буулт"}</TabsTrigger>
+          <TabsTrigger value="ast">{"Дамжуулалт"}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -190,9 +180,7 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
 
       {data.length > 8 && (
         <p className="text-center text-xs text-muted-foreground">
-          {
-            "Доод шугамыг чирч хугацаа сонгоно уу"
-          }
+          {"Доод шугамыг чирч хугацаа сонгоно уу"}
         </p>
       )}
     </div>
