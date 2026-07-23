@@ -1,26 +1,35 @@
 "use client";
 
 import {
-  ArrowLeftRight,
-  FileCheck,
-  HardDrive,
-  Scale,
-  ShieldAlert,
   Activity,
+  ArrowLeftRight,
   Award,
+  BadgeCheck,
   BookOpen,
   Calendar,
-  CreditCard,
+  ClipboardCheck,
   ClipboardList,
+  CreditCard,
+  Eye,
+  FileCheck,
+  FileText,
+  GraduationCap,
+  HardDrive,
+  Heart,
   LayoutDashboard,
+  List,
   MapPin,
   Medal,
+  Megaphone,
   Package,
+  Scale,
   School,
+  ShieldAlert,
   ShoppingCart,
   Timer,
   Trophy,
   UserCircle,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -43,7 +52,6 @@ interface NavGroup {
 }
 
 const navGroups: NavGroup[] = [
-
   {
     label: "Үндсэн",
     items: [
@@ -71,6 +79,11 @@ const navGroups: NavGroup[] = [
       { href: "/admin/teams", label: "Баг", icon: Users },
       { href: "/admin/players", label: "Тоглогч", icon: UserCircle },
       { href: "/admin/teams/roster", label: "Бүртгэл", icon: ClipboardList },
+      { href: "/admin/teams/availability", label: "Бэлэн байдал", icon: Calendar },
+      { href: "/admin/teams/opponent-notes", label: "Өрсөлдөгчийн тэмдэглэл", icon: FileText },
+      { href: "/admin/teams/staff", label: "Ажилтнууд", icon: BadgeCheck },
+      { href: "/admin/teams/training", label: "Сургалт", icon: ClipboardList },
+      { href: "/admin/teams/transactions", label: "Гүйлгээ", icon: ArrowLeftRight },
     ],
   },
   {
@@ -99,6 +112,21 @@ const navGroups: NavGroup[] = [
       { href: "/admin/academy/trainers", label: "Дасгалжуулагч", icon: Users },
       { href: "/admin/academy/locations", label: "Байршил", icon: MapPin },
       { href: "/admin/academy/payments", label: "Төлбөр", icon: CreditCard },
+      { href: "/admin/academy/announcements", label: "Зар", icon: Megaphone },
+      { href: "/admin/academy/attendance", label: "Ирц", icon: ClipboardCheck },
+      { href: "/admin/academy/consent", label: "Зөвшөөрөл", icon: FileCheck },
+      { href: "/admin/academy/enrollments", label: "Элсэлт", icon: UserPlus },
+      { href: "/admin/academy/students", label: "Сурагчид", icon: GraduationCap },
+      { href: "/admin/academy/waitlists", label: "Хүлээлгийн жагсаалт", icon: List },
+      { href: "/admin/academy/payments-ledger", label: "Төлбөрийн дэвтэр", icon: BookOpen },
+    ],
+  },
+  {
+    label: "Бусад",
+    items: [
+      { href: "/admin/audience", label: "Үзэгчид", icon: Eye },
+      { href: "/admin/seasons", label: "Улирлууд", icon: Calendar },
+      { href: "/admin/sponsors", label: "Ивээн тэтгэгчид", icon: Heart },
     ],
   },
 ];

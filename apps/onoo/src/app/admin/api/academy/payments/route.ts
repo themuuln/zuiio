@@ -1,61 +1,60 @@
-import { type NextRequest, NextResponse } from "next/server";
+/**
+ * CRUD /admin/api/academy/payments — student payment records
+ */
+import { createRouteHandlers, withAuth } from "@/lib/supabase/admin-route";
 import {
-  checkPayment,
-  createInvoice,
-  getQPayConfig,
-  QPayError,
-} from "@/lib/shop/qpay";
+  type NextRequest,
+  NextResponse,
+} from "next/server";
 
-export async function POST(req: NextRequest) {
-  try {
-    const { amount, description, merchantId } = await req.json();
+const payments = createRouteHandlers("student_payments", {
+  select: "*, students:academy_students(canonical_name)",
+});
 
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ error: "Дүн буруу байна" }, { status: 400 });
-    }
+export const GET = payments.list();
 
-    const config = getQPayConfig();
-    const invoice = await createInvoice(config, {
-      amount,
-      merchantInvoiceId: `academy-${Date.now()}`,
-      callbackUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:3000"}/api/qpay/callback`,
-    });
+export const POST = payments.create();
 
-    return NextResponse.json(invoice);
-  } catch (err) {
-    if (err instanceof QPayError) {
-      return NextResponse.json({ error: err.message }, { status: 502 });
-    }
-    return NextResponse.json(
-      { error: "Төлбөр үүсгэхэд алдаа гарлаа" },
-      { status: 500 },
-    );
-  }
-}
-
-export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const invoiceId = searchParams.get("invoice_id");
-
-    if (!invoiceId) {
+export async function PUT(request: NextRequest) {
+  return withAuth(async (supabase) => {
+    const body = await request.json();
+    if (!body.id) {
       return NextResponse.json(
-        { error: "invoice_id заавал байх ёстой" },
+        { error: "id заавал байх ёстой" },
         { status: 400 },
       );
     }
+    const { data, error } = await supabase
+      .from("student_payments")
+      .update(body)
+      .eq("id", body.id)
+      .select("*, students:academy_students(canonical_name)")
+      .single();
 
-    const config = getQPayConfig();
-    const status = await checkPayment(config, invoiceId);
-
-    return NextResponse.json(status);
-  } catch (err) {
-    if (err instanceof QPayError) {
-      return NextResponse.json({ error: err.message }, { status: 502 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    return NextResponse.json(
-      { error: "Төлөв шалгахад алдаа гарлаа" },
-      { status: 500 },
-    );
-  }
+    return NextResponse.json(data);
+  });
+}
+
+export async function DELETE(request: NextRequest) {
+  return withAuth(async (supabase) => {
+    const body = await request.json();
+    if (!body.id) {
+      return NextResponse.json(
+        { error: "id заавал байх ёстой" },
+        { status: 400 },
+      );
+    }
+    const { error } = await supabase
+      .from("student_payments")
+      .delete()
+      .eq("id", body.id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return new NextResponse(null, { status: 204 });
+  });
 }

@@ -438,7 +438,30 @@ export const academyApi = {
   programs: createEntityApi<AcademyProgramRow>(`${BASE}/academy/programs`),
   trainers: createEntityApi<AcademyTrainerRow>(`${BASE}/academy/trainers`),
   locations: createEntityApi<AcademyLocationRow>(`${BASE}/academy/locations`),
+  students: createEntityApi<AcademyStudentRow>(`${BASE}/academy/students`),
 };
+
+// ── Academy: Students ──
+
+export interface AcademyStudentRow {
+  id: string;
+  academy_id: string;
+  canonical_name: string;
+  name_latin: string | null;
+  date_of_birth: string | null;
+  school_name: string | null;
+  grade_level: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  medical_notes: string | null;
+  allergies: string[] | null;
+  notes: string | null;
+  photo_url: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  academy_profiles: { name: string } | null;
+}
 
 // ── Organizations ──
 

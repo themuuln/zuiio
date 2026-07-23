@@ -5,3 +5,4 @@ const competitions = createRouteHandlers("competitions", {
 });
 
 export const GET = competitions.list();
+export const POST = competitions.create();

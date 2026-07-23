@@ -52,34 +52,32 @@ export function Sponsors() {
       id="sponsors"
       className="overflow-hidden border-t border-sidebar-border/30 bg-[var(--surface-1)] py-16 sm:py-20"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-12 text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-warning">
-            Түншүүд
-          </p>
-          <h2 className="font-display text-3xl leading-tight tracking-tight text-sidebar-foreground sm:text-4xl">
-            Бидэнтэй хамт
-          </h2>
-        </div>
+      <div className="mb-12 text-center px-4 sm:px-6 lg:px-8">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-warning">
+          Түншүүд
+        </p>
+        <h2 className="font-display text-3xl leading-tight tracking-tight text-sidebar-foreground sm:text-4xl">
+          Бидэнтэй хамт
+        </h2>
+      </div>
 
-        <div className="relative">
-          {/* Gradient fade edges */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[var(--surface-1)] via-[var(--surface-1)]/50 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[var(--surface-1)] via-[var(--surface-1)]/50 to-transparent" />
+      <div className="relative">
+        {/* Gradient fade edges */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[var(--surface-1)] via-[var(--surface-1)]/50 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[var(--surface-1)] via-[var(--surface-1)]/50 to-transparent" />
 
-          <MarqueeRow>
+        <MarqueeRow>
+          {sponsors.map((sponsor) => (
+            <SponsorLogo key={sponsor.slug} name={sponsor.name} />
+          ))}
+        </MarqueeRow>
+
+        <div className="mt-4">
+          <MarqueeRow reverse>
             {sponsors.map((sponsor) => (
               <SponsorLogo key={sponsor.slug} name={sponsor.name} />
             ))}
           </MarqueeRow>
-
-          <div className="mt-4">
-            <MarqueeRow reverse>
-              {sponsors.map((sponsor) => (
-                <SponsorLogo key={sponsor.slug} name={sponsor.name} />
-              ))}
-            </MarqueeRow>
-          </div>
         </div>
       </div>
     </section>

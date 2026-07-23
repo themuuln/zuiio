@@ -53,7 +53,7 @@ export default function AcademyPaymentsPage() {
     setState({ step: "loading" });
 
     try {
-      const res = await fetch("/admin/api/academy/payments", {
+      const res = await fetch("/admin/api/academy/qpay", {
         method: "POST",
         body: JSON.stringify({
           amount: parsed.data.amount,
@@ -93,7 +93,7 @@ export default function AcademyPaymentsPage() {
       await promise;
       try {
         const res = await fetch(
-          `/admin/api/academy/payments?invoice_id=${invoiceId}`,
+          `/admin/api/academy/qpay?invoice_id=${invoiceId}`,
         );
         if (!res.ok) continue;
         const status = await res.json();

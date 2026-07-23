@@ -6,7 +6,21 @@ import * as Sentry from "@sentry/nextjs";
  * (Supabase query failures, API errors, handled exceptions).
  */
 export function captureError(context: string, error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
+  let message: string;
+  if (error instanceof Error) {
+    message = error.message;
+  } else if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    // PostgrestError and similar Supabase errors are plain objects, not Error instances
+    message = error.message;
+  } else {
+    message = String(error);
+  }
+
   console.error(`${context}:`, message);
   Sentry.captureException(error, {
     tags: { context },

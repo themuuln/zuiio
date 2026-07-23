@@ -5,3 +5,4 @@ const venues = createRouteHandlers("venues", {
 });
 
 export const GET = venues.list();
+export const POST = venues.create();

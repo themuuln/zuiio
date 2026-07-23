@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 @import "@zuiio/branding/globals.css";
 
+/* ─── Scrollbar gutter — prevent layout shift when scrollbar appears ─── */
+html {
+  scrollbar-gutter: stable;
+}
+
 /*
  * Onoo — Sports Stats Platform
  * Dark-first design: near-black canvas, orange primary, purple secondary
