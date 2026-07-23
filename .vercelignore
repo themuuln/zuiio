@@ -10,11 +10,8 @@
 
 # Dependencies (reinstalled by Vercel during build)
 **/node_modules/
-
 # Sibling applications (not part of agent-gateway's build graph)
-apps/onoo/
 apps/tamga/
-apps/khosuud/
 apps/zuiio-id/
 apps/website/
 apps/zraf-web/
