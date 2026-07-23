@@ -390,19 +390,19 @@ importers:
         specifier: 2.5.4
         version: 2.5.4
       '@playwright/test':
-        specifier: 'catalog:'
+        specifier: ^1.61.1
         version: 1.61.1
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.2
       '@testing-library/jest-dom':
-        specifier: 'catalog:'
+        specifier: ^6.9.1
         version: 6.9.1
       '@testing-library/react':
-        specifier: 'catalog:'
+        specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@testing-library/user-event':
-        specifier: 'catalog:'
+        specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
       '@types/node':
         specifier: ^26.1.1
@@ -426,7 +426,7 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       jsdom:
-        specifier: 'catalog:'
+        specifier: ^29.1.1
         version: 29.1.1(@noble/hashes@1.8.0)
       pg:
         specifier: ^8.22.0
@@ -444,7 +444,7 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
       vitest:
-        specifier: 'catalog:'
+        specifier: ^4.1.10
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.1.1)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(jsdom@29.1.1(@noble/hashes@1.8.0))(msw@2.15.0(@types/node@26.1.1)(typescript@7.0.2))(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))
 
   apps/onoo-app:
