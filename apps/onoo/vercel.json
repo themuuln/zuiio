@@ -1,4 +1,5 @@
 {
+  "installCommand": "pnpm install",
   "buildCommand": "cd apps/onoo && pnpm build",
-  "outputDirectory": ".next"
+  "outputDirectory": "apps/onoo/.next"
 }
