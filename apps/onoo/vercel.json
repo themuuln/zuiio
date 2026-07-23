@@ -1,5 +1,5 @@
 {
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "installCommand": "pnpm --prefix \"$PWD/../..\" install --frozen-lockfile",
   "buildCommand": "pnpm exec next build",
   "outputDirectory": ".next"
 }
