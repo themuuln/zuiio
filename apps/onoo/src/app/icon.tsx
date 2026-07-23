@@ -13,11 +13,11 @@ export default function Icon() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "oklch(0.72 0.22 40)", // orange primary
+        background: "#E8832A", // orange primary
         borderRadius: 6,
         fontSize: 20,
         fontWeight: 700,
-        color: "oklch(0.02 0.002 60)", // near-black
+        color: "#070808", // near-black
         fontFamily: "system-ui, sans-serif",
       }}
     >

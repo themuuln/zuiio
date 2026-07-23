@@ -16,12 +16,6 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
     useTypeScriptCli: true,
-    cacheComponents: true,
-    cacheLife: {
-      minutes: { stale: 60, revalidate: 300 },
-      hours: { stale: 3600, revalidate: 3600 },
-      days: { stale: 86400, revalidate: 86400 },
-    },
     optimizePackageImports: [
       "lucide-react",
       "recharts",

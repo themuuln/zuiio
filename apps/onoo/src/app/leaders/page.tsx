@@ -16,7 +16,6 @@ export const metadata: Metadata = {
   description:
     "Сагсан бөмбөгийн лигийн шилдэг тоглогчид бүх ангилалд: оноо, давсан, олгосон, булаасан, хаасан.",
 };
-export const revalidate = 3600;
 
 const STATS = [
   {

@@ -13,7 +13,6 @@
 import type { GameRoster, SportConfig, StatEvent } from "@onoo/core/types";
 import { cache } from "react";
 import { captureError } from "@/lib/errors";
-import { cacheLife, cacheTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 // Import shared types for internal use + re-export for backward compatibility
@@ -64,9 +63,6 @@ export type {
 
 /** Return recent finalized games (most recent first), limited to `limit`. */
 export async function getRecentGames(limit = 4): Promise<GameWithTeams[]> {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag("recent-games");
   const today = new Date().toISOString().slice(0, 10);
   const allGames = await getGamesByDate(today);
   return allGames
@@ -93,9 +89,6 @@ function mapGameRow(row: Record<string, unknown>): GameWithTeams {
 }
 export const getGamesByDate = cache(
   async (dateStr: string): Promise<GameWithTeams[]> => {
-    "use cache";
-    cacheLife("minutes");
-    cacheTag("games-by-date");
     const supabase = await createClient();
     const start = `${dateStr}T00:00:00`;
     const end = `${dateStr}T23:59:59`;
@@ -185,9 +178,6 @@ export async function getLiveGames(): Promise<GameWithTeams[]> {
 }
 
 export async function getGameById(id: string): Promise<GameWithTeams | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(`game-${id}`);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_games")
@@ -232,9 +222,6 @@ function mapLeaderRow(row: Record<string, unknown>): LeaderRow {
   };
 }
 export async function getStandings(): Promise<StandingRow[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("standings");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_standings")
@@ -250,9 +237,6 @@ export async function getStandings(): Promise<StandingRow[]> {
 export async function getLeaders(
   includeUnqualified = false,
 ): Promise<LeaderRow[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("leaders");
   const supabase = await createClient();
   let query = supabase
     .from("v_public_leaders")
@@ -292,9 +276,6 @@ export async function getTeamBySlug(slug: string): Promise<{
   recentGames: GameWithTeams[];
   upcomingGames: GameWithTeams[];
 } | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("team-by-slug");
   const supabase = await createClient();
 
   const { data: roster, error: rosterErr } = await supabase
@@ -390,9 +371,6 @@ export async function getPlayerById(id: string): Promise<{
   seasonStats: LeaderRow[];
   gameLog: BoxScoreRow[];
 } | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("player-by-id");
   const supabase = await createClient();
 
   const { data: profiles } = await supabase
@@ -427,9 +405,6 @@ export async function getPlayerGameLog(
   playerId: string,
   competitionId?: string | null,
 ): Promise<PlayerGameLine[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("player-game-log");
   const supabase = await createClient();
   const { data: boxScore, error: boxScoreError } = await supabase
     .from("v_public_box_score")
@@ -493,9 +468,6 @@ export async function getPlayerGameLog(
 }
 
 export async function getBoxScore(gameId: string): Promise<BoxScoreRow[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(`box-score-${gameId}`);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_box_score")
@@ -509,9 +481,6 @@ export async function getBoxScore(gameId: string): Promise<BoxScoreRow[]> {
 }
 
 export async function getPlayByPlay(gameId: string): Promise<PlayByPlayRow[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(`play-by-play-${gameId}`);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_play_by_play")
@@ -534,9 +503,6 @@ export async function getPlayerShootingProfile(
   ftm: number;
   fta: number;
 } | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("shooting-profile");
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -562,9 +528,6 @@ export async function getPlayerShotZones(
   playerId: string,
   competitionId: string,
 ): Promise<ShotZoneStat[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("shot-zones");
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -652,9 +615,6 @@ export async function getPlayerSeasonAverages(
   spg: number;
   bpg: number;
 } | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("season-averages");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_leaders")
@@ -679,9 +639,6 @@ export async function getLeagueAverages(competitionId: string): Promise<{
   averages: { pts: number; reb: number; ast: number; stl: number; blk: number };
   maxes: { pts: number; reb: number; ast: number; stl: number; blk: number };
 }> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("league-averages");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_leaders")
@@ -751,9 +708,6 @@ export async function getPlayerCompetitions(playerId: string): Promise<
     league_name: string;
   }>
 > {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("player-comps");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_player_profiles")
@@ -792,9 +746,6 @@ export async function getPlayerCareerTotals(playerId: string): Promise<{
   reb: number;
   ast: number;
 } | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("player-career");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_leaders")
@@ -826,9 +777,6 @@ export async function getPlayerCareerTotals(playerId: string): Promise<{
  * Returns top 5 qualified players ranked by EFF.
  */
 export async function getMvpRace(competitionId: string): Promise<MvpRaceRow[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("mvp-race");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_leaders")
@@ -879,9 +827,6 @@ export async function getMvpRace(competitionId: string): Promise<MvpRaceRow[]> {
 export async function getPlayerAwards(
   playerId: string,
 ): Promise<PlayerAwardRow[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("player-awards");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_awards")
@@ -906,9 +851,6 @@ export async function getCompetition(competitionId: string): Promise<{
   season: string;
   league: string;
 } | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("competition");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_standings")
