@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { useState } from "react";
 import { Toaster } from "sonner";
 
@@ -21,6 +22,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       {children}
       <Toaster richColors position="top-right" />
+      <SpeedInsights />
     </QueryClientProvider>
   );
 }

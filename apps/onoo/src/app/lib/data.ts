@@ -11,7 +11,9 @@
  */
 
 import type { GameRoster, SportConfig, StatEvent } from "@onoo/core/types";
+import { cache } from "react";
 import { captureError } from "@/lib/errors";
+import { cacheLife, cacheTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 // Import shared types for internal use + re-export for backward compatibility
@@ -62,6 +64,9 @@ export type {
 
 /** Return recent finalized games (most recent first), limited to `limit`. */
 export async function getRecentGames(limit = 4): Promise<GameWithTeams[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("recent-games");
   const today = new Date().toISOString().slice(0, 10);
   const allGames = await getGamesByDate(today);
   return allGames
@@ -86,51 +91,54 @@ function mapGameRow(row: Record<string, unknown>): GameWithTeams {
     venue_city: null,
   };
 }
-export async function getGamesByDate(
-  dateStr: string,
-): Promise<GameWithTeams[]> {
-  const supabase = await createClient();
-  const start = `${dateStr}T00:00:00`;
-  const end = `${dateStr}T23:59:59`;
+export const getGamesByDate = cache(
+  async (dateStr: string): Promise<GameWithTeams[]> => {
+    "use cache";
+    cacheLife("minutes");
+    cacheTag("games-by-date");
+    const supabase = await createClient();
+    const start = `${dateStr}T00:00:00`;
+    const end = `${dateStr}T23:59:59`;
 
-  // Query both views in parallel — verified (v_public_games) and live/provisional (v_public_live_games)
-  const [{ data: verified, error: err1 }, { data: live, error: err2 }] =
-    await Promise.all([
-      supabase
-        .from("v_public_games")
-        .select("*")
-        .gte("scheduled_at", start)
-        .lt("scheduled_at", end)
-        .order("scheduled_at"),
-      supabase
-        .from("v_public_live_games")
-        .select("*")
-        .gte("scheduled_at", start)
-        .lt("scheduled_at", end)
-        .order("scheduled_at"),
-    ]);
+    // Query both views in parallel — verified (v_public_games) and live/provisional (v_public_live_games)
+    const [{ data: verified, error: err1 }, { data: live, error: err2 }] =
+      await Promise.all([
+        supabase
+          .from("v_public_games")
+          .select("*")
+          .gte("scheduled_at", start)
+          .lt("scheduled_at", end)
+          .order("scheduled_at"),
+        supabase
+          .from("v_public_live_games")
+          .select("*")
+          .gte("scheduled_at", start)
+          .lt("scheduled_at", end)
+          .order("scheduled_at"),
+      ]);
 
-  if (err1) captureError("getGamesByDate/v_public_games", err1);
-  if (err2) captureError("getGamesByDate/v_public_live_games", err2);
+    if (err1) captureError("getGamesByDate/v_public_games", err1);
+    if (err2) captureError("getGamesByDate/v_public_live_games", err2);
 
-  const verifiedRows = (verified ?? []).map((r) =>
-    mapGameRow(r as Record<string, unknown>),
-  );
-  const liveRows = (live ?? []).map((r) =>
-    mapGameRow(r as Record<string, unknown>),
-  );
+    const verifiedRows = (verified ?? []).map((r) =>
+      mapGameRow(r as Record<string, unknown>),
+    );
+    const liveRows = (live ?? []).map((r) =>
+      mapGameRow(r as Record<string, unknown>),
+    );
 
-  // Merge: verified takes priority for same id, live games fill the rest
-  const seen = new Set(verifiedRows.map((g) => g.id));
-  const merged = [...verifiedRows, ...liveRows.filter((g) => !seen.has(g.id))];
+    // Merge: verified takes priority for same id, live games fill the rest
+    const seen = new Set(verifiedRows.map((g) => g.id));
+    const merged = [...verifiedRows, ...liveRows.filter((g) => !seen.has(g.id))];
 
-  // Restore sort order by scheduled_at
-  merged.sort(
-    (a, b) =>
-      new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime(),
-  );
-  return merged;
-}
+    // Restore sort order by scheduled_at
+    merged.sort(
+      (a, b) =>
+        new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime(),
+    );
+    return merged;
+  },
+);
 
 export interface ScorebarStrip {
   /** Games for `activeDate`, ordered live → upcoming → finals. */
@@ -177,6 +185,9 @@ export async function getLiveGames(): Promise<GameWithTeams[]> {
 }
 
 export async function getGameById(id: string): Promise<GameWithTeams | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`game-${id}`);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_games")
@@ -221,6 +232,9 @@ function mapLeaderRow(row: Record<string, unknown>): LeaderRow {
   };
 }
 export async function getStandings(): Promise<StandingRow[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("standings");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_standings")
@@ -236,6 +250,9 @@ export async function getStandings(): Promise<StandingRow[]> {
 export async function getLeaders(
   includeUnqualified = false,
 ): Promise<LeaderRow[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("leaders");
   const supabase = await createClient();
   let query = supabase
     .from("v_public_leaders")
@@ -267,6 +284,7 @@ export async function getTeamBySlug(slug: string): Promise<{
     primary_color: string | null;
     short_code: string;
     team_season_id: string;
+    social_links: Record<string, string>;
   };
   players: TeamRosterRow[];
   standings: StandingRow | undefined;
@@ -274,6 +292,9 @@ export async function getTeamBySlug(slug: string): Promise<{
   recentGames: GameWithTeams[];
   upcomingGames: GameWithTeams[];
 } | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("team-by-slug");
   const supabase = await createClient();
 
   const { data: roster, error: rosterErr } = await supabase
@@ -282,8 +303,17 @@ export async function getTeamBySlug(slug: string): Promise<{
     .eq("team_slug", slug);
 
   if (rosterErr || !roster || roster.length === 0) return null;
-
   const first = roster[0] as unknown as TeamRosterRow;
+
+
+  const { data: teamRow } = await supabase
+    .from("teams")
+    .select("social_links")
+    .eq("id", first.team_id)
+    .single();
+  const socialLinks =
+    (teamRow?.social_links as Record<string, string> | null) ?? {};
+
   const team = {
     id: first.team_id,
     name: first.team_name,
@@ -292,6 +322,7 @@ export async function getTeamBySlug(slug: string): Promise<{
     primary_color: null as string | null,
     short_code: first.team_name.slice(0, 3).toUpperCase(),
     team_season_id: first.team_season_id,
+    social_links: socialLinks,
   };
 
   // Run standings, leaders, and games queries in parallel
@@ -359,6 +390,9 @@ export async function getPlayerById(id: string): Promise<{
   seasonStats: LeaderRow[];
   gameLog: BoxScoreRow[];
 } | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("player-by-id");
   const supabase = await createClient();
 
   const { data: profiles } = await supabase
@@ -393,6 +427,9 @@ export async function getPlayerGameLog(
   playerId: string,
   competitionId?: string | null,
 ): Promise<PlayerGameLine[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("player-game-log");
   const supabase = await createClient();
   const { data: boxScore, error: boxScoreError } = await supabase
     .from("v_public_box_score")
@@ -456,6 +493,9 @@ export async function getPlayerGameLog(
 }
 
 export async function getBoxScore(gameId: string): Promise<BoxScoreRow[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`box-score-${gameId}`);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_box_score")
@@ -469,6 +509,9 @@ export async function getBoxScore(gameId: string): Promise<BoxScoreRow[]> {
 }
 
 export async function getPlayByPlay(gameId: string): Promise<PlayByPlayRow[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`play-by-play-${gameId}`);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_play_by_play")
@@ -491,6 +534,9 @@ export async function getPlayerShootingProfile(
   ftm: number;
   fta: number;
 } | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("shooting-profile");
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -516,6 +562,9 @@ export async function getPlayerShotZones(
   playerId: string,
   competitionId: string,
 ): Promise<ShotZoneStat[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("shot-zones");
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -603,6 +652,9 @@ export async function getPlayerSeasonAverages(
   spg: number;
   bpg: number;
 } | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("season-averages");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_leaders")
@@ -627,6 +679,9 @@ export async function getLeagueAverages(competitionId: string): Promise<{
   averages: { pts: number; reb: number; ast: number; stl: number; blk: number };
   maxes: { pts: number; reb: number; ast: number; stl: number; blk: number };
 }> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("league-averages");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_leaders")
@@ -696,6 +751,9 @@ export async function getPlayerCompetitions(playerId: string): Promise<
     league_name: string;
   }>
 > {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("player-comps");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_player_profiles")
@@ -734,6 +792,9 @@ export async function getPlayerCareerTotals(playerId: string): Promise<{
   reb: number;
   ast: number;
 } | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("player-career");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_leaders")
@@ -765,6 +826,9 @@ export async function getPlayerCareerTotals(playerId: string): Promise<{
  * Returns top 5 qualified players ranked by EFF.
  */
 export async function getMvpRace(competitionId: string): Promise<MvpRaceRow[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("mvp-race");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_leaders")
@@ -815,6 +879,9 @@ export async function getMvpRace(competitionId: string): Promise<MvpRaceRow[]> {
 export async function getPlayerAwards(
   playerId: string,
 ): Promise<PlayerAwardRow[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("player-awards");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_awards")
@@ -839,6 +906,9 @@ export async function getCompetition(competitionId: string): Promise<{
   season: string;
   league: string;
 } | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("competition");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_standings")

@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
+
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
 import {
@@ -46,9 +46,7 @@ export const metadata: Metadata = {
 function formatAverage(value: number | null): string {
   return value?.toFixed(1) ?? "—";
 }
-
 export default async function HomePage() {
-  await connection();
   const today = getUlaanbaatarDate();
   const [todayGames, upcomingGames, recentGames, standings, leaders, players] =
     await Promise.all([
@@ -59,7 +57,6 @@ export default async function HomePage() {
       getLeaders(),
       getPlayers(),
     ]);
-
   const liveGame = todayGames.find(
     (game) => game.status === "live_provisional",
   );

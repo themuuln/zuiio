@@ -16,6 +16,7 @@ import { PublicEmptyState } from "../components/public-empty-state";
 import { getStandings } from "../lib/data";
 import { StandingsTable } from "./components/standings-table";
 
+export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Шалгуур — Оноо",
   description: "Лигийн байрлал, багуудын форм, цуврал болон онооны зөрүү.",

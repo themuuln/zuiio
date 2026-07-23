@@ -39,7 +39,6 @@ export function TeamLogo({
         alt={shortCode}
         width={px}
         height={px}
-        unoptimized
         className={cn("shrink-0 rounded-full object-cover", className)}
       />
     );

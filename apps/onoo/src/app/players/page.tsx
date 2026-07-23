@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Тоглогчид — Оноо",
   description: "Сагсан бөмбөгийн лигийн бүх тоглогчид — нэр, баг, статистик.",
 };
+export const revalidate = 3600;
 
 export default async function PlayersPage({
   searchParams,
