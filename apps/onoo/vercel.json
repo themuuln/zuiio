@@ -1,5 +1,5 @@
 {
-  "installCommand": "cd ../../ && pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm exec turbo run build --filter=onoo-web",
-  "outputDirectory": ".next"
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm exec turbo run build --filter=onoo-web",
+  "outputDirectory": "apps/onoo/.next"
 }
