@@ -27,13 +27,13 @@ Phase 1–7 нь Оноо-ийн одоогийн хэрэгжих замын з
 
 - [x] `stat_events` journal, ruleset vocabulary, projection rebuild command, authorization cutover.
 - [x] Submission review UI, journal durability tests, handoff UI.
-- [x] Ops console, integration tests, chaos tests.
+- [x] Ops console, integration tests, chaos tests, venues CRUD, seasons CRUD.
 
 ### Phase 2 — Player profile as showcase
 
 > Execution spec: [plans/phase-2-player-showcase.md](plans/phase-2-player-showcase.md)
 
-- [x] Roster onboarding kit, consent & takedown, hero identity card.
+- [x] Roster onboarding kit, consent & takedown, hero identity card, social links.
 - [x] Season story arc, shooting profile, career highs & milestones.
 - [x] Radar chart, recent games strip, plain-language summaries.
 - [x] Report-error intake, season selector & career view, box score below fold.
@@ -85,7 +85,7 @@ Phase 1–7 нь Оноо-ийн одоогийн хэрэгжих замын з
 - [x] Canonical identity for leagues, clubs, teams, academies, guardians.
 - [x] Official roster snapshots, eligibility, transfers, identity disputes.
 - [x] One account + least-privilege org roles.
-- [x] Private storage, audit, retention, consent, break-glass support.
+- [x] Private storage, audit, retention, consent, break-glass support, dark theme.
 
 ### Phase 9 — Team operations
 

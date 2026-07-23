@@ -1,5 +1,4 @@
 {
-  "installCommand": "pnpm install",
-  "buildCommand": "pnpm exec turbo run build --filter=onoo-web",
-  "outputDirectory": "apps/onoo/.next"
+  "buildCommand": "cd apps/onoo && pnpm build",
+  "outputDirectory": ".next"
 }

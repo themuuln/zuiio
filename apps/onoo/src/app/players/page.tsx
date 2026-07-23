@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getPlayers } from "../lib/data";
-import { PlayerGrid } from "./components/player-grid";
+import { SuspendedPlayerGrid } from "./components/player-grid-section";
 
 export const metadata: Metadata = {
   title: "Тоглогчид — Оноо",
@@ -13,11 +12,10 @@ export default async function PlayersPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = "" } = await searchParams;
-  const players = await getPlayers();
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-      {/* ── Hero header with court motif ── */}
+      {/* ── Hero header — streams immediately, no data dependency ── */}
       <header className="court-accent relative overflow-hidden rounded-xl bg-sidebar px-6 py-8 sm:px-10 sm:py-10">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.06]"
@@ -40,18 +38,11 @@ export default async function PlayersPage({
             Тоглогчоо нэр, баг, байрлалаар олж улирлын гүйцэтгэл болон бүрэн
             тоглолтын түүхийг нь үзээрэй.
           </p>
-          {players.length > 0 && (
-            <p className="mt-4 text-sm tabular-nums text-sidebar-foreground/50">
-              <span className="font-display text-lg text-warning">
-                {players.length}
-              </span>{" "}
-              тоглогч
-            </p>
-          )}
         </div>
       </header>
 
-      <PlayerGrid players={players} initialSearch={q} />
+      {/* ── Player grid — streams via Suspense while data fetches ── */}
+      <SuspendedPlayerGrid searchQuery={q} />
     </main>
   );
 }

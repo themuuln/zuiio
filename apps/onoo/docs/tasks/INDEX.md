@@ -48,6 +48,8 @@ _All Horizon A tasks (Phases 1–7) are complete. Academy Phase 10a foundation i
 | T-1.8 | Runbook + paper fallback | P1 | ✅ | S | — | [spec](../plans/phase-1-trusted-foundation.md#task-18--game-day-runbook--paper-fallback) |
 | T-1.9 | Ops console | P1 | ✅ | M | T-1.3 | [spec](../plans/phase-1-trusted-foundation.md#task-19--ops-console) |
 | T-1.10 | Integration + chaos tests | P1 | ✅ | M | T-1.4, T-1.6 | [spec](../plans/phase-1-trusted-foundation.md#task-110--integration--chaos-tests) |
+| T-1.11 | Venues admin CRUD | P2 | ✅ | S | — | [spec](../tasks/T-1.11-venues-crud.md) |
+| T-1.12 | Seasons admin CRUD | P2 | ✅ | S | — | [spec](../tasks/T-1.12-seasons-crud.md) |
 
 ### Phase 2 — Player profile as showcase
 
@@ -65,6 +67,7 @@ _All Horizon A tasks (Phases 1–7) are complete. Academy Phase 10a foundation i
 | T-2.10 | Report-error intake | P1 | ✅ | M | T-1.9 | [spec](../plans/phase-2-player-showcase.md#task-210--report-a-stat-error-intake) |
 | T-2.11 | Season selector & career | P1 | ✅ | M | T-2.1 | [spec](../plans/phase-2-player-showcase.md#task-211--season-selector--career-view) |
 | T-2.12 | Box score below fold | P1 | ✅ | S | — | [spec](../plans/phase-2-player-showcase.md#task-212--box-score-history-below-the-fold) |
+| T-2.13 | Social links for entity profiles | P2 | ✅ | M | T-2.3 | [spec](../tasks/T-2.13-social-links.md) |
 
 ### Phase 3 — Final-Whistle Pack
 
@@ -132,6 +135,7 @@ _All Horizon A tasks (Phases 1–7) are complete. Academy Phase 10a foundation i
 | T-8.4 | Private storage & audit | P2 | ✅ | M | T-8.1 | Tenant-isolated storage |
 | T-8.5 | Consent & retention | P2 | ✅ | S | T-8.1 | Data retention policies |
 | T-8.6 | Break-glass support | P3 | ✅ | S | T-8.1 | Emergency access |
+| T-8.7 | Dark theme design system | P2 | ✅ | M | — | [spec](../tasks/T-8.7-dark-theme.md) |
 
 ### Phase 9 — Team operations
 

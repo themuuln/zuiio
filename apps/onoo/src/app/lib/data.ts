@@ -122,7 +122,10 @@ export const getGamesByDate = cache(
 
     // Merge: verified takes priority for same id, live games fill the rest
     const seen = new Set(verifiedRows.map((g) => g.id));
-    const merged = [...verifiedRows, ...liveRows.filter((g) => !seen.has(g.id))];
+    const merged = [
+      ...verifiedRows,
+      ...liveRows.filter((g) => !seen.has(g.id)),
+    ];
 
     // Restore sort order by scheduled_at
     merged.sort(
@@ -234,27 +237,35 @@ export async function getStandings(): Promise<StandingRow[]> {
   return data.map((row: Record<string, unknown>) => mapStandingRow(row));
 }
 
-export async function getLeaders(
-  includeUnqualified = false,
-): Promise<LeaderRow[]> {
-  const supabase = await createClient();
-  let query = supabase
-    .from("v_public_leaders")
-    .select("*")
-    .order("pts", { ascending: false });
+export const getLeaders = cache(
+  async (
+    includeUnqualified = false,
+    searchQuery?: string,
+  ): Promise<LeaderRow[]> => {
+    const supabase = await createClient();
+    let query = supabase
+      .from("v_public_leaders")
+      .select("*")
+      .order("pts", { ascending: false });
 
-  if (!includeUnqualified) {
-    query = query.eq("qualified", true);
-  }
+    if (!includeUnqualified) {
+      query = query.eq("qualified", true);
+    }
 
-  const { data, error } = await query;
+    if (searchQuery && searchQuery.trim().length > 0) {
+      query = query.or(
+        `player_name.ilike.%${searchQuery.trim()}%,player_name_latin.ilike.%${searchQuery.trim()}%`,
+      );
+    }
 
-  if (error || !data) {
-    captureError("getLeaders", error);
-    return [];
-  }
-  return data.map((row: Record<string, unknown>) => mapLeaderRow(row));
-}
+    const { data, error } = await query;
+    if (error || !data) {
+      captureError("getLeaders", error);
+      return [];
+    }
+    return data.map((row: Record<string, unknown>) => mapLeaderRow(row));
+  },
+);
 
 // getPlayers aliases getLeaders — pages import by name; may diverge later
 export const getPlayers = getLeaders;
@@ -285,7 +296,6 @@ export async function getTeamBySlug(slug: string): Promise<{
 
   if (rosterErr || !roster || roster.length === 0) return null;
   const first = roster[0] as unknown as TeamRosterRow;
-
 
   const { data: teamRow } = await supabase
     .from("teams")
