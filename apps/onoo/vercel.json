@@ -1,5 +1,5 @@
 {
   "installCommand": "npx pnpm@9.15.4 install",
-  "buildCommand": "pnpm exec next build",
-  "outputDirectory": ".next"
+  "buildCommand": "cd apps/onoo && pnpm exec next build",
+  "outputDirectory": "apps/onoo/.next"
 }
