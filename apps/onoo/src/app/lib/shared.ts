@@ -244,6 +244,7 @@ export type PlayerProfileRow = {
   player_position: string | null;
   nationality: string;
   photo_url: string | null;
+  social_links: Record<string, string>;
   team_season_id: string;
   team_id: string;
   team_name: string;

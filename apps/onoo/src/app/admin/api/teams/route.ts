@@ -8,7 +8,7 @@ export const GET = teams.list((query, req) => {
 });
 
 export const POST = teams.create((body) => {
-  const { league_id, name, short_code, slug, primary_color } = body;
+  const { league_id, name, short_code, slug, primary_color, social_links } = body;
   if (!league_id || !name || !short_code || !slug) {
     return {
       insert: body,
@@ -21,5 +21,6 @@ export const POST = teams.create((body) => {
     short_code,
     slug,
     primary_color: primary_color ?? null,
+    social_links: social_links ?? {},
   };
 });

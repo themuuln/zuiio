@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { type LeagueRow, leaguesApi, sportsApi } from "@/app/admin/_lib/api";
+import { catalogRefApi, leaguesApi, type LeagueRow, type SportRow } from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,15 +44,13 @@ const leagueSchema = z.object({
 });
 
 export default function LeaguesPage() {
-  const { data: leagues = [], isPending } = useQuery({
-    queryKey: ["admin", "leagues"],
-    queryFn: () => leaguesApi.list(),
+  const { data: ref, isPending } = useQuery({
+    queryKey: ["admin", "catalog", "reference"],
+    queryFn: () => catalogRefApi.get(),
+    staleTime: 3 * 60 * 1000,
   });
-
-  const { data: sports = [] } = useQuery({
-    queryKey: ["admin", "sports"],
-    queryFn: () => sportsApi.list(),
-  });
+  const leagues = (ref?.leagues ?? []) as LeagueRow[];
+  const sports = (ref?.sports ?? []) as SportRow[];
 
   const crud = useEntityCrud({
     api: leaguesApi,

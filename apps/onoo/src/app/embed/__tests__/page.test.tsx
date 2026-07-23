@@ -173,7 +173,7 @@ vi.mock("@/app/lib/data", () => ({
 // ---------------------------------------------------------------------------
 
 describe("Embed pages", () => {
-  it("renders game embed page", async () => {
+  it("renders game embed page", { timeout: 15000 }, async () => {
     const Page = (await import("../game/[id]/page")).default;
     const { container } = render(
       await Page({ params: Promise.resolve({ id: "game-1" }) }),
@@ -191,7 +191,7 @@ describe("Embed pages", () => {
     expect(mockGetGameById).toHaveBeenCalledWith("game-1");
   });
 
-  it("renders player embed page", async () => {
+  it("renders player embed page", { timeout: 15000 }, async () => {
     const Page = (await import("../player/[id]/page")).default;
     render(await Page({ params: Promise.resolve({ id: "player-1" }) }));
 

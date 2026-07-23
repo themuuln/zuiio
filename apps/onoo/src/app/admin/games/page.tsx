@@ -9,11 +9,12 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
-  competitionsApi,
+  catalogRefApi,
+  type CompetitionRow,
   type GameRow,
   gamesApi,
   teamSeasonsApi,
-  venuesApi,
+  type VenueRow,
 } from "@/app/admin/_lib/api";
 import { AdminTableSkeleton } from "@/components/admin/admin-skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -121,16 +122,15 @@ export default function AdminGamesPage() {
     queryKey: ["admin", "games"],
     queryFn: () => gamesApi.list(),
   });
+  
 
-  const { data: competitions = [] } = useQuery({
-    queryKey: ["admin", "competitions"],
-    queryFn: () => competitionsApi.list(),
+  const { data: ref } = useQuery({
+    queryKey: ["admin", "catalog", "reference"],
+    queryFn: () => catalogRefApi.get(),
+    staleTime: 3 * 60 * 1000,
   });
-
-  const { data: venues = [] } = useQuery({
-    queryKey: ["admin", "venues"],
-    queryFn: () => venuesApi.list(),
-  });
+  const competitions = (ref?.competitions ?? []) as CompetitionRow[];
+  const venues = (ref?.venues ?? []) as VenueRow[];
 
   const { data: teamSeasons = [] } = useQuery({
     queryKey: ["admin", "team-seasons", selectedCompetitionId],

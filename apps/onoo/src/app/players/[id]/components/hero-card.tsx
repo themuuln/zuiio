@@ -1,5 +1,5 @@
 import { getStatLabel } from "@onoo/core";
-import { CalendarDays, MapPin, Ruler, Weight } from "lucide-react";
+import { CalendarDays, ExternalLink, Globe, MapPin, Ruler, Weight } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { FlipStatCard } from "@/app/components/flip-stat-card";
@@ -115,6 +115,17 @@ export async function HeroCard({
     dob: isEn ? "Date of Birth" : "Төрсөн өдөр",
     nationality: isEn ? "Nationality" : "Харьяалал",
   };
+  const socialLabels: Record<string, string> = {
+    instagram: "Instagram",
+    facebook: "Facebook",
+    twitter: "Twitter / X",
+    youtube: "YouTube",
+    tiktok: "TikTok",
+    website: isEn ? "Website" : "Вэб",
+  };
+
+  const socialLinks = player.social_links ?? {};
+  const hasSocialLinks = Object.keys(socialLinks).length > 0;
 
   return (
     <section
@@ -220,6 +231,31 @@ export async function HeroCard({
             label={factLabels.nationality}
             value={player.nationality || "—"}
           />
+          {hasSocialLinks && (
+            <div className="col-span-2 mt-1 space-y-1.5">
+              <p className="text-xs font-medium text-sidebar-foreground/50 uppercase tracking-wider">
+                {isEn ? "Social" : "Сошиал"}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(socialLinks).map(([platform, url]) => {
+                  if (!url) return null;
+                  return (
+                    <a
+                      key={platform}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-full border border-sidebar-border bg-sidebar-accent/50 px-2.5 py-1 text-xs font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-sports)] focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
+                    >
+                      <Globe className="size-3 shrink-0" />
+                      {socialLabels[platform] ?? platform}
+                      <ExternalLink className="size-2.5 shrink-0 opacity-50" />
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

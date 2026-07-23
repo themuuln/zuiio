@@ -324,15 +324,22 @@ describe("Admin awards page", () => {
     // Default mock returns
     mockUseQuery.mockImplementation(({ queryKey }: { queryKey: string[] }) => {
       if (queryKey[0] === "admin" && queryKey[1] === "awards") {
-        return { data: mockAwards, isLoading: false };
+        return { data: mockAwards, isPending: false };
       }
-      if (queryKey[0] === "admin" && queryKey[1] === "competitions") {
-        return { data: mockCompetitions, isLoading: false };
+      if (queryKey[0] === "admin" && queryKey[1] === "catalog") {
+        return {
+          data: {
+            competitions: mockCompetitions,
+            seasons: [],
+            sports: [],
+            leagues: [],
+            venues: [],
+            players: mockPlayers,
+          },
+          isPending: false,
+        };
       }
-      if (queryKey[0] === "admin" && queryKey[1] === "players") {
-        return { data: mockPlayers, isLoading: false };
-      }
-      return { data: [], isLoading: false };
+      return { data: [], isPending: false };
     });
 
     mockUseMutation.mockReturnValue({
@@ -392,15 +399,22 @@ describe("Admin awards page", () => {
   it("shows loading state", () => {
     mockUseQuery.mockImplementation(({ queryKey }: { queryKey: string[] }) => {
       if (queryKey[0] === "admin" && queryKey[1] === "awards") {
-        return { data: undefined, isLoading: true };
+        return { data: undefined, isLoading: true, isPending: true };
       }
-      if (queryKey[0] === "admin" && queryKey[1] === "competitions") {
-        return { data: mockCompetitions, isLoading: false };
+      if (queryKey[0] === "admin" && queryKey[1] === "catalog") {
+        return {
+          data: {
+            competitions: mockCompetitions,
+            seasons: [],
+            sports: [],
+            leagues: [],
+            venues: [],
+            players: mockPlayers,
+          },
+          isPending: false,
+        };
       }
-      if (queryKey[0] === "admin" && queryKey[1] === "players") {
-        return { data: mockPlayers, isLoading: false };
-      }
-      return { data: [], isLoading: false };
+      return { data: [], isPending: false };
     });
     render(<AwardsPage />);
     const layout = screen.getByTestId("admin-page-layout");
@@ -410,15 +424,22 @@ describe("Admin awards page", () => {
   it("shows empty state when no awards", () => {
     mockUseQuery.mockImplementation(({ queryKey }: { queryKey: string[] }) => {
       if (queryKey[0] === "admin" && queryKey[1] === "awards") {
-        return { data: [], isLoading: false };
+        return { data: [], isPending: false };
       }
-      if (queryKey[0] === "admin" && queryKey[1] === "competitions") {
-        return { data: mockCompetitions, isLoading: false };
+      if (queryKey[0] === "admin" && queryKey[1] === "catalog") {
+        return {
+          data: {
+            competitions: mockCompetitions,
+            seasons: [],
+            sports: [],
+            leagues: [],
+            venues: [],
+            players: mockPlayers,
+          },
+          isPending: false,
+        };
       }
-      if (queryKey[0] === "admin" && queryKey[1] === "players") {
-        return { data: mockPlayers, isLoading: false };
-      }
-      return { data: [], isLoading: false };
+      return { data: [], isPending: false };
     });
     render(<AwardsPage />);
     expect(screen.getByText("Шагнал байхгүй байна")).toBeInTheDocument();

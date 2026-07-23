@@ -16,6 +16,7 @@ interface TeamHeaderProps {
     primary_color: string | null;
     short_code: string;
     team_season_id: string;
+    social_links: Record<string, string>;
   };
   standings: StandingRow | undefined;
   form: FormResult[];
@@ -98,7 +99,34 @@ export function TeamHeader({
               </div>
             )}
           </div>
-        </div>
+          {/* Social links */}
+          {Object.keys(team.social_links).length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {Object.entries(team.social_links).map(([platform, url]) => {
+                if (!url) return null;
+                const labels: Record<string, string> = {
+                  instagram: "Instagram",
+                  facebook: "Facebook",
+                  twitter: "Twitter / X",
+                  youtube: "YouTube",
+                  tiktok: "TikTok",
+                  website: "Вэб",
+                };
+                return (
+                  <a
+                    key={platform}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-full border border-sidebar-border bg-sidebar-accent/50 px-2.5 py-1 text-xs font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  >
+                    {labels[platform] ?? platform}
+                  </a>
+                );
+              })}
+            </div>
+          )}
+          </div>
 
         <div className="grid grid-cols-3 gap-3 lg:col-span-5">
           <StatBlock

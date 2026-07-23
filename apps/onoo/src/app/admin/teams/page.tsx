@@ -39,13 +39,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useEntityCrud } from "@/hooks/use-entity-crud";
+import { Separator } from "@/components/ui/separator";
 
 const teamSchema = z.object({
   name: z.string().min(1, "Нэр заавал байх ёстой"),
   short_code: z.string().min(1, "Товчлол заавал байх ёстой"),
   slug: z.string().min(1, "Slug заавал байх ёстой"),
   primary_color: z.string().optional(),
+  social_links: z.record(z.string(), z.string()).optional(),
 });
+const SOCIAL_PLATFORMS = [
+  { id: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
+  { id: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
+  { id: "twitter", label: "Twitter / X", placeholder: "https://twitter.com/..." },
+  { id: "youtube", label: "YouTube", placeholder: "https://youtube.com/..." },
+  { id: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/..." },
+  { id: "website", label: "Вэб", placeholder: "https://..." },
+] as const;
 
 export default function TeamsPage() {
   const queryClient = useQueryClient();
@@ -71,7 +81,7 @@ export default function TeamsPage() {
     api: teamsApi,
     queryKey: ["admin", "teams"],
     schema: teamSchema,
-    defaultValues: { name: "", short_code: "", slug: "", primary_color: "" },
+    defaultValues: { name: "", short_code: "", slug: "", primary_color: "", social_links: {} },
     successMessages: {
       create: "Баг амжилттай нэмэгдлээ",
       update: "Баг амжилттай шинэчлэгдлээ",
@@ -82,6 +92,7 @@ export default function TeamsPage() {
       short_code: row.short_code,
       slug: row.slug,
       primary_color: row.primary_color ?? "",
+      social_links: row.social_links ?? {},
     }),
   });
 
@@ -256,6 +267,30 @@ export default function TeamsPage() {
                   </FormItem>
                 )}
               />
+              <Separator />
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Сошиал холбоосууд</p>
+                {SOCIAL_PLATFORMS.map((platform) => (
+                  <FormField
+                    key={platform.id}
+                    control={crud.form.control}
+                    name={`social_links.${platform.id}`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{platform.label}</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={platform.placeholder}
+                            value={String(field.value ?? "")}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"

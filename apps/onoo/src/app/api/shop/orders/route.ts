@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createInvoice, getQPayConfig } from "@/lib/shop/qpay";
 
 const createOrderSchema = z.object({
   productId: z.string().uuid(),
@@ -54,42 +55,43 @@ export async function POST(request: NextRequest) {
 
     const orderId = data as string;
 
-    // Create QPay invoice
-    const qpayRes = await createQPayInvoice(orderId, 300);
+    // Create QPay invoice via shared adapter (auto mock if env not set)
+    const config = getQPayConfig();
+    const invoice = await createInvoice(config, {
+      amount: 300,
+      merchantInvoiceId: `shop-${orderId}`,
+      callbackUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:3000"}/api/qpay/callback`,
+    });
 
-    if (!qpayRes.ok) {
+    // Attach invoice to order
+    const attachResult = await supabase.rpc("cmd_attach_shop_invoice", {
+      p_order_id: orderId,
+      p_qpay_invoice_id: invoice.invoiceId,
+      p_qpay_qr_image: invoice.qrImage,
+    });
+
+    if (attachResult.error) {
       // Cancel the order — release stock
       try {
         await supabase.rpc("cmd_cancel_shop_order", {
           p_order_id: orderId,
         });
       } catch {
-        // Best-effort cancellation — order will be cleaned up by cron
+        // Best-effort cancellation
       }
-
       return NextResponse.json(
         { error: "QPay системд алдаа гарлаа. Дахиж оролдоно уу." },
         { status: 502 },
       );
     }
 
-    const qpayData = await qpayRes.json();
-    const invoiceId = qpayData.invoice_id ?? qpayData.invoiceId;
-
-    // Attach invoice to order
-    await supabase.rpc("cmd_attach_shop_invoice", {
-      p_order_id: orderId,
-      p_invoice_id: invoiceId,
-      p_qr_image: qpayData.qr_image ?? qpayData.qrImage ?? "",
-    });
-
     return NextResponse.json({
       orderId,
-      totalMnt: qpayData.amount ?? 0,
-      qrImage: qpayData.qr_image ?? qpayData.qrImage ?? "",
-      qrText: qpayData.qr_text ?? qpayData.qrText ?? "",
-      merchantInvoiceId: invoiceId,
-      expiresIn: qpayData.expires_in ?? qpayData.expiresIn ?? 300,
+      totalMnt: invoice.amount ?? 300,
+      qrImage: invoice.qrImage,
+      qrText: invoice.qrText,
+      merchantInvoiceId: invoice.invoiceId,
+      expiresIn: invoice.expiresIn,
     });
   } catch (err) {
     console.error("Create order error:", err);
@@ -98,25 +100,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-async function createQPayInvoice(
-  orderId: string,
-  amount: number,
-): Promise<Response> {
-  // In production, this would call QPay API via qpay.ts
-  // For now, return mock response for development
-  return new Response(
-    JSON.stringify({
-      invoice_id: `INV-${orderId.slice(0, 8)}`,
-      qr_text: `qpay://${orderId}`,
-      qr_image: "",
-      amount,
-      expires_in: 300,
-    }),
-    {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    },
-  );
 }

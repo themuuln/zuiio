@@ -51,13 +51,13 @@ on conflict (key) do nothing;
 -- ============================================================================
 
 -- Mongolian Basketball Association (Монголын Сагсан Бөмбөгийн Холбоо)
-insert into public.organizations (id, name, type) values
-('b0000000-0000-0000-0000-000000000001', 'Монголын Сагсан Бөмбөгийн Холбоо', 'league_operator')
+insert into public.organizations (id, name, slug, type) values
+('b0000000-0000-0000-0000-000000000001', 'Монголын Сагсан Бөмбөгийн Холбоо', 'msbh', 'league_operator')
 on conflict (id) do nothing;
 
 -- Space League operator (Спэйс лиг)
-insert into public.organizations (id, name, type) values
-('b0000000-0000-0000-0000-000000000002', 'Спэйс Лиг ХХК', 'league_operator')
+insert into public.organizations (id, name, slug, type) values
+('b0000000-0000-0000-0000-000000000002', 'Спэйс Лиг ХХК', 'space-league', 'league_operator')
 on conflict (id) do nothing;
 
 -- ============================================================================

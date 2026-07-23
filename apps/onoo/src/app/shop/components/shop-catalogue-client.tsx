@@ -1,13 +1,8 @@
 "use client";
 
+import { ShoppingBag } from "lucide-react";
+import { PublicEmptyState } from "@/app/components/public-empty-state";
 import type { ShopProductRow } from "@/app/lib/data-shop";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { ProductCard } from "./product-card";
 
 interface ShopCatalogueClientProps {
@@ -17,15 +12,11 @@ interface ShopCatalogueClientProps {
 export function ShopCatalogueClient({ products }: ShopCatalogueClientProps) {
   if (products.length === 0) {
     return (
-      <Empty>
-        <EmptyMedia variant="icon" />
-        <EmptyHeader>
-          <EmptyTitle>Бараа байхгүй байна</EmptyTitle>
-          <EmptyDescription>
-            Та удахгүй шинэ бүтээгдэхүүн нэмэгдэхийг хүлээнэ үү
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <PublicEmptyState
+        icon={ShoppingBag}
+        title="Бараа байхгүй байна"
+        description="Та удахгүй шинэ бүтээгдэхүүн нэмэгдэхийг хүлээнэ үү"
+      />
     );
   }
 

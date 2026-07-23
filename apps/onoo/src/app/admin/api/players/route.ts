@@ -33,6 +33,7 @@ export const POST = players.create((body) => {
     visibility,
     consent_recorded_at,
     consent_note,
+    social_links,
   } = body;
   if (!canonical_name) {
     return { insert: body, validate: "canonical_name is required" };
@@ -45,5 +46,6 @@ export const POST = players.create((body) => {
     visibility: visibility ?? "public",
     consent_recorded_at: consent_recorded_at || null,
     consent_note: consent_note ?? null,
+    social_links: social_links ?? {},
   };
 });

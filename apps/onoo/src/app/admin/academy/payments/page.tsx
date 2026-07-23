@@ -97,7 +97,7 @@ export default function AcademyPaymentsPage() {
         );
         if (!res.ok) continue;
         const status = await res.json();
-        if (status.paid) {
+        if (status.status === "PAID") {
           setState({ step: "success" });
           toast.success("Төлбөр төлөгдлөө!");
           return;

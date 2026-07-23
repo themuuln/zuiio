@@ -22,8 +22,6 @@ class MockQueryBuilder<T = unknown> {
         this.result.data && Array.isArray(this.result.data)
           ? this.result.data.length
           : 0;
-      // Return a thenable that resolves with { data: null, error: null, count }
-      // so await supabase.from(...).select(..., { head: true }) works
       this.result = { data: null, error: null, count } as QueryResult;
     }
     return this;
@@ -33,7 +31,15 @@ class MockQueryBuilder<T = unknown> {
     return this;
   }
 
+  ilike(_field: string, _pattern: string) {
+    return this;
+  }
+
   single() {
+    return this;
+  }
+
+  maybeSingle() {
     return this;
   }
 
@@ -66,6 +72,10 @@ class MockQueryBuilder<T = unknown> {
     return this;
   }
 
+  rpc(_fn: string, _params: Record<string, unknown>) {
+    return this;
+  }
+
   then<TResult1 = QueryResult<T>, TResult2 = never>(
     onfulfilled?:
       | ((value: QueryResult<T>) => TResult1 | PromiseLike<TResult1>)
@@ -92,6 +102,10 @@ class MockQueryBuilder<T = unknown> {
 interface MockAuth {
   getUser: () => Promise<{
     data: { user: { id: string; email: string } | null };
+    error: null;
+  }>;
+  getSession: () => Promise<{
+    data: { session: { user: { id: string; email: string } | null } | null };
     error: null;
   }>;
 }
@@ -121,6 +135,12 @@ export function createMockSupabase(authResult?: {
       getUser() {
         return Promise.resolve({
           data: { user },
+          error: null,
+        });
+      },
+      getSession() {
+        return Promise.resolve({
+          data: { session: user ? { user } : null },
           error: null,
         });
       },

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     const invoice = await createInvoice(config, {
       amount,
       merchantInvoiceId: `academy-${Date.now()}`,
-      callbackUrl: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/qpay-callback`,
+      callbackUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:3000"}/api/qpay/callback`,
     });
 
     return NextResponse.json(invoice);

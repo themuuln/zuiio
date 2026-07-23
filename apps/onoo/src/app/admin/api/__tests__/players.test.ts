@@ -223,3 +223,100 @@ describe("Players API", () => {
     });
   });
 });
+
+describe("Players API — social_links", () => {
+  let mock: MockFrom & { _queryResults: Map<string, unknown> };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mock = createMockSupabase();
+    mockCreateClient.mockResolvedValue(mock as never);
+  });
+
+  const validBody = {
+    canonical_name: "Batzorig Erdene",
+    name_latin: "Batzorig Erdene",
+    position: "PG",
+    nationality: "Mongolian",
+    visibility: "public",
+    social_links: {
+      instagram: "https://instagram.com/batzorig",
+      facebook: "https://facebook.com/batzorig",
+    },
+  };
+
+  it("creates a player with social_links and returns 201", async () => {
+    const created = {
+      id: "player-new",
+      ...validBody,
+      consent_recorded_at: null,
+      consent_note: null,
+    };
+    setQueryResult(mock, "players", created);
+    const req = createMockRequest(
+      validBody,
+      "http://localhost:3000/admin/api/players",
+      "POST",
+    );
+    const res = await POST(req as never);
+    const body = await parseResponse(res);
+
+    expect(res.status).toBe(201);
+    expect(body).toEqual(created);
+  });
+
+  it("creates a player without social_links and defaults to empty object", async () => {
+    const minimal = { canonical_name: "New Player" };
+    const created = {
+      id: "player-new",
+      canonical_name: "New Player",
+      name_latin: null,
+      position: null,
+      nationality: null,
+      visibility: "public",
+      social_links: {},
+      consent_recorded_at: null,
+      consent_note: null,
+    };
+    setQueryResult(mock, "players", created);
+    const req = createMockRequest(
+      minimal,
+      "http://localhost:3000/admin/api/players",
+      "POST",
+    );
+    const res = await POST(req as never);
+    const body = await parseResponse(res);
+
+    expect(res.status).toBe(201);
+    expect(body).toEqual(created);
+  });
+
+  it("persists partial social_links (only instagram)", async () => {
+    const partial = {
+      canonical_name: "Test Player",
+      social_links: { instagram: "https://instagram.com/test" },
+    };
+    const created = {
+      id: "player-new",
+      canonical_name: "Test Player",
+      name_latin: null,
+      position: null,
+      nationality: null,
+      visibility: "public",
+      social_links: { instagram: "https://instagram.com/test" },
+      consent_recorded_at: null,
+      consent_note: null,
+    };
+    setQueryResult(mock, "players", created);
+    const req = createMockRequest(
+      partial,
+      "http://localhost:3000/admin/api/players",
+      "POST",
+    );
+    const res = await POST(req as never);
+    const body = await parseResponse(res);
+
+    expect(res.status).toBe(201);
+    expect(body.social_links).toEqual({ instagram: "https://instagram.com/test" });
+  });
+});

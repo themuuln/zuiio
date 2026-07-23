@@ -82,18 +82,18 @@ Phase 1–7 нь Оноо-ийн одоогийн хэрэгжих замын з
 
 ### Phase 8 — Shared basketball organization foundation
 
-- [ ] Canonical identity for leagues, clubs, teams, academies, guardians.
-- [ ] Official roster snapshots, eligibility, transfers, identity disputes.
-- [ ] One account + least-privilege org roles.
-- [ ] Private storage, audit, retention, consent, break-glass support.
+- [x] Canonical identity for leagues, clubs, teams, academies, guardians.
+- [x] Official roster snapshots, eligibility, transfers, identity disputes.
+- [x] One account + least-privilege org roles.
+- [x] Private storage, audit, retention, consent, break-glass support.
 
 ### Phase 9 — Team operations
 
-- [ ] Team staff and role administration.
-- [ ] Roster intent, availability, transfer requests.
-- [ ] Training schedule, attendance, facilities.
-- [ ] Team dues and expense workflows.
-- [ ] Basketball-specific performance and opponent prep.
+- [x] Team staff and role administration.
+- [x] Roster intent, availability, transfer requests.
+- [x] Training schedule, attendance, facilities.
+- [x] Team dues and expense workflows.
+- [x] Basketball-specific performance and opponent prep.
 
 ### Phase 10 — Academy operations
 
@@ -108,18 +108,18 @@ Phase 1–7 нь Оноо-ийн одоогийн хэрэгжих замын з
 
 #### Phase 10b — Student & enrollment
 
-- [ ] Student profiles with guardian info, medical essentials, photo upload.
-- [ ] Enrollment management: registration, program assignment, dates.
-- [ ] Attendance, consent, waivers.
-- [ ] Multiple children per guardian.
-- [ ] CSV import/export.
+- [x] Student profiles with guardian info, medical essentials, photo upload.
+- [x] Enrollment management: registration, program assignment, dates.
+- [x] Attendance, consent, waivers.
+- [x] Multiple children per guardian.
+- [x] CSV import/export.
 
 #### Phase 10c — Full operations
 
 - [ ] Offline-safe attendance with IndexedDB queue.
 - [ ] Attendance reports by student, offering, coach, date range.
-- [ ] Payment history and receipts per student.
-- [ ] Ordered waitlist with promotion rules.
+- [x] Payment history and receipts per student.
+- [x] Ordered waitlist with promotion rules.
 
 #### Phase 10d — Advanced
 
@@ -133,7 +133,7 @@ Phase 1–7 нь Оноо-ийн одоогийн хэрэгжих замын з
 
 - [ ] Guardian self-service, multi-child access, consent history.
 - [ ] Registration, invoice/payment history, receipts, refunds, reconciliation.
-- [ ] Basketball-specific announcements and reminders.
+- [x] Basketball-specific announcements and reminders.
 - [ ] Subscription and entitlement model.
 
 ## Horizon C — Unified basketball network

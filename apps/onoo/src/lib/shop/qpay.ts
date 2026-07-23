@@ -7,6 +7,11 @@ import "server-only";
  * invoice creations within the same process reuse the same token without
  * re-authenticating.
  *
+ * When QPay environment variables (QPAY_CLIENT_ID, QPAY_CLIENT_SECRET) are
+ * not configured, the adapter runs in **mock mode** — it returns realistic
+ * fake data so the full payment flow can be developed and tested without a
+ * QPay merchant account. Mock invoices auto-confirm after ~20 seconds.
+ *
  * All mutations (invoice creation, payment confirmation) happen through the
  * server-owner database commands — this adapter only communicates with the
  * QPay merchant API.
@@ -50,21 +55,49 @@ export class QPayError extends Error {
   }
 }
 
+// ── Mock mode ────────────────────────────────────────────────────────
+
+/** Check if QPay credentials are configured. If not, run in mock mode. */
+export function isMockMode(): boolean {
+  return !process.env.QPAY_CLIENT_ID || !process.env.QPAY_CLIENT_SECRET;
+}
+
+/** In-memory mock invoice statuses: invoiceId -> UNPAID | PAID | EXPIRED. */
+const mockInvoiceStatuses = new Map<string, string>();
+
+/** Register a mock invoice and auto-confirm after ~20 seconds. */
+function createMockInvoice(): string {
+  const id = `MOCK-INV-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  mockInvoiceStatuses.set(id, "UNPAID");
+  setTimeout(() => {
+    if (mockInvoiceStatuses.get(id) === "UNPAID") {
+      mockInvoiceStatuses.set(id, "PAID");
+    }
+  }, 20_000);
+  return id;
+}
+
+/** Confirm a mock payment immediately (callback route or tests). */
+export function confirmMockPayment(invoiceId: string): boolean {
+  if (!mockInvoiceStatuses.has(invoiceId)) return false;
+  mockInvoiceStatuses.set(invoiceId, "PAID");
+  return true;
+}
+
+/** Reset mock state (for tests). */
+export function resetMockState(): void {
+  mockInvoiceStatuses.clear();
+}
+
 // ── Configuration ───────────────────────────────────────────────────
 
 export function getQPayConfig(): QPayConfig {
   return {
-    clientId: requireEnv("QPAY_CLIENT_ID"),
-    clientSecret: requireEnv("QPAY_CLIENT_SECRET"),
+    clientId: process.env.QPAY_CLIENT_ID ?? "",
+    clientSecret: process.env.QPAY_CLIENT_SECRET ?? "",
     baseUrl: process.env.QPAY_BASE_URL || "https://merchant-sandbox.qpay.mn",
-    invoiceCode: requireEnv("QPAY_INVOICE_CODE"),
+    invoiceCode: process.env.QPAY_INVOICE_CODE ?? "",
   };
-}
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new QPayError("MISSING_ENV", `${name} is not set`);
-  return value;
 }
 
 // ── Token cache ─────────────────────────────────────────────────────
@@ -117,6 +150,11 @@ async function qpayFetch(
 // ── Access token ────────────────────────────────────────────────────
 
 export async function getAccessToken(config: QPayConfig): Promise<string> {
+  // Mock mode: return fake token
+  if (!config.clientId || !config.clientSecret) {
+    return "mock-access-token";
+  }
+
   if (!isTokenExpired() && tokenCache) {
     return tokenCache.token;
   }
@@ -169,6 +207,20 @@ export async function createInvoice(
     callbackUrl: string;
   },
 ): Promise<QPayInvoice> {
+  // Mock mode: return realistic fake data
+  if (!config.clientId || !config.clientSecret) {
+    const mockId = createMockInvoice();
+    return {
+      invoiceId: mockId,
+      qrText: `qpay://mock/${mockId}`,
+      qrImage: "",
+      expiresIn: 300,
+      merchantInvoiceId: params.merchantInvoiceId,
+      amount: params.amount,
+      currency: "MNT",
+    };
+  }
+
   const token = await getAccessToken(config);
 
   const response = await qpayFetch(`${config.baseUrl}/invoice`, {
@@ -204,6 +256,26 @@ export async function checkPayment(
   config: QPayConfig,
   invoiceId: string,
 ): Promise<QPayPaymentStatus> {
+  // Mock mode: return status from in-memory tracking
+  if (invoiceId.startsWith("MOCK-INV-")) {
+    const status = mockInvoiceStatuses.get(invoiceId) ?? "UNPAID";
+    return {
+      status,
+      paidAmount: status === "PAID" ? 50000 : 0,
+      currency: "MNT",
+      invoiceId,
+    };
+  }
+
+  if (!config.clientId || !config.clientSecret) {
+    return {
+      status: "UNPAID",
+      paidAmount: 0,
+      currency: "MNT",
+      invoiceId,
+    };
+  }
+
   const token = await getAccessToken(config);
 
   const response = await qpayFetch(`${config.baseUrl}/payment/check`, {

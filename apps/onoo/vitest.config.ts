@@ -7,6 +7,11 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
+    server: {
+      deps: {
+        inline: ["server-only"],
+      },
+    },
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     exclude: [
@@ -39,6 +44,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "server-only": path.resolve(__dirname, "./src/test/__mocks__/server-only.ts"),
     },
   },
 });

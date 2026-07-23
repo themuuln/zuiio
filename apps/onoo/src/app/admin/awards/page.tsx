@@ -7,8 +7,9 @@ import { toast } from "sonner";
 import {
   type AwardRow,
   awardsApi,
-  competitionsApi,
-  playersApi,
+  catalogRefApi,
+  type CompetitionRow,
+  type PlayerRow,
 } from "@/app/admin/_lib/api";
 import { AdminTableSkeleton } from "@/components/admin/admin-skeleton";
 import { AdminPageLayout } from "@/components/admin/page-layout";
@@ -83,15 +84,13 @@ export default function AwardsPage() {
     queryFn: () => awardsApi.list(),
   });
 
-  const { data: competitions } = useQuery({
-    queryKey: ["admin", "competitions"],
-    queryFn: () => competitionsApi.list(),
+  const { data: ref } = useQuery({
+    queryKey: ["admin", "catalog", "reference"],
+    queryFn: () => catalogRefApi.get(),
+    staleTime: 3 * 60 * 1000,
   });
-
-  const { data: players } = useQuery({
-    queryKey: ["admin", "players"],
-    queryFn: () => playersApi.list(),
-  });
+  const competitions = (ref?.competitions ?? []) as CompetitionRow[];
+  const players = (ref?.players ?? []) as PlayerRow[];
 
   const grantMutation = useMutation({
     mutationFn: (data: {

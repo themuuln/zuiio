@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const BASE = "/admin/api";
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
+export async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
@@ -97,6 +97,7 @@ export interface TeamRow {
   logo_url: string | null;
   created_at: string;
   leagues?: { name: string } | null;
+  social_links: Record<string, string>;
 }
 
 export const teamsApi = createEntityApi<TeamRow>(`${BASE}/teams`);
@@ -115,6 +116,7 @@ export interface PlayerRow {
   visibility: "public" | "hidden";
   consent_recorded_at: string | null;
   consent_note: string | null;
+  social_links: Record<string, string>;
   created_at: string;
 }
 
@@ -149,6 +151,7 @@ export interface CompetitionRow {
   type: string;
   season_id: string;
   created_at: string;
+  social_links: Record<string, string>;
 }
 
 export interface VenueRow {
@@ -435,4 +438,292 @@ export const academyApi = {
   programs: createEntityApi<AcademyProgramRow>(`${BASE}/academy/programs`),
   trainers: createEntityApi<AcademyTrainerRow>(`${BASE}/academy/trainers`),
   locations: createEntityApi<AcademyLocationRow>(`${BASE}/academy/locations`),
+};
+
+// ── Organizations ──
+
+export interface OrganizationRow {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url?: string | null;
+  type: string;
+  contact_phone?: string | null;
+  contact_email?: string | null;
+  website?: string | null;
+  settings?: Record<string, unknown> | null;
+  created_at: string;
+  social_links: Record<string, string>;
+}
+
+export const orgApi = {
+  list: () => request<OrganizationRow[]>(`${BASE}/org`),
+  update: (id: string, data: Partial<OrganizationRow>) =>
+    request<OrganizationRow>(`${BASE}/org`, {
+      method: "POST",
+      body: JSON.stringify({ id, ...data }),
+    }),
+};
+
+export interface BreakGlassRow {
+  id: string;
+  organization_id: string;
+  granted_to: string;
+  reason: string;
+  expires_at: string;
+  granted_by?: string | null;
+  is_expired: boolean;
+  created_at: string;
+}
+
+export const breakGlassApi = {
+  list: (orgId: string) =>
+    request<BreakGlassRow[]>(
+      `${BASE}/org/break-glass?org_id=${encodeURIComponent(orgId)}`,
+    ),
+  grant: (data: Record<string, unknown>) =>
+    request<BreakGlassRow>(`${BASE}/org/break-glass`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  expire: (id: string) =>
+    request<void>(`${BASE}/org/break-glass?id=${encodeURIComponent(id)}`, {
+      method: "PUT",
+    }),
+};
+export interface ConsentPolicyRow {
+  id: string;
+  organization_id: string;
+  title: string;
+  description?: string | null;
+  retention_days: number;
+  data_categories: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export const orgConsentApi = {
+  list: (orgId: string) =>
+    request<ConsentPolicyRow[]>(
+      `${BASE}/org/consent?org_id=${encodeURIComponent(orgId)}`,
+    ),
+  create: (data: Record<string, unknown>) =>
+    request<ConsentPolicyRow>(`${BASE}/org/consent`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<ConsentPolicyRow>(
+      `${BASE}/org/consent?id=${encodeURIComponent(id)}`,
+      { method: "PUT", body: JSON.stringify(data) },
+    ),
+  delete: (id: string) =>
+    request<void>(`${BASE}/org/consent`, {
+      method: "DELETE",
+      body: JSON.stringify({ id }),
+    }),
+};
+
+export interface MemberRow {
+  membership_id: string;
+  user_id: string;
+  scope_type: string;
+  scope_id: string;
+  role: string;
+  display_name?: string | null;
+  user_email?: string | null;
+  created_at: string;
+}
+
+export const orgMembersApi = {
+  list: (scopeType: string, scopeId: string) =>
+    request<MemberRow[]>(
+      `${BASE}/org/members?scope_type=${encodeURIComponent(scopeType)}&scope_id=${encodeURIComponent(scopeId)}`,
+    ),
+  assign: (userId: string, scopeType: string, scopeId: string, role: string) =>
+    request<MemberRow>(`${BASE}/org/members`, {
+      method: "POST",
+      body: JSON.stringify({
+        user_id: userId,
+        scope_type: scopeType,
+        scope_id: scopeId,
+        role,
+      }),
+    }),
+  remove: (membershipId: string) =>
+    request<void>(`${BASE}/org/members`, {
+      method: "DELETE",
+      body: JSON.stringify({ membership_id: membershipId }),
+    }),
+};
+
+export interface OrgStorageBucketRow {
+  id: string;
+  organization_id: string;
+  bucket_name: string;
+  bucket_id: string;
+  is_tenant_isolation: boolean;
+  created_at: string;
+}
+
+export const orgStorageApi = {
+  list: (orgId: string) =>
+    request<OrgStorageBucketRow[]>(
+      `${BASE}/org/storage?org_id=${encodeURIComponent(orgId)}`,
+    ),
+  create: (data: Record<string, unknown>) =>
+    request<OrgStorageBucketRow>(`${BASE}/org/storage`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<void>(`${BASE}/org/storage`, {
+      method: "DELETE",
+      body: JSON.stringify({ id }),
+    }),
+};
+
+export interface RosterSnapshotRow {
+  id: string;
+  team_season_id: string;
+  player_id: string;
+  jersey_number?: number | null;
+  position?: string | null;
+  is_active: boolean;
+  status: string;
+  captured_at: string;
+  players?: { canonical_name: string; photo_url: string } | null;
+  created_at: string;
+}
+
+export const rosterApi = {
+  list: (teamSeasonId: string) =>
+    request<RosterSnapshotRow[]>(
+      `${BASE}/teams/roster?team_season_id=${encodeURIComponent(teamSeasonId)}`,
+    ),
+  create: (teamSeasonId: string) =>
+    request<RosterSnapshotRow[]>(`${BASE}/teams/roster`, {
+      method: "POST",
+      body: JSON.stringify({ team_season_id: teamSeasonId }),
+    }),
+  remove: (id: string) =>
+    request<void>(`${BASE}/teams/roster?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+};
+
+// ── Academy Reference (consolidated) ──
+
+export interface AcademyRefData {
+  programs: unknown[];
+  trainers: unknown[];
+  locations: unknown[];
+  students: unknown[];
+  profile: unknown[];
+}
+
+export const academyRefApi = {
+  get: () => request<AcademyRefData>(`${BASE}/academy/reference`),
+};
+
+// ── Teams Context (consolidated) ──
+
+export interface TeamsContextData {
+  teamSeasons: unknown[];
+  players: unknown[];
+}
+
+export const teamsContextApi = {
+  get: () => request<TeamsContextData>(`${BASE}/teams/context`),
+};
+
+// ── Org Reference (consolidated) ──
+
+export interface OrgRefData {
+  orgs: unknown[];
+}
+
+export const orgRefApi = {
+  get: () => request<OrgRefData>(`${BASE}/org/reference`),
+};
+
+// ── Catalog Reference (consolidated) ──
+
+export interface CatalogRefData {
+  competitions: unknown[];
+  seasons: unknown[];
+  sports: unknown[];
+  leagues: unknown[];
+  venues: unknown[];
+  players: unknown[];
+}
+
+export const catalogRefApi = {
+  get: () => request<CatalogRefData>(`${BASE}/catalog/reference`),
+};
+
+// ── Transfers ──
+
+export interface TransferRow {
+  id: string;
+  player_id: string;
+  from_team_season_id: string | null;
+  to_team_season_id: string;
+  transfer_type: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  effective_from: string;
+  effective_until: string | null;
+  note: string | null;
+  created_by: string;
+  created_at: string;
+  players?: { canonical_name: string } | null;
+  teams_from?: { team_id: string; teams: { name: string } | null } | null;
+  teams_to?: { team_id: string; teams: { name: string } | null } | null;
+}
+
+export const transfersApi = {
+  list: (params?: Record<string, string>) =>
+    request<TransferRow[]>(
+      `${BASE}/org/transfers${params ? `?${new URLSearchParams(params).toString()}` : ""}`,
+    ),
+  create: (data: Record<string, unknown>) =>
+    request<TransferRow>(`${BASE}/org/transfers`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+// ── Identity Disputes ──
+
+export interface IdentityDisputeRow {
+  id: string;
+  player_id: string;
+  competition_id: string | null;
+  dispute_reason: string;
+  description: string;
+  evidence_notes: string | null;
+  status: string;
+  resolution_notes: string | null;
+  submitted_at: string;
+  players?: { canonical_name: string; photo_url: string | null } | null;
+  competitions?: { name: string } | null;
+}
+
+export const identityDisputesApi = {
+  list: (status?: string) =>
+    request<IdentityDisputeRow[]>(
+      `${BASE}/org/identity-disputes${status ? `?status=${status}` : ""}`,
+    ),
+  create: (data: Record<string, unknown>) =>
+    request<IdentityDisputeRow>(`${BASE}/org/identity-disputes`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  resolve: (id: string, status: string, resolutionNotes?: string) =>
+    request<IdentityDisputeRow>(`${BASE}/org/identity-disputes`, {
+      method: "POST",
+      body: JSON.stringify({ id, status, resolution_notes: resolutionNotes }),
+    }),
 };

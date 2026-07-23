@@ -56,6 +56,15 @@ const positionLabels: Record<string, string> = {
   C: "Center",
 };
 
+const SOCIAL_PLATFORMS = [
+  { id: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
+  { id: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
+  { id: "twitter", label: "Twitter / X", placeholder: "https://twitter.com/..." },
+  { id: "youtube", label: "YouTube", placeholder: "https://youtube.com/..." },
+  { id: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/..." },
+  { id: "website", label: "Вэб сайт", placeholder: "https://..." },
+] as const;
+
 const playerSchema = z.object({
   canonical_name: z.string().min(1, "Нэр заавал байх ёстой"),
   name_latin: z.string().optional(),
@@ -64,6 +73,7 @@ const playerSchema = z.object({
   visibility: z.enum(["public", "hidden"]),
   consent_recorded_at: z.string().optional(),
   consent_note: z.string().optional(),
+  social_links: z.record(z.string(), z.string()).optional(),
 });
 
 type PlayerFormValues = z.infer<typeof playerSchema>;
@@ -87,7 +97,6 @@ export default function PlayersPage() {
         debouncedSearch ? { search: debouncedSearch } : undefined,
       ),
   });
-
   const form = useForm<PlayerFormValues>({
     resolver: zodResolver(playerSchema),
     defaultValues: {
@@ -98,6 +107,7 @@ export default function PlayersPage() {
       visibility: "public",
       consent_recorded_at: "",
       consent_note: "",
+      social_links: {},
     },
   });
 
@@ -122,6 +132,7 @@ export default function PlayersPage() {
         visibility: data.visibility,
         consent_recorded_at: data.consent_recorded_at || undefined,
         consent_note: data.consent_note || undefined,
+        social_links: data.social_links ?? ({} as Record<string, string>),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "players"] });
@@ -144,6 +155,7 @@ export default function PlayersPage() {
         visibility: data.visibility,
         consent_recorded_at: data.consent_recorded_at || undefined,
         consent_note: data.consent_note || undefined,
+        social_links: data.social_links ?? ({} as Record<string, string>),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "players"] });
@@ -182,6 +194,7 @@ export default function PlayersPage() {
         ? player.consent_recorded_at.slice(0, 10)
         : "",
       consent_note: player.consent_note ?? "",
+      social_links: player.social_links ?? {},
     });
     setDialogOpen(true);
   }
@@ -371,6 +384,30 @@ export default function PlayersPage() {
                       </FormItem>
                     )}
                   />
+                  <Separator />
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Сошиал холбоосууд</p>
+                    {SOCIAL_PLATFORMS.map((platform) => (
+                      <FormField
+                        key={platform.id}
+                        control={form.control}
+                        name={`social_links.${platform.id}`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{platform.label}</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder={platform.placeholder}
+                                value={String(field.value ?? "")}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
                   <div className="flex justify-end gap-2">
                     <Button
                       type="button"
@@ -383,9 +420,9 @@ export default function PlayersPage() {
                       {isMutating ? "Хадгалж байна..." : "Хадгалах"}
                     </Button>
                   </div>
-                </form>
-              </Form>
-            </DialogContent>
+                  </form>
+                </Form>
+              </DialogContent>
           </Dialog>
         </>
       }

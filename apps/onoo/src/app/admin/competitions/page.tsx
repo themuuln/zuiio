@@ -5,8 +5,9 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { z } from "zod";
 import {
   type CompetitionRow,
+  catalogRefApi,
   competitionsApi,
-  seasonsApi,
+  type SeasonRow,
 } from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { useEntityCrud } from "@/hooks/use-entity-crud";
 
 const COMPETITION_TYPES = [
@@ -48,29 +50,36 @@ const COMPETITION_TYPES = [
   { value: "cup", label: "Цомын тэмцээн" },
   { value: "friendly", label: "Нөхөрсөг тоглолт" },
 ] as const;
+const SOCIAL_PLATFORMS = [
+  { id: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
+  { id: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
+  { id: "twitter", label: "Twitter / X", placeholder: "https://twitter.com/..." },
+  { id: "youtube", label: "YouTube", placeholder: "https://youtube.com/..." },
+  { id: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/..." },
+  { id: "website", label: "Вэб", placeholder: "https://..." },
+] as const;
 
 const competitionSchema = z.object({
   name: z.string().min(1, "Нэр оруулна уу"),
   season_id: z.string().min(1, "Улирал сонгоно уу"),
   type: z.string().min(1, "Төрөл сонгоно уу"),
+  social_links: z.record(z.string(), z.string()).optional(),
 });
 
 export default function CompetitionsPage() {
-  const { data: competitions = [], isPending } = useQuery({
-    queryKey: ["admin", "competitions"],
-    queryFn: () => competitionsApi.list(),
+  const { data: ref, isPending } = useQuery({
+    queryKey: ["admin", "catalog", "reference"],
+    queryFn: () => catalogRefApi.get(),
+    staleTime: 3 * 60 * 1000,
   });
-
-  const { data: seasons = [] } = useQuery({
-    queryKey: ["admin", "seasons"],
-    queryFn: () => seasonsApi.list(),
-  });
+  const competitions = (ref?.competitions ?? []) as CompetitionRow[];
+  const seasons = (ref?.seasons ?? []) as SeasonRow[];
 
   const crud = useEntityCrud({
     api: competitionsApi,
     queryKey: ["admin", "competitions"],
     schema: competitionSchema,
-    defaultValues: { name: "", season_id: "", type: "" },
+    defaultValues: { name: "", season_id: "", type: "", social_links: {} },
     successMessages: {
       create: "Тэмцээн амжилттай нэмэгдлээ",
       update: "Тэмцээн амжилттай шинэчлэгдлээ",
@@ -80,6 +89,7 @@ export default function CompetitionsPage() {
       name: row.name,
       season_id: row.season_id,
       type: row.type,
+      social_links: row.social_links ?? {},
     }),
   });
 
@@ -227,6 +237,30 @@ export default function CompetitionsPage() {
                   </FormItem>
                 )}
               />
+              <Separator />
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Сошиал холбоосууд</p>
+                {SOCIAL_PLATFORMS.map((platform) => (
+                  <FormField
+                    key={platform.id}
+                    control={crud.form.control}
+                    name={`social_links.${platform.id}`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{platform.label}</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={platform.placeholder}
+                            value={String(field.value ?? "")}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"

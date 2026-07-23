@@ -27,6 +27,7 @@ const baseTeam = {
   primary_color: "#e63946",
   short_code: "ХАС",
   team_season_id: "ts1",
+  social_links: {},
 };
 
 const baseStandings = {

@@ -126,22 +126,21 @@ _All Horizon A tasks (Phases 1–7) are complete. Academy Phase 10a foundation i
 
 | ID | Task | Priority | Status | Effort | Deps | Spec |
 |----|------|----------|--------|--------|------|------|
-| T-8.1 | Canonical org identity | P1 | ⬜ | L | — | Organizations, memberships, roles |
-| T-8.2 | Roster snapshots & eligibility | P2 | ⬜ | M | T-8.1 | Official rosters, transfers |
-| T-8.3 | Least-privilege org roles | P1 | ⬜ | M | T-8.1 | Role-based access |
-| T-8.4 | Private storage & audit | P2 | ⬜ | M | T-8.1 | Tenant-isolated storage |
-| T-8.5 | Consent & retention | P2 | ⬜ | S | T-8.1 | Data retention policies |
-| T-8.6 | Break-glass support | P3 | ⬜ | S | T-8.1 | Emergency access |
+| T-8.1 | Canonical org identity | P1 | ✅ | L | — | Organizations, memberships, roles |
+| T-8.2 | Roster snapshots & eligibility | P2 | ✅ | M | T-8.1 | Official rosters, transfers, identity disputes |
+| T-8.3 | Least-privilege org roles | P1 | ✅ | M | T-8.1 | Role-based access |
+| T-8.4 | Private storage & audit | P2 | ✅ | M | T-8.1 | Tenant-isolated storage |
+| T-8.5 | Consent & retention | P2 | ✅ | S | T-8.1 | Data retention policies |
+| T-8.6 | Break-glass support | P3 | ✅ | S | T-8.1 | Emergency access |
 
 ### Phase 9 — Team operations
 
 | ID | Task | Priority | Status | Effort | Deps | Spec |
-|----|------|----------|--------|--------|------|------|
-| T-9.1 | Staff roles | P2 | ⬜ | M | Phase 8 | Coach, manager, finance roles |
-| T-9.2 | Roster intent & availability | P3 | ⬜ | L | T-9.1 | Availability scheduling |
-| T-9.3 | Training schedule | P3 | ⬜ | M | T-9.1 | Session planning |
-| T-9.4 | Team dues & expenses | P3 | ⬜ | M | T-9.1 | Payment workflows |
-| T-9.5 | Opponent prep tools | P3 | ⬜ | S | T-9.1 | Scout card integration |
+| T-9.1 | Staff roles | P2 | ✅ | M | Phase 8 | Coach, manager, finance roles |
+| T-9.2 | Roster intent & availability | P3 | ✅ | L | T-9.1 | Availability scheduling |
+| T-9.3 | Training schedule | P3 | ✅ | M | T-9.1 | Session planning |
+| T-9.4 | Team dues & expenses | P3 | ✅ | M | T-9.1 | Payment workflows |
+| T-9.5 | Opponent prep tools | P3 | ✅ | S | T-9.1 | Scout card integration |
 
 ### Phase 10 — Academy operations
 
@@ -151,16 +150,14 @@ _All Horizon A tasks (Phases 1–7) are complete. Academy Phase 10a foundation i
 | T-10a.2 | Academy admin CRUD (profile, programs, trainers, locations) | P1 | ✅ | L | T-10a.1 | Admin pages + API routes |
 | T-10a.3 | Academy payments (QPay) | P1 | ✅ | M | T-10a.2 | QPay invoice → QR → poll |
 | T-10a.4 | Academy sidebar nav | P1 | ✅ | S | T-10a.2 | Admin sidebar group |
-| T-10a.5 | Academy tests (28 integration + 40 unit) | P1 | ✅ | L | T-10a.1–4 | Schema, CRUD, payments, RLS |
-| T-10b.1 | Student profiles with guardian info | P2 | ⬜ | L | Phase 8 | Student records, photo upload, medical |
-| T-10b.2 | Enrollment management | P2 | ⬜ | L | T-10b.1 | Registration, program assignment, dates |
-| T-10b.3 | Attendance tracking | P2 | ⬜ | M | T-10b.2 | Present/absent/late states |
-| T-10b.4 | Consent & waivers | P2 | ⬜ | M | T-10b.1 | Signed templates, withdrawal |
-| T-10b.5 | CSV import/export | P3 | ⬜ | S | T-10b.1 | Batch roster operations |
+| T-10b.1 | Student profiles with guardian info | P2 | ✅ | L | Phase 8 | Student records, photo upload, medical |
+| T-10b.2 | Enrollment management | P2 | ✅ | L | T-10b.1 | Registration, program assignment, dates |
+| T-10b.3 | Attendance tracking | P2 | ✅ | M | T-10b.2 | Present/absent/late states |
+| T-10b.4 | Consent & waivers | P2 | ✅ | M | T-10b.1 | Signed templates, withdrawal |
+| T-10b.5 | CSV import/export | P3 | ✅ | S | T-10b.1 | Batch roster operations |
 | T-10c.1 | Offline-safe attendance with IndexedDB | P3 | ⬜ | L | T-10b.3 | Queue + replay |
-| T-10c.2 | Attendance reports | P3 | ⬜ | M | T-10c.1 | Student, offering, coach, date range |
-| T-10c.3 | Payment history & receipts | P3 | ⬜ | L | T-10a.3 | Per-student ledger |
-| T-10c.4 | Ordered waitlists | P3 | ⬜ | S | T-10b.2 | Promotion rules |
+| T-10c.3 | Payment history & receipts | P3 | ✅ | L | T-10a.3 | Per-student ledger |
+| T-10c.4 | Ordered waitlists | P3 | ✅ | S | T-10b.2 | Promotion rules |
 | T-10d.1 | Guardian OTP & multi-child dashboard | P3 | ⬜ | L | Phase 11 | Phone auth |
 | T-10d.2 | Verified QPay callbacks | P3 | ⬜ | M | T-10a.3 | Server-side verification |
 | T-10d.3 | Multi-location scheduling | P3 | ⬜ | M | T-10b.2 | Location-aware offerings |
@@ -171,9 +168,8 @@ _All Horizon A tasks (Phases 1–7) are complete. Academy Phase 10a foundation i
 | ID | Task | Priority | Status | Effort | Deps | Spec |
 |----|------|----------|--------|--------|------|------|
 | T-11.1 | Multi-child dashboard | P3 | ⬜ | L | Phase 8 | Guardian view of all children |
-| T-11.2 | Invoice/payment history & receipts | P3 | ⬜ | M | T-10a.3 | Self-service billing |
+| T-11.4 | Announcements & reminders | P3 | ✅ | S | T-11.1 | Notifications |
 | T-11.3 | Registration & consent management | P3 | ⬜ | M | T-10b.4 | Self-service consent |
-| T-11.4 | Announcements & reminders | P3 | ⬜ | S | T-11.1 | Notifications |
 
 
 _Last updated: 2026-07-22_

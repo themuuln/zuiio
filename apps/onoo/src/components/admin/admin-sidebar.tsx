@@ -1,11 +1,17 @@
 "use client";
 
 import {
+  ArrowLeftRight,
+  FileCheck,
+  HardDrive,
+  Scale,
+  ShieldAlert,
   Activity,
   Award,
   BookOpen,
   Calendar,
   CreditCard,
+  ClipboardList,
   LayoutDashboard,
   MapPin,
   Medal,
@@ -44,6 +50,11 @@ const navGroups: NavGroup[] = [
       { href: "/admin", label: "Хянах самбар", icon: LayoutDashboard },
       { href: "/admin/org", label: "Байгууллага", icon: Trophy },
       { href: "/admin/org/members", label: "Гишүүд", icon: Users },
+      { href: "/admin/org/storage", label: "Хадгалах сан", icon: HardDrive },
+      { href: "/admin/org/consent", label: "Зөвшөөрөл", icon: FileCheck },
+      { href: "/admin/org/break-glass", label: "Яаралтай хандалт", icon: ShieldAlert },
+      { href: "/admin/org/transfers", label: "Шилжүүлэг", icon: ArrowLeftRight },
+      { href: "/admin/org/identity-disputes", label: "Маргаан", icon: Scale },
     ],
   },
   {
@@ -59,6 +70,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/admin/teams", label: "Баг", icon: Users },
       { href: "/admin/players", label: "Тоглогч", icon: UserCircle },
+      { href: "/admin/teams/roster", label: "Бүртгэл", icon: ClipboardList },
     ],
   },
   {
