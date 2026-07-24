@@ -232,16 +232,22 @@ export async function approveTransfer(
       quantity: number;
     }>;
 
-    for (const item of items) {
-      const { data: balance } = await supabase
-        .from("inventory_balances")
-        .select("quantity_on_hand")
-        .eq("organization_id", orgId)
-        .eq("branch_id", transfer.from_branch_id)
-        .eq("part_id", item.part_id)
-        .single();
+    // Batch stock check — one query instead of N
+    const { data: balances } = await supabase
+      .from("inventory_balances")
+      .select("part_id, quantity_on_hand")
+      .eq("organization_id", orgId)
+      .eq("branch_id", transfer.from_branch_id)
+      .in(
+        "part_id",
+        items.map((i) => i.part_id),
+      );
 
-      const available = balance?.quantity_on_hand ?? 0;
+    const balanceMap = new Map(
+      (balances ?? []).map((b) => [b.part_id, b.quantity_on_hand ?? 0]),
+    );
+    for (const item of items) {
+      const available = balanceMap.get(item.part_id) ?? 0;
       if (available < item.quantity) {
         throw new ValidationError(
           `Insufficient stock: need ${item.quantity}, have ${available} at source branch`,
@@ -349,53 +355,45 @@ export async function receiveTransfer(
     quantity: number;
     unit_cost: number | null;
   }>;
-  // Create transfer_out movements at source branch
+  // Batch all transfer_out movements at source branch — one INSERT
   if (transfer.from_branch_id) {
-    for (const item of items) {
-      const { error: mvError } = await supabase
-        .from("inventory_movements")
-        .insert({
-          organization_id: orgId,
-          branch_id: transfer.from_branch_id,
-          part_id: item.part_id,
-          movement_type: "transfer_out",
-          quantity: -item.quantity,
-          unit_cost: item.unit_cost,
-          reference_type: "stock_transfer",
-          reference_id: transferId,
-          created_by: userId,
-        });
-      if (mvError) {
-        reportServerError(
-          `Failed to create transfer_out movement for part ${item.part_id}`,
-          mvError,
-        );
-        throw new Error(`Inventory movement failed: ${mvError.message}`);
-      }
-    }
-  }
-  // Create transfer_in movements at destination branch
-  for (const item of items) {
+    const outMovements = items.map((item) => ({
+      organization_id: orgId,
+      branch_id: transfer.from_branch_id,
+      part_id: item.part_id,
+      movement_type: "transfer_out" as const,
+      quantity: -item.quantity,
+      unit_cost: item.unit_cost,
+      reference_type: "stock_transfer" as const,
+      reference_id: transferId,
+      created_by: userId,
+    }));
     const { error: mvError } = await supabase
       .from("inventory_movements")
-      .insert({
-        organization_id: orgId,
-        branch_id: transfer.to_branch_id,
-        part_id: item.part_id,
-        movement_type: "transfer_in",
-        quantity: item.quantity,
-        unit_cost: item.unit_cost,
-        reference_type: "stock_transfer",
-        reference_id: transferId,
-        created_by: userId,
-      });
+      .insert(outMovements);
     if (mvError) {
-      reportServerError(
-        `Failed to create transfer_in movement for part ${item.part_id}`,
-        mvError,
-      );
+      reportServerError("Failed to create transfer_out movements", mvError);
       throw new Error(`Inventory movement failed: ${mvError.message}`);
     }
+  }
+  // Batch all transfer_in movements at destination branch — one INSERT
+  const inMovements = items.map((item) => ({
+    organization_id: orgId,
+    branch_id: transfer.to_branch_id,
+    part_id: item.part_id,
+    movement_type: "transfer_in" as const,
+    quantity: item.quantity,
+    unit_cost: item.unit_cost,
+    reference_type: "stock_transfer" as const,
+    reference_id: transferId,
+    created_by: userId,
+  }));
+  const { error: mvError } = await supabase
+    .from("inventory_movements")
+    .insert(inMovements);
+  if (mvError) {
+    reportServerError("Failed to create transfer_in movements", mvError);
+    throw new Error(`Inventory movement failed: ${mvError.message}`);
   }
 
   // Update transfer status

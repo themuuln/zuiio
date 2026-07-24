@@ -99,20 +99,6 @@ export default function AdminPage() {
     }
   }
 
-  if (!meData?.isAdmin) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <ShieldAlert className="size-10 text-destructive" />
-        <Typography.H2 className="text-xl font-semibold">
-          {t("admin.accessDenied")}
-        </Typography.H2>
-        <Typography.Muted className="text-muted-foreground text-center max-w-md">
-          {t("admin.accessDeniedDesc")}
-        </Typography.Muted>
-      </div>
-    );
-  }
-
   const activeOrgs = orgs.filter(
     (o) => o.subscription?.status === "active",
   ).length;

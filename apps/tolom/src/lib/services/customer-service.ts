@@ -454,9 +454,9 @@ export async function getSharedCustomer(
     throw new NotFoundError("Customer not found");
   }
 
-  const orgName =
-    (data as Record<string, unknown>).organizations?.name ?? "Unknown";
-  return { ...data, organization_name: orgName } as Customer;
+  const orgRow = data as unknown as { organizations?: { name?: string } };
+  const orgName = orgRow.organizations?.name ?? "Unknown";
+  return { ...data, organization_name: orgName } as unknown as Customer;
 }
 
 /**
