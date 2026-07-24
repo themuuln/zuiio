@@ -1,6 +1,9 @@
 import { ok } from "@/lib/api-response";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
 export const GET = createPortalRouteHandler(async ({ customer, supabase }) => {
+  // Cascade stage 1: get the customer's vehicle IDs (from vehicle_owners)
+  // Cascade stage 2: get work_orders scoped to those vehicles
+  // The second stage needs vehicle IDs from the first — cannot parallelize.
   const { data: ownerships, error: ownershipError } = await supabase
     .from("vehicle_owners")
     .select("vehicle_id")

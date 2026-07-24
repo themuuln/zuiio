@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { apiError } from "@/lib/api-response";
 import { EstimateDocument } from "@/lib/pdf/estimate-document";
 import { getEstimate } from "@/lib/services/estimate-service";
 import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
@@ -7,10 +8,7 @@ export const GET = createRouteHandler(
   async ({ params, supabase, orgId }) => {
     const estimate = await getEstimate(supabase, params.estimateId, orgId);
     if (!estimate) {
-      return NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "Estimate not found" } },
-        { status: 404 },
-      );
+      return apiError("NOT_FOUND", "Estimate not found", 404);
     }
 
     const { data: org } = await supabase

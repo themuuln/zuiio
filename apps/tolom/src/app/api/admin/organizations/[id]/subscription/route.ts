@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import { ok } from "@/lib/api-response";
+import { apiError, ok } from "@/lib/api-response";
+
 import { ForbiddenError } from "@/lib/errors";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
@@ -14,19 +14,9 @@ async function guard(request: Request, supabase: SupabaseClient) {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await mutationRateLimiter.check(ip);
   if (!rateCheck.allowed) {
-    throw {
-      response: NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      ),
-    };
+    return apiError("RATE_LIMITED", "Too many requests", 429, {
+      "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)),
+    });
   }
   const isSuperAdmin = await checkSuperAdmin(supabase);
   if (!isSuperAdmin) throw new ForbiddenError();
@@ -34,7 +24,8 @@ async function guard(request: Request, supabase: SupabaseClient) {
 
 export const PATCH = createRouteHandler(
   async ({ request, orgId, supabase }) => {
-    await guard(request, supabase);
+    const guardResult = await guard(request, supabase);
+    if (guardResult) return guardResult;
     const body = await request.json();
 
     if (body.action === "extend") {

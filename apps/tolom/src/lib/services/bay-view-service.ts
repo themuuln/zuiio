@@ -847,9 +847,9 @@ export async function reorderWorkOrderHelpers(
   }
 
   // Update each row's sort_order based on the new ordering
-  for (let i = 0; i < orderedMechanicIds.length; i++) {
-    const rowId = idByMechanic.get(orderedMechanicIds[i]);
-    if (!rowId) continue; // skip if not found (shouldn't happen)
+  const updates = orderedMechanicIds.map(async (mechanicId, i) => {
+    const rowId = idByMechanic.get(mechanicId);
+    if (!rowId) return; // skip if not found (shouldn't happen)
     const { error: updErr } = await db
       .from("work_order_helpers")
       .update({ sort_order: i })
@@ -861,7 +861,9 @@ export async function reorderWorkOrderHelpers(
       });
       throw new Error(updErr.message ?? "Failed to reorder helper");
     }
-  }
+  });
+
+  await Promise.all(updates);
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");

@@ -196,7 +196,27 @@ export async function savePostServiceData(
     }
   }
 
-  // 5. Upsert vehicle_service_schedules with mechanic-approved intervals
+  // 5. Batch-check existing schedules for all recommendations at once
+  // (replaces N per-item existence queries inside the Promise.all map)
+  const scheduleServiceNames = recommendations
+    .filter((r) => r.intervalMonths || r.intervalKm)
+    .map((r) => r.serviceName);
+  const existingSchedulesMap: Record<string, string> = {};
+  if (scheduleServiceNames.length > 0) {
+    const { data: existingSchedules } = await supabase
+      .from("vehicle_service_schedules")
+      .select("id, service_name")
+      .eq("organization_id", orgId)
+      .eq("vehicle_id", vehicleId)
+      .in("service_name", scheduleServiceNames)
+      .is("deleted_at", null);
+    if (existingSchedules) {
+      for (const s of existingSchedules) {
+        existingSchedulesMap[s.service_name] = s.id;
+      }
+    }
+  }
+  // 6. Upsert vehicle_service_schedules with mechanic-approved intervals
   // Fetch work_order customer_id once (avoids N+1 query inside the per-recommendation map)
   const { data: wo } = await supabase
     .from("work_orders")
@@ -222,17 +242,9 @@ export async function savePostServiceData(
           ? odometerReading + rec.intervalKm
           : null;
 
-      // Check for existing schedule for this vehicle + service name
-      const { data: existing } = await supabase
-        .from("vehicle_service_schedules")
-        .select("id")
-        .eq("organization_id", orgId)
-        .eq("vehicle_id", vehicleId)
-        .eq("service_name", rec.serviceName)
-        .is("deleted_at", null)
-        .maybeSingle();
-
-      if (existing) {
+      // Upsert using the pre-batched map instead of a per-item existence query
+      const existingId = existingSchedulesMap[rec.serviceName];
+      if (existingId) {
         await supabase
           .from("vehicle_service_schedules")
           .update({
@@ -245,7 +257,7 @@ export async function savePostServiceData(
             updated_by: user.id,
             updated_at: new Date().toISOString(),
           })
-          .eq("id", existing.id);
+          .eq("id", existingId);
       } else {
         await supabase.from("vehicle_service_schedules").insert({
           organization_id: orgId,
@@ -264,7 +276,7 @@ export async function savePostServiceData(
         });
       }
 
-      // 6. Create reminder_log (pending, scheduled 2 weeks before next_due_date)
+      // Create reminder_log (pending, scheduled 2 weeks before next_due_date)
       if (nextDueDate) {
         const reminderDate = new Date(nextDueDate);
         reminderDate.setDate(reminderDate.getDate() - 14); // 2 weeks before

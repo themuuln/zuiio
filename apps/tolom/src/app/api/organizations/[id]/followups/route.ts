@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { createFollowup, listFollowups } from "@/lib/services/followup-service";
@@ -18,7 +17,7 @@ export const GET = createRouteHandler(
       limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
     });
 
-    return NextResponse.json(result);
+    return ok(result);
   },
   { requiredPermission: { resource: "customers", action: "read" } },
 );

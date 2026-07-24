@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { apiError } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type {
@@ -97,10 +98,7 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
     .single();
 
   if (!org) {
-    return NextResponse.json(
-      { error: { message: "Organization not found" } },
-      { status: 404 },
-    );
+    return apiError("NOT_FOUND", "Organization not found", 404);
   }
 
   const tables: Record<string, string> = {
