@@ -54,6 +54,17 @@ class MockQueryBuilder<T = unknown> {
   lt(_field: string, _value: string) {
     return this;
   }
+  gte(_field: string, _value: string) {
+    return this;
+  }
+
+  in(_field: string, _values: unknown[]) {
+    return this;
+  }
+
+  is(_field: string, _value: unknown) {
+    return this;
+  }
 
   or(_filter: string) {
     return this;

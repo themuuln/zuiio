@@ -39,14 +39,15 @@ export async function POST(request: NextRequest) {
 
     // ── Resolve an existing dispute ──
     if (body.id && body.status) {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
 
       const { data, error } = await supabase
         .from("identity_disputes")
         .update({
           status: body.status,
           resolution_notes: body.resolution_notes || null,
-          resolved_by: user?.id,
+          resolved_by: userId,
           resolved_at:
             body.status === "resolved" || body.status === "dismissed"
               ? new Date().toISOString()
@@ -72,8 +73,8 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       ) as never;
     }
-
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
 
     const { data, error } = await supabase
       .from("identity_disputes")
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
         description,
         evidence_notes: evidence_notes || null,
         status: "open",
-        submitted_by: user?.id,
+        submitted_by: userId,
       })
       .select()
       .single();

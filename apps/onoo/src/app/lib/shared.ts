@@ -455,3 +455,31 @@ export type {
   TeamGameStatsRow,
   TeamSeasonAggregates,
 } from "./types/team-stats";
+
+// ---------------------------------------------------------------------------
+// Canonical identity types
+// ---------------------------------------------------------------------------
+
+export interface AthleteAffiliation {
+  entity_type: string;
+  entity_id: string;
+  entity_name: string;
+  source: string;
+}
+
+export interface AthleteTimelineEvent {
+  event_type: string;
+  entity_id: string;
+  event_id: string;
+  event_date: string;
+  competition_name: string | null;
+  player_team_name: string | null;
+  opponent_name: string | null;
+  home_score: number | null;
+  away_score: number | null;
+  pts: number | null;
+  assists: number | null;
+  total_rebounds: number | null;
+  program_name: string | null;
+  event_label: string | null;
+}

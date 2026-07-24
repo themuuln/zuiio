@@ -44,9 +44,8 @@ export async function POST(request: NextRequest) {
       ) as never;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
 
     const { data, error } = await supabase
       .from("break_glass_access")
@@ -55,7 +54,7 @@ export async function POST(request: NextRequest) {
         granted_to,
         reason,
         expires_at,
-        granted_by: user?.id ?? null,
+        granted_by: userId,
       })
       .select()
       .single();

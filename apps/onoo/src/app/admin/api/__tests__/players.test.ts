@@ -90,6 +90,7 @@ describe("Players API", () => {
       const noUserMock = createMockSupabase();
       noUserMock.auth = {
         getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
       };
       mockCreateClient.mockResolvedValue(noUserMock as never);
       const req = createMockRequest(
@@ -189,6 +190,7 @@ describe("Players API", () => {
       const noUserMock = createMockSupabase();
       noUserMock.auth = {
         getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
       };
       mockCreateClient.mockResolvedValue(noUserMock as never);
       const req = createMockRequest(

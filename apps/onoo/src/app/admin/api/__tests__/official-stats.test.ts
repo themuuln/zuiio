@@ -101,6 +101,9 @@ describe("official statistics import API", () => {
         getUser: vi.fn().mockResolvedValue({
           data: { user: { id: "scorer-1" } },
         }),
+        getSession: vi.fn().mockResolvedValue({
+          data: { session: { user: { id: "scorer-1" } } },
+        }),
       },
       storage: {
         from: vi.fn().mockReturnValue({ upload, remove }),
@@ -139,6 +142,7 @@ describe("official statistics import API", () => {
     mockCreateClient.mockResolvedValue({
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
+        getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
       },
     } as never);
 

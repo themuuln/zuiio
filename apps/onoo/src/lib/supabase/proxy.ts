@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const _supabase = createServerClient(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -24,6 +24,25 @@ export async function updateSession(request: NextRequest) {
       },
     },
   );
+
+  // Refresh the auth session on protected routes — this calls getUser() once
+  // at the proxy layer so route handlers can use getSession() (cookie-only)
+  // instead of making their own getUser() API calls.
+  const pathname = request.nextUrl.pathname;
+  const isProtectedRoute =
+    pathname.startsWith("/admin") || pathname.startsWith("/tracker");
+
+  if (isProtectedRoute && !pathname.startsWith("/admin/login")) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/login";
+      return NextResponse.redirect(url);
+    }
+  }
 
   return supabaseResponse;
 }

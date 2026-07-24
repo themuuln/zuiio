@@ -81,6 +81,14 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const currentUserId = session?.user?.id;
+
+    if (!currentUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     // Get or create season (reference data — not a protected table)
     let { data: season } = await supabase
@@ -257,7 +265,7 @@ export async function POST(request: NextRequest) {
         game_id: null, // Season-level import — not associated with a specific game
         source_type: "import",
         evidence_url: null,
-        submitted_by: (await supabase.auth.getUser()).data.user?.id,
+        submitted_by: currentUserId,
         normalized_payload: normalizedPayload,
         confidence: 1.0,
         status: "pending",

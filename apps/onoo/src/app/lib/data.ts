@@ -17,6 +17,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 // Import shared types for internal use + re-export for backward compatibility
 import type {
+  AthleteAffiliation,
+  AthleteTimelineEvent,
   BoxScoreRow,
   GameWithTeams,
   LeaderRow,
@@ -46,6 +48,8 @@ export {
   statusVariant,
 } from "./shared";
 export type {
+  AthleteAffiliation,
+  AthleteTimelineEvent,
   BoxScoreRow,
   GameWithTeams,
   LeaderRow,
@@ -1347,4 +1351,57 @@ export function aggregateMonthlyStats(
           totalFta > 0 ? Math.round((totalFtm / totalFta) * 1000) / 10 : null,
       };
     });
+}
+
+// ---------------------------------------------------------------------------
+// Canonical identity queries
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch all affiliations for a canonical identity (player, student, etc.).
+ * Returns an empty array if none exist or the query fails.
+ */
+export async function getAthleteAffiliations(
+  canonicalIdentityId: string,
+): Promise<AthleteAffiliation[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .rpc("cmd_get_athlete_affiliations", {
+      p_canonical_identity_id: canonicalIdentityId,
+    });
+  return (data as AthleteAffiliation[]) ?? [];
+}
+
+/**
+ * Look up a player's canonical identity ID. Returns null if the player
+ * doesn't exist or has no canonical identity.
+ */
+export async function getPlayerCanonicalIdentity(
+  playerId: string,
+): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("players")
+    .select("canonical_identity_id")
+    .eq("id", playerId)
+    .maybeSingle();
+  return (data?.canonical_identity_id as string) ?? null;
+}
+
+/**
+ * Fetch the timeline of events for a canonical identity (games, enrollments).
+ * Events are ordered by date descending, limited to `limit` (default 10).
+ */
+export async function getAthleteTimeline(
+  canonicalIdentityId: string,
+  limit = 10,
+): Promise<AthleteTimelineEvent[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("v_athlete_timeline")
+    .select("*")
+    .eq("entity_id", canonicalIdentityId)
+    .order("event_date", { ascending: false })
+    .limit(limit);
+  return (data as AthleteTimelineEvent[]) ?? [];
 }
