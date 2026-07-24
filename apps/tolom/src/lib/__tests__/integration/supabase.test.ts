@@ -18,10 +18,16 @@ import {
   signInAsUser,
 } from "./helpers";
 
+// ── Guard: skip if Supabase local stack is not running ──────
+
+const hasSupabase =
+  !!process.env.SUPABASE_ANON_KEY && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+const describeWhenSupabase = hasSupabase ? describe : describe.skip;
+
 // ── Connectivity ─────────────────────────────────────────────
 
-describe("Supabase connectivity", () => {
-  const admin = createAdminClient();
+describeWhenSupabase("Supabase connectivity", () => {
+  const admin = hasSupabase ? createAdminClient() : null;
 
   it("can connect to Supabase with service-role key", async () => {
     const { data, error } = await admin
@@ -46,8 +52,8 @@ describe("Supabase connectivity", () => {
 
 // ── Auth ─────────────────────────────────────────────────────
 
-describe("Supabase auth", () => {
-  const admin = createAdminClient();
+describeWhenSupabase("Supabase auth", () => {
+  const admin = hasSupabase ? createAdminClient() : null;
   let testUser: { id: string; email: string; password: string };
 
   beforeAll(async () => {
@@ -81,8 +87,8 @@ describe("Supabase auth", () => {
 
 // ── Organization CRUD ────────────────────────────────────────
 
-describe("Organization CRUD", () => {
-  const admin = createAdminClient();
+describeWhenSupabase("Organization CRUD", () => {
+  const admin = hasSupabase ? createAdminClient() : null;
   let orgId: string;
   let testUser: { id: string; email: string; password: string };
 
@@ -95,9 +101,9 @@ describe("Organization CRUD", () => {
 
   afterAll(async () => {
     await deleteRecord(
-      admin,
+      admin!,
       "organization_users",
-      `${orgId},${testUser.id}` as any,
+      `${orgId},${testUser.id}` as unknown as string, // composite key
     );
     await admin.auth.admin.deleteUser(testUser.id);
     await deleteRecord(admin, "organizations", orgId);
@@ -153,8 +159,8 @@ describe("Organization CRUD", () => {
 
 // ── Basic CRUD: Customers ───────────────────────────────────
 
-describe("Customers CRUD", () => {
-  const admin = createAdminClient();
+describeWhenSupabase("Customers CRUD", () => {
+  const admin = hasSupabase ? createAdminClient() : null;
   let orgId: string;
   let testUser: { id: string; email: string; password: string };
   let customerId: string;
@@ -168,9 +174,9 @@ describe("Customers CRUD", () => {
 
   afterAll(async () => {
     await deleteRecord(
-      admin,
+      admin!,
       "organization_users",
-      `${orgId},${testUser.id}` as any,
+      `${orgId},${testUser.id}` as unknown as string, // composite key
     );
     await admin.auth.admin.deleteUser(testUser.id);
     await deleteRecord(admin, "organizations", orgId);
@@ -217,7 +223,7 @@ describe("Customers CRUD", () => {
 
 // ── Public RPC functions ────────────────────────────────────
 
-describe("Public RPC functions", () => {
+describeWhenSupabase("Public RPC functions", () => {
   it("get_user_organization_id returns null for anon", async () => {
     const anon = createAnonClient();
     const { data, error } = await anon.rpc("get_user_organization_id");

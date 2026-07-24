@@ -4,6 +4,9 @@
 	"description": "Supabase Realtime hooks for React Query cache invalidation",
 	"license": "MIT",
 	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
 	"main": "./src/index.ts",
 	"peerDependencies": {
 		"@tanstack/react-query": "^5.101.2",

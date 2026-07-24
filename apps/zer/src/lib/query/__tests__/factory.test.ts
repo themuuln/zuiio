@@ -2,7 +2,13 @@
  * Tests for src/lib/query/keys.ts and src/lib/query/factory.ts
  */
 import { describe, expect, it } from "vitest";
-import { productKeys, saleKeys, contactKeys, expenseKeys, inventoryKeys } from "../keys";
+import {
+  contactKeys,
+  expenseKeys,
+  inventoryKeys,
+  productKeys,
+  saleKeys,
+} from "../keys";
 
 describe("query keys", () => {
   it("productKeys has expected structure", () => {

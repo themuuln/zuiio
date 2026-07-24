@@ -489,7 +489,10 @@ describe("approveTransfer", () => {
     });
 
     db.__qb.resolveOnce({ data: row, error: null }); // fetch transfer
-    db.__qb.resolveOnce({ data: { quantity_on_hand: 10 }, error: null }); // inventory check
+    db.__qb.resolveOnce({
+      data: [{ part_id: PART_ID, quantity_on_hand: 10 }],
+      error: null,
+    }); // inventory check
     db.__qb.resolveOnce({ data: null, error: null }); // update
     db.__qb.resolveOnce({ data: row, error: null }); // getTransfer
 
@@ -557,7 +560,10 @@ describe("approveTransfer", () => {
     });
 
     db.__qb.resolveOnce({ data: row, error: null }); // fetch
-    db.__qb.resolveOnce({ data: { quantity_on_hand: 2 }, error: null }); // only 2, need 5
+    db.__qb.resolveOnce({
+      data: [{ part_id: PART_ID, quantity_on_hand: 2 }],
+      error: null,
+    }); // only 2, need 5
 
     await expect(
       approveTransfer(db, TRANSFER_ID, ORG_ID, USER_ID),
@@ -589,8 +595,13 @@ describe("approveTransfer", () => {
     });
 
     db.__qb.resolveOnce({ data: row, error: null }); // fetch
-    db.__qb.resolveOnce({ data: { quantity_on_hand: 10 }, error: null }); // part-1 OK
-    db.__qb.resolveOnce({ data: { quantity_on_hand: 5 }, error: null }); // part-2 OK
+    db.__qb.resolveOnce({
+      data: [
+        { part_id: "part-1", quantity_on_hand: 10 },
+        { part_id: "part-2", quantity_on_hand: 5 },
+      ],
+      error: null,
+    }); // batch inventory check
     db.__qb.resolveOnce({ data: null, error: null }); // update
     db.__qb.resolveOnce({ data: row, error: null }); // getTransfer
 
@@ -656,8 +667,8 @@ describe("receiveTransfer", () => {
     });
 
     db.__qb.resolveOnce({ data: row, error: null }); // fetch
-    db.__qb.resolveOnce({ data: null, error: null }); // transfer_out movement
-    db.__qb.resolveOnce({ data: null, error: null }); // transfer_in movement
+    db.__qb.resolveOnce({ data: null, error: null }); // transfer_out movement (batch)
+    db.__qb.resolveOnce({ data: null, error: null }); // transfer_in movement (batch)
     db.__qb.resolveOnce({ data: null, error: null }); // update status
     db.__qb.resolveOnce({ data: row, error: null }); // getTransfer
 
@@ -665,16 +676,19 @@ describe("receiveTransfer", () => {
 
     expect(result.id).toBe(TRANSFER_ID);
 
-    // Verify movement creation
+    // Verify movement creation — batch inserts wrap items in arrays
     const mvInserts = db.from("inventory_movements").insert.mock.calls;
-    expect(mvInserts[0][0]).toMatchObject({
+    expect(mvInserts).toHaveLength(2); // out + in batches
+    expect(mvInserts[0][0]).toHaveLength(1); // 1 out movement
+    expect(mvInserts[0][0][0]).toMatchObject({
       branch_id: BRANCH_ID,
       movement_type: "transfer_out",
       quantity: -5,
       reference_type: "stock_transfer",
       reference_id: TRANSFER_ID,
     });
-    expect(mvInserts[1][0]).toMatchObject({
+    expect(mvInserts[1][0]).toHaveLength(1); // 1 in movement
+    expect(mvInserts[1][0][0]).toMatchObject({
       branch_id: DEST_BRANCH_ID,
       movement_type: "transfer_in",
       quantity: 5,
@@ -709,7 +723,8 @@ describe("receiveTransfer", () => {
 
     const mvInserts = db.from("inventory_movements").insert.mock.calls;
     expect(mvInserts).toHaveLength(1);
-    expect(mvInserts[0][0]).toMatchObject({ movement_type: "transfer_in" });
+    expect(mvInserts[0][0]).toHaveLength(1); // 1 in movement (batch)
+    expect(mvInserts[0][0][0]).toMatchObject({ movement_type: "transfer_in" });
   });
 
   it("should create movements for each item", async () => {
@@ -721,24 +736,23 @@ describe("receiveTransfer", () => {
         { id: "i2", part_id: "part-2", quantity: 7, unit_cost: 15 },
       ],
     });
-
-    // fetch + 2 transfer_out + 2 transfer_in + update + getTransfer = 7 awaits
+    // fetch + out batch + in batch + update + getTransfer = 5 awaits
     db.__qb.resolveOnce({ data: row, error: null });
-    db.__qb.resolveOnce({ data: null, error: null }); // out item 0
-    db.__qb.resolveOnce({ data: null, error: null }); // out item 1
-    db.__qb.resolveOnce({ data: null, error: null }); // in item 0
-    db.__qb.resolveOnce({ data: null, error: null }); // in item 1
+    db.__qb.resolveOnce({ data: null, error: null }); // out movements (batch)
+    db.__qb.resolveOnce({ data: null, error: null }); // in movements (batch)
     db.__qb.resolveOnce({ data: null, error: null }); // update
     db.__qb.resolveOnce({ data: row, error: null }); // getTransfer
 
     await receiveTransfer(db, TRANSFER_ID, ORG_ID, USER_ID);
 
     const mvInserts = db.from("inventory_movements").insert.mock.calls;
-    expect(mvInserts).toHaveLength(4);
-    expect(mvInserts[0][0].quantity).toBe(-3);
-    expect(mvInserts[1][0].quantity).toBe(-7);
-    expect(mvInserts[2][0].quantity).toBe(3);
-    expect(mvInserts[3][0].quantity).toBe(7);
+    expect(mvInserts).toHaveLength(2); // out + in batches
+    expect(mvInserts[0][0]).toHaveLength(2); // 2 out movements
+    expect(mvInserts[0][0][0].quantity).toBe(-3);
+    expect(mvInserts[0][0][1].quantity).toBe(-7);
+    expect(mvInserts[1][0]).toHaveLength(2); // 2 in movements
+    expect(mvInserts[1][0][0].quantity).toBe(3);
+    expect(mvInserts[1][0][1].quantity).toBe(7);
   });
 
   it("should throw NotFoundError when transfer not found", async () => {

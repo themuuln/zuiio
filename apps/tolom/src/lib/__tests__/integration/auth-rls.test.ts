@@ -22,15 +22,23 @@ import {
   signInAsUser,
 } from "./helpers";
 
+// ── Guard: skip if Supabase local stack is not running ──────
+
+const hasSupabase =
+  !!process.env.SUPABASE_ANON_KEY && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+const describeWhenSupabase = hasSupabase ? describe : describe.skip;
+
 // ── Setup: two orgs, two users ───────────────────────────────
 
-const admin = createAdminClient();
+let admin: ReturnType<typeof createAdminClient> | null = null;
 let orgAId: string;
 let orgBId: string;
 let userA: { id: string; email: string; password: string };
 let userB: { id: string; email: string; password: string };
 
 beforeAll(async () => {
+  if (!hasSupabase) return;
+  admin = createAdminClient();
   const orgA = await createTestOrg(admin);
   orgAId = orgA.orgId;
   const orgB = await createTestOrg(admin);
@@ -48,16 +56,17 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  if (!hasSupabase || !admin) return;
   // Clean up in reverse dependency order
   await deleteRecord(
-    admin,
+    admin!,
     "organization_users",
-    `${orgAId},${userA.id}` as any,
+    `${orgAId},${userA.id}` as unknown as string, // composite key
   );
   await deleteRecord(
-    admin,
+    admin!,
     "organization_users",
-    `${orgBId},${userB.id}` as any,
+    `${orgBId},${userB.id}` as unknown as string, // composite key
   );
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
@@ -67,7 +76,7 @@ afterAll(async () => {
 
 // ── Multi-tenant isolation: Organizations ────────────────────
 
-describe("Organizations RLS — cross-org isolation", () => {
+describeWhenSupabase("Organizations RLS — cross-org isolation", () => {
   it("User A sees only Org A", async () => {
     const ua = await signInAsUser(userA.email, userA.password);
     const { data } = await ua.from("organizations").select("id, name");
@@ -94,7 +103,7 @@ describe("Organizations RLS — cross-org isolation", () => {
 
 // ── Branches RLS ─────────────────────────────────────────────
 
-describe("Branches RLS — org-scoped", () => {
+describeWhenSupabase("Branches RLS — org-scoped", () => {
   let branchAId: string;
   let branchBId: string;
 
@@ -127,7 +136,7 @@ describe("Branches RLS — org-scoped", () => {
 
 // ── Customers RLS ────────────────────────────────────────────
 
-describe("Customers RLS — cross-org isolation", () => {
+describeWhenSupabase("Customers RLS — cross-org isolation", () => {
   let customerAId: string;
   let customerBId: string;
 
@@ -177,7 +186,7 @@ describe("Customers RLS — cross-org isolation", () => {
 
 // ── Vehicles RLS ─────────────────────────────────────────────
 
-describe("Vehicles RLS — cross-org isolation", () => {
+describeWhenSupabase("Vehicles RLS — cross-org isolation", () => {
   let vehicleAId: string;
   let vehicleBId: string;
 
@@ -216,7 +225,7 @@ describe("Vehicles RLS — cross-org isolation", () => {
 
 // ── Work Orders RLS ──────────────────────────────────────────
 
-describe("Work Orders RLS — cross-org isolation", () => {
+describeWhenSupabase("Work Orders RLS — cross-org isolation", () => {
   let woAId: string;
   let woBId: string;
 

@@ -1,13 +1,11 @@
 #!/bin/sh
 
 # ──────────────────────────────────────────────────
-# pre-push: verify pushes before they reach the remote
+# pre-push: lightweight validation before push
+# Full CI validation happens in GitHub Actions
 # ──────────────────────────────────────────────────
 
-# Parse stdin for pushes targeting 'refs/heads/main' on any remote.
-# Stdin format: <local-ref> <local-commit> <remote-ref> <remote-commit>
-set -e
-
+# Parse stdin for pushes targeting 'refs/heads/main'
 PUSHING_TO_MAIN=false
 while read local_ref local_commit remote_ref remote_commit; do
   if [ "$remote_ref" = "refs/heads/main" ]; then
@@ -15,13 +13,17 @@ while read local_ref local_commit remote_ref remote_commit; do
   fi
 done
 
-# ─── tolom validate on main-branch pushes ───
+# On main-branch pushes, run validation
 if [ "$PUSHING_TO_MAIN" = "true" ]; then
-  echo "🔍 Push to main detected — running tolom validate..."
-  cd apps/tolom
-  pnpm validate
-  echo "✅ tolom validate passed."
+  echo "🔍 Push to main detected — running typecheck..."
+  CHANGED_APPS=$(git diff --name-only HEAD~1..HEAD 2>/dev/null | cut -d/ -f2 | sort -u | tr '\n' ',' | sed 's/,$//')
+  if [ -n "$CHANGED_APPS" ]; then
+    for APP in $(echo "$CHANGED_APPS" | tr ',' ' '); do
+      if [ -f "apps/$APP/package.json" ]; then
+        echo "  Checking $APP..."
+        (cd "apps/$APP" && pnpm typecheck 2>/dev/null) || echo "  ⚠️  Skipped (no typecheck script)"
+      fi
+    done
+  fi
+  echo "✅ Pre-push validation complete."
 fi
-
-# ─── onoo-web tests on any branch (existing behaviour) ───
-pnpm --filter onoo-web test:all

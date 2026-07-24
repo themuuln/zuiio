@@ -4,6 +4,9 @@
 	"description": "Shared UI components and utilities — InlineEditableField, search highlighting, toast helpers, form input mappings",
 	"license": "MIT",
 	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
 	"main": "./src/index.ts",
 	"devDependencies": {
 		"@testing-library/react": "^16.3.2",

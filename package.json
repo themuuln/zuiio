@@ -4,19 +4,8 @@
   "packageManager": "pnpm@11.15.1",
   "scripts": {
     "build": "turbo run build",
-    "build:zer": "turbo run build --filter=zer",
-    "build:tolom": "turbo run build --filter=tolom",
-    "build:website": "turbo run build --filter=@zuiio/website",
-    "build:zuiio-id": "turbo run build --filter=@zuiio/id",
     "build:packages": "turbo run build --filter='./packages/*'",
     "dev": "turbo run dev",
-    "dev:website": "turbo run dev --filter=website",
-    "dev:zer": "turbo run dev --filter=zer",
-    "dev:tolom": "turbo run dev --filter=tolom",
-    "dev:zuiio-id": "turbo run dev --filter=@zuiio/id",
-    "dev:agent-gateway": "turbo run dev --filter=agent-gateway",
-    "dev:onoo": "turbo run dev --filter=onoo",
-    "build:onoo": "turbo run build --filter=onoo",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "check": "turbo run typecheck lint --continue",
@@ -24,8 +13,6 @@
     "test:coverage": "turbo run test:coverage",
     "verify": "turbo run typecheck lint test:coverage --continue",
     "audit": "turbo run verify && turbo run test:e2e",
-    "coverage:check": "turbo run test:coverage",
-    "coverage:ratchet": "turbo run test:coverage -- --reporter=json --coverage.thresholds.autoUpdate=true",
     "format": "biome format --write",
     "prepare": "husky",
     "sso:plan": "tsx scripts/sso/cli.ts plan",
@@ -33,30 +20,19 @@
     "sso:doctor": "tsx scripts/sso/cli.ts doctor",
     "mcp:init": "npx tsx scripts/mcp-init.ts",
     "design:check": "bash scripts/design-quality-check.sh",
-    "design:score": "echo 'OPTIK skills: use /score in Claude Code or Cursor'",
-    "clean:dev": "turbo run clean:dev",
     "clean:turbopack": "find . -type d -name turbopack -path '*/.next/*' -exec rm -rf {} + 2>/dev/null; echo 'Turbopack caches cleaned'"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
-    "@lhci/cli": "catalog:",
     "@types/node": "^26.1.1",
-    "@types/react": "catalog:",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "next": "catalog:",
     "optik-design": "^1.0.0",
-    "turbo": "^2.10.4",
-    "vitest": "catalog:"
+    "turbo": "^2.10.4"
   },
   "lint-staged": {
-    "apps/zer/src/**/*.{ts,tsx}": [
-      "cd apps/zer && biome check --write --no-errors-on-unmatched",
-      "cd apps/zer && node scripts/capture-check.mjs"
-    ],
-    "apps/tolom/src/**/*.{ts,tsx}": [
-      "cd apps/tolom && biome check --write --no-errors-on-unmatched",
-      "cd apps/tolom && node scripts/capture-check.mjs"
+    "**/*.{ts,tsx}": [
+      "biome check --write --no-errors-on-unmatched"
     ]
   }
 }

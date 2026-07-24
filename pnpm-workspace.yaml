@@ -4,6 +4,8 @@ packages:
   - "!apps/archive/*"
   - "apps/*/packages/*"
 
+catalogMode: strict
+
 catalog:
   # Next.js — active apps use 16.3.0-preview.8
   next: 16.3.0-preview.8
