@@ -14,7 +14,6 @@ const fontPreconnectHeader = {
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  cacheComponents: true,
   experimental: {
     useTypeScriptCli: true,
     optimizePackageImports: [
@@ -34,10 +33,6 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "*.supabase.in",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
       },
     ],
     formats: ["image/avif", "image/webp"],

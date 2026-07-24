@@ -20,7 +20,6 @@ const NAV_ITEMS = [
   { href: "/standings", label: "Шалгуур" },
   { href: "/players", label: "Тоглогчид" },
   { href: "/leaders", label: "Тэргүүлэгчид" },
-  { href: "/academy", label: "Академи" },
   { href: "/shop", label: "Дэлгүүр" },
 ] as const;
 
