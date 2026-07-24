@@ -1405,3 +1405,83 @@ export async function getAthleteTimeline(
     .limit(limit);
   return (data as AthleteTimelineEvent[]) ?? [];
 }
+
+// ---------------------------------------------------------------------------
+// Academy public page
+// ---------------------------------------------------------------------------
+
+export interface AcademyData {
+  academy_name: string;
+  academy_logo_url: string | null;
+  programs: Array<{
+    id: string;
+    name: string;
+    price_mnt: number | null;
+    age_group: string | null;
+    description: string | null;
+    duration_weeks: number | null;
+    location_name: string | null;
+    location_city: string | null;
+  }>;
+  trainers: Array<{
+    id: string;
+    name: string;
+    photo_url: string | null;
+    specialties: string[];
+    bio: string | null;
+  }>;
+  locations: Array<{
+    id: string;
+    name: string;
+    city: string | null;
+    address: string | null;
+    hours: string | null;
+  }>;
+}
+
+export async function getAcademyData(): Promise<AcademyData | null> {
+  const supabase = await createClient();
+
+  // Get the most recently created academy profile
+  const { data: profile } = await supabase
+    .from("academy_profiles")
+    .select("name, logo_url")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const [programsResult, trainersResult, locationsResult] = await Promise.all([
+    supabase.from("v_public_academy_programs").select("*"),
+    supabase.from("v_public_academy_trainers").select("*"),
+    supabase.from("v_public_academy_locations").select("*"),
+  ]);
+
+  return {
+    academy_name: profile.name,
+    academy_logo_url: profile.logo_url,
+    programs: (programsResult.data ?? []).map((p) => ({
+      id: p.id as string,
+      name: p.name as string,
+      price_mnt: p.price_mnt as number | null,
+      age_group: p.age_group as string | null,
+      description: p.description as string | null,
+      duration_weeks: p.duration_weeks as number | null,
+      location_name: p.location_name as string | null,
+      location_city: p.location_city as string | null,
+    })),
+    trainers: (trainersResult.data ?? []).map((t) => ({
+      id: t.id as string,
+      name: t.name as string,
+      photo_url: t.photo_url as string | null,
+      specialties: (t.specialties as string[]) ?? [],
+      bio: t.bio as string | null,
+    })),
+    locations: (locationsResult.data ?? []).map((l) => ({
+      id: l.id as string,
+      name: l.name as string,
+      city: l.city as string | null,
+      address: l.address as string | null,
+      hours: l.hours as string | null,
+    })),
+  };
+}

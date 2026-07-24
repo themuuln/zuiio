@@ -209,7 +209,7 @@ importers:
         version: link:packages/core
       '@sentry/nextjs':
         specifier: ^10.64.0
-        version: 10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(next@16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(webpack@5.108.4(esbuild@0.28.1))
+        version: 10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(next@16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(webpack@5.108.4(esbuild@0.28.1))
       '@supabase/ssr':
         specifier: ^0.12.0
         version: 0.12.0(@supabase/supabase-js@2.110.2)
@@ -279,6 +279,9 @@ importers:
       react-hook-form:
         specifier: ^7.81.0
         version: 7.81.0(react@19.2.7)
+      recharts:
+        specifier: 'catalog:'
+        version: 3.9.2(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react-is@19.2.7)(react@19.2.7)(redux@5.0.1)
       shadcn:
         specifier: ^4.10.0
         version: 4.13.0(@typescript/typescript6@6.0.2)
@@ -619,7 +622,7 @@ importers:
         version: 3.2.2(react@19.2.7)
       '@ducanh2912/next-pwa':
         specifier: ^10.2.9
-        version: 10.2.9(@types/babel__core@7.20.5)(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(supports-color@8.1.1)(webpack@5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16))
+        version: 10.2.9(@types/babel__core@7.20.5)(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(webpack@5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16))
       '@hookform/resolvers':
         specifier: 'catalog:'
         version: 5.4.0(react-hook-form@7.81.0(react@19.2.7))
@@ -664,10 +667,10 @@ importers:
         version: 1.38.0
       '@vercel/analytics':
         specifier: ^2.0.1
-        version: 2.0.1(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(vue@3.5.39(typescript@7.0.2))
+        version: 2.0.1(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(vue@3.5.39(@typescript/typescript6@6.0.2))
       '@vercel/speed-insights':
         specifier: ^2.0.0
-        version: 2.0.0(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(vue@3.5.39(typescript@7.0.2))
+        version: 2.0.0(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(vue@3.5.39(@typescript/typescript6@6.0.2))
       '@zuiio/branding':
         specifier: workspace:*
         version: link:../../packages/branding
@@ -739,7 +742,7 @@ importers:
         version: 16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       next-intl:
         specifier: ^4.13.1
-        version: 4.13.2(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(typescript@7.0.2)
+        version: 4.13.2(@typescript/typescript6@6.0.2)(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
       next-themes:
         specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -802,7 +805,7 @@ importers:
         version: 3.6.0
       web-push:
         specifier: ^3.6.7
-        version: 3.6.7(supports-color@8.1.1)
+        version: 3.6.7
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -878,28 +881,28 @@ importers:
         version: 1.32.0
       msw:
         specifier: ^2.15.0
-        version: 2.15.0(@types/node@26.1.1)(typescript@7.0.2)
+        version: 2.15.0(@types/node@26.1.1)(@typescript/typescript6@6.0.2)
       react-doctor:
         specifier: ^0.8.1
-        version: 0.8.3(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(eslint@10.7.0(jiti@2.7.0))(supports-color@8.1.1)
+        version: 0.8.3(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(eslint@10.7.0(jiti@2.7.0))
       react-grab:
         specifier: ^0.1.50
         version: 0.1.50(react@19.2.7)
       shadcn:
         specifier: ^4.13.1
-        version: 4.14.1(typescript@7.0.2)
+        version: 4.14.1(@typescript/typescript6@6.0.2)
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
       typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
+        specifier: 'catalog:'
+        version: '@typescript/typescript6@6.0.2'
       vitepress:
         specifier: ^1.6.4
-        version: 1.6.4(@algolia/client-search@5.55.2)(@types/node@26.1.1)(@types/react@19.2.17)(axios@1.18.1)(fuse.js@7.5.0)(lightningcss@1.32.0)(postcss@8.5.16)(qrcode@1.5.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(search-insights@2.17.3)(terser@5.48.0)(typescript@7.0.2)
+        version: 1.6.4(@algolia/client-search@5.55.2)(@types/node@26.1.1)(@types/react@19.2.17)(@typescript/typescript6@6.0.2)(axios@1.18.1)(fuse.js@7.5.0)(lightningcss@1.32.0)(postcss@8.5.16)(qrcode@1.5.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(search-insights@2.17.3)(terser@5.48.0)
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.1.1)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(jsdom@29.1.1(@noble/hashes@1.8.0))(msw@2.15.0(@types/node@26.1.1)(typescript@7.0.2))(vite@8.1.0(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.1.1)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(jsdom@29.1.1(@noble/hashes@1.8.0))(msw@2.15.0(@types/node@26.1.1)(@typescript/typescript6@6.0.2))(vite@8.1.0(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
 
   apps/tolom-mobile:
     dependencies:
@@ -1152,7 +1155,7 @@ importers:
         version: 2.1.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@sentry/nextjs':
         specifier: ^10.58.0
-        version: 10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(webpack@5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16))
+        version: 10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(webpack@5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16))
       '@supabase/ssr':
         specifier: ^0.12.3
         version: 0.12.3(@supabase/supabase-js@2.110.8)
@@ -1191,7 +1194,7 @@ importers:
         version: 4.4.0
       inngest:
         specifier: ^4.13.0
-        version: 4.13.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.12.27)(next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@7.0.2)(zod@4.4.3)
+        version: 4.13.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.12.27)(next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@7.0.2)(zod@4.4.3)
       lucide-react:
         specifier: ^1.24.0
         version: 1.24.0(react@19.2.7)
@@ -1200,13 +1203,13 @@ importers:
         version: 6.0.0
       next:
         specifier: ^16.3.0-preview.8
-        version: 16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        version: 16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       next-intl:
         specifier: ^4.13.0
-        version: 4.13.2(next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(typescript@7.0.2)
+        version: 4.13.2(next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(typescript@7.0.2)
       next-sitemap:
         specifier: ^4.2.3
-        version: 4.2.3(next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))
+        version: 4.2.3(next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -1248,7 +1251,7 @@ importers:
         version: 1.4.0
       uploadthing:
         specifier: ^7.7.4
-        version: 7.7.4(express@5.2.1)(next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(tailwindcss@4.3.2)
+        version: 7.7.4(express@5.2.1)(next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(tailwindcss@4.3.2)
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -13344,9 +13347,6 @@ packages:
   immediate@3.0.6:
     resolution: {integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==}
 
-  immer@11.1.11:
-    resolution: {integrity: sha512-qzXuyXAkPySAGYkfsAwodDPWT8Zm7/Uo5BNt4BjhMhG5WlWyZZ4wQqnWwdS8kjlQ1Cwu6gjw3A6+0gTQwlyYtw==}
-
   immer@11.1.15:
     resolution: {integrity: sha512-VrNANlmnWQnh5COXIIOQXM9oOJw7naGKlBT74ZOOR6lpVXc3gFEu9FJLDFcpCJ2j+NWr8TIwtWD//T6ZX6TKiQ==}
 
@@ -19623,7 +19623,7 @@ snapshots:
       '@babel/core': 7.29.7
       '@babel/helper-plugin-utils': 7.29.7
 
-  '@babel/plugin-transform-runtime@7.29.7(@babel/core@7.29.7)':
+  '@babel/plugin-transform-runtime@7.29.7(@babel/core@7.29.7)(supports-color@8.1.1)':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/helper-module-imports': 7.29.7
@@ -19697,7 +19697,7 @@ snapshots:
       '@babel/helper-create-regexp-features-plugin': 7.29.7(@babel/core@7.29.7)
       '@babel/helper-plugin-utils': 7.29.7
 
-  '@babel/preset-env@7.29.7(@babel/core@7.29.7)(supports-color@8.1.1)':
+  '@babel/preset-env@7.29.7(@babel/core@7.29.7)':
     dependencies:
       '@babel/compat-data': 7.29.7
       '@babel/core': 7.29.7
@@ -20137,13 +20137,13 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@ducanh2912/next-pwa@10.2.9(@types/babel__core@7.20.5)(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(supports-color@8.1.1)(webpack@5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16))':
+  '@ducanh2912/next-pwa@10.2.9(@types/babel__core@7.20.5)(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(webpack@5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16))':
     dependencies:
       fast-glob: 3.3.2
       next: 16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       semver: 7.6.3
       webpack: 5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16)
-      workbox-build: 7.1.1(@types/babel__core@7.20.5)(supports-color@8.1.1)
+      workbox-build: 7.1.1(@types/babel__core@7.20.5)
       workbox-core: 7.1.0
       workbox-webpack-plugin: 7.1.0(@types/babel__core@7.20.5)(webpack@5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16))
       workbox-window: 7.1.0
@@ -25531,7 +25531,7 @@ snapshots:
       '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-react-jsx-source': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-regenerator': 7.29.7(@babel/core@7.29.7)
-      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)
+      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)(supports-color@8.1.1)
       '@babel/plugin-transform-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-unicode-regex': 7.29.7(@babel/core@7.29.7)
       '@react-native/babel-plugin-codegen': 0.85.3(@babel/core@7.29.7)
@@ -25569,7 +25569,7 @@ snapshots:
       '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-react-jsx-source': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-regenerator': 7.29.7(@babel/core@7.29.7)
-      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)
+      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)(supports-color@8.1.1)
       '@babel/plugin-transform-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-unicode-regex': 7.29.7(@babel/core@7.29.7)
       '@react-native/babel-plugin-codegen': 0.86.0(@babel/core@7.29.7)
@@ -25898,7 +25898,7 @@ snapshots:
     dependencies:
       '@standard-schema/spec': 1.1.0
       '@standard-schema/utils': 0.3.0
-      immer: 11.1.11
+      immer: 11.1.15
       redux: 5.0.1
       redux-thunk: 3.1.0(redux@5.0.1)
       reselect: 5.2.0
@@ -26319,7 +26319,7 @@ snapshots:
     dependencies:
       '@sentry/core': 10.68.0
 
-  '@sentry/nextjs@10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(next@16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(webpack@5.108.4(esbuild@0.28.1))':
+  '@sentry/nextjs@10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(next@16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(webpack@5.108.4(esbuild@0.28.1))':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@rollup/plugin-commonjs': 28.0.1(rollup@4.62.2)
@@ -26369,7 +26369,7 @@ snapshots:
       - supports-color
       - webpack
 
-  '@sentry/nextjs@10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(webpack@5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16))':
+  '@sentry/nextjs@10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(webpack@5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16))':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@rollup/plugin-commonjs': 28.0.1(rollup@4.62.2)
@@ -26382,7 +26382,7 @@ snapshots:
       '@sentry/react': 10.65.0(react@19.2.7)
       '@sentry/vercel-edge': 10.65.0
       '@sentry/webpack-plugin': 5.4.0(rollup@4.62.2)(webpack@5.108.4(esbuild@0.28.1)(lightningcss@1.32.0)(postcss@8.5.16))
-      next: 16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next: 16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       rollup: 4.62.2
       stacktrace-parser: 0.1.11
     transitivePeerDependencies:
@@ -28048,19 +28048,19 @@ snapshots:
     dependencies:
       uncrypto: 0.1.3
 
-  '@vercel/analytics@2.0.1(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(vue@3.5.39(typescript@7.0.2))':
+  '@vercel/analytics@2.0.1(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(vue@3.5.39(@typescript/typescript6@6.0.2))':
     optionalDependencies:
       next: 16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react: 19.2.7
-      vue: 3.5.39(typescript@7.0.2)
+      vue: 3.5.39(@typescript/typescript6@6.0.2)
 
   '@vercel/oidc@3.2.0': {}
 
-  '@vercel/speed-insights@2.0.0(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(vue@3.5.39(typescript@7.0.2))':
+  '@vercel/speed-insights@2.0.0(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(vue@3.5.39(@typescript/typescript6@6.0.2))':
     optionalDependencies:
       next: 16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react: 19.2.7
-      vue: 3.5.39(typescript@7.0.2)
+      vue: 3.5.39(@typescript/typescript6@6.0.2)
 
   '@vitejs/plugin-react@4.7.0(vite@5.4.21(@types/node@20.19.43)(lightningcss@1.32.0)(terser@5.48.0))':
     dependencies:
@@ -28086,10 +28086,10 @@ snapshots:
       vite: 5.4.21(@types/node@20.19.43)(lightningcss@1.32.0)(terser@5.48.0)
       vue: 3.5.39(@typescript/typescript6@6.0.2)
 
-  '@vitejs/plugin-vue@5.2.4(vite@5.4.21(@types/node@26.1.1)(lightningcss@1.32.0)(terser@5.48.0))(vue@3.5.39(typescript@7.0.2))':
+  '@vitejs/plugin-vue@5.2.4(vite@5.4.21(@types/node@26.1.1)(lightningcss@1.32.0)(terser@5.48.0))(vue@3.5.39(@typescript/typescript6@6.0.2))':
     dependencies:
       vite: 5.4.21(@types/node@26.1.1)(lightningcss@1.32.0)(terser@5.48.0)
-      vue: 3.5.39(typescript@7.0.2)
+      vue: 3.5.39(@typescript/typescript6@6.0.2)
 
   '@vitest/coverage-v8@3.2.7(supports-color@8.1.1)(vitest@3.2.7(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@4.1.10(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@1.8.0))(lightningcss@1.32.0)(msw@2.15.0(@types/node@26.1.1)(typescript@7.0.2))(terser@5.48.0))':
     dependencies:
@@ -28395,12 +28395,6 @@ snapshots:
       '@vue/shared': 3.5.39
       vue: 3.5.39(@typescript/typescript6@6.0.2)
 
-  '@vue/server-renderer@3.5.39(vue@3.5.39(typescript@7.0.2))':
-    dependencies:
-      '@vue/compiler-ssr': 3.5.39
-      '@vue/shared': 3.5.39
-      vue: 3.5.39(typescript@7.0.2)
-
   '@vue/shared@3.5.39': {}
 
   '@vueuse/core@12.8.2(@typescript/typescript6@6.0.2)':
@@ -28409,15 +28403,6 @@ snapshots:
       '@vueuse/metadata': 12.8.2
       '@vueuse/shared': 12.8.2(@typescript/typescript6@6.0.2)
       vue: 3.5.39(@typescript/typescript6@6.0.2)
-    transitivePeerDependencies:
-      - typescript
-
-  '@vueuse/core@12.8.2(typescript@7.0.2)':
-    dependencies:
-      '@types/web-bluetooth': 0.0.21
-      '@vueuse/metadata': 12.8.2
-      '@vueuse/shared': 12.8.2(typescript@7.0.2)
-      vue: 3.5.39(typescript@7.0.2)
     transitivePeerDependencies:
       - typescript
 
@@ -28434,30 +28419,11 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@vueuse/integrations@12.8.2(axios@1.18.1)(focus-trap@7.8.0)(fuse.js@7.5.0)(qrcode@1.5.4)(typescript@7.0.2)':
-    dependencies:
-      '@vueuse/core': 12.8.2(typescript@7.0.2)
-      '@vueuse/shared': 12.8.2(typescript@7.0.2)
-      vue: 3.5.39(typescript@7.0.2)
-    optionalDependencies:
-      axios: 1.18.1
-      focus-trap: 7.8.0
-      fuse.js: 7.5.0
-      qrcode: 1.5.4
-    transitivePeerDependencies:
-      - typescript
-
   '@vueuse/metadata@12.8.2': {}
 
   '@vueuse/shared@12.8.2(@typescript/typescript6@6.0.2)':
     dependencies:
       vue: 3.5.39(@typescript/typescript6@6.0.2)
-    transitivePeerDependencies:
-      - typescript
-
-  '@vueuse/shared@12.8.2(typescript@7.0.2)':
-    dependencies:
-      vue: 3.5.39(typescript@7.0.2)
     transitivePeerDependencies:
       - typescript
 
@@ -29096,7 +29062,7 @@ snapshots:
       '@babel/plugin-transform-react-jsx': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-react-jsx-development': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-react-pure-annotations': 7.29.7(@babel/core@7.29.7)
-      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)
+      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)(supports-color@8.1.1)
       '@babel/plugin-transform-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-unicode-regex': 7.29.7(@babel/core@7.29.7)
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
@@ -29148,7 +29114,7 @@ snapshots:
       '@babel/plugin-transform-react-jsx': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-react-jsx-development': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-react-pure-annotations': 7.29.7(@babel/core@7.29.7)
-      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)
+      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)(supports-color@8.1.1)
       '@babel/plugin-transform-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-unicode-regex': 7.29.7(@babel/core@7.29.7)
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
@@ -29200,7 +29166,7 @@ snapshots:
       '@babel/plugin-transform-react-jsx': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-react-jsx-development': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-react-pure-annotations': 7.29.7(@babel/core@7.29.7)
-      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)
+      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)(supports-color@8.1.1)
       '@babel/plugin-transform-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-unicode-regex': 7.29.7(@babel/core@7.29.7)
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
@@ -29252,7 +29218,7 @@ snapshots:
       '@babel/plugin-transform-react-jsx': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-react-jsx-development': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-react-pure-annotations': 7.29.7(@babel/core@7.29.7)
-      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)
+      '@babel/plugin-transform-runtime': 7.29.7(@babel/core@7.29.7)(supports-color@8.1.1)
       '@babel/plugin-transform-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-unicode-regex': 7.29.7(@babel/core@7.29.7)
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
@@ -33263,7 +33229,7 @@ snapshots:
   gaxios@7.1.3:
     dependencies:
       extend: 3.0.2
-      https-proxy-agent: 7.0.6(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6
       node-fetch: 3.3.2
       rimraf: 5.0.10
     transitivePeerDependencies:
@@ -33614,7 +33580,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  https-proxy-agent@7.0.6(supports-color@8.1.1):
+  https-proxy-agent@7.0.6:
     dependencies:
       agent-base: 7.1.4
       debug: 4.4.3(supports-color@8.1.1)
@@ -33667,8 +33633,6 @@ snapshots:
 
   immediate@3.0.6: {}
 
-  immer@11.1.11: {}
-
   immer@11.1.15: {}
 
   import-fresh@3.3.1:
@@ -33713,7 +33677,7 @@ snapshots:
     dependencies:
       css-in-js-utils: 3.1.0
 
-  inngest@4.13.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.12.27)(next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@7.0.2)(zod@4.4.3):
+  inngest@4.13.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.12.27)(next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(supports-color@8.1.1)(typescript@7.0.2)(zod@4.4.3):
     dependencies:
       '@bufbuild/protobuf': 2.12.1
       '@inngest/ai': 0.1.7
@@ -33742,7 +33706,7 @@ snapshots:
     optionalDependencies:
       express: 5.2.1
       hono: 4.12.27
-      next: 16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next: 16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react: 19.2.7
       typescript: 7.0.2
     transitivePeerDependencies:
@@ -35077,7 +35041,7 @@ snapshots:
     dependencies:
       exponential-backoff: 3.1.3
       flow-enums-runtime: 0.0.6
-      https-proxy-agent: 7.0.6(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6
       metro-core: 0.84.4
     transitivePeerDependencies:
       - supports-color
@@ -35605,7 +35569,6 @@ snapshots:
       typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
       - '@types/node'
-    optional: true
 
   msw@2.15.0(@types/node@26.1.1)(typescript@7.0.2):
     dependencies:
@@ -35717,7 +35680,7 @@ snapshots:
 
   next-intl-swc-plugin-extractor@4.13.2: {}
 
-  next-intl@4.13.2(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(typescript@7.0.2):
+  next-intl@4.13.2(@typescript/typescript6@6.0.2)(next@16.3.0-preview.5(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7):
     dependencies:
       '@formatjs/intl-localematcher': 0.8.11
       '@parcel/watcher': 2.5.6
@@ -35730,18 +35693,18 @@ snapshots:
       react: 19.2.7
       use-intl: 4.13.2(react@19.2.7)
     optionalDependencies:
-      typescript: 7.0.2
+      typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
       - '@swc/helpers'
 
-  next-intl@4.13.2(next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(typescript@7.0.2):
+  next-intl@4.13.2(next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(typescript@7.0.2):
     dependencies:
       '@formatjs/intl-localematcher': 0.8.11
       '@parcel/watcher': 2.5.6
       '@swc/core': 1.15.43
       icu-minify: 4.13.2
       negotiator: 1.0.0
-      next: 16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next: 16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       next-intl-swc-plugin-extractor: 4.13.2
       po-parser: 2.1.1
       react: 19.2.7
@@ -35751,13 +35714,13 @@ snapshots:
     transitivePeerDependencies:
       - '@swc/helpers'
 
-  next-sitemap@4.2.3(next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)):
+  next-sitemap@4.2.3(next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)):
     dependencies:
       '@corex/deepmerge': 4.0.43
       '@next/env': 13.5.11
       fast-glob: 3.3.3
       minimist: 1.2.8
-      next: 16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next: 16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
 
   next-themes@0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -35878,7 +35841,7 @@ snapshots:
       - '@types/node'
       - babel-plugin-macros
 
-  next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
       '@next/env': 16.3.0-preview.9
       '@swc/helpers': 0.5.15
@@ -36313,7 +36276,7 @@ snapshots:
       debug: 4.4.3(supports-color@8.1.1)
       get-uri: 6.0.5(supports-color@8.1.1)
       http-proxy-agent: 7.0.2(supports-color@8.1.1)
-      https-proxy-agent: 7.0.6(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6
       pac-resolver: 7.0.1
       socks-proxy-agent: 8.0.5
     transitivePeerDependencies:
@@ -36726,7 +36689,7 @@ snapshots:
       agent-base: 7.1.4
       debug: 4.4.3(supports-color@8.1.1)
       http-proxy-agent: 7.0.2(supports-color@8.1.1)
-      https-proxy-agent: 7.0.6(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6
       lru-cache: 7.18.3
       pac-proxy-agent: 7.2.0(supports-color@8.1.1)
       proxy-from-env: 1.1.0
@@ -36899,7 +36862,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  react-doctor@0.8.3(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(eslint@10.7.0(jiti@2.7.0))(supports-color@8.1.1):
+  react-doctor@0.8.3(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(eslint@10.7.0(jiti@2.7.0)):
     dependencies:
       '@babel/code-frame': 7.29.7
       '@sentry/node': 10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))(supports-color@8.1.1)
@@ -37957,7 +37920,7 @@ snapshots:
       decimal.js-light: 2.5.1
       es-toolkit: 1.49.0
       eventemitter3: 5.0.4
-      immer: 11.1.11
+      immer: 11.1.15
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-is: 19.2.7
@@ -38485,7 +38448,7 @@ snapshots:
       - supports-color
       - typescript
 
-  shadcn@4.14.1(typescript@7.0.2):
+  shadcn@4.14.1(@typescript/typescript6@6.0.2):
     dependencies:
       '@babel/core': 7.29.7
       '@babel/parser': 7.29.7
@@ -38496,7 +38459,7 @@ snapshots:
       '@types/validate-npm-package-name': 4.0.2
       browserslist: 4.28.4
       commander: 14.0.3
-      cosmiconfig: 9.0.2(typescript@7.0.2)
+      cosmiconfig: 9.0.2(@typescript/typescript6@6.0.2)
       dedent: 1.7.2
       deepmerge: 4.3.1
       diff: 8.0.4
@@ -39621,7 +39584,7 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
-  uploadthing@7.7.4(express@5.2.1)(next@16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(tailwindcss@4.3.2):
+  uploadthing@7.7.4(express@5.2.1)(next@16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(tailwindcss@4.3.2):
     dependencies:
       '@effect/platform': 0.90.3(effect@3.17.7)
       '@standard-schema/spec': 1.0.0-beta.4
@@ -39630,7 +39593,7 @@ snapshots:
       effect: 3.17.7
     optionalDependencies:
       express: 5.2.1
-      next: 16.3.0-preview.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      next: 16.3.0-preview.9(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       tailwindcss: 4.3.2
 
   uri-js@4.4.1:
@@ -39940,7 +39903,7 @@ snapshots:
       - typescript
       - universal-cookie
 
-  vitepress@1.6.4(@algolia/client-search@5.55.2)(@types/node@26.1.1)(@types/react@19.2.17)(axios@1.18.1)(fuse.js@7.5.0)(lightningcss@1.32.0)(postcss@8.5.16)(qrcode@1.5.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(search-insights@2.17.3)(terser@5.48.0)(typescript@7.0.2):
+  vitepress@1.6.4(@algolia/client-search@5.55.2)(@types/node@26.1.1)(@types/react@19.2.17)(@typescript/typescript6@6.0.2)(axios@1.18.1)(fuse.js@7.5.0)(lightningcss@1.32.0)(postcss@8.5.16)(qrcode@1.5.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(search-insights@2.17.3)(terser@5.48.0):
     dependencies:
       '@docsearch/css': 3.8.2
       '@docsearch/js': 3.8.2(@algolia/client-search@5.55.2)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(search-insights@2.17.3)
@@ -39949,17 +39912,17 @@ snapshots:
       '@shikijs/transformers': 2.5.0
       '@shikijs/types': 2.5.0
       '@types/markdown-it': 14.1.2
-      '@vitejs/plugin-vue': 5.2.4(vite@5.4.21(@types/node@26.1.1)(lightningcss@1.32.0)(terser@5.48.0))(vue@3.5.39(typescript@7.0.2))
+      '@vitejs/plugin-vue': 5.2.4(vite@5.4.21(@types/node@26.1.1)(lightningcss@1.32.0)(terser@5.48.0))(vue@3.5.39(@typescript/typescript6@6.0.2))
       '@vue/devtools-api': 7.7.10
       '@vue/shared': 3.5.39
-      '@vueuse/core': 12.8.2(typescript@7.0.2)
-      '@vueuse/integrations': 12.8.2(axios@1.18.1)(focus-trap@7.8.0)(fuse.js@7.5.0)(qrcode@1.5.4)(typescript@7.0.2)
+      '@vueuse/core': 12.8.2(@typescript/typescript6@6.0.2)
+      '@vueuse/integrations': 12.8.2(@typescript/typescript6@6.0.2)(axios@1.18.1)(focus-trap@7.8.0)(fuse.js@7.5.0)(qrcode@1.5.4)
       focus-trap: 7.8.0
       mark.js: 8.11.1
       minisearch: 7.2.0
       shiki: 2.5.0
       vite: 5.4.21(@types/node@26.1.1)(lightningcss@1.32.0)(terser@5.48.0)
-      vue: 3.5.39(typescript@7.0.2)
+      vue: 3.5.39(@typescript/typescript6@6.0.2)
     optionalDependencies:
       postcss: 8.5.16
     transitivePeerDependencies:
@@ -40256,16 +40219,6 @@ snapshots:
     optionalDependencies:
       typescript: '@typescript/typescript6@6.0.2'
 
-  vue@3.5.39(typescript@7.0.2):
-    dependencies:
-      '@vue/compiler-dom': 3.5.39
-      '@vue/compiler-sfc': 3.5.39
-      '@vue/runtime-dom': 3.5.39
-      '@vue/server-renderer': 3.5.39(vue@3.5.39(typescript@7.0.2))
-      '@vue/shared': 3.5.39
-    optionalDependencies:
-      typescript: 7.0.2
-
   w3c-xmlserializer@5.0.0:
     dependencies:
       xml-name-validator: 5.0.0
@@ -40295,11 +40248,11 @@ snapshots:
     dependencies:
       defaults: 1.0.4
 
-  web-push@3.6.7(supports-color@8.1.1):
+  web-push@3.6.7:
     dependencies:
       asn1.js: 5.4.1
       http_ece: 1.2.0
-      https-proxy-agent: 7.0.6(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6
       jws: 4.0.1
       minimist: 1.2.8
     transitivePeerDependencies:
@@ -40508,7 +40461,7 @@ snapshots:
     dependencies:
       '@apideck/better-ajv-errors': 0.3.7(ajv@8.20.0)
       '@babel/core': 7.29.7
-      '@babel/preset-env': 7.29.7(@babel/core@7.29.7)(supports-color@8.1.1)
+      '@babel/preset-env': 7.29.7(@babel/core@7.29.7)
       '@babel/runtime': 7.29.7
       '@rollup/plugin-babel': 5.3.1(@babel/core@7.29.7)(@types/babel__core@7.20.5)(rollup@2.80.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@2.80.0)
@@ -40547,11 +40500,11 @@ snapshots:
       - '@types/babel__core'
       - supports-color
 
-  workbox-build@7.1.1(@types/babel__core@7.20.5)(supports-color@8.1.1):
+  workbox-build@7.1.1(@types/babel__core@7.20.5):
     dependencies:
       '@apideck/better-ajv-errors': 0.3.7(ajv@8.20.0)
       '@babel/core': 7.29.7
-      '@babel/preset-env': 7.29.7(@babel/core@7.29.7)(supports-color@8.1.1)
+      '@babel/preset-env': 7.29.7(@babel/core@7.29.7)
       '@babel/runtime': 7.29.7
       '@rollup/plugin-babel': 5.3.1(@babel/core@7.29.7)(@types/babel__core@7.20.5)(rollup@2.80.0)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@2.80.0)
