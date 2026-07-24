@@ -111,14 +111,8 @@ const FEATURES = [
 ];
 
 export default function HomePage() {
-  const t = useTranslations("home") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const appT = useTranslations("app") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("home");
+  const appT = useTranslations("app");
 
   // Prefetch critical routes for instant navigation
   useEffect(() => {

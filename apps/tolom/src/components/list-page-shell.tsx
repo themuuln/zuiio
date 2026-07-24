@@ -158,7 +158,9 @@ export function ListPageShell({
   className,
 }: ListPageShellProps) {
   return (
-    <div className={cn("tablet-touch flex flex-col gap-6", className)}>
+    <div
+      className={cn("tablet-touch flex flex-col gap-6", className)}
+    >
       {/* ── Header: title/description always visible, skeleton only on action ── */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">

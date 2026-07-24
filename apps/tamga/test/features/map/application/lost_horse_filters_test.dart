@@ -102,14 +102,8 @@ void main() {
     });
 
     test('equality works', () {
-      const state1 = LostHorseFilterState(
-        aimag: 'Ховд',
-        animalType: AnimalType.camel,
-      );
-      const state2 = LostHorseFilterState(
-        aimag: 'Ховд',
-        animalType: AnimalType.camel,
-      );
+      const state1 = LostHorseFilterState(aimag: 'Ховд', animalType: AnimalType.camel);
+      const state2 = LostHorseFilterState(aimag: 'Ховд', animalType: AnimalType.camel);
       const state3 = LostHorseFilterState(aimag: 'Архангай');
 
       expect(state1, state2);
@@ -390,15 +384,9 @@ void main() {
     test('sorts reports newest first', () {
       final now = DateTime(2026, 6, 15);
       final reports = [
-        _createReport(
-          id: 'r1',
-          createdAt: now.subtract(const Duration(days: 3)),
-        ),
+        _createReport(id: 'r1', createdAt: now.subtract(const Duration(days: 3))),
         _createReport(id: 'r2', createdAt: now),
-        _createReport(
-          id: 'r3',
-          createdAt: now.subtract(const Duration(days: 1)),
-        ),
+        _createReport(id: 'r3', createdAt: now.subtract(const Duration(days: 1))),
       ];
 
       final sorted = [...reports];
@@ -427,29 +415,25 @@ void main() {
 
   group('kAimags constant', () {
     test('has 21 entries matching RegionSelectionPage._regions', () {
-      expect(
-        kAimags.length,
-        21,
-        reason:
-            'kAimags should contain the 21 items from RegionSelectionPage._regions. '
-            'Note: Баян-Өлгий is intentionally absent to match that list (known issue).',
-      );
+      expect(kAimags.length, 21,
+          reason: 'kAimags should contain the 21 items from RegionSelectionPage._regions. '
+              'Note: Баян-Өлгий is intentionally absent to match that list (known issue).');
     });
 
     test('contains key aimags', () {
-      expect(
-        kAimags,
-        containsAll(['Улаанбаатар', 'Архангай', 'Ховд', 'Дорнод', 'Өмнөговь']),
-      );
+      expect(kAimags, containsAll([
+        'Улаанбаатар',
+        'Архангай',
+        'Ховд',
+        'Дорнод',
+        'Өмнөговь',
+      ]));
     });
 
     test('has no duplicates', () {
       final unique = kAimags.toSet();
-      expect(
-        unique.length,
-        kAimags.length,
-        reason: 'All aimag entries must be unique',
-      );
+      expect(unique.length, kAimags.length,
+          reason: 'All aimag entries must be unique');
     });
 
     test('all entries are non-empty', () {

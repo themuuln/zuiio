@@ -61,7 +61,8 @@ Future<void> processEventCompletion({
 /// [ref] — ConsumerWidget эсвэл ConsumerState-ийн ref объект.
 /// [event] — хадгалагдсан үйл явдал.
 Future<void> processEventCompletionFromRef(WidgetRef ref, Event event) async {
-  final regRepo = await ref.read(eventRegistrationRepositoryProvider.future);
+  final regRepo =
+      await ref.read(eventRegistrationRepositoryProvider.future);
   await processEventCompletion(
     event: event,
     registrationRepo: regRepo,

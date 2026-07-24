@@ -92,14 +92,8 @@ const CATEGORIES: {
 ];
 
 export default function FaqPage() {
-  const t = useTranslations("faq") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const appT = useTranslations("app") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("faq");
+  const appT = useTranslations("app");
   const [searchQuery, setSearchQuery] = useState("");
 
   return (

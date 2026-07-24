@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture, withDbCapture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
@@ -8,11 +9,6 @@ import { requireWriteAction } from "@/lib/action-utils";
 import { logAuditEventWithClient } from "@/lib/audit";
 import { withBranchFilter } from "@/lib/branches";
 import { findOrCreateContact } from "@/lib/contact-utils";
-import {
-  defaultExpiryDate,
-  generateToken,
-  hashToken,
-} from "@/lib/public-share-token";
 import { revalidateEntities } from "@/lib/revalidate";
 import type { Database } from "@/lib/supabase/types";
 import { getString } from "@/lib/validation";
@@ -22,7 +18,6 @@ type SupabaseDb = SupabaseClient<Database>;
 export type InvoiceShareState = {
   token?: string;
   error?: string;
-  success?: boolean;
 };
 
 export async function createInvoice(
@@ -177,16 +172,11 @@ export async function createInvoiceShareLink(
     return { error: "Нэхэмжлэлийн ID олдсонгүй." };
   }
 
-  const rawToken = generateToken();
-  const tokenHash = hashToken(rawToken);
+  const token = randomBytes(32).toString("hex");
 
   let updateQuery = supabase
     .from("invoices")
-    .update({
-      token_hash: tokenHash,
-      expires_at: defaultExpiryDate("invoice").toISOString(),
-      created_by: userId,
-    })
+    .update({ token, created_by: userId })
     .eq("id", invoiceId)
     .eq("organization_id", organizationId);
 
@@ -216,122 +206,7 @@ export async function createInvoiceShareLink(
     ),
   );
 
-  return { token: rawToken, success: true };
-}
-export async function rotateInvoiceShareLink(
-  _prevState: InvoiceShareState | undefined,
-  formData: FormData,
-): Promise<InvoiceShareState> {
-  const ctx = await requireWriteAction("invoices.update");
-  if ("error" in ctx) {
-    capture(ctx.error, {
-      context: "rotateInvoiceShareLink: requireWriteAction",
-    });
-    return { error: ctx.error };
-  }
-  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
-
-  const invoiceId = formData.get("invoice_id") as string;
-  if (!invoiceId) {
-    return { error: "Нэхэмжлэлийн ID олдсонгүй." };
-  }
-
-  const rawToken = generateToken();
-  const tokenHash = hashToken(rawToken);
-
-  let updateQuery = supabase
-    .from("invoices")
-    .update({
-      token_hash: tokenHash,
-      rotated_at: new Date().toISOString(),
-      created_by: userId,
-    })
-    .eq("id", invoiceId)
-    .eq("organization_id", organizationId);
-
-  updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
-
-  const { error: updateError } = await withDbCapture(
-    "invoices: rotate share link",
-    updateQuery,
-  );
-
-  if (updateError) {
-    return {
-      error: `Хуваалцах холбоос шинэчлэхэд алдаа гарлаа: ${updateError.message}`,
-    };
-  }
-
-  after(() =>
-    logAuditEventWithClient(
-      supabase,
-      organizationId,
-      userId,
-      "shared",
-      "invoice",
-      invoiceId,
-      undefined,
-      "Нэхэмжлэлийн хуваалцах холбоос шинэчлэсэн",
-    ),
-  );
-
-  return { token: rawToken, success: true };
-}
-
-export async function revokeInvoiceShareLink(
-  _prevState: InvoiceShareState | undefined,
-  formData: FormData,
-): Promise<InvoiceShareState> {
-  const ctx = await requireWriteAction("invoices.update");
-  if ("error" in ctx) {
-    capture(ctx.error, {
-      context: "revokeInvoiceShareLink: requireWriteAction",
-    });
-    return { error: ctx.error };
-  }
-  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
-
-  const invoiceId = formData.get("invoice_id") as string;
-  if (!invoiceId) {
-    return { error: "Нэхэмжлэлийн ID олдсонгүй." };
-  }
-
-  let updateQuery = supabase
-    .from("invoices")
-    .update({
-      revoked_at: new Date().toISOString(),
-      created_by: userId,
-    })
-    .eq("id", invoiceId)
-    .eq("organization_id", organizationId);
-
-  updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
-
-  const { error: updateError } = await withDbCapture(
-    "invoices: revoke share link",
-    updateQuery,
-  );
-
-  if (updateError) {
-    return {
-      error: `Хуваалцах холбоос цуцлахад алдаа гарлаа: ${updateError.message}`,
-    };
-  }
-
-  after(() =>
-    logAuditEventWithClient(
-      supabase,
-      organizationId,
-      userId,
-      "shared",
-      "invoice",
-      invoiceId,
-      undefined,
-      "Нэхэмжлэлийн хуваалцах холбоос цуцалсан",
-    ),
-  );
-
-  return { success: true };
+  return { token };
 }
 
 export async function updateInvoiceStatus(invoiceId: string, status: string) {

@@ -329,7 +329,7 @@ export function VariantPicker({
             </p>
           </div>
           <span className="shrink-0 text-[11px] font-medium text-muted-foreground">
-            {selectedCount}/{groups?.length ?? 0}
+            {selectedCount}/{groups.length}
           </span>
         </div>
 
@@ -348,7 +348,7 @@ export function VariantPicker({
                     : "bg-foreground/70",
               )}
               style={{
-                width: `${Math.max((selectedCount / (groups?.length ?? 1)) * 100, 8)}%`,
+                width: `${Math.max((selectedCount / groups.length) * 100, 8)}%`,
               }}
             />
           </div>
@@ -361,14 +361,14 @@ export function VariantPicker({
                   : "Сонголтоо өөрчлөөд дахин шалгана уу"}
             </span>
             <span className="shrink-0">
-              {(groups?.length ?? 0) - selectedCount} үлдсэн
+              {groups.length - selectedCount} үлдсэн
             </span>
           </div>
         </div>
       </div>
 
       <div className="mt-3 space-y-3">
-        {groups?.map((group, groupIndex) => {
+        {groups.map((group, groupIndex) => {
           const selectedOption = group.options.find(
             (option) => selections[group.id] === option.id,
           );
@@ -380,7 +380,7 @@ export function VariantPicker({
 
           return (
             <div key={group.id} className="relative pl-6">
-              {groupIndex < (groups?.length ?? 0) - 1 && (
+              {groupIndex < groups.length - 1 && (
                 <span
                   aria-hidden="true"
                   className={cn(
@@ -556,7 +556,7 @@ export function VariantPicker({
               ? matchedVariant.option_labels
               : isCompleteSelection
                 ? "Нэг эсвэл хэд хэдэн сонголтоо солиод дахин шалгана уу"
-                : `${selectedCount}/${groups?.length ?? 0} алхам дууссан`}
+                : `${selectedCount}/${groups.length} алхам дууссан`}
           </p>
         </div>
 

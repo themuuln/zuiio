@@ -1,6 +1,7 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import {
+
   deleteAppointment,
   getAppointment,
   updateAppointment,
@@ -17,13 +18,12 @@ export const GET = createRouteHandler(
 );
 
 export const PATCH = createRouteHandler(
-  async ({ request, params, supabase, user }) => {
+  async ({ request, params, supabase }) => {
     const body = await request.json();
     const appointment = await updateAppointment(
       supabase,
       params.appointmentId,
       body,
-      user.id,
     );
     return ok(appointment);
   },
@@ -34,8 +34,8 @@ export const PATCH = createRouteHandler(
 );
 
 export const DELETE = createRouteHandler(
-  async ({ params, supabase, user }) => {
-    await deleteAppointment(supabase, params.appointmentId, user.id);
+  async ({ params, supabase }) => {
+    await deleteAppointment(supabase, params.appointmentId);
     return ok(null);
   },
   {

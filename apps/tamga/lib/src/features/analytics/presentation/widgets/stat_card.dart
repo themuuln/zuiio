@@ -53,11 +53,17 @@ class StatCard extends StatelessWidget {
   // ── Төлөвүүд ────────────────────────────────────────────────────────
 
   /// Ачаалалт төлөв.
-  factory StatCard.loading({Key? key}) =>
-      StatCard._(key: key, label: 'Уншиж байна...', value: '---');
+  factory StatCard.loading({Key? key}) => StatCard._(
+    key: key,
+    label: 'Уншиж байна...',
+    value: '---',
+  );
 
   /// Алдаа төлөв.
-  factory StatCard.error({Key? key, String message = 'Алдаа гарлаа'}) =>
+  factory StatCard.error({
+    Key? key,
+    String message = 'Алдаа гарлаа',
+  }) =>
       StatCard._(
         key: key,
         label: message,
@@ -68,7 +74,11 @@ class StatCard extends StatelessWidget {
 
   /// Хоосон төлөв.
   factory StatCard.empty({Key? key, String label = 'Мэдээлэл байхгүй'}) =>
-      StatCard._(key: key, label: label, value: '0');
+      StatCard._(
+        key: key,
+        label: label,
+        value: '0',
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -81,9 +91,9 @@ class StatCard extends StatelessWidget {
     // Provide fallback TamgaColors for environments (e.g. tests) that
     // don't set up the full Tamga theme extension.
     final existingColors = Theme.of(context).extension<TamgaColors>();
-    final theme = Theme.of(
-      context,
-    ).copyWith(extensions: [existingColors ?? TamgaColors.light]);
+    final theme = Theme.of(context).copyWith(
+      extensions: [existingColors ?? TamgaColors.light],
+    );
 
     return Theme(
       data: theme,

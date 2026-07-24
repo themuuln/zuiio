@@ -24,8 +24,7 @@ class WelcomePage extends StatelessWidget {
         // ── Full-bleed steppe photo ──
         Positioned.fill(
           child: CachedNetworkImage(
-            imageUrl:
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuAMdai4zpOT5PQh3Ni4IdsukHc2KHgfWb_NobAqjbttd6tM0mW3vlkz9hGmlgW7TgG-G7Uogn-Yw1BU0vNIhe3SZzYGbz7Y-ftmgj4yNzGtUTHsK73b01uEtlHS9Msm3NjfTAoBdUlcC9lBDzso05n-W073g_etOiaVyCUN24_f3yLAoQEs1_kT_mzOMADRHa-Oo30fu0B8Y8omHNsKobDN2loQCU21LnVEo3FbU-5C1i1ZACrx0kfFBPpqRuB5a57_yOsw1JlYNg',
+            imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAMdai4zpOT5PQh3Ni4IdsukHc2KHgfWb_NobAqjbttd6tM0mW3vlkz9hGmlgW7TgG-G7Uogn-Yw1BU0vNIhe3SZzYGbz7Y-ftmgj4yNzGtUTHsK73b01uEtlHS9Msm3NjfTAoBdUlcC9lBDzso05n-W073g_etOiaVyCUN24_f3yLAoQEs1_kT_mzOMADRHa-Oo30fu0B8Y8omHNsKobDN2loQCU21LnVEo3FbU-5C1i1ZACrx0kfFBPpqRuB5a57_yOsw1JlYNg',
             fit: BoxFit.cover,
             errorWidget: (_, _, _) => Container(
               color: tc.surfaceContainerLow,

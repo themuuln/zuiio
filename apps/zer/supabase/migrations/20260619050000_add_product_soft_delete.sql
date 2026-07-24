@@ -8,7 +8,7 @@
 -- =============================================
 
 ALTER TABLE public.products
-ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+ADD COLUMN deleted_at TIMESTAMPTZ DEFAULT NULL;
 
 -- Update the product_variants.is_active default to true if not already set
 -- (This ensures variants created after migrations are active by default)

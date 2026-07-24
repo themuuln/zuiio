@@ -1,6 +1,6 @@
 "use server";
 
-import { capture, withDbCapture } from "@zuiio/capture";
+import { capture } from "@zuiio/capture";
 
 import { requireActionContext } from "@/lib/action-utils";
 import { slugify } from "@/lib/format";
@@ -80,15 +80,12 @@ export async function createBranch(formData: FormData) {
   const slug = slugify(name.trim());
 
   // Check for duplicate slug
-  const { data: existingBranch } = await withDbCapture(
-    "branches: check slug",
-    ctx.supabase
-      .from("branches")
-      .select("id")
-      .eq("organization_id", ctx.organizationId)
-      .eq("slug", slug)
-      .maybeSingle(),
-  );
+  const { data: existingBranch } = await ctx.supabase
+    .from("branches")
+    .select("id")
+    .eq("organization_id", ctx.organizationId)
+    .eq("slug", slug)
+    .maybeSingle();
 
   if (existingBranch) {
     return { error: "Энэ нэртэй салбар бүртгэгдсэн байна." };
@@ -97,21 +94,18 @@ export async function createBranch(formData: FormData) {
   const serviceClient = createServiceClient();
 
   // 1. Create branch
-  const { data: branch, error: branchError } = await withDbCapture(
-    "branches: create",
-    ctx.supabase
-      .from("branches")
-      .insert({
-        organization_id: ctx.organizationId,
-        name: name.trim(),
-        slug,
-        address,
-        phone,
-        email,
-      })
-      .select("id, name, slug")
-      .single(),
-  );
+  const { data: branch, error: branchError } = await ctx.supabase
+    .from("branches")
+    .insert({
+      organization_id: ctx.organizationId,
+      name: name.trim(),
+      slug,
+      address,
+      phone,
+      email,
+    })
+    .select("id, name, slug")
+    .single();
 
   if (branchError) {
     capture(branchError, { context: "branches: createBranch" });
@@ -122,24 +116,20 @@ export async function createBranch(formData: FormData) {
   }
 
   // 2. Auto-create warehouse (1:1 mapping)
-  const { error: warehouseError } = await withDbCapture(
-    "warehouses: create for branch",
-    serviceClient.from("warehouses").insert({
+  const { error: warehouseError } = await serviceClient
+    .from("warehouses")
+    .insert({
       organization_id: ctx.organizationId,
       name: `${name.trim()} - Үндсэн агуулах`,
       location: address,
       is_default: false,
       branch_id: branch.id,
-    }),
-  );
+    });
 
   if (warehouseError) {
     // Rollback: delete the branch if warehouse creation failed
     capture(warehouseError, { context: "branches: createBranch" });
-    await withDbCapture(
-      "branches: rollback delete",
-      ctx.supabase.from("branches").delete().eq("id", branch.id),
-    );
+    await ctx.supabase.from("branches").delete().eq("id", branch.id);
     return {
       error: `Агуулах үүсгэхэд алдаа гарлаа: ${warehouseError.message}`,
     };
@@ -155,10 +145,7 @@ export async function createBranch(formData: FormData) {
   if (accountInsertError) {
     // Rollback: delete branch and warehouse
     capture(accountInsertError, { context: "branches: createBranch" });
-    await withDbCapture(
-      "branches: rollback delete",
-      ctx.supabase.from("branches").delete().eq("id", branch.id),
-    );
+    await ctx.supabase.from("branches").delete().eq("id", branch.id);
     return {
       error: `Дансны бүртгэл үүсгэхэд алдаа гарлаа: ${accountInsertError}`,
     };
@@ -177,23 +164,20 @@ async function seedChartOfAccounts(
 ): Promise<string | null> {
   // Batch 1: insert all root-level accounts (no parent)
   const rootAccounts = DEFAULT_ACCOUNTS.filter((a) => !a.parent_code);
-  const { data: rootResults, error: rootError } = await withDbCapture(
-    "chart_of_accounts: seed roots",
-    serviceClient
-      .from("chart_of_accounts")
-      .insert(
-        rootAccounts.map((acct) => ({
-          organization_id: organizationId,
-          branch_id: branchId,
-          code: acct.code,
-          name: acct.name,
-          type: acct.type,
-          parent_id: null,
-          is_active: true,
-        })),
-      )
-      .select("id, code"),
-  );
+  const { data: rootResults, error: rootError } = await serviceClient
+    .from("chart_of_accounts")
+    .insert(
+      rootAccounts.map((acct) => ({
+        organization_id: organizationId,
+        branch_id: branchId,
+        code: acct.code,
+        name: acct.name,
+        type: acct.type,
+        parent_id: null,
+        is_active: true,
+      })),
+    )
+    .select("id, code");
 
   if (rootError) return rootError.message;
   if (!rootResults) return "Root accounts insertion returned no rows.";
@@ -202,9 +186,9 @@ async function seedChartOfAccounts(
 
   // Batch 2: insert child accounts with resolved parent_id
   const childAccounts = DEFAULT_ACCOUNTS.filter((a) => a.parent_code);
-  const { error: childError } = await withDbCapture(
-    "chart_of_accounts: seed children",
-    serviceClient.from("chart_of_accounts").insert(
+  const { error: childError } = await serviceClient
+    .from("chart_of_accounts")
+    .insert(
       childAccounts.map((acct) => ({
         organization_id: organizationId,
         branch_id: branchId,
@@ -214,8 +198,7 @@ async function seedChartOfAccounts(
         parent_id: codeToId.get(acct.parent_code!) ?? null,
         is_active: true,
       })),
-    ),
-  );
+    );
 
   if (childError) return childError.message;
 
@@ -237,15 +220,12 @@ export async function updateBranch(branchId: string, formData: FormData) {
     return { error: "Салбарын нэр шаардлагатай." };
   }
 
-  const { data: currentBranch } = await withDbCapture(
-    "branches: fetch current",
-    ctx.supabase
-      .from("branches")
-      .select("name, slug")
-      .eq("id", branchId)
-      .eq("organization_id", ctx.organizationId)
-      .single(),
-  );
+  const { data: currentBranch } = await ctx.supabase
+    .from("branches")
+    .select("name, slug")
+    .eq("id", branchId)
+    .eq("organization_id", ctx.organizationId)
+    .single();
 
   if (!currentBranch) {
     return { error: "Салбар олдсонгүй." };
@@ -256,16 +236,13 @@ export async function updateBranch(branchId: string, formData: FormData) {
   if (currentBranch.name !== name.trim()) {
     const newSlug = slugify(name.trim());
 
-    const { data: existingBranch } = await withDbCapture(
-      "branches: check slug uniqueness",
-      ctx.supabase
-        .from("branches")
-        .select("id")
-        .eq("organization_id", ctx.organizationId)
-        .eq("slug", newSlug)
-        .neq("id", branchId)
-        .maybeSingle(),
-    );
+    const { data: existingBranch } = await ctx.supabase
+      .from("branches")
+      .select("id")
+      .eq("organization_id", ctx.organizationId)
+      .eq("slug", newSlug)
+      .neq("id", branchId)
+      .maybeSingle();
 
     if (existingBranch) {
       return { error: "Энэ нэртэй салбар бүртгэгдсэн байна." };
@@ -274,20 +251,17 @@ export async function updateBranch(branchId: string, formData: FormData) {
     slugOverride = newSlug;
   }
 
-  const { error } = await withDbCapture(
-    "branches: update",
-    ctx.supabase
-      .from("branches")
-      .update({
-        name: name.trim(),
-        address,
-        phone,
-        email,
-        ...(slugOverride ? { slug: slugOverride } : {}),
-      })
-      .eq("id", branchId)
-      .eq("organization_id", ctx.organizationId),
-  );
+  const { error } = await ctx.supabase
+    .from("branches")
+    .update({
+      name: name.trim(),
+      address,
+      phone,
+      email,
+      ...(slugOverride ? { slug: slugOverride } : {}),
+    })
+    .eq("id", branchId)
+    .eq("organization_id", ctx.organizationId);
 
   if (error) {
     capture(error, { context: "branches: updateBranch" });
@@ -305,15 +279,12 @@ export async function setDefaultBranch(branchId: string) {
   const ctx = await requireActionContext("settings.manage");
   if ("error" in ctx) return ctx;
 
-  const { data: branch } = await withDbCapture(
-    "branches: fetch default status",
-    ctx.supabase
-      .from("branches")
-      .select("id, is_default")
-      .eq("id", branchId)
-      .eq("organization_id", ctx.organizationId)
-      .single(),
-  );
+  const { data: branch } = await ctx.supabase
+    .from("branches")
+    .select("id, is_default")
+    .eq("id", branchId)
+    .eq("organization_id", ctx.organizationId)
+    .single();
 
   if (!branch) {
     return { error: "Салбар олдсонгүй." };
@@ -324,14 +295,11 @@ export async function setDefaultBranch(branchId: string) {
   }
 
   // Unset previous default
-  const { error: unsetError } = await withDbCapture(
-    "branches: unset default",
-    ctx.supabase
-      .from("branches")
-      .update({ is_default: false })
-      .eq("organization_id", ctx.organizationId)
-      .eq("is_default", true),
-  );
+  const { error: unsetError } = await ctx.supabase
+    .from("branches")
+    .update({ is_default: false })
+    .eq("organization_id", ctx.organizationId)
+    .eq("is_default", true);
 
   if (unsetError) {
     return {
@@ -340,14 +308,11 @@ export async function setDefaultBranch(branchId: string) {
   }
 
   // Set new default
-  const { error: setError } = await withDbCapture(
-    "branches: set default",
-    ctx.supabase
-      .from("branches")
-      .update({ is_default: true })
-      .eq("id", branchId)
-      .eq("organization_id", ctx.organizationId),
-  );
+  const { error: setError } = await ctx.supabase
+    .from("branches")
+    .update({ is_default: true })
+    .eq("id", branchId)
+    .eq("organization_id", ctx.organizationId);
 
   if (setError) {
     return {
@@ -381,13 +346,10 @@ export async function deleteBranch(branchId: string) {
   ] as const;
 
   for (const table of tablesToCheck) {
-    const { count } = await withDbCapture(
-      "branches: check transactions",
-      ctx.supabase
-        .from(table as "sales")
-        .select("*", { count: "exact", head: true })
-        .eq("branch_id", branchId),
-    );
+    const { count } = await ctx.supabase
+      .from(table as "sales")
+      .select("*", { count: "exact", head: true })
+      .eq("branch_id", branchId);
 
     if (count && count > 0) {
       return {
@@ -399,26 +361,20 @@ export async function deleteBranch(branchId: string) {
 
   // Delete warehouse linked to this branch
   const serviceClient = createServiceClient();
-  await withDbCapture(
-    "warehouses: delete for branch",
-    serviceClient.from("warehouses").delete().eq("branch_id", branchId),
-  );
+  await serviceClient.from("warehouses").delete().eq("branch_id", branchId);
 
   // Delete chart of accounts for this branch
-  await withDbCapture(
-    "chart_of_accounts: delete for branch",
-    serviceClient.from("chart_of_accounts").delete().eq("branch_id", branchId),
-  );
+  await serviceClient
+    .from("chart_of_accounts")
+    .delete()
+    .eq("branch_id", branchId);
 
   // Delete the branch itself
-  const { error } = await withDbCapture(
-    "branches: delete",
-    ctx.supabase
-      .from("branches")
-      .delete()
-      .eq("id", branchId)
-      .eq("organization_id", ctx.organizationId),
-  );
+  const { error } = await ctx.supabase
+    .from("branches")
+    .delete()
+    .eq("id", branchId)
+    .eq("organization_id", ctx.organizationId);
 
   if (error) {
     capture(error, { context: "branches: deleteBranch" });
@@ -438,14 +394,11 @@ export async function assignUserBranch(
   const ctx = await requireActionContext("members.manage_role");
   if ("error" in ctx) return ctx;
 
-  const { error } = await withDbCapture(
-    "profiles: assign branch",
-    ctx.supabase
-      .from("profiles")
-      .update({ branch_id: branchId })
-      .eq("id", profileId)
-      .eq("organization_id", ctx.organizationId),
-  );
+  const { error } = await ctx.supabase
+    .from("profiles")
+    .update({ branch_id: branchId })
+    .eq("id", profileId)
+    .eq("organization_id", ctx.organizationId);
 
   if (error) {
     capture(error, { context: "branches: assignBranch" });

@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "claudeMdPath": "CLAUDE.md",
+  "addedSections": ["ZRAf — Project-Specific Instructions"],
+  "claudeMdInstructions": [
+    "Ship to 1-person tester on Vercel quickly",
+    "Trunk-based workflow, feature branches for bigger changes",
+    "Autonomous mode — no breakpoints for routine work",
+    "Vercel deployment target — watch asset sizes (100MB limit)",
+    "Static JSON + images in public/data/ — monitor total size",
+    "No CI/CD for now",
+    "No tests — add when ready for production",
+    "Biome for linting and formatting"
+  ],
+  "additions": "Added ZRAf-specific section with project goals, workflow, deploy target, and tool notes."
+}

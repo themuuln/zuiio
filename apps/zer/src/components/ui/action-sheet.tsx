@@ -1,6 +1,7 @@
 "use client";
 
 import { Drawer } from "@base-ui/react/drawer";
+import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 export interface ActionSheetAction {
@@ -93,13 +94,14 @@ export function ActionSheet({
                 </Drawer.Description>
               )}
 
-              <ul className="m-0 list-none p-0">
+              <ul className="m-0 list-none p-0" role="menu">
                 {actions.map((action, index) => (
                   <li
                     key={index}
                     className={cn(
                       "not-first:border-t border-border dark:border-white",
                     )}
+                    role="menuitem"
                   >
                     <button
                       type="button"

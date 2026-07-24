@@ -13,7 +13,7 @@
  *   node scripts/screenshots/capture.mjs --width 1440 --height 900  # custom viewport
  */
 
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { chromium } from "@playwright/test";
 
@@ -173,10 +173,13 @@ async function login(page) {
 
 async function capturePage(page, { name, route, wait }) {
   const url = route.replace(/^\/mn\//, `/${locale}/`);
+  console.log(`  📸 ${name} → ${url}`);
 
   try {
     await page.goto(`${BASE_URL}${url}`, { waitUntil: wait, timeout: 30_000 });
-  } catch (_err) {}
+  } catch (err) {
+    console.log(`  ⚠️  Navigation timeout for ${name}, capturing anyway...`);
+  }
 
   // Extra settle time for animations, lazy-loaded content
   await page.waitForTimeout(1_500);
@@ -196,6 +199,7 @@ async function capturePage(page, { name, route, wait }) {
 
   const filepath = join(OUTPUT_DIR, `${name}.png`);
   await page.screenshot({ path: filepath, fullPage });
+  console.log(`  ✅ Saved: ${filepath}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -203,6 +207,12 @@ async function capturePage(page, { name, route, wait }) {
 // ---------------------------------------------------------------------------
 
 async function main() {
+  console.log(`\n🖼️  TOLOM Guide Screenshot Capture`);
+  console.log(
+    `   Locale: ${locale} | Viewport: ${viewportWidth}×${viewportHeight} | Full page: ${fullPage}`,
+  );
+  console.log(`   Pages: ${pagesToCapture.length} | Output: ${OUTPUT_DIR}\n`);
+
   // Ensure output directory exists
   mkdirSync(OUTPUT_DIR, { recursive: true });
 
@@ -213,23 +223,33 @@ async function main() {
     deviceScaleFactor: 2, // Retina-quality screenshots
   });
   const page = await context.newPage();
+
+  // Login once
+  console.log("🔐 Logging in...");
   await login(page);
+  console.log("✅ Authenticated\n");
 
   // Capture each page
-  let _captured = 0;
+  let captured = 0;
   let failed = 0;
 
   for (const pageDef of pagesToCapture) {
     try {
       await capturePage(page, pageDef);
-      _captured++;
-    } catch (_err) {
+      captured++;
+    } catch (err) {
+      console.log(`  ❌ Failed: ${pageDef.name} — ${err.message}`);
       failed++;
     }
   }
 
   await browser.close();
-  if (failed > 0)
+
+  console.log(`\n${"─".repeat(50)}`);
+  console.log(`✅ Captured: ${captured}/${pagesToCapture.length}`);
+  if (failed > 0) console.log(`❌ Failed: ${failed}`);
+  console.log(`📁 Output: ${OUTPUT_DIR}`);
+  console.log(`\nUse in Markdown: ![Description](/images/<name>.png)\n`);
 }
 
 main().catch((err) => {

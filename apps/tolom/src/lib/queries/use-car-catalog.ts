@@ -154,7 +154,7 @@ export function useSmartCarLookup(plateNumber: string | null) {
     queryKey: ["smartcar-lookup", plateNumber],
     queryFn: async (): Promise<SmartCarLookupData> => {
       const res = await fetch(
-        `/api/smartcar/lookup?plate=${encodeURIComponent(plateNumber as string)}`,
+        `/api/smartcar/lookup?plate=${encodeURIComponent(plateNumber!)}`,
       );
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Lookup failed");

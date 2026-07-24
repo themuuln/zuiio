@@ -13,7 +13,9 @@ abstract class MessageRepository {
   // ============================================================
 
   /// Хэрэглэгчийн бүх active conversation-уудыг авах.
-  Future<Result<List<MarketConversation>>> fetchConversations(String userId);
+  Future<Result<List<MarketConversation>>> fetchConversations(
+    String userId,
+  );
 
   /// Нэг conversation-ийг ID-аар авах.
   Future<Result<MarketConversation?>> fetchConversation(String id);

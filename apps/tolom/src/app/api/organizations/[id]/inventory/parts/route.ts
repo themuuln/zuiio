@@ -1,6 +1,7 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
+
   createPart,
   getPartsCatalog,
   updatePart,
@@ -30,14 +31,14 @@ export const POST = createRouteHandler(
 );
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, supabase, user }) => {
+  async ({ request, orgId, supabase }) => {
     const { searchParams } = new URL(request.url);
     const itemId = searchParams.get("partId") ?? searchParams.get("id");
     if (!itemId) {
       return apiError("VALIDATION", "partId required", 400);
     }
     const body = await request.json();
-    const part = await updatePart(supabase, itemId, orgId, body, user.id);
+    const part = await updatePart(supabase, itemId, orgId, body);
     return ok(part);
   },
   { rateLimit: true, subscription: true },

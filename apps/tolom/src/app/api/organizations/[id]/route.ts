@@ -17,9 +17,9 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
  * Updates an organization's name or settings.
  */
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, supabase, user }) => {
+  async ({ request, orgId, supabase }) => {
     const body = await request.json();
-    const org = await updateOrganization(supabase, orgId, body, user.id);
+    const org = await updateOrganization(supabase, orgId, body);
     return ok(org);
   },
   { rateLimit: true, subscription: true },

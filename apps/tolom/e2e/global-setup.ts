@@ -1,13 +1,7 @@
 import { execSync, readFileSync, statSync } from "node:fs";
-import { resolve } from "node:path";
 import type { FullConfig } from "@playwright/test";
 import { chromium } from "@playwright/test";
-import {
-  addSupabaseSessionCookie,
-  buildSupabaseSessionCookie,
-} from "./auth-cookie";
 
-const PROJECT_ROOT = resolve(__dirname, "..");
 const PORT = process.env.PORT ?? 3000;
 const BASE_URL = `http://localhost:${PORT}`;
 const TEST_EMAIL = process.env.E2E_EMAIL ?? "themuuln4@gmail.com";
@@ -18,9 +12,8 @@ const TEST_PASSWORD = process.env.E2E_PASSWORD ?? "Tolom!11";
  * .env.local isn't automatically loaded).
  */
 function loadEnvLocal() {
-  const envPath = resolve(PROJECT_ROOT, ".env.local");
   try {
-    const content = readFileSync(envPath, "utf-8");
+    const content = readFileSync(".env.local", "utf-8");
     for (const line of content.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
@@ -50,70 +43,21 @@ export default async function globalSetup(_config: FullConfig) {
 
   // Skip login if auth state already exists and is fresh (< 24 hours old)
   const authFile = "e2e/.auth/user.json";
-  let authFileFresh = false;
   try {
     const stat = statSync(authFile);
     const ageHours = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
-    authFileFresh = ageHours < 24;
-  } catch {
-    // Auth file doesn't exist — fall through to full login below
-  }
-
-  if (authFileFresh) {
-    // The file is recent, but the saved access token may already be
-    // expired (Supabase JWTs live ~1h) or in a stale format that
-    // @supabase/ssr can't reconstruct. Verify both before trusting it:
-    //   1. it carries an sb-access-token, and
-    //   2. that token's `exp` claim is still in the future.
-    // Otherwise the middleware accepts the cookie for the layout shell but
-    // v2 server actions (which read the real session) return no data and
-    // the bay regions never render. Fall through to a full login.
-    let hasUsableToken = false;
-    try {
-      const raw = readFileSync(authFile, "utf-8");
-      const tokenMatch = raw.match(/"sb-access-token","value":"([^"]+)"/);
-      if (tokenMatch) {
-        const payload = JSON.parse(
-          Buffer.from(tokenMatch[1].split(".")[1], "base64").toString(),
-        );
-        const expiresAt = typeof payload.exp === "number" ? payload.exp : 0;
-        hasUsableToken = Date.now() / 1000 < expiresAt - 60;
-      }
-    } catch {
-      hasUsableToken = false;
-    }
-
-    if (hasUsableToken) {
+    if (ageHours < 24) {
       process.stdout.write(
-        "✓ Auth state is fresh, refreshing session cookie via dashboard nav\n",
+        `✓ Auth state is fresh (${ageHours.toFixed(1)}h old), skipping login\n`,
       );
-      const browser = await chromium.launch();
-      const context = await browser.newContext({ baseURL: BASE_URL });
-      await addSupabaseSessionCookie(context);
-      // Re-navigate to /dashboard so the @supabase/ssr middleware
-      // re-exchanges/refreshes the session cookie through the real
-      // server path (a cookie rebuilt from the stored token is accepted
-      // by the layout shell but can fail RLS-scoped server actions in
-      // bay-view-v2). Re-saving the state guarantees a valid session.
-      const page = await context.newPage();
-      await page.goto("/dashboard", {
-        waitUntil: "domcontentloaded",
-        timeout: 60_000,
-      });
-      await page.waitForURL("**/dashboard**", { timeout: 30_000 });
-      await context.storageState({ path: authFile });
-      await browser.close();
       return;
     }
-    process.stdout.write(
-      "⚠️  Auth file fresh but token expired/stale, performing full login\n",
-    );
+  } catch {
+    // Auth file doesn't exist — need to login
   }
 
   // Skip seeding for remote Supabase — only seed local instances
-  const supabaseUrl = (
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
-  ).toLowerCase();
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").toLowerCase();
   const isLocalSupabase =
     supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1");
   if (!process.env.CI && isLocalSupabase) {
@@ -167,20 +111,7 @@ export default async function globalSetup(_config: FullConfig) {
   const browser = await chromium.launch();
   const context = await browser.newContext({ baseURL: BASE_URL });
 
-  // @supabase/ssr reads the single `sb-<ref>-auth-token` cookie (a JSON
-  // session), not the bare sb-access/sb-refresh tokens. Build it now so the
-  // middleware accepts the session on first navigation.
-  const sessionCookie = buildSupabaseSessionCookie(access_token, refresh_token);
   await context.addCookies([
-    {
-      name: sessionCookie.name,
-      value: sessionCookie.value,
-      domain: "localhost",
-      path: "/",
-      httpOnly: false,
-      secure: false,
-      sameSite: "Lax",
-    },
     {
       name: "sb-access-token",
       value: access_token,
@@ -195,19 +126,11 @@ export default async function globalSetup(_config: FullConfig) {
     },
   ]);
 
+  // Verify auth works by navigating to dashboard
   const page = await context.newPage();
-  // /dashboard can trigger a heavy first compile; wait for DOM, not full load.
-  await page.goto("/dashboard", {
-    waitUntil: "domcontentloaded",
-    timeout: 60_000,
-  });
-  await page.waitForURL("**/dashboard**", { timeout: 30_000 });
+  await page.goto("/dashboard");
+  await page.waitForURL("**/dashboard**", { timeout: 15_000 });
 
-  await context.storageState({ path: authFile });
-  // user.json now holds sb-access-token + sb-refresh-token — reconstruct the
-  // sb-<ref>-auth-token cookie that @supabase/ssr actually reads, then re-save
-  // so every auth-dependent spec inherits a working client session.
-  await addSupabaseSessionCookie(context);
   await context.storageState({ path: authFile });
   await browser.close();
 

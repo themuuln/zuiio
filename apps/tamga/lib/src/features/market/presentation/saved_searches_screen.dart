@@ -116,9 +116,7 @@ class _SavedSearchesScreenState extends ConsumerState<SavedSearchesScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.error,
-            ),
+            style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
             child: const Text('Устгах'),
           ),
         ],
@@ -156,9 +154,15 @@ class _SavedSearchTile extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: colorScheme.secondaryContainer,
-          child: Icon(Icons.search, color: colorScheme.onSecondaryContainer),
+          child: Icon(
+            Icons.search,
+            color: colorScheme.onSecondaryContainer,
+          ),
         ),
-        title: Text(search.name, style: theme.textTheme.titleMedium),
+        title: Text(
+          search.name,
+          style: theme.textTheme.titleMedium,
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -218,8 +222,7 @@ class _SavedSearchTile extends StatelessWidget {
       final max = filters['maxPrice']?.toString() ?? '∞';
       parts.add('₮$min-₮$max');
     }
-    if (filters.containsKey('verifiedOnly') &&
-        filters['verifiedOnly'] == true) {
+    if (filters.containsKey('verifiedOnly') && filters['verifiedOnly'] == true) {
       parts.add('Баталгаажсан');
     }
     return parts.isEmpty ? 'Бүх зар' : parts.join(' · ');

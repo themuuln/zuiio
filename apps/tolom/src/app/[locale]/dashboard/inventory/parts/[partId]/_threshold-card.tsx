@@ -27,10 +27,7 @@ export function ThresholdCard({
   onHand,
   isPending,
 }: ThresholdCardProps) {
-  const t = useTranslations("inventory") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("inventory");
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(currentMinimum);
 

@@ -34,26 +34,26 @@ const STEPS = [
   { key: "step1", icon: ClipboardList },
   { key: "step2", icon: Wrench },
   { key: "step3", icon: Check },
-] as const;
+];
 
 const WORKFLOW_PILLARS = [
   { key: "workflowFrontDesk", icon: ClipboardList },
   { key: "workflowWorkshop", icon: Wrench },
   { key: "workflowManagement", icon: LineChart },
-] as const;
+];
 
 const DIFFERENTIATORS = [
   { key: "differenceTablet", icon: Check },
   { key: "differencePricing", icon: Tag },
   { key: "differenceVisibility", icon: Users },
   { key: "differenceScalability", icon: Store },
-] as const;
+];
 
 const PRICING_TIERS = [
   { key: "pricingTier1", popular: false },
   { key: "pricingTier2", popular: true },
   { key: "pricingTier3", popular: false },
-] as const;
+];
 
 export function HowItWorksSection() {
   const t = useTranslations("home");
@@ -135,7 +135,7 @@ export function WorkflowSection() {
                   <CardDescription>{t(`${pillar.key}Desc`)}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 pt-0">
-                  {([1, 2, 3] as const).map((item) => (
+                  {[1, 2, 3].map((item) => (
                     <div key={item} className="flex gap-3">
                       <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
                         <Check className="size-3 text-primary" />
@@ -207,7 +207,7 @@ export function TestimonialsSection() {
           {t("testimonialsTitle")}
         </Typography.H2>
         <div className="grid gap-6 md:grid-cols-2">
-          {([1, 2] as const).map((i) => (
+          {[1, 2].map((i) => (
             <Card key={i} className="relative">
               <CardHeader>
                 <div className="flex gap-1">

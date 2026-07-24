@@ -4,11 +4,8 @@ import 'package:tamga/src/features/map/domain/mongolian_locations.dart';
 void main() {
   group('kAimagList', () {
     test('has 22 entries (21 aimags + Улаанбаатар)', () {
-      expect(
-        kAimagList.length,
-        22,
-        reason: 'Must have 21 aimags + Улаанбаатар = 22 entries',
-      );
+      expect(kAimagList.length, 22,
+          reason: 'Must have 21 aimags + Улаанбаатар = 22 entries');
     });
 
     test('contains no duplicates', () {
@@ -31,11 +28,8 @@ void main() {
 
     test('all entries are non-empty', () {
       for (final aimag in kAimagList) {
-        expect(
-          aimag.trim().isNotEmpty,
-          isTrue,
-          reason: 'Aimag should not be empty',
-        );
+        expect(aimag.trim().isNotEmpty, isTrue,
+            reason: 'Aimag should not be empty');
       }
     });
   });

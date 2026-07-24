@@ -1,6 +1,7 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import {
+
   deletePart,
   getPart,
   updatePart,
@@ -13,19 +14,19 @@ export const GET = createRouteHandler(async ({ params, supabase, orgId }) => {
 });
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, params, supabase, user }) => {
+  async ({ request, orgId, params, supabase }) => {
     const { partId } = params;
     const body = await request.json();
-    const part = await updatePart(supabase, partId, orgId, body, user.id);
+    const part = await updatePart(supabase, partId, orgId, body);
     return ok(part);
   },
   { rateLimit: true, subscription: true },
 );
 
 export const DELETE = createRouteHandler(
-  async ({ orgId, params, supabase, user }) => {
+  async ({ orgId, params, supabase }) => {
     const { partId } = params;
-    await deletePart(supabase, partId, orgId, user.id);
+    await deletePart(supabase, partId, orgId);
     return ok(null);
   },
   { rateLimit: true, subscription: true },

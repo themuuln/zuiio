@@ -59,8 +59,18 @@ export function useBayViewDialogs() {
     setDrawerInitialAction(null);
   }, []);
 
-  // ── Direct assign bay number (for vehicle registration → assign flow) ──
+  // ── Empty bay action drawer (carries bay number) ──
+  const [emptyBayBayNumber, setEmptyBayBayNumber] = useState<number | null>(
+    null,
+  );
+  const openEmptyBay = useCallback((bayNumber: number) => {
+    setEmptyBayBayNumber(bayNumber);
+  }, []);
+  const closeEmptyBay = useCallback(() => {
+    setEmptyBayBayNumber(null);
+  }, []);
 
+  // ── Direct assign bay number (for vehicle registration → assign flow) ──
   const [directAssignBayNumber, setDirectAssignBayNumber] = useState<
     number | null
   >(null);
@@ -69,6 +79,7 @@ export function useBayViewDialogs() {
   const anyOpen =
     Object.values(open).some(Boolean) ||
     detailWoId !== null ||
+    emptyBayBayNumber !== null ||
     directAssignBayNumber !== null;
 
   return {
@@ -85,6 +96,10 @@ export function useBayViewDialogs() {
     setDrawerInitialAction,
     openDetail,
     closeDetail,
+    emptyBayBayNumber,
+    setEmptyBayBayNumber,
+    openEmptyBay,
+    closeEmptyBay,
     directAssignBayNumber,
     setDirectAssignBayNumber,
     anyOpen,
@@ -110,6 +125,10 @@ export interface BayViewDialogsState {
     initialAction?: "add-service" | "add-part",
   ) => void;
   closeDetail: () => void;
+  emptyBayBayNumber: number | null;
+  setEmptyBayBayNumber: (num: number | null) => void;
+  openEmptyBay: (bayNumber: number) => void;
+  closeEmptyBay: () => void;
   directAssignBayNumber: number | null;
   setDirectAssignBayNumber: (num: number | null) => void;
   anyOpen: boolean;

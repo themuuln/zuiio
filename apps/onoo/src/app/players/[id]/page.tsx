@@ -1,722 +1,320 @@
-import { detectMilestones, getStatLabel } from "@onoo/core";
-import {
-  ArrowLeft,
-  ChartNoAxesCombined,
-  Medal,
-  TableProperties,
-  Target,
-  TrendingUp,
-} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { LanguageToggle } from "@/app/components/language-toggle";
-import { ReportErrorDialog } from "@/components/report-error-dialog";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ViewBeacon } from "@/components/view-beacon";
-import {
-  aggregateMonthlyStats,
-  formatMinutes,
-  getLeagueAverages,
-  getPlayerAwards,
   getPlayerById,
-  getPlayerCareerTotals,
-  getPlayerCompetitions,
-  getPlayerGameLog,
   getPlayerShootingProfile,
-  getPlayerShotScatter,
-  getPlayerShotZones,
-  getPlayers,
+  getLeagueAverages,
+  getPlayerCompetitions,
+  getPlayerCareerTotals,
+  formatMinutes,
 } from "../../lib/data";
-import {
-  computeSeasonAdvancedStats,
-  computeStreaks,
-} from "./components/_advanced-helpers";
-import { AdvancedStatsTable } from "./components/advanced-stats-table";
-import { AwardsShelf } from "./components/awards-shelf";
-import { BestWorstGames } from "./components/best-worst-games";
-// Lazy-loaded chart components (recharts) — client-only, ~1.5M+ saved on non-chart pages
-import {
-  FormTrends,
-  HomeAwaySplits,
-  MonthlyProgression,
-  SeasonArc,
-  ShootingProfile,
-  SkillRadar,
-} from "./components/chart-sections";
 import { HeroCard } from "./components/hero-card";
-import { Milestones } from "./components/milestones";
-import { ScrollReveal } from "./components/motion-wrapper";
-import { RecentGames } from "./components/recent-games";
+import { ShootingProfile } from "./components/shooting-profile";
+import { SkillRadar } from "./components/skill-radar";
 import { SeasonSelector } from "./components/season-selector";
-import { ShotChart } from "./components/shot-chart";
-import { StatCard } from "./components/stat-card";
 
-interface PlayerPageProps {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ season?: string; lang?: string }>;
-}
+type PlayerPageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ season?: string }> };
 
-const EMPTY_SHOOTING_PROFILE = {
-  fgm: 0,
-  fga: 0,
-  tpm: 0,
-  tpa: 0,
-  ftm: 0,
-  fta: 0,
-};
-
-export async function generateMetadata({
-  params,
-}: PlayerPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PlayerPageProps): Promise<Metadata> {
   const { id } = await params;
   const data = await getPlayerById(id);
-  if (!data?.player)
-    return {
-      title: "Тоглогч олодсонгүй — Оноо",
-    };
+  if (!data?.player) return { title: "Тоглогч олдсонгүй — Оноо" };
 
   return {
     title: `${data.player.canonical_name} — Оноо`,
-    description: `${data.player.canonical_name} (${data.player.name_latin}) тоглогчийн мэдээл ба статистик.`,
-    alternates: { canonical: `https://onoo.mn/players/${id}` },
+    description: `${data.player.canonical_name} (${data.player.name_latin}) тоглогчийн мэдээлэл ба статистик.`,
   };
 }
 
-export default async function PlayerPage({
-  params,
-  searchParams,
-}: PlayerPageProps) {
+export default async function PlayerPage({ params, searchParams }: PlayerPageProps) {
   const { id } = await params;
-  const { season, lang } = await searchParams;
-  const locale = lang === "en" ? "en" : "mn";
-  const isEn = locale === "en";
+  const { season } = await searchParams;
   const [data, competitions] = await Promise.all([
     getPlayerById(id),
     getPlayerCompetitions(id),
   ]);
-
   if (!data?.player) notFound();
 
-  const { player, profiles } = data;
-  const isCareer = season === "career";
-  const latestCompetitionId =
-    competitions[0]?.competition_id ?? player.competition_id;
-  const requestedCompetitionId = competitions.some(
-    (competition) => competition.competition_id === season,
-  )
-    ? season
-    : null;
-  const activeCompetitionId = isCareer
+  const { player: playerMaybe, seasonStats, gameLog } = data;
+  const player = playerMaybe!;
+  const latestSeason = seasonStats[0];
+
+  // Determine current competition from URL or default to latest
+  const isCareer = !season;
+  const currentCompetitionId = isCareer
     ? null
-    : (requestedCompetitionId ?? latestCompetitionId);
-  const activeProfile =
-    profiles.find(
-      (profile) => profile.competition_id === activeCompetitionId,
-    ) ?? player;
-  const [
-    shootingProfile,
-    leagueData,
-    careerTotals,
-    playerGameLog,
-    playerAwards,
-    shotZones,
-  ] = await Promise.all([
+    : competitions.find((c) => c.competition_id === season)?.competition_id ?? null;
+  const activeCompetitionId = currentCompetitionId ?? player.competition_id;
+
+  const [shootingProfile, leagueData, careerTotals] = await Promise.all([
     activeCompetitionId
       ? getPlayerShootingProfile(id, activeCompetitionId)
       : Promise.resolve(null),
-    activeCompetitionId
+    activeCompetitionId && !isCareer
       ? getLeagueAverages(activeCompetitionId)
       : Promise.resolve(null),
     getPlayerCareerTotals(id),
-    getPlayerGameLog(id, activeCompetitionId),
-    getPlayerAwards(id),
-    activeCompetitionId
-      ? getPlayerShotZones(id, activeCompetitionId)
-      : Promise.resolve([]),
   ]);
 
-  const trendData = playerGameLog.map((line) => ({
-    game_id: line.game_id,
-    game_date: line.game_date,
-    opponent: line.opponent_short_code,
-    pts: line.pts,
-    reb: line.oreb + line.dreb,
-    ast: line.ast,
-    result: line.result,
-  }));
-  const milestones = detectMilestones(
-    playerGameLog.map((line) => ({
-      game_id: line.game_id,
-      game_date: line.game_date.slice(0, 10),
-      pts: line.pts,
-      reb: line.oreb + line.dreb,
-      ast: line.ast,
-      stl: line.stl,
-      blk: line.blk,
-    })),
-  );
-  const shotScatter = activeCompetitionId
-    ? await getPlayerShotScatter(id, activeCompetitionId)
-    : [];
-  const advancedStats = computeSeasonAdvancedStats(playerGameLog);
-  const streaks = computeStreaks(playerGameLog);
-  const monthlyStats = aggregateMonthlyStats(playerGameLog);
-  const seasonLabel = isCareer
-    ? isEn
-      ? "Career Total"
-      : "Карьерийн бүх тоглот"
-    : `${activeProfile.season_name} · ${activeProfile.competition_name}`;
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: player.canonical_name,
-    alternateName: player.name_latin ?? undefined,
-    jobTitle: player.position ?? "Баскетболч",
-    memberOf: {
-      "@type": "SportsTeam",
-      name: player.team_name,
-      sport: "Basketball",
-    },
-    description: [
-      player.points_per_game != null
-        ? `${player.points_per_game.toFixed(1)} нэгэн тоглолтод`
-        : null,
-      player.games_played ? `${player.games_played} тоглолт` : null,
-    ]
-      .filter(Boolean)
-      .join(", "),
-  };
-
   return (
-    <>
-      <ViewBeacon entityType="player" entityId={id} />
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <main
-        id="main-content"
-        className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10"
-      >
-        {/* ─── Breadcrumb + heading ─── */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-2">
-            <Link
-              href="/players"
-              className="inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <ArrowLeft className="size-4" aria-hidden="true" />
-              {isEn ? "Players" : "Тоглочид"}
-            </Link>
-            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--brand-sports)]">
-              {isEn ? "Player Profile" : "Тоглогчийн профайл"}
-            </p>
-            <p className="text-sm text-muted-foreground">{seasonLabel}</p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-2">
-              <Suspense
-                fallback={
-                  <div className="h-9 w-full animate-pulse rounded-lg bg-muted sm:w-72" />
-                }
-              >
-                <SeasonSelector
-                  competitions={competitions}
-                  currentCompetitionId={activeCompetitionId}
-                />
-              </Suspense>
-              <Suspense fallback={null}>
-                <LanguageToggle />
-              </Suspense>
-            </div>
-            <Link
-              href={`/players/compare?players=${id}`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border bg-background px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              {isEn ? "Compare" : "Харьцуулах"}
-            </Link>
-          </div>
-        </div>
+    <main className="mx-auto max-w-4xl px-4 py-8 space-y-6">
+      {/* Season selector */}
+      {competitions.length > 1 && (
+        <Suspense>
+          <SeasonSelector
+            competitions={competitions}
+            currentCompetitionId={currentCompetitionId}
+          />
+        </Suspense>
+      )}
 
-        {/* ─── Hero card — player identity + season averages ─── */}
-        <HeroCard
-          playerId={id}
-          competitionId={activeCompetitionId}
-          careerTotals={isCareer ? careerTotals : null}
-          advancedStats={advancedStats}
-          locale={locale}
-        />
+      {/* Career totals summary — visible in both modes */}
+      {careerTotals && (
+        <p className="text-sm text-muted-foreground">
+          Карьер: {careerTotals.gp} тоглолт{" | "}
+          {careerTotals.pts} оноо{" | "}
+          {careerTotals.reb} самбар{" | "}
+          {careerTotals.ast} дамжуулалт
+        </p>
+      )}
 
-        {/* ─── Quick share card (shown when stats available) ─── */}
-        {(activeProfile.points_per_game != null ||
-          activeProfile.oreb_per_game != null ||
-          careerTotals) && (
-          <div className="space-y-3">
-            <h2 className="court-dot-accent text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              {isEn ? "Share" : "Хүтлэх"}
+      <Tabs defaultValue="summary" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="summary">Тойм</TabsTrigger>
+          <TabsTrigger value="gamelog">Бүх тоглолт</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="summary" className="space-y-6">
+          {/* Hero identity card */}
+          <HeroCard
+            playerId={id}
+            competitionId={activeCompetitionId}
+            careerTotals={isCareer ? careerTotals : null}
+          />
+          {/* Shooting profile */}
+          {shootingProfile && (
+            <ShootingProfile
+              data={shootingProfile}
+              teamColor={latestSeason?.team_color}
+            />
+          )}
+
+          {/* Bio */}
+          <section aria-labelledby="bio-heading">
+            <h2 id="bio-heading" className="sr-only">
+              Мэдээлэл
             </h2>
-            <StatCard
-              playerName={
-                isEn
-                  ? player.name_latin || player.canonical_name
-                  : player.canonical_name
-              }
-              teamName={player.team_name}
-              seasonLabel={seasonLabel}
-              stats={
-                careerTotals
-                  ? {
-                      pts: careerTotals.pts,
-                      reb: careerTotals.reb,
-                      ast: careerTotals.ast,
-                      gp: careerTotals.gp,
-                    }
-                  : {
-                      pts: activeProfile.points_per_game ?? null,
-                      reb:
-                        (activeProfile.oreb_per_game ?? 0) +
-                          (activeProfile.dreb_per_game ?? 0) || null,
-                      ast: activeProfile.ast_per_game ?? null,
-                      stl: activeProfile.stl_per_game ?? null,
-                      blk: activeProfile.blk_per_game ?? null,
-                      gp: activeProfile.games_played ?? null,
-                    }
-              }
-              locale={locale}
-            />
-          </div>
-        )}
-
-        {/* ─── Recent games strip ─── */}
-        <ScrollReveal>
-          <RecentGames gameLines={playerGameLog} />
-        </ScrollReveal>
-
-        {/* ─── Best / Worst game highlight ─── */}
-        {playerGameLog.length >= 3 && (
-          <BestWorstGames gameLines={playerGameLog} locale={locale} />
-        )}
-        {/* ─── Main stats grid ─── */}
-        <Tabs defaultValue="summary" className="gap-6">
-          <TabsList className="grid w-full grid-cols-2 sm:w-fit">
-            <TabsTrigger value="summary">
-              <ChartNoAxesCombined aria-hidden="true" />
-              {isEn ? "Summary" : "Тойм"}
-            </TabsTrigger>
-            <TabsTrigger value="gamelog">
-              <TableProperties aria-hidden="true" />
-              {isEn ? "All Games" : "Бүх тоглот"}
-            </TabsTrigger>
-          </TabsList>
-
-          {/* ─── Summary tab ─── */}
-          <TabsContent value="summary" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-12">
-              {/* Season trend chart */}
-              <Card className="lg:col-span-7">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--brand-sports)]/10 text-[var(--brand-sports)]">
-                      <ChartNoAxesCombined
-                        className="size-5"
-                        aria-hidden="true"
-                      />
-                    </span>
-                    <div>
-                      <CardTitle className="text-lg">
-                        {isEn ? "Season Trend" : "Улиралын хандлаг"}
-                      </CardTitle>
-                      <CardDescription className="mt-1">
-                        {isEn
-                          ? "Performance change game by game"
-                          : "Тоглобын бүрийн явжилтын ерхлэнт"}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <SeasonArc data={trendData} />
-                </CardContent>
-              </Card>
-
-              {/* Shooting profile — only for season view */}
-              {!isCareer && (
-                <ShootingProfile
-                  data={shootingProfile ?? EMPTY_SHOOTING_PROFILE}
-                  className="lg:col-span-5"
-                />
-              )}
-
-              {/* Form & trends — efficiency, opponent scatter, win/loss */}
-              <Card className="lg:col-span-12">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--brand-sports)]/10 text-[var(--brand-sports)]">
-                      <TrendingUp className="size-5" aria-hidden="true" />
-                    </span>
-                    <div>
-                      <CardTitle className="text-lg">
-                        {isEn ? "Form & Trends" : "Форм ба Хандлага"}
-                      </CardTitle>
-                      <CardDescription className="mt-1">
-                        {isEn
-                          ? "Recent efficiency and performance by opponent"
-                          : "Сүүлийн үр ашаг болон өрсөлдөгчөөр үзүүлэлт"}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <FormTrends gameLines={playerGameLog} locale={locale} />
-                </CardContent>
-              </Card>
-
-              {/* Shot chart — court heatmap (real zone data) + efficiency */}
-              {!isCareer && (
-                <ShotChart
-                  shotZones={shotZones}
-                  shots={shotScatter}
-                  shootingProfile={shootingProfile ?? EMPTY_SHOOTING_PROFILE}
-                  locale={locale}
-                  className="lg:col-span-12"
-                />
-              )}
-            </div>
-            {/* Home/Away splits */}
-            <HomeAwaySplits
-              gameLines={playerGameLog}
-              locale={locale}
-              className="lg:col-span-12"
-            />
-
-            {/* Monthly progression */}
-            {monthlyStats.length >= 2 && (
-              <MonthlyProgression
-                monthlyStats={monthlyStats}
-                className="lg:col-span-12"
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <BioCard label="Байрлал" value={player.position ?? "—"} />
+              <BioCard
+                label="Өндөр"
+                value={player.height_cm ? `${player.height_cm} см` : "—"}
               />
-            )}
-            {/* Advanced stats */}
-            {advancedStats && (
-              <AdvancedStatsTable stats={advancedStats} locale={locale} />
-            )}
-
-            {/* Streaks */}
-            {streaks && playerGameLog.length >= 3 && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--brand-sports)]/10 text-[var(--brand-sports)]">
-                      <TrendingUp className="size-5" aria-hidden="true" />
-                    </span>
-                    <div>
-                      <CardTitle className="text-lg">
-                        {isEn ? "Streaks" : "Цуврал амжилтууд"}
-                      </CardTitle>
-                      <CardDescription className="mt-1">
-                        {isEn
-                          ? "Current and season-long runs"
-                          : "Одоогийн болон улирлын хамгийн урт цувралууд"}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {isEn ? "Current Streak" : "Одоогийн цуврал"}
-                      </span>
-                      <span
-                        className={`text-xl font-bold tabular-nums ${
-                          streaks.currentStreak.type === "W"
-                            ? "text-success"
-                            : streaks.currentStreak.length > 1
-                              ? "text-destructive"
-                              : "text-muted-foreground"
-                        }`}
-                      >
-                        {streaks.currentStreak.type}
-                        {streaks.currentStreak.length}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {isEn ? "Longest Win Streak" : "Хамгийн урт ялалт"}
-                      </span>
-                      <span className="text-xl font-bold tabular-nums text-success">
-                        W{streaks.longestWinStreak}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {isEn ? "Active Scoring (10+)" : "Тогтвортой 10+ оноо"}
-                      </span>
-                      <span className="text-xl font-bold tabular-nums text-[var(--brand-sports)]">
-                        {streaks.currentScoringStreak}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {isEn ? "Best Scoring Run" : "Хамгийн урт 10+ оноо"}
-                      </span>
-                      <span className="text-xl font-bold tabular-nums">
-                        {streaks.longestScoringStreak}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Skill radar + milestones row */}
-            <div className="grid gap-6 lg:grid-cols-12">
-              {/* Skill radar — only for season view with league data */}
-              {!isCareer && leagueData && (
-                <Card className="lg:col-span-7">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--brand-sports)]/10 text-[var(--brand-sports)]">
-                        <Target className="size-5" aria-hidden="true" />
-                      </span>
-                      <div>
-                        <CardTitle className="text-lg">
-                          {isEn ? "Skill Radar" : "Чадалын супраган"}
-                        </CardTitle>
-                        <CardDescription className="mt-1">
-                          {isEn
-                            ? "Player vs League Average"
-                            : "Тоглогч ба лигийн дундаж"}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex flex-col items-center">
-                    {/* Legend */}
-                    <div className="mb-2 flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="size-2 rounded-full bg-[var(--brand-sports)]" />{" "}
-                        {isEn ? "Player" : "Тоглогч"}
-                      </span>
-                      <span className="inline-flex items-center gap-2">
-                        <span className="size-2 rounded-full bg-muted-foreground" />{" "}
-                        {isEn ? "League Average" : "Лигийн дундаж"}
-                      </span>
-                    </div>
-                    <SkillRadar
-                      playerStats={{
-                        pts: activeProfile.points_per_game ?? 0,
-                        reb:
-                          (activeProfile.oreb_per_game ?? 0) +
-                          (activeProfile.dreb_per_game ?? 0),
-                        ast: activeProfile.ast_per_game ?? 0,
-                        stl: activeProfile.stl_per_game ?? 0,
-                        blk: activeProfile.blk_per_game ?? 0,
-                      }}
-                      leagueAverages={leagueData.averages}
-                      leagueMaxes={leagueData.maxes}
-                    />
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Career highs / Milestones */}
-              <Card className={isCareer ? "lg:col-span-7" : "lg:col-span-5"}>
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--brand-sports)]/10 text-[var(--brand-sports)]">
-                      <Medal className="size-5" aria-hidden="true" />
-                    </span>
-                    <div>
-                      <CardTitle className="text-lg">
-                        {isEn ? "Career Highs" : "Онцлох амжилтууд"}
-                      </CardTitle>
-                      <CardDescription className="mt-1">
-                        {isEn
-                          ? "Top performances and consistency"
-                          : "Әдээ явцалт ба тогтвортой рүузмэлт"}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Milestones milestones={milestones} locale={locale} />
-                </CardContent>
-              </Card>
+              <BioCard
+                label="Жин"
+                value={player.weight_kg ? `${player.weight_kg} кг` : "—"}
+              />
+              <BioCard
+                label="Төрсөн өдөр"
+                value={
+                  player.dob
+                    ? new Date(player.dob).toLocaleDateString("mn-MN", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })
+                    : "—"
+                }
+              />
             </div>
+          </section>
 
-            {playerAwards.length > 0 && (
-              <AwardsShelf awards={playerAwards} locale={locale} />
-            )}
-          </TabsContent>
+          {/* Season stats */}
+          {latestSeason && (
+            <section aria-labelledby="stats-heading" className="space-y-3">
+              <h2 id="stats-heading" className="text-xl font-semibold">
+                Улирлын статистик — {latestSeason.team_name}
+              </h2>
+              <Card>
+                <CardContent className="p-0 overflow-x-auto">
+                  <table className="w-full text-sm" role="table">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="px-3 py-2.5 font-medium" scope="col">ТТ</th>
+                        <th className="px-3 py-2.5 font-medium text-right" scope="col">Оноо</th>
+                        <th className="px-3 py-2.5 font-medium text-right" scope="col">Дундаж</th>
+                        <th className="px-3 py-2.5 font-medium text-right" scope="col">Давсан</th>
+                        <th className="px-3 py-2.5 font-medium text-right" scope="col">Олгосон</th>
+                        <th className="px-3 py-2.5 font-medium text-right" scope="col">Булаасан</th>
+                        <th className="px-3 py-2.5 font-medium text-right" scope="col">Хаасан</th>
+                        <th className="px-3 py-2.5 font-medium text-right" scope="col">Алдаа</th>
+                        <th className="px-3 py-2.5 font-medium text-right" scope="col">Мин</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b last:border-0">
+                        <td className="px-3 py-2.5 tabular-nums font-medium">
+                          {latestSeason.gp}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums font-semibold">
+                          {latestSeason.pts?.toFixed(1)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {latestSeason.seconds_played?.toFixed(1)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {((latestSeason.oreb ?? 0) + (latestSeason.dreb ?? 0)).toFixed(1)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {latestSeason.ast?.toFixed(1)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {latestSeason.stl?.toFixed(1)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {latestSeason.blk?.toFixed(1)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {latestSeason.tov?.toFixed(1)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
+                          {latestSeason.seconds_played?.toFixed(1)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            </section>
+          )}
 
-          {/* ─── Game log tab ─── */}
-          <TabsContent value="gamelog">
+          {/* Skill radar — player vs league average */}
+          {!isCareer && latestSeason && leagueData && (
+            <section aria-labelledby="radar-heading" className="space-y-3">
+              <h2 id="radar-heading" className="text-xl font-semibold">
+                Чадварын зураглал
+              </h2>
+              <Card>
+                <CardContent className="flex justify-center py-6">
+                  <SkillRadar
+                    playerStats={{
+                      pts: latestSeason.pts ?? 0,
+                      reb: (latestSeason.oreb ?? 0) + (latestSeason.dreb ?? 0),
+                      ast: latestSeason.ast ?? 0,
+                      stl: latestSeason.stl ?? 0,
+                      blk: latestSeason.blk ?? 0,
+                    }}
+                    leagueAverages={leagueData.averages}
+                    leagueMaxes={leagueData.maxes}
+                  />
+                </CardContent>
+              </Card>
+            </section>
+          )}
+        </TabsContent>
+
+        <TabsContent value="gamelog" className="space-y-3">
+          {gameLog.length > 0 ? (
             <Card>
-              <CardHeader className="border-b">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-lg">
-                      {isEn ? "Game Log" : "Тоглоын дэлгэвр"}
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      {playerGameLog.length}{" "}
-                      {isEn ? "verified games" : "баталгаажсан тогломт"} {"·"}{" "}
-                      {seasonLabel}
-                    </CardDescription>
-                  </div>
-                  <ReportErrorDialog playerId={id} />
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                {playerGameLog.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-max text-sm">
-                      <thead>
-                        <tr className="border-b bg-muted/35 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                          <th className="px-4 py-3 font-medium" scope="col">
-                            {isEn ? "Date" : "Огноо"}
-                          </th>
-                          <th className="px-4 py-3 font-medium" scope="col">
-                            {isEn ? "Opponent" : "Өрсөлдөгч"}
-                          </th>
-                          <th
-                            className="px-4 py-3 text-center font-medium"
-                            scope="col"
-                          >
-                            {isEn ? "Result" : "Үр дүн"}
-                          </th>
-                          <StatHead>{isEn ? "+/−" : "+/−"}</StatHead>
-                          <StatHead>{getStatLabel("mpg", locale)}</StatHead>
-                          <StatHead>{getStatLabel("pts", locale)}</StatHead>
-                          <StatHead>{isEn ? "FGM" : "Оруулсан"}</StatHead>
-                          <StatHead>{isEn ? "3PT" : "3 хооноо"}</StatHead>
-                          <StatHead>{getStatLabel("reb", locale)}</StatHead>
-                          <StatHead>{getStatLabel("ast", locale)}</StatHead>
-                          <StatHead>{getStatLabel("stl", locale)}</StatHead>
-                          <StatHead>{getStatLabel("blk", locale)}</StatHead>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...playerGameLog].reverse().map((line) => (
-                          <tr
-                            key={line.game_id}
-                            className="border-b last:border-0 hover:bg-muted/25"
-                          >
-                            <td className="whitespace-nowrap px-4 py-3 text-muted-foreground tabular-nums">
-                              {new Date(line.game_date).toLocaleDateString(
-                                "mn-MN",
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                },
-                              )}
-                            </td>
-                            <td className="px-4 py-3 font-medium">
-                              <span className="mr-1.5 text-xs text-muted-foreground">
-                                {line.is_home ? "🏠" : "✈️"}
-                              </span>
-                              {line.opponent_short_code}
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <Badge
-                                className={
-                                  line.result === "W"
-                                    ? "bg-success text-success-foreground hover:bg-success"
-                                    : "bg-destructive text-destructive-foreground hover:bg-destructive"
-                                }
-                              >
-                                {line.result} · {line.team_score}–
-                                {line.opponent_score}
-                              </Badge>
-                            </td>
-                            <StatCell
-                              strong={line.team_score - line.opponent_score > 0}
-                              muted={line.team_score - line.opponent_score < 0}
-                            >
-                              {line.team_score - line.opponent_score > 0
-                                ? "+"
-                                : ""}
-                              {line.team_score - line.opponent_score}
-                            </StatCell>
-                            <StatCell muted>
-                              {formatMinutes(line.seconds_played)}
-                            </StatCell>
-                            <StatCell strong>{line.pts}</StatCell>
-                            <StatCell>
-                              {line.fgm}/{line.fga}
-                            </StatCell>
-                            <StatCell>
-                              {line.tpm}/{line.tpa}
-                            </StatCell>
-                            <StatCell>{line.oreb + line.dreb}</StatCell>
-                            <StatCell>{line.ast}</StatCell>
-                            <StatCell>{line.stl}</StatCell>
-                            <StatCell>{line.blk}</StatCell>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="flex min-h-64 flex-col items-center justify-center px-6 text-center">
-                    <TableProperties
-                      className="size-7 text-muted-foreground"
-                      aria-hidden="true"
-                    />
-                    <h2 className="mt-3 font-semibold">
-                      {isEn ? "No game records" : "Тоглоны бүртцэ байна"}
-                    </h2>
-                    <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                      {isEn
-                        ? "Detailed stats will appear after verified games."
-                        : "Баталгаажсан тоглолтын дараа дэлгэрэгээ статистик энд нэжиглэнэ."}
-                    </p>
-                  </div>
-                )}
+              <CardContent className="p-0 overflow-x-auto">
+                <table className="w-full text-sm" role="table">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="px-3 py-2.5 font-medium whitespace-nowrap" scope="col">Өдөр</th>
+                      <th className="px-3 py-2.5 font-medium whitespace-nowrap" scope="col">Баг</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">Мин</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">Оноо</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">Ол/Нийт</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">3Ол/Нийт</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">ШОл/Нийт</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">Давсан</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">Олгосон</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">Булаасан</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">Хаасан</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">Алдаа</th>
+                      <th className="px-3 py-2.5 font-medium text-right whitespace-nowrap" scope="col">Зөрчил</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gameLog.map((gl, i) => (
+                      <tr
+                        key={`${gl.game_id}-${i}`}
+                        className="border-b last:border-0"
+                      >
+                        <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap tabular-nums">
+                          {new Date(gl.revision_approved_at).toLocaleDateString("mn-MN", { month: "short", day: "numeric" })}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <Badge variant="outline">{gl.team_short}</Badge>
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
+                          {formatMinutes(gl.seconds_played)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums font-semibold">
+                          {gl.pts}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {gl.fgm}/{gl.fga}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {gl.tpm}/{gl.tpa}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {gl.ftm}/{gl.fta}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {gl.oreb + gl.dreb}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {gl.ast}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {gl.stl}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {gl.blk}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {gl.tov}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
+                          {gl.pf}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </>
+          ) : (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              Тоглолтын мэдээлэл байхгүй байна.
+            </p>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      <div>
+        <Link href="/leaders" className="text-sm text-primary hover:underline">
+          ← Тэргүүлэгчид руу буцах
+        </Link>
+      </div>
+    </main>
   );
 }
 
-function StatHead({ children }: { children: React.ReactNode }) {
+function BioCard({ label, value }: { label: string; value: string }) {
   return (
-    <th className="px-4 py-3 text-right font-medium" scope="col">
-      {children}
-    </th>
-  );
-}
-
-interface StatCellProps {
-  children: React.ReactNode;
-  muted?: boolean;
-  strong?: boolean;
-}
-
-function StatCell({ children, muted = false, strong = false }: StatCellProps) {
-  return (
-    <td
-      className={`px-4 py-3 text-right tabular-nums ${
-        muted ? "text-muted-foreground" : ""
-      } ${strong ? "stat-number" : ""}`}
-    >
-      {children}
-    </td>
+    <Card>
+      <CardContent className="py-4 text-center">
+        <div className="text-lg font-semibold">{value}</div>
+        <div className="text-xs text-muted-foreground mt-1">{label}</div>
+      </CardContent>
+    </Card>
   );
 }

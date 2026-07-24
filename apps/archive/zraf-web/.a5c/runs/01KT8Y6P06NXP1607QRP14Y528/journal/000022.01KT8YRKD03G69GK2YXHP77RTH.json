@@ -1,0 +1,22 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-06-04T09:17:23.232Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KT8YRKBS7FNB4NWF9Q7BCVCB",
+    "invocationKey": "cradle/project-install:S000011:scaffold-new-project",
+    "invocationHash": "113ed06de15a682963a5a2108eed2d6d9da2c02cc6afa729226abe01c5d07396",
+    "stepId": "S000011",
+    "taskId": "scaffold-new-project",
+    "kind": "agent",
+    "label": "agent",
+    "taskDefRef": "tasks/01KT8YRKBS7FNB4NWF9Q7BCVCB/task.json",
+    "labels": [
+      "agent",
+      "cradle",
+      "scaffold",
+      "new-project"
+    ]
+  },
+  "checksum": "7454ae26e5e34b9d2211745645534a8e3d34b2dd40e7570fd78d41e1ca325fd2"
+}

@@ -57,7 +57,9 @@ class _TrainingFormScreenState extends ConsumerState<TrainingFormScreen> {
     _handlerNameController = TextEditingController(
       text: existing?.handlerName ?? '',
     );
-    _weatherController = TextEditingController(text: existing?.weather ?? '');
+    _weatherController = TextEditingController(
+      text: existing?.weather ?? '',
+    );
   }
 
   @override
@@ -93,9 +95,7 @@ class _TrainingFormScreenState extends ConsumerState<TrainingFormScreen> {
     final duration = int.tryParse(_durationController.text) ?? 0;
     final distance = double.tryParse(_distanceController.text);
     final log = TrainingLog(
-      id:
-          widget.existingLog?.id ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+      id: widget.existingLog?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
       horseId: widget.horseId,
       type: _selectedType,
       date: _selectedDate,
@@ -138,9 +138,7 @@ class _TrainingFormScreenState extends ConsumerState<TrainingFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.isEditing ? 'Дасгалжуулалт засах' : 'Дасгалжуулалт нэмэх',
-        ),
+        title: Text(widget.isEditing ? 'Дасгалжуулалт засах' : 'Дасгалжуулалт нэмэх'),
       ),
       body: Form(
         key: _formKey,
@@ -195,9 +193,7 @@ class _TrainingFormScreenState extends ConsumerState<TrainingFormScreen> {
               child: InputDecorator(
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppSpacing.cornerRadius,
-                    ),
+                    borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
                   ),
                   suffixIcon: const Icon(Icons.calendar_today),
                 ),

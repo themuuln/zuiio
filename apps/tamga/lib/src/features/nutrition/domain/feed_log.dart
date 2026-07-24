@@ -146,8 +146,15 @@ class FeedLog {
           notes == other.notes;
 
   @override
-  int get hashCode =>
-      Object.hash(id, scheduleId, horseId, date, amountGiven, skipped, notes);
+  int get hashCode => Object.hash(
+    id,
+    scheduleId,
+    horseId,
+    date,
+    amountGiven,
+    skipped,
+    notes,
+  );
 
   @override
   String toString() =>

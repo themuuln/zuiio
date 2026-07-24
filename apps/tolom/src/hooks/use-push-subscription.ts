@@ -1,7 +1,7 @@
 "use client";
 
-import { capture } from "@zuiio/capture";
 import { useCallback, useEffect, useState } from "react";
+import { capture } from "@zuiio/capture";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -37,8 +37,7 @@ function urlBase64ToBuffer(base64String: string): ArrayBuffer {
 
 export function usePushSubscription(): UsePushSubscriptionReturn {
   const [isSupported, setIsSupported] = useState(false);
-  const [permission, setPermission] =
-    useState<NotificationPermission>("default");
+  const [permission, setPermission] = useState<NotificationPermission>("default");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -123,7 +122,8 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
 
     try {
       const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
+      const subscription =
+        await registration.pushManager.getSubscription();
 
       if (!subscription) {
         setIsSubscribed(false);

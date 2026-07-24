@@ -22,10 +22,7 @@ interface ExpenseDetailViewProps {
 }
 
 export function ExpenseDetailView({ expense }: ExpenseDetailViewProps) {
-  const t = useTranslations("expenses") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("expenses");
   const overdue = isOverdue(expense);
 
   return (

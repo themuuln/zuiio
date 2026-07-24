@@ -91,7 +91,10 @@ class LostHorseFilterNotifier extends StateNotifier<LostHorseFilterState> {
   }
 
   void setAnimalType(AnimalType? value) {
-    state = state.copyWith(animalType: value, clearAnimalType: value == null);
+    state = state.copyWith(
+      animalType: value,
+      clearAnimalType: value == null,
+    );
   }
 
   void setCoatColor(String? value) {
@@ -109,7 +112,9 @@ class LostHorseFilterNotifier extends StateNotifier<LostHorseFilterState> {
 
 /// Provider for filter state.
 final lostHorseFilterProvider =
-    StateNotifierProvider<LostHorseFilterNotifier, LostHorseFilterState>((ref) {
+    StateNotifierProvider<LostHorseFilterNotifier, LostHorseFilterState>((
+      ref,
+    ) {
       return LostHorseFilterNotifier();
     });
 
@@ -144,29 +149,29 @@ const List<String> kAimags = [
 /// based on the current filter state.
 final filteredActiveLostHorsesProvider =
     Provider.autoDispose<AsyncValue<List<LostHorseReport>>>((ref) {
-      final reportsAsync = ref.watch(activeLostHorsesStreamProvider);
-      final filter = ref.watch(lostHorseFilterProvider);
+  final reportsAsync = ref.watch(activeLostHorsesStreamProvider);
+  final filter = ref.watch(lostHorseFilterProvider);
 
-      return reportsAsync.whenData((reports) {
-        var filtered = reports.where((r) {
-          if (filter.aimag != null && r.locationAimag != filter.aimag) {
-            return false;
-          }
-          if (filter.animalType != null && r.animalType != filter.animalType) {
-            return false;
-          }
-          if (filter.coatColor != null && r.coatColor != filter.coatColor) {
-            return false;
-          }
-          if (filter.status != null && r.status != filter.status) {
-            return false;
-          }
-          return true;
-        }).toList();
+  return reportsAsync.whenData((reports) {
+    var filtered = reports.where((r) {
+      if (filter.aimag != null && r.locationAimag != filter.aimag) {
+        return false;
+      }
+      if (filter.animalType != null && r.animalType != filter.animalType) {
+        return false;
+      }
+      if (filter.coatColor != null && r.coatColor != filter.coatColor) {
+        return false;
+      }
+      if (filter.status != null && r.status != filter.status) {
+        return false;
+      }
+      return true;
+    }).toList();
 
-        // Sort by recency (newest first).
-        filtered.sort((a, b) => b.lastSeenAt.compareTo(a.lastSeenAt));
+    // Sort by recency (newest first).
+    filtered.sort((a, b) => b.lastSeenAt.compareTo(a.lastSeenAt));
 
-        return filtered;
-      });
-    });
+    return filtered;
+  });
+});

@@ -1,8 +1,4 @@
-import {
-  keepPreviousData,
-  type UseQueryResult,
-  useQuery,
-} from "@tanstack/react-query";
+import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type { CreateCustomerParams, Customer } from "@/lib/types";
 import { createOrgQuery } from "./factory";
@@ -45,7 +41,6 @@ export function useCustomers(
       });
     },
     enabled: !!orgId,
-    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
@@ -69,7 +64,6 @@ export function useSharedCustomers(
       });
     },
     enabled: !!orgId,
-    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }

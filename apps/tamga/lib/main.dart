@@ -1,13 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:marionette_flutter/marionette_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
@@ -24,7 +21,6 @@ import 'src/core/storage/isar_database.dart';
 import 'src/features/updater/presentation/update_overlay.dart';
 
 import 'src/core/sync/connection_status.dart';
-import 'ui/shadcn/components/control/button/button.dart' as shadcn;
 
 export 'src/app/app.dart';
 
@@ -44,29 +40,9 @@ void main() {
   // crash reporting service руу илгээнэ.
   runZonedGuarded(
     () async {
-      // ── Widget binding — inside the same zone as runApp ──
-      // MarionetteBinding enables AI-driven UI testing via MCP (debug mode only).
-      // Must be the only binding in the process — skip in test runner.
-      if (kDebugMode && !Platform.environment.containsKey('FLUTTER_TEST')) {
-        final logCollector = PrintLogCollector();
-        MarionetteBinding.ensureInitialized(
-          MarionetteConfiguration(
-            // Recognize shadcn custom Button as interactive.
-            isInteractiveWidget: (type) => type == shadcn.Button,
-            // Collect logs for get_logs.
-            logCollector: logCollector,
-          ),
-        );
+      // Must be inside the same zone as runApp to avoid zone mismatch.
+      WidgetsFlutterBinding.ensureInitialized();
 
-        // Tee debugPrint into the log collector so get_logs captures console output.
-        final defaultDebugPrint = debugPrint;
-        debugPrint = (String? message, {int? wrapWidth}) {
-          if (message != null) logCollector.addLog(message);
-          defaultDebugPrint(message, wrapWidth: wrapWidth);
-        };
-      } else {
-        WidgetsFlutterBinding.ensureInitialized();
-      }
       // ── Image cache config ──
       PaintingBinding.instance.imageCache.maximumSize = 500;
       PaintingBinding.instance.imageCache.maximumSizeBytes = 100 * 1024 * 1024;

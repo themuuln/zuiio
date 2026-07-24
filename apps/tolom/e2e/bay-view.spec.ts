@@ -1,37 +1,21 @@
 import type { Page } from "@playwright/test";
+import { mockBayView } from "./mocks";
 import { expect, test } from "./test-extensions";
 
-// Real authenticated session (no REST mocks — bay-view v2/v3 use server actions).
-// Full login + seed is ~2m; keep per-test timeout generous.
-test.setTimeout(90_000);
+// With mocked APIs, tests are fast — no cold starts. 15s is generous.
+test.setTimeout(60_000);
 
 /** Wait for the bay view to finish loading (skeleton replaced with live content) */
 async function waitForBayViewReady(page: Page) {
   await expect(
     page.getByRole("region", { name: /bay \d/i }).first(),
-  ).toBeVisible({ timeout: 30_000 });
+  ).toBeVisible({ timeout: 10_000 });
 }
 
-/** Expand the collapsible toolbar secondary row (status pills + refresh live there) */
-async function expandToolbar(page: Page) {
-  const expandBtn = page.getByRole("button", {
-    name: /expand toolbar/i,
-  });
-  if (await expandBtn.isVisible().catch(() => false)) {
-    await expandBtn.click();
-    await page.waitForTimeout(250);
-  }
-}
-
-test.describe("Bay View", () => {
+test.describe("Bay View (Mocked)", () => {
   test.beforeEach(async ({ page }) => {
-    // The app holds open SSE/polling connections, so the "load" event
-    // never fires reliably — wait only for DOM content, then let
-    // waitForBayViewReady gate on the actual rendered regions.
-    await page.goto("/dashboard/bay-view", {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
+    await mockBayView(page);
+    await page.goto("/dashboard/bay-view");
   });
 
   test.describe("Page Structure", () => {
@@ -40,13 +24,15 @@ test.describe("Bay View", () => {
     }) => {
       await waitForBayViewReady(page);
 
-      // At least one view mode toggle is pressed (grid by default)
+      // At least one view mode toggle should be pressed (grid by default)
       await expect(
         page.locator('button[aria-pressed="true"]').first(),
       ).toBeVisible({ timeout: 5000 });
 
-      // KPI utilization card renders as a button ending in a percentage
-      const kpiButton = page.getByRole("button", { name: /%$/, exact: false });
+      // KPI cards render as buttons with stats
+      const kpiButton = page.getByRole("button", {
+        name: /булангийн ашиглалт/i,
+      });
       await expect(kpiButton).toBeVisible({ timeout: 5000 });
 
       // Bay regions are rendered (occupied or empty)
@@ -55,9 +41,7 @@ test.describe("Bay View", () => {
       ).toBeVisible({ timeout: 5000 });
     });
 
-    test("renders bay regions for occupied and empty bays", async ({
-      page,
-    }) => {
+    test("renders 6 bays — 3 occupied, 3 empty", async ({ page }) => {
       await waitForBayViewReady(page);
 
       // Occupied bays show vehicle plate after bay number
@@ -65,21 +49,21 @@ test.describe("Bay View", () => {
         name: /bay \d+ - .+/i,
       });
       await expect(occupiedBays.first()).toBeVisible({ timeout: 5000 });
-      expect(await occupiedBays.count()).toBeGreaterThanOrEqual(1);
+      expect(await occupiedBays.count()).toBeGreaterThanOrEqual(3);
 
-      // Empty bays are present
+      // Empty bays show "empty"
       const emptyBays = page.getByRole("region", {
         name: /bay \d+ - empty/i,
       });
       await expect(emptyBays.first()).toBeVisible({ timeout: 5000 });
-      expect(await emptyBays.count()).toBeGreaterThanOrEqual(1);
+      expect(await emptyBays.count()).toBeGreaterThanOrEqual(3);
     });
+
     test("shows the search input", async ({ page }) => {
       await waitForBayViewReady(page);
-
-      // Search box is the toolbar textbox (label differs by locale:
-      // "Search plate, make, model..." / "Улсын дугаар...")
-      const searchBox = page.getByRole("textbox").first();
+      const searchBox = page.getByRole("textbox", {
+        name: /Улсын дугаар/i,
+      });
       await expect(searchBox).toBeVisible({ timeout: 5000 });
     });
   });
@@ -88,64 +72,57 @@ test.describe("Bay View", () => {
     test("switches view modes via toggle buttons", async ({ page }) => {
       await waitForBayViewReady(page);
 
-      // The three view toggles (grid/kanban/list) are aria-pressed buttons
-      const toggles = page.locator("button[aria-pressed]");
+      const toggles = page
+        .locator('button[aria-pressed="true"], button:not([aria-pressed])')
+        .filter({ has: page.locator("img, svg") });
+
       await expect(toggles.first()).toBeVisible({ timeout: 5000 });
-      expect(await toggles.count()).toBeGreaterThanOrEqual(2);
+      const count = await toggles.count();
 
-      const initialPressed = await toggles
-        .filter({ hasAttribute: "aria-pressed", hasNotText: "" })
-        .first()
-        .getAttribute("aria-pressed");
-
-      // Click a different toggle and confirm the pressed state moves
-      const others = toggles.filter({
-        hasAttribute: "aria-pressed",
-        hasNotText: "",
-      });
-      const target = others.filter({ hasNotText: initialPressed ?? "x" });
-      if ((await target.count()) > 0) {
-        await target.first().click();
-        await page.waitForTimeout(500);
+      if (count >= 2) {
+        const second = toggles.nth(1);
+        const pressed = await second.getAttribute("aria-pressed");
+        if (pressed !== "true" && pressed !== "") {
+          await second.click();
+          await page.waitForTimeout(800);
+          await expect(
+            page.getByRole("region", { name: /bay \d/i }).first(),
+          ).toBeVisible();
+        }
       }
-
-      // Bay content still renders after switching
-      await expect(
-        page.getByRole("region", { name: /bay \d/i }).first(),
-      ).toBeVisible({ timeout: 5000 });
     });
   });
 
   test.describe("Status Filtering", () => {
     test("shows all filter pills", async ({ page }) => {
       await waitForBayViewReady(page);
-      await expandToolbar(page);
 
-      // Pills render in the toolbar row (locale-agnostic: All/Бүгд,
-      // New/Шинэ). "All" pill is the first status filter.
-      await expect(
-        page.getByRole("button", { name: /^(all|бүгд)$/i, exact: true }),
-      ).toBeVisible({ timeout: 5000 });
+      // These pills render client-side — not API-dependent
+      // Use exact match to avoid "Шинэ" matching "Шинэчлэх" (Refresh)
+      await expect(page.getByRole("button", { name: "Бүгд", exact: true })).toBeVisible({
+        timeout: 5000,
+      });
+      await expect(page.getByRole("button", { name: "Шинэ", exact: true })).toBeVisible({
+        timeout: 5000,
+      });
     });
 
     test("clicking a status pill does not crash the page", async ({ page }) => {
       await waitForBayViewReady(page);
-      await expandToolbar(page);
 
-      const newFilter = page.getByRole("button", {
-        name: /^(new|шинэ)$/i,
-        exact: true,
-      });
+      // Use exact match to avoid matching "Шинэчлэх" (Refresh)
+      const newFilter = page.getByRole("button", { name: "Шинэ", exact: true });
       await expect(newFilter).toBeVisible({ timeout: 5000 });
       await newFilter.click();
       await page.waitForTimeout(500);
 
-      // Page stays functional after filter click
+      // Page should still be functional after filter click
       await expect(
         page.getByRole("region", { name: /bay \d/i }).first(),
       ).toBeVisible({ timeout: 5000 });
     });
   });
+
 
   test.describe("Empty Bays", () => {
     test("empty bay shows add vehicle prompt", async ({ page }) => {
@@ -156,9 +133,29 @@ test.describe("Bay View", () => {
         .first();
       await expect(emptyBay).toBeVisible({ timeout: 5000 });
 
+      // Empty bays show a button with "Click to add vehicle" text
       await expect(
-        emptyBay.getByRole("button", { name: /^bay 0\d/i }),
+        emptyBay.getByRole("button", { name: /click to add/i }),
       ).toBeVisible({ timeout: 5000 });
+    });
+
+    test("opens assign dialog from empty bay", async ({ page }) => {
+      await waitForBayViewReady(page);
+
+      const emptyBay = page
+        .getByRole("region", { name: /bay \d+ - empty/i })
+        .first();
+      await expect(emptyBay).toBeVisible({ timeout: 5000 });
+
+      const addBtn = emptyBay.getByRole("button", {
+        name: /click to add/i,
+      });
+      await expect(addBtn).toBeVisible({ timeout: 5000 });
+      await addBtn.click();
+
+      await expect(page.getByRole("dialog")).toBeVisible({
+        timeout: 10_000,
+      });
     });
   });
 
@@ -167,17 +164,15 @@ test.describe("Bay View", () => {
       page,
     }) => {
       await waitForBayViewReady(page);
-      await expandToolbar(page);
 
-      const refreshBtn = page.getByRole("button", {
-        name: /refresh|шинэчлэх/i,
-      });
+      const refreshBtn = page.getByRole("button", { name: "Шинэчлэх" });
+      await expect(refreshBtn).toBeVisible({ timeout: 5000 });
       await refreshBtn.click();
 
-      // After refresh, bay regions remain visible
+      // After refresh, bay regions should still be visible
       await expect(
         page.getByRole("region", { name: /bay \d/i }).first(),
-      ).toBeVisible({ timeout: 15_000 });
+      ).toBeVisible({ timeout: 10_000 });
     });
   });
 
@@ -187,30 +182,27 @@ test.describe("Bay View", () => {
 
       // Sidebar uses buttons, not links
       await expect(
-        page.getByRole("button", { name: /bay view|засварын булан/i }),
+        page
+          .getByRole("complementary")
+          .getByRole("button", { name: "Засварын булан" }),
       ).toBeVisible({ timeout: 5000 });
     });
   });
 
-  test.describe("Alternative Route (v3)", () => {
+  test.describe("Alternative Route", () => {
     test("navigates to bay-view-v3 route and loads", async ({ page }) => {
+      await mockBayView(page);
       await page.goto("/dashboard/bay-view-v3");
-      // v3 is dynamically imported (ssr:false) — wait for real content, not skeleton
-      await expect(page.getByText("Нийт бэй", { exact: false })).toBeVisible({
-        timeout: 20_000,
-      });
+      await waitForBayViewReady(page);
     });
 
-    test("bay-view-v3 shows KPI strip and filter pills", async ({ page }) => {
+    test("bay-view-v3 shows bay regions with data", async ({ page }) => {
+      await mockBayView(page);
       await page.goto("/dashboard/bay-view-v3");
-      await expect(page.getByText("Нийт бэй", { exact: false })).toBeVisible({
-        timeout: 20_000,
-      });
-
-      // v3 filter pills (mock data) render client-side
-      await expect(page.getByRole("button", { name: /Бүгд/i })).toBeVisible({
-        timeout: 5000,
-      });
+      await waitForBayViewReady(page);
+      await expect(
+        page.getByRole("region", { name: /bay \d/i }).first(),
+      ).toBeVisible({ timeout: 5000 });
     });
   });
 });

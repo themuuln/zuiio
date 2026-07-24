@@ -73,24 +73,15 @@ BreedingAdvice createMockAdvice({
   InbreedingRisk risk = InbreedingRisk.medium,
   int riskScore = 45,
   String healthNotes = 'Test health notes.',
-  List<CoatColorPrediction> coatColorPredictions = const [
-    CoatColorPrediction(color: 'Bay', probability: 50),
-    CoatColorPrediction(color: 'Black', probability: 50),
-  ],
+  List<String> colorPredictions = const ['Bay', 'Black'],
   List<String> breedSuggestions = const ['Good match'],
 }) {
   return BreedingAdvice(
-    compatibilityScore: 50,
     inbreedingRisk: risk,
     riskScore: riskScore,
-    coatColorPredictions: coatColorPredictions,
-    healthRisks: const [],
     healthNotes: healthNotes,
-    breedingWindow: '',
-    overallRecommendation: OverallRecommendation.consultVet,
+    colorPredictions: colorPredictions,
     breedSuggestions: breedSuggestions,
-    mongolianBreedNotes: '',
-    commonAncestors: const [],
   );
 }
 
@@ -175,7 +166,10 @@ void main() {
 
     testWidgets('shows empty state when no horses registered', (tester) async {
       await tester.pumpWidget(
-        createBreedingAdviceScreen(horses: [], repository: mockRepository),
+        createBreedingAdviceScreen(
+          horses: [],
+          repository: mockRepository,
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -187,7 +181,10 @@ void main() {
       final mares = [createMare()];
 
       await tester.pumpWidget(
-        createBreedingAdviceScreen(horses: mares, repository: mockRepository),
+        createBreedingAdviceScreen(
+          horses: mares,
+          repository: mockRepository,
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -231,7 +228,10 @@ void main() {
       final horses = [createStallion(), createMare()];
 
       await tester.pumpWidget(
-        createBreedingAdviceScreen(horses: horses, repository: mockRepository),
+        createBreedingAdviceScreen(
+          horses: horses,
+          repository: mockRepository,
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -248,7 +248,10 @@ void main() {
       final horses = [createStallion(), createMare()];
 
       await tester.pumpWidget(
-        createBreedingAdviceScreen(horses: horses, repository: mockRepository),
+        createBreedingAdviceScreen(
+          horses: horses,
+          repository: mockRepository,
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -271,18 +274,13 @@ void main() {
         risk: InbreedingRisk.low,
         riskScore: 15,
         healthNotes: 'Low risk pair with good genetic diversity.',
-        coatColorPredictions: [
-          CoatColorPrediction(color: 'Bay', probability: 50),
-          CoatColorPrediction(color: 'Chestnut', probability: 50),
-        ],
+        colorPredictions: ['Bay', 'Chestnut'],
         breedSuggestions: ['Excellent match'],
       );
 
-      when(
-        () => mockRepository.getBreedingAdvice(
-          BreedingQuery(sireId: stallion.id, damId: mare.id),
-        ),
-      ).thenAnswer((_) async => Result.ok(advice));
+      when(() => mockRepository.getBreedingAdvice(
+            BreedingQuery(sireId: stallion.id, damId: mare.id),
+          )).thenAnswer((_) async => Result.ok(advice));
 
       await tester.pumpWidget(
         createBreedingAdviceScreen(
@@ -322,11 +320,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify results are displayed
-      verify(
-        () => mockRepository.getBreedingAdvice(
-          BreedingQuery(sireId: stallion.id, damId: mare.id),
-        ),
-      ).called(1);
+      verify(() => mockRepository.getBreedingAdvice(
+            BreedingQuery(sireId: stallion.id, damId: mare.id),
+          )).called(1);
 
       // Check results
       expect(find.text('Цус ойртолтын эрсдэл'), findsOneWidget);

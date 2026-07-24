@@ -13,7 +13,6 @@ import '../../shared/data/isar_schemas/isar_search_area.dart';
 import '../domain/geofence_alert.dart';
 import '../domain/horse_location.dart';
 import '../domain/lost_horse_report.dart';
-import '../domain/pasture_zone.dart';
 import '../domain/search_area.dart';
 import 'map_repository.dart';
 
@@ -105,7 +104,8 @@ class LocalMapRepository implements MapRepository {
                 : null;
           }
           if (fields.containsKey('renewal_requested')) {
-            existing.renewalRequested = fields['renewal_requested'] as bool;
+            existing.renewalRequested =
+                fields['renewal_requested'] as bool;
           }
           existing.updatedAt = DateTime.now();
           await _storage.lostHorseReports.put(existing);
@@ -419,35 +419,4 @@ class LocalMapRepository implements MapRepository {
   }
 
   double _deg2rad(double deg) => deg * pi / 180;
-
-  // ── Pasture Zones ──────────────────────────────────────────────
-
-  @override
-  Future<Result<List<PastureZone>>> getPastureZones(String userId) async {
-    // Pasture zones are Supabase-backed; return empty for offline.
-    return const Result.ok([]);
-  }
-
-  @override
-  Future<Result<PastureZone>> savePastureZone(PastureZone zone) async {
-    return Result.ok(zone);
-  }
-
-  @override
-  Future<Result<void>> deletePastureZone(String zoneId) async {
-    return const Result.ok(null);
-  }
-
-  @override
-  Future<Result<void>> assignHorseToZone(String zoneId, String horseId) async {
-    return const Result.ok(null);
-  }
-
-  @override
-  Future<Result<void>> unassignHorseFromZone(
-    String zoneId,
-    String horseId,
-  ) async {
-    return const Result.ok(null);
-  }
 }

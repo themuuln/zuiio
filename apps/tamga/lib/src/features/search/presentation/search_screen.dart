@@ -236,3 +236,5 @@ class _EventResultTile extends StatelessWidget {
     );
   }
 }
+
+

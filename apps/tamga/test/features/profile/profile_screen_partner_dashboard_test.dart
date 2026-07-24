@@ -152,7 +152,9 @@ class _PartnerDashboardTestScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: Text('PARTNER_DASHBOARD_LOADED')),
+      body: Center(
+        child: Text('PARTNER_DASHBOARD_LOADED'),
+      ),
     );
   }
 }
@@ -169,7 +171,9 @@ void main() {
         ProviderScope(
           overrides: [
             authRepositoryProvider.overrideWithValue(mockAuthRepo),
-            localEventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            localEventRepositoryProvider.overrideWith(
+              (ref) => mockEventRepo,
+            ),
             horsesProvider.overrideWith((ref) => <HorseRecord>[]),
           ],
           child: MaterialApp(
@@ -195,69 +199,68 @@ void main() {
 
       // Verify the "Түншийн самбар" ListTile is present
       expect(find.text('Түншийн самбар'), findsOneWidget);
-      expect(
-        find.text('Арга хэмжээ удирдах / Partner Dashboard'),
-        findsOneWidget,
-      );
+      expect(find.text('Арга хэмжээ удирдах / Partner Dashboard'), findsOneWidget);
       expect(find.byIcon(Icons.dashboard_outlined), findsOneWidget);
     });
 
     testWidgets(
-      'tapping "Түншийн самбар" navigates to PartnerDashboardScreen',
-      (tester) async {
-        final goRouter = GoRouter(
-          initialLocation: '/profile',
-          routes: [
-            GoRoute(
-              path: '/profile',
-              builder: (ctx, state) => const ProfileScreen(),
-              routes: [
-                GoRoute(
-                  path: 'partner-dashboard',
-                  builder: (ctx, state) => const _PartnerDashboardTestScreen(),
-                ),
-              ],
-            ),
-          ],
-        );
-
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              authRepositoryProvider.overrideWithValue(mockAuthRepo),
-              localEventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-              horsesProvider.overrideWith((ref) => <HorseRecord>[]),
+        'tapping "Түншийн самбар" navigates to PartnerDashboardScreen', (
+      tester,
+    ) async {
+      final goRouter = GoRouter(
+        initialLocation: '/profile',
+        routes: [
+          GoRoute(
+            path: '/profile',
+            builder: (ctx, state) => const ProfileScreen(),
+            routes: [
+              GoRoute(
+                path: 'partner-dashboard',
+                builder: (ctx, state) => const _PartnerDashboardTestScreen(),
+              ),
             ],
-            child: MaterialApp.router(
-              theme: AppTheme.light(),
-              routerConfig: goRouter,
-            ),
           ),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
-        await tester.pump(const Duration(milliseconds: 100));
+        ],
+      );
 
-        // Navigate to Settings tab
-        await tester.tap(find.text('Тохиргоо'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(mockAuthRepo),
+            localEventRepositoryProvider.overrideWith(
+              (ref) => mockEventRepo,
+            ),
+            horsesProvider.overrideWith((ref) => <HorseRecord>[]),
+          ],
+          child: MaterialApp.router(
+            theme: AppTheme.light(),
+            routerConfig: goRouter,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
 
-        // Scroll down
-        await tester.drag(find.byType(ListView).last, const Offset(0, -600));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+      // Navigate to Settings tab
+      await tester.tap(find.text('Тохиргоо'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-        // Tap "Түншийн самбар"
-        await tester.tap(find.text('Түншийн самбар').last);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-        await tester.pump(const Duration(milliseconds: 300));
+      // Scroll down
+      await tester.drag(find.byType(ListView).last, const Offset(0, -600));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-        // Verify navigation to PartnerDashboardScreen occurred
-        // by checking for a unique text in the destination screen
-        expect(find.text('PARTNER_DASHBOARD_LOADED'), findsOneWidget);
-      },
-    );
+      // Tap "Түншийн самбар" 
+      await tester.tap(find.text('Түншийн самбар').last);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Verify navigation to PartnerDashboardScreen occurred
+      // by checking for a unique text in the destination screen
+      expect(find.text('PARTNER_DASHBOARD_LOADED'), findsOneWidget);
+    });
   });
 }

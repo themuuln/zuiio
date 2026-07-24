@@ -83,10 +83,7 @@ function getCustomerLabel(customer: Customer, t?: (key: string) => string) {
 }
 
 function NewVehicleForm() {
-  const t = useTranslations("vehicles") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("vehicles");
   const { replace } = useRouter();
   const { setDetailVehicleId } = usePageHeader();
   const searchParams = useSearchParams();

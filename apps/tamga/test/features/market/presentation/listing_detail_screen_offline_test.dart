@@ -95,13 +95,18 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Verify offline snackbar is shown
-      expect(find.text('Энэ үйлдэл интернэт холболт шаарддаг'), findsOneWidget);
+      expect(
+        find.text('Энэ үйлдэл интернэт холболт шаарддаг'),
+        findsOneWidget,
+      );
 
       // Verify the online action was NOT called
       expect(onlineActionCalled, 0);
     });
 
-    testWidgets('calls online action when online', (WidgetTester tester) async {
+    testWidgets('calls online action when online', (
+      WidgetTester tester,
+    ) async {
       when(() => mockMonitor.current).thenReturn(ConnectionStatus.online);
 
       int onlineActionCalled = 0;
@@ -129,7 +134,10 @@ void main() {
       expect(onlineActionCalled, 1);
 
       // No offline snackbar
-      expect(find.text('Энэ үйлдэл интернэт холболт шаарддаг'), findsNothing);
+      expect(
+        find.text('Энэ үйлдэл интернэт холболт шаарддаг'),
+        findsNothing,
+      );
     });
   });
 

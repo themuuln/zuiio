@@ -8,7 +8,11 @@ void main() {
   group('GenderPieChart', () {
     testWidgets('renders loading state', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: GenderPieChart.loading())),
+        const MaterialApp(
+          home: Scaffold(
+            body: GenderPieChart.loading(),
+          ),
+        ),
       );
 
       expect(find.text('Хүйсний мэдээлэл ачааллаж байна...'), findsOneWidget);
@@ -18,7 +22,9 @@ void main() {
     testWidgets('renders empty state', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: GenderPieChart(genderSplit: {})),
+          home: Scaffold(
+            body: GenderPieChart(genderSplit: {}),
+          ),
         ),
       );
 

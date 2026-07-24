@@ -333,42 +333,37 @@ void main() {
     // ════════════════════════════════════════════════════════════
     // VAL-RACE-013: LocalRaceEntryRepository stores in Isar and enqueues
     // ════════════════════════════════════════════════════════════
-    test(
-      'offline-first: data persists in Isar and SyncQueue has pending item',
-      () async {
-        final regResult = await repository.register(
-          raceId: 'race-1',
-          horseId: 'horse-offline',
-          ownerId: 'user-1',
-          jockeyName: 'Офлайн морьтон',
-        );
+    test('offline-first: data persists in Isar and SyncQueue has pending item',
+        () async {
+      final regResult = await repository.register(
+        raceId: 'race-1',
+        horseId: 'horse-offline',
+        ownerId: 'user-1',
+        jockeyName: 'Офлайн морьтон',
+      );
 
-        expect(
-          regResult.isSuccess,
-          true,
-          reason: 'Local register should succeed even when offline',
-        );
-        final entryId = regResult.value.id;
+      expect(regResult.isSuccess, true,
+          reason: 'Local register should succeed even when offline');
+      final entryId = regResult.value.id;
 
-        // Verify in Isar
-        final fetched = await repository.fetchByRace('race-1');
-        expect(fetched.isSuccess, true);
-        final saved = fetched.value.where((e) => e.id == entryId).toList();
-        expect(saved.length, 1);
-        expect(saved.first.jockeyName, 'Офлайн морьтон');
-        expect(saved.first.status, RaceEntryStatus.registered);
+      // Verify in Isar
+      final fetched = await repository.fetchByRace('race-1');
+      expect(fetched.isSuccess, true);
+      final saved = fetched.value.where((e) => e.id == entryId).toList();
+      expect(saved.length, 1);
+      expect(saved.first.jockeyName, 'Офлайн морьтон');
+      expect(saved.first.status, RaceEntryStatus.registered);
 
-        // Verify SyncQueue
-        expect(syncQueue.pendingCount, greaterThanOrEqualTo(1));
-        // Find our item (may not be the first since we created other entries)
-        final pendingItems = syncQueue
-            .toList()
-            .where((item) => item.entityId == entryId)
-            .toList();
-        expect(pendingItems.length, 1);
-        expect(pendingItems.first.entityType, 'race_entry');
-        expect(pendingItems.first.action, SyncAction.create);
-      },
-    );
+      // Verify SyncQueue
+      expect(syncQueue.pendingCount, greaterThanOrEqualTo(1));
+      // Find our item (may not be the first since we created other entries)
+      final pendingItems = syncQueue
+          .toList()
+          .where((item) => item.entityId == entryId)
+          .toList();
+      expect(pendingItems.length, 1);
+      expect(pendingItems.first.entityType, 'race_entry');
+      expect(pendingItems.first.action, SyncAction.create);
+    });
   });
 }

@@ -45,7 +45,10 @@ enum TeamRole {
       TeamPermission.viewTraining,
       TeamPermission.manageTraining,
     ],
-    TeamRole.viewer => [TeamPermission.viewHealth, TeamPermission.viewTraining],
+    TeamRole.viewer => [
+      TeamPermission.viewHealth,
+      TeamPermission.viewTraining,
+    ],
   };
 }
 
@@ -156,8 +159,7 @@ class TeamMember {
       teamId: json['teamId'] as String,
       userId: json['userId'] as String,
       role: TeamRole.values.byName(json['role'] as String),
-      permissions:
-          (json['permissions'] as List<dynamic>?)
+      permissions: (json['permissions'] as List<dynamic>?)
               ?.map((e) => TeamPermission.values.byName(e as String))
               .toList() ??
           [],
@@ -188,8 +190,7 @@ class TeamMember {
       teamId: json['team_id'] as String,
       userId: json['user_id'] as String,
       role: TeamRole.values.byName(json['role'] as String),
-      permissions:
-          (json['permissions'] as List<dynamic>?)
+      permissions: (json['permissions'] as List<dynamic>?)
               ?.map((e) => TeamPermission.values.byName(e as String))
               .toList() ??
           [],

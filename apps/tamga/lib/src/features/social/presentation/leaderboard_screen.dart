@@ -21,7 +21,9 @@ class LeaderboardScreen extends ConsumerWidget {
     final selectedTimePeriod = ref.watch(leaderboardTimePeriodProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Үржүүлэгчийн чансаа')),
+      appBar: AppBar(
+        title: const Text('Үржүүлэгчийн чансаа'),
+      ),
       body: Column(
         children: [
           // ── Шүүлтүүрүүд ──
@@ -121,7 +123,9 @@ class _FilterSection extends StatelessWidget {
                     return Container(
                       height: 40,
                       decoration: BoxDecoration(
-                        border: Border.all(color: theme.colorScheme.outline),
+                        border: Border.all(
+                          color: theme.colorScheme.outline,
+                        ),
                         borderRadius: BorderRadius.circular(
                           AppSpacing.cornerRadiusSmall,
                         ),
@@ -150,9 +154,7 @@ class _FilterSection extends StatelessWidget {
                   },
                   loading: () => const SizedBox(
                     height: 40,
-                    child: Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                   ),
                   error: (_, _) => const SizedBox(
                     height: 40,
@@ -224,7 +226,10 @@ class _LeaderboardRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Чансааны дугаар ──
-            SizedBox(width: 36, child: _buildRankBadge(theme)),
+            SizedBox(
+              width: 36,
+              child: _buildRankBadge(theme),
+            ),
             const SizedBox(width: AppSpacing.md),
 
             // ── Үржүүлэгчийн мэдээлэл ──

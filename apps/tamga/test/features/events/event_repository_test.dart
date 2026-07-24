@@ -208,118 +208,103 @@ void main() {
     // VAL-EVENTS-034: Network failure — data preservation + sync
     // ══════════════════════════════════════════════════════════════
     test(
-      'network failure simulation: event persists locally and SyncQueue has pending item',
-      () async {
-        // This test validates the offline-first resilience pattern:
-        // LocalEventRepository always saves to Isar first and enqueues
-        // to SyncQueue. Even if cloud sync fails later, the data
-        // remains safe in Isar and the SyncQueue item stays pending.
+        'network failure simulation: event persists locally and SyncQueue has pending item',
+        () async {
+      // This test validates the offline-first resilience pattern:
+      // LocalEventRepository always saves to Isar first and enqueues
+      // to SyncQueue. Even if cloud sync fails later, the data
+      // remains safe in Isar and the SyncQueue item stays pending.
 
-        final event = Event(
-          id: 'evt-net-1',
-          horseId: 'h1',
-          title: 'Сүлжээний алдаа',
-          eventType: EventType.race,
-          date: DateTime(2026, 7, 11),
-          location: 'Тест байршил',
-          organizerName: 'Тест зохион байгуулагч',
-          organizerPhone: '99119911',
-          isFeatured: false,
-          registrationEnabled: true,
-          notes: 'Сүлжээ тасарсан үед хадгалах тест',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+      final event = Event(
+        id: 'evt-net-1',
+        horseId: 'h1',
+        title: 'Сүлжээний алдаа',
+        eventType: EventType.race,
+        date: DateTime(2026, 7, 11),
+        location: 'Тест байршил',
+        organizerName: 'Тест зохион байгуулагч',
+        organizerPhone: '99119911',
+        isFeatured: false,
+        registrationEnabled: true,
+        notes: 'Сүлжээ тасарсан үед хадгалах тест',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
-        // Step 1: Save the event — always succeeds locally
-        final result = await repository.saveEvent(event);
-        expect(
-          result.isSuccess,
-          true,
-          reason: 'Local save should succeed even when offline',
-        );
-        expect(result.value.id, 'evt-net-1');
-        expect(result.value.title, 'Сүлжээний алдаа');
+      // Step 1: Save the event — always succeeds locally
+      final result = await repository.saveEvent(event);
+      expect(result.isSuccess, true,
+          reason: 'Local save should succeed even when offline');
+      expect(result.value.id, 'evt-net-1');
+      expect(result.value.title, 'Сүлжээний алдаа');
 
-        // Step 2: Verify event persists in Isar (data preserved locally)
-        final fetch = await repository.fetchEvents();
-        expect(fetch.isSuccess, true);
-        final savedEvents = fetch.value
-            .where((e) => e.id == 'evt-net-1')
-            .toList();
-        expect(
-          savedEvents.length,
-          1,
-          reason: 'Event must be readable from Isar after save',
-        );
+      // Step 2: Verify event persists in Isar (data preserved locally)
+      final fetch = await repository.fetchEvents();
+      expect(fetch.isSuccess, true);
+      final savedEvents =
+          fetch.value.where((e) => e.id == 'evt-net-1').toList();
+      expect(savedEvents.length, 1,
+          reason: 'Event must be readable from Isar after save');
 
-        final saved = savedEvents.first;
-        expect(saved.title, 'Сүлжээний алдаа');
-        expect(saved.location, 'Тест байршил');
-        expect(saved.organizerName, 'Тест зохион байгуулагч');
-        expect(saved.organizerPhone, '99119911');
-        expect(saved.eventType, EventType.race);
-        expect(saved.isFeatured, false);
-        expect(saved.registrationEnabled, true);
-        expect(saved.notes, 'Сүлжээ тасарсан үед хадгалах тест');
+      final saved = savedEvents.first;
+      expect(saved.title, 'Сүлжээний алдаа');
+      expect(saved.location, 'Тест байршил');
+      expect(saved.organizerName, 'Тест зохион байгуулагч');
+      expect(saved.organizerPhone, '99119911');
+      expect(saved.eventType, EventType.race);
+      expect(saved.isFeatured, false);
+      expect(saved.registrationEnabled, true);
+      expect(saved.notes, 'Сүлжээ тасарсан үед хадгалах тест');
 
-        // Step 3: Verify SyncQueue has a pending item for later cloud sync
-        expect(
-          syncQueue.pendingCount,
-          greaterThanOrEqualTo(1),
-          reason: 'SyncQueue must have a pending item',
-        );
+      // Step 3: Verify SyncQueue has a pending item for later cloud sync
+      expect(syncQueue.pendingCount, greaterThanOrEqualTo(1),
+          reason: 'SyncQueue must have a pending item');
 
-        final pendingItem = syncQueue.peek()!;
-        expect(pendingItem.entityType, 'event');
-        expect(pendingItem.entityId, 'evt-net-1');
-        expect(pendingItem.action, SyncAction.create);
-        expect(
-          pendingItem.status,
-          SyncItemStatus.pending,
-          reason: 'SyncQueue item should be pending until synced',
-        );
+      final pendingItem = syncQueue.peek()!;
+      expect(pendingItem.entityType, 'event');
+      expect(pendingItem.entityId, 'evt-net-1');
+      expect(pendingItem.action, SyncAction.create);
+      expect(pendingItem.status, SyncItemStatus.pending,
+          reason: 'SyncQueue item should be pending until synced');
 
-        // Step 4: Verify the SyncQueue item data matches the event
-        expect(pendingItem.data['title'], 'Сүлжээний алдаа');
-        expect(pendingItem.data['location'], 'Тест байршил');
-        expect(pendingItem.data['eventType'], 'race');
-      },
-    );
+      // Step 4: Verify the SyncQueue item data matches the event
+      expect(pendingItem.data['title'], 'Сүлжээний алдаа');
+      expect(pendingItem.data['location'], 'Тест байршил');
+      expect(pendingItem.data['eventType'], 'race');
+    });
 
     test(
-      'fetchFeaturedEvents returns only featured events after offline save',
-      () async {
-        final featuredEvent = Event(
-          id: 'evt-feat-1',
-          horseId: 'h1',
-          title: 'Онцлох үйл явдал',
-          eventType: EventType.auction,
-          date: DateTime(2026, 8, 1),
-          isFeatured: true,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        final nonFeaturedEvent = Event(
-          id: 'evt-nonfeat-1',
-          horseId: 'h1',
-          title: 'Энгийн үйл явдал',
-          eventType: EventType.training,
-          date: DateTime(2026, 8, 15),
-          isFeatured: false,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+        'fetchFeaturedEvents returns only featured events after offline save',
+        () async {
+      final featuredEvent = Event(
+        id: 'evt-feat-1',
+        horseId: 'h1',
+        title: 'Онцлох үйл явдал',
+        eventType: EventType.auction,
+        date: DateTime(2026, 8, 1),
+        isFeatured: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      final nonFeaturedEvent = Event(
+        id: 'evt-nonfeat-1',
+        horseId: 'h1',
+        title: 'Энгийн үйл явдал',
+        eventType: EventType.training,
+        date: DateTime(2026, 8, 15),
+        isFeatured: false,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
-        await repository.saveEvent(featuredEvent);
-        await repository.saveEvent(nonFeaturedEvent);
+      await repository.saveEvent(featuredEvent);
+      await repository.saveEvent(nonFeaturedEvent);
 
-        final featured = await repository.fetchFeaturedEvents();
-        expect(featured.isSuccess, true);
-        expect(featured.value.length, 1);
-        expect(featured.value.first.id, 'evt-feat-1');
-        expect(featured.value.first.title, 'Онцлох үйл явдал');
-      },
-    );
+      final featured = await repository.fetchFeaturedEvents();
+      expect(featured.isSuccess, true);
+      expect(featured.value.length, 1);
+      expect(featured.value.first.id, 'evt-feat-1');
+      expect(featured.value.first.title, 'Онцлох үйл явдал');
+    });
   });
 }

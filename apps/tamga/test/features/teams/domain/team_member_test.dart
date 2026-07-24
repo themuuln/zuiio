@@ -125,24 +125,21 @@ void main() {
       expect(member.permissions, isEmpty);
     });
 
-    test(
-      'effectivePermissions returns role defaults when permissions empty',
-      () {
-        final now = DateTime(2026, 6, 18);
-        final member = TeamMember(
-          id: 'member-1',
-          teamId: 'team-1',
-          userId: 'user-1',
-          role: TeamRole.vet,
-          joinedAt: now,
-        );
+    test('effectivePermissions returns role defaults when permissions empty', () {
+      final now = DateTime(2026, 6, 18);
+      final member = TeamMember(
+        id: 'member-1',
+        teamId: 'team-1',
+        userId: 'user-1',
+        role: TeamRole.vet,
+        joinedAt: now,
+      );
 
-        final effective = member.effectivePermissions;
-        expect(effective, TeamRole.vet.defaultPermissions);
-        expect(effective, contains(TeamPermission.viewHealth));
-        expect(effective, contains(TeamPermission.manageHealth));
-      },
-    );
+      final effective = member.effectivePermissions;
+      expect(effective, TeamRole.vet.defaultPermissions);
+      expect(effective, contains(TeamPermission.viewHealth));
+      expect(effective, contains(TeamPermission.manageHealth));
+    });
 
     test('effectivePermissions returns custom permissions when set', () {
       final now = DateTime(2026, 6, 18);
@@ -156,10 +153,7 @@ void main() {
       );
 
       final effective = member.effectivePermissions;
-      expect(effective, [
-        TeamPermission.manageHorses,
-        TeamPermission.viewHealth,
-      ]);
+      expect(effective, [TeamPermission.manageHorses, TeamPermission.viewHealth]);
     });
 
     test('hasPermission checks effective permissions', () {
@@ -242,10 +236,7 @@ void main() {
         teamId: 'team-1',
         userId: 'user-1',
         role: TeamRole.manager,
-        permissions: [
-          TeamPermission.inviteMembers,
-          TeamPermission.manageHorses,
-        ],
+        permissions: [TeamPermission.inviteMembers, TeamPermission.manageHorses],
         joinedAt: now,
       );
 

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:tamga/src/shared/domain/horse.dart' show Horse, HorseGender;
+import 'package:tamga/src/shared/domain/horse.dart'
+    show Horse, HorseGender;
 import 'package:tamga/src/features/analytics/domain/herd_analytics.dart';
 
 void main() {
@@ -142,12 +143,8 @@ void main() {
       final analytics = HerdAnalytics.empty;
       expect(analytics.totalHorses, 0);
       expect(analytics.ageDistribution, []);
-      expect(analytics.genderSplit, {
-        HorseGender.stallion: 0,
-        HorseGender.mare: 0,
-        HorseGender.gelding: 0,
-        HorseGender.foal: 0,
-      });
+      expect(analytics.genderSplit,
+          {HorseGender.stallion: 0, HorseGender.mare: 0, HorseGender.gelding: 0, HorseGender.foal: 0});
       expect(analytics.breedBreakdown, {});
     });
   });

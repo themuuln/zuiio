@@ -46,10 +46,7 @@ export function AppearanceCustomization({
   preview,
   savedBrandColor,
 }: AppearanceCustomizationProps) {
-  const t = useTranslations("settings") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("settings");
   return (
     <SettingsBlock>
       <Field>

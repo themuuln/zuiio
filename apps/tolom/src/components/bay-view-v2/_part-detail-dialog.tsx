@@ -26,10 +26,7 @@ export function PartDetailDialog({
   part,
   entry,
 }: PartDetailDialogProps) {
-  const t = useTranslations("bayView") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("bayView");
 
   if (!part || !entry) return null;
 

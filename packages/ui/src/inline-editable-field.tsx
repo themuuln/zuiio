@@ -105,35 +105,27 @@ export function InlineEditableField({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const raw = e.target.value;
       const num = parseInput ? parseInput(raw) : Number(raw);
-      const selStart = e.target.selectionStart ?? 0;
 
       if (formatDisplay && !Number.isNaN(num)) {
         // Reformat so commas/₮ stay visible during editing.
         const formatted = formatDisplay(num);
-
-        // If cursor was at the end of the raw input, keep it at the end
-        // after formatting (e.g. typing "400k" → "₮ 400,000" keeps cursor after "000").
-        if (selStart >= raw.length) {
-          cursorRef.current = formatted.length;
-        } else {
-          // Mid-string edit: map cursor by digit count — preserves position when commas shift.
-          const rawBeforeCursor = raw.slice(0, selStart);
-          const digitsBefore = (rawBeforeCursor.match(/\d/g) || []).length;
-          let pos = 0;
-          let count = 0;
-          for (let i = 0; i < formatted.length; i++) {
-            if (/\d/.test(formatted[i])) {
-              count++;
-              if (count > digitsBefore) {
-                pos = i;
-                break;
-              }
+        // Map cursor by digit count — preserves position when commas shift.
+        const rawBeforeCursor = raw.slice(0, e.target.selectionStart ?? 0);
+        const digitsBefore = (rawBeforeCursor.match(/\d/g) || []).length;
+        let pos = 0;
+        let count = 0;
+        for (let i = 0; i < formatted.length; i++) {
+          if (/\d/.test(formatted[i])) {
+            count++;
+            if (count > digitsBefore) {
+              pos = i;
+              break;
             }
-            pos = i + 1;
           }
-          if (count <= digitsBefore) pos = formatted.length;
-          cursorRef.current = pos;
+          pos = i + 1;
         }
+        if (count <= digitsBefore) pos = formatted.length;
+        cursorRef.current = pos;
         setEditText(formatted);
       } else {
         setEditText(raw);

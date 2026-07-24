@@ -115,7 +115,9 @@ class _RaceDetailScreenState extends ConsumerState<RaceDetailScreen> {
   /// Уралдаан засах хуудас руу шилжих.
   Future<void> _editRace(Race race) async {
     final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => RaceFormScreen(initialRace: race)),
+      MaterialPageRoute(
+        builder: (_) => RaceFormScreen(initialRace: race),
+      ),
     );
     if (result == true && context.mounted) {
       ref.invalidate(raceDetailProvider(widget.raceId));
@@ -125,14 +127,15 @@ class _RaceDetailScreenState extends ConsumerState<RaceDetailScreen> {
 
   /// Үр дүн засах хуудас руу шилжих.
   Future<void> _editResults(Race race, List<RaceEntry> entries) async {
-    final activeEntries = entries
-        .where((e) => e.status != RaceEntryStatus.scratched)
-        .toList();
+    final activeEntries =
+        entries.where((e) => e.status != RaceEntryStatus.scratched).toList();
 
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) =>
-            RaceResultsEditorScreen(race: race, entries: activeEntries),
+        builder: (_) => RaceResultsEditorScreen(
+          race: race,
+          entries: activeEntries,
+        ),
       ),
     );
     if (result == true && context.mounted) {
@@ -162,7 +165,10 @@ class _RaceDetailScreenState extends ConsumerState<RaceDetailScreen> {
       ),
       data: (race) => Scaffold(
         appBar: AppBar(
-          title: Text(race.name, style: const TextStyle(fontSize: 18)),
+          title: Text(
+            race.name,
+            style: const TextStyle(fontSize: 18),
+          ),
           actions: [
             // ── Organizer: edit race button ──
             if (race.organizerId == userId &&
@@ -192,7 +198,8 @@ class _RaceDetailScreenState extends ConsumerState<RaceDetailScreen> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, stack) => TamgaErrorWidget(
             message: 'Бүртгэлүүдийг ачаалахад алдаа гарлаа',
-            onRetry: () => ref.invalidate(raceEntriesProvider(widget.raceId)),
+            onRetry: () =>
+                ref.invalidate(raceEntriesProvider(widget.raceId)),
           ),
           data: (entries) => _RaceDetailContent(
             race: race,
@@ -225,15 +232,15 @@ class _RaceDetailContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final activeEntries = entries
-        .where((e) => e.status != RaceEntryStatus.scratched)
-        .toList();
+    final activeEntries =
+        entries.where((e) => e.status != RaceEntryStatus.scratched).toList();
     final isUpcoming =
         race.status == RaceStatus.upcoming || race.status == RaceStatus.ongoing;
     final isCompleted = race.status == RaceStatus.completed;
-    final isFull =
-        race.hasMaxEntries && activeEntries.length >= race.maxEntries!;
-    final canRegister = isUpcoming && !isFull && userId.isNotEmpty;
+    final isFull = race.hasMaxEntries &&
+        activeEntries.length >= race.maxEntries!;
+    final canRegister =
+        isUpcoming && !isFull && userId.isNotEmpty;
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -244,8 +251,12 @@ class _RaceDetailContent extends StatelessWidget {
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: canRegister ? onRegister : null,
-              icon: Icon(isFull ? Icons.lock_outline : Icons.add),
-              label: Text(isFull ? 'Бүртгэл дууссан' : 'Морь бүртгүүлэх'),
+              icon: Icon(
+                isFull ? Icons.lock_outline : Icons.add,
+              ),
+              label: Text(
+                isFull ? 'Бүртгэл дууссан' : 'Морь бүртгүүлэх',
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -273,12 +284,16 @@ class _RaceDetailContent extends StatelessWidget {
                 children: [
                   Text(
                     'Тодорхойлолт',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(race.description!, style: theme.textTheme.bodyMedium),
+                  Text(
+                    race.description!,
+                    style: theme.textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
@@ -339,7 +354,9 @@ class _HorseSelectionSheet extends StatelessWidget {
             if (horses.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                child: Center(child: Text('Бүртгүүлэх боломжтой морь байхгүй')),
+                child: Center(
+                  child: Text('Бүртгүүлэх боломжтой морь байхгүй'),
+                ),
               )
             else
               Flexible(
@@ -350,7 +367,8 @@ class _HorseSelectionSheet extends StatelessWidget {
                     final horse = horses[i];
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: theme.colorScheme.primaryContainer,
+                        backgroundColor:
+                            theme.colorScheme.primaryContainer,
                         child: Text(
                           horse.name.isNotEmpty
                               ? horse.name[0].toUpperCase()
@@ -362,7 +380,9 @@ class _HorseSelectionSheet extends StatelessWidget {
                         ),
                       ),
                       title: Text(horse.name),
-                      subtitle: Text('${horse.birthYear} · ${horse.coat}'),
+                      subtitle: Text(
+                        '${horse.birthYear} · ${horse.coat}',
+                      ),
                       trailing: const Icon(Icons.add_circle_outline),
                       onTap: () => Navigator.of(context).pop(horse),
                     );
@@ -408,9 +428,8 @@ class _JockeyNameDialogState extends State<_JockeyNameDialog> {
             hintText: 'Морьтон хүний нэр',
             border: OutlineInputBorder(),
           ),
-          validator: (v) => (v == null || v.trim().isEmpty)
-              ? 'Морьтон нэр шаардлагатай'
-              : null,
+          validator: (v) =>
+              (v == null || v.trim().isEmpty) ? 'Морьтон нэр шаардлагатай' : null,
           onFieldSubmitted: (_) => _submit(),
         ),
       ),
@@ -419,7 +438,10 @@ class _JockeyNameDialogState extends State<_JockeyNameDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Цуцлах'),
         ),
-        FilledButton(onPressed: _submit, child: const Text('Бүртгүүлэх')),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('Бүртгүүлэх'),
+        ),
       ],
     );
   }
@@ -555,7 +577,11 @@ class _PrizeDistributionCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.emoji_events, size: 18, color: colorScheme.primary),
+                Icon(
+                  Icons.emoji_events,
+                  size: 18,
+                  color: colorScheme.primary,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Шагналын хуваарилалт',
@@ -571,9 +597,7 @@ class _PrizeDistributionCard extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: colorScheme.tertiaryContainer.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(
-                  AppSpacing.cornerRadiusSmall,
-                ),
+                borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusSmall),
               ),
               child: Text(
                 race.prizeDistribution!,
@@ -648,7 +672,9 @@ class _RegisteredHorsesSection extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.lg,
+                  ),
                   child: Text(
                     'Бүртгэл байхгүй байна',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -660,7 +686,10 @@ class _RegisteredHorsesSection extends StatelessWidget {
             ] else ...[
               const SizedBox(height: AppSpacing.md),
               ...entries.map(
-                (entry) => _EntryTile(entry: entry, isCompleted: isCompleted),
+                (entry) => _EntryTile(
+                  entry: entry,
+                  isCompleted: isCompleted,
+                ),
               ),
             ],
           ],
@@ -739,7 +768,8 @@ class _EntryTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (entry.jockeyName != null && entry.jockeyName!.isNotEmpty)
+                if (entry.jockeyName != null &&
+                    entry.jockeyName!.isNotEmpty)
                   Text(
                     'Морьтон: ${entry.jockeyName}',
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -826,7 +856,12 @@ class _InfoRow extends StatelessWidget {
             color: colorScheme.onSurfaceVariant,
           ),
         ),
-        Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
+        Expanded(
+          child: Text(
+            value,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
       ],
     );
   }
@@ -873,7 +908,11 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         status.displayName,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: fg),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: fg,
+        ),
       ),
     );
   }

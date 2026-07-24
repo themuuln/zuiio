@@ -1,26 +1,23 @@
-import type { Metadata } from "next";
+import { capture } from "@zuiio/capture";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getPublicCatalog, getPublicCategories } from "@/lib/public-catalog";
 import { createClient } from "@/lib/supabase/server";
 import { ProductsPageClient } from "./products-page-client";
 
-// Types for client components — private fields optional for public catalog
 export type PublicProduct = {
   id: string;
   name: string;
+  sku: string | null;
+  barcode: string | null;
   unit: string | null;
   sale_price: number | null;
+  current_stock: number | null;
+  min_stock: number | null;
   category_name: string | null;
   category_id: string | null;
   image_url: string | null;
   description: string | null;
   attribute_count: number;
-  // These may be present for internal use but absent from public catalog
-  sku?: string | null;
-  barcode?: string | null;
-  current_stock?: number | null;
-  min_stock?: number | null;
 };
 
 export type OrgMeta = {
@@ -28,6 +25,11 @@ export type OrgMeta = {
   slug: string;
   currency: string;
   companyType: string;
+};
+
+export type PublicProductsData = {
+  organization: OrgMeta;
+  products: PublicProduct[];
 };
 
 export type PublicCategory = {
@@ -48,26 +50,6 @@ export default function PublicProductsPage({
   );
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const supabase = await createClient();
-  const catalog = await getPublicCatalog(supabase, slug);
-
-  if (!catalog?.organization) {
-    return { title: "Каталог" };
-  }
-
-  return {
-    title: `${catalog.organization.name} — Бүтээгдэхүүний каталог`,
-    description: `${catalog.organization.name}-ийн бүтээгдэхүүний каталог`,
-    robots: { index: true, follow: true },
-  };
-}
-
 async function ProductsDataFetcher({
   params,
 }: {
@@ -77,28 +59,34 @@ async function ProductsDataFetcher({
   const supabase = await createClient();
 
   try {
-    const [catalog, categories] = await Promise.all([
-      getPublicCatalog(supabase, slug),
-      getPublicCategories(supabase, slug),
-    ]);
+    const [{ data: productsData, error: prodError }, { data: categoriesData }] =
+      await Promise.all([
+        supabase.rpc("get_public_products", { p_slug: slug }),
+        supabase.rpc("get_public_categories", { p_slug: slug }),
+      ]);
 
-    if (!catalog?.organization) {
+    if (prodError) {
+      capture(prodError, { context: "public products: rpc" });
       notFound();
     }
 
+    if (!productsData) {
+      notFound();
+    }
+
+    const { organization, products } =
+      productsData as unknown as PublicProductsData;
+    const categories = (categoriesData ?? []) as unknown as PublicCategory[];
+
     return (
       <ProductsPageClient
-        organization={{
-          name: catalog.organization?.name,
-          slug: catalog.organization?.slug,
-          currency: catalog.organization?.currency,
-          companyType: catalog.organization?.company_type,
-        }}
-        products={catalog.products}
+        organization={organization}
+        products={products}
         categories={categories}
       />
     );
-  } catch {
+  } catch (err) {
+    capture(err, { context: "public products" });
     notFound();
   }
 }

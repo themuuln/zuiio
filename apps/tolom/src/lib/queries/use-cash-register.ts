@@ -3,7 +3,6 @@
  */
 
 import {
-  keepPreviousData,
   type UseMutationResult,
   type UseQueryResult,
   useMutation,
@@ -53,8 +52,7 @@ export function useCurrentSession(
       });
     },
     enabled: !!orgId,
-    placeholderData: keepPreviousData,
-    staleTime: 30_000,
+    staleTime: 10_000,
     retry: 1,
   });
 }
@@ -78,8 +76,7 @@ export function useCashRegisterSession(
       return fetchSession(orgId);
     },
     enabled: !!orgId && !!sessionId,
-    placeholderData: keepPreviousData,
-    staleTime: 30_000,
+    staleTime: 10_000,
     retry: 1,
   });
 }
@@ -109,7 +106,6 @@ export function useCashRegisterSessions(
       });
     },
     enabled: !!orgId,
-    placeholderData: keepPreviousData,
     staleTime: 30_000,
     retry: 1,
   });

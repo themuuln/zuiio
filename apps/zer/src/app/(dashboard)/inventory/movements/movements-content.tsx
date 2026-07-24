@@ -7,12 +7,13 @@ import {
   Plus,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
 import { withDbCapture } from "@zuiio/capture";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ErpEmptyState } from "@/components/erp/empty-state";
+import { DataTable } from "@/components/ui/data-table";
 import { PageShell } from "@/components/erp/page-shell";
 import {
   type MovementDetailData,
@@ -20,7 +21,6 @@ import {
 } from "@/components/inventory/movement-detail-drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
 import { useBranchContext } from "@/lib/branch-context";
 import { withBranchFilter } from "@/lib/branches";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -66,7 +66,7 @@ interface QueryResult {
   movements: MovementRow[];
   totalCount: number;
   totalPages: number;
-}
+};
 
 const columns: ColumnDef<MovementRow>[] = [
   {
@@ -80,9 +80,7 @@ const columns: ColumnDef<MovementRow>[] = [
     id: "product_name",
     header: "Бүтээгдэхүүн",
     cell: ({ row }) => (
-      <span className="text-xs font-medium sm:text-sm">
-        {row.original.product_name}
-      </span>
+      <span className="text-xs font-medium sm:text-sm">{row.original.product_name}</span>
     ),
   },
   {
@@ -90,9 +88,7 @@ const columns: ColumnDef<MovementRow>[] = [
     id: "type",
     header: "Төрөл",
     cell: ({ row }) => (
-      <Badge
-        variant={row.original.type === "out" ? "destructive" : "secondary"}
-      >
+      <Badge variant={row.original.type === "out" ? "destructive" : "secondary"}>
         {MOVEMENT_LABELS[row.original.type] ?? row.original.type}
       </Badge>
     ),
@@ -101,8 +97,7 @@ const columns: ColumnDef<MovementRow>[] = [
     accessorFn: (row) => row.quantity,
     id: "quantity",
     header: "Тоо хэмжээ",
-    cell: ({ row }) =>
-      `${row.original.quantity} ${row.original.product_unit ?? "ширхэг"}`,
+    cell: ({ row }) => `${row.original.quantity} ${row.original.product_unit ?? "ширхэг"}`,
   },
   {
     accessorFn: (row) => row.unit_cost ?? 0,
@@ -330,6 +325,7 @@ export function MovementsContent() {
         {/* ── Pagination ── */}
         {!isPending && data.totalPages > 1 && (
           <div className="flex items-center justify-end gap-3">
+
             <div className="flex items-center gap-1">
               {currentPage > 1 && (
                 <Link

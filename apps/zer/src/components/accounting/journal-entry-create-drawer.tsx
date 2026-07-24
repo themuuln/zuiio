@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/drawer-footer";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -395,13 +396,11 @@ export function JournalEntryCreateDrawer({
           )}
         </div>
 
-        {errors.lines &&
-          !Array.isArray(errors.lines) &&
-          "message" in errors.lines && (
-            <p className="text-xs text-destructive">
-              {String(errors.lines.message)}
-            </p>
-          )}
+        {errors.lines && !Array.isArray(errors.lines) && (
+          <p className="text-xs text-destructive">
+            {(errors.lines as any)?.message}
+          </p>
+        )}
 
         <ErrorBanner error={journalMutation.error} />
       </form>

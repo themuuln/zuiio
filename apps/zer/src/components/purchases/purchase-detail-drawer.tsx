@@ -87,7 +87,7 @@ async function fetchPurchaseOrder(
       .eq("id", id)
       .single(),
   );
-  const _orderError = orderResult.error;
+  const orderError = orderResult.error;
   const order = orderResult.data as unknown as
     | PurchaseDetailData["order"]
     | null;

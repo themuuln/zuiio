@@ -82,16 +82,13 @@ type VehicleModelValues = z.infer<typeof vehicleModelSchema>;
 
 // ── Component ──────────────────────────────────────────────────
 
-export function VehicleModelFormDrawer({
+export function VehicleModelFormSheet({
   mode,
   item,
   open,
   onOpenChange,
 }: VehicleModelFormSheetProps) {
-  const t = useTranslations("vehicleModels") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("vehicleModels");
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 

@@ -24,7 +24,9 @@ class PendingInvitationsScreen extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Урилгууд')),
+      appBar: AppBar(
+        title: const Text('Урилгууд'),
+      ),
       body: invitationsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => TamgaErrorWidget(
@@ -118,9 +120,7 @@ class _InvitationCard extends ConsumerWidget {
                   height: 48,
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(
-                      AppSpacing.cornerRadius,
-                    ),
+                    borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
                   ),
                   child: const Icon(Icons.group_outlined),
                 ),
@@ -205,7 +205,10 @@ class _InvitationCard extends ConsumerWidget {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _acceptInvitation(BuildContext context, WidgetRef ref) async {
+  Future<void> _acceptInvitation(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -243,7 +246,9 @@ class _InvitationCard extends ConsumerWidget {
           // Navigate to the team's stable profile
           // ignore: use_build_context_synchronously
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const StableProfileScreen()),
+            MaterialPageRoute(
+              builder: (_) => const StableProfileScreen(),
+            ),
           );
         } else {
           TamgaToast.showError(
@@ -255,7 +260,10 @@ class _InvitationCard extends ConsumerWidget {
     }
   }
 
-  Future<void> _declineInvitation(BuildContext context, WidgetRef ref) async {
+  Future<void> _declineInvitation(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(

@@ -23,7 +23,8 @@ void main() {
     }
 
     test('default value is 1', () {
-      expect(1, 1, reason: 'lostCount in LostHorseReport defaults to 1');
+      expect(1, 1,
+          reason: 'lostCount in LostHorseReport defaults to 1');
     });
 
     test('empty string shows error', () {
@@ -76,22 +77,15 @@ void main() {
 
   group('Animal type dropdown', () {
     test('AnimalType has exactly 5 values', () {
-      expect(
-        AnimalType.values.length,
-        5,
-        reason:
-            'Must have 5 animal types: '
-            'Адуу, Үхэр, Хонь, Ямаа, Тэмээ',
-      );
+      expect(AnimalType.values.length, 5,
+          reason: 'Must have 5 animal types: '
+              'Адуу, Үхэр, Хонь, Ямаа, Тэмээ');
     });
 
     test('each AnimalType has non-empty displayName', () {
       for (final type in AnimalType.values) {
-        expect(
-          type.displayName.trim().isNotEmpty,
-          isTrue,
-          reason: '${type.name} displayName should not be empty',
-        );
+        expect(type.displayName.trim().isNotEmpty, isTrue,
+            reason: '${type.name} displayName should not be empty');
       }
     });
   });
@@ -111,11 +105,8 @@ void main() {
 
     test('all AnimalAge displayNames are non-empty', () {
       for (final age in AnimalAge.values) {
-        expect(
-          age.displayName.trim().isNotEmpty,
-          isTrue,
-          reason: '${age.name} displayName should not be empty',
-        );
+        expect(age.displayName.trim().isNotEmpty, isTrue,
+            reason: '${age.name} displayName should not be empty');
       }
     });
 
@@ -133,7 +124,11 @@ void main() {
 
       // 3+ ages selected
       final updated = report.copyWith(
-        ages: [AnimalAge.unaga, AnimalAge.daaga, AnimalAge.shudlen],
+        ages: [
+          AnimalAge.unaga,
+          AnimalAge.daaga,
+          AnimalAge.shudlen,
+        ],
       );
 
       expect(updated.ages.length, 3);
@@ -143,22 +138,24 @@ void main() {
 
       // Verify persistence: second copyWith keeps existing ages
       final updated2 = updated.copyWith(
-        ages: [...updated.ages, AnimalAge.khazaalan],
+        ages: [
+          ...updated.ages,
+          AnimalAge.khazaalan,
+        ],
       );
 
       expect(updated2.ages.length, 4);
-      expect(
-        updated2.ages,
-        containsAll([
-          AnimalAge.unaga,
-          AnimalAge.daaga,
-          AnimalAge.shudlen,
-          AnimalAge.khazaalan,
-        ]),
-      );
+      expect(updated2.ages, containsAll([
+        AnimalAge.unaga,
+        AnimalAge.daaga,
+        AnimalAge.shudlen,
+        AnimalAge.khazaalan,
+      ]));
 
       // Verify toggling off: removing an age
-      final updated3 = report.copyWith(ages: [AnimalAge.unaga]);
+      final updated3 = report.copyWith(
+        ages: [AnimalAge.unaga],
+      );
 
       expect(updated3.ages.length, 1);
       expect(updated3.ages, [AnimalAge.unaga]);
@@ -190,16 +187,13 @@ void main() {
       final restored = LostHorseReport.fromJson(json);
 
       expect(restored.ages.length, 5);
-      expect(
-        restored.ages,
-        containsAll([
-          AnimalAge.unaga,
-          AnimalAge.daaga,
-          AnimalAge.shudlen,
-          AnimalAge.khazaalan,
-          AnimalAge.soyolon,
-        ]),
-      );
+      expect(restored.ages, containsAll([
+        AnimalAge.unaga,
+        AnimalAge.daaga,
+        AnimalAge.shudlen,
+        AnimalAge.khazaalan,
+        AnimalAge.soyolon,
+      ]));
     });
   });
 
@@ -218,11 +212,8 @@ void main() {
 
     test('all HorseGender display names are non-empty', () {
       for (final gender in HorseGender.values) {
-        expect(
-          gender.displayName.trim().isNotEmpty,
-          isTrue,
-          reason: '${gender.name} displayName should not be empty',
-        );
+        expect(gender.displayName.trim().isNotEmpty, isTrue,
+            reason: '${gender.name} displayName should not be empty');
       }
     });
   });
@@ -231,22 +222,15 @@ void main() {
 
   group('Breed dropdown', () {
     test('HorseBreed has exactly 4 values', () {
-      expect(
-        HorseBreed.values.length,
-        4,
-        reason:
-            'Must have 4 breeds: '
-            'Монгол, Шинэ цагийн монгол, Цэвэр цусны, Эрлийз',
-      );
+      expect(HorseBreed.values.length, 4,
+          reason: 'Must have 4 breeds: '
+              'Монгол, Шинэ цагийн монгол, Цэвэр цусны, Эрлийз');
     });
 
     test('each HorseBreed has non-empty displayName', () {
       for (final breed in HorseBreed.values) {
-        expect(
-          breed.displayName.trim().isNotEmpty,
-          isTrue,
-          reason: '${breed.name} displayName should not be empty',
-        );
+        expect(breed.displayName.trim().isNotEmpty, isTrue,
+            reason: '${breed.name} displayName should not be empty');
       }
     });
   });
@@ -265,11 +249,8 @@ void main() {
           .where((c) => c.toLowerCase().contains(query.toLowerCase()))
           .toList();
 
-      expect(
-        filtered.length,
-        greaterThan(0),
-        reason: 'Filtering by "$query" should return results',
-      );
+      expect(filtered.length, greaterThan(0),
+          reason: 'Filtering by "$query" should return results');
       expect(filtered, containsAll(['Халтар', 'Халзан', 'Халиун']));
     });
 
@@ -279,11 +260,8 @@ void main() {
           .where((c) => c.toLowerCase().contains(query.toLowerCase()))
           .toList();
 
-      expect(
-        filtered,
-        isEmpty,
-        reason: 'Non-matching query should return no results',
-      );
+      expect(filtered, isEmpty,
+          reason: 'Non-matching query should return no results');
     });
 
     test('empty query returns all colors', () {

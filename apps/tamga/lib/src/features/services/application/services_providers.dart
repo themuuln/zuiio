@@ -33,16 +33,16 @@ final localVetProfileRepositoryProvider = Provider<LocalVetProfileRepository>(
 );
 
 /// Vet Profile repository provider (abstract interface).
-final vetProfileRepositoryProvider = FutureProvider<VetProfileRepository>((
-  ref,
-) async {
-  return ref.read(localVetProfileRepositoryProvider);
-});
+final vetProfileRepositoryProvider =
+    FutureProvider<VetProfileRepository>((ref) async {
+      return ref.read(localVetProfileRepositoryProvider);
+    });
 
 /// Service Provider repository provider (local).
 final localServiceProviderRepositoryProvider =
     Provider<LocalServiceProviderRepository>(
-      (ref) => LocalServiceProviderRepository(storage: IsarStorage.instance),
+      (ref) =>
+          LocalServiceProviderRepository(storage: IsarStorage.instance),
     );
 
 /// Service Provider repository provider (abstract interface).

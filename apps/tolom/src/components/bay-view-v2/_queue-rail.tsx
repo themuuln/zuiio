@@ -1,3 +1,5 @@
+"use client";
+
 import { ArrowRight, Car, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,10 +66,17 @@ export function QueueRail({
         <ScrollArea className="flex-1">
           <div className="flex flex-col gap-px p-2">
             {items.map((wo) => (
-              <button
+              <div
                 key={wo.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={() => onItemClick(wo)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onItemClick(wo);
+                  }
+                }}
                 className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted/60 cursor-pointer group w-full"
               >
                 <div className="flex flex-col min-w-0 flex-1">
@@ -100,7 +109,7 @@ export function QueueRail({
                     <ArrowRight className="size-3" />
                   </Button>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </ScrollArea>

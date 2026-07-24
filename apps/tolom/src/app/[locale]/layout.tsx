@@ -32,10 +32,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({
-    locale: locale as "en" | "mn",
-    namespace: "home",
-  });
+  const t = await getTranslations({ locale, namespace: "home" });
   return {
     title: { default: t("title"), template: "%s | TOLOM" },
     description: t("subtitle"),
@@ -52,9 +49,7 @@ export async function generateMetadata({
   };
 }
 
-import { Suspense } from "react";
-
-async function LocaleLayoutInner({
+export default async function LocaleLayout({
   children,
   params,
 }: {
@@ -91,19 +86,5 @@ async function LocaleLayoutInner({
         </NextIntlClientProvider>
       </TooltipProvider>
     </DrawerProvider>
-  );
-}
-
-export default async function LocaleLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}) {
-  return (
-    <Suspense fallback={null}>
-      <LocaleLayoutInner params={params}>{children}</LocaleLayoutInner>
-    </Suspense>
   );
 }

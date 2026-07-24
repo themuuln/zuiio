@@ -66,17 +66,12 @@ export const PATCH = createRouteHandler(
 );
 
 export const POST = createRouteHandler(
-  async ({ request, params, orgId, supabase, user }) => {
+  async ({ request, params, orgId, supabase }) => {
     const { purchaseOrderId } = params;
     const body = await request.json();
 
     if (body.action === "receive") {
-      const po = await receivePurchaseOrder(
-        supabase,
-        purchaseOrderId,
-        orgId,
-        user.id,
-      );
+      const po = await receivePurchaseOrder(supabase, purchaseOrderId, orgId);
       return ok(po);
     }
 

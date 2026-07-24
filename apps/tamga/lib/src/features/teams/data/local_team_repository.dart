@@ -195,7 +195,10 @@ class LocalTeamRepository implements TeamRepository {
       }
 
       final domain = existing.toDomain();
-      final updated = domain.copyWith(role: newRole, permissions: permissions);
+      final updated = domain.copyWith(
+        role: newRole,
+        permissions: permissions,
+      );
 
       final isarMember = IsarTeamMember.fromDomain(updated);
       isarMember.id = existing.id;
@@ -330,9 +333,8 @@ class LocalTeamRepository implements TeamRepository {
       final updatedInvitation = invitation.copyWith(
         status: InvitationStatus.accepted,
       );
-      final isarUpdatedInvitation = IsarTeamInvitation.fromDomain(
-        updatedInvitation,
-      );
+      final isarUpdatedInvitation =
+          IsarTeamInvitation.fromDomain(updatedInvitation);
       isarUpdatedInvitation.id = stored.id;
       await _storage.teamInvitations.isar.writeTxn(() async {
         await _storage.teamInvitations.put(isarUpdatedInvitation);
@@ -395,9 +397,8 @@ class LocalTeamRepository implements TeamRepository {
       final updatedInvitation = invitation.copyWith(
         status: InvitationStatus.declined,
       );
-      final isarUpdatedInvitation = IsarTeamInvitation.fromDomain(
-        updatedInvitation,
-      );
+      final isarUpdatedInvitation =
+          IsarTeamInvitation.fromDomain(updatedInvitation);
       isarUpdatedInvitation.id = stored.id;
       await _storage.teamInvitations.isar.writeTxn(() async {
         await _storage.teamInvitations.put(isarUpdatedInvitation);
@@ -413,26 +414,5 @@ class LocalTeamRepository implements TeamRepository {
         ),
       );
     });
-  }
-
-  // ── Team Horses ──────────────────────────────────────────────
-
-  @override
-  Future<Result<void>> addHorseToTeam(
-    String teamId,
-    String horseId, {
-    String? addedBy,
-  }) async {
-    // Team horse associations are Supabase-backed.
-    return const Result.ok(null);
-  }
-
-  @override
-  Future<Result<void>> removeHorseFromTeam(
-    String teamId,
-    String horseId,
-  ) async {
-    // Team horse associations are Supabase-backed.
-    return const Result.ok(null);
   }
 }

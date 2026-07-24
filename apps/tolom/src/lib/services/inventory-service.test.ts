@@ -67,11 +67,26 @@ describe("getPartsCatalog", () => {
         updated_at: "2025-01-01T00:00:00.000Z",
       },
     ];
+    // Code counts rows per part_id, not the `count` field value
+    const mockAssignments = [
+      ...Array.from({ length: 13 }, () => ({ part_id: "part-1", count: 1 })),
+      ...Array.from({ length: 5 }, () => ({ part_id: "part-2", count: 1 })),
+    ];
 
-    mockClient.rpc.mockResolvedValueOnce({
-      data: { data: mockParts, total: 2 },
-      error: null,
-    });
+    // First query: parts_catalog — eq is not terminal (is() follows), limit ends the chain
+    // Second query: vehicle_model_parts — eq IS terminal
+    mockClient
+      .from("parts_catalog")
+      .limit.mockReturnValueOnce(
+        Promise.resolve({ data: mockParts, error: null }),
+      );
+    mockClient
+      .from("parts_catalog")
+      .eq.mockReturnValueOnce(mockClient.from("parts_catalog")) // parts_catalog eq: return builder for chaining
+      .mockReturnValueOnce(
+        // vehicle_model_parts eq: terminal call
+        Promise.resolve({ data: mockAssignments, error: null }),
+      );
 
     const result = await getPartsCatalog(mockClient as any, "org-1");
 
@@ -81,30 +96,40 @@ describe("getPartsCatalog", () => {
     expect(items[1].id).toBe("part-2");
   });
 
-  it("calls RPC with correct params", async () => {
-    mockClient.rpc.mockResolvedValueOnce({
-      data: { data: [], total: 0 },
-      error: null,
-    });
+  it("filters by organization_id and deleted_at is null", async () => {
+    mockClient
+      .from("parts_catalog")
+      .limit.mockReturnValueOnce(Promise.resolve({ data: [], error: null }));
+    mockClient
+      .from("parts_catalog")
+      .eq.mockReturnValueOnce(mockClient.from("parts_catalog"))
+      .mockReturnValueOnce(Promise.resolve({ data: [], error: null }));
 
-    await getPartsCatalog(mockClient as any, "org-1");
-    expect(mockClient.rpc).toHaveBeenCalledWith(
-      "get_parts_catalog_with_popularity",
-      {
-        p_org_id: "org-1",
-        p_page: 1,
-        p_page_size: 50,
-      },
+    const result = await getPartsCatalog(mockClient as any, "org-1");
+
+    expect(result).toEqual([]);
+    expect(mockClient.from).toHaveBeenCalledWith("parts_catalog");
+    expect(mockClient.from("parts_catalog").is).toHaveBeenCalledWith(
+      "deleted_at",
+      null,
+    );
+    expect(mockClient.from("parts_catalog").eq).toHaveBeenCalledWith(
+      "organization_id",
+      "org-1",
     );
   });
 
   it("returns empty array when no parts exist", async () => {
-    mockClient.rpc.mockResolvedValueOnce({
-      data: { data: [], total: 0 },
-      error: null,
-    });
+    mockClient
+      .from("parts_catalog")
+      .limit.mockReturnValueOnce(Promise.resolve({ data: null, error: null }));
+    mockClient
+      .from("parts_catalog")
+      .eq.mockReturnValueOnce(mockClient.from("parts_catalog"))
+      .mockReturnValueOnce(Promise.resolve({ data: [], error: null }));
 
     const result = await getPartsCatalog(mockClient as any, "org-1");
+
     expect(result).toEqual([]);
   });
 });

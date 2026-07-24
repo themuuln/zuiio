@@ -62,10 +62,7 @@ export function RefundDialog({
   amountRefunded,
   invoiceNumber,
 }: RefundDialogProps) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const recordRefund = useRecordRefund(orgId);
   const [step, setStep] = useState<"form" | "confirm">("form");
 

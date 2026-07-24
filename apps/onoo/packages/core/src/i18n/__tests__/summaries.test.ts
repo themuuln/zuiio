@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, it, expect } from "vitest";
 import { describePlayerGame, type GameSummaryInput } from "../summaries";
 
 const base: GameSummaryInput = {
@@ -149,7 +149,9 @@ describe("describePlayerGame", () => {
     it("includes shooting suffix when eligible", () => {
       const line = overrides({ pts: 12, reb: 8, ast: 5, fgm: 6, fga: 10 });
       const result = describePlayerGame(line);
-      expect(result.mn).toBe("12 оноо, 8 самбар, 5 дамжуулалт 60% пүршилттэй");
+      expect(result.mn).toBe(
+        "12 оноо, 8 самбар, 5 дамжуулалт 60% пүршилттэй"
+      );
     });
   });
 

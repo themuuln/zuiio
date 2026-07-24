@@ -86,10 +86,7 @@ function SkeletonGrid() {
 // ── Page ───────────────────────────────────────────────────────
 
 export default function CategoriesPage() {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
 
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;

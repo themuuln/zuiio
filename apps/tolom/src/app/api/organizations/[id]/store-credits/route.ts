@@ -31,11 +31,7 @@ export const GET = createRouteHandler(
       return ok(data);
     }
 
-    if (!customerId) {
-      return apiError("BAD_REQUEST", "customer_id is required", 400);
-    }
-
-    const balance = await getStoreCreditBalance(supabase, customerId, orgId);
+    const balance = await getStoreCreditBalance(supabase, customerId!, orgId);
 
     // Also get recent transactions if requested
     const includeTransactions = searchParams.get("include") === "transactions";
@@ -44,7 +40,7 @@ export const GET = createRouteHandler(
     if (includeTransactions) {
       transactions = await getStoreCreditTransactions(
         supabase,
-        customerId,
+        customerId!,
         orgId,
         { limit: 10 },
       );

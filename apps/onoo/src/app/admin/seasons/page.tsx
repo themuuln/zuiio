@@ -1,44 +1,21 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { leaguesApi, type SeasonRow, seasonsApi } from "@/app/admin/_lib/api";
-import { AdminPageLayout } from "@/components/admin/page-layout";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { seasonsApi, leaguesApi, type SeasonRow } from "../_lib/api";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useEntityCrud } from "@/hooks/use-entity-crud";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const seasonSchema = z.object({
   name: z.string().min(1, "Нэр оруулна уу"),
@@ -46,58 +23,105 @@ const seasonSchema = z.object({
   ends_on: z.string().optional(),
 });
 
+type SeasonFormValues = z.infer<typeof seasonSchema>;
+
 export default function SeasonsPage() {
+  const queryClient = useQueryClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<SeasonRow | null>(null);
   const [selectedLeagueId, setSelectedLeagueId] = useState<string>("");
 
   const { data: leagues = [] } = useQuery({
     queryKey: ["admin", "leagues"],
-    queryFn: () => leaguesApi.list(),
+    queryFn: leaguesApi.list,
   });
 
   const { data: seasons = [], isPending } = useQuery({
     queryKey: ["admin", "seasons", selectedLeagueId],
-    queryFn: () =>
-      seasonsApi.list(
-        selectedLeagueId ? { league_id: selectedLeagueId } : undefined,
-      ),
+    queryFn: () => seasonsApi.list(selectedLeagueId),
     enabled: !!selectedLeagueId,
   });
 
-  const crud = useEntityCrud({
-    api: seasonsApi,
-    queryKey: ["admin", "seasons"],
-    schema: seasonSchema,
+  const form = useForm<SeasonFormValues>({
+    resolver: zodResolver(seasonSchema),
     defaultValues: { name: "", starts_on: "", ends_on: "" },
-    successMessages: {
-      create: "Улирал амжилттай үүсгэлээ",
-      update: "Улирал амжилттай шинэчлэлээ",
-      delete: "Улирал устгагдлаа",
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: SeasonFormValues) =>
+      seasonsApi.create({ ...data, league_id: selectedLeagueId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "seasons"] });
+      toast.success("Улирал амжилттай үүсгэлээ");
+      setDialogOpen(false);
+      form.reset();
     },
-    editMap: (row: SeasonRow) => ({
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }: SeasonFormValues & { id: string }) =>
+      seasonsApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "seasons"] });
+      toast.success("Улирал амжилттай шинэчлэлээ");
+      setDialogOpen(false);
+      setEditing(null);
+      form.reset();
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => seasonsApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "seasons"] });
+      toast.success("Улирал устгагдлаа");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  function openCreate() {
+    setEditing(null);
+    form.reset({ name: "", starts_on: "", ends_on: "" });
+    setDialogOpen(true);
+  }
+
+  function openEdit(row: SeasonRow) {
+    setEditing(row);
+    form.reset({
       name: row.name,
       starts_on: row.starts_on ?? "",
       ends_on: row.ends_on ?? "",
-    }),
-  });
+    });
+    setDialogOpen(true);
+  }
+
+  function onSubmit(values: SeasonFormValues) {
+    if (editing) {
+      updateMutation.mutate({ ...values, id: editing.id });
+    } else {
+      createMutation.mutate(values);
+    }
+  }
+
+  function handleDelete(id: string) {
+    if (!window.confirm("Улирлыг устгах уу?")) return;
+    deleteMutation.mutate(id);
+  }
+
+  const isPendingMutation = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <>
-      <AdminPageLayout
-        title="Улирлууд"
-        loading={isPending}
-        isEmpty={!!selectedLeagueId && seasons.length === 0}
-        emptyTitle="Улирал байхгүй байна"
-        emptyDescription="Улирал нэмэх товчийг дарж шинэ улирал үүсгэнэ үү."
-        actions={
-          <Button
-            size="sm"
-            onClick={crud.handleCreate}
-            disabled={!selectedLeagueId}
-          >
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Улирлууд</CardTitle>
+          <Button size="sm" onClick={openCreate} disabled={!selectedLeagueId}>
             Нэмэх
           </Button>
-        }
-        headerExtras={
+        </CardHeader>
+        <CardContent className="space-y-4">
           <Select value={selectedLeagueId} onValueChange={setSelectedLeagueId}>
             <SelectTrigger className="w-full max-w-sm">
               <SelectValue placeholder="Лиг сонгох" />
@@ -110,76 +134,74 @@ export default function SeasonsPage() {
               ))}
             </SelectContent>
           </Select>
-        }
-      >
-        {!selectedLeagueId ? (
-          <p className="text-muted-foreground text-sm">Лиг сонгоно уу</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Нэр</TableHead>
-                <TableHead>Эхлэх</TableHead>
-                <TableHead>Дуусах</TableHead>
-                <TableHead className="w-[100px]">Үйлдэл</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {seasons.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">{row.name}</TableCell>
-                  <TableCell>
-                    {row.starts_on
-                      ? new Date(row.starts_on).toLocaleDateString("mn-MN")
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    {row.ends_on
-                      ? new Date(row.ends_on).toLocaleDateString("mn-MN")
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => crud.handleEdit(row)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() =>
-                          crud.handleDelete(row, "Улирлыг устгах уу?")
-                        }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </AdminPageLayout>
 
-      <Dialog open={crud.dialogOpen} onOpenChange={crud.handleDialogOpenChange}>
+          {!selectedLeagueId ? (
+            <p className="text-muted-foreground text-sm">Лиг сонгоно уу</p>
+          ) : isPending ? (
+            <p className="text-muted-foreground text-sm">Ачаалж байна…</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Нэр</TableHead>
+                  <TableHead>Эхлэх</TableHead>
+                  <TableHead>Дуусах</TableHead>
+                  <TableHead className="w-[100px]">Үйлдэл</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {seasons.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-medium">{row.name}</TableCell>
+                    <TableCell>
+                      {row.starts_on
+                        ? new Date(row.starts_on).toLocaleDateString("mn-MN")
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {row.ends_on
+                        ? new Date(row.ends_on).toLocaleDateString("mn-MN")
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
+                          Засах
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                          onClick={() => handleDelete(row.id)}
+                        >
+                          Устгах
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {seasons.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      Улирал байхгүй байна
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {crud.editingItem ? "Улирал засах" : "Улирал нэмэх"}
-            </DialogTitle>
+            <DialogTitle>{editing ? "Улирал засах" : "Улирал нэмэх"}</DialogTitle>
           </DialogHeader>
-          <Form {...crud.form}>
-            <form
-              onSubmit={crud.form.handleSubmit(crud.handleSubmit)}
-              className="space-y-4"
-            >
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
-                control={crud.form.control}
+                control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
@@ -192,7 +214,7 @@ export default function SeasonsPage() {
                 )}
               />
               <FormField
-                control={crud.form.control}
+                control={form.control}
                 name="starts_on"
                 render={({ field }) => (
                   <FormItem>
@@ -205,7 +227,7 @@ export default function SeasonsPage() {
                 )}
               />
               <FormField
-                control={crud.form.control}
+                control={form.control}
                 name="ends_on"
                 render={({ field }) => (
                   <FormItem>
@@ -218,18 +240,14 @@ export default function SeasonsPage() {
                 )}
               />
               <DialogFooter>
-                <Button type="submit" disabled={crud.isMutating}>
-                  {crud.isMutating
-                    ? "Хадгалж байна…"
-                    : crud.editingItem
-                      ? "Шинэчлэх"
-                      : "Үүсгэх"}
+                <Button type="submit" disabled={isPendingMutation}>
+                  {isPendingMutation ? "Хадгалж байна…" : editing ? "Шинэчлэх" : "Үүсгэх"}
                 </Button>
               </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

@@ -15,7 +15,9 @@ class AgeBarChart extends StatelessWidget {
   });
 
   /// Ачаалалт төлөв.
-  const AgeBarChart.loading({super.key}) : ageDistribution = null, maxBars = 10;
+  const AgeBarChart.loading({super.key})
+    : ageDistribution = null,
+      maxBars = 10;
 
   /// Насны хуваарилалт.
   final List<AgeBucket>? ageDistribution;
@@ -46,7 +48,10 @@ class AgeBarChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Насны хуваарилалт', style: theme.textTheme.titleSmall),
+        Text(
+          'Насны хуваарилалт',
+          style: theme.textTheme.titleSmall,
+        ),
         const SizedBox(height: 16),
         Expanded(
           child: BarChart(

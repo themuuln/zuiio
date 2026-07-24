@@ -5,7 +5,10 @@ const double kDefaultCommissionRate = 0.05;
 ///
 /// Зарын гүйлгээний комиссын хувь хэмжээ болон дүнг хадгална.
 class MarketCommission {
-  const MarketCommission({required this.commissionRate, this.commissionAmount});
+  const MarketCommission({
+    required this.commissionRate,
+    this.commissionAmount,
+  });
 
   /// Комиссын хувь хэмжээ (аравтын бутархай, жишээ нь 0.05 = 5%).
   final double commissionRate;
@@ -54,7 +57,10 @@ class MarketCommission {
           commissionAmount == other.commissionAmount;
 
   @override
-  int get hashCode => Object.hash(commissionRate, commissionAmount);
+  int get hashCode => Object.hash(
+        commissionRate,
+        commissionAmount,
+      );
 
   @override
   String toString() =>

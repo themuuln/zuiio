@@ -187,11 +187,6 @@ export function ProductDetailDrawer({
           <Badge variant={isLow ? "destructive" : "secondary"}>
             {isLow ? "Анхаарах" : "Хэвийн"}
           </Badge>
-          {product.variants && product.variants.length > 0 && (
-            <Badge variant="secondary">
-              Варианттай · {product.variants.length}
-            </Badge>
-          )}
         </div>
 
         {/* Info rows */}
@@ -226,14 +221,7 @@ export function ProductDetailDrawer({
           />
           <InfoRow
             label="Одоогийн үлдэгдэл"
-            value={
-              product.variants && product.variants.length > 0
-                ? `${product.variants.reduce(
-                    (sum, v) => sum + (v.current_stock ?? 0),
-                    0,
-                  )} ${product.unit ?? "ширхэг"} (${product.variants.length} вариант)`
-                : `${product.current_stock ?? 0} ${product.unit ?? "ширхэг"}`
-            }
+            value={`${product.current_stock ?? 0} ${product.unit ?? "ширхэг"}`}
           />
           <InfoRow
             label="Доод үлдэгдэл"

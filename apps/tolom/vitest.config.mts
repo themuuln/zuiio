@@ -4,56 +4,12 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@zuiio/core": path.resolve(__dirname, "./src/lib/zuiio/core.ts"),
-      "@zuiio/hooks": path.resolve(__dirname, "./src/lib/zuiio/hooks.ts"),
-      "@zuiio/query": path.resolve(__dirname, "./src/lib/zuiio/query.ts"),
-    },
-  },
   test: {
+    environment: "jsdom",
     globals: true,
-    // ── Two projects: Node (fast) for pure TS, jsdom for React/component tests
-    projects: [
-      {
-        resolve: {
-          alias: {
-            "@": path.resolve(__dirname, "./src"),
-            "@zuiio/core": path.resolve(__dirname, "./src/lib/zuiio/core.ts"),
-            "@zuiio/hooks": path.resolve(__dirname, "./src/lib/zuiio/hooks.ts"),
-            "@zuiio/query": path.resolve(__dirname, "./src/lib/zuiio/query.ts"),
-          },
-        },
-        test: {
-          name: "node",
-          environment: "node",
-          include: ["src/**/*.test.ts"],
-          exclude: ["src/**/*.test.tsx"],
-          globals: true,
-          css: false,
-          setupFiles: ["./src/test/setup-node.ts"],
-        },
-      },
-      {
-        resolve: {
-          alias: {
-            "@": path.resolve(__dirname, "./src"),
-            "@zuiio/core": path.resolve(__dirname, "./src/lib/zuiio/core.ts"),
-            "@zuiio/hooks": path.resolve(__dirname, "./src/lib/zuiio/hooks.ts"),
-            "@zuiio/query": path.resolve(__dirname, "./src/lib/zuiio/query.ts"),
-          },
-        },
-        test: {
-          name: "dom",
-          environment: "jsdom",
-          include: ["src/**/*.test.tsx"],
-          globals: true,
-          css: true,
-          setupFiles: ["./src/test/setup-tests.ts"],
-        },
-      },
-    ],
+    setupFiles: ["./src/test/setup-tests.ts"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    css: true,
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
@@ -70,6 +26,14 @@ export default defineConfig({
         functions: 50,
         lines: 40,
       },
+    },
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "@zuiio/core": path.resolve(__dirname, "./src/lib/zuiio/core.ts"),
+      "@zuiio/hooks": path.resolve(__dirname, "./src/lib/zuiio/hooks.ts"),
+      "@zuiio/query": path.resolve(__dirname, "./src/lib/zuiio/query.ts"),
     },
   },
 });

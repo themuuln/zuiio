@@ -44,12 +44,17 @@ function getQueryClient(): QueryClient {
 export default function QueryProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(getQueryClient);
 
-  // Profile is excluded from IndexedDB persistence by shouldDehydrateQuery.
-  // Server-side prefetch (PrefetchDashboard) hydrates profile via HydrationBoundary.
+  // Once the persister hydrates from IndexedDB, remove any stale profile
+  // queries that were persisted before the shouldDehydrateQuery filter was
+  // added. After this, the profile must always be fetched from the network.
+  const handleHydrate = () => {
+    queryClient.removeQueries({ queryKey: ["profile"] });
+  };
 
   return (
     <PersistQueryClientProvider
       client={queryClient}
+      onSuccess={handleHydrate}
       persistOptions={{
         persister: indexedDbPersister,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours

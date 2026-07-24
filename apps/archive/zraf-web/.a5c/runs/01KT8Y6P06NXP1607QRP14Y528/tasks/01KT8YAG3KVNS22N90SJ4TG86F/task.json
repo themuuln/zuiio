@@ -1,0 +1,581 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "bottlenecks": {
+          "items": {
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "frequency": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "impact": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "branchPatterns": {
+          "properties": {
+            "averageLifetime": {
+              "type": "string"
+            },
+            "mergeStrategy": {
+              "type": "string"
+            },
+            "namingConvention": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "commitPatterns": {
+          "properties": {
+            "averageFrequency": {
+              "type": "string"
+            },
+            "averageSize": {
+              "type": "object"
+            },
+            "conventions": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "messageFormat": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "contributors": {
+          "items": {
+            "properties": {
+              "areas": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "commitCount": {
+                "type": "number"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "evolution": {
+          "properties": {
+            "growthAreas": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "majorEvents": {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "technologyChanges": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "implicitRules": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "painPoints": {
+          "items": {
+            "properties": {
+              "category": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "discoveredVia": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "releasePatterns": {
+          "properties": {
+            "frequency": {
+              "type": "string"
+            },
+            "tagFormat": {
+              "type": "string"
+            },
+            "versioningScheme": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "commitPatterns",
+        "bottlenecks"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "existingProfile": null,
+        "projectRoot": "/Users/themuuln/coding/personal/zraf-web",
+        "repoStructure": {
+          "architecture": {
+            "dataFlow": "Static JSON files in public/data/ → fetch() in data-loader.ts → LearningEngine processes → React context (use-learning) → Screen components render → localStorage for persistence",
+            "entryPoints": [
+              "src/app/layout.tsx",
+              "src/app/page.tsx"
+            ],
+            "modules": [
+              {
+                "description": "Next.js App Router pages and layout",
+                "name": "app",
+                "path": "src/app"
+              },
+              {
+                "description": "UI components: app-shell, screens (home, practice, progress, profile, session, result, onboarding)",
+                "name": "components",
+                "path": "src/components"
+              },
+              {
+                "description": "React hooks — use-learning.tsx (LearningProvider context)",
+                "name": "hooks",
+                "path": "src/hooks"
+              },
+              {
+                "description": "Core logic: data-loader, learning-engine, models, question-bank, storage, utils",
+                "name": "lib",
+                "path": "src/lib"
+              },
+              {
+                "description": "shadcn/ui base components",
+                "name": "ui",
+                "path": "src/components/ui"
+              },
+              {
+                "description": "Static JSON question data + images loaded at runtime",
+                "name": "data",
+                "path": "public/data/traffic_institute"
+              }
+            ],
+            "pattern": "single-page application (client-side rendered)"
+          },
+          "conventions": {
+            "additionalRules": [
+              "React Compiler enabled (babel-plugin-react-compiler)",
+              "suppressHydrationWarning on <html> for dark mode",
+              "All data loaded client-side via fetch to static JSON",
+              "No server components — entire app is 'use client'"
+            ],
+            "codeStyle": {
+              "formatter": "Biome format",
+              "linter": "Biome (biome.json)",
+              "no ESLint": true
+            },
+            "errorHandling": "try-catch with silent fallback in storage/data-loader",
+            "importOrder": [
+              "@/ (path alias to src/)",
+              "external packages"
+            ],
+            "naming": {
+              "components": "kebab-case files, PascalCase exports",
+              "hooks": "use-*.tsx pattern",
+              "lib": "kebab-case utility modules"
+            },
+            "testingConventions": "No tests configured yet"
+          },
+          "directoryTree": {
+            "public": {
+              "data": {
+                "traffic_institute": {
+                  "app_ready": [
+                    "categories/",
+                    "images/",
+                    "question_bank_index.json",
+                    "question_bank.json"
+                  ],
+                  "mirror": [
+                    "(50 referenced image files)"
+                  ],
+                  "tests_playwright.json": true
+                }
+              }
+            },
+            "src": {
+              "app": [
+                "layout.tsx",
+                "page.tsx",
+                "globals.css",
+                "favicon.ico"
+              ],
+              "components": [
+                "app-shell.tsx",
+                "home-screen.tsx",
+                "onboarding-screen.tsx",
+                "practice-screen.tsx",
+                "profile-screen.tsx",
+                "progress-screen.tsx",
+                "result-screen.tsx",
+                "session-screen.tsx",
+                "ui/"
+              ],
+              "hooks": [
+                "use-learning.tsx"
+              ],
+              "lib": [
+                "data-loader.ts",
+                "learning-engine.ts",
+                "models.ts",
+                "question-bank.ts",
+                "storage.ts",
+                "utils.ts"
+              ]
+            }
+          },
+          "documentation": [
+            {
+              "path": "README.md",
+              "summary": "Create Next.js boilerplate readme",
+              "type": "readme"
+            },
+            {
+              "path": "AGENTS.md",
+              "summary": "Global agent config (symlinked)",
+              "type": "config"
+            },
+            {
+              "path": "CLAUDE.md",
+              "summary": "Agent instructions (symlink to AGENTS.md)",
+              "type": "config"
+            }
+          ],
+          "techStack": {
+            "buildTools": [
+              "Next.js (Turbopack)",
+              "PostCSS"
+            ],
+            "databases": [],
+            "frameworks": [
+              {
+                "category": "meta-framework",
+                "name": "Next.js",
+                "version": "16.2.6"
+              },
+              {
+                "category": "UI library",
+                "name": "React",
+                "version": "19.2.4"
+              },
+              {
+                "category": "utility CSS",
+                "name": "Tailwind CSS",
+                "version": "4"
+              },
+              {
+                "category": "build optimization",
+                "name": "React Compiler",
+                "version": "1.0.0"
+              }
+            ],
+            "infrastructure": [
+              {
+                "category": "hosting (target)",
+                "name": "Vercel"
+              }
+            ],
+            "languages": [
+              {
+                "name": "TypeScript",
+                "role": "primary"
+              },
+              {
+                "name": "CSS",
+                "role": "styling (Tailwind)"
+              }
+            ],
+            "packageManagers": [
+              "pnpm",
+              "npm (lockfile present)"
+            ]
+          }
+        }
+      },
+      "instructions": [
+        "Analyze git log for commit patterns:",
+        "  - Commit message format and conventions (conventional commits, ticket references, etc.)",
+        "  - Commit frequency and distribution over time",
+        "  - Average commit size (files changed, lines added/removed)",
+        "  - Most active contributors and their areas of focus",
+        "Analyze branch patterns:",
+        "  - Branch naming conventions",
+        "  - Branch lifetime (how long branches live before merge)",
+        "  - Merge strategy (merge commits, squash, rebase)",
+        "Analyze PR/merge patterns if available:",
+        "  - PR size distribution",
+        "  - Review turnaround time indicators (time between commits)",
+        "  - Common reviewers",
+        "Analyze release patterns:",
+        "  - Tag format and frequency",
+        "  - Release branching strategy",
+        "  - Versioning scheme (semver, calver, etc.)",
+        "Identify evolution patterns:",
+        "  - Major refactoring events (large commits touching many files)",
+        "  - Technology migrations visible in history",
+        "  - Growing or shrinking areas of the codebase",
+        "Identify bottlenecks:",
+        "  - Files with high churn (frequently changed)",
+        "  - Files that are always changed together (hidden coupling)",
+        "  - Long-lived branches that cause merge conflicts",
+        "Extract implicit rules:",
+        "  - Files that must be changed together",
+        "  - Areas that rarely change (stable core)",
+        "  - Patterns of test-code co-changes",
+        "Limit git log analysis to a reasonable depth (last 500-1000 commits or 6 months)",
+        "Do NOT access any sensitive information from git history"
+      ],
+      "outputFormat": "JSON with commitPatterns (object), branchPatterns (object), releasePatterns (object), evolution (object with majorEvents, technologyChanges, growthAreas), bottlenecks (array of {id, description, impact, location, frequency}), implicitRules (array of strings), painPoints (array of {id, description, severity, category, discoveredVia}), contributors (array of {name, areas, commitCount})",
+      "role": "process mining specialist and software historian",
+      "task": "Analyze the git history of this project to extract development patterns, implicit rules, evolution trajectory, and bottlenecks. This information will help babysitter understand how the project operates."
+    }
+  },
+  "description": "Analyze git history to extract commit patterns, PR patterns, release patterns, evolution, bottlenecks, and implicit rules",
+  "io": {
+    "inputJsonPath": "tasks/01KT8YAG3KVNS22N90SJ4TG86F/input.json",
+    "outputJsonPath": "tasks/01KT8YAG3KVNS22N90SJ4TG86F/result.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "agent",
+    "cradle",
+    "git-history",
+    "mining"
+  ],
+  "title": "Mine git history for process patterns",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KT8YAG3KVNS22N90SJ4TG86F",
+  "taskId": "process-mining",
+  "invocationKey": "cradle/project-install:S000004:process-mining",
+  "stepId": "S000004",
+  "inputs": {
+    "existingProfile": null,
+    "projectRoot": "/Users/themuuln/coding/personal/zraf-web",
+    "repoStructure": {
+      "architecture": {
+        "dataFlow": "Static JSON files in public/data/ → fetch() in data-loader.ts → LearningEngine processes → React context (use-learning) → Screen components render → localStorage for persistence",
+        "entryPoints": [
+          "src/app/layout.tsx",
+          "src/app/page.tsx"
+        ],
+        "modules": [
+          {
+            "description": "Next.js App Router pages and layout",
+            "name": "app",
+            "path": "src/app"
+          },
+          {
+            "description": "UI components: app-shell, screens (home, practice, progress, profile, session, result, onboarding)",
+            "name": "components",
+            "path": "src/components"
+          },
+          {
+            "description": "React hooks — use-learning.tsx (LearningProvider context)",
+            "name": "hooks",
+            "path": "src/hooks"
+          },
+          {
+            "description": "Core logic: data-loader, learning-engine, models, question-bank, storage, utils",
+            "name": "lib",
+            "path": "src/lib"
+          },
+          {
+            "description": "shadcn/ui base components",
+            "name": "ui",
+            "path": "src/components/ui"
+          },
+          {
+            "description": "Static JSON question data + images loaded at runtime",
+            "name": "data",
+            "path": "public/data/traffic_institute"
+          }
+        ],
+        "pattern": "single-page application (client-side rendered)"
+      },
+      "conventions": {
+        "additionalRules": [
+          "React Compiler enabled (babel-plugin-react-compiler)",
+          "suppressHydrationWarning on <html> for dark mode",
+          "All data loaded client-side via fetch to static JSON",
+          "No server components — entire app is 'use client'"
+        ],
+        "codeStyle": {
+          "formatter": "Biome format",
+          "linter": "Biome (biome.json)",
+          "no ESLint": true
+        },
+        "errorHandling": "try-catch with silent fallback in storage/data-loader",
+        "importOrder": [
+          "@/ (path alias to src/)",
+          "external packages"
+        ],
+        "naming": {
+          "components": "kebab-case files, PascalCase exports",
+          "hooks": "use-*.tsx pattern",
+          "lib": "kebab-case utility modules"
+        },
+        "testingConventions": "No tests configured yet"
+      },
+      "directoryTree": {
+        "public": {
+          "data": {
+            "traffic_institute": {
+              "app_ready": [
+                "categories/",
+                "images/",
+                "question_bank_index.json",
+                "question_bank.json"
+              ],
+              "mirror": [
+                "(50 referenced image files)"
+              ],
+              "tests_playwright.json": true
+            }
+          }
+        },
+        "src": {
+          "app": [
+            "layout.tsx",
+            "page.tsx",
+            "globals.css",
+            "favicon.ico"
+          ],
+          "components": [
+            "app-shell.tsx",
+            "home-screen.tsx",
+            "onboarding-screen.tsx",
+            "practice-screen.tsx",
+            "profile-screen.tsx",
+            "progress-screen.tsx",
+            "result-screen.tsx",
+            "session-screen.tsx",
+            "ui/"
+          ],
+          "hooks": [
+            "use-learning.tsx"
+          ],
+          "lib": [
+            "data-loader.ts",
+            "learning-engine.ts",
+            "models.ts",
+            "question-bank.ts",
+            "storage.ts",
+            "utils.ts"
+          ]
+        }
+      },
+      "documentation": [
+        {
+          "path": "README.md",
+          "summary": "Create Next.js boilerplate readme",
+          "type": "readme"
+        },
+        {
+          "path": "AGENTS.md",
+          "summary": "Global agent config (symlinked)",
+          "type": "config"
+        },
+        {
+          "path": "CLAUDE.md",
+          "summary": "Agent instructions (symlink to AGENTS.md)",
+          "type": "config"
+        }
+      ],
+      "techStack": {
+        "buildTools": [
+          "Next.js (Turbopack)",
+          "PostCSS"
+        ],
+        "databases": [],
+        "frameworks": [
+          {
+            "category": "meta-framework",
+            "name": "Next.js",
+            "version": "16.2.6"
+          },
+          {
+            "category": "UI library",
+            "name": "React",
+            "version": "19.2.4"
+          },
+          {
+            "category": "utility CSS",
+            "name": "Tailwind CSS",
+            "version": "4"
+          },
+          {
+            "category": "build optimization",
+            "name": "React Compiler",
+            "version": "1.0.0"
+          }
+        ],
+        "infrastructure": [
+          {
+            "category": "hosting (target)",
+            "name": "Vercel"
+          }
+        ],
+        "languages": [
+          {
+            "name": "TypeScript",
+            "role": "primary"
+          },
+          {
+            "name": "CSS",
+            "role": "styling (Tailwind)"
+          }
+        ],
+        "packageManagers": [
+          "pnpm",
+          "npm (lockfile present)"
+        ]
+      }
+    }
+  }
+}

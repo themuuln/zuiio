@@ -64,20 +64,18 @@ export function useMechanicEod(
   return useQuery({
     queryKey: mechanicKeys.eod(orgId ?? "", userId ?? ""),
     queryFn: async () => {
-      if (!orgId) throw new Error("orgId required");
-      if (!userId) throw new Error("userId required");
       const today = new Date().toISOString().split("T")[0];
-      const data = await fetchReports(orgId, {
-        params: { type: "eod", date: today, mechanic: userId },
-        cacheKeyParams: { type: "eod", mechanic: userId },
+      const data = await fetchReports(orgId!, {
+        params: { type: "eod", date: today, mechanic: userId! },
+        cacheKeyParams: { type: "eod", mechanic: userId! },
       });
       const mechanic = (data?.mechanics ?? []).find(
-        (m: { mechanic_id: string }) => m.mechanic_id === userId,
+        (m: { mechanic_id: string }) => m.mechanic_id === userId!,
       );
       return mechanic ?? null;
     },
     enabled: !!orgId && !!userId,
-    staleTime: 30_000,
+    staleTime: 15_000,
     refetchInterval: 30_000,
     placeholderData: (prev) => prev,
   });
@@ -97,11 +95,10 @@ export function useMechanicWorkOrders(
   return useQuery({
     queryKey: mechanicKeys.workOrders(orgId ?? "", userId ?? ""),
     queryFn: async () => {
-      if (!userId) throw new Error("userId required");
       // Build status params manually (factory doesn't support arrays)
       const statuses = ["In Progress", "Diagnosing", "New", "Ready for Pickup"];
       const statusParams = new URLSearchParams();
-      statusParams.set("mechanic", userId);
+      statusParams.set("mechanic", userId!);
       for (const s of statuses) statusParams.append("status", s);
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders?${statusParams.toString()}`,
@@ -116,7 +113,7 @@ export function useMechanicWorkOrders(
       return (json.data as WorkOrderRow[]) ?? [];
     },
     enabled: !!orgId && !!userId,
-    staleTime: 30_000,
+    staleTime: 15_000,
     refetchInterval: 30_000,
     placeholderData: (prev) => prev,
   });
@@ -135,21 +132,19 @@ export function useMechanicTrend(
   return useQuery({
     queryKey: mechanicKeys.trend(orgId ?? "", userId ?? "", "", ""),
     queryFn: async () => {
-      if (!orgId) throw new Error("orgId required");
-      if (!userId) throw new Error("userId required");
       const today = new Date().toISOString().split("T")[0];
       const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
-      const data = await fetchReports(orgId, {
+      const data = await fetchReports(orgId!, {
         params: {
           type: "mechanic-trend",
-          mechanic: userId,
+          mechanic: userId!,
           period: "weekly",
           startDate: eightWeeksAgo,
           endDate: today,
         },
-        cacheKeyParams: { type: "mechanic-trend", mechanic: userId },
+        cacheKeyParams: { type: "mechanic-trend", mechanic: userId! },
       });
       return (data as unknown as MechanicTrend) ?? null;
     },
@@ -220,13 +215,11 @@ export function useMechanicsList(
 ): UseQueryResult<MechanicItem[], Error> {
   return useQuery({
     queryKey: mechanicKeys.list(orgId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchReports(orgId, {
+    queryFn: () =>
+      fetchReports(orgId!, {
         params: { type: "mechanics" },
         cacheKeyParams: { type: "mechanics" },
-      }) as Promise<MechanicItem[]>;
-    },
+      }) as Promise<MechanicItem[]>,
     enabled: !!orgId,
     staleTime: 300_000,
     placeholderData: (prev) => prev,

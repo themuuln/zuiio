@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   if (!playerId && !teamId) {
     return NextResponse.json(
       { error: "playerId or teamId required" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -62,10 +62,7 @@ export async function GET(request: NextRequest) {
         pf: stat.pf,
         perGame: {
           pts: stat.gp > 0 ? (stat.pts / stat.gp).toFixed(1) : "0.0",
-          reb:
-            stat.gp > 0
-              ? ((stat.oreb + stat.dreb) / stat.gp).toFixed(1)
-              : "0.0",
+          reb: stat.gp > 0 ? ((stat.oreb + stat.dreb) / stat.gp).toFixed(1) : "0.0",
           ast: stat.gp > 0 ? (stat.ast / stat.gp).toFixed(1) : "0.0",
         },
       };
@@ -143,8 +140,7 @@ export async function GET(request: NextRequest) {
       winPct: s.games > 0 ? (s.wins / s.games).toFixed(3) : ".000",
       avgPtsFor: s.games > 0 ? (s.ptsFor / s.games).toFixed(1) : "0.0",
       avgPtsAgainst: s.games > 0 ? (s.ptsAgainst / s.games).toFixed(1) : "0.0",
-      diff:
-        s.games > 0 ? ((s.ptsFor - s.ptsAgainst) / s.games).toFixed(1) : "0.0",
+      diff: s.games > 0 ? ((s.ptsFor - s.ptsAgainst) / s.games).toFixed(1) : "0.0",
     }));
 
     return NextResponse.json({ type: "team", data: seasons });

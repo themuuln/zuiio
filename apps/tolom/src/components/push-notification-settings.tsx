@@ -3,6 +3,7 @@
 import { Bell, BellOff, Loader2 } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -35,9 +36,7 @@ export function PushNotificationSettings() {
       if (success) {
         toast.success("Мэдэгдэл идэвхэслээ");
       } else if (permission === "denied") {
-        toast.error(
-          "Хөтөч мэдэгдэл унтраасан байна. Хөтөчийн тохиргооноо шалгана уу.",
-        );
+        toast.error("Хөтөч мэдэгдэл унтраасан байна. Хөтөчийн тохиргооноо шалгана уу.");
       }
     }
   }, [isSubscribed, subscribe, unsubscribe, permission]);

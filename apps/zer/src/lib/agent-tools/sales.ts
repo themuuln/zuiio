@@ -59,7 +59,6 @@ function getSalesSummary(
         .from("sales")
         .select("total_amount, paid_amount")
         .eq("organization_id", orgId)
-        .is("deleted_at", null)
         .gte("sale_date", dateStart);
       if (salesAggError) {
         capture(salesAggError, { context: "[agent] getSalesSummary" });
@@ -84,8 +83,6 @@ function getSalesSummary(
           "quantity, total_price, products!inner(name), sales!inner(organization_id, sale_date)",
         )
         .eq("sales.organization_id", orgId)
-        .is("deleted_at", null)
-        .is("sales.deleted_at", null)
         .gte("sales.sale_date", dateStart);
       if (itemsError) {
         capture(itemsError, { context: "[agent] getSalesSummary" });
@@ -148,7 +145,6 @@ function getPendingSales(
         .from("sales")
         .select("id, sale_date, total_amount, paid_amount, status")
         .eq("organization_id", orgId)
-        .is("deleted_at", null)
         .or("paid_amount.is.null,paid_amount.lt.total_amount")
         .order("sale_date", { ascending: false })
         .limit(10);
@@ -202,7 +198,6 @@ function getTodaySales(
         .from("sales")
         .select("total_amount, paid_amount")
         .eq("organization_id", orgId)
-        .is("deleted_at", null)
         .gte("sale_date", dayStart);
       if (salesAggError) {
         capture(salesAggError, { context: "[agent] getTodaySales" });
@@ -227,8 +222,6 @@ function getTodaySales(
           "quantity, total_price, products!inner(name), sales!inner(organization_id, sale_date)",
         )
         .eq("sales.organization_id", orgId)
-        .is("deleted_at", null)
-        .is("sales.deleted_at", null)
         .gte("sales.sale_date", dayStart);
       if (itemsError) {
         capture(itemsError, { context: "[agent] getTodaySales" });

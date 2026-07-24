@@ -54,36 +54,9 @@ export async function createBranch(
   db: SupabaseClient,
   orgId: string,
   params: CreateBranchParams,
-  userId_?: string,
 ): Promise<Branch> {
-  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
+  const userId = (await db.auth.getUser()).data.user?.id;
   if (!userId) throw new NotFoundError("Not authenticated");
-  // Enforce branch_limit
-  const { data: org, error: orgError } = await db
-    .from("organizations")
-    .select("branch_limit")
-    .eq("id", orgId)
-    .single();
-
-  if (orgError || !org) {
-    throw new NotFoundError("Organization not found");
-  }
-
-  const { count: branchCount, error: countError } = await db
-    .from("branches")
-    .select("*", { count: "exact", head: true })
-    .eq("organization_id", orgId)
-    .is("deleted_at", null);
-
-  if (countError) {
-    throw new Error(countError.message ?? "Failed to count branches");
-  }
-
-  if (branchCount != null && branchCount >= org.branch_limit) {
-    throw new ValidationError(
-      `Branch limit reached (${org.branch_limit}). Upgrade your plan to add more branches.`,
-    );
-  }
   return crud.create(db, orgId, params, userId);
 }
 
@@ -106,9 +79,8 @@ export async function updateBranch(
   branchId: string,
   orgId: string,
   params: UpdateBranchParams,
-  userId_?: string,
 ): Promise<Branch> {
-  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
+  const userId = (await db.auth.getUser()).data.user?.id;
   if (!userId) throw new NotFoundError("Not authenticated");
   return crud.update(db, orgId, branchId, params, userId);
 }
@@ -120,9 +92,8 @@ export async function deleteBranch(
   db: SupabaseClient,
   branchId: string,
   orgId: string,
-  userId_?: string,
 ): Promise<void> {
-  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
+  const userId = (await db.auth.getUser()).data.user?.id;
   if (!userId) throw new NotFoundError("Not authenticated");
   await crud.softDelete(db, orgId, branchId, userId);
 }

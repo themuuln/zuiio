@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { DetailDrawerShell } from "@/components/ui/detail-drawer-shell";
 import { InfoRow } from "@/components/ui/info-row";
 import { formatCurrency } from "@/lib/format";

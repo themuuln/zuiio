@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT8YXB5NSYT84TB1JHQ9J85Y",
+  "taskId": "initialize-a5c-infra",
+  "invocationKey": "cradle/project-install:S000013:initialize-a5c-infra",
+  "status": "ok",
+  "result": {
+    "packageJsonCreated": true,
+    "packageJsonPath": ".a5c/package.json",
+    "qualityGates": {
+      "commitChecks": [
+        "biome check"
+      ],
+      "deployGates": [
+        "biome check",
+        "next build"
+      ],
+      "formatting": "biome format --write",
+      "linting": "biome check",
+      "qualityThreshold": 80,
+      "testCoverage": 60
+    },
+    "qualityGatesPath": ".a5c/quality-gates.json",
+    "sdkInstalled": false
+  },
+  "startedAt": "2026-06-04T09:21:17.226Z",
+  "finishedAt": "2026-06-04T09:21:17.226Z",
+  "value": {
+    "packageJsonCreated": true,
+    "packageJsonPath": ".a5c/package.json",
+    "qualityGates": {
+      "commitChecks": [
+        "biome check"
+      ],
+      "deployGates": [
+        "biome check",
+        "next build"
+      ],
+      "formatting": "biome format --write",
+      "linting": "biome check",
+      "qualityThreshold": 80,
+      "testCoverage": 60
+    },
+    "qualityGatesPath": ".a5c/quality-gates.json",
+    "sdkInstalled": false
+  }
+}

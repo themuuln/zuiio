@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { MechanicSwitcher } from "@/components/mechanic-switcher";
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
@@ -56,11 +57,18 @@ function SidebarSkeleton() {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const { push } = useRouter();
+  const t = useTranslations();
+  const { push, prefetch } = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Prefetch critical pages for faster navigation
+    prefetch("/dashboard");
+    prefetch("/dashboard/bay-view");
+    prefetch("/dashboard/work-orders");
+  }, [prefetch]);
+
   const {
     isActive,
     groups,
@@ -81,7 +89,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher />
       </SidebarHeader>
       <SidebarContent>
-        {roleLoading ? (
+        {!mounted || roleLoading ? (
           <SidebarSkeleton />
         ) : (
           <>

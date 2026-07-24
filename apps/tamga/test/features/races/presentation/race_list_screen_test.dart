@@ -18,7 +18,10 @@ import '../../../helpers/test_helpers.dart';
 ///
 /// Overrides [racesProvider] with the provided [races] list, or simulates
 /// loading/error states.
-Widget createRaceListScreen({List<Race>? races, bool simulateError = false}) {
+Widget createRaceListScreen({
+  List<Race>? races,
+  bool simulateError = false,
+}) {
   if (simulateError) {
     return ProviderScope(
       overrides: [
@@ -26,7 +29,10 @@ Widget createRaceListScreen({List<Race>? races, bool simulateError = false}) {
           throw Exception('Test network error');
         }),
       ],
-      child: MaterialApp(theme: AppTheme.light(), home: const RaceListScreen()),
+      child: MaterialApp(
+        theme: AppTheme.light(),
+        home: const RaceListScreen(),
+      ),
     );
   }
 
@@ -36,7 +42,10 @@ Widget createRaceListScreen({List<Race>? races, bool simulateError = false}) {
         return races ?? [];
       }),
     ],
-    child: MaterialApp(theme: AppTheme.light(), home: const RaceListScreen()),
+    child: MaterialApp(
+      theme: AppTheme.light(),
+      home: const RaceListScreen(),
+    ),
   );
 }
 
@@ -53,7 +62,9 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [racesProvider.overrideWith((ref) => completer.future)],
+          overrides: [
+            racesProvider.overrideWith((ref) => completer.future),
+          ],
           child: MaterialApp(
             theme: AppTheme.light(),
             home: const RaceListScreen(),
@@ -83,10 +94,16 @@ void main() {
       expect(find.byType(TamgaErrorWidget), findsOneWidget);
 
       // Verify the error message
-      expect(find.text('Уралдаан ачаалахад алдаа гарлаа'), findsOneWidget);
+      expect(
+        find.text('Уралдаан ачаалахад алдаа гарлаа'),
+        findsOneWidget,
+      );
 
       // Verify retry button exists
-      expect(find.text('Дахин оролдох / Retry'), findsOneWidget);
+      expect(
+        find.text('Дахин оролдох / Retry'),
+        findsOneWidget,
+      );
     });
 
     // ════════════════════════════════════════════════════════════

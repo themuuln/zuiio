@@ -57,10 +57,7 @@ type DialogState =
 // ── Component ──────────────────────────────────────────────
 
 export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
 
   const [state, setState] = useState<DialogState>("form");
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
@@ -339,6 +336,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
         {state === "qr" && qrDataUrl && (
           <div className="flex flex-col items-center gap-3 py-2">
             <div className="rounded-lg border p-2">
+              {/* biome-ignore lint/performance/noImgElement: QR codes use inline data URIs, next/Image is not suitable */}
               <img
                 src={qrDataUrl}
                 alt={t("bayView.registrationQrCode")}
@@ -362,6 +360,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
         {state === "expired" && qrDataUrl && (
           <div className="flex flex-col items-center gap-3 py-2">
             <div className="relative rounded-lg border p-2 opacity-50">
+              {/* biome-ignore lint/performance/noImgElement: QR codes use inline data URIs, next/Image is not suitable */}
               <img
                 src={qrDataUrl}
                 alt={t("bayView.registrationQrCode")}

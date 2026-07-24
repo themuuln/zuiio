@@ -15,7 +15,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { LowStockCard } from "@/app/[locale]/dashboard/_low-stock-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -40,7 +40,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { Link } from "@/lib/i18n/navigation";
 import { useBranches } from "@/lib/queries/use-branches";
 import { useCurrentSession } from "@/lib/queries/use-cash-register";
@@ -143,10 +142,7 @@ function PaymentMiniCard({
 }
 
 export default function EodClosePage() {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const locale = useLocale();
   const localeTag = locale === "mn" ? "mn-MN" : "en-US";
   const { data: org, isPending: orgLoading } = useCurrentOrg();
@@ -157,6 +153,7 @@ export default function EodClosePage() {
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isPendingItemsOpen, setIsPendingItemsOpen] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const { data: branches = [] } = useBranches(orgId);
   const branchName = branchFilter
@@ -197,7 +194,6 @@ export default function EodClosePage() {
   const openCount = eod?.open_work_orders ?? 0;
   const biggestIssue = eod?.biggest_issue ?? null;
   const unpaidInvoiceCount = eod?.unpaid_invoices?.count ?? 0;
-  useIsFirstLoad(!!eod);
 
   const attentionItems = [
     {
@@ -224,6 +220,12 @@ export default function EodClosePage() {
     ? (eodQuery.error?.message ?? statusQuery.error?.message)
     : null;
   const isRefreshing = eodQuery.isFetching || statusQuery.isFetching;
+
+  useEffect(() => {
+    if (eod && !hasLoadedOnce) {
+      setHasLoadedOnce(true);
+    }
+  }, [eod, hasLoadedOnce]);
 
   const handleRefresh = async () => {
     await Promise.all([eodQuery.refetch(), statusQuery.refetch()]);

@@ -82,10 +82,7 @@ interface RefundsTabProps {
 }
 
 export function RefundsTab({ orgId }: RefundsTabProps) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const cancelRefund = useCancelRefund(orgId);

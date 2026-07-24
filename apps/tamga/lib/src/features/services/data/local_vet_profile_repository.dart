@@ -9,8 +9,9 @@ import 'services_repository.dart';
 
 /// Isar дээр суурилсан локал мал эмнэлгийн профайлын репозитори.
 class LocalVetProfileRepository implements VetProfileRepository {
-  LocalVetProfileRepository({required IsarStorage storage})
-    : _storage = storage;
+  LocalVetProfileRepository({
+    required IsarStorage storage,
+  }) : _storage = storage;
 
   final IsarStorage _storage;
 

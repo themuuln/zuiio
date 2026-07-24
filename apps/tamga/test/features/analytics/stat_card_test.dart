@@ -9,7 +9,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: StatCard(label: 'Total Horses', value: '42'),
+            body: StatCard(
+              label: 'Total Horses',
+              value: '42',
+            ),
           ),
         ),
       );
@@ -60,7 +63,11 @@ void main() {
 
     testWidgets('renders loading state', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: StatCard.loading())),
+        MaterialApp(
+          home: Scaffold(
+            body: StatCard.loading(),
+          ),
+        ),
       );
 
       expect(find.text('Уншиж байна...'), findsOneWidget);
@@ -70,7 +77,9 @@ void main() {
     testWidgets('renders error state', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: StatCard.error(message: 'Failed to load')),
+          home: Scaffold(
+            body: StatCard.error(message: 'Failed to load'),
+          ),
         ),
       );
 
@@ -82,7 +91,9 @@ void main() {
     testWidgets('renders empty state', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: StatCard.empty(label: 'No data available')),
+          home: Scaffold(
+            body: StatCard.empty(label: 'No data available'),
+          ),
         ),
       );
 

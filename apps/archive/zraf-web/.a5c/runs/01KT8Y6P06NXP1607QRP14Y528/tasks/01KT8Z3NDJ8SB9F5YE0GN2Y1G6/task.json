@@ -1,0 +1,73 @@
+{
+  "kind": "breakpoint",
+  "metadata": {
+    "label": "breakpoint",
+    "payload": {
+      "context": {
+        "files": [
+          {
+            "format": "json",
+            "label": "Full Profile JSON",
+            "path": "artifacts/project-profile-preview.json"
+          },
+          {
+            "format": "json",
+            "label": "Tool Recommendations",
+            "path": "artifacts/tool-recommendations.json"
+          },
+          {
+            "format": "markdown",
+            "label": "CLAUDE.md Additions",
+            "path": "artifacts/claude-md-additions.md"
+          },
+          {
+            "format": "markdown",
+            "label": "New Project Scaffold",
+            "path": "artifacts/new-project-scaffold.md"
+          }
+        ]
+      },
+      "question": "Please review the complete project profile before we save it.\n\n**Project**: ZRAf\n**Description**: Mongolian driving theory exam prep app — practice questions, mock exams, progress tracking. Client-side only with localStorage persistence.\n**Tech Stack**: TypeScript, CSS | Next.js, React, Tailwind CSS, React Compiler\n**Architecture**: client-side SPA with static data\n**Team Members**: Temuulen\n**Goals**: Ship to tester quickly for feedback; Deploy on Vercel for 1-person testing; Optimize static assets to fit Vercel deployment limits\n\n**Recommended Skills**: next-best-practices, next-cache-components, uiux, webapp-testing\n**Recommended Processes**: gsd/execute, gsd/verify\n**CI/CD Configured**: Skipped\n**CLAUDE.md Updated**: Yes\n**Gitignore Configured**: logs-runs\n**New Project Scaffolding**: Applied\n\n**Profile Path**: /Users/themuuln/coding/personal/zraf-web/.a5c/project-profile.json\n\nApprove to save this profile, or provide corrections.",
+      "title": "Project Profile Review"
+    },
+    "requestedAt": "2026-06-04T09:23:25.746Z"
+  },
+  "title": "breakpoint",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KT8Z3NDJ8SB9F5YE0GN2Y1G6",
+  "taskId": "__sdk.breakpoint",
+  "invocationKey": "cradle/project-install:S000016:__sdk.breakpoint",
+  "stepId": "S000016",
+  "inputs": {
+    "label": "breakpoint",
+    "payload": {
+      "context": {
+        "files": [
+          {
+            "format": "json",
+            "label": "Full Profile JSON",
+            "path": "artifacts/project-profile-preview.json"
+          },
+          {
+            "format": "json",
+            "label": "Tool Recommendations",
+            "path": "artifacts/tool-recommendations.json"
+          },
+          {
+            "format": "markdown",
+            "label": "CLAUDE.md Additions",
+            "path": "artifacts/claude-md-additions.md"
+          },
+          {
+            "format": "markdown",
+            "label": "New Project Scaffold",
+            "path": "artifacts/new-project-scaffold.md"
+          }
+        ]
+      },
+      "question": "Please review the complete project profile before we save it.\n\n**Project**: ZRAf\n**Description**: Mongolian driving theory exam prep app — practice questions, mock exams, progress tracking. Client-side only with localStorage persistence.\n**Tech Stack**: TypeScript, CSS | Next.js, React, Tailwind CSS, React Compiler\n**Architecture**: client-side SPA with static data\n**Team Members**: Temuulen\n**Goals**: Ship to tester quickly for feedback; Deploy on Vercel for 1-person testing; Optimize static assets to fit Vercel deployment limits\n\n**Recommended Skills**: next-best-practices, next-cache-components, uiux, webapp-testing\n**Recommended Processes**: gsd/execute, gsd/verify\n**CI/CD Configured**: Skipped\n**CLAUDE.md Updated**: Yes\n**Gitignore Configured**: logs-runs\n**New Project Scaffolding**: Applied\n\n**Profile Path**: /Users/themuuln/coding/personal/zraf-web/.a5c/project-profile.json\n\nApprove to save this profile, or provide corrections.",
+      "title": "Project Profile Review"
+    },
+    "requestedAt": "2026-06-04T09:23:25.746Z"
+  }
+}

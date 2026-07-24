@@ -9,7 +9,7 @@ interface NewPurchaseOrderSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function NewPurchaseOrderDrawer({
+export function NewPurchaseOrderSheet({
   open,
   onOpenChange,
 }: NewPurchaseOrderSheetProps) {

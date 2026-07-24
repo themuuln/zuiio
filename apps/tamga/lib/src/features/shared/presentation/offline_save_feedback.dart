@@ -36,6 +36,9 @@ void showOfflineAwareSaveFeedback(
       icon: Icons.cloud_upload_outlined,
     );
   } else {
-    TamgaToast.showSuccess(context, onSavedMessage);
+    TamgaToast.showSuccess(
+      context,
+      onSavedMessage,
+    );
   }
 }

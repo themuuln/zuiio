@@ -172,12 +172,12 @@ test.describe("Public shop products", () => {
     const product = await getFirstProduct(supabase);
     test.skip(!product, "No products found");
 
-    await page.goto(`/${slug}/products/${product?.id}`, {
+    await page.goto(`/${slug}/products/${product!.id}`, {
       waitUntil: "domcontentloaded",
     });
 
     await aiAssert(
-      `The page shows a product detail view for "${product?.name}"`,
+      `The page shows a product detail view for "${product!.name}"`,
     );
 
     await aiAssert("The price and stock information are displayed");

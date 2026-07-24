@@ -7,11 +7,11 @@
  */
 export type {
   Game,
-  GamePlayerStats,
-  GameStatus,
   Player,
-  SeasonPlayerStats,
-  Standings,
   Team,
   Venue,
+  Standings,
+  GamePlayerStats,
+  SeasonPlayerStats,
+  GameStatus,
 } from "../../../packages/core/src/types/index";

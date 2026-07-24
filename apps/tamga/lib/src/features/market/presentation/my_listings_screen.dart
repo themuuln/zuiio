@@ -223,8 +223,10 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
   ) async {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            TrialSlotsScreen(listingId: listing.id, sellerId: listing.sellerId),
+        builder: (_) => TrialSlotsScreen(
+          listingId: listing.id,
+          sellerId: listing.sellerId,
+        ),
       ),
     );
   }
@@ -259,7 +261,9 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
             timer.cancel();
 
             // Payment verified — activate boost or VIP on the listing
-            final marketRepo = await ref.read(marketRepositoryProvider.future);
+            final marketRepo = await ref.read(
+              marketRepositoryProvider.future,
+            );
             final now = DateTime.now();
             final expiresAt = now.add(result.duration);
 
@@ -477,10 +481,7 @@ class _MyListingCard extends StatelessWidget {
                     ),
                     OutlinedButton.icon(
                       onPressed: onTrialSlots,
-                      icon: const Icon(
-                        Icons.event_available_outlined,
-                        size: 16,
-                      ),
+                      icon: const Icon(Icons.event_available_outlined, size: 16),
                       label: const Text('Туршилт'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(

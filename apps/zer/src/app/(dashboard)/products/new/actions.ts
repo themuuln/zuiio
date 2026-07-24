@@ -3,7 +3,8 @@
 import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { validateProductInput } from "@/lib/domain-rules";
-import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
+import { revalidateEntity } from "@/lib/revalidate";
+
 export async function createProduct(
   _prevState: { error?: string } | undefined,
   formData: FormData,
@@ -20,9 +21,8 @@ export async function createProduct(
   const sku = formData.get("sku")?.toString() ?? null;
   const barcode = formData.get("barcode")?.toString() ?? null;
   const unit = formData.get("unit")?.toString() ?? "ширхэг";
-  const brandName = formData.get("brand_name")?.toString() || null;
+  const brandId = formData.get("brand_id")?.toString() || null;
   const categoryName = formData.get("category_name")?.toString() || null;
-  const imageUrl = formData.get("image_url")?.toString() || null;
 
   const validationError = validateProductInput({
     name,
@@ -56,11 +56,7 @@ export async function createProduct(
     } else {
       const { data: created, error: createCatError } = await supabase
         .from("categories")
-        .insert({
-          name: categoryName.trim(),
-          organization_id: organizationId,
-          slug: "",
-        })
+        .insert({ name: categoryName.trim(), organization_id: organizationId })
         .select("id")
         .single();
       if (createCatError) {
@@ -70,40 +66,6 @@ export async function createProduct(
       if (created) categoryId = created.id;
     }
   }
-  // Resolve brand_name to brand_id (find-or-create, same as categories)
-  let resolvedBrandId: string | null = null;
-  if (brandName) {
-    const { data: existingBrand, error: brandQueryError } = await supabase
-      .from("brands")
-      .select("id")
-      .eq("organization_id", organizationId)
-      .eq("name", brandName.trim())
-      .maybeSingle();
-    if (brandQueryError) {
-      capture(brandQueryError, {
-        context: "createProduct: check existing brand",
-      });
-    }
-
-    if (existingBrand) {
-      resolvedBrandId = existingBrand.id;
-    } else {
-      const { data: newBrand, error: createBrandError } = await supabase
-        .from("brands")
-        .insert({ name: brandName.trim(), organization_id: organizationId })
-        .select("id")
-        .single();
-      if (createBrandError) {
-        capture(createBrandError, { context: "createProduct: create brand" });
-      }
-
-      if (newBrand) resolvedBrandId = newBrand.id;
-    }
-  }
-  // Read variant payloads up front so we can flag has_variants on insert
-  // (the trigger also keeps this in sync when variants are added/removed).
-  const variantGroupsRaw = formData.get("variant_groups")?.toString();
-  const variantDataRaw = formData.get("variant_data")?.toString();
 
   const { data: product, error } = await supabase
     .from("products")
@@ -113,16 +75,13 @@ export async function createProduct(
       sku: sku?.trim() || null,
       barcode: barcode?.trim() || null,
       unit,
-      brand_id: resolvedBrandId,
+      brand_id: brandId || null,
       category_id: categoryId,
       cost_price: costPrice,
       sale_price: salePrice,
       current_stock: currentStock,
       min_stock: minStock,
-      image_url: imageUrl,
-      is_public: false,
-      has_variants: Boolean(variantGroupsRaw && variantDataRaw),
-    } as never)
+    })
     .select("id")
     .single();
 
@@ -132,6 +91,8 @@ export async function createProduct(
   }
 
   // Handle variants if provided
+  const variantGroupsRaw = formData.get("variant_groups")?.toString();
+  const variantDataRaw = formData.get("variant_data")?.toString();
 
   if (variantGroupsRaw && variantDataRaw && product) {
     try {
@@ -238,6 +199,5 @@ export async function createProduct(
   }
 
   revalidateEntity("products");
-  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }

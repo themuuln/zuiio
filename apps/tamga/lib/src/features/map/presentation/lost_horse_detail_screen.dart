@@ -60,10 +60,7 @@ class LostHorseDetailScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        report.horseName ?? '',
-                        style: TamgaTypography.headline(),
-                      ),
+                      Text(report.horseName ?? '', style: TamgaTypography.headline()),
                       Text(
                         _timeAgo(report.lastSeenAt),
                         style: TamgaTypography.caption1(
@@ -116,7 +113,11 @@ class LostHorseDetailScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (report.locationAimag != null)
-                    _locationRow('Аймаг', report.locationAimag!, colors),
+                    _locationRow(
+                      'Аймаг',
+                      report.locationAimag!,
+                      colors,
+                    ),
                   if (report.locationSum != null) ...[
                     const SizedBox(height: TamgaSpacing.sm),
                     _locationRow('Сум', report.locationSum!, colors),
@@ -149,11 +150,7 @@ class LostHorseDetailScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _animalInfoRow(
-                    'Малын төрөл',
-                    report.animalType.displayName,
-                    colors,
-                  ),
+                  _animalInfoRow('Малын төрөл', report.animalType.displayName, colors),
                   const SizedBox(height: TamgaSpacing.sm),
                   if (report.ages.isNotEmpty)
                     _animalInfoRow(
@@ -207,8 +204,8 @@ class LostHorseDetailScreen extends ConsumerWidget {
                     color: report.pricingTier == LostHorsePricingTier.vip
                         ? colors.primary
                         : report.pricingTier == LostHorsePricingTier.featured
-                        ? colors.secondary
-                        : colors.surfaceContainerHighest,
+                            ? colors.secondary
+                            : colors.surfaceContainerHighest,
                   ),
                   child: Text(
                     report.pricingTier.displayName,
@@ -228,7 +225,9 @@ class LostHorseDetailScreen extends ConsumerWidget {
                     report.expiresAt != null
                         ? 'Дуусах: ${_formatDate(report.expiresAt!)}'
                         : 'Хугацаагүй',
-                    style: TamgaTypography.body(color: colors.onSurfaceVariant),
+                    style: TamgaTypography.body(
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
                 ),
 
@@ -308,7 +307,9 @@ class LostHorseDetailScreen extends ConsumerWidget {
                             child: SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
                             ),
                           ),
                         ),
@@ -337,7 +338,9 @@ class LostHorseDetailScreen extends ConsumerWidget {
                     const SizedBox(height: TamgaSpacing.sm),
                     Text(
                       report.earMarkDescription!,
-                      style: TamgaTypography.body(weight: FontWeight.w500),
+                      style: TamgaTypography.body(
+                        weight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ],
@@ -359,12 +362,18 @@ class LostHorseDetailScreen extends ConsumerWidget {
             TamgaCard(
               child: Row(
                 children: [
-                  Icon(Icons.phone_outlined, size: 20, color: colors.primary),
+                  Icon(
+                    Icons.phone_outlined,
+                    size: 20,
+                    color: colors.primary,
+                  ),
                   const SizedBox(width: TamgaSpacing.md),
                   Expanded(
                     child: Text(
                       report.contactPhone!,
-                      style: TamgaTypography.body(weight: FontWeight.w500),
+                      style: TamgaTypography.body(
+                        weight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
@@ -374,7 +383,8 @@ class LostHorseDetailScreen extends ConsumerWidget {
           ],
 
           // ── Video Section ─────────────────────────────────────
-          if (report.videoUrls.isNotEmpty || _isR2Available(ref) == false) ...[
+          if (report.videoUrls.isNotEmpty ||
+              _isR2Available(ref) == false) ...[
             _buildVideoSection(context, ref, colors),
             const SizedBox(height: TamgaSpacing.lg),
           ],
@@ -618,7 +628,9 @@ class LostHorseDetailScreen extends ConsumerWidget {
           width: 80,
           child: Text(
             label,
-            style: TamgaTypography.footnote(color: colors.onSurfaceVariant),
+            style: TamgaTypography.footnote(
+              color: colors.onSurfaceVariant,
+            ),
           ),
         ),
         Expanded(
@@ -650,7 +662,9 @@ class LostHorseDetailScreen extends ConsumerWidget {
           width: 80,
           child: Text(
             label,
-            style: TamgaTypography.footnote(color: colors.onSurfaceVariant),
+            style: TamgaTypography.footnote(
+              color: colors.onSurfaceVariant,
+            ),
           ),
         ),
         Expanded(
@@ -765,7 +779,10 @@ class LostHorseDetailScreen extends ConsumerWidget {
                 height: videoSize,
                 color: colors.surfaceContainerHighest,
                 child: const Center(
-                  child: Icon(Icons.videocam_outlined, size: 28),
+                  child: Icon(
+                    Icons.videocam_outlined,
+                    size: 28,
+                  ),
                 ),
               ),
               Container(
@@ -792,7 +809,11 @@ class LostHorseDetailScreen extends ConsumerWidget {
   Widget _buildVideoPlaceholder(TamgaColors colors) {
     return Row(
       children: [
-        Icon(Icons.videocam_outlined, color: colors.onSurfaceVariant, size: 24),
+        Icon(
+          Icons.videocam_outlined,
+          color: colors.onSurfaceVariant,
+          size: 24,
+        ),
         const SizedBox(width: TamgaSpacing.sm),
         Expanded(
           child: Text(
@@ -887,7 +908,8 @@ class LostHorseDetailScreen extends ConsumerWidget {
             child: ElevatedButton(
               onPressed: () => _renewReport(context, ref),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isExpired ? colors.error : colors.secondary,
+                backgroundColor:
+                    isExpired ? colors.error : colors.secondary,
                 foregroundColor: colors.onPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: TamgaSpacing.md,
@@ -926,9 +948,14 @@ class LostHorseDetailScreen extends ConsumerWidget {
     if (confirmed != true || !context.mounted) return;
 
     try {
-      await ref.read(renewLostHorseReportProvider(report).future);
+      await ref.read(
+        renewLostHorseReportProvider(report).future,
+      );
       if (!context.mounted) return;
-      TamgaToast.showSuccess(context, 'Зар амжилттай сунгагдлаа');
+      TamgaToast.showSuccess(
+        context,
+        'Зар амжилттай сунгагдлаа',
+      );
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!context.mounted) return;

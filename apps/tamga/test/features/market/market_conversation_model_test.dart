@@ -39,7 +39,8 @@ void main() {
         expect(conversation.buyerId, 'buyer-1');
         expect(conversation.sellerId, 'seller-1');
         expect(conversation.lastMessage, 'Сайн байна уу?');
-        expect(conversation.lastMessageAt, DateTime(2026, 6, 1, 12, 0, 0));
+        expect(conversation.lastMessageAt,
+            DateTime(2026, 6, 1, 12, 0, 0));
         expect(conversation.unreadCount, 0);
       });
 
@@ -78,7 +79,10 @@ void main() {
           lastMessage: 'Hello',
           unreadCount: 1,
         );
-        final copied = original.copyWith(lastMessage: 'Hi', unreadCount: 0);
+        final copied = original.copyWith(
+          lastMessage: 'Hi',
+          unreadCount: 0,
+        );
 
         expect(copied.lastMessage, 'Hi');
         expect(copied.unreadCount, 0);

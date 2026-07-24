@@ -23,7 +23,10 @@ Widget createBookingScreen({
     ],
     child: MaterialApp(
       theme: AppTheme.light(),
-      home: BookingScreen(providerType: providerType, providerId: providerId),
+      home: BookingScreen(
+        providerType: providerType,
+        providerId: providerId,
+      ),
     ),
   );
 }
@@ -107,10 +110,7 @@ void main() {
       expect(find.text('Мал эмнэлэг'), findsOneWidget);
 
       // Verify service detail label
-      expect(
-        find.text('Үйлчилгээний дэлгэрэнгүй / Service Detail'),
-        findsOneWidget,
-      );
+      expect(find.text('Үйлчилгээний дэлгэрэнгүй / Service Detail'), findsOneWidget);
 
       // Verify date selector
       expect(find.text('Огноо / Date'), findsOneWidget);

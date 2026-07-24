@@ -62,7 +62,7 @@ export function createSuppliersColumns(cb: Callbacks): ColumnDef<Supplier>[] {
         >
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             onClick={() => cb.onEdit(row.original)}
             title="Edit"
           >
@@ -70,7 +70,7 @@ export function createSuppliersColumns(cb: Callbacks): ColumnDef<Supplier>[] {
           </Button>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             onClick={() => cb.onDelete(row.original.id)}
             className="text-destructive/70 hover:text-destructive"
             title="Delete"

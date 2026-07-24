@@ -9,7 +9,7 @@ type NewExpenseSheetProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export function NewExpenseDrawer({ open, onOpenChange }: NewExpenseSheetProps) {
+export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
   const t = useTranslations("expenses");
 
   return (

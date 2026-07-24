@@ -1,0 +1,1255 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "justifications": {
+          "type": "object"
+        },
+        "prioritized": {
+          "properties": {
+            "mustHave": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "niceToHave": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "recommendedAgents": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "recommendedMethodology": {
+          "type": "string"
+        },
+        "recommendedProcesses": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "recommendedSkills": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "remediations": {
+          "items": {
+            "properties": {
+              "painPointId": {
+                "type": "string"
+              },
+              "process": {
+                "type": "string"
+              },
+              "recommendation": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "recommendedProcesses",
+        "recommendedSkills",
+        "recommendedMethodology"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "availableProcessCategories": [
+          "gsd (Get Stuff Done - general project workflows: new-project, discuss, plan, execute, verify, audit, map-codebase, iterative-convergence)",
+          "methodologies (TDD, agile, spec-driven, evolutionary, domain-driven, self-assessment, etc.)",
+          "cradle (installation and onboarding: user-install, project-install)",
+          "specializations/data-science-ml",
+          "specializations/devops-sre-platform",
+          "specializations/ux-ui-design",
+          "specializations/product-management",
+          "specializations/data-engineering-analytics",
+          "specializations/technical-documentation",
+          "specializations/domains/science",
+          "specializations/domains/business",
+          "specializations/domains/social-sciences-humanities"
+        ],
+        "miningResult": {
+          "bottlenecks": [
+            {
+              "description": "Entire codebase in one commit — no granular history",
+              "frequency": "one-time",
+              "id": "bn-single-commit",
+              "impact": "hard to trace when features were added",
+              "location": "repo-wide"
+            }
+          ],
+          "branchPatterns": {
+            "averageLifetime": "N/A",
+            "mergeStrategy": "N/A",
+            "namingConvention": "main (default)"
+          },
+          "commitPatterns": {
+            "averageFrequency": "single initial commit",
+            "averageSize": {
+              "filesChanged": "all",
+              "linesAdded": "scaffold",
+              "linesRemoved": 0
+            },
+            "conventions": [
+              "No conventions established yet — single commit repo"
+            ],
+            "messageFormat": "Create Next App (scaffold default)"
+          },
+          "contributors": [
+            {
+              "areas": [
+                "all"
+              ],
+              "commitCount": 1,
+              "name": "Temuulen Undrakhbayar"
+            }
+          ],
+          "evolution": {
+            "growthAreas": [
+              "src/components (8 screens)",
+              "src/lib (6 modules)",
+              "public/data (question bank)"
+            ],
+            "majorEvents": [
+              {
+                "date": "initial",
+                "description": "Initial scaffold + full feature implementation (single commit)"
+              }
+            ],
+            "technologyChanges": [
+              "Create Next App scaffold → full driving theory app"
+            ]
+          },
+          "implicitRules": [
+            "All code is client-side rendered (no server components)",
+            "Data loaded from static JSON, not API routes",
+            "localStorage for all persistence"
+          ],
+          "painPoints": [
+            {
+              "category": "quality",
+              "description": "No test suite configured",
+              "discoveredVia": "tool analysis",
+              "id": "pp-no-tests",
+              "severity": "medium"
+            },
+            {
+              "category": "devops",
+              "description": "No CI/CD pipeline",
+              "discoveredVia": "tool analysis",
+              "id": "pp-no-ci",
+              "severity": "low"
+            }
+          ],
+          "releasePatterns": {
+            "frequency": "none",
+            "tagFormat": "none",
+            "versioningScheme": "0.1.0 (package.json)"
+          }
+        },
+        "profile": {
+          "architecture": {
+            "dataFlow": "Static JSON → fetch() → LearningEngine → React context → Screens → localStorage",
+            "entryPoints": [
+              "src/app/layout.tsx",
+              "src/app/page.tsx"
+            ],
+            "modules": [
+              {
+                "description": "Next.js App Router pages",
+                "name": "app",
+                "path": "src/app"
+              },
+              {
+                "description": "8 screen components + app shell",
+                "name": "components",
+                "path": "src/components"
+              },
+              {
+                "description": "use-learning context provider",
+                "name": "hooks",
+                "path": "src/hooks"
+              },
+              {
+                "description": "Core logic: data-loader, learning-engine, models, question-bank, storage, utils",
+                "name": "lib",
+                "path": "src/lib"
+              },
+              {
+                "description": "Static JSON question bank + images",
+                "name": "data",
+                "path": "public/data"
+              }
+            ],
+            "pattern": "client-side SPA with static data"
+          },
+          "bottlenecks": [
+            {
+              "description": "Single commit codebase — no granular history",
+              "id": "bn-repo-0",
+              "impact": "Hard to trace feature evolution",
+              "location": "repo-wide"
+            }
+          ],
+          "cicd": {
+            "configPaths": [],
+            "pipelines": [],
+            "provider": null
+          },
+          "claudeMdInstructions": [
+            "Ship to tester quickly — prioritize working features over perfection",
+            "Trunk-based workflow, feature branches for bigger changes",
+            "Autonomous mode — no breakpoints for routine work",
+            "Vercel deployment target — watch asset sizes"
+          ],
+          "conventions": {
+            "additionalRules": [
+              "React Compiler enabled",
+              "suppressHydrationWarning",
+              "All client-side, no RSC"
+            ],
+            "codeStyle": {
+              "formatter": "Biome",
+              "linter": "Biome"
+            },
+            "errorHandling": "try-catch with silent fallback",
+            "importOrder": [
+              "@/ aliases",
+              "external"
+            ],
+            "naming": {
+              "components": "kebab-case files, PascalCase exports",
+              "hooks": "use-*.tsx",
+              "lib": "kebab-case"
+            },
+            "testingConventions": "None configured"
+          },
+          "createdAt": "2026-06-04T09:13:30.000Z",
+          "description": "Mongolian driving theory exam prep app — practice questions, mock exams, progress tracking. Client-side only with localStorage persistence.",
+          "goals": [
+            {
+              "category": "productivity",
+              "description": "Ship to tester quickly for feedback",
+              "id": "goal-productivity-0",
+              "priority": "high",
+              "status": "active"
+            },
+            {
+              "category": "quality",
+              "description": "Deploy on Vercel for 1-person testing",
+              "id": "goal-quality-0",
+              "priority": "high",
+              "status": "active"
+            },
+            {
+              "category": "quality",
+              "description": "Optimize static assets to fit Vercel deployment limits",
+              "id": "goal-quality-1",
+              "priority": "high",
+              "status": "active"
+            }
+          ],
+          "installedAgents": [],
+          "installedProcesses": [
+            "cradle/project-install"
+          ],
+          "installedSkills": [],
+          "painPoints": [
+            {
+              "category": "quality",
+              "description": "No test suite",
+              "id": "pp-quality-0",
+              "severity": "medium",
+              "suggestedRemediation": "Add Vitest + Playwright for E2E"
+            },
+            {
+              "category": "devops",
+              "description": "Deployment size exceeds Vercel free tier (178MB > 100MB)",
+              "id": "pp-devops-0",
+              "severity": "high",
+              "suggestedRemediation": "Clean unused assets, compress images"
+            },
+            {
+              "category": "devops",
+              "description": "No CI/CD",
+              "id": "pp-devops-1",
+              "severity": "low"
+            }
+          ],
+          "preferences": {
+            "autonomy": "autonomous",
+            "branchStrategy": "trunk-based",
+            "releaseCadence": "manual/continuous"
+          },
+          "projectName": "ZRAf",
+          "repositories": [
+            {
+              "path": "/Users/themuuln/coding/personal/zraf-web",
+              "url": "local"
+            }
+          ],
+          "team": [
+            {
+              "name": "Temuulen",
+              "responsibilities": [
+                "Full-stack development",
+                "Design",
+                "Deployment"
+              ],
+              "role": "Solo developer"
+            }
+          ],
+          "techStack": {
+            "buildTools": [
+              "Next.js (Turbopack)",
+              "PostCSS"
+            ],
+            "frameworks": [
+              {
+                "category": "meta-framework",
+                "name": "Next.js",
+                "version": "16.2.6"
+              },
+              {
+                "category": "UI library",
+                "name": "React",
+                "version": "19.2.4"
+              },
+              {
+                "category": "utility CSS",
+                "name": "Tailwind CSS",
+                "version": "4"
+              },
+              {
+                "category": "build optimization",
+                "name": "React Compiler",
+                "version": "1.0.0"
+              }
+            ],
+            "infrastructure": [
+              {
+                "category": "hosting",
+                "name": "Vercel"
+              }
+            ],
+            "languages": [
+              {
+                "name": "TypeScript",
+                "role": "primary"
+              },
+              {
+                "name": "CSS",
+                "role": "styling"
+              }
+            ],
+            "packageManagers": [
+              "pnpm"
+            ]
+          },
+          "tools": {
+            "formatting": [
+              {
+                "command": "biome format --write",
+                "name": "Biome",
+                "version": "2.2.0"
+              }
+            ],
+            "linting": [
+              {
+                "command": "biome check",
+                "name": "Biome",
+                "version": "2.2.0"
+              }
+            ],
+            "testing": []
+          },
+          "updatedAt": "2026-06-04T09:13:30.000Z",
+          "version": 1,
+          "workflows": [
+            {
+              "description": "Local dev",
+              "name": "development",
+              "steps": [
+                "pnpm dev",
+                "Edit",
+                "Biome check"
+              ],
+              "triggers": [
+                "manual"
+              ]
+            },
+            {
+              "description": "Push to main triggers Vercel deploy",
+              "name": "deploy",
+              "triggers": [
+                "git push main"
+              ]
+            },
+            {
+              "description": "Work on main, feature branches for bigger changes",
+              "name": "trunk-based",
+              "steps": [
+                "git checkout -b feat/...",
+                "Work",
+                "Merge to main"
+              ]
+            }
+          ]
+        },
+        "repoStructure": {
+          "architecture": {
+            "dataFlow": "Static JSON files in public/data/ → fetch() in data-loader.ts → LearningEngine processes → React context (use-learning) → Screen components render → localStorage for persistence",
+            "entryPoints": [
+              "src/app/layout.tsx",
+              "src/app/page.tsx"
+            ],
+            "modules": [
+              {
+                "description": "Next.js App Router pages and layout",
+                "name": "app",
+                "path": "src/app"
+              },
+              {
+                "description": "UI components: app-shell, screens (home, practice, progress, profile, session, result, onboarding)",
+                "name": "components",
+                "path": "src/components"
+              },
+              {
+                "description": "React hooks — use-learning.tsx (LearningProvider context)",
+                "name": "hooks",
+                "path": "src/hooks"
+              },
+              {
+                "description": "Core logic: data-loader, learning-engine, models, question-bank, storage, utils",
+                "name": "lib",
+                "path": "src/lib"
+              },
+              {
+                "description": "shadcn/ui base components",
+                "name": "ui",
+                "path": "src/components/ui"
+              },
+              {
+                "description": "Static JSON question data + images loaded at runtime",
+                "name": "data",
+                "path": "public/data/traffic_institute"
+              }
+            ],
+            "pattern": "single-page application (client-side rendered)"
+          },
+          "conventions": {
+            "additionalRules": [
+              "React Compiler enabled (babel-plugin-react-compiler)",
+              "suppressHydrationWarning on <html> for dark mode",
+              "All data loaded client-side via fetch to static JSON",
+              "No server components — entire app is 'use client'"
+            ],
+            "codeStyle": {
+              "formatter": "Biome format",
+              "linter": "Biome (biome.json)",
+              "no ESLint": true
+            },
+            "errorHandling": "try-catch with silent fallback in storage/data-loader",
+            "importOrder": [
+              "@/ (path alias to src/)",
+              "external packages"
+            ],
+            "naming": {
+              "components": "kebab-case files, PascalCase exports",
+              "hooks": "use-*.tsx pattern",
+              "lib": "kebab-case utility modules"
+            },
+            "testingConventions": "No tests configured yet"
+          },
+          "directoryTree": {
+            "public": {
+              "data": {
+                "traffic_institute": {
+                  "app_ready": [
+                    "categories/",
+                    "images/",
+                    "question_bank_index.json",
+                    "question_bank.json"
+                  ],
+                  "mirror": [
+                    "(50 referenced image files)"
+                  ],
+                  "tests_playwright.json": true
+                }
+              }
+            },
+            "src": {
+              "app": [
+                "layout.tsx",
+                "page.tsx",
+                "globals.css",
+                "favicon.ico"
+              ],
+              "components": [
+                "app-shell.tsx",
+                "home-screen.tsx",
+                "onboarding-screen.tsx",
+                "practice-screen.tsx",
+                "profile-screen.tsx",
+                "progress-screen.tsx",
+                "result-screen.tsx",
+                "session-screen.tsx",
+                "ui/"
+              ],
+              "hooks": [
+                "use-learning.tsx"
+              ],
+              "lib": [
+                "data-loader.ts",
+                "learning-engine.ts",
+                "models.ts",
+                "question-bank.ts",
+                "storage.ts",
+                "utils.ts"
+              ]
+            }
+          },
+          "documentation": [
+            {
+              "path": "README.md",
+              "summary": "Create Next.js boilerplate readme",
+              "type": "readme"
+            },
+            {
+              "path": "AGENTS.md",
+              "summary": "Global agent config (symlinked)",
+              "type": "config"
+            },
+            {
+              "path": "CLAUDE.md",
+              "summary": "Agent instructions (symlink to AGENTS.md)",
+              "type": "config"
+            }
+          ],
+          "techStack": {
+            "buildTools": [
+              "Next.js (Turbopack)",
+              "PostCSS"
+            ],
+            "databases": [],
+            "frameworks": [
+              {
+                "category": "meta-framework",
+                "name": "Next.js",
+                "version": "16.2.6"
+              },
+              {
+                "category": "UI library",
+                "name": "React",
+                "version": "19.2.4"
+              },
+              {
+                "category": "utility CSS",
+                "name": "Tailwind CSS",
+                "version": "4"
+              },
+              {
+                "category": "build optimization",
+                "name": "React Compiler",
+                "version": "1.0.0"
+              }
+            ],
+            "infrastructure": [
+              {
+                "category": "hosting (target)",
+                "name": "Vercel"
+              }
+            ],
+            "languages": [
+              {
+                "name": "TypeScript",
+                "role": "primary"
+              },
+              {
+                "name": "CSS",
+                "role": "styling (Tailwind)"
+              }
+            ],
+            "packageManagers": [
+              "pnpm",
+              "npm (lockfile present)"
+            ]
+          }
+        },
+        "toolsAndServices": {
+          "cicd": {
+            "configPaths": [],
+            "pipelines": [],
+            "provider": null
+          },
+          "containerization": null,
+          "externalIntegrations": [],
+          "infrastructure": null,
+          "services": [],
+          "tools": {
+            "formatting": [
+              {
+                "command": "biome format --write",
+                "name": "Biome",
+                "version": "2.2.0"
+              }
+            ],
+            "linting": [
+              {
+                "command": "biome check",
+                "configFile": "biome.json",
+                "name": "Biome",
+                "version": "2.2.0"
+              }
+            ],
+            "testing": []
+          },
+          "workflows": [
+            {
+              "description": "Local dev with Next.js dev server",
+              "name": "development",
+              "steps": [
+                "pnpm dev",
+                "Edit code",
+                "Biome check/format"
+              ],
+              "triggers": [
+                "manual"
+              ]
+            },
+            {
+              "description": "Production build via Next.js",
+              "name": "build",
+              "steps": [
+                "pnpm build"
+              ],
+              "triggers": [
+                "manual",
+                "Vercel deploy"
+              ]
+            }
+          ]
+        }
+      },
+      "instructions": [
+        "Analyze the project tech stack, architecture, and goals",
+        "Match project characteristics against available process categories and specializations",
+        "Recommend specific processes that would be most useful for the project",
+        "Recommend a default methodology based on project characteristics:",
+        "  - New projects: consider gsd/new-project + agile or TDD methodology",
+        "  - Projects with poor test coverage: recommend TDD methodology",
+        "  - Large mature projects: recommend evolutionary or domain-driven methodology",
+        "  - Projects with quality issues: recommend self-assessment methodology",
+        "Recommend skills and agents based on project needs",
+        "For each recommendation, provide a brief justification",
+        "Prioritize recommendations: must-have vs nice-to-have",
+        "Consider project pain points and bottlenecks when recommending remediation-focused processes",
+        "Consider the project architecture when recommending organization-focused processes",
+        "Match specialization domains to the project domain (e.g., ML project -> data-science-ml specialization)",
+        "Write recommendations to artifacts/tool-recommendations.json"
+      ],
+      "outputFormat": "JSON with recommendedProcesses (array), recommendedSkills (array), recommendedAgents (array), recommendedMethodology (string), justifications (object mapping recommendation to reason), prioritized (object with mustHave and niceToHave arrays), remediations (array of {painPointId, recommendation, process})",
+      "role": "developer tools expert and productivity consultant",
+      "task": "Analyze the project profile and recommend the optimal set of babysitter tools, agents, processes, and skills based on the project tech stack, architecture, workflows, pain points, and goals"
+    }
+  },
+  "description": "Analyze the project profile to recommend the best babysitter skills, agents, processes, and methodologies",
+  "io": {
+    "inputJsonPath": "tasks/01KT8YKETRRYYEFKZ0AX5F5C65/input.json",
+    "outputJsonPath": "tasks/01KT8YKETRRYYEFKZ0AX5F5C65/result.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "agent",
+    "cradle",
+    "selection",
+    "tools"
+  ],
+  "title": "Select optimal tools and processes for project",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KT8YKETRRYYEFKZ0AX5F5C65",
+  "taskId": "tool-selection",
+  "invocationKey": "cradle/project-install:S000007:tool-selection",
+  "stepId": "S000007",
+  "inputs": {
+    "miningResult": {
+      "bottlenecks": [
+        {
+          "description": "Entire codebase in one commit — no granular history",
+          "frequency": "one-time",
+          "id": "bn-single-commit",
+          "impact": "hard to trace when features were added",
+          "location": "repo-wide"
+        }
+      ],
+      "branchPatterns": {
+        "averageLifetime": "N/A",
+        "mergeStrategy": "N/A",
+        "namingConvention": "main (default)"
+      },
+      "commitPatterns": {
+        "averageFrequency": "single initial commit",
+        "averageSize": {
+          "filesChanged": "all",
+          "linesAdded": "scaffold",
+          "linesRemoved": 0
+        },
+        "conventions": [
+          "No conventions established yet — single commit repo"
+        ],
+        "messageFormat": "Create Next App (scaffold default)"
+      },
+      "contributors": [
+        {
+          "areas": [
+            "all"
+          ],
+          "commitCount": 1,
+          "name": "Temuulen Undrakhbayar"
+        }
+      ],
+      "evolution": {
+        "growthAreas": [
+          "src/components (8 screens)",
+          "src/lib (6 modules)",
+          "public/data (question bank)"
+        ],
+        "majorEvents": [
+          {
+            "date": "initial",
+            "description": "Initial scaffold + full feature implementation (single commit)"
+          }
+        ],
+        "technologyChanges": [
+          "Create Next App scaffold → full driving theory app"
+        ]
+      },
+      "implicitRules": [
+        "All code is client-side rendered (no server components)",
+        "Data loaded from static JSON, not API routes",
+        "localStorage for all persistence"
+      ],
+      "painPoints": [
+        {
+          "category": "quality",
+          "description": "No test suite configured",
+          "discoveredVia": "tool analysis",
+          "id": "pp-no-tests",
+          "severity": "medium"
+        },
+        {
+          "category": "devops",
+          "description": "No CI/CD pipeline",
+          "discoveredVia": "tool analysis",
+          "id": "pp-no-ci",
+          "severity": "low"
+        }
+      ],
+      "releasePatterns": {
+        "frequency": "none",
+        "tagFormat": "none",
+        "versioningScheme": "0.1.0 (package.json)"
+      }
+    },
+    "profile": {
+      "architecture": {
+        "dataFlow": "Static JSON → fetch() → LearningEngine → React context → Screens → localStorage",
+        "entryPoints": [
+          "src/app/layout.tsx",
+          "src/app/page.tsx"
+        ],
+        "modules": [
+          {
+            "description": "Next.js App Router pages",
+            "name": "app",
+            "path": "src/app"
+          },
+          {
+            "description": "8 screen components + app shell",
+            "name": "components",
+            "path": "src/components"
+          },
+          {
+            "description": "use-learning context provider",
+            "name": "hooks",
+            "path": "src/hooks"
+          },
+          {
+            "description": "Core logic: data-loader, learning-engine, models, question-bank, storage, utils",
+            "name": "lib",
+            "path": "src/lib"
+          },
+          {
+            "description": "Static JSON question bank + images",
+            "name": "data",
+            "path": "public/data"
+          }
+        ],
+        "pattern": "client-side SPA with static data"
+      },
+      "bottlenecks": [
+        {
+          "description": "Single commit codebase — no granular history",
+          "id": "bn-repo-0",
+          "impact": "Hard to trace feature evolution",
+          "location": "repo-wide"
+        }
+      ],
+      "cicd": {
+        "configPaths": [],
+        "pipelines": [],
+        "provider": null
+      },
+      "claudeMdInstructions": [
+        "Ship to tester quickly — prioritize working features over perfection",
+        "Trunk-based workflow, feature branches for bigger changes",
+        "Autonomous mode — no breakpoints for routine work",
+        "Vercel deployment target — watch asset sizes"
+      ],
+      "conventions": {
+        "additionalRules": [
+          "React Compiler enabled",
+          "suppressHydrationWarning",
+          "All client-side, no RSC"
+        ],
+        "codeStyle": {
+          "formatter": "Biome",
+          "linter": "Biome"
+        },
+        "errorHandling": "try-catch with silent fallback",
+        "importOrder": [
+          "@/ aliases",
+          "external"
+        ],
+        "naming": {
+          "components": "kebab-case files, PascalCase exports",
+          "hooks": "use-*.tsx",
+          "lib": "kebab-case"
+        },
+        "testingConventions": "None configured"
+      },
+      "createdAt": "2026-06-04T09:13:30.000Z",
+      "description": "Mongolian driving theory exam prep app — practice questions, mock exams, progress tracking. Client-side only with localStorage persistence.",
+      "goals": [
+        {
+          "category": "productivity",
+          "description": "Ship to tester quickly for feedback",
+          "id": "goal-productivity-0",
+          "priority": "high",
+          "status": "active"
+        },
+        {
+          "category": "quality",
+          "description": "Deploy on Vercel for 1-person testing",
+          "id": "goal-quality-0",
+          "priority": "high",
+          "status": "active"
+        },
+        {
+          "category": "quality",
+          "description": "Optimize static assets to fit Vercel deployment limits",
+          "id": "goal-quality-1",
+          "priority": "high",
+          "status": "active"
+        }
+      ],
+      "installedAgents": [],
+      "installedProcesses": [
+        "cradle/project-install"
+      ],
+      "installedSkills": [],
+      "painPoints": [
+        {
+          "category": "quality",
+          "description": "No test suite",
+          "id": "pp-quality-0",
+          "severity": "medium",
+          "suggestedRemediation": "Add Vitest + Playwright for E2E"
+        },
+        {
+          "category": "devops",
+          "description": "Deployment size exceeds Vercel free tier (178MB > 100MB)",
+          "id": "pp-devops-0",
+          "severity": "high",
+          "suggestedRemediation": "Clean unused assets, compress images"
+        },
+        {
+          "category": "devops",
+          "description": "No CI/CD",
+          "id": "pp-devops-1",
+          "severity": "low"
+        }
+      ],
+      "preferences": {
+        "autonomy": "autonomous",
+        "branchStrategy": "trunk-based",
+        "releaseCadence": "manual/continuous"
+      },
+      "projectName": "ZRAf",
+      "repositories": [
+        {
+          "path": "/Users/themuuln/coding/personal/zraf-web",
+          "url": "local"
+        }
+      ],
+      "team": [
+        {
+          "name": "Temuulen",
+          "responsibilities": [
+            "Full-stack development",
+            "Design",
+            "Deployment"
+          ],
+          "role": "Solo developer"
+        }
+      ],
+      "techStack": {
+        "buildTools": [
+          "Next.js (Turbopack)",
+          "PostCSS"
+        ],
+        "frameworks": [
+          {
+            "category": "meta-framework",
+            "name": "Next.js",
+            "version": "16.2.6"
+          },
+          {
+            "category": "UI library",
+            "name": "React",
+            "version": "19.2.4"
+          },
+          {
+            "category": "utility CSS",
+            "name": "Tailwind CSS",
+            "version": "4"
+          },
+          {
+            "category": "build optimization",
+            "name": "React Compiler",
+            "version": "1.0.0"
+          }
+        ],
+        "infrastructure": [
+          {
+            "category": "hosting",
+            "name": "Vercel"
+          }
+        ],
+        "languages": [
+          {
+            "name": "TypeScript",
+            "role": "primary"
+          },
+          {
+            "name": "CSS",
+            "role": "styling"
+          }
+        ],
+        "packageManagers": [
+          "pnpm"
+        ]
+      },
+      "tools": {
+        "formatting": [
+          {
+            "command": "biome format --write",
+            "name": "Biome",
+            "version": "2.2.0"
+          }
+        ],
+        "linting": [
+          {
+            "command": "biome check",
+            "name": "Biome",
+            "version": "2.2.0"
+          }
+        ],
+        "testing": []
+      },
+      "updatedAt": "2026-06-04T09:13:30.000Z",
+      "version": 1,
+      "workflows": [
+        {
+          "description": "Local dev",
+          "name": "development",
+          "steps": [
+            "pnpm dev",
+            "Edit",
+            "Biome check"
+          ],
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "description": "Push to main triggers Vercel deploy",
+          "name": "deploy",
+          "triggers": [
+            "git push main"
+          ]
+        },
+        {
+          "description": "Work on main, feature branches for bigger changes",
+          "name": "trunk-based",
+          "steps": [
+            "git checkout -b feat/...",
+            "Work",
+            "Merge to main"
+          ]
+        }
+      ]
+    },
+    "repoStructure": {
+      "architecture": {
+        "dataFlow": "Static JSON files in public/data/ → fetch() in data-loader.ts → LearningEngine processes → React context (use-learning) → Screen components render → localStorage for persistence",
+        "entryPoints": [
+          "src/app/layout.tsx",
+          "src/app/page.tsx"
+        ],
+        "modules": [
+          {
+            "description": "Next.js App Router pages and layout",
+            "name": "app",
+            "path": "src/app"
+          },
+          {
+            "description": "UI components: app-shell, screens (home, practice, progress, profile, session, result, onboarding)",
+            "name": "components",
+            "path": "src/components"
+          },
+          {
+            "description": "React hooks — use-learning.tsx (LearningProvider context)",
+            "name": "hooks",
+            "path": "src/hooks"
+          },
+          {
+            "description": "Core logic: data-loader, learning-engine, models, question-bank, storage, utils",
+            "name": "lib",
+            "path": "src/lib"
+          },
+          {
+            "description": "shadcn/ui base components",
+            "name": "ui",
+            "path": "src/components/ui"
+          },
+          {
+            "description": "Static JSON question data + images loaded at runtime",
+            "name": "data",
+            "path": "public/data/traffic_institute"
+          }
+        ],
+        "pattern": "single-page application (client-side rendered)"
+      },
+      "conventions": {
+        "additionalRules": [
+          "React Compiler enabled (babel-plugin-react-compiler)",
+          "suppressHydrationWarning on <html> for dark mode",
+          "All data loaded client-side via fetch to static JSON",
+          "No server components — entire app is 'use client'"
+        ],
+        "codeStyle": {
+          "formatter": "Biome format",
+          "linter": "Biome (biome.json)",
+          "no ESLint": true
+        },
+        "errorHandling": "try-catch with silent fallback in storage/data-loader",
+        "importOrder": [
+          "@/ (path alias to src/)",
+          "external packages"
+        ],
+        "naming": {
+          "components": "kebab-case files, PascalCase exports",
+          "hooks": "use-*.tsx pattern",
+          "lib": "kebab-case utility modules"
+        },
+        "testingConventions": "No tests configured yet"
+      },
+      "directoryTree": {
+        "public": {
+          "data": {
+            "traffic_institute": {
+              "app_ready": [
+                "categories/",
+                "images/",
+                "question_bank_index.json",
+                "question_bank.json"
+              ],
+              "mirror": [
+                "(50 referenced image files)"
+              ],
+              "tests_playwright.json": true
+            }
+          }
+        },
+        "src": {
+          "app": [
+            "layout.tsx",
+            "page.tsx",
+            "globals.css",
+            "favicon.ico"
+          ],
+          "components": [
+            "app-shell.tsx",
+            "home-screen.tsx",
+            "onboarding-screen.tsx",
+            "practice-screen.tsx",
+            "profile-screen.tsx",
+            "progress-screen.tsx",
+            "result-screen.tsx",
+            "session-screen.tsx",
+            "ui/"
+          ],
+          "hooks": [
+            "use-learning.tsx"
+          ],
+          "lib": [
+            "data-loader.ts",
+            "learning-engine.ts",
+            "models.ts",
+            "question-bank.ts",
+            "storage.ts",
+            "utils.ts"
+          ]
+        }
+      },
+      "documentation": [
+        {
+          "path": "README.md",
+          "summary": "Create Next.js boilerplate readme",
+          "type": "readme"
+        },
+        {
+          "path": "AGENTS.md",
+          "summary": "Global agent config (symlinked)",
+          "type": "config"
+        },
+        {
+          "path": "CLAUDE.md",
+          "summary": "Agent instructions (symlink to AGENTS.md)",
+          "type": "config"
+        }
+      ],
+      "techStack": {
+        "buildTools": [
+          "Next.js (Turbopack)",
+          "PostCSS"
+        ],
+        "databases": [],
+        "frameworks": [
+          {
+            "category": "meta-framework",
+            "name": "Next.js",
+            "version": "16.2.6"
+          },
+          {
+            "category": "UI library",
+            "name": "React",
+            "version": "19.2.4"
+          },
+          {
+            "category": "utility CSS",
+            "name": "Tailwind CSS",
+            "version": "4"
+          },
+          {
+            "category": "build optimization",
+            "name": "React Compiler",
+            "version": "1.0.0"
+          }
+        ],
+        "infrastructure": [
+          {
+            "category": "hosting (target)",
+            "name": "Vercel"
+          }
+        ],
+        "languages": [
+          {
+            "name": "TypeScript",
+            "role": "primary"
+          },
+          {
+            "name": "CSS",
+            "role": "styling (Tailwind)"
+          }
+        ],
+        "packageManagers": [
+          "pnpm",
+          "npm (lockfile present)"
+        ]
+      }
+    },
+    "toolsAndServices": {
+      "cicd": {
+        "configPaths": [],
+        "pipelines": [],
+        "provider": null
+      },
+      "containerization": null,
+      "externalIntegrations": [],
+      "infrastructure": null,
+      "services": [],
+      "tools": {
+        "formatting": [
+          {
+            "command": "biome format --write",
+            "name": "Biome",
+            "version": "2.2.0"
+          }
+        ],
+        "linting": [
+          {
+            "command": "biome check",
+            "configFile": "biome.json",
+            "name": "Biome",
+            "version": "2.2.0"
+          }
+        ],
+        "testing": []
+      },
+      "workflows": [
+        {
+          "description": "Local dev with Next.js dev server",
+          "name": "development",
+          "steps": [
+            "pnpm dev",
+            "Edit code",
+            "Biome check/format"
+          ],
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "description": "Production build via Next.js",
+          "name": "build",
+          "steps": [
+            "pnpm build"
+          ],
+          "triggers": [
+            "manual",
+            "Vercel deploy"
+          ]
+        }
+      ]
+    }
+  }
+}

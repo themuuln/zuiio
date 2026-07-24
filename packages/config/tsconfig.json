@@ -27,8 +27,7 @@
       "@zuiio/ai-agent": ["./packages/ai-agent/src/index.ts"],
       "@zuiio/export": ["./packages/export/src/index.ts"],
       "@zuiio/supabase": ["./packages/supabase/src/index.ts"],
-      "@zuiio/auth": ["./packages/auth/src/index.ts"],
-      "@zuiio/oidc": ["./packages/oidc/src/index.ts"],
+      "@zuiio/auth": ["./packages/auth/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist", "apps"]

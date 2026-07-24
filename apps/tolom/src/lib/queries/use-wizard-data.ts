@@ -246,10 +246,7 @@ export function useServiceCatalog(
 ): UseQueryResult<ServiceCatalog[], Error> {
   return useQuery({
     queryKey: serviceKeys.list(orgId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchServiceCatalog(orgId).then((d) => d ?? []);
-    },
+    queryFn: () => fetchServiceCatalog(orgId!).then((d) => d ?? []),
     enabled: !!orgId,
     staleTime: 60_000,
     retry: 1,
@@ -265,13 +262,12 @@ export function useMechanicsWithJobCount(
   return useQuery({
     queryKey: mechanicKeys.list(orgId ?? ""),
     queryFn: async () => {
-      if (!orgId) throw new Error("orgId required");
       const [mechanicsList, workOrders] = await Promise.all([
-        fetchMechanicsReport(orgId, {
+        fetchMechanicsReport(orgId!, {
           params: { type: "mechanics" },
           errorMessage: "Failed to load mechanics",
         }),
-        fetchWorkOrders(orgId),
+        fetchWorkOrders(orgId!),
       ]);
 
       const activeStatuses = [
@@ -308,10 +304,7 @@ export function useCustomerSearch(
 ): UseQueryResult<Customer[], Error> {
   return useQuery({
     queryKey: customerKeys.list(orgId ?? "", query),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchCustomers(orgId, { params: { q: query } });
-    },
+    queryFn: () => fetchCustomers(orgId!, { params: { q: query } }),
     enabled: !!orgId && query.length > 0,
     staleTime: 30_000,
     retry: 1,
@@ -327,13 +320,11 @@ export function useCustomersByPlate(
 ): UseQueryResult<Customer[], Error> {
   return useQuery({
     queryKey: wizardKeys.customersByPlate(orgId ?? "", plateQuery),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchCustomersByPlate(orgId, {
+    queryFn: () =>
+      fetchCustomersByPlate(orgId!, {
         params: { plate: plateQuery },
         errorMessage: "Failed to search customers by plate",
-      });
-    },
+      }),
     enabled: !!orgId && plateQuery.length > 0,
     staleTime: 30_000,
     retry: 1,
@@ -354,10 +345,9 @@ export function useVehicleSearch(
       `${customerId ?? ""}__${plateQuery}`,
     ),
     queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
       // Normalize plate: strip dashes/spaces, uppercase for consistent matching
       const normalPlate = plateQuery.replace(/[\s-]/g, "").toUpperCase();
-      return fetchVehicles(orgId, {
+      return fetchVehicles(orgId!, {
         params: { customer: customerId, plate: normalPlate || undefined },
       });
     },
@@ -379,10 +369,8 @@ export function useVehicleLastVisit(
   return useQuery({
     queryKey: priceMemoryKeys.lastVisit(orgId ?? "", vehicleId ?? ""),
     queryFn: async () => {
-      if (!orgId) throw new Error("orgId required");
-      if (!vehicleId) throw new Error("vehicleId required");
-      const data = await fetchVehicleLastVisit(orgId, {
-        params: { vehicle_id: vehicleId },
+      const data = await fetchVehicleLastVisit(orgId!, {
+        params: { vehicle_id: vehicleId! },
         errorMessage: "Failed to load vehicle last visit",
       });
 
@@ -421,16 +409,14 @@ export function usePriceHistory(
 ): UseQueryResult<PriceHistoryData, Error> {
   return useQuery({
     queryKey: wizardKeys.priceHistory(orgId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchPriceHistory(orgId).then(
+    queryFn: () =>
+      fetchPriceHistory(orgId!).then(
         (d) =>
           ({
             services: d?.services ?? {},
             parts: d?.parts ?? {},
           }) as PriceHistoryData,
-      );
-    },
+      ),
     enabled: !!orgId,
     staleTime: 60_000,
     retry: 1,
@@ -454,17 +440,15 @@ export function useVehicleServicePrices(
       vehicleMake,
       vehicleModel,
     ),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchVehicleServicePrices(orgId, {
+    queryFn: () =>
+      fetchVehicleServicePrices(orgId!, {
         params: {
           service_catalog_id: serviceCatalogId,
           vehicle_make: vehicleMake,
           vehicle_model: vehicleModel,
         },
         errorMessage: "Failed to load vehicle service prices",
-      }).then((d) => d ?? []);
-    },
+      }).then((d) => d ?? []),
     enabled: !!orgId && !!serviceCatalogId && !!vehicleMake,
     staleTime: 60_000,
     retry: 1,
@@ -487,17 +471,15 @@ export function useVehiclePartPrices(
       partName ?? "",
       vehicleMake,
     ),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchVehiclePartPrices(orgId, {
+    queryFn: () =>
+      fetchVehiclePartPrices(orgId!, {
         params: {
           part_name: partName,
           vehicle_make: vehicleMake,
           vehicle_model: vehicleModel,
         },
         errorMessage: "Failed to load vehicle part prices",
-      }).then((d) => d ?? []);
-    },
+      }).then((d) => d ?? []),
     enabled: !!orgId && !!partName && !!vehicleMake,
     staleTime: 60_000,
     retry: 1,

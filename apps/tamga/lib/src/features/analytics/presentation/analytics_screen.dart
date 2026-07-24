@@ -8,15 +8,12 @@ import 'export_service.dart';
 import 'widgets/age_bar_chart.dart';
 import 'widgets/gender_pie_chart.dart';
 import 'widgets/health_timeline_chart.dart';
-import 'widgets/revenue_chart.dart';
-import 'widgets/breeding_success_chart.dart';
 import 'widgets/stat_card.dart';
 
 /// Аналитик хянах самбарын хуудас.
 ///
-/// Сүрэг, эрүүл мэнд, санхүү, үржүүлгийн үзүүлэлтүүдийг
-/// таб хэлбэрээр харуулна. Хугацааны шүүлтүүр (30d/90d/1y),
-/// CSV болон PDF экспорт дэмжинэ.
+/// Сүрэг, эрүүл мэнд, санхүүгийн үзүүлэлтүүдийг графикаар харуулна.
+/// Хугацааны шүүлтүүр (30d/90d/1y), CSV болон PDF экспорт дэмжинэ.
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
 
@@ -24,10 +21,7 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
   ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
 }
 
-class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
-
+class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   /// Хугацааны шүүлтүүр: 0 = 30 хоног, 1 = 90 хоног, 2 = 1 жил.
   int _selectedPeriodIndex = 0;
 
@@ -35,7 +29,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   bool _isExporting = false;
 
   static const _periodLabels = ['30 хоног', '90 хоног', '1 жил'];
-  static const _tabLabels = ['Сүрэг', 'Эрүүл мэнд', 'Санхүү', 'Үржүүлэг'];
 
   Duration get _selectedDuration {
     switch (_selectedPeriodIndex) {
@@ -46,18 +39,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
       default:
         return const Duration(days: 365);
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: _tabLabels.length, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   @override
@@ -91,11 +72,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
             onPressed: _isExporting ? null : () => _exportPdf(),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: _tabLabels.map((label) => Tab(text: label)).toList(),
-        ),
       ),
       body: Column(
         children: [
@@ -108,7 +84,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
             child: SegmentedButton<int>(
               segments: List.generate(
                 _periodLabels.length,
-                (i) => ButtonSegment(value: i, label: Text(_periodLabels[i])),
+                (i) => ButtonSegment(
+                  value: i,
+                  label: Text(_periodLabels[i]),
+                ),
               ),
               selected: {_selectedPeriodIndex},
               onSelectionChanged: (selected) {
@@ -119,22 +98,111 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
             ),
           ),
 
-          // ── Табын агуулга ──
+          // ── Аналитик агуулга ──
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
                 ref.invalidate(herdAnalyticsProvider);
                 ref.invalidate(healthAnalyticsProvider);
                 ref.invalidate(financialAnalyticsProvider);
-                ref.invalidate(breedingAnalyticsProvider);
               },
-              child: TabBarView(
-                controller: _tabController,
+              child: ListView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
-                  _HerdTab(period: _selectedDuration),
-                  _HealthTab(period: _selectedDuration),
-                  _FinancialTab(period: _selectedDuration),
-                  _BreedingTab(period: _selectedDuration),
+                  // ── Статистик картууд ──
+                  _StatCards(period: _selectedDuration),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ── Насны хуваарилалт ──
+                  _ChartSection(
+                    title: 'Насны хуваарилалт',
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final herdAsync = ref.watch(herdAnalyticsProvider);
+                        return herdAsync.when(
+                          data: (herd) => SizedBox(
+                            height: 250,
+                            child: AgeBarChart(
+                              ageDistribution: herd.ageDistribution,
+                            ),
+                          ),
+                          loading: () => const SizedBox(
+                            height: 250,
+                            child: AgeBarChart.loading(),
+                          ),
+                          error: (err, _) => _ErrorWidget(
+                            message: 'Насны мэдээлэл ачаалахад алдаа гарлаа',
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ── Хүйсний харьцаа ──
+                  _ChartSection(
+                    title: 'Хүйсний харьцаа',
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final herdAsync = ref.watch(herdAnalyticsProvider);
+                        return herdAsync.when(
+                          data: (herd) => SizedBox(
+                            height: 220,
+                            child: GenderPieChart(
+                              genderSplit: herd.genderSplit,
+                            ),
+                          ),
+                          loading: () => const SizedBox(
+                            height: 220,
+                            child: GenderPieChart.loading(),
+                          ),
+                          error: (_, _) => _ErrorWidget(
+                            message: 'Хүйсний мэдээлэл ачаалахад алдаа гарлаа',
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ── Үүлдрийн хуваарилалт ──
+                  _BreedBreakdownCard(),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ── Эрүүл мэндийн хандлага ──
+                  _ChartSection(
+                    title: 'Эрүүл мэндийн хандлага',
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final healthAsync = ref.watch(healthAnalyticsProvider);
+                        return healthAsync.when(
+                          data: (health) => SizedBox(
+                            height: 250,
+                            child: HealthTimelineChart(
+                              healthTrends: health.healthTrends,
+                            ),
+                          ),
+                          loading: () => const SizedBox(
+                            height: 250,
+                            child: HealthTimelineChart.loading(),
+                          ),
+                          error: (_, _) => _ErrorWidget(
+                            message:
+                                'Эрүүл мэндийн мэдээлэл ачаалахад алдаа гарлаа',
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ── Вакцинжуулалтын хувь + удахгүй хийх зүйлс ──
+                  _VaccinationAndDueItems(),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ── Санхүүгийн статистик ──
+                  _FinancialStats(),
+                  const SizedBox(height: AppSpacing.xxl),
                 ],
               ),
             ),
@@ -150,12 +218,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
       final herd = await ref.read(herdAnalyticsProvider.future);
       final health = await ref.read(healthAnalyticsProvider.future);
       final financial = await ref.read(financialAnalyticsProvider.future);
-      final breeding = await ref.read(breedingAnalyticsProvider.future);
       await _exportService.exportToCsv(
         herd: herd,
         health: health,
         financial: financial,
-        breeding: breeding,
       );
       if (mounted) {
         TamgaToast.showSuccess(context, 'CSV амжилттай экспортлогдлоо');
@@ -175,12 +241,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
       final herd = await ref.read(herdAnalyticsProvider.future);
       final health = await ref.read(healthAnalyticsProvider.future);
       final financial = await ref.read(financialAnalyticsProvider.future);
-      final breeding = await ref.read(breedingAnalyticsProvider.future);
       await _exportService.exportToPdf(
         herd: herd,
         health: health,
         financial: financial,
-        breeding: breeding,
       );
       if (mounted) {
         TamgaToast.showSuccess(context, 'PDF амжилттай экспортлогдлоо');
@@ -195,339 +259,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   }
 }
 
-// ── Сүргийн таб ───────────────────────────────────────────────
-
-class _HerdTab extends StatelessWidget {
-  const _HerdTab({required this.period});
-
-  final Duration period;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        _StatCards(period: period),
-        const SizedBox(height: AppSpacing.lg),
-
-        // ── Насны хуваарилалт ──
-        _ChartSection(
-          title: 'Насны хуваарилалт',
-          child: Consumer(
-            builder: (context, ref, _) {
-              final herdAsync = ref.watch(herdAnalyticsProvider);
-              return herdAsync.when(
-                data: (herd) => SizedBox(
-                  height: 250,
-                  child: AgeBarChart(ageDistribution: herd.ageDistribution),
-                ),
-                loading: () =>
-                    const SizedBox(height: 250, child: AgeBarChart.loading()),
-                error: (err, _) => _ErrorWidget(
-                  message: 'Насны мэдээлэл ачаалахад алдаа гарлаа',
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-
-        // ── Хүйсний харьцаа ──
-        _ChartSection(
-          title: 'Хүйсний харьцаа',
-          child: Consumer(
-            builder: (context, ref, _) {
-              final herdAsync = ref.watch(herdAnalyticsProvider);
-              return herdAsync.when(
-                data: (herd) => SizedBox(
-                  height: 220,
-                  child: GenderPieChart(genderSplit: herd.genderSplit),
-                ),
-                loading: () => const SizedBox(
-                  height: 220,
-                  child: GenderPieChart.loading(),
-                ),
-                error: (_, _) => _ErrorWidget(
-                  message: 'Хүйсний мэдээлэл ачаалахад алдаа гарлаа',
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-
-        // ── Үүлдрийн хуваарилалт ──
-        _BreedBreakdownCard(),
-      ],
-    );
-  }
-}
-
-// ── Эрүүл мэндийн таб ────────────────────────────────────────
-
-class _HealthTab extends StatelessWidget {
-  const _HealthTab({required this.period});
-
-  final Duration period;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        // ── Эрүүл мэндийн статистик картууд ──
-        _HealthStatCards(),
-        const SizedBox(height: AppSpacing.lg),
-
-        // ── Вакцинжуулалтын хувь + удахгүй хийх зүйлс ──
-        _VaccinationAndDueItems(),
-        const SizedBox(height: AppSpacing.lg),
-
-        // ── Эрүүл мэндийн хандлага ──
-        _ChartSection(
-          title: 'Эрүүл мэндийн хандлага',
-          child: Consumer(
-            builder: (context, ref, _) {
-              final healthAsync = ref.watch(healthAnalyticsProvider);
-              return healthAsync.when(
-                data: (health) => SizedBox(
-                  height: 250,
-                  child: HealthTimelineChart(healthTrends: health.healthTrends),
-                ),
-                loading: () => const SizedBox(
-                  height: 250,
-                  child: HealthTimelineChart.loading(),
-                ),
-                error: (_, _) => _ErrorWidget(
-                  message: 'Эрүүл мэндийн мэдээлэл ачаалахад алдаа гарлаа',
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Санхүүгийн таб ────────────────────────────────────────────
-
-class _FinancialTab extends StatelessWidget {
-  const _FinancialTab({required this.period});
-
-  final Duration period;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        // ── Санхүүгийн статистик ──
-        _FinancialStats(),
-        const SizedBox(height: AppSpacing.lg),
-
-        // ── Орлогын хандлага ──
-        _ChartSection(
-          title: 'Орлогын хандлага',
-          child: Consumer(
-            builder: (context, ref, _) {
-              final financialAsync = ref.watch(financialAnalyticsRpcProvider);
-              return financialAsync.when(
-                data: (data) {
-                  // RPC өгөгдлөөс орлогын мэдээлэл гаргах
-                  final revenueByType = data['revenue_by_type'];
-                  if (revenueByType is Map && revenueByType.isNotEmpty) {
-                    final points = revenueByType.entries
-                        .map(
-                          (e) => RevenuePoint(
-                            label: e.key.toString(),
-                            amount: (e.value as num).toDouble(),
-                          ),
-                        )
-                        .toList();
-                    return SizedBox(
-                      height: 250,
-                      child: RevenueChart(revenueData: points),
-                    );
-                  }
-                  return SizedBox(
-                    height: 250,
-                    child: RevenueChart(revenueData: const []),
-                  );
-                },
-                loading: () =>
-                    const SizedBox(height: 250, child: RevenueChart.loading()),
-                error: (_, _) => _ErrorWidget(
-                  message: 'Орлогын мэдээлэл ачаалахад алдаа гарлаа',
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Үржүүлгийн таб (Breeder+ түвшин) ──────────────────────────
-
-class _BreedingTab extends StatelessWidget {
-  const _BreedingTab({required this.period});
-
-  final Duration period;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        // ── Үржүүлгийн статистик картууд ──
-        _BreedingStatCards(),
-        const SizedBox(height: AppSpacing.lg),
-
-        // ── Төллөлтийн амжилтын хувь ──
-        _ChartSection(
-          title: 'Төллөлтийн амжилт',
-          child: Consumer(
-            builder: (context, ref, _) {
-              final breedingAsync = ref.watch(breedingAnalyticsProvider);
-              return breedingAsync.when(
-                data: (breeding) => SizedBox(
-                  height: 220,
-                  child: BreedingSuccessChart(
-                    successRate: breeding.foalingSuccessRate,
-                  ),
-                ),
-                loading: () => const SizedBox(
-                  height: 220,
-                  child: BreedingSuccessChart.loading(),
-                ),
-                error: (_, _) => _ErrorWidget(
-                  message: 'Үржүүлгийн мэдээлэл ачаалахад алдаа гарлаа',
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-
-        // ── Хээлтүүлгийн жагсаалт ──
-        _BreedingRecordsList(),
-      ],
-    );
-  }
-}
-
-// ── Эрүүл мэндийн статистик картууд ──────────────────────────
-
-class _HealthStatCards extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final healthAsync = ref.watch(healthAnalyticsProvider);
-    final totalHorses = healthAsync.valueOrNull?.totalHorses ?? 0;
-    final vaccinationRate = healthAsync.valueOrNull?.vaccinationRate ?? 0.0;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: AppSpacing.sm,
-          crossAxisSpacing: AppSpacing.sm,
-          childAspectRatio: 1.4,
-          children: [
-            if (healthAsync.isLoading)
-              StatCard.loading()
-            else if (healthAsync.hasError)
-              StatCard.error()
-            else ...[
-              StatCard(
-                label: 'Нийт морьд',
-                value: '$totalHorses',
-                icon: Icons.pets,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              StatCard(
-                label: 'Вакцинжуулалтын хувь',
-                value: '${(vaccinationRate * 100).toStringAsFixed(0)}%',
-                icon: Icons.vaccines_outlined,
-                color: vaccinationRate >= 0.7 ? Colors.green : Colors.orange,
-              ),
-              StatCard(
-                label: 'Бүртгэлийн тоо',
-                value: '${healthAsync.valueOrNull?.healthLogs.length ?? 0}',
-                icon: Icons.healing_outlined,
-                color: Theme.of(context).colorScheme.tertiary,
-              ),
-              StatCard(
-                label: 'Удахгүй вакцин',
-                value:
-                    '${healthAsync.valueOrNull?.upcomingDueItems.length ?? 0}',
-                icon: Icons.schedule,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-            ],
-          ],
-        );
-      },
-    );
-  }
-}
-
-// ── Үржүүлгийн статистик картууд ──────────────────────────────
-
-class _BreedingStatCards extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final breedingAsync = ref.watch(breedingAnalyticsProvider);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: AppSpacing.sm,
-          crossAxisSpacing: AppSpacing.sm,
-          childAspectRatio: 1.4,
-          children: [
-            if (breedingAsync.isLoading)
-              StatCard.loading()
-            else if (breedingAsync.hasError)
-              StatCard.error()
-            else ...[
-              StatCard(
-                label: 'Идэвхтэй хээлтүүлэг',
-                value: '${breedingAsync.value?.activeBreedings ?? 0}',
-                icon: Icons.child_care_outlined,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              StatCard(
-                label: 'Нийт хээлтүүлэг',
-                value: '${breedingAsync.value?.totalBreedings ?? 0}',
-                icon: Icons.pets,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-              StatCard(
-                label: 'Төллөлтийн амжилт',
-                value:
-                    '${(breedingAsync.value?.foalingSuccessRate ?? 0).toStringAsFixed(1)}%',
-                icon: Icons.star_outline,
-                color: Colors.green,
-              ),
-            ],
-          ],
-        );
-      },
-    );
-  }
-}
-
-// ── Статистик картуудын хэсэг ────────────────────────────────
-
+/// Статистик картуудын хэсэг.
 class _StatCards extends ConsumerWidget {
   const _StatCards({required this.period});
 
@@ -538,6 +270,7 @@ class _StatCards extends ConsumerWidget {
     final herdAsync = ref.watch(herdAnalyticsProvider);
     final healthAsync = ref.watch(healthAnalyticsProvider);
     final financialAsync = ref.watch(financialAnalyticsProvider);
+
     final totalHorses = herdAsync.valueOrNull?.totalHorses ?? 0;
     final vaccinationRate = healthAsync.valueOrNull?.vaccinationRate ?? 0.0;
     final totalRevenue = financialAsync.valueOrNull?.totalRevenue ?? 0;
@@ -554,40 +287,55 @@ class _StatCards extends ConsumerWidget {
           crossAxisSpacing: AppSpacing.sm,
           childAspectRatio: 1.4,
           children: [
-            if (herdAsync.isLoading)
-              StatCard.loading()
-            else if (herdAsync.hasError)
-              StatCard.error()
-            else ...[
-              // Нийт морьд
-              StatCard(
-                label: 'Нийт морьд',
-                value: '$totalHorses',
-                icon: Icons.pets,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              // Вакцинжуулалтын хувь
-              StatCard(
-                label: 'Вакцинжуулалтын хувь',
-                value: '${(vaccinationRate * 100).toStringAsFixed(0)}%',
-                icon: Icons.vaccines_outlined,
-                color: vaccinationRate >= 0.7 ? Colors.green : Colors.orange,
-              ),
-              // Нийт орлого
-              StatCard(
-                label: 'Нийт орлого',
-                value: '$totalRevenue ₮',
-                icon: Icons.trending_up,
-                color: Colors.green,
-              ),
-              // Нийт зарлага
-              StatCard(
-                label: 'Нийт зарлага',
-                value: '$totalExpenses ₮',
-                icon: Icons.trending_down,
-                color: Colors.red,
-              ),
-            ],
+            // Нийт морьд
+            herdAsync.isLoading
+                ? StatCard.loading()
+                : herdAsync.hasError
+                ? StatCard.error()
+                : StatCard(
+                    label: 'Нийт морьд',
+                    value: '$totalHorses',
+                    icon: Icons.pets,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+
+            // Вакцинжуулалтын хувь
+            healthAsync.isLoading
+                ? StatCard.loading()
+                : healthAsync.hasError
+                ? StatCard.error()
+                : StatCard(
+                    label: 'Вакцинжуулалт',
+                    value: '${(vaccinationRate * 100).toStringAsFixed(0)}%',
+                    icon: Icons.vaccines_outlined,
+                    color: vaccinationRate >= 0.7
+                        ? Colors.green
+                        : Colors.orange,
+                  ),
+
+            // Нийт орлого
+            financialAsync.isLoading
+                ? StatCard.loading()
+                : financialAsync.hasError
+                ? StatCard.error()
+                : StatCard(
+                    label: 'Нийт орлого',
+                    value: '$totalRevenue ₮',
+                    icon: Icons.trending_up,
+                    color: Colors.green,
+                  ),
+
+            // Нийт зарлага
+            financialAsync.isLoading
+                ? StatCard.loading()
+                : financialAsync.hasError
+                ? StatCard.error()
+                : StatCard(
+                    label: 'Нийт зарлага',
+                    value: '$totalExpenses ₮',
+                    icon: Icons.trending_down,
+                    color: Colors.red,
+                  ),
           ],
         );
       },
@@ -595,9 +343,10 @@ class _StatCards extends ConsumerWidget {
   }
 }
 
-// ── Үүлдрийн хуваарилалтын карт ──────────────────────────────
-
+/// Үүлдрийн хуваарилалтын карт.
 class _BreedBreakdownCard extends ConsumerWidget {
+  const _BreedBreakdownCard();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -610,7 +359,7 @@ class _BreedBreakdownCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Үүлдэр / Өнгөний хуваарилалт',
+              'Үүлдэр / Өнгөөр хуваарилалт',
               style: theme.textTheme.titleSmall,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -629,10 +378,8 @@ class _BreedBreakdownCard extends ConsumerWidget {
                     ),
                   );
                 }
-                final total = herd.breedBreakdown.values.fold<int>(
-                  0,
-                  (a, b) => a + b,
-                );
+                final total = herd.breedBreakdown.values
+                    .fold<int>(0, (a, b) => a + b);
                 return Column(
                   children: herd.breedBreakdown.entries.map((entry) {
                     final fraction = entry.value / total;
@@ -702,9 +449,10 @@ class _BreedBreakdownCard extends ConsumerWidget {
   }
 }
 
-// ── Вакцинжуулалтын хувь ба удахгүй хийх зүйлсийн хэсэг ───
-
+/// Вакцинжуулалтын хувь ба удахгүй хийх зүйлсийн хэсэг.
 class _VaccinationAndDueItems extends ConsumerWidget {
+  const _VaccinationAndDueItems();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -722,91 +470,93 @@ class _VaccinationAndDueItems extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             healthAsync.when(
-              data: (health) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Вакцинжуулалтын хувь
-                  Row(
-                    children: [
-                      Text(
-                        'Вакцинжуулалтын хувь:',
-                        style: theme.textTheme.bodyMedium,
+              data: (health) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Вакцинжуулалтын хувь
+                    Row(
+                      children: [
+                        Text(
+                          'Вакцинжуулалтын хувь:',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          '${(health.vaccinationRate * 100).toStringAsFixed(0)}%',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: health.vaccinationRate >= 0.7
+                                ? Colors.green
+                                : Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: health.vaccinationRate,
+                        minHeight: 8,
+                        backgroundColor:
+                            theme.colorScheme.surfaceContainerHighest,
                       ),
-                      const SizedBox(width: AppSpacing.sm),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // Удахгүй хийх зүйлс
+                    if (health.upcomingDueItems.isNotEmpty) ...[
                       Text(
-                        '${(health.vaccinationRate * 100).toStringAsFixed(0)}%',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: health.vaccinationRate >= 0.7
-                              ? Colors.green
-                              : Colors.orange,
+                        'Удахгүй хийх шаардлагатай:',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      ...health.upcomingDueItems.map((item) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.schedule,
+                                size: 16,
+                                color: item.daysUntilDue <= 7
+                                    ? Colors.red
+                                    : Colors.orange,
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              Expanded(
+                                child: Text(
+                                  '${item.horseName} — ${item.logType.displayName}',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ),
+                              Text(
+                                '${item.daysUntilDue} хоног',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: item.daysUntilDue <= 7
+                                      ? Colors.red
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ] else ...[
+                      Text(
+                        'Удахгүй хийх шаардлагатай зүйл байхгүй',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: health.vaccinationRate,
-                      minHeight: 8,
-                      backgroundColor:
-                          theme.colorScheme.surfaceContainerHighest,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-
-                  // Удахгүй хийх шаардлагатай зүйлс
-                  if (health.upcomingDueItems.isNotEmpty) ...[
-                    Text(
-                      'Удахгүй хийх шаардлагатай:',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    ...health.upcomingDueItems.map((item) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.schedule,
-                              size: 16,
-                              color: item.daysUntilDue <= 7
-                                  ? Colors.red
-                                  : Colors.orange,
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Expanded(
-                              child: Text(
-                                '${item.horseName} — ${item.logType.displayName}',
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ),
-                            Text(
-                              '${item.daysUntilDue} хоног',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: item.daysUntilDue <= 7
-                                    ? Colors.red
-                                    : theme.colorScheme.onSurfaceVariant,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ] else ...[
-                    Text(
-                      'Удахгүй хийх зүйлс байхгүй',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
                   ],
-                ],
-              ),
+                );
+              },
               loading: () => const Center(
                 child: Padding(
                   padding: EdgeInsets.all(AppSpacing.lg),
@@ -832,9 +582,10 @@ class _VaccinationAndDueItems extends ConsumerWidget {
   }
 }
 
-// ── Санхүүгийн статистик хэсэг ───────────────────────────────
-
+/// Санхүүгийн статистик хэсэг.
 class _FinancialStats extends ConsumerWidget {
+  const _FinancialStats();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -846,56 +597,63 @@ class _FinancialStats extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Санхүүгийн статистик', style: theme.textTheme.titleSmall),
+            Text(
+              'Санхүүгийн статистик',
+              style: theme.textTheme.titleSmall,
+            ),
             const SizedBox(height: AppSpacing.md),
             financialAsync.when(
-              data: (financial) => Column(
-                children: [
-                  _FinancialRow(
-                    label: 'Нийт орлого',
-                    value: '${financial.totalRevenue} ₮',
-                    icon: Icons.trending_up,
-                    color: Colors.green,
-                  ),
-                  const Divider(height: 24),
-                  _FinancialRow(
-                    label: 'Нийт зарлага',
-                    value: '${financial.totalExpenses} ₮',
-                    icon: Icons.trending_down,
-                    color: Colors.red,
-                  ),
-                  const Divider(height: 24),
-                  _FinancialRow(
-                    label: 'Хөрөнгө оруулалтын өгөөж',
-                    value: financial.roi.isFinite
-                        ? '${financial.roi.toStringAsFixed(1)}%'
-                        : '—',
-                    icon: Icons.percent,
-                    color: financial.roi >= 0 ? Colors.green : Colors.red,
-                  ),
-                  const Divider(height: 24),
-                  _FinancialRow(
-                    label: 'Идэвхтэй зарууд',
-                    value: '${financial.activeListings}',
-                    icon: Icons.shopping_bag_outlined,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const Divider(height: 24),
-                  _FinancialRow(
-                    label: 'Борлуулсан зарууд',
-                    value: '${financial.soldListings}',
-                    icon: Icons.check_circle_outline,
-                    color: Colors.green,
-                  ),
-                  const Divider(height: 24),
-                  _FinancialRow(
-                    label: 'Дундаж үнэ',
-                    value: '${financial.averageSalePrice} ₮',
-                    icon: Icons.attach_money,
-                    color: theme.colorScheme.primary,
-                  ),
-                ],
-              ),
+              data: (financial) {
+                return Column(
+                  children: [
+                    _FinancialRow(
+                      label: 'Нийт орлого',
+                      value: '${financial.totalRevenue} ₮',
+                      icon: Icons.trending_up,
+                      color: Colors.green,
+                    ),
+                    const Divider(height: 24),
+                    _FinancialRow(
+                      label: 'Нийт зарлага',
+                      value: '${financial.totalExpenses} ₮',
+                      icon: Icons.trending_down,
+                      color: Colors.red,
+                    ),
+                    const Divider(height: 24),
+                    _FinancialRow(
+                      label: 'Хөрөнгө оруулалтын өгөөж',
+                      value: financial.roi.isFinite
+                          ? '${financial.roi.toStringAsFixed(1)}%'
+                          : '∞',
+                      icon: Icons.percent,
+                      color: financial.roi >= 0
+                          ? Colors.green
+                          : Colors.red,
+                    ),
+                    const Divider(height: 24),
+                    _FinancialRow(
+                      label: 'Идэвхтэй зарууд',
+                      value: '${financial.activeListings}',
+                      icon: Icons.shopping_bag_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const Divider(height: 24),
+                    _FinancialRow(
+                      label: 'Борлуулсан зарууд',
+                      value: '${financial.soldListings}',
+                      icon: Icons.check_circle_outline,
+                      color: Colors.green,
+                    ),
+                    const Divider(height: 24),
+                    _FinancialRow(
+                      label: 'Дундаж үнэ',
+                      value: '${financial.averageSalePrice} ₮',
+                      icon: Icons.attach_money,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ],
+                );
+              },
               loading: () => const Center(
                 child: Padding(
                   padding: EdgeInsets.all(AppSpacing.lg),
@@ -921,8 +679,7 @@ class _FinancialStats extends ConsumerWidget {
   }
 }
 
-// ── Санхүүгийн мэдээллийн нэг мөр ───────────────────────────
-
+/// Санхүүгийн мэдээллийн нэг мөр.
 class _FinancialRow extends StatelessWidget {
   const _FinancialRow({
     required this.label,
@@ -943,7 +700,12 @@ class _FinancialRow extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: color),
         const SizedBox(width: AppSpacing.sm),
-        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
+        Expanded(
+          child: Text(
+            label,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
         Text(
           value,
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -955,127 +717,7 @@ class _FinancialRow extends StatelessWidget {
   }
 }
 
-// ── Үржүүлгийн хээлтүүлгийн жагсаалт ────────────────────────
-
-class _BreedingRecordsList extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final breedingAsync = ref.watch(breedingAnalyticsProvider);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Хээлтүүлгийн бүртгэлүүд', style: theme.textTheme.titleSmall),
-            const SizedBox(height: AppSpacing.md),
-            breedingAsync.when(
-              data: (breeding) {
-                if (breeding.recentBreedings.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Text(
-                        'Хээлтүүлгийн бүртгэл байхгүй',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                return Column(
-                  children: breeding.recentBreedings.map((record) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${record.sireName} × ${record.damName}',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Хээлтсэн: ${record.breedingDate.day}/${record.breedingDate.month}/${record.breedingDate.year}',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _statusColor(
-                                record.status,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              record.statusDisplayName,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: _statusColor(record.status),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-              error: (_, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Text(
-                    'Хээлтүүлгийн мэдээлэл ачаалахад алдаа гарлаа',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.error,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'active':
-        return Colors.blue;
-      case 'foaled':
-        return Colors.green;
-      case 'aborted':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-}
-
-// ── Диаграммын хэсгийн wrapper ───────────────────────────────
-
+/// Диаграммын хэсгийн wrapper.
 class _ChartSection extends StatelessWidget {
   const _ChartSection({required this.title, required this.child});
 
@@ -1084,15 +726,12 @@ class _ChartSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: theme.textTheme.titleSmall),
-            const SizedBox(height: AppSpacing.md),
             child,
           ],
         ),
@@ -1101,8 +740,7 @@ class _ChartSection extends StatelessWidget {
   }
 }
 
-// ── Алдааны widget ───────────────────────────────────────────
-
+/// Алдааны widget.
 class _ErrorWidget extends StatelessWidget {
   const _ErrorWidget({required this.message});
 
@@ -1115,9 +753,13 @@ class _ErrorWidget extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: theme.colorScheme.error,
+            ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               message,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -34,24 +34,15 @@ export const ListView = React.memo(function ListView({
   t,
 }: ListViewProps) {
   const queryClient = useQueryClient();
-  const prefetchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleRowHover = useCallback(
     (woId: string | undefined) => {
       if (woId && orgId) {
-        clearTimeout(prefetchTimerRef.current);
-        prefetchTimerRef.current = setTimeout(() => {
-          prefetchDrawerData(queryClient, orgId, woId);
-        }, 200);
+        prefetchDrawerData(queryClient, orgId, woId);
       }
     },
     [orgId, queryClient],
   );
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => clearTimeout(prefetchTimerRef.current);
-  }, []);
 
   return (
     <div className="p-4 overflow-y-auto w-full h-full">

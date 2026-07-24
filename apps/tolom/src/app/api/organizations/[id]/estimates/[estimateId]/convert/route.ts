@@ -9,12 +9,11 @@ import { convertEstimateToWorkOrder } from "@/lib/services/estimate-service";
  * The estimate is marked as "converted" with a link to the new work order.
  */
 export const POST = createRouteHandler(
-  async ({ params, orgId, supabase, user }) => {
+  async ({ params, orgId, supabase }) => {
     const workOrder = await convertEstimateToWorkOrder(
       supabase,
       params.estimateId,
       orgId,
-      user.id,
     );
     return created(workOrder);
   },

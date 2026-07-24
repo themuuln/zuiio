@@ -7,17 +7,21 @@
  */
 
 import type {
-  BoxScoreLine,
-  DeriveWarning,
+  StatEvent,
   GameRoster,
   SportConfig,
-  StatEvent,
+  BoxScoreLine,
   TeamBoxScoreLine,
-} from "../types";
+  DeriveWarning,
+} from '../types';
 
 // ---------------------------------------------------------------------------
 // Payload shape helpers (stat_events.payload is Json)
 // ---------------------------------------------------------------------------
+
+interface ShotPayload {
+  assisted_by?: string;
+}
 
 interface SubPayload {
   out_player_id: string;
@@ -26,7 +30,7 @@ interface SubPayload {
 
 /** Safely interpret payload as a plain object. */
 function asObj(payload: unknown): Record<string, unknown> {
-  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
     return payload as Record<string, unknown>;
   }
   return {};
@@ -49,7 +53,10 @@ function canonicalSort(events: StatEvent[]): StatEvent[] {
 // Line constructors
 // ---------------------------------------------------------------------------
 
-function emptyPlayerLine(playerId: string, teamSeasonId: string): BoxScoreLine {
+function emptyPlayerLine(
+  playerId: string,
+  teamSeasonId: string,
+): BoxScoreLine {
   return {
     playerId,
     teamSeasonId,
@@ -129,7 +136,7 @@ function creditAssist(
     existing.ast += 1;
     return;
   }
-  const tid = playerTeam.get(assisterId) ?? "";
+  const tid = playerTeam.get(assisterId) ?? '';
   if (!tid) {
     warnings.push({
       eventId: event.id,
@@ -147,23 +154,23 @@ function creditAssist(
 
 /** Events that MUST have a player_id and produce stat increments. */
 const PLAYER_STAT_EVENTS = new Set([
-  "shot_2pt_made",
-  "shot_2pt_missed",
-  "shot_3pt_made",
-  "shot_3pt_missed",
-  "ft_made",
-  "ft_missed",
-  "rebound_off",
-  "rebound_def",
-  "steal",
-  "block",
-  "turnover",
-  "foul_personal",
-  "foul_technical",
+  'shot_2pt_made',
+  'shot_2pt_missed',
+  'shot_3pt_made',
+  'shot_3pt_missed',
+  'ft_made',
+  'ft_missed',
+  'rebound_off',
+  'rebound_def',
+  'steal',
+  'block',
+  'turnover',
+  'foul_personal',
+  'foul_technical',
 ]);
 
 /** Team-level stat events (no individual player increment). */
-const TEAM_STAT_EVENTS = new Set(["rebound_team"]);
+const TEAM_STAT_EVENTS = new Set(['rebound_team']);
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -204,7 +211,7 @@ export function deriveBoxScore(input: {
 
   // -- Time tracking is only possible when admin events exist -----------
   const hasTimeTracking = sorted.some(
-    (e) => e.event_type === "period_start" || e.event_type === "substitution",
+    (e) => e.event_type === 'period_start' || e.event_type === 'substitution',
   );
 
   // -- On-court state: teamSeasonId → {playerIds} ----------------------
@@ -244,7 +251,9 @@ export function deriveBoxScore(input: {
         : sportConfig.period_minutes * 60;
 
       prevClock =
-        event.event_type === "period_start" ? event.clock_seconds : periodLen;
+        event.event_type === 'period_start'
+          ? event.clock_seconds
+          : periodLen;
     }
 
     // ---- Credit interval from previous event to this one
@@ -259,11 +268,11 @@ export function deriveBoxScore(input: {
     prevClock = event.clock_seconds;
 
     // ---- Substitution ----
-    if (event.event_type === "substitution") {
+    if (event.event_type === 'substitution') {
       if (!event.team_season_id) {
         warnings.push({
           eventId: event.id,
-          message: "Substitution missing team_season_id",
+          message: 'Substitution missing team_season_id',
         });
         continue;
       }
@@ -272,8 +281,9 @@ export function deriveBoxScore(input: {
       if (teamSet) {
         const p = asObj(event.payload) as unknown as SubPayload;
         const outId =
-          typeof p.out_player_id === "string" ? p.out_player_id : null;
-        const inId = typeof p.in_player_id === "string" ? p.in_player_id : null;
+          typeof p.out_player_id === 'string' ? p.out_player_id : null;
+        const inId =
+          typeof p.in_player_id === 'string' ? p.in_player_id : null;
 
         if (outId && teamSet.has(outId)) {
           teamSet.delete(outId);
@@ -289,7 +299,7 @@ export function deriveBoxScore(input: {
     }
 
     // ---- Admin / period_start: timeline only, no stats ----
-    if (event.event_type === "period_start") continue;
+    if (event.event_type === 'period_start') continue;
 
     // ---- Team-only stat (no player increment) ----
     if (TEAM_STAT_EVENTS.has(event.event_type)) continue;
@@ -309,7 +319,7 @@ export function deriveBoxScore(input: {
 
     // Ensure a line exists for this player
     if (!playerLines.has(pid)) {
-      const tid = event.team_season_id ?? playerTeam.get(pid) ?? "";
+      const tid = event.team_season_id ?? playerTeam.get(pid) ?? '';
       if (!tid) {
         warnings.push({
           eventId: event.id,
@@ -323,67 +333,67 @@ export function deriveBoxScore(input: {
     const p = asObj(event.payload);
 
     switch (event.event_type) {
-      case "shot_2pt_made":
+      case 'shot_2pt_made':
         line.pts += 2;
         line.fgm += 1;
         line.fga += 1;
-        if (typeof p.assisted_by === "string") {
+        if (typeof p.assisted_by === 'string') {
           creditAssist(p.assisted_by, event, playerLines, playerTeam, warnings);
         }
         break;
 
-      case "shot_2pt_missed":
+      case 'shot_2pt_missed':
         line.fga += 1;
         break;
 
-      case "shot_3pt_made":
+      case 'shot_3pt_made':
         line.pts += 3;
         line.fgm += 1;
         line.fga += 1;
         line.tpm += 1;
         line.tpa += 1;
-        if (typeof p.assisted_by === "string") {
+        if (typeof p.assisted_by === 'string') {
           creditAssist(p.assisted_by, event, playerLines, playerTeam, warnings);
         }
         break;
 
-      case "shot_3pt_missed":
+      case 'shot_3pt_missed':
         line.fga += 1;
         line.tpa += 1;
         break;
 
-      case "ft_made":
+      case 'ft_made':
         line.pts += 1;
         line.ftm += 1;
         line.fta += 1;
         break;
 
-      case "ft_missed":
+      case 'ft_missed':
         line.fta += 1;
         break;
 
-      case "rebound_off":
+      case 'rebound_off':
         line.oreb += 1;
         break;
 
-      case "rebound_def":
+      case 'rebound_def':
         line.dreb += 1;
         break;
 
-      case "steal":
+      case 'steal':
         line.stl += 1;
         break;
 
-      case "block":
+      case 'block':
         line.blk += 1;
         break;
 
-      case "turnover":
+      case 'turnover':
         line.tov += 1;
         break;
 
-      case "foul_personal":
-      case "foul_technical":
+      case 'foul_personal':
+      case 'foul_technical':
         line.pf += 1;
         break;
 
@@ -441,7 +451,7 @@ export function deriveBoxScore(input: {
 
   // Add team_reb from rebound_team events
   for (const event of sorted) {
-    if (event.event_type === "rebound_team" && event.team_season_id) {
+    if (event.event_type === 'rebound_team' && event.team_season_id) {
       const tl = teamLineMap.get(event.team_season_id);
       if (tl) tl.teamReb += 1;
     }

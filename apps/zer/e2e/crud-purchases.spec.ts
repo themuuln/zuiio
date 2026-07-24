@@ -70,6 +70,8 @@ test.describe("Purchases module", () => {
       const toast = page.locator("[data-sonner-toast]").first();
       const toastVisible = await toast.isVisible().catch(() => false);
       if (toastVisible) {
+        // Success toast appeared
+        console.log("Purchase created successfully");
       }
     }
   });

@@ -52,7 +52,8 @@ test.describe("Registration → Organization creation flow", () => {
       const serverError = page.locator('[class*="destructive"]').first();
       const hasError = await serverError.isVisible().catch(() => false);
       if (hasError) {
-        const _errorText = await serverError.textContent();
+        const errorText = await serverError.textContent();
+        console.log(`Organization creation error: ${errorText}`);
       }
     }
 

@@ -44,11 +44,7 @@ export default function GlobalError({
           <p className="error-message">
             Уучлаарай, системийн алдаа гарлаа. Дахин ачаална уу.
           </p>
-          <button
-            type="button"
-            className="error-button"
-            onClick={() => reset()}
-          >
+          <button className="error-button" onClick={() => reset()}>
             Дахин оролдох
           </button>
           <p className="error-hint">

@@ -18,6 +18,9 @@ import {
   newPool,
 } from "./setup-integration";
 
+const SEED_HOME_TS = SEED_HOME_TEAM_SEASON;
+const SEED_AWAY_TS = SEED_AWAY_TEAM_SEASON;
+
 /**
  * Sets up a fully scored and published game.
  * Returns the game ID and revision used.
@@ -197,7 +200,7 @@ async function setupPublishedGame(
     };
     const projStr = JSON.stringify(projection).replace(/'/g, "''");
 
-    let revisionId: string;
+    let revisionId = "";
     await asUser(client, admin.id, async () => {
       const { rows } = await client.query(
         `SELECT * FROM public.cmd_create_revision(

@@ -10,12 +10,9 @@ export function useAttachments(orgId: string | undefined, woId: string) {
   );
   return useQuery({
     queryKey: attachmentKeys.list(orgId ?? "", woId),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchAttachments(orgId);
-    },
+    queryFn: () => fetchAttachments(orgId!),
     enabled: !!orgId && !!woId,
-    staleTime: 30_000,
+    staleTime: 15_000,
   });
 }
 

@@ -17,7 +17,6 @@ export function CategoryDetailDrawer({
   onEdit,
   onDelete,
   isDeletePending,
-  nestedDrawerOpen = false,
 }: {
   category: CategoryDetailData;
   open: boolean;
@@ -25,7 +24,6 @@ export function CategoryDetailDrawer({
   onEdit?: () => void;
   onDelete?: () => void;
   isDeletePending?: boolean;
-  nestedDrawerOpen?: boolean;
 }) {
   return (
     <DetailDrawerShell
@@ -36,7 +34,6 @@ export function CategoryDetailDrawer({
       onEdit={onEdit}
       onDelete={onDelete}
       isDeletePending={isDeletePending}
-      nestedDrawerOpen={nestedDrawerOpen}
     >
       <div className="divide-y rounded-xl border border-border/80">
         <InfoRow

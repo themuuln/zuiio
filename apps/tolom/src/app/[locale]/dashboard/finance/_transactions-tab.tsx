@@ -58,10 +58,7 @@ export function TransactionsTab({
   filteredWorkOrders,
   data,
 }: TransactionsTabProps) {
-  const financeT = useTranslations("finance") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const financeT = useTranslations("finance");
   const now = useClientNow();
 
   const exportColumns: ExportColumn<WorkOrderRow>[] = [

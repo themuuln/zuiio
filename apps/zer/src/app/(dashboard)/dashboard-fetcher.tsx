@@ -15,7 +15,7 @@ export async function DashboardFetcher({
 }: {
   children: React.ReactNode;
 }) {
-  const { supabase, profile, org, organizationId, userEmail } =
+  const { supabase, profile, org, organizationId } =
     await getDashboardContext();
 
   // Branches + POS checkout settings. POS settings live in newer columns and
@@ -32,7 +32,7 @@ export async function DashboardFetcher({
       supabase
         .from("organizations")
         .select(
-          "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, has_track_stock, shop_default_payment_method",
+          "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, shop_default_payment_method",
         )
         .eq("id", organizationId)
         .single(),
@@ -57,14 +57,6 @@ export async function DashboardFetcher({
   const hasAuditLog = org.has_audit_log !== false;
   const hasSuppliers = org.has_suppliers !== false;
   const hasHr = false;
-
-  const _hasCheckoutCustomer = posSettings?.has_checkout_customer !== false;
-  const _hasCheckoutQuickAmounts =
-    posSettings?.has_checkout_quick_amounts !== false;
-  const _hasReceiptDrawer = posSettings?.has_receipt_drawer !== false;
-  const _hasTrackStock = posSettings?.has_track_stock !== false;
-  const _shopDefaultPaymentMethod =
-    posSettings?.shop_default_payment_method ?? "cash";
 
   const allFeatures =
     enabledFeatures.length > 0
@@ -105,11 +97,10 @@ export async function DashboardFetcher({
           organizationName={org.name ?? null}
           logoUrl={brandConfig.logo_url ?? null}
           userFullName={profile.full_name}
-          userEmail={userEmail}
+          enabledFeatures={allFeatures}
           hasMultiBranch={hasMultiBranch}
           orgSettings={{
             organizationId: organizationId ?? "",
-            companyType: org.company_type ?? "other",
             hasSuppliers,
             hasInventory,
             hasCustomerCredit,
@@ -123,7 +114,6 @@ export async function DashboardFetcher({
             hasCheckoutQuickAmounts:
               posSettings?.has_checkout_quick_amounts !== false,
             hasReceiptDrawer: posSettings?.has_receipt_drawer !== false,
-            trackStock: posSettings?.has_track_stock !== false,
             shopDefaultPaymentMethod:
               posSettings?.shop_default_payment_method ?? "card",
           }}

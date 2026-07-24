@@ -43,7 +43,7 @@ export default function RegisterScreen() {
       <TextInput
         className="bg-card border border-border rounded-lg px-4 py-3 text-foreground mb-4"
         placeholder="Нэр"
-        placeholderTextColor="rgb(var(--muted-foreground))"
+        placeholderTextColor="hsl(var(--muted-foreground))"
         value={name}
         onChangeText={setName}
       />
@@ -51,7 +51,7 @@ export default function RegisterScreen() {
       <TextInput
         className="bg-card border border-border rounded-lg px-4 py-3 text-foreground mb-4"
         placeholder="Утасны дугаа"
-        placeholderTextColor="rgb(var(--muted-foreground))"
+        placeholderTextColor="hsl(var(--muted-foreground))"
         keyboardType="phone-pad"
         value={phone}
         onChangeText={setPhone}

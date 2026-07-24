@@ -3,8 +3,6 @@
 import { capture } from "@zuiio/capture";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { PRESET_CATEGORIES } from "@/lib/constants";
-import { revalidateEntities } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server-service";
 import type { Database } from "@/lib/supabase/types";
@@ -81,47 +79,6 @@ export async function completeOnboarding(
     capture(posError, { context: "onboarding: pos checkout setting" });
   }
 
-  // Seed preset categories for the org's company type
-  if (hasCategories !== false) {
-    const serviceSupabase = createServiceClient();
-    const { data: org } = await serviceSupabase
-      .from("organizations")
-      .select("company_type")
-      .eq("id", profile.organization_id!)
-      .single();
-
-    const companyType = org?.company_type ?? "other";
-    const presetNames =
-      PRESET_CATEGORIES[companyType] ?? PRESET_CATEGORIES.other ?? [];
-
-    if (presetNames.length > 0) {
-      // Fetch existing categories to avoid duplicates
-      const { data: existingCats } = await serviceSupabase
-        .from("categories")
-        .select("name")
-        .eq("organization_id", profile.organization_id!);
-
-      const existingNames = new Set(existingCats?.map((c) => c.name) ?? []);
-      const newCategories = presetNames
-        .filter((name) => !existingNames.has(name))
-        .map((name) => ({
-          name,
-          organization_id: profile.organization_id!,
-          slug: "",
-        }));
-
-      if (newCategories.length > 0) {
-        const { error: seedError } = await serviceSupabase
-          .from("categories")
-          .insert(newCategories);
-
-        if (seedError) {
-          capture(seedError, { context: "onboarding: seed preset categories" });
-        }
-      }
-    }
-  }
-
   // Import selected brand presets using service client (bypasses RLS)
   if (brandNamesToImport && brandNamesToImport.length > 0) {
     const serviceSupabase = createServiceClient();
@@ -186,7 +143,6 @@ export async function completeOnboarding(
               .insert({
                 name: preset.category_name,
                 organization_id: profile.organization_id,
-                slug: "",
               })
               .select("id")
               .single();
@@ -230,7 +186,6 @@ export async function completeOnboarding(
     }
   }
 
-  revalidateEntities(["settings", "products", "categories"]);
   revalidatePath("/");
   redirect("/");
 }

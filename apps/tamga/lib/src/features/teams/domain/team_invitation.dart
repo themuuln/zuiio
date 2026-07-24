@@ -102,9 +102,7 @@ class TeamInvitation {
       invitedUserId: json['invitedUserId'] as String,
       invitedByUserId: json['invitedByUserId'] as String,
       role: TeamRole.values.byName(json['role'] as String),
-      status: InvitationStatus.values.byName(
-        json['status'] as String? ?? 'pending',
-      ),
+      status: InvitationStatus.values.byName(json['status'] as String? ?? 'pending'),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
@@ -136,9 +134,7 @@ class TeamInvitation {
       invitedUserId: json['invited_user_id'] as String,
       invitedByUserId: json['invited_by_user_id'] as String,
       role: TeamRole.values.byName(json['role'] as String),
-      status: InvitationStatus.values.byName(
-        json['status'] as String? ?? 'pending',
-      ),
+      status: InvitationStatus.values.byName(json['status'] as String? ?? 'pending'),
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }

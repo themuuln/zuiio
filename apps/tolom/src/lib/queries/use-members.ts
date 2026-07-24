@@ -60,10 +60,7 @@ export function useMembers(
 ): UseQueryResult<UserProfile[], Error> {
   return useQuery({
     queryKey: memberKeys.users(orgId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchUsers(orgId);
-    },
+    queryFn: () => fetchUsers(orgId!),
     enabled: !!orgId,
     staleTime: 60_000,
   });
@@ -74,10 +71,7 @@ export function useInvites(
 ): UseQueryResult<InviteWithEmail[], Error> {
   return useQuery({
     queryKey: memberKeys.invites(orgId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchInvites(orgId);
-    },
+    queryFn: () => fetchInvites(orgId!),
     enabled: !!orgId,
     staleTime: 60_000,
   });
@@ -88,10 +82,7 @@ export function useRoles(
 ): UseQueryResult<Role[], Error> {
   return useQuery({
     queryKey: memberKeys.roles(orgId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchRoles(orgId);
-    },
+    queryFn: () => fetchRoles(orgId!),
     enabled: !!orgId,
     staleTime: 5 * 60_000,
   });

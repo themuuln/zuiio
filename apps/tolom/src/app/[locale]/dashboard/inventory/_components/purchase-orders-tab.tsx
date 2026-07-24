@@ -52,10 +52,7 @@ export function PurchaseOrdersTab({
   onSearchChange,
 }: PurchaseOrdersTabProps) {
   const locale = useLocale();
-  const t = useTranslations("inventory") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("inventory");
   const now = useClientNow();
   const poStatusLabels = useMemo(() => getPoStatusLabels(t), [t]);
   const { data: purchaseOrders = [], isPending } = usePurchaseOrders(

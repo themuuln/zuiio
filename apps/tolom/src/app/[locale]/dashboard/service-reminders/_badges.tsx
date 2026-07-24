@@ -25,10 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export function StatusBadge({ status }: { status: string }) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const key = STATUS_LABELS[status];
   const variant = STATUS_BADGE_VARIANT[status] ?? "outline";
   return <Badge variant={variant}>{key ? t(key) : status}</Badge>;
@@ -41,10 +38,7 @@ const CHANNEL_LABELS: Record<string, string> = {
 };
 
 export function ChannelBadge({ channel }: { channel: string }) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const key = CHANNEL_LABELS[channel];
   return <Badge variant="outline">{key ? t(key) : channel}</Badge>;
 }
@@ -69,10 +63,7 @@ const DUE_STATUS_CONFIG: Record<
 };
 
 export function DueStatusBadge({ status }: { status: DueStatus }) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const config = DUE_STATUS_CONFIG[status];
   return <Badge variant={config.variant}>{t(config.labelKey)}</Badge>;
 }

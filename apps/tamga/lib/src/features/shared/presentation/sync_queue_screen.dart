@@ -132,8 +132,9 @@ class SyncQueueScreen extends ConsumerWidget {
               loading: () => const _LoadingState(),
               error: (err, _) => _ErrorState(
                 message: 'Ачаалахад алдаа гарлаа: $err',
-                onRetry: () =>
-                    ref.invalidate(persistentDeadLetterItemsProvider),
+                onRetry: () => ref.invalidate(
+                  persistentDeadLetterItemsProvider,
+                ),
               ),
             ),
           ],
@@ -527,10 +528,7 @@ class _DeadLetterItemCard extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      _ActionChip(
-                        label: _actionLabel(item.action),
-                        action: item.action,
-                      ),
+                      _ActionChip(label: _actionLabel(item.action), action: item.action),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         _formatTimestamp(item.timestamp),
@@ -546,9 +544,8 @@ class _DeadLetterItemCard extends ConsumerWidget {
                       child: Text(
                         'Оролдсон: ${item.retryCount} удаа',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onErrorContainer.withValues(
-                            alpha: 0.7,
-                          ),
+                          color: theme.colorScheme.onErrorContainer
+                              .withValues(alpha: 0.7),
                           fontSize: 11,
                         ),
                       ),
@@ -684,7 +681,11 @@ class _EmptySection extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
       child: Column(
         children: [
-          Icon(icon, size: 40, color: theme.colorScheme.outlineVariant),
+          Icon(
+            icon,
+            size: 40,
+            color: theme.colorScheme.outlineVariant,
+          ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             message,
@@ -737,7 +738,11 @@ class _ErrorState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         children: [
-          Icon(Icons.error_outline, size: 40, color: theme.colorScheme.error),
+          Icon(
+            Icons.error_outline,
+            size: 40,
+            color: theme.colorScheme.error,
+          ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             message,

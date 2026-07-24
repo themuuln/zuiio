@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT8Z236R630RZSM694KYCTHF",
+  "taskId": "configure-gitignore",
+  "invocationKey": "cradle/project-install:S000015:configure-gitignore",
+  "status": "ok",
+  "result": {
+    "configured": true,
+    "entriesAdded": [
+      ".a5c/creds.env",
+      ".a5c/creds.env.tmp.*",
+      ".a5c/logs/",
+      ".a5c/runs/"
+    ],
+    "existedBefore": true,
+    "gitignorePath": ".gitignore",
+    "level": "logs-runs",
+    "sectionReplaced": false
+  },
+  "startedAt": "2026-06-04T09:23:13.210Z",
+  "finishedAt": "2026-06-04T09:23:13.210Z",
+  "value": {
+    "configured": true,
+    "entriesAdded": [
+      ".a5c/creds.env",
+      ".a5c/creds.env.tmp.*",
+      ".a5c/logs/",
+      ".a5c/runs/"
+    ],
+    "existedBefore": true,
+    "gitignorePath": ".gitignore",
+    "level": "logs-runs",
+    "sectionReplaced": false
+  }
+}

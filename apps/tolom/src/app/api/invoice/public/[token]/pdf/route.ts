@@ -19,8 +19,7 @@ export const GET = createRouteHandler(
 
     // Fetch invoice via public RPC
     const { data: invoiceData, error: invError } = await supabase.rpc(
-      // biome-ignore lint/suspicious/noExplicitAny: RPC name not in generated types union but works at runtime with SECURITY DEFINER invariant
-      "get_public_invoice_by_token" as any,
+      "get_public_invoice_by_token",
       { p_token: token },
     );
 

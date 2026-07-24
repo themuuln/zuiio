@@ -61,12 +61,9 @@ export function useWorkOrderDetail(orgId: string | undefined, woId: string) {
   );
   return useQuery({
     queryKey: workOrderKeys.detail(orgId ?? "", woId),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchWorkOrder(orgId);
-    },
+    queryFn: () => fetchWorkOrder(orgId!),
     enabled: !!orgId,
-    staleTime: 30_000,
+    staleTime: 15_000,
   });
 }
 
@@ -75,10 +72,7 @@ const fetchServiceCatalog = createOrgQuery<ServiceCatalog[]>("/services");
 export function useServiceCatalog(orgId: string | undefined) {
   return useQuery({
     queryKey: serviceKeys.list(orgId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchServiceCatalog(orgId);
-    },
+    queryFn: () => fetchServiceCatalog(orgId!),
     enabled: !!orgId,
     staleTime: 300_000, // 5 min — catalog rarely changes after setup
   });
@@ -95,10 +89,8 @@ const fetchMechanicsList =
 export function useMechanicsList(orgId: string | undefined) {
   return useQuery({
     queryKey: mechanicKeys.list(orgId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchMechanicsList(orgId, { params: { type: "mechanics" } });
-    },
+    queryFn: () =>
+      fetchMechanicsList(orgId!, { params: { type: "mechanics" } }),
     enabled: !!orgId,
     staleTime: 60_000,
   });

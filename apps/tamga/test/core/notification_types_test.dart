@@ -26,10 +26,7 @@ void main() {
 
     test('lostHorseRenewal has correct properties', () {
       expect(NotificationType.lostHorseRenewal.key, 'lost_horse_renewal');
-      expect(
-        NotificationType.lostHorseRenewal.channelId,
-        'lost_horse_renewals',
-      );
+      expect(NotificationType.lostHorseRenewal.channelId, 'lost_horse_renewals');
       expect(NotificationType.lostHorseRenewal.label, 'Хаяж морийн зар');
       expect(NotificationType.lostHorseRenewal.labelEn, 'Lost Horse Renewal');
     });

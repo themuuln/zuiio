@@ -14,10 +14,10 @@
 		"pdf-lib": "^1.17.1"
 	},
 	"devDependencies": {
-		"@types/node": "^26.1.1",
+		"@types/node": "^20",
 		"@typescript/native": "npm:typescript@^7.0.2",
 		"@zuiio/config": "workspace:*",
 		"exceljs": "^4",
-		"typescript": "^7.0.2"
+		"typescript": "npm:@typescript/typescript6@^6.0.2"
 	}
 }

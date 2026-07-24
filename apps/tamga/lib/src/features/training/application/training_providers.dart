@@ -32,9 +32,9 @@ final trainingRepositoryProvider = Provider<TrainingRepository>((ref) {
 /// [horseId] ашиглан тухайн морины бүх дасгалжуулалтыг авна.
 final trainingLogsProvider =
     createListFamilyProvider<TrainingLog, TrainingRepository, String>(
-      (ref) async => ref.watch(trainingRepositoryProvider),
-      (repo, horseId) => repo.fetchByHorse(horseId),
-    );
+  (ref) async => ref.watch(trainingRepositoryProvider),
+  (repo, horseId) => repo.fetchByHorse(horseId),
+);
 
 // ═══════════════════════════════════════════════════════════════════════
 // PerformanceRecord providers
@@ -45,6 +45,6 @@ final trainingLogsProvider =
 /// [horseId] ашиглан тухайн морины бүх гүйцэтгэлийн үзүүлэлтийг авна.
 final performanceRecordsProvider =
     createListFamilyProvider<PerformanceRecord, TrainingRepository, String>(
-      (ref) async => ref.watch(trainingRepositoryProvider),
-      (repo, horseId) => repo.fetchPerformanceByHorse(horseId),
-    );
+  (ref) async => ref.watch(trainingRepositoryProvider),
+  (repo, horseId) => repo.fetchPerformanceByHorse(horseId),
+);

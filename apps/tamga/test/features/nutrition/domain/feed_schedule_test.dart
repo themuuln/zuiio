@@ -21,11 +21,8 @@ void main() {
 
     test('displayName is non-empty for all values', () {
       for (final type in FeedType.values) {
-        expect(
-          type.displayName.isNotEmpty,
-          isTrue,
-          reason: '${type.name} should have a non-empty displayName',
-        );
+        expect(type.displayName.isNotEmpty, isTrue,
+            reason: '${type.name} should have a non-empty displayName');
       }
     });
 
@@ -155,7 +152,10 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      final updated = schedule.copyWith(endDate: null, notes: '');
+      final updated = schedule.copyWith(
+        endDate: null,
+        notes: '',
+      );
       expect(updated.endDate, isNull);
       expect(updated.notes, '');
     });
@@ -320,35 +320,32 @@ void main() {
 
     // ── Serialization — Supabase JSON ────────────────────────
 
-    test(
-      'toSupabaseJson uses snake_case keys and includes ownerId/updated_at',
-      () {
-        final schedule = FeedSchedule(
-          id: 'fs-1',
-          horseId: 'horse-1',
-          feedType: FeedType.hay,
-          quantityKg: 5.0,
-          frequency: 'Өдөр бүр',
-          startDate: DateTime(2026, 6, 1),
-          endDate: DateTime(2026, 8, 1),
-          notes: 'Өвс',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        final json = schedule.toSupabaseJson(ownerId: 'user-1');
+    test('toSupabaseJson uses snake_case keys and includes ownerId/updated_at', () {
+      final schedule = FeedSchedule(
+        id: 'fs-1',
+        horseId: 'horse-1',
+        feedType: FeedType.hay,
+        quantityKg: 5.0,
+        frequency: 'Өдөр бүр',
+        startDate: DateTime(2026, 6, 1),
+        endDate: DateTime(2026, 8, 1),
+        notes: 'Өвс',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      final json = schedule.toSupabaseJson(ownerId: 'user-1');
 
-        expect(json['owner_id'], 'user-1');
-        expect(json['id'], 'fs-1');
-        expect(json['horse_id'], 'horse-1');
-        expect(json['feed_type'], 'hay');
-        expect(json['quantity_kg'], 5.0);
-        expect(json['frequency'], 'Өдөр бүр');
-        expect(json['start_date'], '2026-06-01T00:00:00.000');
-        expect(json['end_date'], '2026-08-01T00:00:00.000');
-        expect(json['notes'], 'Өвс');
-        expect(json['updated_at'], isA<String>());
-      },
-    );
+      expect(json['owner_id'], 'user-1');
+      expect(json['id'], 'fs-1');
+      expect(json['horse_id'], 'horse-1');
+      expect(json['feed_type'], 'hay');
+      expect(json['quantity_kg'], 5.0);
+      expect(json['frequency'], 'Өдөр бүр');
+      expect(json['start_date'], '2026-06-01T00:00:00.000');
+      expect(json['end_date'], '2026-08-01T00:00:00.000');
+      expect(json['notes'], 'Өвс');
+      expect(json['updated_at'], isA<String>());
+    });
 
     test('fromSupabaseJson deserializes snake_case', () {
       final supabase = {

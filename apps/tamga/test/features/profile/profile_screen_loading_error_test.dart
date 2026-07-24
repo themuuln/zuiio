@@ -183,249 +183,206 @@ class _ErrorAuthRepository implements AuthRepository {
 void main() {
   // ── Loading State Tests ─────────────────────────────────────────
   group('VAL-FOUND-010: ProfileScreen shows skeleton loaders while loading', () {
-    testWidgets(
-      'shows shimmer and skeleton placeholder when providers are loading',
-      (tester) async {
-        // Keep horses/events in loading state using never-completing futures
-        final horsesCompleter = Completer<List<HorseRecord>>();
-        final eventsCompleter = Completer<List<Event>>();
+    testWidgets('shows shimmer and skeleton placeholder when providers are loading', (
+      tester,
+    ) async {
+      // Keep horses/events in loading state using never-completing futures
+      final horsesCompleter = Completer<List<HorseRecord>>();
+      final eventsCompleter = Completer<List<Event>>();
 
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              authRepositoryProvider.overrideWithValue(
-                _LoadingAuthRepository(),
-              ),
-              horsesProvider.overrideWith((ref) => horsesCompleter.future),
-              eventsProvider.overrideWith((ref) => eventsCompleter.future),
-            ],
-            child: MaterialApp(
-              theme: AppTheme.light(),
-              home: const ProfileScreen(),
-            ),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(_LoadingAuthRepository()),
+            horsesProvider.overrideWith((ref) => horsesCompleter.future),
+            eventsProvider.overrideWith((ref) => eventsCompleter.future),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            home: const ProfileScreen(),
           ),
-        );
+        ),
+      );
 
-        // Pump to let the initial build happen. The providers stay in loading
-        // state because the completers never complete.
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
+      // Pump to let the initial build happen. The providers stay in loading
+      // state because the completers never complete.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-        // ── Assertions: skeleton UI elements are visible ──
+      // ── Assertions: skeleton UI elements are visible ──
 
-        // ShimmerEffect wraps the skeleton content (at least one in header,
-        // plus one from SkeletonLoader in horses tab when that tab renders)
-        expect(
-          find.byType(ShimmerEffect),
-          findsAtLeastNWidgets(1),
-          reason: 'ShimmerEffect should be present during loading',
-        );
+      // ShimmerEffect wraps the skeleton content (at least one in header,
+      // plus one from SkeletonLoader in horses tab when that tab renders)
+      expect(find.byType(ShimmerEffect), findsAtLeastNWidgets(1),
+          reason: 'ShimmerEffect should be present during loading');
 
-        // Skeleton avatar circle — a Container with BoxShape.circle and size 96
-        final skeletonAvatars = find.byWidgetPredicate(
-          (widget) =>
-              widget is Container &&
-              widget.constraints?.maxWidth == 96 &&
-              widget.decoration is BoxDecoration &&
-              (widget.decoration as BoxDecoration).shape == BoxShape.circle,
-        );
-        expect(
-          skeletonAvatars,
-          findsOneWidget,
-          reason: 'Skeleton avatar circle should be shown during loading',
-        );
+      // Skeleton avatar circle — a Container with BoxShape.circle and size 96
+      final skeletonAvatars = find.byWidgetPredicate(
+        (widget) =>
+            widget is Container &&
+            widget.constraints?.maxWidth == 96 &&
+            widget.decoration is BoxDecoration &&
+            (widget.decoration as BoxDecoration).shape == BoxShape.circle,
+      );
+      expect(skeletonAvatars, findsOneWidget,
+          reason: 'Skeleton avatar circle should be shown during loading');
 
-        // Skeleton stat chips — Container widgets with fixed dimensions
-        // The _SkeletonStatChip renders a Container(width: 100, height: 32)
-        final skeletonChips = find.byWidgetPredicate(
-          (widget) =>
-              widget is Container &&
-              widget.constraints?.maxWidth == 100 &&
-              widget.constraints?.maxHeight == 32 &&
-              widget.decoration is BoxDecoration &&
-              (widget.decoration as BoxDecoration).borderRadius != null,
-        );
-        // Should find 3 skeleton stat chips
-        expect(
-          skeletonChips,
-          findsNWidgets(3),
-          reason: 'Three skeleton stat chips should be shown during loading',
-        );
+      // Skeleton stat chips — Container widgets with fixed dimensions
+      // The _SkeletonStatChip renders a Container(width: 100, height: 32)
+      final skeletonChips = find.byWidgetPredicate(
+        (widget) =>
+            widget is Container &&
+            widget.constraints?.maxWidth == 100 &&
+            widget.constraints?.maxHeight == 32 &&
+            widget.decoration is BoxDecoration &&
+            (widget.decoration as BoxDecoration).borderRadius != null,
+      );
+      // Should find 3 skeleton stat chips
+      expect(skeletonChips, findsNWidgets(3),
+          reason: 'Three skeleton stat chips should be shown during loading');
 
-        // Verify the cover photo settings icon is still visible
-        expect(
-          find.byIcon(Icons.settings_outlined),
-          findsOneWidget,
-          reason: 'Settings icon should remain visible in skeleton header',
-        );
+      // Verify the cover photo settings icon is still visible
+      expect(find.byIcon(Icons.settings_outlined), findsOneWidget,
+          reason: 'Settings icon should remain visible in skeleton header');
 
-        // Verify the skeleton header does NOT contain actual data text
-        expect(
-          find.text('Хэрэглэгч'),
-          findsNothing,
-          reason: 'Display name should not appear during loading',
-        );
-      },
-    );
+      // Verify the skeleton header does NOT contain actual data text
+      expect(find.text('Хэрэглэгч'), findsNothing,
+          reason: 'Display name should not appear during loading');
+    });
   });
 
   // ── Error State Tests ───────────────────────────────────────────
-  group(
-    'VAL-FOUND-011: ProfileScreen shows inline error cards with retry on failure',
-    () {
-      testWidgets('shows error cards and "—" in stats when providers have errors', (
-        tester,
-      ) async {
-        await tester.setLargeViewport();
+  group('VAL-FOUND-011: ProfileScreen shows inline error cards with retry on failure', () {
+    testWidgets('shows error cards and "—" in stats when providers have errors', (
+      tester,
+    ) async {
+      await tester.setLargeViewport();
 
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              authRepositoryProvider.overrideWithValue(_ErrorAuthRepository()),
-              horsesProvider.overrideWith(
-                (ref) => Future.error(
-                  AppException(message: 'Horses error', code: 'H_ERR'),
-                ),
-              ),
-              eventsProvider.overrideWith(
-                (ref) => Future.error(
-                  AppException(message: 'Events error', code: 'E_ERR'),
-                ),
-              ),
-            ],
-            child: MaterialApp(
-              theme: AppTheme.light(),
-              home: const ProfileScreen(),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(_ErrorAuthRepository()),
+            horsesProvider.overrideWith(
+              (ref) => Future.error(AppException(message: 'Horses error', code: 'H_ERR')),
             ),
-          ),
-        );
-
-        // Let async operations settle — the error futures complete immediately
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
-        await tester.pump(const Duration(milliseconds: 100));
-        await tester.pump(const Duration(milliseconds: 100));
-
-        // ── Assertions: error UI elements are visible ──
-
-        // Retry buttons should be present (each error card has "Дахин оролдох")
-        expect(
-          find.text('Дахин оролдох'),
-          findsWidgets,
-          reason: 'Retry buttons should appear on error cards',
-        );
-
-        // Error message for auth failure (may appear in both error card and toast)
-        expect(
-          find.textContaining('Хэрэглэгчийн мэдээлэл ачаалахад алдаа гарлаа'),
-          findsAtLeastNWidgets(1),
-          reason: 'Auth error message should be visible',
-        );
-
-        // Error message for horses failure
-        expect(
-          find.textContaining('Морьдын мэдээлэл ачаалахад алдаа гарлаа'),
-          findsAtLeastNWidgets(1),
-          reason: 'Horses error message should be visible',
-        );
-
-        // Error message for events failure
-        expect(
-          find.textContaining('Уралдааны мэдээлэл ачаалахад алдаа гарлаа'),
-          findsAtLeastNWidgets(1),
-          reason: 'Events error message should be visible',
-        );
-
-        // Stat chips show '—' for errored data
-        // Horses, events, and lineage chips all show '—' when their data errors
-        expect(
-          find.text('—'),
-          findsAtLeastNWidgets(3),
-          reason: 'All three stat chips show "—" when data has errors',
-        );
-      });
-
-      testWidgets('retry button triggers provider invalidation', (
-        tester,
-      ) async {
-        final errorRepo = _ErrorAuthRepository();
-
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              authRepositoryProvider.overrideWithValue(errorRepo),
-              horsesProvider.overrideWith((ref) => <HorseRecord>[]),
-              eventsProvider.overrideWith((ref) => <Event>[]),
-            ],
-            child: MaterialApp(
-              theme: AppTheme.light(),
-              home: const ProfileScreen(),
+            eventsProvider.overrideWith(
+              (ref) => Future.error(AppException(message: 'Events error', code: 'E_ERR')),
             ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            home: const ProfileScreen(),
           ),
-        );
+        ),
+      );
 
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
-        await tester.pump(const Duration(milliseconds: 100));
+      // Let async operations settle — the error futures complete immediately
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
 
-        // Verify error card with retry button is visible
-        expect(
-          find.text('Дахин оролдох'),
-          findsWidgets,
-          reason: 'Retry button should be visible on auth error card',
-        );
+      // ── Assertions: error UI elements are visible ──
 
-        // Tap the retry button
-        await tester.tap(find.text('Дахин оролдох').first);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
+      // Retry buttons should be present (each error card has "Дахин оролдох")
+      expect(find.text('Дахин оролдох'), findsWidgets,
+          reason: 'Retry buttons should appear on error cards');
 
-        // After invalidation, the provider re-fetches and errors again,
-        // so the error card and retry button should show again
-        expect(
-          find.text('Дахин оролдох'),
-          findsWidgets,
-          reason:
-              'Retry button should reappear after invalidation re-triggers error',
-        );
-      });
+      // Error message for auth failure (may appear in both error card and toast)
+      expect(
+        find.textContaining('Хэрэглэгчийн мэдээлэл ачаалахад алдаа гарлаа'),
+        findsAtLeastNWidgets(1),
+        reason: 'Auth error message should be visible',
+      );
 
-      testWidgets('settings tab is still accessible with auth error', (
-        tester,
-      ) async {
-        await tester.setLargeViewport();
+      // Error message for horses failure
+      expect(
+        find.textContaining('Морьдын мэдээлэл ачаалахад алдаа гарлаа'),
+        findsAtLeastNWidgets(1),
+        reason: 'Horses error message should be visible',
+      );
 
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              authRepositoryProvider.overrideWithValue(_ErrorAuthRepository()),
-              horsesProvider.overrideWith((ref) => <HorseRecord>[]),
-              eventsProvider.overrideWith((ref) => <Event>[]),
-            ],
-            child: MaterialApp(
-              theme: AppTheme.light(),
-              home: const ProfileScreen(),
-            ),
+      // Error message for events failure
+      expect(
+        find.textContaining('Уралдааны мэдээлэл ачаалахад алдаа гарлаа'),
+        findsAtLeastNWidgets(1),
+        reason: 'Events error message should be visible',
+      );
+
+      // Stat chips show '—' for errored data
+      // Horses, events, and lineage chips all show '—' when their data errors
+      expect(find.text('—'), findsAtLeastNWidgets(3),
+          reason: 'All three stat chips show "—" when data has errors');
+    });
+
+    testWidgets('retry button triggers provider invalidation', (tester) async {
+      final errorRepo = _ErrorAuthRepository();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(errorRepo),
+            horsesProvider.overrideWith((ref) => <HorseRecord>[]),
+            eventsProvider.overrideWith((ref) => <Event>[]),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            home: const ProfileScreen(),
           ),
-        );
+        ),
+      );
 
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
-        await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
 
-        // Navigate to settings tab
-        await tester.tap(find.text('Тохиргоо'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+      // Verify error card with retry button is visible
+      expect(
+        find.text('Дахин оролдох'),
+        findsWidgets,
+        reason: 'Retry button should be visible on auth error card',
+      );
 
-        // Settings tab content should be accessible
-        expect(
-          find.text('Мэдээлэл'),
-          findsOneWidget,
-          reason:
-              'Settings tab content should be accessible even with auth error',
-        );
-      });
-    },
-  );
+      // Tap the retry button
+      await tester.tap(find.text('Дахин оролдох').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // After invalidation, the provider re-fetches and errors again,
+      // so the error card and retry button should show again
+      expect(find.text('Дахин оролдох'), findsWidgets,
+          reason: 'Retry button should reappear after invalidation re-triggers error');
+    });
+
+    testWidgets('settings tab is still accessible with auth error', (tester) async {
+      await tester.setLargeViewport();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(_ErrorAuthRepository()),
+            horsesProvider.overrideWith((ref) => <HorseRecord>[]),
+            eventsProvider.overrideWith((ref) => <Event>[]),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            home: const ProfileScreen(),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Navigate to settings tab
+      await tester.tap(find.text('Тохиргоо'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Settings tab content should be accessible
+      expect(find.text('Мэдээлэл'), findsOneWidget,
+          reason: 'Settings tab content should be accessible even with auth error');
+    });
+  });
 }

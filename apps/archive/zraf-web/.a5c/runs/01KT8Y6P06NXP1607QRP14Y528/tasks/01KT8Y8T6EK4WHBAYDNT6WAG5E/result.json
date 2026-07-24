@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT8Y8T6EK4WHBAYDNT6WAG5E",
+  "taskId": "analyze-tools-services",
+  "invocationKey": "cradle/project-install:S000003:analyze-tools-services",
+  "status": "ok",
+  "result": {
+    "cicd": {
+      "configPaths": [],
+      "pipelines": [],
+      "provider": null
+    },
+    "containerization": null,
+    "externalIntegrations": [],
+    "infrastructure": null,
+    "services": [],
+    "tools": {
+      "formatting": [
+        {
+          "command": "biome format --write",
+          "name": "Biome",
+          "version": "2.2.0"
+        }
+      ],
+      "linting": [
+        {
+          "command": "biome check",
+          "configFile": "biome.json",
+          "name": "Biome",
+          "version": "2.2.0"
+        }
+      ],
+      "testing": []
+    },
+    "workflows": [
+      {
+        "description": "Local dev with Next.js dev server",
+        "name": "development",
+        "steps": [
+          "pnpm dev",
+          "Edit code",
+          "Biome check/format"
+        ],
+        "triggers": [
+          "manual"
+        ]
+      },
+      {
+        "description": "Production build via Next.js",
+        "name": "build",
+        "steps": [
+          "pnpm build"
+        ],
+        "triggers": [
+          "manual",
+          "Vercel deploy"
+        ]
+      }
+    ]
+  },
+  "startedAt": "2026-06-04T09:09:34.337Z",
+  "finishedAt": "2026-06-04T09:09:34.337Z",
+  "value": {
+    "cicd": {
+      "configPaths": [],
+      "pipelines": [],
+      "provider": null
+    },
+    "containerization": null,
+    "externalIntegrations": [],
+    "infrastructure": null,
+    "services": [],
+    "tools": {
+      "formatting": [
+        {
+          "command": "biome format --write",
+          "name": "Biome",
+          "version": "2.2.0"
+        }
+      ],
+      "linting": [
+        {
+          "command": "biome check",
+          "configFile": "biome.json",
+          "name": "Biome",
+          "version": "2.2.0"
+        }
+      ],
+      "testing": []
+    },
+    "workflows": [
+      {
+        "description": "Local dev with Next.js dev server",
+        "name": "development",
+        "steps": [
+          "pnpm dev",
+          "Edit code",
+          "Biome check/format"
+        ],
+        "triggers": [
+          "manual"
+        ]
+      },
+      {
+        "description": "Production build via Next.js",
+        "name": "build",
+        "steps": [
+          "pnpm build"
+        ],
+        "triggers": [
+          "manual",
+          "Vercel deploy"
+        ]
+      }
+    ]
+  }
+}

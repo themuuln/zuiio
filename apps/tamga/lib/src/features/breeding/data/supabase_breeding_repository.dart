@@ -36,10 +36,7 @@ class SupabaseBreedingRepository with SupabaseRepositoryMixin {
           .order('breeding_date', ascending: false);
 
       final records = (response as List<dynamic>)
-          .map(
-            (row) =>
-                BreedingRecord.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => BreedingRecord.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(records);
@@ -97,4 +94,5 @@ class SupabaseBreedingRepository with SupabaseRepositoryMixin {
       return Result.fail(wrapError(e));
     }
   }
+
 }

@@ -12,6 +12,7 @@ import {
 } from "@/components/products/variant-editor";
 import { buttonVariants } from "@/components/ui/button";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
+import { NestedDrawerPanel } from "@/components/ui/nested-drawer-panel";
 
 export {
   computeCombinations,
@@ -29,6 +30,7 @@ export function VariantManagerDrawer({
   onVariantsChange,
   open: externalOpen,
   onOpenChange: externalOnOpenChange,
+  parentTitle,
   inline,
 }: {
   groups: LocalVariantGroup[];
@@ -42,6 +44,8 @@ export function VariantManagerDrawer({
   onVariantsChange: (data: LocalVariantData[]) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Title of the parent drawer for breadcrumb display. */
+  parentTitle?: string;
   /** When true, renders as an inline panel inside the parent drawer instead of a portal-based drawer. */
   inline?: boolean;
 }) {
@@ -64,7 +68,6 @@ export function VariantManagerDrawer({
   const trigger = (
     <button
       type="button"
-      onClick={() => setOpen(true)}
       className={buttonVariants({
         variant: hasVariants ? "outline" : "secondary",
       })}
@@ -93,21 +96,20 @@ export function VariantManagerDrawer({
     />
   );
 
-  // Inline mode: render as a nested drawer that stacks on top of the parent
+  // Inline mode: render inside the parent drawer using NestedDrawerPanel
   if (inline) {
     return (
       <>
         {trigger}
-        <DrawerLayout
+        <NestedDrawerPanel
           open={open}
-          onOpenChange={setOpen}
-          panelWidth="32rem"
-          nested
+          onClose={() => setOpen(false)}
           title="Вариант тохируулах"
           description="Бүтээгдэхүүний хувилбаруудыг тохируулах"
+          parentTitle={parentTitle}
         >
           {panelContent}
-        </DrawerLayout>
+        </NestedDrawerPanel>
       </>
     );
   }

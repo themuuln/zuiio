@@ -1,6 +1,7 @@
 "use client";
 
 import { MoreHorizontal, Pencil, UserMinus, Users } from "lucide-react";
+import type { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,10 +45,10 @@ interface MemberListProps {
   loading: boolean;
   members: UserProfile[];
   roles: Role[];
-  onRoleChange: (memberId: string, roleId: string) => void;
+  onRoleChange: (userId: string, roleId: string) => void;
   onEdit: (member: UserProfile) => void;
-  onRemove: (memberId: string) => void;
-  t: (key: string, values?: Record<string, string | number>) => string;
+  onRemove: (userId: string) => void;
+  t: ReturnType<typeof useTranslations<"organization.memberManagement">>;
 }
 
 export function MemberList({

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT8YPWYY2SK57N8EE4H5VFNT",
+  "taskId": "update-claude-md",
+  "invocationKey": "cradle/project-install:S000010:update-claude-md",
+  "status": "ok",
+  "result": {
+    "addedSections": [
+      "ZRAf — Project-Specific Instructions"
+    ],
+    "additions": "Added ZRAf-specific section with project goals, workflow, deploy target, and tool notes.",
+    "claudeMdInstructions": [
+      "Ship to 1-person tester on Vercel quickly",
+      "Trunk-based workflow, feature branches for bigger changes",
+      "Autonomous mode — no breakpoints for routine work",
+      "Vercel deployment target — watch asset sizes (100MB limit)",
+      "Static JSON + images in public/data/ — monitor total size",
+      "No CI/CD for now",
+      "No tests — add when ready for production",
+      "Biome for linting and formatting"
+    ],
+    "claudeMdPath": "CLAUDE.md",
+    "updated": true
+  },
+  "startedAt": "2026-06-04T09:17:11.653Z",
+  "finishedAt": "2026-06-04T09:17:11.653Z",
+  "value": {
+    "addedSections": [
+      "ZRAf — Project-Specific Instructions"
+    ],
+    "additions": "Added ZRAf-specific section with project goals, workflow, deploy target, and tool notes.",
+    "claudeMdInstructions": [
+      "Ship to 1-person tester on Vercel quickly",
+      "Trunk-based workflow, feature branches for bigger changes",
+      "Autonomous mode — no breakpoints for routine work",
+      "Vercel deployment target — watch asset sizes (100MB limit)",
+      "Static JSON + images in public/data/ — monitor total size",
+      "No CI/CD for now",
+      "No tests — add when ready for production",
+      "Biome for linting and formatting"
+    ],
+    "claudeMdPath": "CLAUDE.md",
+    "updated": true
+  }
+}

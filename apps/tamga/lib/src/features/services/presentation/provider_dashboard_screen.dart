@@ -64,7 +64,9 @@ class _ProviderDashboardScreenState
             ),
             error: (error, _) => TamgaErrorWidget(
               message: 'Удахгүй болох захиалгуудыг ачаалахад алдаа гарлаа',
-              onRetry: () => ref.invalidate(providerUpcomingBookingsProvider),
+              onRetry: () => ref.invalidate(
+                providerUpcomingBookingsProvider,
+              ),
             ),
             data: (bookings) {
               if (bookings.isEmpty) {
@@ -116,7 +118,8 @@ class _ProviderDashboardScreenState
             ),
             error: (error, _) => TamgaErrorWidget(
               message: 'Өнгөрсөн захиалгуудыг ачаалахад алдаа гарлаа',
-              onRetry: () => ref.invalidate(providerPastBookingsProvider),
+              onRetry: () =>
+                  ref.invalidate(providerPastBookingsProvider),
             ),
             data: (bookings) {
               if (bookings.isEmpty) {
@@ -286,9 +289,8 @@ class _ProviderDashboardScreenState
     if (confirm == true && mounted) {
       // Invalidate to trigger a refresh - we use the FutureProvider.family
       // The actual completion is done in the booking itself via complete()
-      final repository = await ref.read(
-        serviceBookingRepositoryProvider.future,
-      );
+      final repository =
+          await ref.read(serviceBookingRepositoryProvider.future);
       final completed = booking.complete();
       final result = await repository.updateBooking(completed);
 
@@ -401,23 +403,27 @@ class _BookingCard extends StatelessWidget {
             // Огноо
             Row(
               children: [
-                Icon(
-                  Icons.calendar_today,
-                  size: 14,
-                  color: tc.onSurfaceVariant,
-                ),
+                Icon(Icons.calendar_today,
+                    size: 14, color: tc.onSurfaceVariant),
                 const SizedBox(width: 4),
                 Text(
                   '${booking.bookingDate.year}-${booking.bookingDate.month.toString().padLeft(2, '0')}-${booking.bookingDate.day.toString().padLeft(2, '0')}',
-                  style: TextStyle(fontSize: 13, color: tc.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: tc.onSurfaceVariant,
+                  ),
                 ),
                 if (booking.locationAimag != null) ...[
                   const SizedBox(width: TamgaSpacing.lg),
-                  Icon(Icons.location_on, size: 14, color: tc.onSurfaceVariant),
+                  Icon(Icons.location_on,
+                      size: 14, color: tc.onSurfaceVariant),
                   const SizedBox(width: 4),
                   Text(
                     booking.locationAimag!,
-                    style: TextStyle(fontSize: 13, color: tc.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: tc.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ],
@@ -432,7 +438,10 @@ class _BookingCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     '${booking.horseIds.length} морь(д)',
-                    style: TextStyle(fontSize: 13, color: tc.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: tc.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),

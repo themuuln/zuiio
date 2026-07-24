@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
 import { type NextRequest, NextResponse } from "next/server";
 import { PUBLIC_ROUTES } from "@/lib/constants";
@@ -26,10 +27,10 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  let userId: string | null = null;
+  let user: User | null = null;
   try {
-    const { data } = await supabase.auth.getClaims();
-    userId = data?.claims?.sub ?? null;
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
   } catch (e) {
     // Session is invalid — treat as unauthenticated.
     capture(e, { context: "middleware session validation" });
@@ -53,7 +54,7 @@ export async function updateSession(request: NextRequest) {
   const isCronRoute = request.nextUrl.pathname.startsWith("/api/cron/");
 
   if (
-    !userId &&
+    !user &&
     !isPublicRoute &&
     !isShareRoute &&
     !isPublicProductsRoute &&
@@ -115,7 +116,7 @@ export async function updateSession(request: NextRequest) {
     const response = NextResponse.redirect(url);
 
     // Forward any auth cookie changes from supabaseResponse
-    // (getClaims() may have refreshed or cleared session cookies via setAll)
+    // (getUser() may have refreshed or cleared session cookies via setAll)
     for (const cookie of supabaseResponse.headers.getSetCookie()) {
       response.headers.append("Set-Cookie", cookie);
     }
@@ -131,7 +132,7 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (
-    userId &&
+    user &&
     (request.nextUrl.pathname === "/login" ||
       request.nextUrl.pathname === "/register")
   ) {
@@ -154,8 +155,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Pass user ID as a header so consumers can avoid a duplicate getUser() call.
-  if (userId) {
-    supabaseResponse.headers.set("x-authed-user-id", userId);
+  if (user) {
+    supabaseResponse.headers.set("x-authed-user-id", user.id);
   }
 
   return supabaseResponse;

@@ -46,18 +46,14 @@ class _TrialSlotsScreenState extends ConsumerState<TrialSlotsScreen> {
       ),
       body: slotsAsync.when(
         data: (slots) {
-          final available = slots
-              .where((s) => s.status == TrialSlotStatus.available)
-              .toList();
-          final booked = slots
-              .where((s) => s.status == TrialSlotStatus.booked)
-              .toList();
+          final available =
+              slots.where((s) => s.status == TrialSlotStatus.available).toList();
+          final booked =
+              slots.where((s) => s.status == TrialSlotStatus.booked).toList();
           final past = slots
-              .where(
-                (s) =>
-                    s.status == TrialSlotStatus.completed ||
-                    s.status == TrialSlotStatus.cancelled,
-              )
+              .where((s) =>
+                  s.status == TrialSlotStatus.completed ||
+                  s.status == TrialSlotStatus.cancelled)
               .toList();
 
           return RefreshIndicator(
@@ -75,12 +71,10 @@ class _TrialSlotsScreenState extends ConsumerState<TrialSlotsScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  ...available.map(
-                    (slot) => _SlotCard(
-                      slot: slot,
-                      onDelete: () => _deleteSlot(slot.id),
-                    ),
-                  ),
+                  ...available.map((slot) => _SlotCard(
+                        slot: slot,
+                        onDelete: () => _deleteSlot(slot.id),
+                      )),
                   const SizedBox(height: AppSpacing.lg),
                 ],
                 if (booked.isNotEmpty) ...[
@@ -91,9 +85,10 @@ class _TrialSlotsScreenState extends ConsumerState<TrialSlotsScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  ...booked.map(
-                    (slot) => _SlotCard(slot: slot, isBooked: true),
-                  ),
+                  ...booked.map((slot) => _SlotCard(
+                        slot: slot,
+                        isBooked: true,
+                      )),
                   const SizedBox(height: AppSpacing.lg),
                 ],
                 if (past.isNotEmpty) ...[
@@ -158,7 +153,9 @@ class _TrialSlotsScreenState extends ConsumerState<TrialSlotsScreen> {
                       context: ctx,
                       initialDate: selectedDate,
                       firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 90)),
+                      lastDate: DateTime.now().add(
+                        const Duration(days: 90),
+                      ),
                     );
                     if (date != null) {
                       setState(() => selectedDate = date);
@@ -239,9 +236,7 @@ class _TrialSlotsScreenState extends ConsumerState<TrialSlotsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Цагийн цонх устгах'),
-        content: const Text(
-          'Та энэ цагийн цонхыг устгахдаа итгэлтэй байна уу?',
-        ),
+        content: const Text('Та энэ цагийн цонхыг устгахдаа итгэлтэй байна уу?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -293,13 +288,13 @@ class _SlotCard extends StatelessWidget {
           isPast
               ? Icons.event_busy
               : isBooked
-              ? Icons.event
-              : Icons.event_available,
+                  ? Icons.event
+                  : Icons.event_available,
           color: isPast
               ? theme.colorScheme.error
               : isBooked
-              ? Colors.orange
-              : theme.colorScheme.tertiary,
+                  ? Colors.orange
+                  : theme.colorScheme.tertiary,
         ),
         title: Text(
           '${slot.dateDisplay}  ${slot.timeDisplay}',
@@ -314,14 +309,14 @@ class _SlotCard extends StatelessWidget {
               isPast
                   ? slot.status.displayName
                   : isBooked
-                  ? 'Захиалсан'
-                  : 'Чөлөөтэй',
+                      ? 'Захиалсан'
+                      : 'Чөлөөтэй',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isPast
                     ? theme.colorScheme.error
                     : isBooked
-                    ? Colors.orange
-                    : theme.colorScheme.tertiary,
+                        ? Colors.orange
+                        : theme.colorScheme.tertiary,
               ),
             ),
             if (slot.notes != null && slot.notes!.isNotEmpty)
@@ -336,10 +331,8 @@ class _SlotCard extends StatelessWidget {
         ),
         trailing: onDelete != null
             ? IconButton(
-                icon: Icon(
-                  Icons.delete_outline,
-                  color: theme.colorScheme.error,
-                ),
+                icon: Icon(Icons.delete_outline,
+                    color: theme.colorScheme.error),
                 onPressed: onDelete,
               )
             : null,
@@ -370,9 +363,8 @@ class TrialBookingSection extends ConsumerWidget {
 
     return slotsAsync.when(
       data: (slots) {
-        final available = slots
-            .where((s) => s.status == TrialSlotStatus.available)
-            .toList();
+        final available =
+            slots.where((s) => s.status == TrialSlotStatus.available).toList();
 
         if (available.isEmpty) {
           return Card(
@@ -413,12 +405,13 @@ class TrialBookingSection extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.event_available,
-                      color: theme.colorScheme.primary,
-                    ),
+                    Icon(Icons.event_available,
+                        color: theme.colorScheme.primary),
                     const SizedBox(width: AppSpacing.sm),
-                    Text('Туршилтын цагууд', style: theme.textTheme.titleLarge),
+                    Text(
+                      'Туршилтын цагууд',
+                      style: theme.textTheme.titleLarge,
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -429,13 +422,11 @@ class TrialBookingSection extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ...available.map(
-                  (slot) => _AvailableSlotItem(
-                    slot: slot,
-                    listingId: listingId,
-                    sellerId: sellerId,
-                  ),
-                ),
+                ...available.map((slot) => _AvailableSlotItem(
+                      slot: slot,
+                      listingId: listingId,
+                      sellerId: sellerId,
+                    )),
               ],
             ),
           ),
@@ -524,9 +515,9 @@ class _AvailableSlotItem extends ConsumerWidget {
             children: [
               Text(
                 'Цаг: ${slot.dateDisplay} ${slot.timeDisplay}',
-                style: Theme.of(
-                  ctx,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
               const SizedBox(height: AppSpacing.md),
               TextField(
@@ -569,7 +560,9 @@ class _AvailableSlotItem extends ConsumerWidget {
         if (context.mounted) {
           if (result.isSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Туршилтын хүсэлт илгээгдлээ!')),
+              const SnackBar(
+                content: Text('Туршилтын хүсэлт илгээгдлээ!'),
+              ),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(

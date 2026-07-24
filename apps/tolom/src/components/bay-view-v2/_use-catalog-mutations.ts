@@ -250,7 +250,6 @@ export function useCatalogMutations<T extends EntityKind>(
 
   // ── Add ──
   function addItem(item: CatalogServiceItem | CatalogPartItem) {
-    if (!workOrderId) return;
     const ri = item as Item;
     const tempId = `temp-${Math.random().toString(36).slice(2, 11)}`;
     const price = Number(item.last_price ?? item.default_price ?? 0);
@@ -266,7 +265,7 @@ export function useCatalogMutations<T extends EntityKind>(
       unit_cost: 0,
       last_sold_price: ri.last_price ?? null,
       notes: null,
-      work_order_id: workOrderId,
+      work_order_id: workOrderId!,
       organization_id: null,
       created_by: null,
       created_at: new Date().toISOString(),

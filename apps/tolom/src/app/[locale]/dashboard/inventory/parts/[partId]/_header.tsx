@@ -23,10 +23,7 @@ export function PartHeader({
   minThreshold,
   isPending,
 }: PartHeaderProps) {
-  const t = useTranslations("inventory") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("inventory");
 
   if (isPending) {
     return (

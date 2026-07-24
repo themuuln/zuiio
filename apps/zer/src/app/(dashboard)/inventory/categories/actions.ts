@@ -2,7 +2,6 @@
 
 import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
-import { PRESET_CATEGORIES } from "@/lib/constants";
 import { validateCategoryInput } from "@/lib/domain-rules";
 import { revalidateEntity } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
@@ -42,7 +41,6 @@ export async function createCategory(
   const { error } = await supabase.from("categories").insert({
     organization_id: organizationId,
     name,
-    slug: "",
   });
 
   if (error) {
@@ -152,57 +150,4 @@ export async function deleteCategory(
 
   revalidateEntity("categories");
   return { success: true as const };
-}
-
-/**
- * Seed preset categories for the org's company type.
- * Skips names that already exist. Returns the number of categories created.
- */
-export async function seedPresetCategories(): Promise<{
-  seeded?: number;
-  error?: string;
-}> {
-  const ctx = await requireActionContext("categories.create");
-  if ("error" in ctx) return { error: ctx.error };
-  const { supabase, organizationId } = ctx;
-
-  // Read the org's company type
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("company_type")
-    .eq("id", organizationId)
-    .single();
-
-  const companyType = (org?.company_type as string) ?? "other";
-  const presetNames =
-    PRESET_CATEGORIES[companyType] ?? PRESET_CATEGORIES.other ?? [];
-
-  if (presetNames.length === 0) return { seeded: 0 };
-
-  // Fetch existing categories to avoid duplicates
-  const { data: existingCats } = await supabase
-    .from("categories")
-    .select("name")
-    .eq("organization_id", organizationId);
-
-  const existingNames = new Set(existingCats?.map((c) => c.name) ?? []);
-  const newCategories = presetNames
-    .filter((name) => !existingNames.has(name))
-    .map((name) => ({
-      name,
-      organization_id: organizationId,
-      slug: "",
-    }));
-
-  if (newCategories.length === 0) return { seeded: 0 };
-
-  const { error } = await supabase.from("categories").insert(newCategories);
-
-  if (error) {
-    capture(error, { context: "categories: seedPresetCategories" });
-    return { error: error.message ?? "Ангилал үүсгэхэд алдаа гарлаа." };
-  }
-
-  revalidateEntity("categories");
-  return { seeded: newCategories.length };
 }

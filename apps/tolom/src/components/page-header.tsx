@@ -99,10 +99,7 @@ export function PageHeader({
   onTabChange,
   actions,
 }: PageHeaderProps) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const { push } = useRouter();
   const { searchItems } = useNavigation();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -203,7 +200,7 @@ export function PageHeader({
 
   return (
     <>
-      <header className="sticky top-0 z-50 flex shrink-0 flex-col border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <header className="sticky top-0 z-50 flex w-full shrink-0 flex-col border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="flex h-12 items-center gap-2 px-4">
           <div className="flex min-w-0 items-center gap-2 self-stretch">
             <SidebarTrigger className="-ml-1 rounded-xl" />
@@ -211,7 +208,7 @@ export function PageHeader({
               <Breadcrumb className="hidden md:flex">
                 <BreadcrumbList>
                   {breadcrumbItems.map((item, i) => (
-                    <BreadcrumbItem key={item.href}>
+                    <BreadcrumbItem key={i}>
                       {i < breadcrumbItems.length - 1 ? (
                         <>
                           <BreadcrumbLink render={<Link href={item.href} />}>
@@ -267,7 +264,7 @@ export function PageHeader({
             <Breadcrumb>
               <BreadcrumbList>
                 {breadcrumbItems.map((item, i) => (
-                  <BreadcrumbItem key={item.href}>
+                  <BreadcrumbItem key={i}>
                     {i < breadcrumbItems.length - 1 ? (
                       <>
                         <BreadcrumbLink render={<Link href={item.href} />}>
@@ -375,10 +372,10 @@ export function PageHeader({
                     setNewPartsCarSheetOpen(true);
                   },
                 },
-              ].map((item, _i) => {
+              ].map((item, i) => {
                 const Icon = item.icon;
                 return (
-                  <CommandItem key={item.label} onSelect={item.onSelect}>
+                  <CommandItem key={`create-${i}`} onSelect={item.onSelect}>
                     <Icon className="size-4" />
                     <span>{item.label}</span>
                   </CommandItem>
@@ -409,10 +406,7 @@ export function PageHeader({
 }
 
 function SettingsShortcut() {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const pathname = usePathname();
   const isActive = pathname === "/dashboard/settings";
 
@@ -443,10 +437,7 @@ function SettingsShortcut() {
 }
 
 function QuickCreateHeader() {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const {
     setNewCustomerDialogOpen,
     setNewVehicleDialogOpen,

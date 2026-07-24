@@ -55,7 +55,11 @@ export function VehicleNameSkeleton({ className }: { className?: string }) {
 }
 
 /* ── Mechanic badge skeleton (avatar circle + name) ─────── */
-export function MechanicBadgeSkeleton({ className }: { className?: string }) {
+export function MechanicBadgeSkeleton({
+  className,
+}: {
+  className?: string;
+}) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <Skeleton className="size-6 rounded-full" />
@@ -65,8 +69,14 @@ export function MechanicBadgeSkeleton({ className }: { className?: string }) {
 }
 
 /* ── Bay card footer button skeleton ────────────────────── */
-export function FooterButtonSkeleton({ className }: { className?: string }) {
-  return <Skeleton className={cn("h-7 w-16 rounded-lg", className)} />;
+export function FooterButtonSkeleton({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <Skeleton className={cn("h-7 w-16 rounded-lg", className)} />
+  );
 }
 
 /* ── Bay card occupied layout skeleton ──────────────────── *

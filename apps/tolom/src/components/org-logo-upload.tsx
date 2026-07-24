@@ -102,11 +102,7 @@ export default function OrgLogoUpload({
     [uploadFile],
   );
 
-  const {
-    getRootProps,
-    getInputProps: _,
-    isDragActive,
-  } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       "image/png": [".png"],

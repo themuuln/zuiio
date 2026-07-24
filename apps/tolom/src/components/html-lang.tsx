@@ -12,6 +12,7 @@ export function HtmlLang() {
     <Script
       id="html-lang"
       strategy="beforeInteractive"
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: required for setting html lang attribute via script
       dangerouslySetInnerHTML={{
         __html: `document.documentElement.lang='${locale}'`,
       }}

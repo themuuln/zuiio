@@ -1,0 +1,14 @@
+{
+  "packageJsonCreated": true,
+  "packageJsonPath": ".a5c/package.json",
+  "qualityGatesPath": ".a5c/quality-gates.json",
+  "sdkInstalled": false,
+  "qualityGates": {
+    "qualityThreshold": 80,
+    "testCoverage": 60,
+    "linting": "biome check",
+    "formatting": "biome format --write",
+    "commitChecks": ["biome check"],
+    "deployGates": ["biome check", "next build"]
+  }
+}

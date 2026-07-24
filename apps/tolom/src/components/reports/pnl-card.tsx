@@ -79,10 +79,7 @@ function buildRows(data: PnLSummary, t: (key: string) => string): PnLRow[] {
 }
 
 export function PnLCard({ data, loading }: PnLCardProps) {
-  const t = useTranslations("reports") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("reports");
 
   if (loading) return <Skeleton className="h-[300px] rounded-xl" />;
 

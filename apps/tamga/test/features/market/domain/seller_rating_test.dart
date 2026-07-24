@@ -57,10 +57,7 @@ void main() {
         sellerResponse: 'Баярлалаа!',
         responseAt: DateTime(2026, 6, 16),
       );
-      final cleared = withResponse.copyWith(
-        clearResponse: true,
-        clearResponseAt: true,
-      );
+      final cleared = withResponse.copyWith(clearResponse: true, clearResponseAt: true);
       expect(cleared.sellerResponse, isNull);
       expect(cleared.responseAt, isNull);
     });
@@ -221,73 +218,25 @@ void main() {
     test('percentageFor returns correct values', () {
       final now = DateTime(2026, 6, 15);
       final ratings = [
-        SellerRating(
-          id: 'r1',
-          listingId: 'l1',
-          sellerId: 's1',
-          buyerId: 'b1',
-          rating: 5,
-          review: '',
-          createdAt: now,
-        ),
-        SellerRating(
-          id: 'r2',
-          listingId: 'l1',
-          sellerId: 's1',
-          buyerId: 'b1',
-          rating: 5,
-          review: '',
-          createdAt: now,
-        ),
-        SellerRating(
-          id: 'r3',
-          listingId: 'l1',
-          sellerId: 's1',
-          buyerId: 'b1',
-          rating: 4,
-          review: '',
-          createdAt: now,
-        ),
-        SellerRating(
-          id: 'r4',
-          listingId: 'l1',
-          sellerId: 's1',
-          buyerId: 'b1',
-          rating: 3,
-          review: '',
-          createdAt: now,
-        ),
+        SellerRating(id: 'r1', listingId: 'l1', sellerId: 's1', buyerId: 'b1', rating: 5, review: '', createdAt: now),
+        SellerRating(id: 'r2', listingId: 'l1', sellerId: 's1', buyerId: 'b1', rating: 5, review: '', createdAt: now),
+        SellerRating(id: 'r3', listingId: 'l1', sellerId: 's1', buyerId: 'b1', rating: 4, review: '', createdAt: now),
+        SellerRating(id: 'r4', listingId: 'l1', sellerId: 's1', buyerId: 'b1', rating: 3, review: '', createdAt: now),
       ];
 
       final summary = SellerRatingSummary.fromRatings(ratings);
-      expect(summary.percentageFor(5), 0.5); // 2/4
+      expect(summary.percentageFor(5), 0.5);  // 2/4
       expect(summary.percentageFor(4), 0.25); // 1/4
       expect(summary.percentageFor(3), 0.25); // 1/4
-      expect(summary.percentageFor(2), 0.0); // 0/4
-      expect(summary.percentageFor(1), 0.0); // 0/4
+      expect(summary.percentageFor(2), 0.0);  // 0/4
+      expect(summary.percentageFor(1), 0.0);  // 0/4
     });
 
     test('JSON serialization round-trip', () {
       final now = DateTime(2026, 6, 15);
       final ratings = [
-        SellerRating(
-          id: 'r1',
-          listingId: 'l1',
-          sellerId: 's1',
-          buyerId: 'b1',
-          rating: 5,
-          review: '',
-          createdAt: now,
-        ),
-        SellerRating(
-          id: 'r2',
-          listingId: 'l1',
-          sellerId: 's1',
-          buyerId: 'b1',
-          rating: 4,
-          review: '',
-          createdAt: now,
-        ),
+        SellerRating(id: 'r1', listingId: 'l1', sellerId: 's1', buyerId: 'b1', rating: 5, review: '', createdAt: now),
+        SellerRating(id: 'r2', listingId: 'l1', sellerId: 's1', buyerId: 'b1', rating: 4, review: '', createdAt: now),
       ];
 
       final summary = SellerRatingSummary.fromRatings(ratings);
@@ -306,15 +255,7 @@ void main() {
 
       final now = DateTime(2026, 6, 15);
       final ratings = [
-        SellerRating(
-          id: 'r1',
-          listingId: 'l1',
-          sellerId: 's1',
-          buyerId: 'b1',
-          rating: 5,
-          review: '',
-          createdAt: now,
-        ),
+        SellerRating(id: 'r1', listingId: 'l1', sellerId: 's1', buyerId: 'b1', rating: 5, review: '', createdAt: now),
       ];
       final c = SellerRatingSummary.fromRatings(ratings);
       expect(a == c, false);

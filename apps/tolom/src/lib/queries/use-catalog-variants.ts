@@ -38,7 +38,7 @@ export function useVariantGroups(
   return useQuery({
     queryKey: catalogVariantKeys.groups(orgId ?? ""),
     queryFn: () =>
-      apiCall<CatalogVariantGroup[]>(orgId as string, {
+      apiCall<CatalogVariantGroup[]>(orgId!, {
         action: "list-groups",
         applies_to: appliesTo,
       }),
@@ -56,7 +56,7 @@ export function useCreateVariantGroup(orgId: string | undefined) {
       applies_to: "service" | "part" | "both";
       sort_order?: number;
     }) =>
-      apiCall<CatalogVariantGroup>(orgId as string, {
+      apiCall<CatalogVariantGroup>(orgId!, {
         action: "create-group",
         ...params,
       }),
@@ -73,7 +73,7 @@ export function useDeleteVariantGroup(orgId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      apiCall<void>(orgId as string, { action: "delete-group", id }),
+      apiCall<void>(orgId!, { action: "delete-group", id }),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: catalogVariantKeys.groups(orgId ?? ""),
@@ -90,13 +90,11 @@ export function useDeleteVariantGroup(orgId: string | undefined) {
 export function useVariantOptions(orgId: string | undefined, groupId?: string) {
   return useQuery({
     queryKey: catalogVariantKeys.options(orgId ?? "", groupId),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return apiCall<CatalogVariantOption[]>(orgId, {
+    queryFn: () =>
+      apiCall<CatalogVariantOption[]>(orgId!, {
         action: "list-options",
         group_id: groupId,
-      });
-    },
+      }),
     enabled: !!orgId,
     staleTime: 5 * 60_000,
   });
@@ -110,13 +108,11 @@ export function useCreateVariantOption(orgId: string | undefined) {
       label: string;
       label_mn?: string;
       sort_order?: number;
-    }) => {
-      if (!orgId) throw new Error("orgId required");
-      return apiCall<CatalogVariantOption>(orgId, {
+    }) =>
+      apiCall<CatalogVariantOption>(orgId!, {
         action: "create-option",
         ...params,
-      });
-    },
+      }),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: catalogVariantKeys.options(orgId ?? ""),
@@ -129,10 +125,8 @@ export function useCreateVariantOption(orgId: string | undefined) {
 export function useDeleteVariantOption(orgId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => {
-      if (!orgId) throw new Error("orgId required");
-      return apiCall<void>(orgId, { action: "delete-option", id });
-    },
+    mutationFn: (id: string) =>
+      apiCall<void>(orgId!, { action: "delete-option", id }),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: catalogVariantKeys.options(orgId ?? ""),
@@ -153,14 +147,12 @@ export function useItemVariants(
 ) {
   return useQuery({
     queryKey: catalogVariantKeys.items(orgId ?? "", entityType, entityId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return apiCall<CatalogItemVariant[]>(orgId, {
+    queryFn: () =>
+      apiCall<CatalogItemVariant[]>(orgId!, {
         action: "list-items",
         entity_type: entityType,
         entity_id: entityId,
-      });
-    },
+      }),
     enabled: !!orgId && !!entityId,
     staleTime: 30_000,
   });
@@ -175,13 +167,8 @@ export function useUpdateItemVariant(orgId: string | undefined) {
       cost?: number | null;
       sku?: string | null;
       is_active?: boolean;
-    }) => {
-      if (!orgId) throw new Error("orgId required");
-      return apiCall<CatalogItemVariant>(orgId, {
-        action: "update-item",
-        ...params,
-      });
-    },
+    }) =>
+      apiCall<CatalogItemVariant>(orgId!, { action: "update-item", ...params }),
     onSuccess: (_data, _vars) => {
       qc.invalidateQueries({
         queryKey: catalogVariantKeys.items(orgId ?? "", "", ""),
@@ -194,10 +181,8 @@ export function useUpdateItemVariant(orgId: string | undefined) {
 export function useDeleteItemVariant(orgId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => {
-      if (!orgId) throw new Error("orgId required");
-      return apiCall<void>(orgId, { action: "delete-item", id });
-    },
+    mutationFn: (id: string) =>
+      apiCall<void>(orgId!, { action: "delete-item", id }),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: catalogVariantKeys.items(orgId ?? "", "", ""),
@@ -219,13 +204,11 @@ export function useBulkGenerateVariants(orgId: string | undefined) {
       entity_id: string;
       dimension_options: Record<string, string[]>;
       get_price?: Record<string, number>;
-    }) => {
-      if (!orgId) throw new Error("orgId required");
-      return apiCall<CatalogItemVariant[]>(orgId, {
+    }) =>
+      apiCall<CatalogItemVariant[]>(orgId!, {
         action: "bulk-items",
         ...params,
-      });
-    },
+      }),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({
         queryKey: catalogVariantKeys.items(

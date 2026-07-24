@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export const tamgaSchema = appSchema({
-  version: 2,
+  version: 1,
   tables: [
     // Horses
     tableSchema({
@@ -17,8 +17,8 @@ export const tamgaSchema = appSchema({
         { name: "dam_id", type: "string", isOptional: true, isIndexed: true },
         { name: "owner_id", type: "string", isIndexed: true },
         { name: "status", type: "string" },
-        { name: "created_at", type: "number" },
-        { name: "updated_at", type: "number" },
+        { name: "created_at", type: "string" },
+        { name: "updated_at", type: "string" },
         { name: "is_deleted", type: "boolean" },
         { name: "sync_status", type: "string" },
       ],
@@ -36,7 +36,7 @@ export const tamgaSchema = appSchema({
         { name: "veterinarian", type: "string", isOptional: true },
         { name: "cost", type: "number", isOptional: true },
         { name: "next_reminder", type: "string", isOptional: true },
-        { name: "created_at", type: "number" },
+        { name: "created_at", type: "string" },
         { name: "sync_status", type: "string" },
       ],
     }),
@@ -53,7 +53,7 @@ export const tamgaSchema = appSchema({
         { name: "foal_id", type: "string", isOptional: true },
         { name: "status", type: "string" },
         { name: "notes", type: "string", isOptional: true },
-        { name: "created_at", type: "number" },
+        { name: "created_at", type: "string" },
         { name: "sync_status", type: "string" },
       ],
     }),
@@ -74,8 +74,8 @@ export const tamgaSchema = appSchema({
         { name: "location", type: "string", isOptional: true },
         { name: "latitude", type: "number", isOptional: true },
         { name: "longitude", type: "number", isOptional: true },
-        { name: "created_at", type: "number" },
-        { name: "updated_at", type: "number" },
+        { name: "created_at", type: "string" },
+        { name: "updated_at", type: "string" },
         { name: "sync_status", type: "string" },
       ],
     }),
@@ -94,7 +94,7 @@ export const tamgaSchema = appSchema({
         { name: "longitude", type: "number", isOptional: true },
         { name: "organizer_id", type: "string", isIndexed: true },
         { name: "max_participants", type: "number", isOptional: true },
-        { name: "created_at", type: "number" },
+        { name: "created_at", type: "string" },
         { name: "sync_status", type: "string" },
       ],
     }),
@@ -107,7 +107,7 @@ export const tamgaSchema = appSchema({
         { name: "record_id", type: "string" },
         { name: "action", type: "string" },
         { name: "data", type: "string" },
-        { name: "created_at", type: "number" },
+        { name: "created_at", type: "string" },
         { name: "attempts", type: "number" },
         { name: "last_error", type: "string", isOptional: true },
       ],
@@ -119,7 +119,7 @@ export const tamgaSchema = appSchema({
       columns: [
         { name: "key", type: "string", isIndexed: true },
         { name: "value", type: "string" },
-        { name: "updated_at", type: "number" },
+        { name: "updated_at", type: "string" },
       ],
     }),
   ],

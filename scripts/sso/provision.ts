@@ -1,446 +1,379 @@
 #!/usr/bin/env node
+
 /**
- * SSO provisioning reconciler.
+ * SSO Provisioner — idempotent setup for Zuiio identity federation.
  *
- * Computes the diff between the desired state (from sso-products.ts + env)
- * and the actual state (from GoTrue admin API + DB). Can generate a plan
- * or apply changes.
+ * Creates OAuth clients on the identity project, configures custom:zuiio
+ * OIDC providers on each product project, and upserts the product_catalog.
+ *
+ * Usage:
+ *   pnpm sso:plan  --environment development
+ *   pnpm sso:apply --environment development
+ *   pnpm sso:apply --environment development --rotate zer
  */
 
-import { SSO_PRODUCTS } from "../../config/sso-products";
-import type { IdentityAdminClient, ProductAdminClient } from "./supabase-admin";
-import {
-  buildClientSpec,
-  extractProjectRef,
-  resolveCallbackUri,
-} from "./supabase-admin";
-import type { ProductConfig } from "./environment";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
+import { SSO_PRODUCTS, type SsoProduct } from "../../config/sso-products";
 
-// ─── Types ──────────────────────────────────────────────────────────
+// ── CLI args ──────────────────────────────────────────────────
 
-export interface PlanAction {
-  type: "create_client" | "update_client" | "delete_client" | "create_catalog" | "update_catalog" | "create_provider" | "update_provider" | "add_callback_uri" | "ok";
-  productId: string;
-  displayName: string;
+const args = process.argv.slice(2);
+
+function getArg(name: string): string | undefined {
+  const flag = `--${name}`;
+  const idx = args.indexOf(flag);
+  if (idx === -1) return undefined;
+  return args[idx + 1];
+}
+
+const environment = getArg("environment") ?? "development";
+const dryRun = args.includes("--dry-run");
+const rotateProduct = getArg("rotate");
+
+if (!["development", "staging", "production"].includes(environment)) {
+  console.error(
+    `Invalid environment: ${environment}. Must be development, staging, or production.`,
+  );
+  process.exit(1);
+}
+
+// ── Env validation ────────────────────────────────────────────
+
+const EnvSchema = z.object({
+  IDENTITY_SUPABASE_URL: z.string().url(),
+  IDENTITY_SERVICE_ROLE_KEY: z.string().min(1),
+  PRODUCT_SUPABASE_URLS: z.record(z.string(), z.string().url()),
+  PRODUCT_SERVICE_ROLE_KEYS: z.record(z.string(), z.string().min(1)),
+});
+
+type EnvConfig = z.infer<typeof EnvSchema>;
+
+function loadEnv(): EnvConfig {
+  const productUrls: Record<string, string> = {};
+  const productKeys: Record<string, string> = {};
+
+  for (const product of SSO_PRODUCTS) {
+    if (product.authMode === "none") continue;
+
+    const urlKey = `${product.id.toUpperCase()}_SUPABASE_URL`;
+    const keyKey = `${product.id.toUpperCase()}_SERVICE_ROLE_KEY`;
+
+    const url = process.env[urlKey];
+    const key = process.env[keyKey];
+
+    if (url) productUrls[product.id] = url;
+    if (key) productKeys[product.id] = key;
+  }
+
+  return EnvSchema.parse({
+    IDENTITY_SUPABASE_URL: process.env.IDENTITY_SUPABASE_URL,
+    IDENTITY_SERVICE_ROLE_KEY: process.env.IDENTITY_SERVICE_ROLE_KEY,
+    PRODUCT_SUPABASE_URLS: productUrls,
+    PRODUCT_SERVICE_ROLE_KEYS: productKeys,
+  });
+}
+
+// ── Types ─────────────────────────────────────────────────────
+
+interface OAuthClient {
+  id: string;
+  name: string;
+  redirect_uris: string[];
+  client_type: string;
+  token_endpoint_auth_method: string;
+  secret?: string;
+}
+
+interface PlanItem {
+  product: SsoProduct;
+  action: "create_client" | "configure_provider" | "upsert_catalog" | "skip";
   detail: string;
+  existing?: boolean;
 }
 
-export interface ProvisionPlan {
-  actions: PlanAction[];
-  errors: string[];
-  summary: {
-    create: number;
-    update: number;
-    delete: number;
-    ok: number;
-    errors: number;
-  };
+// ── Helpers ───────────────────────────────────────────────────
+
+function adminClient(url: string, key: string): SupabaseClient {
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 }
 
-export interface ApplyResult {
-  action: PlanAction;
-  success: boolean;
-  error?: string;
-}
+// ── Core logic ────────────────────────────────────────────────
 
-// ─── Plan builder ───────────────────────────────────────────────────
+async function planOrApply(
+  env: EnvConfig,
+  mode: "plan" | "apply",
+): Promise<void> {
+  const identity = adminClient(
+    env.IDENTITY_SUPABASE_URL,
+    env.IDENTITY_SERVICE_ROLE_KEY,
+  );
 
-export async function buildProvisionPlan(
-  identityClient: IdentityAdminClient,
-  productClients: Map<string, ProductAdminClient>,
-  products: ProductConfig[],
-): Promise<ProvisionPlan> {
-  const actions: PlanAction[] = [];
-  const errors: string[] = [];
+  const plan: PlanItem[] = [];
 
-  // 1. Fetch current state
-  const { clients: existingClients, error: listErr } =
-    await identityClient.listOAuthClients();
-
-  if (listErr) {
-    errors.push(`Failed to list OAuth clients: ${listErr}`);
-    return { actions, errors, summary: { create: 0, update: 0, delete: 0, ok: 0, errors: 1 } };
-  }
-
-  const db = identityClient.getDbClient();
-  const { data: catalogRows } = await db
-    .from("product_catalog")
-    .select("id, display_name, client_id, enabled, logo_url, continue_urls");
-
-  const catalog = (catalogRows ?? []) as Array<{
-    id: string;
-    display_name: string;
-    client_id: string | null;
-    enabled: boolean;
-    logo_url: string | null;
-    continue_urls: string[];
-  }>;
-
-  // 2. Process each product
-  for (const product of products) {
-    const ssoProduct = SSO_PRODUCTS.find((p) => p.id === product.id);
-    if (!ssoProduct || ssoProduct.authMode !== "sso") continue;
-
-    if (!product.supabaseUrl) {
-      actions.push({
-        type: "ok",
-        productId: product.id,
-        displayName: product.displayName,
-        detail: "⏭ No Supabase URL configured — skipping (set env vars)",
+  for (const product of SSO_PRODUCTS) {
+    if (product.authMode === "none") {
+      plan.push({
+        product,
+        action: "skip",
+        detail: "authMode: none — no SSO provisioning needed",
       });
       continue;
     }
 
-    const callbackUri = resolveCallbackUri(product.supabaseUrl);
-    const desiredSpec = buildClientSpec(ssoProduct, callbackUri);
+    const productUrl = env.PRODUCT_SUPABASE_URLS[product.id];
+    const productKey = env.PRODUCT_SERVICE_ROLE_KEYS[product.id];
 
-    // Find existing OAuth client: prefer by catalog client_id, fallback by name
-    const catalogRow = catalog.find((r) => r.id === product.id);
-    let existingClient = catalogRow?.client_id
-      ? existingClients.find((c) => c.client_id === catalogRow!.client_id)
-      : undefined;
-
-    // Fallback: match by client_name if no catalog row
-    if (!existingClient) {
-      existingClient = existingClients.find(
-        (c) => c.client_name === desiredSpec.client_name,
-      );
+    if (!productUrl || !productKey) {
+      plan.push({
+        product,
+        action: "skip",
+        detail: `Missing ${product.id.toUpperCase()}_SUPABASE_URL or ${product.id.toUpperCase()}_SERVICE_ROLE_KEY`,
+      });
+      continue;
     }
 
-    // ── OAuth client reconciliation ──
+    // 1. Check existing OAuth client
+    const { data: existingClients } = await identity.auth.admin.listClients();
+    const existingClient = existingClients?.find(
+      (c: OAuthClient) =>
+        c.name?.includes(product.displayName) &&
+        c.name?.includes(environment),
+    );
+
     if (!existingClient) {
-      actions.push({
-        type: "create_client",
-        productId: product.id,
-        displayName: product.displayName,
-        detail: `OAuth client "${desiredSpec.client_name}" → ${callbackUri}`,
+      plan.push({
+        product,
+        action: "create_client",
+        detail: `Create OAuth client: Zuiio ${product.displayName} (${environment})`,
       });
     } else {
-      const uriChanged =
-        existingClient.redirect_uris?.[0] !== desiredSpec.redirect_uris[0];
-      const logoChanged =
-        (existingClient.logo_uri ?? "") !== (desiredSpec.logo_uri ?? "");
-
-      if (uriChanged || logoChanged) {
-        const changes: string[] = [];
-        if (uriChanged) changes.push(`redirect_uri: ${desiredSpec.redirect_uris[0]}`);
-        if (logoChanged) changes.push("logo");
-        actions.push({
-          type: "update_client",
-          productId: product.id,
-          displayName: product.displayName,
-          detail: `OAuth client ${existingClient.client_id} — ${changes.join(", ")}`,
-        });
-      }
+      plan.push({
+        product,
+        action: "create_client",
+        detail: `OAuth client already exists: ${existingClient.id}`,
+        existing: true,
+      });
     }
 
-    // ── Catalog row reconciliation ──
-    const resolvedClientId = existingClient?.client_id ?? "pending-creation";
+    // 2. Check product catalog row
+    const { data: catalogRow } = await identity
+      .from("product_catalog")
+      .select("id")
+      .eq("id", product.id)
+      .single();
+
     if (!catalogRow) {
-      actions.push({
-        type: "create_catalog",
-        productId: product.id,
-        displayName: product.displayName,
-        detail: `Catalog entry for ${product.id} (client_id: ${resolvedClientId})`,
+      plan.push({
+        product,
+        action: "upsert_catalog",
+        detail: `Add product_catalog row for ${product.id}`,
       });
     } else {
-      const needsUpdate =
-        catalogRow.display_name !== product.displayName ||
-        catalogRow.client_id !== resolvedClientId ||
-        catalogRow.logo_url !== (ssoProduct.logoUrl ?? null);
-
-      if (needsUpdate) {
-        actions.push({
-          type: "update_catalog",
-          productId: product.id,
-          displayName: product.displayName,
-          detail: `Catalog ${product.id} — sync display_name/logo/client_id`,
-        });
-      }
+      plan.push({
+        product,
+        action: "upsert_catalog",
+        detail: `product_catalog row exists for ${product.id}`,
+        existing: true,
+      });
     }
 
-    // ── Product-side provider reconciliation ──
-    const productClient = productClients.get(product.id);
-    if (productClient && existingClient) {
-      const { config: providerConfig, error: providerErr } =
-        await productClient.getZuiioProvider();
-      if (providerErr) {
-        actions.push({
-          type: "ok",
-          productId: product.id,
-          displayName: product.displayName,
-          detail: `⚠ Cannot check provider config: ${providerErr}`,
-        });
-      } else if (!providerConfig) {
-        actions.push({
-          type: "create_provider",
-          productId: product.id,
-          displayName: product.displayName,
-          detail: `custom:zuiio provider not configured — needs client_id ${existingClient.client_id}`,
-        });
-      } else {
-        const needsUpdate =
-          providerConfig.client_id !== existingClient.client_id ||
-          !providerConfig.pkce_enabled ||
-          !providerConfig.enabled;
+    // 3. Check custom:zuiio provider on product project
+    const productAdmin = adminClient(productUrl, productKey);
+    const { data: providers } =
+      await productAdmin.auth.admin.listProviders();
+    const existingProvider = providers?.find(
+      (p: { provider_type?: string; identifier?: string }) =>
+        p.identifier === "custom:zuiio",
+    );
 
-        if (needsUpdate) {
-          actions.push({
-            type: "update_provider",
-            productId: product.id,
-            displayName: product.displayName,
-            detail: `Update custom:zuiio provider — sync client_id/enabled/PKCE`,
-          });
-        }
-      }
-    }
-
-    // ── If everything is up to date ──
-    if (
-      existingClient &&
-      catalogRow &&
-      actions.find(
-        (a) =>
-          a.productId === product.id &&
-          (a.type === "create_client" ||
-            a.type === "update_client" ||
-            a.type === "create_catalog" ||
-            a.type === "update_catalog" ||
-            a.type === "create_provider" ||
-            a.type === "update_provider"),
-      ) === undefined
-    ) {
-      actions.push({
-        type: "ok",
-        productId: product.id,
-        displayName: product.displayName,
-        detail: `✓ All up to date`,
+    if (!existingProvider) {
+      plan.push({
+        product,
+        action: "configure_provider",
+        detail: `Configure custom:zuiio provider on ${product.id}`,
+      });
+    } else {
+      plan.push({
+        product,
+        action: "configure_provider",
+        detail: `custom:zuiio provider already configured on ${product.id}`,
+        existing: true,
       });
     }
   }
 
-  // Compute summary
-  const summary = {
-    create: actions.filter((a) => a.type.startsWith("create")).length,
-    update: actions.filter((a) => a.type.startsWith("update")).length,
-    delete: actions.filter((a) => a.type === "delete_client").length,
-    ok: actions.filter((a) => a.type === "ok").length,
-    errors: errors.length,
-  };
+  // ── Output ────────────────────────────────────────────────
 
-  return { actions, errors, summary };
-}
+  const actions = plan.filter((p) => p.action !== "skip" && !p.existing);
 
-// ─── Plan executor ───────────────────────────────────────────────────
+  console.log(`\n── SSO Plan (${environment}) ${mode === "plan" ? "— DRY RUN" : ""} ──\n`);
 
-export async function applyProvisionPlan(
-  plan: ProvisionPlan,
-  identityClient: IdentityAdminClient,
-  productClients: Map<string, ProductAdminClient>,
-  products: ProductConfig[],
-): Promise<ApplyResult[]> {
-  const results: ApplyResult[] = [];
+  for (const item of plan) {
+    const icon =
+      item.action === "skip"
+        ? "○"
+        : item.existing
+          ? "✓"
+          : mode === "plan"
+            ? "+"
+            : "•";
+    console.log(`  ${icon} [${item.product.id}] ${item.detail}`);
+  }
 
-  for (const action of plan.actions) {
-    if (action.type === "ok") {
-      results.push({ action, success: true });
-      continue;
-    }
+  console.log(
+    `\n  ${actions.length} action(s) ${mode === "plan" ? "would be" : ""} needed.\n`,
+  );
 
-    try {
-      const result = await executeAction(
-        action,
-        identityClient,
-        productClients,
-        products,
-      );
-      results.push(result);
-    } catch (err) {
-      results.push({
-        action,
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
+  if (mode === "plan") return;
+
+  // ── Apply ─────────────────────────────────────────────────
+
+  console.log("── Applying ──\n");
+
+  for (const product of SSO_PRODUCTS) {
+    if (product.authMode === "none") continue;
+
+    const productUrl = env.PRODUCT_SUPABASE_URLS[product.id];
+    const productKey = env.PRODUCT_SERVICE_ROLE_KEYS[product.id];
+
+    if (!productUrl || !productKey) continue;
+
+    const productItem = plan.find(
+      (p) => p.product.id === product.id && p.action === "create_client",
+    );
+
+    // Create OAuth client if needed
+    if (productItem && !productItem.existing) {
+      const { data, error } = await identity.auth.admin.createClient({
+        name: `Zuiio ${product.displayName} (${environment})`,
+        redirect_uris: [`${productUrl}/auth/v1/callback`],
+        client_type: "confidential",
+        token_endpoint_auth_method: "client_secret_basic",
       });
-    }
-  }
 
-  return results;
-}
-
-async function executeAction(
-  action: PlanAction,
-  identityClient: IdentityAdminClient,
-  productClients: Map<string, ProductAdminClient>,
-  products: ProductConfig[],
-): Promise<ApplyResult> {
-  const product = products.find((p) => p.id === action.productId);
-  const ssoProduct = SSO_PRODUCTS.find((p) => p.id === action.productId);
-
-  if (!product || !ssoProduct) {
-    return {
-      action,
-      success: false,
-      error: `Product ${action.productId} not found`,
-    };
-  }
-
-  const callbackUri = product.supabaseUrl
-    ? resolveCallbackUri(product.supabaseUrl)
-    : "";
-  const desiredSpec = buildClientSpec(ssoProduct, callbackUri);
-
-  switch (action.type) {
-    case "create_client": {
-      const { client, error } =
-        await identityClient.createOAuthClient(desiredSpec);
-      if (error) return { action, success: false, error };
-      console.log(`  ✅ Created OAuth client ${client!.client_id}`);
-
-      // After creating the client, update the catalog with the real client_id
-      const db = identityClient.getDbClient();
-      const { error: catalogErr } = await db.from("product_catalog").upsert(
-        {
-          id: product.id,
-          display_name: ssoProduct.displayName,
-          client_id: client!.client_id,
-          enabled: true,
-          logo_url: ssoProduct.logoUrl ?? null,
-          continue_urls: [],
-        },
-        { onConflict: "id" },
-      );
-      if (catalogErr) {
-        console.error(`  ⚠ Created client but catalog upsert failed: ${catalogErr.message}`);
-        console.log(`  → Manually: update product_catalog set client_id = '${client!.client_id}' where id = '${product.id}'`);
-      } else {
-        console.log(`  ✅ Catalog row updated with client_id`);
-      }
-
-      // If we have the product client, configure the provider
-      const productClientForCreate = productClients.get(product.id);
-      if (productClientForCreate && product.supabaseUrl) {
-        const issuer = process.env.ZUIIO_OIDC_ISSUER ?? `https://id.zuiiotech.com`;
-        const { error: providerErr } =
-          await productClientForCreate.upsertZuiioProvider({
-            client_id: client!.client_id,
-            client_secret: client!.client_secret ?? "",
-            issuer,
-          });
-        if (providerErr) {
-          console.error(`  ⚠ Provider config failed: ${providerErr}`);
-        } else {
-          console.log(`  ✅ custom:zuiio provider configured on ${product.displayName}`);
-        }
-      }
-      return { action, success: true };
-    }
-
-    case "update_client": {
-      const { client, error } =
-        await identityClient.updateOAuthClient(
-          // Need to resolve the client_id — scan existing clients
-          await resolveClientId(identityClient, ssoProduct),
-          {
-            redirect_uris: desiredSpec.redirect_uris,
-            client_name: desiredSpec.client_name,
-            scopes: desiredSpec.scopes,
-            grant_types: desiredSpec.grant_types,
-            logo_uri: desiredSpec.logo_uri,
-          },
+      if (error) {
+        console.error(
+          `  ✗ Failed to create client for ${product.id}: ${error.message}`,
         );
-      if (error) return { action, success: false, error };
-      console.log(`  ✅ Updated OAuth client ${client!.client_id}`);
-      return { action, success: true };
-    }
+        continue;
+      }
 
-    case "create_catalog": {
-      const db = identityClient.getDbClient();
-      const clientId = await resolveClientId(identityClient, ssoProduct);
-      const { error } = await db.from("product_catalog").upsert(
-        {
-          id: product.id,
-          display_name: ssoProduct.displayName,
-          client_id: clientId ?? "00000000-0000-0000-0000-000000000000",
-          enabled: true,
-          logo_url: ssoProduct.logoUrl ?? null,
-          continue_urls: [],
-        },
-        { onConflict: "id" },
+      console.log(
+        `  • Created OAuth client for ${product.id}: ${data.id}`,
       );
-      if (error) return { action, success: false, error: error.message };
-      console.log(`  ✅ Created catalog entry for ${product.id}`);
-      return { action, success: true };
-    }
-
-    case "update_catalog": {
-      const db = identityClient.getDbClient();
-      const clientId = await resolveClientId(identityClient, ssoProduct);
-      const { error } = await db
-        .from("product_catalog")
-        .update({
-          display_name: ssoProduct.displayName,
-          client_id: clientId ?? "00000000-0000-0000-0000-000000000000",
-          logo_url: ssoProduct.logoUrl ?? null,
-        })
-        .eq("id", product.id);
-      if (error) return { action, success: false, error: error.message };
-      console.log(`  ✅ Updated catalog entry for ${product.id}`);
-      return { action, success: true };
-    }
-
-    case "create_provider":
-    case "update_provider": {
-      const productClient = productClients.get(product.id);
-      if (!productClient) {
-        return {
-          action,
-          success: false,
-          error: "No product client configured (missing service role key)",
-        };
+      if (data.secret) {
+        console.log(
+          `    Client secret: ${data.secret} (SAVE THIS — not shown again)`,
+        );
       }
-      const clientId = await resolveClientId(identityClient, ssoProduct);
-      if (!clientId) {
-        return {
-          action,
-          success: false,
-          error: "Cannot resolve client_id — has the OAuth client been created?",
-        };
+
+      // Upsert catalog
+      const catalogItem = plan.find(
+        (p) =>
+          p.product.id === product.id && p.action === "upsert_catalog",
+      );
+
+      if (catalogItem && !catalogItem.existing) {
+        const { error: catalogError } = await identity
+          .from("product_catalog")
+          .upsert({
+            id: product.id,
+            display_name: product.displayName,
+            client_id: data.id,
+            enabled: true,
+            continue_urls: [
+              ...product.appRoots.map(
+                (root) => `http://localhost:3000${product.ssoStartPath}`,
+              ),
+              ...(product.mobileStartUrl
+                ? [product.mobileStartUrl]
+                : []),
+            ],
+          });
+
+        if (catalogError) {
+          console.error(
+            `  ✗ Failed to upsert catalog for ${product.id}: ${catalogError.message}`,
+          );
+        } else {
+          console.log(`  • Upserted product_catalog for ${product.id}`);
+        }
       }
-      const issuer = process.env.ZUIIO_OIDC_ISSUER ?? `https://id.zuiiotech.com`;
-      const { error } = await productClient.upsertZuiioProvider({
-        client_id: clientId,
-        client_secret: "",
-        issuer,
-      });
-      if (error) return { action, success: false, error };
-      console.log(`  ✅ custom:zuiio provider configured on ${product.displayName}`);
-      return { action, success: true };
     }
 
-    default:
-      return { action, success: false, error: `Unknown action type: ${action.type}` };
+    // Configure custom:zuiio provider if needed
+    const providerItem = plan.find(
+      (p) =>
+        p.product.id === product.id &&
+        p.action === "configure_provider",
+    );
+
+    if (providerItem && !providerItem.existing) {
+      const productAdmin = adminClient(productUrl, productKey);
+
+      // We need the identity client_id for this product
+      const { data: clientData } = await identity.auth.admin.listClients();
+      const client = clientData?.find(
+        (c: OAuthClient) =>
+          c.name?.includes(product.displayName) &&
+          c.name?.includes(environment),
+      );
+
+      if (!client) {
+        console.error(
+          `  ✗ Cannot configure provider for ${product.id}: OAuth client not found`,
+        );
+        continue;
+      }
+
+      const { error: providerError } =
+        await productAdmin.auth.admin.createProvider({
+          provider_type: "oidc",
+          identifier: "custom:zuiio",
+          name: "Zuiio ID",
+          client_id: client.id,
+          client_secret: (client as OAuthClient & { secret?: string })
+            .secret ?? "",
+          issuer: `${env.IDENTITY_SUPABASE_URL}/auth/v1`,
+          scopes: ["openid", "email", "profile"],
+          email_optional: false,
+          pkce_enabled: true,
+        });
+
+      if (providerError) {
+        console.error(
+          `  ✗ Failed to configure provider for ${product.id}: ${providerError.message}`,
+        );
+      } else {
+        console.log(
+          `  • Configured custom:zuiio provider on ${product.id}`,
+        );
+      }
+    }
+  }
+
+  console.log("\n── Done ──\n");
+}
+
+// ── Entry point ───────────────────────────────────────────────
+
+async function main() {
+  try {
+    const env = loadEnv();
+    await planOrApply(env, dryRun ? "plan" : "apply");
+  } catch (e: unknown) {
+    if (e instanceof z.ZodError) {
+      console.error("Environment validation failed:");
+      for (const issue of e.issues) {
+        console.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+      }
+      process.exit(1);
+    }
+    throw e;
   }
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────
-
-/** Resolve the client_id for a product by checking catalog first, then name match. */
-async function resolveClientId(
-  identityClient: IdentityAdminClient,
-  product: (typeof SSO_PRODUCTS)[number],
-): Promise<string | null> {
-  const db = identityClient.getDbClient();
-  const { data: catalogRow } = await db
-    .from("product_catalog")
-    .select("client_id")
-    .eq("id", product.id)
-    .maybeSingle();
-
-  if (catalogRow?.client_id) return catalogRow.client_id;
-
-  const { clients } = await identityClient.listOAuthClients();
-  const match = clients.find((c) => c.client_name === product.displayName);
-  return match?.client_id ?? null;
-}
-
-export { resolveClientId };
+main();

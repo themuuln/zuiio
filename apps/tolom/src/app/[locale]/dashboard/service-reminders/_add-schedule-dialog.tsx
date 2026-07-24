@@ -49,10 +49,7 @@ export function AddScheduleDialog({
   isPending,
   onAdd,
 }: AddScheduleDialogProps) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     vehicle_id: "",

@@ -64,7 +64,8 @@ void main() {
       ),
     ];
 
-    test('vaccinationRate returns correct percentage of vaccinated horses', () {
+    test('vaccinationRate returns correct percentage of vaccinated horses',
+        () {
       // 3 horses total, all 3 have vaccination records
       final analytics = HealthAnalytics(healthLogs: logs, totalHorses: 3);
       expect(analytics.vaccinationRate, 1.0);
@@ -78,9 +79,9 @@ void main() {
     test('vaccinationRate is partial when some horses not vaccinated', () {
       // Only horse1 and horse2 have vaccinations (out of 3 horses)
       final logsWithoutHorse3Vaccination = logs
-          .where(
-            (l) => l.horseId != 'horse3' || l.logType != LogType.vaccination,
-          )
+          .where((l) =>
+              l.horseId != 'horse3' ||
+              l.logType != LogType.vaccination)
           .toList();
 
       // Add some non-vaccination logs for horse3
@@ -142,16 +143,14 @@ void main() {
       );
 
       // horse1 should be in upcoming due items (13 days until due)
-      final horse1Items = analytics.upcomingDueItems.where(
-        (i) => i.horseId == 'horse1',
-      );
+      final horse1Items =
+          analytics.upcomingDueItems.where((i) => i.horseId == 'horse1');
       expect(horse1Items.isNotEmpty, true);
       expect(horse1Items.first.logType, LogType.vaccination);
 
       // horse2 should not be in upcoming due items (185 days away)
-      final horse2Items = analytics.upcomingDueItems.where(
-        (i) => i.horseId == 'horse2',
-      );
+      final horse2Items =
+          analytics.upcomingDueItems.where((i) => i.horseId == 'horse2');
       expect(horse2Items.isEmpty, true);
     });
 
@@ -165,9 +164,8 @@ void main() {
       expect(analytics.healthTrends.isNotEmpty, true);
 
       // Count unique months
-      final months = analytics.healthTrends
-          .map((p) => '${p.date.year}-${p.date.month}')
-          .toSet();
+      final months =
+          analytics.healthTrends.map((p) => '${p.date.year}-${p.date.month}').toSet();
       expect(months.length, greaterThanOrEqualTo(4));
     });
 

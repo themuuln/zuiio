@@ -12,7 +12,10 @@ void main() {
     test('toJson serializes correctly', () {
       final query = BreedingQuery(sireId: 'sire-1', damId: 'dam-1');
       final json = query.toJson();
-      expect(json, {'sireId': 'sire-1', 'damId': 'dam-1'});
+      expect(json, {
+        'sireId': 'sire-1',
+        'damId': 'dam-1',
+      });
     });
 
     test('fromJson deserializes correctly', () {

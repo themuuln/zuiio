@@ -14,6 +14,7 @@ test.describe("Shop (public storefront)", () => {
       const loginTitle = page.getByText("Нэвтрэх").first();
       const loginVisible = await loginTitle.isVisible().catch(() => false);
       if (loginVisible) {
+        console.log("Shop redirects to login (auth required)");
         return;
       }
     }
@@ -31,6 +32,7 @@ test.describe("Shop (public storefront)", () => {
       const bottomBar = page.locator('[class*="bottom"]').first();
       const bottomVisible = await bottomBar.isVisible().catch(() => false);
       if (bottomVisible) {
+        console.log("Bottom bar visible");
       }
     }
   });

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { withDbCapture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import type { Database } from "@/lib/supabase/types";
 
 // ─── Public Types ─────────────────────────────────────────────────────
@@ -65,53 +65,6 @@ export type ReportData = {
   commissionSummary: CommissionSummaryData;
 };
 
-// ─── Financial Statement Types ──────────────────────────────────────
-
-export type ProfitLossRow = {
-  accountId: string;
-  accountCode: string;
-  accountName: string;
-  accountType: string;
-  amount: number;
-};
-
-export type ProfitLossData = {
-  revenue: ProfitLossRow[];
-  expenses: ProfitLossRow[];
-  totalRevenue: number;
-  totalExpenses: number;
-  netIncome: number;
-};
-
-export type BalanceSheetRow = {
-  accountId: string;
-  accountCode: string;
-  accountName: string;
-  accountType: string;
-  balance: number;
-};
-
-export type BalanceSheetData = {
-  assets: BalanceSheetRow[];
-  liabilities: BalanceSheetRow[];
-  equity: BalanceSheetRow[];
-  totalAssets: number;
-  totalLiabilities: number;
-  totalEquity: number;
-};
-
-export type CashFlowRow = {
-  category: string;
-  amount: number;
-};
-
-export type CashFlowData = {
-  operating: number;
-  investing: number;
-  financing: number;
-  netCashFlow: number;
-};
-
 // ─── Internal helpers ─────────────────────────────────────────────────
 
 type SaleItemForProductSales = {
@@ -139,7 +92,6 @@ export async function getFinancialSummary(
           .from("sales")
           .select("total_amount, paid_amount")
           .eq("organization_id", organizationId)
-          .is("deleted_at", null)
           .gte("sale_date", dateFrom)
           .lte("sale_date", dateTo)
           .neq("status", "cancelled"),
@@ -150,7 +102,6 @@ export async function getFinancialSummary(
           .from("expenses")
           .select("amount")
           .eq("organization_id", organizationId)
-          .is("deleted_at", null)
           .gte("expense_date", dateFrom)
           .lte("expense_date", dateTo),
       ),
@@ -162,8 +113,6 @@ export async function getFinancialSummary(
             "quantity, products!inner(cost_price), sales!inner(organization_id, sale_date, status)",
           )
           .eq("sales.organization_id", organizationId)
-          .is("deleted_at", null)
-          .is("sales.deleted_at", null)
           .gte("sales.sale_date", dateFrom)
           .lte("sales.sale_date", dateTo)
           .neq("sales.status", "cancelled"),
@@ -211,8 +160,6 @@ export async function getProductSalesBreakdown(
         "quantity, total_price, products!inner(name, cost_price), sales!inner(organization_id, sale_date, status)",
       )
       .eq("sales.organization_id", organizationId)
-      .is("deleted_at", null)
-      .is("sales.deleted_at", null)
       .gte("sales.sale_date", dateFrom)
       .lte("sales.sale_date", dateTo)
       .neq("sales.status", "cancelled"),
@@ -274,7 +221,6 @@ export async function getExpenseBreakdownByCategory(
       .from("expenses")
       .select("category, amount")
       .eq("organization_id", organizationId)
-      .is("deleted_at", null)
       .gte("expense_date", dateFrom)
       .lte("expense_date", dateTo),
   );
@@ -317,7 +263,6 @@ export async function getStockMovementsSummary(
       .from("stock_movements")
       .select("type")
       .eq("organization_id", organizationId)
-      .is("deleted_at", null)
       .gte("created_at", dateFrom)
       .lte("created_at", dateTo),
   );
@@ -349,7 +294,6 @@ export async function getPendingSales(
       .from("sales")
       .select("id, total_amount, sale_date, payment_method, contacts(name)")
       .eq("organization_id", organizationId)
-      .is("deleted_at", null)
       .eq("status", "pending")
       .gte("sale_date", dateFrom)
       .lte("sale_date", dateTo)
@@ -396,8 +340,6 @@ export async function getCommissionSummaryReport(
          )`,
       )
       .eq("sales.organization_id", organizationId)
-      .is("deleted_at", null)
-      .is("sales.deleted_at", null)
       .gte("sales.sale_date", dateFrom)
       .lte("sales.sale_date", dateTo)
       .neq("sales.status", "cancelled")
@@ -433,8 +375,8 @@ export async function getCommissionSummaryReport(
     if (!staffMap.has(staffId)) {
       staffMap.set(staffId, { fullName, saleItemIds: [], earned: 0 });
     }
-    const entry = staffMap.get(staffId);
-    if (entry) entry.earned += earned;
+    const entry = staffMap.get(staffId)!;
+    entry.earned += earned;
   }
 
   // Get per-staff paid amounts
@@ -541,163 +483,5 @@ export async function getFullReport(
     stockMovements,
     pendingSales,
     commissionSummary,
-  };
-}
-
-// ─── Financial Statement Queries ────────────────────────────────────
-
-/**
- * Returns profit & loss data for the given organization and date range.
- * Groups accounts by type (income/expense) and computes totals.
- */
-export async function getProfitLoss(
-  supabase: SupabaseClient<Database>,
-  organizationId: string,
-  dateFrom: string,
-  dateTo: string,
-  branchId?: string | null,
-): Promise<ProfitLossData> {
-  const { data, error } = await withDbCapture(
-    "report: profit_loss",
-    supabase.rpc("get_profit_loss", {
-      p_organization_id: organizationId,
-      p_date_from: dateFrom,
-      p_date_to: dateTo,
-      p_branch_id: branchId ?? undefined,
-    }),
-  );
-
-  if (error) throw error;
-
-  const rows = (data ?? []) as Array<{
-    account_id: string;
-    account_code: string;
-    account_name: string;
-    account_type: string;
-    amount: number;
-  }>;
-
-  const revenue = rows
-    .filter((r) => r.account_type === "income")
-    .map((r) => ({
-      accountId: r.account_id,
-      accountCode: r.account_code,
-      accountName: r.account_name,
-      accountType: r.account_type,
-      amount: Number(r.amount),
-    }));
-
-  const expenses = rows
-    .filter((r) => r.account_type === "expense")
-    .map((r) => ({
-      accountId: r.account_id,
-      accountCode: r.account_code,
-      accountName: r.account_name,
-      accountType: r.account_type,
-      amount: Number(r.amount),
-    }));
-
-  const totalRevenue = revenue.reduce((sum, r) => sum + r.amount, 0);
-  const totalExpenses = expenses.reduce((sum, r) => sum + r.amount, 0);
-
-  return {
-    revenue,
-    expenses,
-    totalRevenue,
-    totalExpenses,
-    netIncome: totalRevenue - totalExpenses,
-  };
-}
-
-/**
- * Returns balance sheet data as of a specific date.
- * Groups accounts by type (asset/liability/equity).
- */
-export async function getBalanceSheetData(
-  supabase: SupabaseClient<Database>,
-  organizationId: string,
-  asOfDate: string,
-  branchId?: string | null,
-): Promise<BalanceSheetData> {
-  const { data, error } = await withDbCapture(
-    "report: balance_sheet",
-    supabase.rpc("get_balance_sheet", {
-      p_organization_id: organizationId,
-      p_as_of_date: asOfDate,
-      p_branch_id: branchId ?? undefined,
-    }),
-  );
-
-  if (error) throw error;
-
-  const rows = (data ?? []) as Array<{
-    account_id: string;
-    account_code: string;
-    account_name: string;
-    account_type: string;
-    balance: number;
-  }>;
-
-  const mapRow = (r: (typeof rows)[number]): BalanceSheetRow => ({
-    accountId: r.account_id,
-    accountCode: r.account_code,
-    accountName: r.account_name,
-    accountType: r.account_type,
-    balance: Number(r.balance),
-  });
-
-  const assets = rows.filter((r) => r.account_type === "asset").map(mapRow);
-  const liabilities = rows
-    .filter((r) => r.account_type === "liability")
-    .map(mapRow);
-  const equity = rows.filter((r) => r.account_type === "equity").map(mapRow);
-
-  return {
-    assets,
-    liabilities,
-    equity,
-    totalAssets: assets.reduce((sum, r) => sum + r.balance, 0),
-    totalLiabilities: liabilities.reduce((sum, r) => sum + r.balance, 0),
-    totalEquity: equity.reduce((sum, r) => sum + r.balance, 0),
-  };
-}
-
-/**
- * Returns cash flow data for the given organization and date range.
- * Groups by category (operating/investing/financing).
- */
-export async function getCashFlowData(
-  supabase: SupabaseClient<Database>,
-  organizationId: string,
-  dateFrom: string,
-  dateTo: string,
-  branchId?: string | null,
-): Promise<CashFlowData> {
-  const { data, error } = await withDbCapture(
-    "report: cash_flow",
-    supabase.rpc("get_cash_flow", {
-      p_organization_id: organizationId,
-      p_date_from: dateFrom,
-      p_date_to: dateTo,
-      p_branch_id: branchId ?? undefined,
-    }),
-  );
-
-  if (error) throw error;
-
-  const rows = (data ?? []) as Array<{
-    category: string;
-    amount: number;
-  }>;
-
-  const operating = rows.find((r) => r.category === "operating")?.amount ?? 0;
-  const investing = rows.find((r) => r.category === "investing")?.amount ?? 0;
-  const financing = rows.find((r) => r.category === "financing")?.amount ?? 0;
-
-  return {
-    operating: Number(operating),
-    investing: Number(investing),
-    financing: Number(financing),
-    netCashFlow: Number(operating) + Number(investing) + Number(financing),
   };
 }

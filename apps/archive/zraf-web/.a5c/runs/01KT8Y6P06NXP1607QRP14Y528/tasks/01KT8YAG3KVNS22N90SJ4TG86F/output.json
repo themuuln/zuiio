@@ -1,0 +1,38 @@
+{
+  "commitPatterns": {
+    "messageFormat": "Create Next App (scaffold default)",
+    "averageFrequency": "single initial commit",
+    "averageSize": {"filesChanged": "all", "linesAdded": "scaffold", "linesRemoved": 0},
+    "conventions": ["No conventions established yet — single commit repo"]
+  },
+  "branchPatterns": {
+    "namingConvention": "main (default)",
+    "averageLifetime": "N/A",
+    "mergeStrategy": "N/A"
+  },
+  "releasePatterns": {
+    "tagFormat": "none",
+    "frequency": "none",
+    "versioningScheme": "0.1.0 (package.json)"
+  },
+  "evolution": {
+    "majorEvents": [{"description": "Initial scaffold + full feature implementation (single commit)", "date": "initial"}],
+    "technologyChanges": ["Create Next App scaffold → full driving theory app"],
+    "growthAreas": ["src/components (8 screens)", "src/lib (6 modules)", "public/data (question bank)"]
+  },
+  "bottlenecks": [
+    {"id": "bn-single-commit", "description": "Entire codebase in one commit — no granular history", "impact": "hard to trace when features were added", "location": "repo-wide", "frequency": "one-time"}
+  ],
+  "implicitRules": [
+    "All code is client-side rendered (no server components)",
+    "Data loaded from static JSON, not API routes",
+    "localStorage for all persistence"
+  ],
+  "painPoints": [
+    {"id": "pp-no-tests", "description": "No test suite configured", "severity": "medium", "category": "quality", "discoveredVia": "tool analysis"},
+    {"id": "pp-no-ci", "description": "No CI/CD pipeline", "severity": "low", "category": "devops", "discoveredVia": "tool analysis"}
+  ],
+  "contributors": [
+    {"name": "Temuulen Undrakhbayar", "areas": ["all"], "commitCount": 1}
+  ]
+}

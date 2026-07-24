@@ -1,9 +1,0 @@
-{
-  "extends": "@zuiio/config/tsconfig",
-  "compilerOptions": {
-    "paths": {
-      "@zuiio/oidc": ["./src/index.ts"]
-    }
-  },
-  "include": ["src"]
-}

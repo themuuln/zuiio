@@ -53,7 +53,8 @@ class _MockRaceEntryRepository implements RaceEntryRepository {
     required String horseId,
     required String ownerId,
     required String jockeyName,
-  }) async => registerResult;
+  }) async =>
+      registerResult;
 
   @override
   Future<Result<RaceEntry>> cancel(String id) async =>
@@ -65,7 +66,8 @@ class _MockRaceEntryRepository implements RaceEntryRepository {
     required String result,
     required int placement,
     required int prize,
-  }) async => Result.ok(createMockRaceEntry());
+  }) async =>
+      Result.ok(createMockRaceEntry());
 }
 
 // ── Test horses ─────────────────────────────────────────────────────
@@ -105,7 +107,9 @@ Widget createRaceDetailScreen({
           throw Exception('Test error');
         }),
         authStateProvider.overrideWith(
-          () => FakeAuthStateNotifier(AuthState.authenticated(userId: userId)),
+          () => FakeAuthStateNotifier(
+            AuthState.authenticated(userId: userId),
+          ),
         ),
         horsesProvider.overrideWith((ref) async => horses),
       ],
@@ -125,7 +129,9 @@ Widget createRaceDetailScreen({
         return entries;
       }),
       authStateProvider.overrideWith(
-        () => FakeAuthStateNotifier(AuthState.authenticated(userId: userId)),
+        () => FakeAuthStateNotifier(
+          AuthState.authenticated(userId: userId),
+        ),
       ),
       horsesProvider.overrideWith((ref) async => horses),
     ],
@@ -149,9 +155,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            raceDetailProvider(
-              'test-race-1',
-            ).overrideWith((ref) => raceDetailCompleter.future),
+            raceDetailProvider('test-race-1').overrideWith(
+              (ref) => raceDetailCompleter.future,
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.light(),
@@ -178,10 +184,16 @@ void main() {
       expect(find.byType(TamgaErrorWidget), findsOneWidget);
 
       // Verify the error message
-      expect(find.text('Уралдаан ачаалахад алдаа гарлаа'), findsOneWidget);
+      expect(
+        find.text('Уралдаан ачаалахад алдаа гарлаа'),
+        findsOneWidget,
+      );
 
       // Verify retry button
-      expect(find.text('Дахин оролдох / Retry'), findsOneWidget);
+      expect(
+        find.text('Дахин оролдох / Retry'),
+        findsOneWidget,
+      );
     });
 
     // ════════════════════════════════════════════════════════════
@@ -336,7 +348,9 @@ void main() {
         status: RaceStatus.upcoming,
       );
 
-      await tester.pumpWidget(createRaceDetailScreen(race: race, entries: []));
+      await tester.pumpWidget(
+        createRaceDetailScreen(race: race, entries: []),
+      );
       await tester.pumpAndSettle();
 
       // Verify the empty state for entries
@@ -350,7 +364,9 @@ void main() {
         status: RaceStatus.cancelled,
       );
 
-      await tester.pumpWidget(createRaceDetailScreen(race: race));
+      await tester.pumpWidget(
+        createRaceDetailScreen(race: race),
+      );
       await tester.pumpAndSettle();
 
       // Verify the screen renders
@@ -490,9 +506,9 @@ void main() {
           ProviderScope(
             overrides: [
               raceDetailProvider('race-1').overrideWith((ref) async => race),
-              raceEntriesProvider(
-                'race-1',
-              ).overrideWith((ref) async => <RaceEntry>[]),
+              raceEntriesProvider('race-1').overrideWith(
+                (ref) async => <RaceEntry>[],
+              ),
               authStateProvider.overrideWith(
                 () => FakeAuthStateNotifier(
                   AuthState.authenticated(userId: 'user-1'),
@@ -567,9 +583,9 @@ void main() {
         ProviderScope(
           overrides: [
             raceDetailProvider('race-1').overrideWith((ref) async => race),
-            raceEntriesProvider(
-              'race-1',
-            ).overrideWith((ref) async => <RaceEntry>[]),
+            raceEntriesProvider('race-1').overrideWith(
+              (ref) async => <RaceEntry>[],
+            ),
             authStateProvider.overrideWith(
               () => FakeAuthStateNotifier(
                 AuthState.authenticated(userId: 'user-1'),

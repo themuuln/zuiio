@@ -65,14 +65,8 @@ export function OverviewTab({
   topServices,
   revenueTrend = EMPTY_REVENUE_TREND,
 }: OverviewTabProps) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const financeT = useTranslations("finance") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
+  const financeT = useTranslations("finance");
 
   if (!hasAnyData) {
     return <EmptyFinanceState />;
@@ -279,14 +273,8 @@ export function OverviewTab({
 }
 
 function TopServicesTable({ services }: { services: TopService[] }) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const financeT = useTranslations("finance") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
+  const financeT = useTranslations("finance");
 
   const columns: ColumnDef<TopService>[] = useMemo(
     () => [

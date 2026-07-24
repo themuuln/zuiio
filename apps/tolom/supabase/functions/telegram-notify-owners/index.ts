@@ -305,6 +305,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (!orgsWithLinks || orgsWithLinks.length === 0) {
+    console.log("No active telegram links found");
     return new Response(JSON.stringify({ checked: 0, sent: 0 }), {
       headers: { "Content-Type": "application/json" },
     });
@@ -329,8 +330,8 @@ Deno.serve(async (req: Request) => {
       });
     }
     orgMap
-      .get(link.organization_id)
-      ?.links.push({ chat_id: link.telegram_chat_id });
+      .get(link.organization_id)!
+      .links.push({ chat_id: link.telegram_chat_id });
   }
 
   let sentCount = 0;
@@ -368,6 +369,7 @@ Deno.serve(async (req: Request) => {
                 })
                 .eq("organization_id", orgId)
                 .eq("telegram_chat_id", link.chat_id);
+              console.log(`Deactivated telegram link for chat ${link.chat_id}`);
             }
           } else {
             sentCount++;
@@ -382,6 +384,10 @@ Deno.serve(async (req: Request) => {
       console.error(`Failed to compute summary for org ${orgId}:`, orgErr);
     }
   }
+
+  console.log(
+    `Sent ${period} notification to ${sentCount} chat(s) across ${orgCount} org(s)`,
+  );
   return new Response(
     JSON.stringify({ orgs: orgCount, sent: sentCount, period }),
     { headers: { "Content-Type": "application/json" } },

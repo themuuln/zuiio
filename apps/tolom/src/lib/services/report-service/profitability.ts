@@ -148,6 +148,59 @@ export async function getComparisonData(
   };
 }
 
+export async function getWorkOrderProfit(
+  db: SupabaseClient,
+  workOrderId: string,
+  _orgId: string,
+): Promise<import("@/lib/types").WorkOrderProfit> {
+  const supabase = db;
+
+  const [servicesResult, partsResult] = await Promise.all([
+    supabase
+      .from("work_order_services")
+      .select("final_price, unit_cost, quantity")
+      .eq("work_order_id", workOrderId),
+    supabase
+      .from("work_order_parts")
+      .select("final_price, unit_cost, quantity")
+      .eq("work_order_id", workOrderId),
+  ]);
+
+  const serviceRevenue = (servicesResult.data ?? []).reduce(
+    (sum, s) => sum + Number(s.final_price),
+    0,
+  );
+  const serviceCost = (servicesResult.data ?? []).reduce(
+    (sum, s) => sum + Number(s.unit_cost ?? 0) * s.quantity,
+    0,
+  );
+  const partsRevenue = (partsResult.data ?? []).reduce(
+    (sum, p) => sum + Number(p.final_price),
+    0,
+  );
+  const partsCost = (partsResult.data ?? []).reduce(
+    (sum, p) => sum + Number(p.unit_cost ?? 0) * p.quantity,
+    0,
+  );
+
+  const totalRevenue = serviceRevenue + partsRevenue;
+  const totalCost = serviceCost + partsCost;
+  const grossProfit = totalRevenue - totalCost;
+  const marginPercent =
+    totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+
+  return {
+    totalRevenue,
+    totalCost,
+    grossProfit,
+    marginPercent,
+    serviceRevenue,
+    serviceCost,
+    partsRevenue,
+    partsCost,
+  };
+}
+
 export async function getDashboardProfitSummary(
   db: SupabaseClient,
   orgId: string,

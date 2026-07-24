@@ -13,29 +13,9 @@ import { login } from "./actions";
 const DEV_EMAIL = "themuuln1@gmail.com";
 const DEV_PASSWORD = "Tolom!11";
 
-export function LoginForm({
-  next,
-  error,
-  detail,
-}: {
-  next: string;
-  error?: string;
-  detail?: string;
-}) {
+export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(login, undefined);
   const isDev = process.env.NODE_ENV === "development";
-
-  const ssoError =
-    error === "sso_failed"
-      ? "Гуравдагч нэвтрэх үйлчилгээ (Google) амжилтгүй боллоо. Дахин оролдоно уу."
-      : error === "auth_callback_failed"
-        ? "Нэвтрэх баталгаажуулалт амжилтгүй боллоо. Дахин оролдоно уу."
-        : null;
-  const urlErrorMessage = ssoError
-    ? detail
-      ? `${ssoError} (${detail})`
-      : ssoError
-    : null;
 
   return (
     <AuthCard title="Нэвтрэх" description="Имэйл хаяг, нууц үгээ оруулна уу">
@@ -75,27 +55,13 @@ export function LoginForm({
             </div>
           </Field>
         </FieldGroup>
-        <ErrorBanner error={urlErrorMessage} />
+
         <ErrorBanner error={state?.error} />
 
         <Button type="submit" disabled={pending}>
           Нэвтрэх
           <ArrowRight data-icon="inline-end" />
         </Button>
-
-        <div className="relative flex items-center gap-3 my-1">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Эсвэл
-          </span>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
-        <Link href={`/sso?next=${encodeURIComponent(next)}`}>
-          <Button type="button" variant="outline" className="w-full">
-            SSO-р нэвтрэх
-          </Button>
-        </Link>
 
         <p className="text-center text-sm text-muted-foreground">
           Бүртгэлгүй юу?{" "}

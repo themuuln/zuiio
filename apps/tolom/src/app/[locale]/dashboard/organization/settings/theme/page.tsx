@@ -6,11 +6,7 @@ import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 export default function ThemeSettingsPage() {
-  const t = (
-    useTranslations as (
-      ns: string,
-    ) => (key: string, values?: Record<string, string | number>) => string
-  )("organization.theme");
+  const t = useTranslations("organization.theme");
   const { data: orgInfo } = useCurrentOrg();
 
   if (!orgInfo) {

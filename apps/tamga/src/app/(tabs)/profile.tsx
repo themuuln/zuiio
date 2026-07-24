@@ -3,13 +3,10 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-import { useProfile } from "@/hooks/useProfile";
-import { TIER_META, type SubscriptionTier } from "@/hooks/useSubscriptionMutations";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const { data: profile } = useProfile(user?.id);
 
   if (loading) {
     return (
@@ -52,44 +49,6 @@ export default function ProfileScreen() {
         <Text className="text-xl font-bold text-foreground">{name}</Text>
         <Text className="text-muted-foreground">{phone}</Text>
       </View>
-      {/* Subscription Status Card */}
-      {(() => {
-        const tier: SubscriptionTier =
-          profile?.subscription_tier === "pro" ||
-          profile?.subscription_tier === "breeder" ||
-          profile?.subscription_tier === "stable"
-            ? (profile.subscription_tier as SubscriptionTier)
-            : "free";
-        const meta = TIER_META[tier];
-        return (
-          <TouchableOpacity
-            onPress={() => router.push("/subscription")}
-            className="mx-4 mb-4 bg-card rounded-xl p-4 flex-row items-center"
-          >
-            <View
-              className="w-10 h-10 rounded-full items-center justify-center mr-3"
-              style={{ backgroundColor: `${meta.color}20` }}
-            >
-              <Ionicons name={meta.icon as keyof typeof Ionicons.glyphMap} size={20} color={meta.color} />
-            </View>
-            <View className="flex-1">
-              <Text className="text-sm text-muted-foreground">Захиалга</Text>
-              <Text className="text-base font-semibold text-foreground">{meta.label}</Text>
-            </View>
-            {tier === "free" ? (
-              <View className="bg-primary/10 px-3 py-1 rounded-full">
-                <Text className="text-xs font-semibold text-primary">Шинэчлэх</Text>
-              </View>
-            ) : (
-              <View className="bg-green-500/10 px-3 py-1 rounded-full">
-                <Text className="text-xs font-semibold text-green-600">Идэвхтэй</Text>
-              </View>
-            )}
-            <Ionicons name="chevron-forward" size={18} className="text-muted-foreground ml-2" />
-          </TouchableOpacity>
-        );
-      })()}
-
 
       <View className="bg-card mx-4 rounded-xl overflow-hidden mb-4">
         {menuItems.map((item, i) => (

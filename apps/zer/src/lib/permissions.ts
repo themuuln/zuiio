@@ -119,25 +119,6 @@ export const PERMISSION_GROUPS: {
     key: "discounts",
     permissions: APP_PERMISSIONS.filter((p) => p.startsWith("discounts.")),
   },
-  {
-    label: "Үйлдвэрлэл",
-    key: "manufacturing",
-    permissions: APP_PERMISSIONS.filter((p) =>
-      [
-        "boms.create",
-        "boms.read",
-        "boms.update",
-        "boms.delete",
-        "production_orders.create",
-        "production_orders.read",
-        "production_orders.update",
-        "production_orders.delete",
-        "production_costs.read",
-        "quality_checks.create",
-        "quality_checks.read",
-      ].includes(p),
-    ),
-  },
 ];
 
 /** Human-readable labels for each permission */
@@ -209,15 +190,4 @@ export const PERMISSION_LABELS: Record<AppPermission, string> = {
   "discounts.read": "Хямдрал харах",
   "discounts.update": "Хямдрал засах",
   "discounts.delete": "Хямдрал устгах",
-  "boms.create": "BOM үүсгэх",
-  "boms.read": "BOM харах",
-  "boms.update": "BOM засах",
-  "boms.delete": "BOM устгах",
-  "production_orders.create": "Үйлдвэрлэлийн захиалга үүсгэх",
-  "production_orders.read": "Үйлдвэрлэлийн захиалга харах",
-  "production_orders.update": "Үйлдвэрлэлийн захиалга засах",
-  "production_orders.delete": "Үйлдвэрлэлийн захиалга устгах",
-  "production_costs.read": "Үйлдвэрлэлийн зардал харах",
-  "quality_checks.create": "Чанарын шалгалт бүртгэх",
-  "quality_checks.read": "Чанарын шалгалт харах",
 } as Record<AppPermission, string>;

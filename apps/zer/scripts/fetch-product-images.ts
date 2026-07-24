@@ -198,31 +198,37 @@ async function main() {
     .order("name");
 
   if (!products || products.length === 0) {
+    console.log("All products already have images!");
     return;
   }
 
-  let _successCount = 0;
-  let _failCount = 0;
+  console.log(`Found ${products.length} products without images\n`);
+
+  let successCount = 0;
+  let failCount = 0;
 
   for (const product of products) {
     process.stdout.write(`${product.name} ... `);
 
     const imgUrl = await searchForImage(product.name);
     if (!imgUrl) {
-      _failCount++;
+      console.log("no image found");
+      failCount++;
       continue;
     }
 
     const downloaded = await downloadImage(imgUrl);
     if (!downloaded) {
-      _failCount++;
+      console.log("download failed");
+      failCount++;
       continue;
     }
 
     const compressed = await compressImage(downloaded);
     const publicUrl = await uploadToStorage(product.id, compressed);
     if (!publicUrl) {
-      _failCount++;
+      console.log("upload failed");
+      failCount++;
       continue;
     }
 
@@ -233,11 +239,16 @@ async function main() {
       .eq("id", product.id);
 
     if (error) {
-      _failCount++;
+      console.log(`db update failed: ${error.message}`);
+      failCount++;
     } else {
-      _successCount++;
+      console.log("OK");
+      successCount++;
     }
   }
+
+  console.log(`\n${"=".repeat(60)}`);
+  console.log(`Done! ${successCount} updated, ${failCount} failed`);
 }
 
 main().catch(console.error);

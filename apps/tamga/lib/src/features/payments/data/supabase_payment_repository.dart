@@ -8,9 +8,7 @@ import '../domain/payment_request.dart';
 import 'payment_repository.dart';
 
 /// Supabase cloud implementation for payment requests.
-class SupabasePaymentRepository
-    with SupabaseRepositoryMixin
-    implements PaymentRepository {
+class SupabasePaymentRepository with SupabaseRepositoryMixin implements PaymentRepository {
   SupabasePaymentRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 

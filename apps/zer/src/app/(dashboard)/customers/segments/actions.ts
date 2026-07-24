@@ -1,6 +1,6 @@
 "use server";
 
-import { capture, withDbCapture } from "@zuiio/capture";
+import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
 
@@ -77,16 +77,13 @@ export async function createCustomerSegment(
     .replace(/-+/g, "-")
     .trim();
 
-  const { error } = await withDbCapture(
-    "customer_segments: create",
-    supabase.from("customer_segments").insert({
-      organization_id: organizationId,
-      name,
-      slug,
-      sort_order: sortOrder,
-      is_active: isActive,
-    }),
-  );
+  const { error } = await supabase.from("customer_segments").insert({
+    organization_id: organizationId,
+    name,
+    slug,
+    sort_order: sortOrder,
+    is_active: isActive,
+  });
 
   if (error) {
     capture(error, { context: "createCustomerSegment" });
@@ -124,19 +121,16 @@ export async function updateCustomerSegment(
     .replace(/-+/g, "-")
     .trim();
 
-  const { error } = await withDbCapture(
-    "customer_segments: update",
-    supabase
-      .from("customer_segments")
-      .update({
-        name,
-        slug,
-        sort_order: sortOrder,
-        is_active: isActive,
-      })
-      .eq("id", id)
-      .eq("organization_id", organizationId),
-  );
+  const { error } = await supabase
+    .from("customer_segments")
+    .update({
+      name,
+      slug,
+      sort_order: sortOrder,
+      is_active: isActive,
+    })
+    .eq("id", id)
+    .eq("organization_id", organizationId);
 
   if (error) {
     capture(error, { context: "updateCustomerSegment" });
@@ -152,14 +146,11 @@ export async function deleteCustomerSegment(id: string) {
   if ("error" in ctx) return ctx;
   const { supabase, organizationId } = ctx;
 
-  const { error } = await withDbCapture(
-    "customer_segments: delete",
-    supabase
-      .from("customer_segments")
-      .delete()
-      .eq("id", id)
-      .eq("organization_id", organizationId),
-  );
+  const { error } = await supabase
+    .from("customer_segments")
+    .delete()
+    .eq("id", id)
+    .eq("organization_id", organizationId);
 
   if (error) {
     capture(error, { context: "deleteCustomerSegment" });
@@ -192,18 +183,15 @@ export async function seedCustomerSegmentPreset() {
 
   let created = 0;
   for (const preset of presets) {
-    const { error } = await withDbCapture(
-      "customer_segments: seed preset upsert",
-      supabase.from("customer_segments").upsert(
-        {
-          organization_id: organizationId,
-          name: preset.name,
-          slug: preset.slug,
-          sort_order: preset.sort_order,
-          is_active: true,
-        },
-        { onConflict: "organization_id,slug", ignoreDuplicates: true },
-      ),
+    const { error } = await supabase.from("customer_segments").upsert(
+      {
+        organization_id: organizationId,
+        name: preset.name,
+        slug: preset.slug,
+        sort_order: preset.sort_order,
+        is_active: true,
+      },
+      { onConflict: "organization_id,slug", ignoreDuplicates: true },
     );
     if (error) {
       capture(error, { context: "seedCustomerSegmentPreset: upsert" });

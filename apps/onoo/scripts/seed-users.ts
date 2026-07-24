@@ -10,20 +10,17 @@
  * Idempotent: safe to run multiple times
  */
 
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://localhost:54321";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SERVICE_KEY) {
-  console.error(
-    "Missing SUPABASE_SERVICE_ROLE_KEY. Run `supabase status` and set it.",
-  );
+  console.error("Missing SUPABASE_SERVICE_ROLE_KEY. Run `supabase status` and set it.");
   process.exit(1);
 }
 
 // Fixed UUIDs matching seed.sql
 const LEAGUE_ID = "c0000000-0000-0000-0000-000000000001";
-const _ORG_ID = "b0000000-0000-0000-0000-000000000001";
+const ORG_ID = "b0000000-0000-0000-0000-000000000001";
 const GAME_ID = "70000000-0000-0000-0000-000000000001";
 
 interface User {
@@ -34,11 +31,7 @@ interface User {
 
 const USERS: User[] = [
   { email: "admin@dev.local", password: "admin123", display_name: "Admin Dev" },
-  {
-    email: "scorer@dev.local",
-    password: "scorer123",
-    display_name: "Scorer Dev",
-  },
+  { email: "scorer@dev.local", password: "scorer123", display_name: "Scorer Dev" },
 ];
 
 async function createUser(user: User): Promise<string | null> {
@@ -63,9 +56,7 @@ async function createUser(user: User): Promise<string | null> {
       headers: { apikey: SERVICE_KEY!, Authorization: `Bearer ${SERVICE_KEY}` },
     });
     const { users } = await listRes.json();
-    const existing = users.find(
-      (u: { email: string }) => u.email === user.email,
-    );
+    const existing = users.find((u: { email: string }) => u.email === user.email);
     if (existing) {
       console.log(`  ✓ ${user.email} already exists (${existing.id})`);
       return existing.id;

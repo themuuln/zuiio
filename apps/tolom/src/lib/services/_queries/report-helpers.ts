@@ -273,27 +273,43 @@ async function fetchMechanicKpis(
 ): Promise<ReportMechanicKpi[]> {
   if (woIds.length === 0) return [];
 
-  // Phase 1: All independent queries in parallel — only depend on woIds
-  const [
-    woMechanicsResult,
-    svcsResult,
-    partsResult,
-    completionDataResult,
-    woCustomerRowsResult,
-  ] = await Promise.all([
-    supabase
-      .from("work_orders")
-      .select("id, mechanic_id")
-      .in("id", woIds)
-      .not("mechanic_id", "is", null),
-    supabase
-      .from("work_order_services")
-      .select("final_price, work_order_id")
-      .in("work_order_id", woIds),
-    supabase
-      .from("work_order_parts")
-      .select("final_price, work_order_id")
-      .in("work_order_id", woIds),
+  const { data: woMechanics } = await supabase
+    .from("work_orders")
+    .select("id, mechanic_id")
+    .in("id", woIds)
+    .not("mechanic_id", "is", null);
+
+  if (!woMechanics?.length) return [];
+
+  const mechanicWoMap = new Map<string, string[]>();
+  for (const wo of woMechanics) {
+    if (!wo.mechanic_id) continue;
+    const list = mechanicWoMap.get(wo.mechanic_id) ?? [];
+    list.push(wo.id);
+    mechanicWoMap.set(wo.mechanic_id, list);
+  }
+
+  const mechanicIds = [...mechanicWoMap.keys()];
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", mechanicIds);
+
+  const profileMap = new Map<string, string>();
+  for (const p of profiles ?? [])
+    profileMap.set(p.id, p.full_name ?? "Unknown");
+
+  // Fetch all revenue data at once
+  // Build per-WO revenue map from services+parts
+  const { data: svcs } = await supabase
+    .from("work_order_services")
+    .select("final_price, work_order_id")
+    .in("work_order_id", woIds);
+  const { data: parts } = await supabase
+    .from("work_order_parts")
+    .select("final_price, work_order_id")
+    .in("work_order_id", woIds);
+  const [completionData, woCustomerRows] = await Promise.all([
     woIds.length > 0
       ? supabase
           .from("service_completion_data")
@@ -311,64 +327,12 @@ async function fetchMechanicKpis(
       : { data: [] as Record<string, unknown>[] },
   ]);
 
-  const woMechanics = woMechanicsResult.data ?? [];
-  if (!woMechanics.length) return [];
-
-  // Build mechanic → WO map
-  const mechanicWoMap = new Map<string, string[]>();
-  for (const wo of woMechanics) {
-    if (!wo.mechanic_id) continue;
-    const list = mechanicWoMap.get(wo.mechanic_id) ?? [];
-    list.push(wo.id);
-    mechanicWoMap.set(wo.mechanic_id, list);
-  }
-
-  const mechanicIds = [...mechanicWoMap.keys()];
-
-  // Extract customer IDs for Phase 2
-  const customerIds = [
-    ...new Set(
-      (woCustomerRowsResult.data ?? [])
-        .map((w) => w.customer_id)
-        .filter(Boolean),
-    ),
-  ] as string[];
-
-  // Phase 2: Queries that depend on Phase 1 results (parallel with each other)
-  const [profilesResult, customersResult] = await Promise.all([
-    mechanicIds.length > 0
-      ? supabase.from("profiles").select("id, full_name").in("id", mechanicIds)
-      : { data: [] as { id: string; full_name: string | null }[] },
-    customerIds.length > 0
-      ? supabase
-          .from("customers")
-          .select("id, first_name, last_name")
-          .in("id", customerIds)
-      : {
-          data: [] as {
-            id: string;
-            first_name: string | null;
-            last_name: string | null;
-          }[],
-        },
-  ]);
-
-  // ── Build all maps ────────────────────────────────────
-  const profileMap = new Map<string, string>();
-  for (const p of profilesResult.data ?? [])
-    profileMap.set(p.id, p.full_name ?? "Unknown");
-
-  const svcs = svcsResult.data ?? [];
-  const parts = partsResult.data ?? [];
-  const completionData = completionDataResult.data ?? [];
-  const woCustomerRows = woCustomerRowsResult.data ?? [];
-
   const woSatMap = new Map<string, number>();
   const woReviewData = new Map<
     string,
     { satisfaction: number; feedback: string | null; date: string }
   >();
-  for (const c of completionData) {
+  for (const c of completionData.data ?? []) {
     if (c.customer_satisfaction != null) {
       woSatMap.set(c.work_order_id, c.customer_satisfaction);
       woReviewData.set(c.work_order_id, {
@@ -379,15 +343,27 @@ async function fetchMechanicKpis(
     }
   }
 
+  // Fetch customer names for feedback display
+  const customerIds = [
+    ...new Set(
+      (woCustomerRows.data ?? []).map((w) => w.customer_id).filter(Boolean),
+    ),
+  ] as string[];
   const custNameMap = new Map<string, string>();
-  for (const c of customersResult.data ?? []) {
-    custNameMap.set(
-      c.id,
-      [c.first_name, c.last_name].filter(Boolean).join(" ") || "Customer",
-    );
+  if (customerIds.length > 0) {
+    const { data: customers } = await supabase
+      .from("customers")
+      .select("id, first_name, last_name")
+      .in("id", customerIds);
+    for (const c of customers ?? []) {
+      custNameMap.set(
+        c.id,
+        [c.first_name, c.last_name].filter(Boolean).join(" ") || "Customer",
+      );
+    }
   }
   const woCustNameMap = new Map<string, string>();
-  for (const wo of woCustomerRows) {
+  for (const wo of woCustomerRows.data ?? []) {
     if (wo.customer_id) {
       woCustNameMap.set(wo.id, custNameMap.get(wo.customer_id) ?? "Customer");
     }
@@ -396,14 +372,14 @@ async function fetchMechanicKpis(
   const woRevMap = new Map<string, number>();
   const woSvcCount = new Map<string, number>();
   const woPartCount = new Map<string, number>();
-  for (const s of svcs) {
+  for (const s of svcs ?? []) {
     woRevMap.set(
       s.work_order_id,
       (woRevMap.get(s.work_order_id) ?? 0) + Number(s.final_price),
     );
     woSvcCount.set(s.work_order_id, (woSvcCount.get(s.work_order_id) ?? 0) + 1);
   }
-  for (const p of parts) {
+  for (const p of parts ?? []) {
     woRevMap.set(
       p.work_order_id,
       (woRevMap.get(p.work_order_id) ?? 0) + Number(p.final_price),

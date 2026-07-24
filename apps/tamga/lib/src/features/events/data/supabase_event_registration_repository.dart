@@ -105,9 +105,9 @@ class SupabaseEventRegistrationRepository
         updatedAt: DateTime.now(),
       );
 
-      await client
-          .from('event_registrations')
-          .upsert(registration.toSupabaseJson());
+      await client.from('event_registrations').upsert(
+        registration.toSupabaseJson(),
+      );
 
       return Result.ok(registration);
     } catch (e) {
@@ -133,7 +133,9 @@ class SupabaseEventRegistrationRepository
       final existing = EventRegistration.fromSupabaseJson(response);
       final updated = existing.copyWith(status: RegistrationStatus.cancelled);
 
-      await client.from('event_registrations').upsert(updated.toSupabaseJson());
+      await client.from('event_registrations').upsert(
+        updated.toSupabaseJson(),
+      );
 
       return Result.ok(updated);
     } catch (e) {
@@ -143,9 +145,9 @@ class SupabaseEventRegistrationRepository
 
   // ── Helpers ──────────────────────────────────────────────────────
 
-  String _generateId() =>
-      'reg_${DateTime.now().millisecondsSinceEpoch}_${_randomSuffix()}';
+  String _generateId() => 'reg_${DateTime.now().millisecondsSinceEpoch}_${_randomSuffix()}';
 
   String _randomSuffix() =>
       DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+
 }

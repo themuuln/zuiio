@@ -45,7 +45,7 @@ interface ServiceModelPricesSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function ServiceModelPricesDrawer({
+export function ServiceModelPricesSheet({
   serviceId,
   serviceName,
   defaultPrice,
@@ -213,16 +213,13 @@ export function ServiceModelPricesDrawer({
 
     if (failures.length > 0) {
       toast.error(
-        t("pricesFailed", {
-          count: String(failures.length),
-          total: String(changedIds.size),
-        }),
+        t("pricesFailed", { count: failures.length, total: changedIds.size }),
       );
       return;
     }
 
     toast.dismiss();
-    toast.success(t("modelsUpdated", { count: String(changedIds.size) }));
+    toast.success(t("modelsUpdated", { count: changedIds.size }));
     setChangedIds(new Set());
   };
 
@@ -241,10 +238,7 @@ export function ServiceModelPricesDrawer({
           <div className="flex items-center justify-between">
             <DrawerTitle>{t("modelSpecificPrices")}</DrawerTitle>
             <Badge variant="secondary" className="shrink-0">
-              {t("customCount", {
-                count: String(customCount),
-                total: String(totalModels),
-              })}
+              {t("customCount", { count: customCount, total: totalModels })}
             </Badge>
           </div>
           <DrawerDescription>
@@ -395,8 +389,7 @@ export function ServiceModelPricesDrawer({
                               </Typography.Muted>
                             ) : hasExisting ? (
                               <Typography.Muted className="text-xs text-muted-foreground">
-                                {t("customPrice")}{" "}
-                                {formatMNT(existingPrice as number)}
+                                {t("customPrice")} {formatMNT(existingPrice!)}
                               </Typography.Muted>
                             ) : (
                               <Typography.Muted className="text-xs text-muted-foreground">
@@ -485,8 +478,8 @@ export function ServiceModelPricesDrawer({
             <AlertDialogTitle>{t("discardTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
               {changedIds.size === 1
-                ? t("discardDesc", { count: String(changedIds.size) })
-                : t("discardDescPlural", { count: String(changedIds.size) })}
+                ? t("discardDesc", { count: changedIds.size })
+                : t("discardDescPlural", { count: changedIds.size })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

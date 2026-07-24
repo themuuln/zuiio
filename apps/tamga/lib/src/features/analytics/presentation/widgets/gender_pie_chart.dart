@@ -8,7 +8,10 @@ import '../../../../shared/domain/horse.dart';
 /// [genderSplit] -аар хүйсний тойрог диаграммыг харуулна.
 /// Ачаалалт, алдаа, хоосон төлөвүүдийг дэмжинэ.
 class GenderPieChart extends StatelessWidget {
-  const GenderPieChart({super.key, required this.genderSplit});
+  const GenderPieChart({
+    super.key,
+    required this.genderSplit,
+  });
 
   /// Ачаалалт төлөв.
   const GenderPieChart.loading({super.key}) : genderSplit = null;
@@ -40,19 +43,17 @@ class GenderPieChart extends StatelessWidget {
     // Зөвхөн 0-ээс их утгатай хүйсүүдийг харуулах
     final sections = genderSplit!.entries
         .where((e) => e.value > 0)
-        .map(
-          (e) => PieChartSectionData(
-            color: _genderColors[e.key] ?? Colors.grey,
-            value: e.value.toDouble(),
-            title: '${e.value}',
-            radius: 40,
-            titleStyle: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onPrimary,
-            ),
-          ),
-        )
+        .map((e) => PieChartSectionData(
+              color: _genderColors[e.key] ?? Colors.grey,
+              value: e.value.toDouble(),
+              title: '${e.value}',
+              radius: 40,
+              titleStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onPrimary,
+              ),
+            ))
         .toList();
 
     if (sections.isEmpty) {
@@ -62,7 +63,10 @@ class GenderPieChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Хүйсний харьцаа', style: theme.textTheme.titleSmall),
+        Text(
+          'Хүйсний харьцаа',
+          style: theme.textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         Expanded(
           child: Row(
@@ -84,29 +88,27 @@ class GenderPieChart extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: genderSplit!.entries
                       .where((e) => e.value > 0)
-                      .map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: _genderColors[e.key] ?? Colors.grey,
-                                  shape: BoxShape.circle,
+                      .map((e) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: _genderColors[e.key] ?? Colors.grey,
+                                    shape: BoxShape.circle,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${e.key.displayName} (${e.value})',
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${e.key.displayName} (${e.value})',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ))
                       .toList(),
                 ),
               ),

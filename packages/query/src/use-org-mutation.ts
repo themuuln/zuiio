@@ -159,20 +159,6 @@ export interface OrgMutationConfig<TResponse, TVariables, TCache = TResponse> {
    *   where multiple list queries may be active (e.g. service reminders with filters).
    */
   optimisticMode?: "exact" | "prefix";
-  /**
-   * Manual optimistic cache update for non-list data (single entities, objects).
-   * Called in `onMutate` before the mutation fires. Receives queryClient for
-   * direct cache manipulation via `getQueryData`/`setQueryData`.
-   *
-   * Use this when `optimisticUpdate` (which expects arrays) doesn't fit,
-   * e.g. updating a single entity nested inside a larger cache object.
-   *
-   * Must return a snapshot for rollback (or undefined to skip rollback).
-   */
-  onOptimisticUpdate?: (
-    queryClient: ReturnType<typeof useQueryClient>,
-    variables: TVariables,
-  ) => unknown;
 
   /** Success toast message — string or function of variables. */
   successMessage?: string | ((variables: TVariables) => string);
@@ -250,7 +236,6 @@ export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>
     mutationKey,
     optimisticMode,
     optimisticUpdate,
-    onOptimisticUpdate,
     idempotencyKey,
     successMessage,
     errorMessage,
@@ -380,32 +365,21 @@ export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>
         }
       }
 
-      // Manual optimistic update for non-list data (single entities)
-      if (onOptimisticUpdate) {
-        const snapshot = onOptimisticUpdate(queryClient, variables);
-        return {
-          previous: snapshot as TCache[] | undefined,
-          snapshots: [],
-          wasOffline: !isOnline,
-        };
-      }
       return { previous: previous ?? undefined, snapshots: [], wasOffline: !isOnline };
     },
 
     onError: (error, variables, context) => {
-      // Rollback on error — skip if onOptimisticUpdate handles its own rollback
-      if (!onOptimisticUpdate) {
-        if (context?.snapshots && context.snapshots.length > 0) {
-          // Prefix mode: restore all cached entries
-          for (const snap of context.snapshots) {
-            if (snap.data !== undefined) {
-              queryClient.setQueryData<TCache[]>(snap.key, snap.data);
-            }
+      // Rollback on error
+      if (context?.snapshots && context.snapshots.length > 0) {
+        // Prefix mode: restore all cached entries
+        for (const snap of context.snapshots) {
+          if (snap.data !== undefined) {
+            queryClient.setQueryData<TCache[]>(snap.key, snap.data);
           }
-        } else if (context?.previous) {
-          // Exact mode: restore single cache entry
-          queryClient.setQueryData<TCache[]>(exactKey, context.previous);
         }
+      } else if (context?.previous) {
+        // Exact mode: restore single cache entry
+        queryClient.setQueryData<TCache[]>(exactKey, context.previous);
       }
 
       // Non-toast error callback (runs independently)
@@ -448,12 +422,6 @@ export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>
       // If sibling mutations with the same key are still in-flight,
       // skip invalidation to avoid clearing their optimistic state.
       if (queryClient.isMutating({ mutationKey: resolvedMutationKey }) > 1) return;
-
-      // When optimisticQueryKey is set, the mutation uses optimistic cache updates.
-      // Skip invalidation on success — the optimistic state persists until the
-      // next natural refetch (staleTime expiry, manual refetch, or focus).
-      // On error, still invalidate to trigger rollback refetch.
-      if (optimisticQueryKey && !_error) return;
 
       return Promise.all([
         queryClient.invalidateQueries({ queryKey }),

@@ -59,9 +59,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            performanceRecordsProvider(
-              'horse-1',
-            ).overrideWith((ref) => completer.future),
+            performanceRecordsProvider('horse-1').overrideWith(
+              (ref) => completer.future,
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.light(),
@@ -80,9 +80,10 @@ void main() {
     // Error state
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows error widget on fetch failure', (tester) async {
-      await tester.pumpWidget(
-        createPerformanceScreen(horseId: 'horse-1', simulateError: true),
-      );
+      await tester.pumpWidget(createPerformanceScreen(
+        horseId: 'horse-1',
+        simulateError: true,
+      ));
       await tester.pumpAndSettle();
 
       expect(find.byType(TamgaErrorWidget), findsOneWidget);
@@ -94,9 +95,10 @@ void main() {
     testWidgets('shows empty state when no performance records exist', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        createPerformanceScreen(horseId: 'horse-1', records: []),
-      );
+      await tester.pumpWidget(createPerformanceScreen(
+        horseId: 'horse-1',
+        records: [],
+      ));
       await tester.pumpAndSettle();
 
       expect(find.text('Гүйцэтгэлийн үзүүлэлт байхгүй'), findsOneWidget);
@@ -125,9 +127,10 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(
-        createPerformanceScreen(horseId: 'horse-1', records: records),
-      );
+      await tester.pumpWidget(createPerformanceScreen(
+        horseId: 'horse-1',
+        records: records,
+      ));
       await tester.pumpAndSettle();
 
       // Should show value with unit text (more specific than metric name)
@@ -156,9 +159,10 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(
-        createPerformanceScreen(horseId: 'horse-1', records: records),
-      );
+      await tester.pumpWidget(createPerformanceScreen(
+        horseId: 'horse-1',
+        records: records,
+      ));
       await tester.pumpAndSettle();
 
       // Should show filter chip labels (at least find them in the scrollable row)
@@ -187,9 +191,10 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(
-        createPerformanceScreen(horseId: 'horse-1', records: records),
-      );
+      await tester.pumpWidget(createPerformanceScreen(
+        horseId: 'horse-1',
+        records: records,
+      ));
       await tester.pumpAndSettle();
 
       expect(find.byType(PerformanceTrendChart), findsOneWidget);
@@ -199,9 +204,10 @@ void main() {
     // FAB
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows FAB to add new measurement', (tester) async {
-      await tester.pumpWidget(
-        createPerformanceScreen(horseId: 'horse-1', records: []),
-      );
+      await tester.pumpWidget(createPerformanceScreen(
+        horseId: 'horse-1',
+        records: [],
+      ));
       await tester.pumpAndSettle();
 
       expect(find.byType(FloatingActionButton), findsOneWidget);

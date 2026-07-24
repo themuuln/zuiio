@@ -43,7 +43,18 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         children: [
-          const SizedBox(height: AppSpacing.page),
+          const SizedBox(height: AppSpacing.section),
+
+          // ── Back button + Header ──
+          GestureDetector(
+            onTap: widget.onBack,
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Icon(Icons.chevron_left, size: 28, color: tc.primary),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
 
           // ── Header ──
           Center(
@@ -71,49 +82,36 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
             ),
           ),
           const SizedBox(height: AppSpacing.xxxl),
-          // ── Role cards — scrollable fallback for small screens ──
+
+          // ── Role cards ──
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _RoleWatermarkCard(
-                            role: UserRole.casual,
-                            isSelected: _selectedRole == UserRole.casual,
-                            watermarkIcon: Icons.pets,
-                            onTap: () => setState(() => _selectedRole = UserRole.casual),
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _RoleWatermarkCard(
-                            role: UserRole.breeder,
-                            isSelected: _selectedRole == UserRole.breeder,
-                            watermarkIcon: Icons.sports_motorsports,
-                            onTap: () => setState(() => _selectedRole = UserRole.breeder),
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _RoleWatermarkCard(
-                            role: UserRole.stable,
-                            isSelected: _selectedRole == UserRole.stable,
-                            watermarkIcon: Icons.visibility,
-                            onTap: () => setState(() => _selectedRole = UserRole.stable),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
+            child: Column(
+              children: [
+                _RoleWatermarkCard(
+                  role: UserRole.casual,
+                  isSelected: _selectedRole == UserRole.casual,
+                  watermarkIcon: Icons.pets,
+                  onTap: () => setState(() => _selectedRole = UserRole.casual),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _RoleWatermarkCard(
+                  role: UserRole.breeder,
+                  isSelected: _selectedRole == UserRole.breeder,
+                  watermarkIcon: Icons.sports_motorsports,
+                  onTap: () => setState(() => _selectedRole = UserRole.breeder),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _RoleWatermarkCard(
+                  role: UserRole.stable,
+                  isSelected: _selectedRole == UserRole.stable,
+                  watermarkIcon: Icons.visibility,
+                  onTap: () => setState(() => _selectedRole = UserRole.stable),
+                ),
+              ],
             ),
           ),
-          // ── Bottom actions — back + continue ──
+
+          // ── CTA button ──
           SafeArea(
             top: false,
             child: Padding(
@@ -122,32 +120,16 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                 top: AppSpacing.sm,
               ),
               child: SizedBox(
+                width: double.infinity,
                 height: 48,
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: widget.onBack,
-                      icon: Icon(Icons.chevron_left, color: tc.primary),
-                      style: IconButton.styleFrom(
-                        backgroundColor: tc.surfaceContainerLow,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: _canContinue
-                            ? () => widget.onContinue(_selectedRole!)
-                            : null,
-                        child: const Text(
-                          'Үргэлжлүүлэх',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                  ],
+                child: FilledButton(
+                  onPressed: _canContinue
+                      ? () => widget.onContinue(_selectedRole!)
+                      : null,
+                  child: const Text(
+                    'Үргэлжлүүлэх',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ),
@@ -178,74 +160,77 @@ class _RoleWatermarkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = TamgaColors.of(context);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
-      child: Material(
-        color: tc.surfaceContainerLow,
-        child: InkWell(
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
-              border: Border.all(
-                color: isSelected
-                    ? tc.primary
-                    : tc.outline.withValues(alpha: 0.6),
-                width: 1.5,
-              ),
+    return Material(
+      color: tc.surface,
+      borderRadius: BorderRadius.circular(13),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(13),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          height: 88,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(
+              color: isSelected
+                  ? tc.primary
+                  : tc.outline.withValues(alpha: 0.4),
+              width: isSelected ? 2.0 : 0.5,
             ),
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Stack(
-              clipBehavior: Clip.hardEdge,
-              children: [
-                // Watermark icon — clipped to card bounds
-                Positioned(
-                  right: -8,
-                  top: 0,
-                  bottom: 0,
-                  child: Center(
-                    child: SizedBox(
-                      width: 96,
-                      height: 96,
-                      child: Icon(
-                        watermarkIcon,
-                        size: 96,
-                        color: isSelected
-                            ? tc.primary.withValues(alpha: 0.20)
-                            : tc.onSurfaceVariant.withValues(alpha: 0.10),
-                      ),
-                    ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: Stack(
+            children: [
+              // Watermark icon — large, right-aligned
+              Positioned(
+                right: -8,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Icon(
+                    watermarkIcon,
+                    size: 120,
+                    color: isSelected
+                        ? tc.primary.withValues(alpha: 0.15)
+                        : tc.onSurfaceVariant.withValues(alpha: 0.08),
                   ),
                 ),
+              ),
 
-                // Text content — left-aligned, on top of watermark
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      role.displayName,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: tc.onSurface,
+              // Text content — left-aligned, on top
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        role.displayName,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: tc.onSurface,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      role.subtitle,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        color: tc.onSurfaceVariant,
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        role.subtitle,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          color: tc.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

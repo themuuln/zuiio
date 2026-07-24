@@ -1,7 +1,13 @@
+import { createClient } from "@/lib/supabase/server";
+import { ErrorReportActions } from "./_components/error-report-actions";
 import { formatDistanceToNow } from "date-fns";
 import { mn } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -10,20 +16,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { ErrorReportActions } from "./_components/error-report-actions";
-export const dynamic = "force-dynamic";
+import { Badge } from "@/components/ui/badge";
 
 export default async function OpsConsolePage() {
-  // Use service-role client to bypass RLS for admin telemetry
-  const supabase = createServiceRoleClient();
+  const supabase = await createClient();
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const [
     { data: activeSessions },
     { count: pendingSubmissions },
     { count: pendingRevisions },
-    { data: auditRaw },
+    { data: auditRows },
     { data: staleGames },
     { data: errorReports },
   ] = await Promise.all([
@@ -58,14 +61,6 @@ export default async function OpsConsolePage() {
       .order("created_at", { ascending: false })
       .limit(50),
   ]);
-  const auditRows = auditRaw as unknown as Array<{
-    id: string;
-    actor_id: string | null;
-    action: string;
-    entity: string;
-    entity_id: string | null;
-    created_at: string;
-  }> | null;
 
   const sessions = activeSessions ?? [];
   const auditLog = auditRows ?? [];
@@ -92,7 +87,7 @@ export default async function OpsConsolePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{pendingSubmissions ?? "—"}</p>
+            <p className="text-3xl font-bold">{pendingSubmissions ?? 0}</p>
           </CardContent>
         </Card>
         <Card>
@@ -102,7 +97,7 @@ export default async function OpsConsolePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{pendingRevisions ?? "—"}</p>
+            <p className="text-3xl font-bold">{pendingRevisions ?? 0}</p>
           </CardContent>
         </Card>
       </div>
@@ -118,7 +113,9 @@ export default async function OpsConsolePage() {
         </CardHeader>
         <CardContent>
           {reports.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Хоосон</p>
+            <p className="text-sm text-muted-foreground">
+              Нээлттэй алдааны мэдээлэл байхгүй
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -148,10 +145,10 @@ export default async function OpsConsolePage() {
                         {r.contact ?? "—"}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
-                        {new Date(r.created_at!).toLocaleString("mn-MN")}
+                        {new Date(r.created_at).toLocaleString("mn-MN")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <ErrorReportActions reportId={r.id!} />
+                        <ErrorReportActions reportId={r.id} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -169,7 +166,9 @@ export default async function OpsConsolePage() {
         </CardHeader>
         <CardContent>
           {sessions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Хоосон</p>
+            <p className="text-sm text-muted-foreground">
+              Идэвхитэй бүртгэгч байхгүй байна
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -179,7 +178,9 @@ export default async function OpsConsolePage() {
                     <TableHead>Бүртгэгч</TableHead>
                     <TableHead>Үүрэг</TableHead>
                     <TableHead>Эхэлсэн</TableHead>
-                    <TableHead className="text-right">Сүүлийн дугаар</TableHead>
+                    <TableHead className="text-right">
+                      Сүүлийн дугаар
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -219,19 +220,15 @@ export default async function OpsConsolePage() {
       </Card>
 
       {/* Staleness Alarm */}
-      <Card className={stale.length > 0 ? "border-destructive" : ""}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            Хугацаа хэтэрсэн
-            {stale.length > 0 && (
+      {stale.length > 0 && (
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Хугацаа хэтэрсэн
               <Badge variant="destructive">{stale.length}</Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {stale.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Хоосон</p>
-          ) : (
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -261,9 +258,9 @@ export default async function OpsConsolePage() {
                 </TableBody>
               </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Audit Log */}
       <Card>
@@ -272,7 +269,7 @@ export default async function OpsConsolePage() {
         </CardHeader>
         <CardContent>
           {auditLog.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Хоосон</p>
+            <p className="text-sm text-muted-foreground">Бүртгэл байхгүй</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>

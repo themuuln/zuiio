@@ -238,10 +238,7 @@ function buildPriceRuleBody(form: RuleForm) {
 }
 
 export function PricingRulesSection({ orgId }: { orgId: string }) {
-  const t = useTranslations("settings") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("settings");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<PriceRule | null>(null);
   const [form, setForm] = useState<RuleForm>(DEFAULT_FORM);

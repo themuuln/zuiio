@@ -287,8 +287,6 @@ export const dashboardKeys = {
     ["organizations", orgId, "dashboard", branchId ?? "all"] as const,
   summary: (orgId: string, period: string, branchId?: string | null) =>
     [...dashboardKeys.all(orgId, branchId), "summary", period] as const,
-  bundle: (orgId: string, period: string, branchId?: string | null) =>
-    [...dashboardKeys.all(orgId, branchId), "bundle", period] as const,
 };
 
 export const inventoryKeys = {
@@ -346,10 +344,6 @@ export const inventoryKeys = {
     [...inventoryKeys.all(orgId), "transfers", status ?? "all"] as const,
   transferDetail: (orgId: string, id: string) =>
     [...inventoryKeys.all(orgId), "transfers", "detail", id] as const,
-  vehicleModelParts: (orgId: string, partId: string) =>
-    [...inventoryKeys.all(orgId), "vehicle-model-parts", partId] as const,
-  supplierPriceHistory: (orgId: string, partId: string) =>
-    [...inventoryKeys.all(orgId), "supplier-price-history", partId] as const,
   /** Invalidate transfers + balances + movements together */
   transferInvalidations: (orgId: string) =>
     [

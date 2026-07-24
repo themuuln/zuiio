@@ -2,7 +2,6 @@ export const APP_NAME = "Zer";
 export const APP_DESCRIPTION = "Small business ERP system";
 
 export const PUBLIC_ROUTES = [
-  "/",
   "/landing",
   "/login",
   "/register",
@@ -10,7 +9,6 @@ export const PUBLIC_ROUTES = [
   "/reset-password",
   "/update-password",
   "/organization/new",
-  "/sso",
 ];
 
 export const COMPANY_TYPES = [
@@ -20,7 +18,6 @@ export const COMPANY_TYPES = [
   { value: "manufacturing", label: "Үйлдвэрлэл" },
   { value: "restaurant", label: "Ресторан" },
   { value: "gym", label: "Фитнес / Спорт клуб" },
-  { value: "religious", label: "Шашны дэлгүүр" },
   { value: "other", label: "Бусад" },
 ] as const;
 
@@ -65,31 +62,6 @@ export const FEATURES: FeatureDef[] = [
   { key: "reports", label: "Тайлан", description: "Тайлан, шинжилгээ" },
   { key: "commissions", label: "Комисс", description: "Комиссын тооцоо" },
   { key: "accounting", label: "Нягтлан", description: "Нягтлан бодох бүртгэл" },
-  {
-    key: "boms",
-    label: "BOM",
-    description: "Бүтээгдэхүүний бүртгэлийн жагсаалт",
-  },
-  {
-    key: "production_orders",
-    label: "Үйлдвэрлэл",
-    description: "Үйлдвэрлэлийн захиалга",
-  },
-  {
-    key: "job_costing",
-    label: "Зардал тооцоо",
-    description: "Үйлдвэрлэлийн зардал болон ашиг",
-  },
-  {
-    key: "quality_control",
-    label: "Чанарын хяналт",
-    description: "Үйлдвэрлэлийн чанарын шалгалт",
-  },
-  {
-    key: "material_tracking",
-    label: "Материалын хяналт",
-    description: "Материалын гаргалт ба буцаалт",
-  },
 ];
 
 /**
@@ -99,13 +71,6 @@ export const FEATURES: FeatureDef[] = [
  */
 export const FEATURE_KEYS = {
   hr: "hr",
-  manufacturing: [
-    "boms",
-    "production_orders",
-    "job_costing",
-    "quality_control",
-    "material_tracking",
-  ] as const,
 } as const;
 
 // Map nav item href → feature key for sidebar gating
@@ -120,9 +85,6 @@ export const NAV_FEATURE_MAP: Record<string, string> = {
   "/discounts": "discounts",
   "/reports": "reports",
   "/commissions": "commissions",
-  "/bom": "boms",
-  "/production": "production_orders",
-  "/job-costing": "job_costing",
   "/accounting": "accounting",
 };
 
@@ -160,18 +122,6 @@ export const PRESET_CATEGORIES: Record<string, readonly string[]> = {
     "Хувцас",
     "Ундаа",
     "Бусад",
-  ],
-  religious: [
-    "Бурхан, Хийд",
-    "Зурга",
-    "Тахилын хэрэгсэл",
-    "Ном, Судар",
-    "Эрдэнэ",
-    "Хадаг",
-    "Шашин хувцас",
-    "Утлага, хонх",
-    "Дуут аяга",
-    "Хийморь",
   ],
   other: ["Бусад"],
 };

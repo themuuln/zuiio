@@ -8,7 +8,6 @@ import { withBranchFilter } from "@/lib/branches";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
-import { quotationSchema } from "@/lib/validation-schemas";
 
 export async function createQuotation(
   _prevState: { error?: string } | undefined,
@@ -23,19 +22,6 @@ export async function createQuotation(
   const expiryDate = getString(formData, "expiry_date");
   const notes = getString(formData, "notes");
   const itemsJson = getString(formData, "items");
-  const parsedQuotation = quotationSchema.safeParse({
-    contact_id: contactId,
-    issue_date: issueDate,
-    expiry_date: expiryDate,
-    notes,
-    items: itemsJson,
-  });
-  if (!parsedQuotation.success) {
-    return {
-      error:
-        parsedQuotation.error.issues[0]?.message || "Мэдээлэл буруу байна.",
-    };
-  }
 
   if (!itemsJson) {
     return { error: "Барааны мэдээлэл шаардлагатай." };

@@ -1,12 +1,9 @@
 "use client";
 
-import type { QueryClient } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
-import type { DrawerDetailResponse } from "@/lib/queries/use-drawer-queries";
-import { drawerDetailKeys } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
 import type { WorkOrderDetail } from "@/lib/types";
 
@@ -19,6 +16,7 @@ interface UseStatusMutationsParams {
   branchId: string | undefined;
   wo: WorkOrderDetail | null;
   setWo: React.Dispatch<React.SetStateAction<WorkOrderDetail | null>>;
+  fetchWo: (silent?: boolean, orgIdOverride?: string) => Promise<void>;
   onRefresh: () => void;
 }
 
@@ -31,6 +29,7 @@ export function useStatusMutations({
   branchId,
   wo,
   setWo,
+  fetchWo,
   onRefresh,
 }: UseStatusMutationsParams) {
   // ── State ──
@@ -50,32 +49,11 @@ export function useStatusMutations({
       `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
     method: "PATCH",
     queryKey: workOrderKeys.all(orgId ?? ""),
-    optimisticQueryKey:
-      orgId && workOrderId
-        ? drawerDetailKeys.all(orgId, workOrderId)
-        : undefined,
-    onOptimisticUpdate: (
-      qc: QueryClient,
-      vars: { status: string; notes?: string },
-    ) => {
-      if (!orgId || !workOrderId) return undefined;
-      const key = drawerDetailKeys.all(orgId, workOrderId);
-      const prev = qc.getQueryData<DrawerDetailResponse>(key);
-      if (prev?.workOrder) {
-        qc.setQueryData<DrawerDetailResponse>(key, {
-          ...prev,
-          workOrder: {
-            ...prev.workOrder,
-            status: vars.status,
-          } as WorkOrderDetail,
-        });
-      }
-      return prev;
-    },
     invalidateKeys: branchId
       ? ([bayViewKeys.data(branchId)] as const)
       : undefined,
-    onSuccess: () => {
+    onSuccess: (_data, _vars) => {
+      fetchWo(true);
       onRefresh();
     },
   });
@@ -89,10 +67,14 @@ export function useStatusMutations({
     const prevWo = wo;
     const destructive = isDestructive(newStatus);
 
+    // Optimistic: update UI immediately
+    setWo((prev) =>
+      prev ? ({ ...prev, status: newStatus } as WorkOrderDetail) : prev,
+    );
+
     try {
       await statusMutation.mutateAsync({ status: newStatus });
     } catch {
-      // Rollback: onOptimisticUpdate handles cache, but we also restore local state
       if (prevWo) setWo(prevWo);
       return;
     }
@@ -103,15 +85,24 @@ export function useStatusMutations({
       toast(`Status changed to ${newStatus}`, {
         action: {
           label: "Undo",
-          onClick: async () => {
-            try {
-              await statusMutation.mutateAsync({
-                status: prevWo?.status ?? "",
+          onClick: () => {
+            if (prevWo) setWo(prevWo);
+            fetch(
+              `/api/organizations/${orgIdCurrent}/work-orders/${workOrderId}`,
+              {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: prevWo?.status }),
+              },
+            )
+              .then(() => {
+                fetchWo(true);
+                onRefresh();
+              })
+              .catch((err) => {
+                reportServerError("Status undo failed", err);
+                toast.error("Failed to undo status change");
               });
-            } catch (err) {
-              reportServerError("Status undo failed", err);
-              toast.error("Failed to undo status change");
-            }
           },
         },
         duration: 8000,
@@ -134,6 +125,9 @@ export function useStatusMutations({
     // Clear confirmation state immediately
     setConfirmStatus(null);
     setStatusNotes("");
+
+    // Optimistic: update UI immediately
+    setWo((prev) => (prev ? ({ ...prev, status } as WorkOrderDetail) : prev));
 
     try {
       const payload: Record<string, string> = { status };

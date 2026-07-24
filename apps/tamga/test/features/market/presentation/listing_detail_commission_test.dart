@@ -6,37 +6,33 @@ void main() {
   group('VAL-MARKET-002: Commission rate displayed on listing detail', () {
     // ── Source code verification ─────────────────────────────────
 
-    test(
-      'ListingDetailScreen has commission display logic in source',
-      () async {
-        final sourceFile = File(
-          'lib/src/features/market/presentation/listing_detail_screen.dart',
-        );
-        final source = await sourceFile.readAsString();
+    test('ListingDetailScreen has commission display logic in source', () async {
+      final sourceFile = File(
+        'lib/src/features/market/presentation/listing_detail_screen.dart',
+      );
+      final source = await sourceFile.readAsString();
 
-        // Verify the commission label text is present
-        expect(
-          source.contains('Комисс:'),
-          isTrue,
-          reason: 'ListingDetailScreen should contain Комисс: label',
-        );
+      // Verify the commission label text is present
+      expect(
+        source.contains('Комисс:'),
+        isTrue,
+        reason: 'ListingDetailScreen should contain Комисс: label',
+      );
 
-        // Verify the display is conditional on commissionRate being non-null
-        expect(
-          source.contains('listing.commissionRate != null'),
-          isTrue,
-          reason: 'Commission display should be conditional on commissionRate',
-        );
+      // Verify the display is conditional on commissionRate being non-null
+      expect(
+        source.contains('listing.commissionRate != null'),
+        isTrue,
+        reason: 'Commission display should be conditional on commissionRate',
+      );
 
-        // Verify the percentage is calculated from commissionRate
-        expect(
-          source.contains('(listing.commissionRate! * 100)'),
-          isTrue,
-          reason:
-              'Commission rate should be converted from decimal to percentage',
-        );
-      },
-    );
+      // Verify the percentage is calculated from commissionRate
+      expect(
+        source.contains('(listing.commissionRate! * 100)'),
+        isTrue,
+        reason: 'Commission rate should be converted from decimal to percentage',
+      );
+    });
 
     // ── Widget test ──────────────────────────────────────────────
 
@@ -49,7 +45,10 @@ void main() {
               final theme = Theme.of(context);
               return Column(
                 children: [
-                  Text('Item price', style: theme.textTheme.titleMedium),
+                  Text(
+                    'Item price',
+                    style: theme.textTheme.titleMedium,
+                  ),
                   if (commissionRate != null) ...[
                     const SizedBox(height: 8),
                     Text(

@@ -1,8 +1,9 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 import { Command as CommandPrimitive } from "cmdk";
 import { Check, Plus, Search } from "lucide-react";
-import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,6 @@ export interface CatalogItem {
   id: string;
   name: string;
   name_mn?: string | null;
-  barcode?: string | null;
   default_price: number | null;
   last_price?: number | null;
   last_make?: string | null;
@@ -159,79 +159,43 @@ function NameDisplay({ item, locale }: { item: CatalogItem; locale: string }) {
 const CATEGORY_MN: Record<string, string> = {
   "AC & Heating": "А/C ба халаалт",
   "AC System": "А/C систем",
-  Additional: "Нэмэлт",
-  Body: "Бие",
-  Brakes: "Тоормос",
-  Cleaning: "Цэвэрлэгээ",
-  Diagnostics: "Оношлогоо",
-  Electrical: "Цахилгаан",
-  Engine: "Хөдөлгүүр",
-  Exhaust: "Угаалтын систем",
-  Fluids: "Шингэнүүд",
+  "Additional": "Нэмэлт",
+  "Body": "Бие",
+  "Brakes": "Тоормос",
+  "Cleaning": "Цэвэрлэгээ",
+  "Diagnostics": "Оношлогоо",
+  "Electrical": "Цахилгаан",
+  "Engine": "Хөдөлгүүр",
+  "Exhaust": "Угаалтын систем",
+  "Fluids": "Шингэнүүд",
   "Fuel System": "Түлшний систем",
-  Inspection: "Шалгалт",
-  Maintenance: "Үйлчилгээ",
-  Miscellaneous: "Бусад",
+  "Inspection": "Шалгалт",
+  "Maintenance": "Үйлчилгээ",
+  "Miscellaneous": "Бусад",
   "Oil Change": "Тос солих",
-  Other: "Бусад",
-  Performance: "Гүйцэтгэл",
-  Steering: "Удирдлага",
-  Suspension: "Өлгүүр",
-  Tires: "Дугуй",
-  Transmission: "Хүрд хувиргагч",
-  Wheels: "Дугуй",
-  Window: "Цонх",
+  "Other": "Бусад",
+  "Performance": "Гүйцэтгэл",
+  "Steering": "Удирдлага",
+  "Suspension": "Өлгүүр",
+  "Tires": "Дугуй",
+  "Transmission": "Хүрд хувиргагч",
+  "Wheels": "Дугуй",
+  "Window": "Цонх",
 };
 // Simple hash → full color class tuple for category chips
 const CHIP_PALETTE: { sel: string; unsel: string }[] = [
-  {
-    sel: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    unsel: "bg-sky-500/8 text-sky-400/60 border-sky-500/15",
-  },
-  {
-    sel: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    unsel: "bg-emerald-500/8 text-emerald-400/60 border-emerald-500/15",
-  },
-  {
-    sel: "bg-violet-500/15 text-violet-400 border-violet-500/30",
-    unsel: "bg-violet-500/8 text-violet-400/60 border-violet-500/15",
-  },
-  {
-    sel: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    unsel: "bg-amber-500/8 text-amber-400/60 border-amber-500/15",
-  },
-  {
-    sel: "bg-rose-500/15 text-rose-400 border-rose-500/30",
-    unsel: "bg-rose-500/8 text-rose-400/60 border-rose-500/15",
-  },
-  {
-    sel: "bg-teal-500/15 text-teal-400 border-teal-500/30",
-    unsel: "bg-teal-500/8 text-teal-400/60 border-teal-500/15",
-  },
-  {
-    sel: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-    unsel: "bg-purple-500/8 text-purple-400/60 border-purple-500/15",
-  },
-  {
-    sel: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-    unsel: "bg-orange-500/8 text-orange-400/60 border-orange-500/15",
-  },
-  {
-    sel: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
-    unsel: "bg-cyan-500/8 text-cyan-400/60 border-cyan-500/15",
-  },
-  {
-    sel: "bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/30",
-    unsel: "bg-fuchsia-500/8 text-fuchsia-400/60 border-fuchsia-500/15",
-  },
-  {
-    sel: "bg-lime-500/15 text-lime-400 border-lime-500/30",
-    unsel: "bg-lime-500/8 text-lime-400/60 border-lime-500/15",
-  },
-  {
-    sel: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
-    unsel: "bg-indigo-500/8 text-indigo-400/60 border-indigo-500/15",
-  },
+  { sel: "bg-sky-500/15 text-sky-400 border-sky-500/30",    unsel: "bg-sky-500/8 text-sky-400/60 border-sky-500/15" },
+  { sel: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30", unsel: "bg-emerald-500/8 text-emerald-400/60 border-emerald-500/15" },
+  { sel: "bg-violet-500/15 text-violet-400 border-violet-500/30", unsel: "bg-violet-500/8 text-violet-400/60 border-violet-500/15" },
+  { sel: "bg-amber-500/15 text-amber-400 border-amber-500/30",  unsel: "bg-amber-500/8 text-amber-400/60 border-amber-500/15" },
+  { sel: "bg-rose-500/15 text-rose-400 border-rose-500/30",    unsel: "bg-rose-500/8 text-rose-400/60 border-rose-500/15" },
+  { sel: "bg-teal-500/15 text-teal-400 border-teal-500/30",    unsel: "bg-teal-500/8 text-teal-400/60 border-teal-500/15" },
+  { sel: "bg-purple-500/15 text-purple-400 border-purple-500/30", unsel: "bg-purple-500/8 text-purple-400/60 border-purple-500/15" },
+  { sel: "bg-orange-500/15 text-orange-400 border-orange-500/30", unsel: "bg-orange-500/8 text-orange-400/60 border-orange-500/15" },
+  { sel: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",    unsel: "bg-cyan-500/8 text-cyan-400/60 border-cyan-500/15" },
+  { sel: "bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/30", unsel: "bg-fuchsia-500/8 text-fuchsia-400/60 border-fuchsia-500/15" },
+  { sel: "bg-lime-500/15 text-lime-400 border-lime-500/30",    unsel: "bg-lime-500/8 text-lime-400/60 border-lime-500/15" },
+  { sel: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30", unsel: "bg-indigo-500/8 text-indigo-400/60 border-indigo-500/15" },
 ];
 
 function chipColor(label: string): { sel: string; unsel: string } {
@@ -549,15 +513,14 @@ export function CatalogCombobox<T extends CatalogItem>({
   filterAllLabel,
 }: CatalogComboboxProps<T>) {
   const q = search.toLowerCase();
-  const filtered =
-    search.length > 0
-      ? items.filter((s) => {
-          const matchName = s.name.toLowerCase().includes(q);
-          const matchNameMn = s.name_mn?.toLowerCase().includes(q) ?? false;
-          const matchBarcode = s.barcode?.toLowerCase().includes(q) ?? false;
-          return matchName || matchNameMn || matchBarcode;
-        })
-      : items;
+  const hasSearch = search.trim().length > 0;
+  const filtered = hasSearch
+    ? items.filter((s) => {
+        const matchName = s.name.toLowerCase().includes(q);
+        const matchNameMn = s.name_mn?.toLowerCase().includes(q) ?? false;
+        return matchName || matchNameMn;
+      })
+    : items;
   const isInline = resultsMode === "inline";
 
   // Inline mode — full-page searchable list with cmdk
@@ -608,7 +571,7 @@ export function CatalogCombobox<T extends CatalogItem>({
             noMatchMessage={noMatchMessage}
             addAsNewLabel={addAsNewLabel}
             locale={locale}
-            hasSearch={search.length > 0}
+            hasSearch={hasSearch}
           />
         </div>
       )}

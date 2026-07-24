@@ -1,7 +1,19 @@
-import { createRouteHandlers } from "@/lib/supabase/admin-route";
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-const sports = createRouteHandlers("sports", {
-  select: "id, key, name_mn, name_en",
-});
+export async function GET(_request: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-export const GET = sports.list();
+  const { data, error } = await supabase
+    .from("sports")
+    .select("id, key, name_mn, name_en");
+
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
+}

@@ -34,7 +34,8 @@ class ConversationScreen extends ConsumerStatefulWidget {
   final String? title;
 
   @override
-  ConsumerState<ConversationScreen> createState() => _ConversationScreenState();
+  ConsumerState<ConversationScreen> createState() =>
+      _ConversationScreenState();
 }
 
 class _ConversationScreenState extends ConsumerState<ConversationScreen> {
@@ -48,9 +49,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     super.initState();
     // Mark conversation as read when opening
     Future.microtask(() {
-      ref
-          .read(messageRepositoryProvider)
-          .markConversationRead(widget.conversationId);
+      ref.read(messageRepositoryProvider).markConversationRead(
+        widget.conversationId,
+      );
       ref.invalidate(unreadCountProvider(_localUserId));
       ref.invalidate(conversationsProvider(_localUserId));
     });
@@ -75,7 +76,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     if (monitor.current == ConnectionStatus.offline) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Энэ үйлдэл интернэт холболт шаарддаг')),
+          const SnackBar(
+            content: Text('Энэ үйлдэл интернэт холболт шаарддаг'),
+          ),
         );
       }
 
@@ -109,15 +112,13 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
     _messageController.clear();
 
-    final result = await ref
-        .read(messageRepositoryProvider)
-        .sendMessage(
-          conversationId: widget.conversationId,
-          senderId: _localUserId,
-          listingId: conversation.listingId,
-          reportId: conversation.reportId,
-          text: text,
-        );
+    final result = await ref.read(messageRepositoryProvider).sendMessage(
+      conversationId: widget.conversationId,
+      senderId: _localUserId,
+      listingId: conversation.listingId,
+      reportId: conversation.reportId,
+      text: text,
+    );
 
     result.when(
       onSuccess: (_) {
@@ -142,18 +143,14 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   @override
   Widget build(BuildContext context) {
     final conversation = widget.conversation;
-    final messagesAsync = ref.watch(
-      messageStreamProvider(widget.conversationId),
-    );
+    final messagesAsync = ref.watch(messageStreamProvider(widget.conversationId));
 
     // Determine title: use [widget.title] if provided, otherwise listing title
     final isReportConversation = conversation?.reportId != null;
 
     // Get listing info for market conversations
     final listing = !isReportConversation && conversation?.listingId != null
-        ? ref
-              .watch(marketListingsMapProvider)[conversation!.listingId!]
-              ?.listing
+        ? ref.watch(marketListingsMapProvider)[conversation!.listingId!]?.listing
         : null;
 
     final effectiveTitle = widget.title ?? listing?.title ?? 'Яриа';
@@ -219,7 +216,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                     child: EmptyState(
                       icon: Icons.chat_outlined,
                       title: 'Зурвас илгээх',
-                      description: 'Доорх талбараар зурвас бичээд илгээнэ үү.',
+                      description:
+                          'Доорх талбараар зурвас бичээд илгээнэ үү.',
                     ),
                   );
                 }
@@ -234,8 +232,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                     return _MessageBubble(
                       message: message,
                       isMe: isMe,
-                      showSender:
-                          index == 0 ||
+                      showSender: index == 0 ||
                           messages[index - 1].senderId != message.senderId,
                     );
                   },
@@ -251,9 +248,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
               error: (err, _) => Center(
                 child: TamgaErrorWidget(
                   message: 'Зурвасуудыг ачаалахад алдаа гарлаа',
-                  onRetry: () => ref.invalidate(
-                    messageStreamProvider(widget.conversationId),
-                  ),
+                  onRetry: () =>
+                      ref.invalidate(messageStreamProvider(widget.conversationId)),
                 ),
               ),
             ),
@@ -288,9 +284,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
               final otherId = widget.conversation?.sellerId == _localUserId
                   ? widget.conversation!.buyerId
                   : widget.conversation!.sellerId;
-              ref
-                  .read(messageRepositoryProvider)
-                  .blockUser(_localUserId, otherId);
+              ref.read(messageRepositoryProvider).blockUser(
+                _localUserId,
+                otherId,
+              );
               Navigator.pop(ctx);
               TamgaToast.showSuccess(context, 'Хэрэглэгч блоклогдлоо.');
             },
@@ -334,13 +331,11 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   ? widget.conversation!.buyerId
                   : widget.conversation!.sellerId;
 
-              ref
-                  .read(messageRepositoryProvider)
-                  .reportUser(
-                    reporterId: _localUserId,
-                    reportedUserId: otherId,
-                    reason: reason,
-                  );
+              ref.read(messageRepositoryProvider).reportUser(
+                reporterId: _localUserId,
+                reportedUserId: otherId,
+                reason: reason,
+              );
               Navigator.pop(ctx);
               TamgaToast.showSuccess(context, 'Мэдэгдэл илгээгдлээ.');
             },
@@ -370,7 +365,9 @@ class _ListingCardHeader extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest,
           border: Border(
-            bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+            bottom: BorderSide(
+              color: theme.colorScheme.outlineVariant,
+            ),
           ),
         ),
         child: Row(
@@ -417,7 +414,10 @@ class _ListingCardHeader extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: theme.colorScheme.outline),
+            Icon(
+              Icons.chevron_right,
+              color: theme.colorScheme.outline,
+            ),
           ],
         ),
       ),
@@ -453,9 +453,8 @@ class _MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: Column(
-        crossAxisAlignment: isMe
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           if (showSender && !isMe)
             Padding(
@@ -471,15 +470,16 @@ class _MessageBubble extends StatelessWidget {
               ),
             ),
           Row(
-            mainAxisAlignment: isMe
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
+            mainAxisAlignment:
+                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: [
-              if (!isMe) const SizedBox(width: AppSpacing.xl),
+              if (!isMe)
+                const SizedBox(width: AppSpacing.xl),
               Flexible(
                 child: Container(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.75,
+                    maxWidth:
+                        MediaQuery.of(context).size.width * 0.75,
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
@@ -527,9 +527,8 @@ class _MessageBubble extends StatelessWidget {
                             _formatTime(message.timestamp),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: isMe
-                                  ? theme.colorScheme.onPrimary.withValues(
-                                      alpha: 0.7,
-                                    )
+                                  ? theme.colorScheme.onPrimary
+                                      .withValues(alpha: 0.7)
                                   : theme.colorScheme.onSurfaceVariant,
                               fontSize: 10,
                             ),
@@ -537,11 +536,12 @@ class _MessageBubble extends StatelessWidget {
                           if (isMe) ...[
                             const SizedBox(width: AppSpacing.xs),
                             Icon(
-                              message.read ? Icons.done_all : Icons.done,
+                              message.read
+                                  ? Icons.done_all
+                                  : Icons.done,
                               size: 12,
-                              color: theme.colorScheme.onPrimary.withValues(
-                                alpha: 0.7,
-                              ),
+                              color: theme.colorScheme.onPrimary
+                                  .withValues(alpha: 0.7),
                             ),
                           ],
                         ],
@@ -550,7 +550,8 @@ class _MessageBubble extends StatelessWidget {
                   ),
                 ),
               ),
-              if (isMe) const SizedBox(width: AppSpacing.xl),
+              if (isMe)
+                const SizedBox(width: AppSpacing.xl),
             ],
           ),
         ],
@@ -571,7 +572,10 @@ class _MessageBubble extends StatelessWidget {
 // ── Message Composer ──────────────────────────────────────────────
 
 class _MessageComposer extends StatelessWidget {
-  const _MessageComposer({required this.controller, required this.onSend});
+  const _MessageComposer({
+    required this.controller,
+    required this.onSend,
+  });
 
   final TextEditingController controller;
   final VoidCallback onSend;

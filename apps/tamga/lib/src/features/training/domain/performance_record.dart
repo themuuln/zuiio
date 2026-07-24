@@ -95,9 +95,7 @@ class PerformanceRecord {
       horseId: json['horseId'] as String,
       metric: MetricType.values.byName(json['metric'] as String),
       value: (json['value'] as num).toDouble(),
-      date: json['date'] != null
-          ? DateTime.parse(json['date'] as String)
-          : null,
+      date: json['date'] != null ? DateTime.parse(json['date'] as String) : null,
       unit: json['unit'] as String?,
       notes: json['notes'] as String? ?? '',
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -130,8 +128,8 @@ class PerformanceRecord {
       date: json['date'] != null
           ? DateTime.parse(json['date'] as String)
           : (json['created_at'] != null
-                ? DateTime.parse(json['created_at'] as String)
-                : null),
+              ? DateTime.parse(json['created_at'] as String)
+              : null),
       unit: json['unit'] as String?,
       notes: json['notes'] as String? ?? '',
       createdAt:
@@ -174,12 +172,10 @@ class PerformanceRecord {
           notes == other.notes;
 
   @override
-  int get hashCode =>
-      Object.hash(id, horseId, metric, value, date, unit, notes);
+  int get hashCode => Object.hash(id, horseId, metric, value, date, unit, notes);
 
   @override
-  String toString() =>
-      'PerformanceRecord(id: $id, metric: ${metric.name}, value: $value)';
+  String toString() => 'PerformanceRecord(id: $id, metric: ${metric.name}, value: $value)';
 }
 
 /// Sentinel for nullable copyWith parameters.

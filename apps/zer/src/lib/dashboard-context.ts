@@ -24,16 +24,13 @@ export const getDashboardContext = cache(async () => {
     redirect("/login");
   }
 
-  // User email from JWT claims (set by Supabase Auth)
-  const userEmail = (claims?.email as string) ?? null;
-
   // Fetch profile with org details in one join
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select(
       `full_name, organization_id, branch_id,
        organizations!inner(
-         name, brand_config, company_type, onboarding_completed, enabled_features,
+         name, brand_config, onboarding_completed, enabled_features,
          has_suppliers, has_inventory, has_customer_credit, has_multi_branch,
          has_variants, has_brands, has_categories, has_email_reports, has_audit_log
        )`,
@@ -57,7 +54,6 @@ export const getDashboardContext = cache(async () => {
   const org = profile.organizations as unknown as {
     name: string;
     brand_config: unknown;
-    company_type: string;
     onboarding_completed: boolean;
     enabled_features: string[];
     has_suppliers: boolean;
@@ -85,6 +81,5 @@ export const getDashboardContext = cache(async () => {
     branchId,
     isBranchScoped: branchId !== null,
     userId,
-    userEmail,
   };
 });

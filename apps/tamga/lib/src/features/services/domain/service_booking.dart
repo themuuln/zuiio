@@ -101,7 +101,8 @@ class ServiceBooking {
       locationSum: locationSum == _sentinel
           ? this.locationSum
           : locationSum as String?,
-      address: address == _sentinel ? this.address : address as String?,
+      address:
+          address == _sentinel ? this.address : address as String?,
       bookingDate: bookingDate ?? this.bookingDate,
       status: status ?? this.status,
       totalAmount: totalAmount == _sentinel
@@ -170,7 +171,9 @@ class ServiceBooking {
         row['provider_type'] as String,
       ),
       serviceType: row['service_type'] as String,
-      horseIds: (row['horse_ids'] as List<dynamic>?)?.cast<String>() ?? [],
+      horseIds: (row['horse_ids'] as List<dynamic>?)
+              ?.cast<String>() ??
+          [],
       locationAimag: row['location_aimag'] as String?,
       locationSum: row['location_sum'] as String?,
       address: row['address'] as String?,

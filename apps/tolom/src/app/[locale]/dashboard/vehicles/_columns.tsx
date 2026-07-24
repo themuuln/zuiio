@@ -21,10 +21,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
       id: "plate_number",
       accessorKey: "plate_number",
       header: ({ column }) => {
-        const t = useTranslations("vehicles") as (
-          key: string,
-          values?: Record<string, string | number>,
-        ) => string;
+        const t = useTranslations("vehicles");
         return <DataTableColumnHeader column={column} title={t("plate")} />;
       },
       cell: ({ row }) => (
@@ -49,10 +46,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
       id: "vin",
       accessorKey: "vin",
       header: ({ column }) => {
-        const t = useTranslations("vehicles") as (
-          key: string,
-          values?: Record<string, string | number>,
-        ) => string;
+        const t = useTranslations("vehicles");
         return <DataTableColumnHeader column={column} title={t("vin")} />;
       },
       cell: ({ row }) =>
@@ -71,10 +65,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
       id: "owner_name",
       accessorKey: "owner_name",
       header: ({ column }) => {
-        const t = useTranslations("vehicles") as (
-          key: string,
-          values?: Record<string, string | number>,
-        ) => string;
+        const t = useTranslations("vehicles");
         return <DataTableColumnHeader column={column} title={t("owner")} />;
       },
       cell: ({ row }) =>
@@ -107,7 +98,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
               }
               nativeButton
               variant="ghost"
-              size="icon"
+              size="icon-sm"
             >
               <Pencil className="size-4" />
             </Button>
@@ -124,7 +115,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
               }
               nativeButton
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               className="text-destructive/70 hover:text-destructive"
             >
               <Trash2 className="size-4" />

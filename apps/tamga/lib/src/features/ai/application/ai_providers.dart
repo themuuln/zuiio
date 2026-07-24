@@ -19,26 +19,17 @@ final aiRepositoryProvider = Provider<AiRepository>((ref) {
 /// Үржүүлгийн шинжилгээний үр дүнг авах FutureProvider.
 ///
 /// [sireId] ба [damId] параметрээр тодорхой хос морины шинжилгээг дуудах.
-/// Edge Function нь 24 цагийн кэштэй; ижил хос дахин дуудвал кэшээс буцна.
 final breedingAdviceProvider =
     FutureProvider.family<BreedingAdvice, BreedingQuery>((ref, query) async {
-      final repository = ref.watch(aiRepositoryProvider);
-      final result = await repository.getBreedingAdvice(query);
+  final repository = ref.watch(aiRepositoryProvider);
+  final result = await repository.getBreedingAdvice(query);
 
-      if (result.isSuccess) {
-        return result.value;
-      }
+  if (result.isSuccess) {
+    return result.value;
+  }
 
-      throw result.error;
-    });
-
-// ── AI Loading State ─────────────────────────────────────────────────
-
-/// Шинжилгээ явагдаж байгаа эсэхийг хянах provider.
-///
-/// `breedingAdviceProvider` нь FutureProvider тул `autoDispose`-той.
-/// Энэ provider нь UI-д тусдаа loading төлөв харуулахад хэрэглэгдэнэ.
-final aiLoadingProvider = StateProvider<bool>((ref) => false);
+  throw result.error;
+});
 
 // ── Rate Limit Configuration ─────────────────────────────────────────
 
@@ -64,7 +55,11 @@ final breedingQueryCountProvider = StateProvider<int>((ref) => 0);
 
 /// Хэрэглэгчийн үлдэгдэл AI шинжилгээний квотын мэдээлэл.
 class BreedingQuotaInfo {
-  const BreedingQuotaInfo({required this.tier, this.limit, required this.used});
+  const BreedingQuotaInfo({
+    required this.tier,
+    this.limit,
+    required this.used,
+  });
 
   /// Хэрэглэгчийн түвшин.
   final SubscriptionTier tier;

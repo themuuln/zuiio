@@ -64,10 +64,11 @@ final initialRouteProvider = Provider<String>((ref) => '/lineage');
 
 /// A listenable that triggers GoRouter redirect re-evaluation.
 ///
-/// Global ValueNotifier (not Riverpod) — mutated directly in auth
-/// listener callbacks to avoid `_dirty` assertion during ProviderScope
-/// mount (Riverpod issue #4781).
-final routerRefreshNotifier = ValueNotifier<int>(0);
+/// Incremented when auth state changes so the redirect guard
+/// re-evaluates without recreating the entire GoRouter instance.
+final routerRefreshProvider = Provider<ValueNotifier<int>>((ref) {
+  return ValueNotifier<int>(0);
+});
 
 /// Public routes that don't require authentication.
 const _publicRoutes = <String>{
@@ -101,6 +102,7 @@ String? authGuardRedirect(AuthState? authState, String location) {
     if (location == '/login' || location == '/register') return '/lineage';
     return null;
   }
+
   return null;
 }
 
@@ -112,9 +114,11 @@ String? authGuardRedirect(AuthState? authState, String location) {
 /// the warm-up frame.
 final appRouterProvider = Provider<GoRouter>((ref) {
   final initialRoute = ref.watch(initialRouteProvider);
+  final refreshNotifier = ref.watch(routerRefreshProvider);
+
   return GoRouter(
     initialLocation: initialRoute,
-    refreshListenable: routerRefreshNotifier,
+    refreshListenable: refreshNotifier,
 
     // ── Redirect guard ─────────────────────────────────────────
     // Хэрэглэгчийн нэвтрэх төлөвөөр route-уудыг хамгаална.
@@ -174,7 +178,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: ':raceId',
             builder: (ctx, state) {
-              return RaceDetailScreen(raceId: state.pathParameters['raceId']!);
+              return RaceDetailScreen(
+                raceId: state.pathParameters['raceId']!,
+              );
             },
           ),
         ],
@@ -409,7 +415,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'verification',
-                    builder: (ctx, state) => const SellerVerificationScreen(),
+                    builder: (ctx, state) =>
+                        const SellerVerificationScreen(),
                   ),
                   GoRoute(
                     path: 'saved-searches',
@@ -417,7 +424,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'partner-dashboard',
-                    builder: (ctx, state) => const PartnerDashboardScreen(),
+                    builder: (ctx, state) =>
+                        const PartnerDashboardScreen(),
                   ),
                   GoRoute(
                     path: 'analytics',

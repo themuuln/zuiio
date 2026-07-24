@@ -88,16 +88,13 @@ function restoreSnapshots(
 
 // ─── Component ────────────────────────────────────────────────
 
-export function ChangeStatusDrawer({
+export function ChangeStatusSheet({
   open,
   onOpenChange,
   workOrderId,
   currentStatus,
 }: ChangeStatusSheetProps) {
-  const t = useTranslations("workOrders") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("workOrders");
   const queryClient = useQueryClient();
   const { data: orgData } = useCurrentOrg();
   const orgId = orgData?.orgId;

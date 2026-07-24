@@ -9,7 +9,9 @@ import '../../../helpers/test_helpers.dart';
 
 // ── Helper to create a ProviderScope wrapper ────────────────────────
 
-Widget createRaceFormScreen({Race? initialRace}) {
+Widget createRaceFormScreen({
+  Race? initialRace,
+}) {
   return ProviderScope(
     child: MaterialApp(
       theme: AppTheme.light(),
@@ -99,7 +101,10 @@ void main() {
       );
 
       // Verify text was entered
-      expect(find.text('Төв аймгийн наадам'), findsOneWidget);
+      expect(
+        find.text('Төв аймгийн наадам'),
+        findsOneWidget,
+      );
     });
 
     // ════════════════════════════════════════════════════════════
@@ -117,7 +122,9 @@ void main() {
         prizeDistribution: '1: 1 сая',
       );
 
-      await tester.pumpWidget(createRaceFormScreen(initialRace: existingRace));
+      await tester.pumpWidget(
+        createRaceFormScreen(initialRace: existingRace),
+      );
       await tester.pumpAndSettle();
 
       // Verify title shows edit

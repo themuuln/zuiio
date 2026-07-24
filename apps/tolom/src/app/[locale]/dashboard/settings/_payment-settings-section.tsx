@@ -49,10 +49,7 @@ function buildBankDraft(
 }
 
 export function PaymentSettingsSection({ orgId }: PaymentSettingsSectionProps) {
-  const t = useTranslations("settings") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("settings");
   const locale = useLocale();
   const { settings, isLoading } = useOrgSettings(orgId);
   const updateSettings = useUpdateOrgSettings(orgId);

@@ -3,30 +3,18 @@
 import {
   Barcode,
   CheckCircle,
-  ClockCounterClockwise,
-  Fire,
-  List as ListIcon,
   MagnifyingGlass,
   Package,
-  Plus,
-  SquaresFour,
   XCircle,
 } from "@phosphor-icons/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import {
-  useAggregatedLookup,
-  useDebounce,
-  useLocalStorage,
-  useLookup,
-} from "@zuiio/hooks";
-import { DynamicProductCreateDrawer } from "@/lib/dynamic-drawers";
+import { useAggregatedLookup, useDebounce, useLookup } from "@zuiio/hooks";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { fetchProductsPage } from "@/app/(dashboard)/shop/actions";
-import {
-  getProductFrequency,
-  useCart,
-} from "@/app/(dashboard)/shop/cart-context";
+import { useCart } from "@/app/(dashboard)/shop/cart-context";
+import { CartFloatingButton } from "@/components/shop/cart-floating-button";
 import { CartPanel } from "@/components/shop/cart-panel";
 import type { CategoryChip } from "@/components/shop/category-chips";
 import { CategoryChips } from "@/components/shop/category-chips";
@@ -43,7 +31,6 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOrgSettings } from "@/lib/org-settings-context";
 import { useProductSearch } from "@/lib/query/hooks/use-product-search";
 import { cn } from "@/lib/utils";
 
@@ -51,8 +38,6 @@ const CameraScanner = dynamic(
   () => import("./camera-scanner").then((m) => m.CameraScanner),
   { ssr: false },
 );
-
-const ProductCreateDrawer = DynamicProductCreateDrawer;
 
 /**
  * Product grid — isolated from CatalogClient so cart mutations
@@ -62,11 +47,9 @@ const ProductCreateDrawer = DynamicProductCreateDrawer;
 const ProductGrid = memo(function ProductGrid({
   products,
   selectionMode,
-  viewMode = "grid",
 }: {
   products: ProductCardProduct[];
   selectionMode: "grid" | "barcode" | "hybrid";
-  viewMode?: "grid" | "list";
 }) {
   const { items } = useCart();
   const [mounted, setMounted] = useState(false);
@@ -78,14 +61,7 @@ const ProductGrid = memo(function ProductGrid({
   );
 
   return (
-    <div
-      className={cn(
-        "gap-3",
-        viewMode === "list"
-          ? "flex flex-col"
-          : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5",
-      )}
-    >
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
       {products.map((product) => (
         <div
           key={product.id}
@@ -93,13 +69,7 @@ const ProductGrid = memo(function ProductGrid({
         >
           <ProductCard
             product={product}
-            variant={
-              viewMode === "list"
-                ? "card"
-                : selectionMode === "grid"
-                  ? "tile"
-                  : "card"
-            }
+            variant={selectionMode === "grid" ? "tile" : "card"}
             cartQuantity={cartQuantityMap.get(product.id) ?? 0}
           />
         </div>
@@ -130,16 +100,12 @@ type CatalogClientProps = {
   selectionMode?: "grid" | "barcode" | "hybrid";
   /** Whether more pages exist beyond the initial server-fetched page. */
   initialHasMore?: boolean;
-  /** Organization ID for inline product creation drawer. */
-  organizationId?: string;
 };
-
 export function CatalogClient({
   products: initialProducts,
   categories,
   selectionMode = "barcode",
   initialHasMore = false,
-  organizationId,
 }: CatalogClientProps) {
   const { addItem } = useCart();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -152,23 +118,7 @@ export function CatalogClient({
     type: "idle",
   });
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [recentSearches, setRecentSearches] = useLocalStorage<string[]>(
-    "zer:shop:recent-searches",
-    [],
-  );
-
-  const recordSearch = (term: string) => {
-    const q = term.trim();
-    if (q.length < 2) return;
-    setRecentSearches((prev) => {
-      const next = [q, ...prev.filter((p) => p !== q)].slice(0, 8);
-      return next;
-    });
-  };
   const debouncedQuery = useDebounce(searchQuery, 300);
-  const { trackStock } = useOrgSettings();
 
   // Auto-focus on mount
   useEffect(() => {
@@ -221,9 +171,10 @@ export function CatalogClient({
     if (!trimmed) return false;
 
     const product = barcodeMap.get(trimmed.toLowerCase()) ?? undefined;
+
     if (product) {
       const stock = Number(product.current_stock ?? 0);
-      if (trackStock && stock <= 0) {
+      if (stock <= 0) {
         setBarcodeStatus({
           type: "error",
           message: `"${product.name}" дууссан байна.`,
@@ -237,7 +188,7 @@ export function CatalogClient({
         name: product.name,
         unitPrice: Number(product.sale_price ?? 0),
         unit: product.unit ?? "ш",
-        maxStock: trackStock ? stock : Number.POSITIVE_INFINITY,
+        maxStock: stock,
       });
 
       setBarcodeStatus({ type: "found", productName: product.name });
@@ -256,7 +207,7 @@ export function CatalogClient({
     if (!product) return { found: false } as const;
 
     const stock = Number(product.current_stock ?? 0);
-    if (trackStock && stock <= 0) {
+    if (stock <= 0) {
       return {
         found: false,
         error: `"${product.name}" дууссан байна.`,
@@ -268,7 +219,7 @@ export function CatalogClient({
       name: product.name,
       unitPrice: Number(product.sale_price ?? 0),
       unit: product.unit ?? "ш",
-      maxStock: trackStock ? stock : Number.POSITIVE_INFINITY,
+      maxStock: stock,
     });
 
     setBarcodeStatus({ type: "found", productName: product.name });
@@ -299,21 +250,23 @@ export function CatalogClient({
         (product) => product.category_id === selectedCategoryId,
       );
     }
+    const query = searchQuery.toLowerCase().trim();
+    if (query) {
+      result = result.filter(
+        (product) =>
+          product.name.toLowerCase().includes(query) ||
+          product.sku?.toLowerCase().includes(query) ||
+          product.barcode?.toLowerCase().includes(query),
+      );
+    }
     return result;
-  }, [serverResults, debouncedQuery, allProducts, selectedCategoryId]);
-
-  // Frequent items: derived client-side from add frequency (persisted in localStorage).
-  // Shown only in the neutral browsing state (no search, no category filter).
-  const frequentProducts = useMemo(() => {
-    if (debouncedQuery || selectedCategoryId) return [];
-    const freq = getProductFrequency();
-    const ranked = Object.entries(freq)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6)
-      .map(([id]) => allProducts.find((p) => p.id === id))
-      .filter((p): p is ProductCardProduct => Boolean(p));
-    return ranked;
-  }, [debouncedQuery, selectedCategoryId, allProducts]);
+  }, [
+    allProducts,
+    searchQuery,
+    debouncedQuery,
+    serverResults,
+    selectedCategoryId,
+  ]);
 
   const isEmpty = allProducts.length === 0;
   const hasNoResults = !isEmpty && filteredProducts.length === 0;
@@ -322,41 +275,6 @@ export function CatalogClient({
 
   return (
     <div className="lg:flex lg:items-start lg:gap-5">
-      {/* Desktop category sidebar */}
-      <aside className="hidden w-56 shrink-0 lg:block">
-        <div className="sticky top-[120px] flex flex-col gap-1">
-          <p className="px-2 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Ангилал
-          </p>
-          <button
-            type="button"
-            onClick={() => setSelectedCategoryId(null)}
-            className={cn(
-              "rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-              selectedCategoryId === null
-                ? "bg-primary/10 font-medium text-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            Бүгд
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setSelectedCategoryId(cat.id)}
-              className={cn(
-                "truncate rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-                selectedCategoryId === cat.id
-                  ? "bg-primary/10 font-medium text-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-      </aside>
       {/* Left pane: search + categories + product grid */}
       <div className="flex min-w-0 flex-1 flex-col gap-4 pb-20 lg:pb-6">
         {/* Unified search + barcode input */}
@@ -380,11 +298,9 @@ export function CatalogClient({
                   }
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (selectionMode !== "grid" && e.key === "Enter") {
                     e.preventDefault();
-                    if (selectionMode === "grid") {
-                      if (searchQuery.trim()) recordSearch(searchQuery);
-                    } else if (searchQuery.trim()) {
+                    if (searchQuery.trim()) {
                       handleBarcodeMatch(searchQuery);
                     }
                   }
@@ -411,10 +327,10 @@ export function CatalogClient({
                   "focus-visible:ring-2 focus-visible:ring-primary/20",
                   showStatus &&
                     barcodeStatus.type === "found" &&
-                    "border-primary bg-primary/5",
+                    "border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-950/30",
                   showStatus &&
                     barcodeStatus.type === "not-found" &&
-                    "border-border bg-muted",
+                    "border-amber-500 bg-amber-50 dark:border-amber-400 dark:bg-amber-950/30",
                   showStatus &&
                     barcodeStatus.type === "error" &&
                     "border-destructive bg-destructive/10",
@@ -438,28 +354,6 @@ export function CatalogClient({
               </Button>
             )}
           </div>
-          {/* Recent searches */}
-          {searchQuery === "" && recentSearches.length > 0 && (
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              <ClockCounterClockwise
-                className="size-3.5 shrink-0 text-muted-foreground"
-                weight="bold"
-              />
-              {recentSearches.map((term) => (
-                <button
-                  key={term}
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery(term);
-                    recordSearch(term);
-                  }}
-                  className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  {term}
-                </button>
-              ))}
-            </div>
-          )}
 
           {/* Status feedback */}
           {showStatus && (
@@ -469,8 +363,11 @@ export function CatalogClient({
             >
               {barcodeStatus.type === "found" && (
                 <>
-                  <CheckCircle className="size-4 text-primary" weight="fill" />
-                  <span className="text-primary">
+                  <CheckCircle
+                    className="size-4 text-emerald-600 dark:text-emerald-400"
+                    weight="fill"
+                  />
+                  <span className="text-emerald-700 dark:text-emerald-300">
                     <strong>{barcodeStatus.productName}</strong> сагсанд
                     нэмэгдлээ.
                   </span>
@@ -479,10 +376,10 @@ export function CatalogClient({
               {barcodeStatus.type === "not-found" && (
                 <>
                   <XCircle
-                    className="size-4 text-muted-foreground"
+                    className="size-4 text-amber-600 dark:text-amber-400"
                     weight="fill"
                   />
-                  <span className="text-muted-foreground">
+                  <span className="text-amber-700 dark:text-amber-300">
                     &ldquo;{barcodeStatus.barcode}&rdquo; баркодтой бүтээгдэхүүн
                     олдсонгүй.
                   </span>
@@ -508,80 +405,24 @@ export function CatalogClient({
           />
         )}
 
-        {/* Category chips — mobile only (desktop uses sidebar) */}
-        <div className="lg:hidden">
-          <CategoryChips
-            categories={categories}
-            selectedId={selectedCategoryId}
-            onSelect={setSelectedCategoryId}
-          />
-        </div>
+        {/* Category chips */}
+        <CategoryChips
+          categories={categories}
+          selectedId={selectedCategoryId}
+          onSelect={setSelectedCategoryId}
+        />
+        {/* Product count */}
         {!isEmpty && !hasNoResults && (
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              {filteredProducts.length === allProducts.length
-                ? `${allProducts.length} бүтээгдэхүүн`
-                : `${filteredProducts.length} / ${allProducts.length} бүтээгдэхүүн`}
-            </p>
-            <fieldset
-              aria-label="Харагдах байдал"
-              className="flex items-center gap-0.5 rounded-md border border-border bg-muted/40 p-0.5"
-            >
-              <button
-                type="button"
-                aria-label="Тор харагдац"
-                aria-pressed={viewMode === "grid"}
-                onClick={() => setViewMode("grid")}
-                className={cn(
-                  "flex size-7 items-center justify-center rounded transition-colors",
-                  viewMode === "grid"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <SquaresFour className="size-4" weight="bold" />
-              </button>
-              <button
-                type="button"
-                aria-label="Жагсаалт харагдац"
-                aria-pressed={viewMode === "list"}
-                onClick={() => setViewMode("list")}
-                className={cn(
-                  "flex size-7 items-center justify-center rounded transition-colors",
-                  viewMode === "list"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <ListIcon className="size-4" weight="bold" />
-              </button>
-            </fieldset>
-          </div>
-        )}
-
-        {/* Frequent items rail — personalized, persisted from add frequency */}
-        {frequentProducts.length > 0 && (
-          <section
-            aria-label="Түгээмэл бараанууд"
-            className="flex flex-col gap-2"
-          >
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Fire className="size-4" weight="bold" />
-              <span>Түгээмэл</span>
-            </div>
-            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {frequentProducts.map((product) => (
-                <div key={product.id} className="w-[200px] shrink-0">
-                  <ProductCard product={product} variant="tile" />
-                </div>
-              ))}
-            </div>
-          </section>
+          <p className="text-xs text-muted-foreground">
+            {filteredProducts.length === allProducts.length
+              ? `${allProducts.length} бүтээгдэхүүн`
+              : `${filteredProducts.length} / ${allProducts.length} бүтээгдэхүүн`}
+          </p>
         )}
 
         {/* Content area */}
         {isEmpty ? (
-          <EmptyCatalogState onCreateClick={() => setCreateDrawerOpen(true)} />
+          <EmptyCatalogState />
         ) : hasNoResults ? (
           <EmptySearchResults query={searchQuery} />
         ) : (
@@ -589,7 +430,6 @@ export function CatalogClient({
             <ProductGrid
               products={filteredProducts}
               selectionMode={selectionMode}
-              viewMode={viewMode}
             />
             {/* Infinite scroll sentinel */}
             {hasNextPage && !serverResults && (
@@ -626,14 +466,10 @@ export function CatalogClient({
         <CartPanel />
       </aside>
 
-      {/* Inline product create drawer */}
-      <ProductCreateDrawer
-        companyType=""
-        organizationId={organizationId}
-        open={createDrawerOpen}
-        onOpenChange={setCreateDrawerOpen}
-        hideTrigger
-      />
+      {/* Floating cart button (mobile only — panel replaces it on desktop) */}
+      <div className="lg:hidden">
+        <CartFloatingButton />
+      </div>
     </div>
   );
 }
@@ -672,7 +508,7 @@ export function CatalogSkeleton() {
   );
 }
 
-function EmptyCatalogState({ onCreateClick }: { onCreateClick: () => void }) {
+function EmptyCatalogState() {
   return (
     <Empty className="min-h-[300px] rounded-xl border border-dashed border-border bg-card/50">
       <EmptyHeader>
@@ -682,13 +518,12 @@ function EmptyCatalogState({ onCreateClick }: { onCreateClick: () => void }) {
         <EmptyTitle>Бүтээгдэхүүн байхгүй байна</EmptyTitle>
         <EmptyDescription>
           Танай байгууллагад бүртгэлтэй бүтээгдэхүүн одоогоор байхгүй байна.
-          Доорх товч дээр дарж шинэ бүтээгдэхүүн нэмнэ үү.
+          Шинэ бүтээгдэхүүн нэмэхийн тулд Бүтээгдэхүүн хэсэгт очно уу.
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button type="button" onClick={onCreateClick}>
-          <Plus className="size-4" />
-          Шинэ бүтээгдэхүүн
+        <Button asChild>
+          <Link href="/products/new">Бүтээгдэхүүн нэмэх</Link>
         </Button>
       </EmptyContent>
     </Empty>

@@ -103,7 +103,10 @@ class _EventMapPreviewState extends State<EventMapPreview> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Байршил', style: theme.textTheme.titleMedium),
+        Text(
+          'Байршил',
+          style: theme.textTheme.titleMedium,
+        ),
         const SizedBox(height: AppSpacing.sm),
         Container(
           height: widget.height,

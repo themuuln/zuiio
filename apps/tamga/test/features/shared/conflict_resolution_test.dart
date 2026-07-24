@@ -26,30 +26,18 @@ import 'package:tamga/src/features/payments/data/payment_repository.dart';
 // ── Mocks ───────────────────────────────────────────────────────────────
 
 class MockHorsesRepository extends Mock implements HorsesRepository {}
-
 class MockHealthRepository extends Mock implements HealthRepository {}
-
 class MockEventRepository extends Mock implements EventRepository {}
-
 class MockMarketRepository extends Mock implements MarketRepository {}
-
 class MockBreedingRepository extends Mock implements BreedingRepository {}
-
 class MockProfileSettingsRepository extends Mock
     implements ProfileSettingsRepository {}
-
 class MockMapRepository extends Mock implements MapRepository {}
-
 class MockIsarSyncStorage extends Mock implements IsarSyncStorage {}
-
 class MockConnectionMonitor extends Mock implements ConnectionMonitor {}
-
 class MockCoOwnershipRepository extends Mock implements CoOwnershipRepository {}
-
 class MockDocumentRepository extends Mock implements DocumentRepository {}
-
 class MockCertificateRepository extends Mock implements CertificateRepository {}
-
 class MockPaymentRepository extends Mock implements PaymentRepository {}
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -174,10 +162,7 @@ void main() {
       );
       expect(conflict.localUpdatedAt, isNotNull);
       expect(conflict.remoteUpdatedAt, isNotNull);
-      expect(
-        conflict.localUpdatedAt!.isBefore(conflict.remoteUpdatedAt!),
-        isTrue,
-      );
+      expect(conflict.localUpdatedAt!.isBefore(conflict.remoteUpdatedAt!), isTrue);
     });
   });
 
@@ -188,7 +173,9 @@ void main() {
 
     setUp(() {
       final syncStorage = MockIsarSyncStorage();
-      when(() => syncStorage.loadQueue()).thenAnswer((_) async => SyncQueue());
+      when(() => syncStorage.loadQueue()).thenAnswer(
+        (_) async => SyncQueue(),
+      );
       when(() => syncStorage.saveQueue(any())).thenAnswer((_) async {});
       coordinator = createTestCoordinator(syncStorage: syncStorage);
     });
@@ -199,41 +186,35 @@ void main() {
     });
 
     test('addConflict increments conflictCount', () {
-      coordinator.testAddConflict(
-        SyncConflict(
-          entityType: 'horse',
-          entityId: 'h1',
-          localData: {'name': 'Local'},
-          remoteData: {'name': 'Remote'},
-        ),
-      );
+      coordinator.testAddConflict(SyncConflict(
+        entityType: 'horse',
+        entityId: 'h1',
+        localData: {'name': 'Local'},
+        remoteData: {'name': 'Remote'},
+      ));
 
       expect(coordinator.conflictCount, 1);
       expect(coordinator.pendingConflicts.length, 1);
     });
 
     test('addConflict updates SyncState.conflictCount', () {
-      coordinator.testAddConflict(
-        SyncConflict(
-          entityType: 'horse',
-          entityId: 'h1',
-          localData: {'name': 'Local'},
-          remoteData: {'name': 'Remote'},
-        ),
-      );
+      coordinator.testAddConflict(SyncConflict(
+        entityType: 'horse',
+        entityId: 'h1',
+        localData: {'name': 'Local'},
+        remoteData: {'name': 'Remote'},
+      ));
 
       expect(coordinator.state.conflictCount, 1);
     });
 
     test('resolveConflict decrements conflictCount', () {
-      coordinator.testAddConflict(
-        SyncConflict(
-          entityType: 'horse',
-          entityId: 'h1',
-          localData: {'name': 'Local'},
-          remoteData: {'name': 'Remote'},
-        ),
-      );
+      coordinator.testAddConflict(SyncConflict(
+        entityType: 'horse',
+        entityId: 'h1',
+        localData: {'name': 'Local'},
+        remoteData: {'name': 'Remote'},
+      ));
 
       expect(coordinator.conflictCount, 1);
 
@@ -242,14 +223,12 @@ void main() {
     });
 
     test('resolveWithData removes conflict and decrements count', () async {
-      coordinator.testAddConflict(
-        SyncConflict(
-          entityType: 'horse',
-          entityId: 'h1',
-          localData: {'name': 'Local'},
-          remoteData: {'name': 'Remote'},
-        ),
-      );
+      coordinator.testAddConflict(SyncConflict(
+        entityType: 'horse',
+        entityId: 'h1',
+        localData: {'name': 'Local'},
+        remoteData: {'name': 'Remote'},
+      ));
 
       expect(coordinator.conflictCount, 1);
 
@@ -263,22 +242,18 @@ void main() {
     });
 
     test('multiple conflicts count correctly', () {
-      coordinator.testAddConflict(
-        SyncConflict(
-          entityType: 'horse',
-          entityId: 'h1',
-          localData: {'name': 'A'},
-          remoteData: {'name': 'B'},
-        ),
-      );
-      coordinator.testAddConflict(
-        SyncConflict(
-          entityType: 'event',
-          entityId: 'e1',
-          localData: {'title': 'X'},
-          remoteData: {'title': 'Y'},
-        ),
-      );
+      coordinator.testAddConflict(SyncConflict(
+        entityType: 'horse',
+        entityId: 'h1',
+        localData: {'name': 'A'},
+        remoteData: {'name': 'B'},
+      ));
+      coordinator.testAddConflict(SyncConflict(
+        entityType: 'event',
+        entityId: 'e1',
+        localData: {'title': 'X'},
+        remoteData: {'title': 'Y'},
+      ));
 
       expect(coordinator.conflictCount, 2);
 
@@ -294,11 +269,15 @@ void main() {
 
   group('ConflictResolutionScreen', () {
     /// Creates a test environment with a coordinator that has specific conflicts.
-    Widget buildTestScreen({required CloudSyncCoordinator coordinator}) {
-      // Override the cloudSyncCoordinatorProvider (FutureProvider)
+    Widget buildTestScreen({
+      required CloudSyncCoordinator coordinator,
+    }) {
+      // Override the cloudSyncCoordinatorProvider (FutureProvider) 
       // with our synchronous value
       final overrides = [
-        cloudSyncCoordinatorProvider.overrideWith((ref) async => coordinator),
+        cloudSyncCoordinatorProvider.overrideWith(
+          (ref) async => coordinator,
+        ),
         syncStateProvider.overrideWith((ref) {
           final notifier = SyncStateNotifier(ref);
           notifier.state = coordinator.state;
@@ -319,7 +298,9 @@ void main() {
       WidgetTester tester,
     ) async {
       final syncStorage = MockIsarSyncStorage();
-      when(() => syncStorage.loadQueue()).thenAnswer((_) async => SyncQueue());
+      when(() => syncStorage.loadQueue()).thenAnswer(
+        (_) async => SyncQueue(),
+      );
       when(() => syncStorage.saveQueue(any())).thenAnswer((_) async {});
 
       final coordinator = createTestCoordinator(syncStorage: syncStorage);
@@ -334,18 +315,18 @@ void main() {
       WidgetTester tester,
     ) async {
       final syncStorage = MockIsarSyncStorage();
-      when(() => syncStorage.loadQueue()).thenAnswer((_) async => SyncQueue());
+      when(() => syncStorage.loadQueue()).thenAnswer(
+        (_) async => SyncQueue(),
+      );
       when(() => syncStorage.saveQueue(any())).thenAnswer((_) async {});
 
       final coordinator = createTestCoordinator(syncStorage: syncStorage);
-      coordinator.testAddConflict(
-        SyncConflict(
-          entityType: 'horse',
-          entityId: 'horse-1',
-          localData: {'name': 'Local Horse', 'age': 5},
-          remoteData: {'name': 'Remote Horse', 'age': 6},
-        ),
-      );
+      coordinator.testAddConflict(SyncConflict(
+        entityType: 'horse',
+        entityId: 'horse-1',
+        localData: {'name': 'Local Horse', 'age': 5},
+        remoteData: {'name': 'Remote Horse', 'age': 6},
+      ));
 
       await tester.pumpWidget(buildTestScreen(coordinator: coordinator));
       await tester.pumpAndSettle();
@@ -367,18 +348,18 @@ void main() {
       WidgetTester tester,
     ) async {
       final syncStorage = MockIsarSyncStorage();
-      when(() => syncStorage.loadQueue()).thenAnswer((_) async => SyncQueue());
+      when(() => syncStorage.loadQueue()).thenAnswer(
+        (_) async => SyncQueue(),
+      );
       when(() => syncStorage.saveQueue(any())).thenAnswer((_) async {});
 
       final coordinator = createTestCoordinator(syncStorage: syncStorage);
-      coordinator.testAddConflict(
-        SyncConflict(
-          entityType: 'horse',
-          entityId: 'horse-1',
-          localData: {'name': 'Local Horse'},
-          remoteData: {'name': 'Remote Horse'},
-        ),
-      );
+      coordinator.testAddConflict(SyncConflict(
+        entityType: 'horse',
+        entityId: 'horse-1',
+        localData: {'name': 'Local Horse'},
+        remoteData: {'name': 'Remote Horse'},
+      ));
 
       expect(coordinator.conflictCount, 1);
 
@@ -398,18 +379,18 @@ void main() {
       WidgetTester tester,
     ) async {
       final syncStorage = MockIsarSyncStorage();
-      when(() => syncStorage.loadQueue()).thenAnswer((_) async => SyncQueue());
+      when(() => syncStorage.loadQueue()).thenAnswer(
+        (_) async => SyncQueue(),
+      );
       when(() => syncStorage.saveQueue(any())).thenAnswer((_) async {});
 
       final coordinator = createTestCoordinator(syncStorage: syncStorage);
-      coordinator.testAddConflict(
-        SyncConflict(
-          entityType: 'horse',
-          entityId: 'horse-1',
-          localData: {'name': 'Local Horse'},
-          remoteData: {'name': 'Remote Horse'},
-        ),
-      );
+      coordinator.testAddConflict(SyncConflict(
+        entityType: 'horse',
+        entityId: 'horse-1',
+        localData: {'name': 'Local Horse'},
+        remoteData: {'name': 'Remote Horse'},
+      ));
 
       expect(coordinator.conflictCount, 1);
 

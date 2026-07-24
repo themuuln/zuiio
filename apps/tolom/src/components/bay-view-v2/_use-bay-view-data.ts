@@ -7,8 +7,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { bayViewKeys } from "@/lib/queries/keys";
 import { useProfile } from "@/lib/queries/use-profile";
-import { getBayViewDataFresh } from "@/lib/services/bay-view-service.actions";
-import type { ShiftReport } from "@/lib/services/bay-view-service.types";
+import type { ShiftReport } from "@/lib/services/bay-view-service";
+import {
+  getBayViewDataFresh,
+  getShiftReport,
+} from "@/lib/services/bay-view-service.actions";
 import type { ActiveDragState, ViewMode } from "./_types";
 import type { BayViewDialogsState } from "./_use-bay-view-dialogs";
 import type { BayViewPendingState } from "./_use-bay-view-pending";
@@ -64,7 +67,7 @@ export function useBayViewData(
     }
   }, [profileData?.id, profileData?.fullName]);
 
-  // ── React Query (shift report is returned inline with bay data) ──
+  // ── React Query ──────────────────────────────────────────────
   const bayQuery = useQuery({
     queryKey: bayViewKeys.data(branchFilter),
     queryFn: () => getBayViewDataFresh(branchFilter),
@@ -72,9 +75,16 @@ export function useBayViewData(
     refetchInterval: anySurfaceOpen ? false : 300_000,
   });
 
+  const shiftQuery = useQuery({
+    queryKey: bayViewKeys.shiftReport(branchFilter),
+    queryFn: () => getShiftReport(branchFilter),
+    staleTime: 60_000,
+    refetchInterval: anySurfaceOpen ? false : 300_000,
+  });
+
   const loading = bayQuery.isPending;
   const data = bayQuery.data ?? null;
-  const shiftReport = data?.shiftReport ?? null;
+  const shiftReport = shiftQuery.data ?? null;
   const error = bayQuery.error instanceof Error ? bayQuery.error.message : null;
   const errorName =
     bayQuery.error instanceof Error ? bayQuery.error.name : null;
@@ -92,8 +102,8 @@ export function useBayViewData(
   }, [woIdFromUrl, data, dialogs]);
 
   const fetchData = useCallback(async () => {
-    await bayQuery.refetch();
-  }, [bayQuery]);
+    await Promise.all([bayQuery.refetch(), shiftQuery.refetch()]);
+  }, [bayQuery, shiftQuery]);
 
   // ── Derived data ─────────────────────────────────────────────
   const readyWosCount = useMemo(

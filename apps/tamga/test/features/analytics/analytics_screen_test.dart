@@ -81,7 +81,10 @@ Widget createAnalyticsScreen({
         return financial ?? FinancialAnalytics.empty;
       }),
     ],
-    child: MaterialApp(theme: AppTheme.light(), home: const AnalyticsScreen()),
+    child: MaterialApp(
+      theme: AppTheme.light(),
+      home: const AnalyticsScreen(),
+    ),
   );
 }
 
@@ -254,7 +257,10 @@ void main() {
         ),
       ];
 
-      final health = HealthAnalytics(healthLogs: healthLogs, totalHorses: 1);
+      final health = HealthAnalytics(
+        healthLogs: healthLogs,
+        totalHorses: 1,
+      );
 
       await tester.pumpWidget(createAnalyticsScreen(health: health));
       await tester.pumpAndSettle();
@@ -264,9 +270,13 @@ void main() {
     });
 
     testWidgets('renders financial stats section', (tester) async {
-      final financial = FinancialAnalytics(listings: []);
+      final financial = FinancialAnalytics(
+        listings: [],
+      );
 
-      await tester.pumpWidget(createAnalyticsScreen(financial: financial));
+      await tester.pumpWidget(
+        createAnalyticsScreen(financial: financial),
+      );
       await tester.pumpAndSettle();
 
       // Financial stats section is in the widget tree

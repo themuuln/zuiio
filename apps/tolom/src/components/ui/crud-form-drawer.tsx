@@ -92,7 +92,7 @@ export function CrudFormDrawer<T extends Record<string, unknown>>({
   defaultValues,
   onSubmit,
   isPending = false,
-  size: _size = "md",
+  size = "md",
   cancelLabel = "Cancel",
   submitLabel = { create: "Create", edit: "Save" },
   formClassName,
@@ -133,7 +133,7 @@ export function CrudFormDrawer<T extends Record<string, unknown>>({
   );
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size={_size}>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} >
       <DetailDrawer.Header>
         <DetailDrawer.Title>
           {mode === "edit" ? title.edit : title.create}

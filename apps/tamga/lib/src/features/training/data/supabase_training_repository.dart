@@ -11,9 +11,7 @@ import 'training_repository.dart';
 ///
 /// Each method maps domain model ↔ Supabase row via the model's built-in
 /// `fromSupabaseJson` / `toSupabaseJson`.
-class SupabaseTrainingRepository
-    with SupabaseRepositoryMixin
-    implements TrainingRepository {
+class SupabaseTrainingRepository with SupabaseRepositoryMixin implements TrainingRepository {
   SupabaseTrainingRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 
@@ -90,8 +88,7 @@ class SupabaseTrainingRepository
 
   @override
   Future<Result<List<PerformanceRecord>>> fetchPerformanceByHorse(
-    String horseId,
-  ) async {
+      String horseId) async {
     try {
       final client = safeClient;
       if (client == null) return const Result.ok([]);
@@ -117,8 +114,7 @@ class SupabaseTrainingRepository
 
   @override
   Future<Result<PerformanceRecord>> savePerformance(
-    PerformanceRecord record,
-  ) async {
+      PerformanceRecord record) async {
     try {
       final client = safeClient;
       if (client == null) {
@@ -154,4 +150,5 @@ class SupabaseTrainingRepository
       return Result.fail(wrapError(e));
     }
   }
+
 }

@@ -12,8 +12,7 @@ part of 'health_log.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
 mixin _$HealthLog {
@@ -38,18 +37,17 @@ abstract class $HealthLogCopyWith<$Res> {
   factory $HealthLogCopyWith(HealthLog value, $Res Function(HealthLog) then) =
       _$HealthLogCopyWithImpl<$Res, HealthLog>;
   @useResult
-  $Res call({
-    String id,
-    String horseId,
-    LogType logType,
-    DateTime? date,
-    String notes,
-    String? medicament,
-    double? cost,
-    String? farrierName,
-    DateTime createdAt,
-    DateTime updatedAt,
-  });
+  $Res call(
+      {String id,
+      String horseId,
+      LogType logType,
+      DateTime? date,
+      String notes,
+      String? medicament,
+      double? cost,
+      String? farrierName,
+      DateTime createdAt,
+      DateTime updatedAt});
 }
 
 /// @nodoc
@@ -76,51 +74,48 @@ class _$HealthLogCopyWithImpl<$Res, $Val extends HealthLog>
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
-    return _then(
-      _value.copyWith(
-            id: null == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
-                      as String,
-            horseId: null == horseId
-                ? _value.horseId
-                : horseId // ignore: cast_nullable_to_non_nullable
-                      as String,
-            logType: null == logType
-                ? _value.logType
-                : logType // ignore: cast_nullable_to_non_nullable
-                      as LogType,
-            date: freezed == date
-                ? _value.date
-                : date // ignore: cast_nullable_to_non_nullable
-                      as DateTime?,
-            notes: null == notes
-                ? _value.notes
-                : notes // ignore: cast_nullable_to_non_nullable
-                      as String,
-            medicament: freezed == medicament
-                ? _value.medicament
-                : medicament // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            cost: freezed == cost
-                ? _value.cost
-                : cost // ignore: cast_nullable_to_non_nullable
-                      as double?,
-            farrierName: freezed == farrierName
-                ? _value.farrierName
-                : farrierName // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            createdAt: null == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-            updatedAt: null == updatedAt
-                ? _value.updatedAt
-                : updatedAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-          )
-          as $Val,
-    );
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      horseId: null == horseId
+          ? _value.horseId
+          : horseId // ignore: cast_nullable_to_non_nullable
+              as String,
+      logType: null == logType
+          ? _value.logType
+          : logType // ignore: cast_nullable_to_non_nullable
+              as LogType,
+      date: freezed == date
+          ? _value.date
+          : date // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      notes: null == notes
+          ? _value.notes
+          : notes // ignore: cast_nullable_to_non_nullable
+              as String,
+      medicament: freezed == medicament
+          ? _value.medicament
+          : medicament // ignore: cast_nullable_to_non_nullable
+              as String?,
+      cost: freezed == cost
+          ? _value.cost
+          : cost // ignore: cast_nullable_to_non_nullable
+              as double?,
+      farrierName: freezed == farrierName
+          ? _value.farrierName
+          : farrierName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      updatedAt: null == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ) as $Val);
   }
 }
 
@@ -128,23 +123,21 @@ class _$HealthLogCopyWithImpl<$Res, $Val extends HealthLog>
 abstract class _$$HealthLogImplCopyWith<$Res>
     implements $HealthLogCopyWith<$Res> {
   factory _$$HealthLogImplCopyWith(
-    _$HealthLogImpl value,
-    $Res Function(_$HealthLogImpl) then,
-  ) = __$$HealthLogImplCopyWithImpl<$Res>;
+          _$HealthLogImpl value, $Res Function(_$HealthLogImpl) then) =
+      __$$HealthLogImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({
-    String id,
-    String horseId,
-    LogType logType,
-    DateTime? date,
-    String notes,
-    String? medicament,
-    double? cost,
-    String? farrierName,
-    DateTime createdAt,
-    DateTime updatedAt,
-  });
+  $Res call(
+      {String id,
+      String horseId,
+      LogType logType,
+      DateTime? date,
+      String notes,
+      String? medicament,
+      double? cost,
+      String? farrierName,
+      DateTime createdAt,
+      DateTime updatedAt});
 }
 
 /// @nodoc
@@ -152,9 +145,8 @@ class __$$HealthLogImplCopyWithImpl<$Res>
     extends _$HealthLogCopyWithImpl<$Res, _$HealthLogImpl>
     implements _$$HealthLogImplCopyWith<$Res> {
   __$$HealthLogImplCopyWithImpl(
-    _$HealthLogImpl _value,
-    $Res Function(_$HealthLogImpl) _then,
-  ) : super(_value, _then);
+      _$HealthLogImpl _value, $Res Function(_$HealthLogImpl) _then)
+      : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -170,68 +162,66 @@ class __$$HealthLogImplCopyWithImpl<$Res>
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
-    return _then(
-      _$HealthLogImpl(
-        id: null == id
-            ? _value.id
-            : id // ignore: cast_nullable_to_non_nullable
-                  as String,
-        horseId: null == horseId
-            ? _value.horseId
-            : horseId // ignore: cast_nullable_to_non_nullable
-                  as String,
-        logType: null == logType
-            ? _value.logType
-            : logType // ignore: cast_nullable_to_non_nullable
-                  as LogType,
-        date: freezed == date
-            ? _value.date
-            : date // ignore: cast_nullable_to_non_nullable
-                  as DateTime?,
-        notes: null == notes
-            ? _value.notes
-            : notes // ignore: cast_nullable_to_non_nullable
-                  as String,
-        medicament: freezed == medicament
-            ? _value.medicament
-            : medicament // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        cost: freezed == cost
-            ? _value.cost
-            : cost // ignore: cast_nullable_to_non_nullable
-                  as double?,
-        farrierName: freezed == farrierName
-            ? _value.farrierName
-            : farrierName // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        createdAt: null == createdAt
-            ? _value.createdAt
-            : createdAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-        updatedAt: null == updatedAt
-            ? _value.updatedAt
-            : updatedAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-      ),
-    );
+    return _then(_$HealthLogImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      horseId: null == horseId
+          ? _value.horseId
+          : horseId // ignore: cast_nullable_to_non_nullable
+              as String,
+      logType: null == logType
+          ? _value.logType
+          : logType // ignore: cast_nullable_to_non_nullable
+              as LogType,
+      date: freezed == date
+          ? _value.date
+          : date // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      notes: null == notes
+          ? _value.notes
+          : notes // ignore: cast_nullable_to_non_nullable
+              as String,
+      medicament: freezed == medicament
+          ? _value.medicament
+          : medicament // ignore: cast_nullable_to_non_nullable
+              as String?,
+      cost: freezed == cost
+          ? _value.cost
+          : cost // ignore: cast_nullable_to_non_nullable
+              as double?,
+      farrierName: freezed == farrierName
+          ? _value.farrierName
+          : farrierName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      updatedAt: null == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ));
   }
 }
 
 /// @nodoc
 
 class _$HealthLogImpl extends _HealthLog {
-  const _$HealthLogImpl({
-    required this.id,
-    required this.horseId,
-    required this.logType,
-    this.date,
-    this.notes = '',
-    this.medicament,
-    this.cost,
-    this.farrierName,
-    required this.createdAt,
-    required this.updatedAt,
-  }) : super._();
+  const _$HealthLogImpl(
+      {required this.id,
+      required this.horseId,
+      required this.logType,
+      this.date,
+      this.notes = '',
+      this.medicament,
+      this.cost,
+      this.farrierName,
+      required this.createdAt,
+      required this.updatedAt})
+      : super._();
 
   @override
   final String id;
@@ -282,19 +272,8 @@ class _$HealthLogImpl extends _HealthLog {
   }
 
   @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    id,
-    horseId,
-    logType,
-    date,
-    notes,
-    medicament,
-    cost,
-    farrierName,
-    createdAt,
-    updatedAt,
-  );
+  int get hashCode => Object.hash(runtimeType, id, horseId, logType, date,
+      notes, medicament, cost, farrierName, createdAt, updatedAt);
 
   @JsonKey(ignore: true)
   @override
@@ -304,18 +283,17 @@ class _$HealthLogImpl extends _HealthLog {
 }
 
 abstract class _HealthLog extends HealthLog {
-  const factory _HealthLog({
-    required final String id,
-    required final String horseId,
-    required final LogType logType,
-    final DateTime? date,
-    final String notes,
-    final String? medicament,
-    final double? cost,
-    final String? farrierName,
-    required final DateTime createdAt,
-    required final DateTime updatedAt,
-  }) = _$HealthLogImpl;
+  const factory _HealthLog(
+      {required final String id,
+      required final String horseId,
+      required final LogType logType,
+      final DateTime? date,
+      final String notes,
+      final String? medicament,
+      final double? cost,
+      final String? farrierName,
+      required final DateTime createdAt,
+      required final DateTime updatedAt}) = _$HealthLogImpl;
   const _HealthLog._() : super._();
 
   @override

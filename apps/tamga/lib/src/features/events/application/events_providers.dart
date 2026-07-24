@@ -17,9 +17,7 @@ import '../data/local_event_registration_repository.dart';
 /// LocalNotificationService-ийн provider.
 ///
 /// Тестэнд override хийхэд хэрэглэнэ.
-final localNotificationServiceProvider = Provider<LocalNotificationService>((
-  ref,
-) {
+final localNotificationServiceProvider = Provider<LocalNotificationService>((ref) {
   return LocalNotificationService.instance;
 });
 
@@ -45,9 +43,9 @@ final eventsProvider = createListProvider<Event, EventRepository>(
 /// Тодорхой морины үйл явдлууд.
 final horseEventsProvider =
     createListFamilyProvider<Event, EventRepository, String>(
-      (ref) => ref.watch(eventRepositoryProvider.future),
-      (repo, horseId) => repo.fetchEventsByHorse(horseId),
-    );
+  (ref) => ref.watch(eventRepositoryProvider.future),
+  (repo, horseId) => repo.fetchEventsByHorse(horseId),
+);
 
 /// Онцлох үйл явдлууд (isFeatured = true).
 final featuredEventsProvider = createListProvider<Event, EventRepository>(
@@ -59,9 +57,10 @@ final featuredEventsProvider = createListProvider<Event, EventRepository>(
 ///
 /// Page size: 20. Дараагийн хуудсыг `loadMore()`-оор ачаална.
 final paginatedEventsProvider =
-    StateNotifierProvider<PaginationNotifier<Event>, PaginationState<Event>>((
-      ref,
-    ) {
+    StateNotifierProvider<
+      PaginationNotifier<Event>,
+      PaginationState<Event>
+    >((ref) {
       final notifier = PaginationNotifier<Event>(
         fetchPage: (page, pageSize) async {
           final repo = ref.read(eventRepositoryProvider).value;
@@ -83,27 +82,23 @@ final paginatedEventsProvider =
 /// Арга хэмжээний бүртгэлийн repository provider.
 final localEventRegistrationRepositoryProvider =
     Provider<EventRegistrationRepository>((ref) {
-      return LocalEventRegistrationRepository(
-        storage: IsarStorage.instance,
-        syncQueue: SyncQueue(),
-      );
-    });
+  return LocalEventRegistrationRepository(
+    storage: IsarStorage.instance,
+    syncQueue: SyncQueue(),
+  );
+});
 
 final eventRegistrationRepositoryProvider =
     FutureProvider<EventRegistrationRepository>((ref) async {
-      return ref.read(localEventRegistrationRepositoryProvider);
-    });
+  return ref.read(localEventRegistrationRepositoryProvider);
+});
 
 /// Тухайн арга хэмжээний бүртгэлүүд.
 final eventRegistrationsProvider =
-    createListFamilyProvider<
-      EventRegistration,
-      EventRegistrationRepository,
-      String
-    >(
-      (ref) => ref.watch(eventRegistrationRepositoryProvider.future),
-      (repo, eventId) => repo.fetchRegistrations(eventId),
-    );
+    createListFamilyProvider<EventRegistration, EventRegistrationRepository, String>(
+  (ref) => ref.watch(eventRegistrationRepositoryProvider.future),
+  (repo, eventId) => repo.fetchRegistrations(eventId),
+);
 
 /// Тухайн морины арга хэмжээний бүртгэлийн төлөв.
 ///
@@ -112,18 +107,16 @@ final eventRegistrationsProvider =
 /// - `true` — бүртгэлтэй
 /// - `false` — бүртгэлгүй
 final horseRegistrationStatusProvider =
-    FutureProvider.family<bool?, ({String eventId, String horseId})>((
-      ref,
-      params,
-    ) async {
-      final repository = await ref.watch(
-        eventRegistrationRepositoryProvider.future,
-      );
-      final result = await repository.fetchRegistrations(params.eventId);
-      final registrations = result.getOrThrow();
-      return registrations.any(
-        (r) =>
-            r.horseId == params.horseId &&
-            r.status != RegistrationStatus.cancelled,
-      );
-    });
+    FutureProvider.family<bool?, ({String eventId, String horseId})>(
+  (ref, params) async {
+    final repository =
+        await ref.watch(eventRegistrationRepositoryProvider.future);
+    final result = await repository.fetchRegistrations(params.eventId);
+    final registrations = result.getOrThrow();
+    return registrations.any(
+      (r) =>
+          r.horseId == params.horseId &&
+          r.status != RegistrationStatus.cancelled,
+    );
+  },
+);

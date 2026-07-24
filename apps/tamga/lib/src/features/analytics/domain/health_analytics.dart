@@ -38,10 +38,12 @@ class HealthTrendPoint {
 /// удахгүй хийх шаардлагатай зүйлс, эрүүл мэндийн
 /// хандлагыг тооцоолно.
 class HealthAnalytics {
-  HealthAnalytics({required this.healthLogs, required this.totalHorses})
-    : vaccinationRate = _computeVaccinationRate(healthLogs, totalHorses),
-      upcomingDueItems = _computeUpcomingDueItems(healthLogs),
-      healthTrends = _computeHealthTrends(healthLogs);
+  HealthAnalytics({
+    required this.healthLogs,
+    required this.totalHorses,
+  })  : vaccinationRate = _computeVaccinationRate(healthLogs, totalHorses),
+        upcomingDueItems = _computeUpcomingDueItems(healthLogs),
+        healthTrends = _computeHealthTrends(healthLogs);
 
   /// Эрүүл мэндийн бүртгэлүүд.
   final List<HealthLog> healthLogs;
@@ -59,11 +61,17 @@ class HealthAnalytics {
   final List<HealthTrendPoint> healthTrends;
 
   /// Хоосон аналитик.
-  static final empty = HealthAnalytics(healthLogs: [], totalHorses: 0);
+  static final empty = HealthAnalytics(
+    healthLogs: [],
+    totalHorses: 0,
+  );
 
   // ── Тооцоолол ─────────────────────────────────────────────────
 
-  static double _computeVaccinationRate(List<HealthLog> logs, int totalHorses) {
+  static double _computeVaccinationRate(
+    List<HealthLog> logs,
+    int totalHorses,
+  ) {
     if (totalHorses == 0) return 0.0;
 
     // Вакцин хийлгэсэн морины тоо
@@ -77,7 +85,9 @@ class HealthAnalytics {
     return vaccinatedHorseIds.length / totalHorses;
   }
 
-  static List<UpcomingDueItem> _computeUpcomingDueItems(List<HealthLog> logs) {
+  static List<UpcomingDueItem> _computeUpcomingDueItems(
+    List<HealthLog> logs,
+  ) {
     // Вакцины хугацаа: сүүлийн вакцин хийлгэснээс хойш 1 жил
     // Туулгалт: 6 сар
     // Эмчилгээ: тогтмол биш
@@ -119,16 +129,14 @@ class HealthAnalytics {
       );
       final daysUntilDue = dueDate.difference(now).inDays;
       if (daysUntilDue <= 30 && daysUntilDue >= 0) {
-        dueItems.add(
-          UpcomingDueItem(
-            horseId: log.horseId,
-            horseName: log.horseId, // Таних тэмдэг (нэрийг provider-ээр нэмнэ)
-            logType: log.logType,
-            lastDate: log.date!,
-            dueDate: dueDate,
-            daysUntilDue: daysUntilDue,
-          ),
-        );
+        dueItems.add(UpcomingDueItem(
+          horseId: log.horseId,
+          horseName: log.horseId, // Таних тэмдэг (нэрийг provider-ээр нэмнэ)
+          logType: log.logType,
+          lastDate: log.date!,
+          dueDate: dueDate,
+          daysUntilDue: daysUntilDue,
+        ));
       }
     }
 
@@ -143,16 +151,14 @@ class HealthAnalytics {
       );
       final daysUntilDue = dueDate.difference(now).inDays;
       if (daysUntilDue <= 30 && daysUntilDue >= 0) {
-        dueItems.add(
-          UpcomingDueItem(
-            horseId: log.horseId,
-            horseName: log.horseId,
-            logType: log.logType,
-            lastDate: log.date!,
-            dueDate: dueDate,
-            daysUntilDue: daysUntilDue,
-          ),
-        );
+        dueItems.add(UpcomingDueItem(
+          horseId: log.horseId,
+          horseName: log.horseId,
+          logType: log.logType,
+          lastDate: log.date!,
+          dueDate: dueDate,
+          daysUntilDue: daysUntilDue,
+        ));
       }
     }
 
@@ -180,13 +186,11 @@ class HealthAnalytics {
     final points = <HealthTrendPoint>[];
     for (final key in sortedKeys) {
       for (final entry in monthlyCounts[key]!.entries) {
-        points.add(
-          HealthTrendPoint(
-            date: DateTime(key.year, key.month),
-            count: entry.value,
-            logType: entry.key,
-          ),
-        );
+        points.add(HealthTrendPoint(
+          date: DateTime(key.year, key.month),
+          count: entry.value,
+          logType: entry.key,
+        ));
       }
     }
 

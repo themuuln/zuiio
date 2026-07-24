@@ -1,10 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import { apiError } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type {
+
   Branch,
   Customer,
   Database,
@@ -33,7 +33,6 @@ import type {
   WorkOrderService,
   WorkOrderStatusHistory,
 } from "@/lib/types";
-
 // Inline alias: payments table Row type (no core.ts export for it)
 type Payment = Database["public"]["Tables"]["payments"]["Row"];
 interface OrgExport {
@@ -98,7 +97,10 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
     .single();
 
   if (!org) {
-    return apiError("NOT_FOUND", "Organization not found", 404);
+    return NextResponse.json(
+      { error: { message: "Organization not found" } },
+      { status: 404 },
+    );
   }
 
   const tables: Record<string, string> = {

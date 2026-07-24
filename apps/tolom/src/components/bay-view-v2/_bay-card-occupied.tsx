@@ -23,10 +23,7 @@ interface BayCardOccupiedProps {
 }
 
 export function BayCardOccupied({ bay }: BayCardOccupiedProps) {
-  const t = useTranslations("bayView") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("bayView");
   const {
     isPending,
     isKanbanMode,

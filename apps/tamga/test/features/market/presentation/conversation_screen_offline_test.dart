@@ -20,9 +20,7 @@ import 'package:tamga/src/features/shared/data/isar_sync_storage.dart';
 // ── Mocks ───────────────────────────────────────────────────────────────
 
 class MockMessageRepository extends Mock implements MessageRepository {}
-
 class MockConnectionMonitor extends Mock implements ConnectionMonitor {}
-
 class MockIsarSyncStorage extends Mock implements IsarSyncStorage {}
 
 // ── Test data ───────────────────────────────────────────────────────────
@@ -39,24 +37,20 @@ final testConversation = MarketConversation(
 
 void _registerFallbackValues() {
   registerFallbackValue(SyncQueue());
-  registerFallbackValue(
-    SyncQueueItem(
-      entityType: 'market_message',
-      entityId: 'fallback',
-      action: SyncAction.create,
-      data: {},
-      timestamp: DateTime(2026),
-    ),
-  );
-  registerFallbackValue(
-    MarketMessage(
-      id: 'fallback',
-      conversationId: 'fallback',
-      senderId: 'fallback',
-      text: 'fallback',
-      timestamp: DateTime(2026),
-    ),
-  );
+  registerFallbackValue(SyncQueueItem(
+    entityType: 'market_message',
+    entityId: 'fallback',
+    action: SyncAction.create,
+    data: {},
+    timestamp: DateTime(2026),
+  ));
+  registerFallbackValue(MarketMessage(
+    id: 'fallback',
+    conversationId: 'fallback',
+    senderId: 'fallback',
+    text: 'fallback',
+    timestamp: DateTime(2026),
+  ));
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -109,24 +103,20 @@ void main() {
       messagesController = _createMessageController();
 
       // Default stubs for required repo methods
-      when(
-        () => mockRepo.markConversationRead(any()),
-      ).thenAnswer((_) async => const Result.ok(null));
-      when(
-        () => mockRepo.fetchMessages(any()),
-      ).thenAnswer((_) async => const Result.ok([]));
-      when(
-        () => mockRepo.messageStream(any()),
-      ).thenAnswer((_) => const Stream.empty());
-      when(
-        () => mockRepo.getUnreadCount(any()),
-      ).thenAnswer((_) async => const Result.ok(0));
-      when(
-        () => mockRepo.fetchConversations(any()),
-      ).thenAnswer((_) async => const Result.ok([]));
+      when(() => mockRepo.markConversationRead(any()))
+          .thenAnswer((_) async => const Result.ok(null));
+      when(() => mockRepo.fetchMessages(any()))
+          .thenAnswer((_) async => const Result.ok([]));
+      when(() => mockRepo.messageStream(any()))
+          .thenAnswer((_) => const Stream.empty());
+      when(() => mockRepo.getUnreadCount(any()))
+          .thenAnswer((_) async => const Result.ok(0));
+      when(() => mockRepo.fetchConversations(any()))
+          .thenAnswer((_) async => const Result.ok([]));
 
       // Default stubs for sync storage
-      when(() => mockSyncStorage.enqueue(any())).thenAnswer((_) async {});
+      when(() => mockSyncStorage.enqueue(any()))
+          .thenAnswer((_) async {});
     });
 
     tearDown(() {
@@ -138,13 +128,11 @@ void main() {
     ) async {
       when(() => mockMonitor.current).thenReturn(ConnectionStatus.offline);
 
-      await tester.pumpWidget(
-        buildConversationTestApp(
-          connectionMonitor: mockMonitor,
-          messageRepository: mockRepo,
-          syncStorage: mockSyncStorage,
-        ),
-      );
+      await tester.pumpWidget(buildConversationTestApp(
+        connectionMonitor: mockMonitor,
+        messageRepository: mockRepo,
+        syncStorage: mockSyncStorage,
+      ));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -158,18 +146,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Verify snackbar is shown
-      expect(find.text('Энэ үйлдэл интернэт холболт шаарддаг'), findsOneWidget);
+      expect(
+        find.text('Энэ үйлдэл интернэт холболт шаарддаг'),
+        findsOneWidget,
+      );
 
       // Verify sendMessage was NOT called
-      verifyNever(
-        () => mockRepo.sendMessage(
-          conversationId: any(named: 'conversationId'),
-          senderId: any(named: 'senderId'),
-          listingId: any(named: 'listingId'),
-          reportId: any(named: 'reportId'),
-          text: any(named: 'text'),
-        ),
-      );
+      verifyNever(() => mockRepo.sendMessage(
+        conversationId: any(named: 'conversationId'),
+        senderId: any(named: 'senderId'),
+        listingId: any(named: 'listingId'),
+        reportId: any(named: 'reportId'),
+        text: any(named: 'text'),
+      ));
 
       // Verify enqueue WAS called
       verify(() => mockSyncStorage.enqueue(any())).called(1);
@@ -180,33 +169,27 @@ void main() {
     ) async {
       when(() => mockMonitor.current).thenReturn(ConnectionStatus.online);
 
-      when(
-        () => mockRepo.sendMessage(
-          conversationId: any(named: 'conversationId'),
-          senderId: any(named: 'senderId'),
-          listingId: any(named: 'listingId'),
-          reportId: any(named: 'reportId'),
-          text: any(named: 'text'),
-        ),
-      ).thenAnswer(
-        (_) async => Result.ok(
-          MarketMessage(
-            id: 'msg-1',
-            conversationId: testConversation.id,
-            senderId: 'local-buyer',
-            text: 'Hello online world',
-            timestamp: DateTime.now(),
-          ),
-        ),
+      when(() => mockRepo.sendMessage(
+        conversationId: any(named: 'conversationId'),
+        senderId: any(named: 'senderId'),
+        listingId: any(named: 'listingId'),
+        reportId: any(named: 'reportId'),
+        text: any(named: 'text'),
+      )).thenAnswer(
+        (_) async => Result.ok(MarketMessage(
+          id: 'msg-1',
+          conversationId: testConversation.id,
+          senderId: 'local-buyer',
+          text: 'Hello online world',
+          timestamp: DateTime.now(),
+        )),
       );
 
-      await tester.pumpWidget(
-        buildConversationTestApp(
-          connectionMonitor: mockMonitor,
-          messageRepository: mockRepo,
-          syncStorage: mockSyncStorage,
-        ),
-      );
+      await tester.pumpWidget(buildConversationTestApp(
+        connectionMonitor: mockMonitor,
+        messageRepository: mockRepo,
+        syncStorage: mockSyncStorage,
+      ));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -220,18 +203,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Verify sendMessage WAS called
-      verify(
-        () => mockRepo.sendMessage(
-          conversationId: any(named: 'conversationId'),
-          senderId: any(named: 'senderId'),
-          listingId: any(named: 'listingId'),
-          reportId: any(named: 'reportId'),
-          text: any(named: 'text'),
-        ),
-      ).called(1);
+      verify(() => mockRepo.sendMessage(
+        conversationId: any(named: 'conversationId'),
+        senderId: any(named: 'senderId'),
+        listingId: any(named: 'listingId'),
+        reportId: any(named: 'reportId'),
+        text: any(named: 'text'),
+      )).called(1);
 
       // No offline snackbar
-      expect(find.text('Энэ үйлдэл интернэт холболт шаарддаг'), findsNothing);
+      expect(
+        find.text('Энэ үйлдэл интернэт холболт шаарддаг'),
+        findsNothing,
+      );
     });
   });
 }

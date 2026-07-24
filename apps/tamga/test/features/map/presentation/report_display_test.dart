@@ -29,11 +29,8 @@ void main() {
   group('LostHorseCard badge logic', () {
     test('report with coatColor has non-null coatColor', () {
       final report = _createReport(now: DateTime(2026, 6, 1));
-      expect(
-        report.coatColor,
-        isNull,
-        reason: 'Default report should have null coatColor',
-      );
+      expect(report.coatColor, isNull,
+          reason: 'Default report should have null coatColor');
 
       final withColor = report.copyWith(coatColor: 'Хээр');
       expect(withColor.coatColor, isNotNull);
@@ -42,11 +39,8 @@ void main() {
 
     test('report with aimag has non-null locationAimag', () {
       final report = _createReport(now: DateTime(2026, 6, 1));
-      expect(
-        report.locationAimag,
-        isNull,
-        reason: 'Default report should have null locationAimag',
-      );
+      expect(report.locationAimag, isNull,
+          reason: 'Default report should have null locationAimag');
 
       final withAimag = report.copyWith(locationAimag: 'Архангай');
       expect(withAimag.locationAimag, isNotNull);
@@ -55,11 +49,8 @@ void main() {
 
     test('report with ages has non-empty ages list', () {
       final report = _createReport(now: DateTime(2026, 6, 1));
-      expect(
-        report.ages,
-        isEmpty,
-        reason: 'Default report should have empty ages',
-      );
+      expect(report.ages, isEmpty,
+          reason: 'Default report should have empty ages');
 
       final withAges = report.copyWith(
         ages: [AnimalAge.daaga, AnimalAge.shudlen],
@@ -136,11 +127,8 @@ void main() {
 
     test('default report has no animal info data', () {
       final report = _createReport(now: DateTime(2026, 6, 1));
-      expect(
-        hasAnimalInfoData(report),
-        isFalse,
-        reason: 'Default report should not show animal info section',
-      );
+      expect(hasAnimalInfoData(report), isFalse,
+          reason: 'Default report should not show animal info section');
     });
 
     test('report with ages shows animal info section', () {
@@ -213,14 +201,13 @@ void main() {
       expect(report.lostCount, 3);
     });
 
-    test(
-      'report with only animalType and lostCount=1 has no additional data',
-      () {
-        final report = _createReport(now: DateTime(2026, 6, 1));
-        // Default animalType=horse, lostCount=1, no other fields
-        expect(hasAnimalInfoData(report), isFalse);
-      },
-    );
+    test('report with only animalType and lostCount=1 has no additional data', () {
+      final report = _createReport(
+        now: DateTime(2026, 6, 1),
+      );
+      // Default animalType=horse, lostCount=1, no other fields
+      expect(hasAnimalInfoData(report), isFalse);
+    });
   });
 
   // ── LostHorseDetailScreen location section logic ───────────────
@@ -236,11 +223,8 @@ void main() {
 
     test('no location data hides location section', () {
       final report = _createReport(now: DateTime(2026, 6, 1));
-      expect(
-        hasLocationData(report),
-        isFalse,
-        reason: 'No location data → section hidden',
-      );
+      expect(hasLocationData(report), isFalse,
+          reason: 'No location data → section hidden');
     });
 
     test('partial location data renders partial display', () {
@@ -259,7 +243,10 @@ void main() {
     test('partial location with aimag+sum renders correctly', () {
       final report = _createReport(
         now: DateTime(2026, 6, 1),
-      ).copyWith(locationAimag: 'Ховд', locationSum: 'Булган');
+      ).copyWith(
+        locationAimag: 'Ховд',
+        locationSum: 'Булган',
+      );
       expect(hasLocationData(report), isTrue);
       expect(report.locationAimag, 'Ховд');
       expect(report.locationSum, 'Булган');
@@ -268,7 +255,9 @@ void main() {
     });
 
     test('full location hierarchy renders', () {
-      final report = _createReport(now: DateTime(2026, 6, 1)).copyWith(
+      final report = _createReport(
+        now: DateTime(2026, 6, 1),
+      ).copyWith(
         locationAimag: 'Баянхонгор',
         locationSum: 'Баянхонгор',
         locationBag: '1-р баг',
@@ -306,20 +295,16 @@ void main() {
 
     test('gallery section hidden when no photos', () {
       // Default report has empty photoUrls
-      expect(
-        hasGallery(report),
-        isFalse,
-        reason: 'Gallery section should be hidden when no photos exist',
-      );
+      expect(hasGallery(report), isFalse,
+          reason: 'Gallery section should be hidden when no photos exist');
     });
 
     test('gallery section visible when photos present', () {
-      report = report.copyWith(photoUrls: ['https://example.com/photo1.jpg']);
-      expect(
-        hasGallery(report),
-        isTrue,
-        reason: 'Gallery section should be visible when photos exist',
+      report = report.copyWith(
+        photoUrls: ['https://example.com/photo1.jpg'],
       );
+      expect(hasGallery(report), isTrue,
+          reason: 'Gallery section should be visible when photos exist');
     });
 
     test('gallery renders multiple photos', () {
@@ -335,29 +320,24 @@ void main() {
     });
 
     test('gallery section hidden when photoUrls list cleared', () {
-      report = report.copyWith(photoUrls: ['https://example.com/photo1.jpg']);
+      report = report.copyWith(
+        photoUrls: ['https://example.com/photo1.jpg'],
+      );
       expect(hasGallery(report), isTrue);
 
       report = report.copyWith(photoUrls: []);
-      expect(
-        hasGallery(report),
-        isFalse,
-        reason: 'Clearing photoUrls should hide the gallery',
-      );
+      expect(hasGallery(report), isFalse,
+          reason: 'Clearing photoUrls should hide the gallery');
     });
 
     test('gallery uses CachedNetworkImage URLs', () {
-      const photoUrl =
-          'https://supabase.co/storage/v1/object/public/'
+      const photoUrl = 'https://supabase.co/storage/v1/object/public/'
           'horse-photos/lost-horse-photos/report123/uuid.jpg';
 
       report = report.copyWith(photoUrls: [photoUrl]);
 
-      expect(
-        report.photoUrls.first,
-        startsWith('http'),
-        reason: 'CachedNetworkImage requires http/https URLs',
-      );
+      expect(report.photoUrls.first, startsWith('http'),
+          reason: 'CachedNetworkImage requires http/https URLs');
       expect(report.photoUrls.first, contains('lost-horse-photos/'));
     });
 
@@ -415,38 +395,29 @@ void main() {
       );
     });
 
-    test(
-      'tamga section hidden when tamgaImageUrl and earMarkDescription are null',
-      () {
-        expect(report.tamgaImageUrl, isNull);
-        expect(report.earMarkDescription, isNull);
-        expect(
-          hasTamgaSection(report),
-          isFalse,
-          reason: 'Tamga section should be hidden when both fields are null',
-        );
-      },
-    );
+    test('tamga section hidden when tamgaImageUrl and earMarkDescription are null', () {
+      expect(report.tamgaImageUrl, isNull);
+      expect(report.earMarkDescription, isNull);
+      expect(hasTamgaSection(report), isFalse,
+          reason: 'Tamga section should be hidden when both fields are null');
+    });
 
     test('tamga section visible when tamgaImageUrl is present', () {
-      report = report.copyWith(tamgaImageUrl: 'https://example.com/tamga.jpg');
-      expect(report.tamgaImageUrl, isNotNull);
-      expect(
-        hasTamgaSection(report),
-        isTrue,
-        reason: 'Tamga section should be visible when tamgaImageUrl is present',
+      report = report.copyWith(
+        tamgaImageUrl: 'https://example.com/tamga.jpg',
       );
+      expect(report.tamgaImageUrl, isNotNull);
+      expect(hasTamgaSection(report), isTrue,
+          reason: 'Tamga section should be visible when tamgaImageUrl is present');
     });
 
     test('tamga section visible when earMarkDescription is present', () {
-      report = report.copyWith(earMarkDescription: 'Зүүн чихэнд тэмдэг');
-      expect(report.earMarkDescription, isNotNull);
-      expect(
-        hasTamgaSection(report),
-        isTrue,
-        reason:
-            'Tamga section should be visible when earMarkDescription is present',
+      report = report.copyWith(
+        earMarkDescription: 'Зүүн чихэнд тэмдэг',
       );
+      expect(report.earMarkDescription, isNotNull);
+      expect(hasTamgaSection(report), isTrue,
+          reason: 'Tamga section should be visible when earMarkDescription is present');
     });
 
     test('tamga section visible when both fields are present', () {
@@ -516,13 +487,9 @@ void main() {
         isR2Available: false,
         videoUrls: [],
       );
-      expect(
-        showVideo,
-        isTrue,
-        reason:
-            'Video section should show "Тун удахгүй" when R2 is not '
-            'configured, even without videos',
-      );
+      expect(showVideo, isTrue,
+          reason: 'Video section should show "Тун удахгүй" when R2 is not '
+              'configured, even without videos');
     });
 
     test('video section hidden when R2 available and no videos', () {
@@ -530,13 +497,9 @@ void main() {
         isR2Available: true,
         videoUrls: [],
       );
-      expect(
-        showVideo,
-        isFalse,
-        reason:
-            'Video section should be hidden when R2 is configured '
-            'but no videos exist',
-      );
+      expect(showVideo, isFalse,
+          reason: 'Video section should be hidden when R2 is configured '
+              'but no videos exist');
     });
 
     test('video section visible when R2 available and videos present', () {
@@ -544,11 +507,8 @@ void main() {
         isR2Available: true,
         videoUrls: ['https://videos.example.com/v1.mp4'],
       );
-      expect(
-        showVideo,
-        isTrue,
-        reason: 'Video section should be visible with actual videos',
-      );
+      expect(showVideo, isTrue,
+          reason: 'Video section should be visible with actual videos');
     });
 
     test('video section visible when R2 available and multiple videos', () {
@@ -559,11 +519,8 @@ void main() {
           'https://videos.example.com/v2.mp4',
         ],
       );
-      expect(
-        showVideo,
-        isTrue,
-        reason: 'Video section should render multiple videos',
-      );
+      expect(showVideo, isTrue,
+          reason: 'Video section should render multiple videos');
     });
   });
 
@@ -585,21 +542,15 @@ void main() {
 
     test('contact phone hidden when null', () {
       expect(report.contactPhone, isNull);
-      expect(
-        hasContactPhone(report),
-        isFalse,
-        reason: 'Contact phone section should be hidden when null',
-      );
+      expect(hasContactPhone(report), isFalse,
+          reason: 'Contact phone section should be hidden when null');
     });
 
     test('contact phone visible when present', () {
       report = report.copyWith(contactPhone: '+97699112233');
       expect(report.contactPhone, isNotNull);
-      expect(
-        hasContactPhone(report),
-        isTrue,
-        reason: 'Contact phone section should be visible when present',
-      );
+      expect(hasContactPhone(report), isTrue,
+          reason: 'Contact phone section should be visible when present');
     });
 
     test('contact phone displays correct value', () {
@@ -614,12 +565,8 @@ void main() {
       expect(hasContactPhone(report), isTrue);
 
       report = _createReport(now: now);
-      expect(
-        hasContactPhone(report),
-        isFalse,
-        reason:
-            'Contact phone should be hidden again after creating a new report without it',
-      );
+      expect(hasContactPhone(report), isFalse,
+          reason: 'Contact phone should be hidden again after creating a new report without it');
     });
   });
 }

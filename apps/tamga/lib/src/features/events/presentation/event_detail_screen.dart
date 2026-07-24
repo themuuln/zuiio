@@ -80,9 +80,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   /// Морь сонгох цонхыг нээж, бүртгүүлэх.
   Future<void> _showRegisterHorseSheet() async {
     final horses = await ref.read(horsesProvider.future);
-    final registrations = await ref.read(
-      eventRegistrationsProvider(widget.event.id).future,
-    );
+    final registrations =
+        await ref.read(eventRegistrationsProvider(widget.event.id).future);
 
     if (!mounted) return;
 
@@ -102,7 +101,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
     if (availableHorses.isEmpty) {
       if (mounted) {
-        TamgaToast.show(context, 'Бүртгүүлэх боломжтой морь байхгүй байна');
+        TamgaToast.show(
+          context,
+          'Бүртгүүлэх боломжтой морь байхгүй байна',
+        );
       }
       return;
     }
@@ -171,7 +173,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     if (context.mounted) {
       result.when(
         onSuccess: (_) {
-          TamgaToast.show(context, 'Сануулга амжилттай товлогдлоо');
+          TamgaToast.show(
+            context,
+            'Сануулга амжилттай товлогдлоо',
+          );
         },
         onFailure: (error) {
           TamgaToast.showError(
@@ -228,16 +233,19 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     final horsesAsync = ref.watch(horsesProvider);
 
     // Морины ID → нэр хөрвүүлэгч
-    final horseNames =
-        horsesAsync.valueOrNull?.fold<Map<String, String>>(
-          {},
-          (map, h) => map..[h.id] = h.name,
-        ) ??
+    final horseNames = horsesAsync.valueOrNull
+            ?.fold<Map<String, String>>(
+              {},
+              (map, h) => map..[h.id] = h.name,
+            ) ??
         <String, String>{};
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.event.title, style: TamgaTypography.title3()),
+        title: Text(
+          widget.event.title,
+          style: TamgaTypography.title3(),
+        ),
         actions: [
           IconButton(
             tooltip: 'Засах',
@@ -292,7 +300,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           ],
 
           // ── Notes ──
-          if (widget.event.notes != null && widget.event.notes!.isNotEmpty) ...[
+          if (widget.event.notes != null &&
+              widget.event.notes!.isNotEmpty) ...[
             _NotesSection(event: widget.event),
             const SizedBox(height: AppSpacing.lg),
           ],
@@ -332,8 +341,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
             ),
             error: (err, _) => TamgaErrorWidget(
               message: 'Бүртгэлүүдийг ачаалахад алдаа гарлаа',
-              onRetry: () =>
-                  ref.invalidate(eventRegistrationsProvider(widget.event.id)),
+              onRetry: () => ref.invalidate(
+                eventRegistrationsProvider(widget.event.id),
+              ),
             ),
           ),
 
@@ -676,9 +686,10 @@ class _OrganizerSection extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      ctx,
-                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                    color: Theme.of(ctx)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -716,7 +727,10 @@ class _OrganizerSection extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (context.mounted) {
-        TamgaToast.showError(context, 'Утас нээхэд алдаа гарлаа');
+        TamgaToast.showError(
+          context,
+          'Утас нээхэд алдаа гарлаа',
+        );
       }
     }
   }
@@ -727,7 +741,10 @@ class _OrganizerSection extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (context.mounted) {
-        TamgaToast.showError(context, 'Имэйл нээхэд алдаа гарлаа');
+        TamgaToast.showError(
+          context,
+          'Имэйл нээхэд алдаа гарлаа',
+        );
       }
     }
   }
@@ -748,7 +765,8 @@ class _OrganizerSection extends StatelessWidget {
               style: TamgaTypography.title3(weight: FontWeight.w600),
             ),
             const SizedBox(height: AppSpacing.md),
-            if (event.organizerName != null && event.organizerName!.isNotEmpty)
+            if (event.organizerName != null &&
+                event.organizerName!.isNotEmpty)
               _InfoRow(
                 icon: Icons.person_outlined,
                 text: event.organizerName!,
@@ -811,7 +829,9 @@ class _InfoRow extends StatelessWidget {
         children: [
           Icon(icon, size: 18, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: AppSpacing.sm),
-          Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
+          Expanded(
+            child: Text(text, style: theme.textTheme.bodyMedium),
+          ),
         ],
       ),
     );
@@ -996,7 +1016,9 @@ class _RegisteredHorseTile extends StatelessWidget {
               label: const Text('Цуцлах'),
               style: TextButton.styleFrom(
                 foregroundColor: colorScheme.error,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                ),
               ),
             ),
         ],
@@ -1044,7 +1066,9 @@ class _HorseSelectionSheet extends StatelessWidget {
             if (horses.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                child: Center(child: Text('Бүртгүүлэх боломжтой морь байхгүй')),
+                child: Center(
+                  child: Text('Бүртгүүлэх боломжтой морь байхгүй'),
+                ),
               )
             else
               Flexible(
@@ -1055,7 +1079,8 @@ class _HorseSelectionSheet extends StatelessWidget {
                     final horse = horses[i];
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: theme.colorScheme.primaryContainer,
+                        backgroundColor:
+                            theme.colorScheme.primaryContainer,
                         child: Text(
                           horse.name.isNotEmpty
                               ? horse.name[0].toUpperCase()

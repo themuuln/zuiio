@@ -16,8 +16,6 @@ import '../../payments/presentation/widgets/paywall_widget.dart';
 import '../../shared/presentation/offline_save_feedback.dart';
 import '../application/horses_providers.dart';
 import '../domain/horse_record.dart';
-import '../../../shared/domain/horse_breed_lineage.dart';
-import '../../../shared/domain/horse_coat_color.dart';
 
 /// Full-screen form for adding a new horse with validation.
 class AddHorseScreen extends ConsumerStatefulWidget {
@@ -37,21 +35,12 @@ class _AddHorseScreenState extends ConsumerState<AddHorseScreen> {
   final _offspringCountController = TextEditingController(text: '0');
   final _rootIdController = TextEditingController();
   final _notesController = TextEditingController();
-  final _regionController = TextEditingController();
-  final _sumController = TextEditingController();
-  final _tamgaBrandClanController = TextEditingController();
-  final _tamgaBrandGenerationController = TextEditingController();
-
-  MongolianBreedLineage? _selectedBreedLineage;
-  MongolianCoatColor? _selectedCoatColor;
 
   HorseGender _gender = HorseGender.gelding;
   bool _isOwnedByHousehold = true;
   bool _isSaving = false;
   File? _photoFile;
   final _imagePicker = ImagePicker();
-  String? _selectedSireId;
-  String? _selectedDamId;
 
   @override
   void dispose() {
@@ -63,10 +52,6 @@ class _AddHorseScreenState extends ConsumerState<AddHorseScreen> {
     _offspringCountController.dispose();
     _rootIdController.dispose();
     _notesController.dispose();
-    _regionController.dispose();
-    _sumController.dispose();
-    _tamgaBrandClanController.dispose();
-    _tamgaBrandGenerationController.dispose();
     super.dispose();
   }
 
@@ -306,115 +291,6 @@ class _AddHorseScreenState extends ConsumerState<AddHorseScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
-            // ── Breed lineage dropdown ──
-            DropdownButtonFormField<MongolianBreedLineage>(
-              initialValue: _selectedBreedLineage,
-              decoration: const InputDecoration(labelText: 'Үүлдэр угсаа'),
-              items: [
-                for (final lineage in MongolianBreedLineage.values)
-                  DropdownMenuItem(
-                    value: lineage,
-                    child: Text(lineage.displayName),
-                  ),
-              ],
-              onChanged: (val) {
-                setState(() => _selectedBreedLineage = val);
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // ── Coat color dropdown ──
-            DropdownButtonFormField<MongolianCoatColor>(
-              initialValue: _selectedCoatColor,
-              decoration: const InputDecoration(labelText: 'Зүсний өнгө'),
-              items: [
-                for (final color in MongolianCoatColor.values)
-                  DropdownMenuItem(
-                    value: color,
-                    child: Text(color.displayName),
-                  ),
-              ],
-              onChanged: (val) {
-                setState(() => _selectedCoatColor = val);
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // ── Region ──
-            TextFormField(
-              controller: _regionController,
-              decoration: const InputDecoration(
-                labelText: 'Аймаг',
-                hintText: 'Жишээ: Хэнтий',
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // ── Sum ──
-            TextFormField(
-              controller: _sumController,
-              decoration: const InputDecoration(
-                labelText: 'Сум',
-                hintText: 'Жишээ: Галшар',
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // ── Tamga brand clan ──
-            TextFormField(
-              controller: _tamgaBrandClanController,
-              decoration: const InputDecoration(labelText: 'Тамга бүлгийн нэр'),
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // ── Tamga brand generation ──
-            TextFormField(
-              controller: _tamgaBrandGenerationController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Тамга үеийн дугаар',
-                hintText: 'Жишээ: 1',
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // ── Sire (father) ──
-            DropdownButtonFormField<String>(
-              initialValue: _selectedSireId,
-              decoration: const InputDecoration(labelText: 'Эцэг морь (Sire)'),
-              items: [
-                const DropdownMenuItem<String>(
-                  value: null,
-                  child: Text('— None —'),
-                ),
-                for (final h
-                    in (ref.read(horsesProvider).valueOrNull ?? []).where(
-                      (h) => h.gender == HorseGender.stallion,
-                    ))
-                  DropdownMenuItem<String>(value: h.id, child: Text(h.name)),
-              ],
-              onChanged: (val) => setState(() => _selectedSireId = val),
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // ── Dam (mother) ──
-            DropdownButtonFormField<String>(
-              initialValue: _selectedDamId,
-              decoration: const InputDecoration(labelText: 'Эх морь (Dam)'),
-              items: [
-                const DropdownMenuItem<String>(
-                  value: null,
-                  child: Text('— None —'),
-                ),
-                for (final h
-                    in (ref.read(horsesProvider).valueOrNull ?? []).where(
-                      (h) => h.gender == HorseGender.mare,
-                    ))
-                  DropdownMenuItem<String>(value: h.id, child: Text(h.name)),
-              ],
-              onChanged: (val) => setState(() => _selectedDamId = val),
-            ),
-            const SizedBox(height: AppSpacing.xxl),
 
             // ── Save button ──
             SizedBox(
@@ -478,22 +354,6 @@ class _AddHorseScreenState extends ConsumerState<AddHorseScreen> {
       lineageRootId: _rootIdController.text.trim().isEmpty
           ? null
           : _rootIdController.text.trim(),
-      coatColor: _selectedCoatColor,
-      breedLineage: _selectedBreedLineage,
-      region: _regionController.text.trim().isEmpty
-          ? null
-          : _regionController.text.trim(),
-      sum: _sumController.text.trim().isEmpty
-          ? null
-          : _sumController.text.trim(),
-      tamgaBrandClan: _tamgaBrandClanController.text.trim().isEmpty
-          ? null
-          : _tamgaBrandClanController.text.trim(),
-      tamgaBrandGeneration: int.tryParse(
-        _tamgaBrandGenerationController.text.trim(),
-      ),
-      sireId: _selectedSireId,
-      damId: _selectedDamId,
     );
 
     // Upload photo if picked
@@ -536,7 +396,10 @@ class _AddHorseScreenState extends ConsumerState<AddHorseScreen> {
 
     // Show offline-aware save feedback
     if (mounted) {
-      showOfflineAwareSaveFeedback(context, ConnectionMonitor.instance.current);
+      showOfflineAwareSaveFeedback(
+        context,
+        ConnectionMonitor.instance.current,
+      );
     }
 
     if (!mounted) return;

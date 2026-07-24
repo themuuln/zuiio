@@ -231,14 +231,18 @@ Future<void> _saveCurrentSearch(BuildContext context, WidgetRef ref) async {
 
     await ref.read(
       saveSavedSearchProvider(
-        SaveSavedSearchParams(userId: userId, name: name, filters: filtersMap),
+        SaveSavedSearchParams(
+          userId: userId,
+          name: name,
+          filters: filtersMap,
+        ),
       ).future,
     );
 
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('"$name" хайлт хадгалагдлаа')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('"$name" хайлт хадгалагдлаа')),
+      );
     }
   }
 }

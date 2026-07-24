@@ -67,14 +67,8 @@ interface MechanicRateRow {
 }
 
 export default function PayrollPage() {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const commonT = useTranslations("common") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
+  const commonT = useTranslations("common");
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const selectedBranchId = useSelectedBranchId();

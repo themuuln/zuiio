@@ -73,7 +73,9 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
     final profilesAsync = ref.watch(filteredVetProfilesProvider(filter));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Мал эмч / Vet Connect')),
+      appBar: AppBar(
+        title: const Text('Мал эмч / Vet Connect'),
+      ),
       body: Column(
         children: [
           // ── Шүүлтүүр / Filters ──
@@ -101,17 +103,16 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
                         const SizedBox(width: TamgaSpacing.sm),
                     itemBuilder: (context, index) {
                       final aimag = _aimags[index];
-                      final isSelected =
-                          (aimag == 'Бүгд / All' && _selectedAimag == null) ||
+                      final isSelected = (aimag == 'Бүгд / All' &&
+                              _selectedAimag == null) ||
                           _selectedAimag == aimag;
                       return FilterChip(
                         label: Text(aimag),
                         selected: isSelected,
                         onSelected: (selected) {
                           setState(() {
-                            _selectedAimag = aimag == 'Бүгд / All'
-                                ? null
-                                : aimag;
+                            _selectedAimag =
+                                aimag == 'Бүгд / All' ? null : aimag;
                           });
                         },
                       );
@@ -138,8 +139,7 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
                         const SizedBox(width: TamgaSpacing.sm),
                     itemBuilder: (context, index) {
                       final spec = _specializations[index];
-                      final isSelected =
-                          (spec == 'Бүгд / All' &&
+                      final isSelected = (spec == 'Бүгд / All' &&
                               _selectedSpecialization == null) ||
                           _selectedSpecialization == spec;
                       return FilterChip(
@@ -147,9 +147,8 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
                         selected: isSelected,
                         onSelected: (selected) {
                           setState(() {
-                            _selectedSpecialization = spec == 'Бүгд / All'
-                                ? null
-                                : spec;
+                            _selectedSpecialization =
+                                spec == 'Бүгд / All' ? null : spec;
                           });
                         },
                       );
@@ -163,11 +162,13 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
           // ── Мал эмч нарын жагсаалт / Vet List ──
           Expanded(
             child: profilesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading:
+                  () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => TamgaErrorWidget(
                 message: 'Мал эмч ачаалахад алдаа гарлаа',
-                onRetry: () =>
-                    ref.invalidate(filteredVetProfilesProvider(filter)),
+                onRetry: () => ref.invalidate(
+                  filteredVetProfilesProvider(filter),
+                ),
               ),
               data: (profiles) {
                 if (profiles.isEmpty) {
@@ -189,13 +190,10 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
                     return _VetProfileCard(
                       profile: profiles[index],
                       onBook: () {
-                        context.push(
-                          '/services/booking',
-                          extra: {
-                            'providerType': ServiceProviderType.vet,
-                            'providerId': profiles[index].providerId,
-                          },
-                        );
+                        context.push('/services/booking', extra: {
+                          'providerType': ServiceProviderType.vet,
+                          'providerId': profiles[index].providerId,
+                        });
                       },
                       onViewProfile: () {
                         _showVetProfileDialog(context, profiles[index]);
@@ -228,7 +226,10 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
     }
   }
 
-  void _showVetProfileDialog(BuildContext context, VetProfile profile) {
+  void _showVetProfileDialog(
+    BuildContext context,
+    VetProfile profile,
+  ) {
     final tc = TamgaColors.of(context);
     showModalBottomSheet(
       context: context,
@@ -350,13 +351,10 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
                       onPressed: () {
                         Navigator.of(ctx).pop();
                         if (context.mounted) {
-                          context.push(
-                            '/services/booking',
-                            extra: {
-                              'providerType': ServiceProviderType.vet,
-                              'providerId': profile.providerId,
-                            },
-                          );
+                          context.push('/services/booking', extra: {
+                            'providerType': ServiceProviderType.vet,
+                            'providerId': profile.providerId,
+                          });
                         }
                       },
                       icon: const Icon(Icons.calendar_today),
@@ -401,7 +399,10 @@ class _VetProfileCard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     backgroundColor: tc.primaryContainer,
-                    child: Icon(Icons.person, color: tc.onPrimaryContainer),
+                    child: Icon(
+                      Icons.person,
+                      color: tc.onPrimaryContainer,
+                    ),
                   ),
                   const SizedBox(width: TamgaSpacing.md),
                   Expanded(
@@ -444,11 +445,8 @@ class _VetProfileCard extends StatelessWidget {
               Row(
                 children: [
                   if (profile.experienceYears != null) ...[
-                    Icon(
-                      Icons.work_outline,
-                      size: 16,
-                      color: tc.onSurfaceVariant,
-                    ),
+                    Icon(Icons.work_outline,
+                        size: 16, color: tc.onSurfaceVariant),
                     const SizedBox(width: 4),
                     Text(
                       '${profile.experienceYears} жил',
@@ -460,11 +458,15 @@ class _VetProfileCard extends StatelessWidget {
                     const SizedBox(width: TamgaSpacing.lg),
                   ],
                   if (profile.licenseNumber != null) ...[
-                    Icon(Icons.verified_outlined, size: 16, color: tc.tertiary),
+                    Icon(Icons.verified_outlined,
+                        size: 16, color: tc.tertiary),
                     const SizedBox(width: 4),
                     Text(
                       'Лицензтэй / Licensed',
-                      style: TextStyle(fontSize: 12, color: tc.tertiary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: tc.tertiary,
+                      ),
                     ),
                   ],
                 ],
@@ -529,11 +531,17 @@ class _ProfileInfoRow extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: TextStyle(fontSize: 12, color: tc.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: tc.onSurfaceVariant,
+                  ),
                 ),
                 Text(
                   value,
-                  style: TextStyle(fontSize: 14, color: tc.onSurface),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: tc.onSurface,
+                  ),
                 ),
               ],
             ),

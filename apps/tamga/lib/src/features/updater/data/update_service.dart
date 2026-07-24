@@ -88,7 +88,6 @@ class UpdateService {
       // download to surface out-of-space errors naturally.
 
       // ── Download APK ──
-      final tempDir = await getTemporaryDirectory();
       final filePath = '${tempDir.path}/tamga-${version.versionName}.apk';
       final file = File(filePath);
 

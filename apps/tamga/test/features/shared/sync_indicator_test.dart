@@ -10,7 +10,10 @@ import 'package:tamga/src/features/profile/application/cloud_sync_coordinator.da
 // ── Helpers ─────────────────────────────────────────────────────────────
 
 /// Wraps SyncIndicator in a ProviderScope with overrides for testing.
-Widget wrapForTest({required Widget child, SyncState? syncState}) {
+Widget wrapForTest({
+  required Widget child,
+  SyncState? syncState,
+}) {
   final overrides = <Override>[];
 
   if (syncState != null) {
@@ -27,7 +30,9 @@ Widget wrapForTest({required Widget child, SyncState? syncState}) {
     overrides: overrides,
     child: MaterialApp(
       theme: AppTheme.light(),
-      home: Scaffold(body: child),
+      home: Scaffold(
+        body: child,
+      ),
     ),
   );
 }
@@ -73,7 +78,9 @@ void main() {
       expect(decoration.color, Colors.amber);
     });
 
-    testWidgets('shows AMBER dot when syncing', (WidgetTester tester) async {
+    testWidgets('shows AMBER dot when syncing', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         wrapForTest(
           child: const SyncIndicator(),
@@ -89,7 +96,9 @@ void main() {
       expect(decoration.color, Colors.amber);
     });
 
-    testWidgets('shows RED dot on error', (WidgetTester tester) async {
+    testWidgets('shows RED dot on error', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         wrapForTest(
           child: const SyncIndicator(),
@@ -110,7 +119,10 @@ void main() {
       await tester.pumpWidget(
         wrapForTest(
           child: const SyncIndicator(),
-          syncState: const SyncState(status: SyncStatus.idle, pendingCount: 0),
+          syncState: const SyncState(
+            status: SyncStatus.idle,
+            pendingCount: 0,
+          ),
         ),
       );
 
@@ -180,7 +192,10 @@ void main() {
       await tester.pumpWidget(
         wrapForTest(
           child: const SyncIndicator(),
-          syncState: const SyncState(status: SyncStatus.idle, pendingCount: 0),
+          syncState: const SyncState(
+            status: SyncStatus.idle,
+            pendingCount: 0,
+          ),
         ),
       );
 
@@ -194,7 +209,10 @@ void main() {
       await tester.pumpWidget(
         wrapForTest(
           child: const SyncIndicator(),
-          syncState: const SyncState(status: SyncStatus.error, pendingCount: 0),
+          syncState: const SyncState(
+            status: SyncStatus.error,
+            pendingCount: 0,
+          ),
         ),
       );
 
@@ -204,7 +222,9 @@ void main() {
   });
 
   group('SyncIndicator - circle shape', () {
-    testWidgets('has BoxShape.circle decoration', (WidgetTester tester) async {
+    testWidgets('has BoxShape.circle decoration', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         wrapForTest(
           child: const SyncIndicator(),
@@ -262,7 +282,9 @@ void main() {
       expect(decoration.color, Colors.red);
     });
 
-    testWidgets('tooltip shows conflict count', (WidgetTester tester) async {
+    testWidgets('tooltip shows conflict count', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         wrapForTest(
           child: const SyncIndicator(),

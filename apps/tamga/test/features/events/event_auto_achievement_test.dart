@@ -222,7 +222,10 @@ void main() {
         completedEvent: completedEvent,
       );
 
-      expect(updated.totalPrizeMoney, _baseProfile.totalPrizeMoney + 750000);
+      expect(
+        updated.totalPrizeMoney,
+        _baseProfile.totalPrizeMoney + 750000,
+      );
       expect(updated.secondPlace, _baseProfile.secondPlace + 1);
     });
 
@@ -245,10 +248,7 @@ void main() {
       );
 
       // Recent results should start with the new result (newest first)
-      expect(
-        updated.recentResults.length,
-        _baseProfile.recentResults.length + 1,
-      );
+      expect(updated.recentResults.length, _baseProfile.recentResults.length + 1);
       expect(updated.recentResults.first.eventId, 'new-3');
       expect(updated.recentResults.first.eventName, 'Шинэ тэмцээн');
       expect(updated.recentResults.first.place, 3);
@@ -353,229 +353,211 @@ void main() {
   // VAL-EVENTS-005: Auto-achievement integration
   // ═══════════════════════════════════════════════════════════════════
   group('VAL-EVENTS-005: Auto-achievement', () {
-    test(
-      'TournamentProfile wins and prizeMoney update after event completion',
-      () {
-        // Create a base TournamentProfile with known stats
-        final profile = TournamentProfile(
-          horseId: 'horse-1',
-          horseName: 'Хан хүлэг',
-          totalRaces: 5,
-          firstPlace: 2,
-          secondPlace: 1,
-          thirdPlace: 0,
-          participationCount: 5,
-          totalPrizeMoney: 1000000,
-          recentResults: [
-            TournamentResult(
-              eventId: 'old-1',
-              eventName: 'Өмнөх тэмцээн',
-              date: DateTime(2026, 5, 1),
-              place: 1,
-              participants: 10,
-              prize: 500000,
-            ),
-          ],
-          bestAchievement: 'Өмнөх тэмцээн',
-          lastRaceDate: DateTime(2026, 5, 1),
-        );
+    test('TournamentProfile wins and prizeMoney update after event completion', () {
+      // Create a base TournamentProfile with known stats
+      final profile = TournamentProfile(
+        horseId: 'horse-1',
+        horseName: 'Хан хүлэг',
+        totalRaces: 5,
+        firstPlace: 2,
+        secondPlace: 1,
+        thirdPlace: 0,
+        participationCount: 5,
+        totalPrizeMoney: 1000000,
+        recentResults: [
+          TournamentResult(
+            eventId: 'old-1',
+            eventName: 'Өмнөх тэмцээн',
+            date: DateTime(2026, 5, 1),
+            place: 1,
+            participants: 10,
+            prize: 500000,
+          ),
+        ],
+        bestAchievement: 'Өмнөх тэмцээн',
+        lastRaceDate: DateTime(2026, 5, 1),
+      );
 
-        // Complete an event with result and prize
-        final completedEvent = Event(
-          id: 'new-race',
-          horseId: 'horse-1',
-          title: 'Хаврын цом',
-          eventType: EventType.race,
-          date: _pastDate,
-          result: '1-р байр',
-          prizeAmount: 2000000,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+      // Complete an event with result and prize
+      final completedEvent = Event(
+        id: 'new-race',
+        horseId: 'horse-1',
+        title: 'Хаврын цом',
+        eventType: EventType.race,
+        date: _pastDate,
+        result: '1-р байр',
+        prizeAmount: 2000000,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
-        // Trigger auto-achievement logic
-        final service = const AutoAchievementService();
-        final updated = service.processCompletedEvent(
-          currentProfile: profile,
-          completedEvent: completedEvent,
-        );
+      // Trigger auto-achievement logic
+      final service = const AutoAchievementService();
+      final updated = service.processCompletedEvent(
+        currentProfile: profile,
+        completedEvent: completedEvent,
+      );
 
-        // Assertions
-        // Wins count increments correctly based on result (1st place)
-        expect(
-          updated.totalRaces,
-          6,
-          reason: 'totalRaces should increment by 1',
-        );
-        expect(
-          updated.firstPlace,
-          3,
-          reason: 'firstPlace should increment by 1 for 1st place result',
-        );
-        expect(
-          updated.secondPlace,
-          1,
-          reason: 'secondPlace should remain unchanged',
-        );
-        expect(
-          updated.thirdPlace,
-          0,
-          reason: 'thirdPlace should remain unchanged',
-        );
+      // Assertions
+      // Wins count increments correctly based on result (1st place)
+      expect(updated.totalRaces, 6, reason: 'totalRaces should increment by 1');
+      expect(
+        updated.firstPlace,
+        3,
+        reason: 'firstPlace should increment by 1 for 1st place result',
+      );
+      expect(
+        updated.secondPlace,
+        1,
+        reason: 'secondPlace should remain unchanged',
+      );
+      expect(
+        updated.thirdPlace,
+        0,
+        reason: 'thirdPlace should remain unchanged',
+      );
 
-        // Prize money is added to total
-        expect(
-          updated.totalPrizeMoney,
-          3000000,
-          reason: 'totalPrizeMoney should be 1,000,000 + 2,000,000 = 3,000,000',
-        );
+      // Prize money is added to total
+      expect(
+        updated.totalPrizeMoney,
+        3000000,
+        reason: 'totalPrizeMoney should be 1,000,000 + 2,000,000 = 3,000,000',
+      );
 
-        // Recent results list includes the completed event at the top
-        expect(updated.recentResults.length, 2);
-        expect(
-          updated.recentResults.first.eventId,
-          'new-race',
-          reason: 'newest result should be first',
-        );
-        expect(updated.recentResults.first.eventName, 'Хаврын цом');
-        expect(updated.recentResults.first.place, 1);
-        expect(updated.recentResults.first.prize, 2000000);
-        expect(
-          updated.recentResults.first.notes,
-          '1-р байр',
-          reason: 'notes should contain the result text',
-        );
-      },
-    );
+      // Recent results list includes the completed event at the top
+      expect(updated.recentResults.length, 2);
+      expect(
+        updated.recentResults.first.eventId,
+        'new-race',
+        reason: 'newest result should be first',
+      );
+      expect(updated.recentResults.first.eventName, 'Хаврын цом');
+      expect(updated.recentResults.first.place, 1);
+      expect(updated.recentResults.first.prize, 2000000);
+      expect(
+        updated.recentResults.first.notes,
+        '1-р байр',
+        reason: 'notes should contain the result text',
+      );
+    });
 
-    test(
-      'processEventCompletion fetches registrations for completed events',
-      () async {
-        final repo = MockEventRegistrationRepository();
-        final event = Event(
-          id: 'evt-1',
-          horseId: 'h1',
-          title: 'Completed',
-          eventType: EventType.race,
-          date: _pastDate,
-          result: 'Түрүү',
-          prizeAmount: 500000,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+    test('processEventCompletion fetches registrations for completed events', () async {
+      final repo = MockEventRegistrationRepository();
+      final event = Event(
+        id: 'evt-1',
+        horseId: 'h1',
+        title: 'Completed',
+        eventType: EventType.race,
+        date: _pastDate,
+        result: 'Түрүү',
+        prizeAmount: 500000,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
-        final reg = EventRegistration(
+      final reg = EventRegistration(
+        id: 'reg-1',
+        eventId: 'evt-1',
+        horseId: 'horse-1',
+        ownerId: 'user-1',
+        registeredAt: _pastDate,
+        status: RegistrationStatus.registered,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      when(() => repo.fetchRegistrations('evt-1'))
+          .thenAnswer((_) async => Result.ok([reg]));
+
+      final invalidatedHorses = <String>[];
+      await processEventCompletion(
+        event: event,
+        registrationRepo: repo,
+        invalidateProfile: (horseId) => invalidatedHorses.add(horseId),
+      );
+
+      verify(() => repo.fetchRegistrations('evt-1')).called(1);
+      // Should have invalidated the horse's tournament profile
+      expect(invalidatedHorses, contains('horse-1'));
+    });
+
+    test('processEventCompletion does nothing for non-completed event', () async {
+      final repo = MockEventRegistrationRepository();
+      final event = Event(
+        id: 'evt-1',
+        horseId: 'h1',
+        title: 'Not completed',
+        eventType: EventType.race,
+        date: _futureDate, // future date = not completed
+        result: 'Түрүү',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final invalidatedHorses = <String>[];
+      await processEventCompletion(
+        event: event,
+        registrationRepo: repo,
+        invalidateProfile: (horseId) => invalidatedHorses.add(horseId),
+      );
+
+      // Should NOT fetch registrations for non-completed event
+      verifyNever(() => repo.fetchRegistrations(any()));
+      expect(invalidatedHorses, isEmpty);
+    });
+
+    test('processEventCompletion with cancelled registrations skips them', () async {
+      final repo = MockEventRegistrationRepository();
+      final event = Event(
+        id: 'evt-1',
+        horseId: 'h1',
+        title: 'Completed',
+        eventType: EventType.race,
+        date: _pastDate,
+        result: '1-р байр',
+        prizeAmount: 500000,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final regs = [
+        EventRegistration(
           id: 'reg-1',
           eventId: 'evt-1',
           horseId: 'horse-1',
           ownerId: 'user-1',
           registeredAt: _pastDate,
-          status: RegistrationStatus.registered,
+          status: RegistrationStatus.cancelled, // cancelled
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
-        );
-
-        when(
-          () => repo.fetchRegistrations('evt-1'),
-        ).thenAnswer((_) async => Result.ok([reg]));
-
-        final invalidatedHorses = <String>[];
-        await processEventCompletion(
-          event: event,
-          registrationRepo: repo,
-          invalidateProfile: (horseId) => invalidatedHorses.add(horseId),
-        );
-
-        verify(() => repo.fetchRegistrations('evt-1')).called(1);
-        // Should have invalidated the horse's tournament profile
-        expect(invalidatedHorses, contains('horse-1'));
-      },
-    );
-
-    test(
-      'processEventCompletion does nothing for non-completed event',
-      () async {
-        final repo = MockEventRegistrationRepository();
-        final event = Event(
-          id: 'evt-1',
-          horseId: 'h1',
-          title: 'Not completed',
-          eventType: EventType.race,
-          date: _futureDate, // future date = not completed
-          result: 'Түрүү',
+        ),
+        EventRegistration(
+          id: 'reg-2',
+          eventId: 'evt-1',
+          horseId: 'horse-2',
+          ownerId: 'user-2',
+          registeredAt: _pastDate,
+          status: RegistrationStatus.registered, // active
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
-        );
+        ),
+      ];
 
-        final invalidatedHorses = <String>[];
-        await processEventCompletion(
-          event: event,
-          registrationRepo: repo,
-          invalidateProfile: (horseId) => invalidatedHorses.add(horseId),
-        );
+      when(() => repo.fetchRegistrations('evt-1'))
+          .thenAnswer((_) async => Result.ok(regs));
 
-        // Should NOT fetch registrations for non-completed event
-        verifyNever(() => repo.fetchRegistrations(any()));
-        expect(invalidatedHorses, isEmpty);
-      },
-    );
+      final invalidatedHorses = <String>[];
+      await processEventCompletion(
+        event: event,
+        registrationRepo: repo,
+        invalidateProfile: (horseId) => invalidatedHorses.add(horseId),
+      );
 
-    test(
-      'processEventCompletion with cancelled registrations skips them',
-      () async {
-        final repo = MockEventRegistrationRepository();
-        final event = Event(
-          id: 'evt-1',
-          horseId: 'h1',
-          title: 'Completed',
-          eventType: EventType.race,
-          date: _pastDate,
-          result: '1-р байр',
-          prizeAmount: 500000,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-
-        final regs = [
-          EventRegistration(
-            id: 'reg-1',
-            eventId: 'evt-1',
-            horseId: 'horse-1',
-            ownerId: 'user-1',
-            registeredAt: _pastDate,
-            status: RegistrationStatus.cancelled, // cancelled
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-          EventRegistration(
-            id: 'reg-2',
-            eventId: 'evt-1',
-            horseId: 'horse-2',
-            ownerId: 'user-2',
-            registeredAt: _pastDate,
-            status: RegistrationStatus.registered, // active
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        ];
-
-        when(
-          () => repo.fetchRegistrations('evt-1'),
-        ).thenAnswer((_) async => Result.ok(regs));
-
-        final invalidatedHorses = <String>[];
-        await processEventCompletion(
-          event: event,
-          registrationRepo: repo,
-          invalidateProfile: (horseId) => invalidatedHorses.add(horseId),
-        );
-
-        verify(() => repo.fetchRegistrations('evt-1')).called(1);
-        // Should only invalidate the active registration's horse (horse-2)
-        expect(invalidatedHorses, ['horse-2']);
-        // Should NOT invalidate the cancelled horse
-        expect(invalidatedHorses, isNot(contains('horse-1')));
-      },
-    );
+      verify(() => repo.fetchRegistrations('evt-1')).called(1);
+      // Should only invalidate the active registration's horse (horse-2)
+      expect(invalidatedHorses, ['horse-2']);
+      // Should NOT invalidate the cancelled horse
+      expect(invalidatedHorses, isNot(contains('horse-1')));
+    });
   });
 }

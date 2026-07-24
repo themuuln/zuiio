@@ -1,5 +1,10 @@
 /// Үйлчилгээний захиалгын төлөв.
-enum ServiceBookingStatus { pending, confirmed, completed, cancelled }
+enum ServiceBookingStatus {
+  pending,
+  confirmed,
+  completed,
+  cancelled,
+}
 
 extension ServiceBookingStatusLabel on ServiceBookingStatus {
   String get label => switch (this) {

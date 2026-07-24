@@ -20,10 +20,9 @@ export async function recordRefund(
   invoiceId: string,
   orgId: string,
   refund: CreateRefundParams,
-  userId_?: string,
 ): Promise<InvoiceRefund[]> {
   const supabase = db;
-  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  const userId = (await supabase.auth.getUser()).data.user?.id;
 
   // Use atomic function to prevent race conditions
   const { error } = await supabase.rpc("record_refund_atomically", {
@@ -196,10 +195,9 @@ export async function cancelRefund(
   db: SupabaseClient,
   refundId: string,
   orgId: string,
-  userId_?: string,
 ): Promise<InvoiceRefund> {
   const supabase = db;
-  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  const userId = (await supabase.auth.getUser()).data.user?.id;
 
   // Get the refund
   const { data: refund } = await supabase

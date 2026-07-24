@@ -67,8 +67,10 @@ function createLogger(baseContext?: Record<string, unknown>): Logger {
   const merge = (ctx: Record<string, unknown> | undefined) =>
     baseContext ? { ...baseContext, ...ctx } : ctx;
 
-  const log =
-    (level: string, fn: typeof console.log): LogFn =>
+  const log = (
+    level: string,
+    fn: typeof console.log,
+  ): LogFn =>
     (ctxOrMsg, msg?) => {
       if (typeof ctxOrMsg === "string") {
         fn(formatMessage(level, baseContext, ctxOrMsg));
@@ -78,11 +80,9 @@ function createLogger(baseContext?: Record<string, unknown>): Logger {
     };
 
   return {
-    // biome-ignore lint/suspicious/noConsole: logger intentionally wraps console for structured logging
     info: log("info", console.log),
     warn: log("warn", console.warn),
     error: log("error", console.error),
-    // biome-ignore lint/suspicious/noConsole: logger intentionally wraps console for structured logging
     debug: log("debug", console.debug),
     child: (context) => createLogger(merge(context)),
   };

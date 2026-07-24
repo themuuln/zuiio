@@ -1,5 +1,7 @@
 {
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm exec next build",
+  "regions": ["sin1"],
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile --ignore-scripts",
+  "buildCommand": "cd ../.. && pnpm --filter onoo-web build",
   "outputDirectory": ".next"
 }

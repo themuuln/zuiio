@@ -1,23 +1,50 @@
-import { createRouteHandlers } from "@/lib/supabase/admin-route";
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-const DEFAULT_ORG_ID =
-  process.env.ADMIN_ORG_ID ?? "b0000000-0000-0000-0000-000000000001";
+const DEFAULT_ORG_ID = "b0000000-0000-0000-0000-000000000001";
 
-const leagues = createRouteHandlers("leagues", {
-  select: "*, sports(name_en, name_mn)",
-});
+export async function GET(_request: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-export const GET = leagues.list();
+  const { data, error } = await supabase
+    .from("leagues")
+    .select("*, sports(name_en, name_mn)");
 
-export const POST = leagues.create((body) => {
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
+}
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await request.json();
   const { name, slug, sport_id, organization_id } = body;
+
   if (!name || !slug || !sport_id) {
-    return { insert: body, validate: "name, slug, and sport_id are required" };
+    return NextResponse.json(
+      { error: "name, slug, and sport_id are required" },
+      { status: 400 },
+    );
   }
-  return {
-    name,
-    slug,
-    sport_id,
-    organization_id: organization_id ?? DEFAULT_ORG_ID,
-  };
-});
+
+  const { data, error } = await supabase
+    .from("leagues")
+    .insert({ name, slug, sport_id, organization_id: organization_id ?? DEFAULT_ORG_ID })
+    .select("*, sports(name_en, name_mn)")
+    .single();
+
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data, { status: 201 });
+}

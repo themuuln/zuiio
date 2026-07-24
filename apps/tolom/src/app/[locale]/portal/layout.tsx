@@ -41,10 +41,7 @@ export default function PortalLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const { push } = useRouter();
   const pathname = usePathname();
   const { customer, loading } = usePortalAuth();

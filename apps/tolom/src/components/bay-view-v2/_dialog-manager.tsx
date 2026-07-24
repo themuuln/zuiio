@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import type { BaySlotData, BayViewData } from "@/lib/services/bay-view-service";
+import { EmptyBayActionDrawer } from "./_empty-bay-action-drawer";
 import type { PaymentMethodFees } from "./_payment-fees";
 import type { BayViewDialogsState } from "./_use-bay-view-dialogs";
 import type { BayViewPendingState } from "./_use-bay-view-pending";
@@ -54,6 +55,8 @@ export interface DialogManagerProps {
     workOrderId: string,
     mechanicId?: string,
   ) => Promise<void>;
+  handleRegisterAndAssign: (bayNumber: number) => void;
+  handleEmptyBayQueueSelect: (workOrderId: string) => void;
   // Refresh / translation
   onRefresh: () => Promise<void>;
   t: (key: string, params?: Record<string, string | number | Date>) => string;
@@ -85,6 +88,8 @@ export function DialogManager({
   handlePickupCompleteConfirm,
   handleBatchComplete,
   handleAssignToBay,
+  handleRegisterAndAssign,
+  handleEmptyBayQueueSelect,
   onRefresh,
   t,
   assignMechanicMutation,
@@ -216,30 +221,72 @@ export function DialogManager({
         onAssign={handleAssignToBay}
         branchId={branchFilter}
       />
-      {/* Vehicle registration drawer */}
-      <VehicleRegistrationDrawer
-        open={dialogs.open.vehicleReg}
-        onOpenChange={handleVehicleRegOpenChange}
-        onQueued={handleVehicleRegQueued}
-        onAssigned={handleVehicleRegAssigned}
-        onRefresh={onRefresh}
-        assignBayNumber={dialogs.directAssignBayNumber ?? undefined}
-        branchId={branchFilter}
-      />
 
-      {/* Work order detail drawer */}
-      <ErrorBoundary>
-        <WorkOrderDetailDrawer
-          workOrderId={dialogs.detailWoId}
-          open={dialogs.detailWoId !== null}
-          onOpenChange={handleDetailDrawerClose}
-          onRefresh={onRefresh}
-          initialAction={dialogs.drawerInitialAction}
-          branchFilter={branchFilter}
-          assignMechanicMutation={assignMechanicMutation}
-          assignCustomerMutation={assignCustomerMutation}
+      {/* Empty bay action drawer — child drawers nested for stack effect */}
+      {dialogs.emptyBayBayNumber !== null ? (
+        <EmptyBayActionDrawer
+          open
+          onOpenChange={(open) => {
+            if (!open) dialogs.setEmptyBayBayNumber(null);
+          }}
+          bayNumber={dialogs.emptyBayBayNumber ?? 0}
+          queue={data?.waitingQueue ?? []}
+          onSelectRegister={() => {
+            dialogs.set("vehicleReg", true);
+          }}
+          onSelectRegisterAndAssign={() => {
+            handleRegisterAndAssign(dialogs.emptyBayBayNumber ?? 0);
+          }}
+          onSelectQueueItem={handleEmptyBayQueueSelect}
+          nestedContent={
+            <>
+              <VehicleRegistrationDrawer
+                open={dialogs.open.vehicleReg}
+                onOpenChange={handleVehicleRegOpenChange}
+                onQueued={handleVehicleRegQueued}
+                onAssigned={handleVehicleRegAssigned}
+                onRefresh={onRefresh}
+                assignBayNumber={dialogs.directAssignBayNumber ?? undefined}
+                branchId={branchFilter}
+              />
+              <WorkOrderDetailDrawer
+                workOrderId={dialogs.detailWoId}
+                open={dialogs.detailWoId !== null}
+                onOpenChange={handleDetailDrawerClose}
+                onRefresh={onRefresh}
+                initialAction={dialogs.drawerInitialAction}
+                branchFilter={branchFilter}
+                assignMechanicMutation={assignMechanicMutation}
+                assignCustomerMutation={assignCustomerMutation}
+              />
+            </>
+          }
         />
-      </ErrorBoundary>
+      ) : (
+        <>
+          <VehicleRegistrationDrawer
+            open={dialogs.open.vehicleReg}
+            onOpenChange={handleVehicleRegOpenChange}
+            onQueued={handleVehicleRegQueued}
+            onAssigned={handleVehicleRegAssigned}
+            onRefresh={onRefresh}
+            assignBayNumber={dialogs.directAssignBayNumber ?? undefined}
+            branchId={branchFilter}
+          />
+          <ErrorBoundary>
+            <WorkOrderDetailDrawer
+              workOrderId={dialogs.detailWoId}
+              open={dialogs.detailWoId !== null}
+              onOpenChange={handleDetailDrawerClose}
+              onRefresh={onRefresh}
+              initialAction={dialogs.drawerInitialAction}
+              branchFilter={branchFilter}
+              assignMechanicMutation={assignMechanicMutation}
+              assignCustomerMutation={assignCustomerMutation}
+            />
+          </ErrorBoundary>
+        </>
+      )}
 
       {/* Shift report dialog */}
       <ShiftReportDialog

@@ -40,7 +40,9 @@ class IsarSavedSearch {
     return SavedSearch(
       id: domainId,
       userId: userId,
-      filters: Map<String, dynamic>.from(jsonDecode(filtersJson) as Map),
+      filters: Map<String, dynamic>.from(
+        jsonDecode(filtersJson) as Map,
+      ),
       name: name,
       createdAt: createdAt,
       lastNotifiedAt: lastNotifiedAt,

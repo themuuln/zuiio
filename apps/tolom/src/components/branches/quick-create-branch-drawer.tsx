@@ -15,10 +15,10 @@ interface QuickCreateBranchSheetProps {
 
 /**
  * Quick-create branch dialog.
- * Follows the exact pattern of QuickCreateCustomerDrawer (quick-create-customer-sheet.tsx).
+ * Follows the exact pattern of QuickCreateCustomerSheet (quick-create-customer-sheet.tsx).
  * Uses ResponsiveFormModal for responsive display (Sheet on desktop, Drawer on mobile).
  */
-export function QuickCreateBranchDrawer({
+export function QuickCreateBranchSheet({
   open,
   onOpenChange,
   onCreated,

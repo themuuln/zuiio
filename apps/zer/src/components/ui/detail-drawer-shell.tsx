@@ -43,8 +43,6 @@ interface DetailDrawerShellProps {
    * @default true
    */
   modal?: boolean | "trap-focus";
-  /** When true, dims and scales the parent drawer to create a stack effect. */
-  nestedDrawerOpen?: boolean;
 }
 
 /**
@@ -67,7 +65,6 @@ export function DetailDrawerShell({
   panelWidth = "28rem",
   footer,
   modal = true,
-  nestedDrawerOpen = false,
 }: DetailDrawerShellProps) {
   const hasActions = onEdit || onDelete;
 
@@ -77,7 +74,6 @@ export function DetailDrawerShell({
       onOpenChange={onOpenChange}
       panelWidth={panelWidth}
       modal={modal}
-      nestedDrawerOpen={nestedDrawerOpen}
       title={title}
       description={status ? `${description ?? ""}` : description}
       footer={footer}

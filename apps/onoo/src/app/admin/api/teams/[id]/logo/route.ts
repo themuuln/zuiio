@@ -1,6 +1,5 @@
-import * as Sentry from "@sentry/nextjs";
-import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 const BUCKET = "team-logos";
 const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
@@ -13,9 +12,9 @@ export async function POST(
   const { id } = await params;
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.user)
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const formData = await request.formData();
@@ -51,8 +50,10 @@ export async function POST(
     });
 
   if (uploadError) {
-    Sentry.captureException(uploadError);
-    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    return NextResponse.json(
+      { error: uploadError.message },
+      { status: 500 },
+    );
   }
 
   const {
@@ -66,8 +67,10 @@ export async function POST(
     .eq("id", id);
 
   if (updateError) {
-    Sentry.captureException(updateError);
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json(
+      { error: updateError.message },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ logo_url: publicUrl });

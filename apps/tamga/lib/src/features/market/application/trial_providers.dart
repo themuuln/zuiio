@@ -13,10 +13,10 @@ import 'market_providers.dart';
 /// Зарын туршилтын цагийн цонхны жагсаалт.
 final trialSlotsForListingProvider =
     FutureProvider.family<List<TrialSlot>, String>((ref, listingId) async {
-      final repository = await ref.watch(marketRepositoryProvider.future);
-      final result = await repository.fetchTrialSlotsForListing(listingId);
-      return result.getOrThrow();
-    });
+  final repository = await ref.watch(marketRepositoryProvider.future);
+  final result = await repository.fetchTrialSlotsForListing(listingId);
+  return result.getOrThrow();
+});
 
 /// Туршилтын цагийн цонхны үйлдлүүд.
 final trialSlotActionsProvider = Provider<TrialSlotActions>((ref) {
@@ -80,15 +80,14 @@ class TrialSlotActions {
 /// Зарын туршилтын захиалгын жагсаалт.
 final trialBookingsForListingProvider =
     FutureProvider.family<List<TrialBooking>, String>((ref, listingId) async {
-      final repository = await ref.watch(marketRepositoryProvider.future);
-      final result = await repository.fetchTrialBookingsForListing(listingId);
-      return result.getOrThrow();
-    });
+  final repository = await ref.watch(marketRepositoryProvider.future);
+  final result = await repository.fetchTrialBookingsForListing(listingId);
+  return result.getOrThrow();
+});
 
 /// Худалдан авагчийн бүх захиалга.
-final trialBookingsForBuyerProvider = FutureProvider<List<TrialBooking>>((
-  ref,
-) async {
+final trialBookingsForBuyerProvider =
+    FutureProvider<List<TrialBooking>>((ref) async {
   final repository = await ref.watch(marketRepositoryProvider.future);
   final result = await repository.fetchTrialBookingsForBuyer(
     localMarketBuyerId,
@@ -97,9 +96,8 @@ final trialBookingsForBuyerProvider = FutureProvider<List<TrialBooking>>((
 });
 
 /// Худалдагчийн бүх захиалга.
-final trialBookingsForSellerProvider = FutureProvider<List<TrialBooking>>((
-  ref,
-) async {
+final trialBookingsForSellerProvider =
+    FutureProvider<List<TrialBooking>>((ref) async {
   final repository = await ref.watch(marketRepositoryProvider.future);
   final result = await repository.fetchTrialBookingsForSeller(
     localMarketBuyerId,

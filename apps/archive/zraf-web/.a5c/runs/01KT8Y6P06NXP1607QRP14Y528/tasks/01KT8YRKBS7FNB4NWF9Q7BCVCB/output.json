@@ -1,0 +1,8 @@
+{
+  "scaffolded": true,
+  "filesCreated": ["PROJECT.md", "ROADMAP.md"],
+  "directoriesCreated": [".a5c/"],
+  "visionDocument": "PROJECT.md",
+  "roadmapDocument": "ROADMAP.md",
+  "skippedFiles": ["CLAUDE.md", "package.json", "next.config.ts", "tsconfig.json", "biome.json"]
+}

@@ -1,18 +1,18 @@
 // ai-breeding — AI Breeding Advisor Edge Function
 //
-// Accepts POST with { sireId, damId }, checks cache, fetches horse data,
-// calls Gemini 2.0 Flash, caches result, and returns structured JSON.
+// Accepts POST with { sireId, damId }, constructs a breeding analysis
+// prompt (inbreeding risk, health compatibility, color genetics),
+// calls OpenCode Go API (DeepSeek V4 Flash), and returns structured JSON.
 //
 // Enforces per-user rate limits:
 //   free    = 5 queries/month
 //   pro     = 50 queries/month
 //   breeder = unlimited
-//   stable  = unlimited
 //
 // Requires environment variables:
 //   SUPABASE_URL
 //   SUPABASE_SERVICE_ROLE_KEY
-//   GEMINI_API_KEY
+//   OPENCODE_API_KEY
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -72,6 +72,51 @@ async function checkRateLimit(
 	return { allowed, remaining, limit };
 }
 
+// ── Breeding Analysis Prompt ─────────────────────────────────────────
+
+function buildBreedingPrompt(sireId: string, damId: string): string {
+	return `You are an expert equine breeding advisor for Mongolian horses. Analyze this potential breeding pair and provide a structured assessment.
+
+## Horse Pair
+- Sire ID: ${sireId}
+- Dam ID: ${damId}
+
+## Required Analysis Areas
+
+### 1. Inbreeding Risk Assessment
+Analyze the potential for inbreeding based on common ancestry patterns in Mongolian horse breeding. Consider:
+- Common bloodlines in Mongolian horse populations
+- Genetic diversity indicators
+- Risk level classification
+
+### 2. Health Compatibility
+Evaluate health considerations for this breeding pair:
+- Known hereditary conditions in Mongolian horse breeds
+- General health compatibility factors
+- Specific health recommendations
+
+### 3. Color Genetics
+Predict possible coat colors for offspring based on common Mongolian horse colors:
+- Base colors: bay, black, chestnut, gray
+- Dilution effects
+- Pattern possibilities
+
+### 4. Breed Suggestions
+Provide recommendations for optimizing this breeding:
+- Complementary trait matching
+- Performance characteristic considerations
+- Breeding best practices for Mongolian horses
+
+Return your analysis as a JSON object with exactly these fields (no markdown, no code fences):
+{
+  "inbreedingRisk": "low" | "medium" | "high",
+  "riskScore": <number 0-100>,
+  "healthNotes": "<detailed health analysis text>",
+  "colorPredictions": ["<color prediction 1>", "<color prediction 2>", ...],
+  "breedSuggestions": ["<suggestion 1>", "<suggestion 2>", ...]
+}`;
+}
+
 // ── Extract User ID from JWT ─────────────────────────────────────────
 
 function extractUserId(req: Request): string | null {
@@ -81,6 +126,8 @@ function extractUserId(req: Request): string | null {
 	}
 
 	try {
+		// Decode the JWT payload (base64url) without verification
+		// The Edge Function runtime verifies the JWT before we get here
 		const token = authHeader.substring(7);
 		const parts = token.split(".");
 		if (parts.length !== 3) return null;
@@ -92,30 +139,6 @@ function extractUserId(req: Request): string | null {
 	} catch {
 		return null;
 	}
-}
-
-// ── Build Breeding Prompt ────────────────────────────────────────────
-
-function buildBreedingPrompt(
-	sire: Record<string, unknown>,
-	dam: Record<string, unknown>,
-): string {
-	return `Та Монгол морь үржлийн мэргэжилтэн. Эдгээр хоёр морийн нийцлийг шинжилж, бүтэцтэй JSON хариу өгнө үү.
-
-Азарга (Сүр): ${sire.name}, Өнгө: ${sire.coat || "Тодорхойгүй"}, Хүйс: ${sire.gender}, Төрсөн он: ${sire.birth_year || "Тодорхойгүй"}
-
-Эмгэн (Дам): ${dam.name}, Өнгө: ${dam.coat || "Тодорхойгүй"}, Хүйс: ${dam.gender}, Төрсөн он: ${dam.birth_year || "Тодорхойгүй"}
-
-Дараах талбаруудтай JSON хариу өгнө үү:
-- compatibility_score (0-100)
-- risk_level (low/medium/high)
-- inbreeding_risk (тодорхойлолт)
-- strengths (Монгол хэл дээрх STRING массив)
-- weaknesses (Монгол хэл дээрх STRING массив)
-- recommendation (Монгол хэл дээрх STRING)
-- disclaimer (always: 'Энэ нь зөвлөх мэдээлэл бөгөөд малын эмчийн зөвлөгөө биш')
-
-Хариуг Монгол хэлээр бичнэ үү. Зөвхөн JSON буцаана уу — markdown кодын блок оруулж болохгүй.`;
 }
 
 // ── Main Handler ─────────────────────────────────────────────────────
@@ -210,93 +233,62 @@ Deno.serve(async (req: Request) => {
 			);
 		}
 
-		// ── 7. Check cache ──────────────────────────────────────────
-		const { data: cached } = await supabase
-			.from("ai_breeding_cache")
-			.select("result")
-			.eq("sire_id", sireId)
-			.eq("dam_id", damId)
-			.gt("expires_at", new Date().toISOString())
-			.single();
-
-		if (cached) {
-			return new Response(
-				JSON.stringify({
-					...cached.result,
-					quota: {
-						tier,
-						limit: rateLimit.limit,
-						remaining: rateLimit.remaining,
-					},
-				}),
-				{
-					headers: { ...corsHeaders, "Content-Type": "application/json" },
-				},
-			);
+		// ── 7. Call OpenCode Go API (DeepSeek V4 Flash) ────────────
+		const apiKey = Deno.env.get("OPENCODE_API_KEY");
+		if (!apiKey) {
+			throw new Error("OPENCODE_API_KEY not configured");
 		}
 
-		// ── 8. Fetch horse data ─────────────────────────────────────
-		const { data: sire } = await supabase
-			.from("horses")
-			.select("*")
-			.eq("id", sireId)
-			.single();
+		const prompt = buildBreedingPrompt(sireId, damId);
 
-		const { data: dam } = await supabase
-			.from("horses")
-			.select("*")
-			.eq("id", damId)
-			.single();
-
-		if (!sire || !dam) {
-			return new Response(
-				JSON.stringify({ error: "Horse not found" }),
-				{
-					status: 404,
-					headers: { ...corsHeaders, "Content-Type": "application/json" },
-				},
-			);
-		}
-
-		// ── 9. Call Gemini 2.0 Flash ────────────────────────────────
-		const geminiKey = Deno.env.get("GEMINI_API_KEY");
-		if (!geminiKey) {
-			throw new Error("GEMINI_API_KEY not configured");
-		}
-
-		const prompt = buildBreedingPrompt(sire, dam);
-
-		const geminiRes = await fetch(
-			`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+		const apiResponse = await fetch(
+			"https://opencode.ai/zen/go/v1/chat/completions",
 			{
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${apiKey}`,
+				},
 				body: JSON.stringify({
-					contents: [{ parts: [{ text: prompt }] }],
-					generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+					model: "deepseek-v4-flash",
+					messages: [
+						{
+							role: "system",
+							content:
+								"You are an expert equine breeding advisor. Always respond with valid JSON only, no markdown.",
+						},
+						{
+							role: "user",
+							content: prompt,
+						},
+					],
+					max_tokens: 2048,
+					temperature: 0.3,
 				}),
 			},
 		);
 
-		if (!geminiRes.ok) {
-			const errorText = await geminiRes.text();
-			console.error("Gemini API error:", geminiRes.status, errorText);
-			throw new Error(`AI API error: ${geminiRes.status}`);
+		if (!apiResponse.ok) {
+			const errorText = await apiResponse.text();
+			console.error("OpenCode Go API error:", apiResponse.status, errorText);
+			throw new Error(`AI API error: ${apiResponse.status}`);
 		}
 
-		const geminiData = await geminiRes.json();
-		const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+		const apiData = await apiResponse.json();
+		const content = apiData?.choices?.[0]?.message?.content;
 
-		if (!text) {
+		if (!content) {
 			throw new Error("No response content from AI model");
 		}
 
-		// ── 10. Parse structured JSON from AI response ──────────────
+		// ── 8. Parse structured JSON from AI response ───────────────
 		let parsed;
 		try {
-			parsed = JSON.parse(text);
+			// Try direct JSON parse first
+			parsed = JSON.parse(content);
 		} catch {
-			const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+			// Try extracting from markdown code fence
+			const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
 			if (jsonMatch) {
 				parsed = JSON.parse(jsonMatch[1].trim());
 			} else {
@@ -304,55 +296,46 @@ Deno.serve(async (req: Request) => {
 			}
 		}
 
-		// Validate and sanitize fields
-		const validRiskLevels = ["low", "medium", "high"];
+		// Validate required fields
+		const validRisks = ["low", "medium", "high"];
 		const result = {
-			compatibility_score:
-				typeof parsed.compatibility_score === "number"
-					? Math.min(100, Math.max(0, parsed.compatibility_score))
-					: 50,
-			risk_level: validRiskLevels.includes(parsed.risk_level)
-				? parsed.risk_level
+			inbreedingRisk: validRisks.includes(parsed.inbreedingRisk)
+				? parsed.inbreedingRisk
 				: "medium",
-			inbreeding_risk:
-				typeof parsed.inbreeding_risk === "string"
-					? parsed.inbreeding_risk
-					: "Тодорхойгүй",
-			strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
-			weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses : [],
-			recommendation:
-				typeof parsed.recommendation === "string"
-					? parsed.recommendation
-					: "",
-			disclaimer:
-				"Энэ нь зөвлөх мэдээлэл бөгөөд малын эмчийн зөвлөгөө биш",
+			riskScore:
+				typeof parsed.riskScore === "number" &&
+				parsed.riskScore >= 0 &&
+				parsed.riskScore <= 100
+					? parsed.riskScore
+					: 50,
+			healthNotes:
+				typeof parsed.healthNotes === "string" ? parsed.healthNotes : "",
+			colorPredictions: Array.isArray(parsed.colorPredictions)
+				? parsed.colorPredictions
+				: [],
+			breedSuggestions: Array.isArray(parsed.breedSuggestions)
+				? parsed.breedSuggestions
+				: [],
 		};
 
-		// ── 11. Cache result ────────────────────────────────────────
-		try {
-			await supabase.from("ai_breeding_cache").insert({
-				sire_id: sireId,
-				dam_id: damId,
-				result,
-				model_version: "gemini-2.0-flash",
-			});
-		} catch (cacheError) {
-			// Non-fatal — result succeeded even if caching fails
-			console.error("Failed to cache breeding result (non-fatal):", cacheError);
-		}
+		// ── 9. Log query to ai_queries table ────────────────────────
+		const promptTokens = apiData?.usage?.prompt_tokens ?? null;
+		const completionTokens = apiData?.usage?.completion_tokens ?? null;
 
-		// ── 12. Log query to ai_queries table ───────────────────────
 		try {
 			await supabase.from("ai_queries").insert({
 				user_id: userId,
 				function_name: "ai-breeding",
-				model: "gemini-2.0-flash",
+				model: "deepseek-v4-flash",
+				prompt_tokens: promptTokens,
+				completion_tokens: completionTokens,
 			});
 		} catch (logError) {
+			// Non-fatal — query succeeded even if logging fails
 			console.error("Failed to log AI query (non-fatal):", logError);
 		}
 
-		// ── 13. Return success ──────────────────────────────────────
+		// ── 10. Return success ─────────────────────────────────────
 		return new Response(
 			JSON.stringify({
 				...result,

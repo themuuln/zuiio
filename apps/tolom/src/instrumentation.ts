@@ -7,7 +7,6 @@ export async function register() {
     // ── Patch console.log to suppress EPIPE storms ─────────────
     // Same issue as console.error: stdout pipe breaks during dev
     // server restarts and EPIPE errors cascade into the pino logger.
-    // biome-ignore lint/suspicious/noConsole: intentional console patching for EPIPE suppression
     const origConsoleLog = console.log.bind(console);
     console.log = (...args: unknown[]) => {
       if (

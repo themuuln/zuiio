@@ -17,10 +17,7 @@ export function useCustomerNotes(
   );
   return useQuery({
     queryKey: customerNoteKeys.list(orgId ?? "", customerId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchNotes(orgId);
-    },
+    queryFn: () => fetchNotes(orgId!),
     enabled: !!orgId && !!customerId,
     staleTime: 30_000,
   });

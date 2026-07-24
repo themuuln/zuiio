@@ -1,0 +1,19 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-06-04T09:23:25.785Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KT8Z3NDJ8SB9F5YE0GN2Y1G6",
+    "invocationKey": "cradle/project-install:S000016:__sdk.breakpoint",
+    "invocationHash": "f95535d165223b99c3be37633d1bd6773b88afcb3998f7905f65033db5c6f239",
+    "stepId": "S000016",
+    "taskId": "__sdk.breakpoint",
+    "kind": "breakpoint",
+    "label": "breakpoint",
+    "taskDefRef": "tasks/01KT8Z3NDJ8SB9F5YE0GN2Y1G6/task.json",
+    "labels": [
+      "breakpoint"
+    ]
+  },
+  "checksum": "57b0caafea6e69aafddb872811fd49aaca8086797e965975edde4efb115994cc"
+}

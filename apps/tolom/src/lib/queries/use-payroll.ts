@@ -26,12 +26,10 @@ export function usePayRates(
 ) {
   return useQuery({
     queryKey: payrollKeys.payRates(orgId ?? "", branchId ?? "all"),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchPayRates(orgId, {
+    queryFn: () =>
+      fetchPayRates(orgId!, {
         params: branchId ? { branch_id: branchId } : undefined,
-      });
-    },
+      }),
     enabled: !!orgId,
     staleTime: 60_000,
   });
@@ -49,16 +47,14 @@ export function usePayrollRecords(
 ) {
   return useQuery({
     queryKey: payrollKeys.records(orgId ?? "", year, month, branchId ?? "all"),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchRecords(orgId, {
+    queryFn: () =>
+      fetchRecords(orgId!, {
         params: {
           year: String(year),
           month: String(month),
           ...(branchId ? { branch_id: branchId } : {}),
         },
-      });
-    },
+      }),
     enabled: !!orgId && year > 0 && month >= 1 && month <= 12,
     staleTime: 30_000,
   });

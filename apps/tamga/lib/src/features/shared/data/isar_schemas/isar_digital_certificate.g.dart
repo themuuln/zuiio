@@ -38,7 +38,11 @@ const IsarDigitalCertificateSchema = CollectionSchema(
       name: r'expiryDate',
       type: IsarType.dateTime,
     ),
-    r'horseId': PropertySchema(id: 4, name: r'horseId', type: IsarType.string),
+    r'horseId': PropertySchema(
+      id: 4,
+      name: r'horseId',
+      type: IsarType.string,
+    ),
     r'horseName': PropertySchema(
       id: 5,
       name: r'horseName',
@@ -49,7 +53,11 @@ const IsarDigitalCertificateSchema = CollectionSchema(
       name: r'issueDate',
       type: IsarType.dateTime,
     ),
-    r'ownerId': PropertySchema(id: 7, name: r'ownerId', type: IsarType.string),
+    r'ownerId': PropertySchema(
+      id: 7,
+      name: r'ownerId',
+      type: IsarType.string,
+    ),
     r'ownerName': PropertySchema(
       id: 8,
       name: r'ownerName',
@@ -60,13 +68,21 @@ const IsarDigitalCertificateSchema = CollectionSchema(
       name: r'previousOwnerId',
       type: IsarType.string,
     ),
-    r'qrCode': PropertySchema(id: 10, name: r'qrCode', type: IsarType.string),
+    r'qrCode': PropertySchema(
+      id: 10,
+      name: r'qrCode',
+      type: IsarType.string,
+    ),
     r'registrationDate': PropertySchema(
       id: 11,
       name: r'registrationDate',
       type: IsarType.dateTime,
     ),
-    r'status': PropertySchema(id: 12, name: r'status', type: IsarType.string),
+    r'status': PropertySchema(
+      id: 12,
+      name: r'status',
+      type: IsarType.string,
+    ),
     r'trustLevel': PropertySchema(
       id: 13,
       name: r'trustLevel',
@@ -76,7 +92,7 @@ const IsarDigitalCertificateSchema = CollectionSchema(
       id: 14,
       name: r'updatedAt',
       type: IsarType.dateTime,
-    ),
+    )
   },
   estimateSize: _isarDigitalCertificateEstimateSize,
   serialize: _isarDigitalCertificateSerialize,
@@ -94,7 +110,7 @@ const IsarDigitalCertificateSchema = CollectionSchema(
           name: r'domainId',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
     ),
     r'horseId': IndexSchema(
@@ -107,9 +123,9 @@ const IsarDigitalCertificateSchema = CollectionSchema(
           name: r'horseId',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
-    ),
+    )
   },
   links: {},
   embeddedSchemas: {},
@@ -243,16 +259,12 @@ Id _isarDigitalCertificateGetId(IsarDigitalCertificate object) {
 }
 
 List<IsarLinkBase<dynamic>> _isarDigitalCertificateGetLinks(
-  IsarDigitalCertificate object,
-) {
+    IsarDigitalCertificate object) {
   return [];
 }
 
 void _isarDigitalCertificateAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  IsarDigitalCertificate object,
-) {
+    IsarCollection<dynamic> col, Id id, IsarDigitalCertificate object) {
   object.id = id;
 }
 
@@ -275,15 +287,13 @@ extension IsarDigitalCertificateByIndex
   }
 
   Future<List<IsarDigitalCertificate?>> getAllByDomainId(
-    List<String> domainIdValues,
-  ) {
+      List<String> domainIdValues) {
     final values = domainIdValues.map((e) => [e]).toList();
     return getAllByIndex(r'domainId', values);
   }
 
   List<IsarDigitalCertificate?> getAllByDomainIdSync(
-    List<String> domainIdValues,
-  ) {
+      List<String> domainIdValues) {
     final values = domainIdValues.map((e) => [e]).toList();
     return getAllByIndexSync(r'domainId', values);
   }
@@ -310,10 +320,8 @@ extension IsarDigitalCertificateByIndex
     return putAllByIndex(r'domainId', objects);
   }
 
-  List<Id> putAllByDomainIdSync(
-    List<IsarDigitalCertificate> objects, {
-    bool saveLinks = true,
-  }) {
+  List<Id> putAllByDomainIdSync(List<IsarDigitalCertificate> objects,
+      {bool saveLinks = true}) {
     return putAllByIndexSync(r'domainId', objects, saveLinks: saveLinks);
   }
 }
@@ -321,37 +329,27 @@ extension IsarDigitalCertificateByIndex
 extension IsarDigitalCertificateQueryWhereSort
     on QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QWhere> {
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterWhere>
-  anyId() {
+      anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension IsarDigitalCertificateQueryWhere
-    on
-        QueryBuilder<
-          IsarDigitalCertificate,
-          IsarDigitalCertificate,
-          QWhereClause
-        > {
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterWhereClause
-  >
-  idEqualTo(Id id) {
+extension IsarDigitalCertificateQueryWhere on QueryBuilder<
+    IsarDigitalCertificate, IsarDigitalCertificate, QWhereClause> {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterWhereClause
-  >
-  idNotEqualTo(Id id) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterWhereClause> idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -373,12 +371,8 @@ extension IsarDigitalCertificateQueryWhere
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterWhereClause
-  >
-  idGreaterThan(Id id, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterWhereClause> idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -386,12 +380,8 @@ extension IsarDigitalCertificateQueryWhere
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterWhereClause
-  >
-  idLessThan(Id id, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterWhereClause> idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -399,392 +389,294 @@ extension IsarDigitalCertificateQueryWhere
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterWhereClause
-  >
-  idBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterWhereClause> idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterWhereClause
-  >
-  domainIdEqualTo(String domainId) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterWhereClause> domainIdEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'domainId', value: [domainId]),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'domainId',
+        value: [domainId],
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterWhereClause
-  >
-  domainIdNotEqualTo(String domainId) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterWhereClause> domainIdNotEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'domainId',
-                lower: [],
-                upper: [domainId],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'domainId',
-                lower: [domainId],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'domainId',
+              lower: [],
+              upper: [domainId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'domainId',
+              lower: [domainId],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'domainId',
-                lower: [domainId],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'domainId',
-                lower: [],
-                upper: [domainId],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'domainId',
+              lower: [domainId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'domainId',
+              lower: [],
+              upper: [domainId],
+              includeUpper: false,
+            ));
       }
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterWhereClause
-  >
-  horseIdEqualTo(String horseId) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterWhereClause> horseIdEqualTo(String horseId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'horseId', value: [horseId]),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'horseId',
+        value: [horseId],
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterWhereClause
-  >
-  horseIdNotEqualTo(String horseId) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterWhereClause> horseIdNotEqualTo(String horseId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'horseId',
-                lower: [],
-                upper: [horseId],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'horseId',
-                lower: [horseId],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'horseId',
+              lower: [],
+              upper: [horseId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'horseId',
+              lower: [horseId],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'horseId',
-                lower: [horseId],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'horseId',
-                lower: [],
-                upper: [horseId],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'horseId',
+              lower: [horseId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'horseId',
+              lower: [],
+              upper: [horseId],
+              includeUpper: false,
+            ));
       }
     });
   }
 }
 
-extension IsarDigitalCertificateQueryFilter
-    on
-        QueryBuilder<
-          IsarDigitalCertificate,
-          IsarDigitalCertificate,
-          QFilterCondition
-        > {
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  createdAtEqualTo(DateTime value) {
+extension IsarDigitalCertificateQueryFilter on QueryBuilder<
+    IsarDigitalCertificate, IsarDigitalCertificate, QFilterCondition> {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'createdAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  createdAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> createdAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'createdAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  createdAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> createdAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'createdAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  createdAtBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> createdAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'createdAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'createdAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  dataAgeDaysIsNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> dataAgeDaysIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'dataAgeDays'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'dataAgeDays',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  dataAgeDaysIsNotNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> dataAgeDaysIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'dataAgeDays'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'dataAgeDays',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  dataAgeDaysEqualTo(int? value) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> dataAgeDaysEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'dataAgeDays', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dataAgeDays',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  dataAgeDaysGreaterThan(int? value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> dataAgeDaysGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'dataAgeDays',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dataAgeDays',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  dataAgeDaysLessThan(int? value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> dataAgeDaysLessThan(
+    int? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'dataAgeDays',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dataAgeDays',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  dataAgeDaysBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> dataAgeDaysBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'dataAgeDays',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dataAgeDays',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  domainIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> domainIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  domainIdGreaterThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> domainIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  domainIdLessThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> domainIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  domainIdBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> domainIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -792,277 +684,211 @@ extension IsarDigitalCertificateQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'domainId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'domainId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  domainIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> domainIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  domainIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> domainIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  domainIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      domainIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  domainIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      domainIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'domainId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'domainId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  domainIdIsEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> domainIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'domainId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'domainId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  domainIdIsNotEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> domainIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'domainId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'domainId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  expiryDateIsNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> expiryDateIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'expiryDate'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'expiryDate',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  expiryDateIsNotNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> expiryDateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'expiryDate'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'expiryDate',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  expiryDateEqualTo(DateTime? value) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> expiryDateEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'expiryDate', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'expiryDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  expiryDateGreaterThan(DateTime? value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> expiryDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'expiryDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'expiryDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  expiryDateLessThan(DateTime? value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> expiryDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'expiryDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'expiryDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  expiryDateBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> expiryDateBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'expiryDate',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'expiryDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseIdGreaterThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseIdLessThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseIdBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1070,206 +896,155 @@ extension IsarDigitalCertificateQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'horseId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'horseId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      horseIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      horseIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'horseId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'horseId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseIdIsEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'horseId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'horseId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseIdIsNotEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'horseId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'horseId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameIsNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseNameIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'horseName'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'horseName',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameIsNotNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseNameIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'horseName'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'horseName',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameEqualTo(String? value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseNameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'horseName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'horseName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameGreaterThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseNameGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'horseName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'horseName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameLessThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseNameLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'horseName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'horseName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseNameBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -1277,348 +1052,267 @@ extension IsarDigitalCertificateQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'horseName',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'horseName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'horseName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'horseName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'horseName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'horseName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      horseNameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'horseName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'horseName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      horseNameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'horseName',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'horseName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameIsEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseNameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'horseName', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'horseName',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  horseNameIsNotEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> horseNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'horseName', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'horseName',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  idEqualTo(Id value) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  idGreaterThan(Id value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  idLessThan(Id value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  idBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  issueDateIsNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> issueDateIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'issueDate'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'issueDate',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  issueDateIsNotNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> issueDateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'issueDate'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'issueDate',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  issueDateEqualTo(DateTime? value) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> issueDateEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'issueDate', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'issueDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  issueDateGreaterThan(DateTime? value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> issueDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'issueDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'issueDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  issueDateLessThan(DateTime? value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> issueDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'issueDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'issueDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  issueDateBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> issueDateBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'issueDate',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'issueDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerIdGreaterThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerIdLessThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerIdBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1626,180 +1320,137 @@ extension IsarDigitalCertificateQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'ownerId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      ownerIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      ownerIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'ownerId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerIdIsEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'ownerId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerIdIsNotEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'ownerId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerNameEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'ownerName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerNameGreaterThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerNameGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'ownerName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerNameLessThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerNameLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'ownerName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerNameBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerNameBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1807,206 +1458,155 @@ extension IsarDigitalCertificateQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'ownerName',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerNameStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'ownerName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerNameEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'ownerName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerNameContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      ownerNameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'ownerName',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerNameMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      ownerNameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'ownerName',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerNameIsEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerNameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'ownerName', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerName',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  ownerNameIsNotEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> ownerNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'ownerName', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerName',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdIsNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> previousOwnerIdIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'previousOwnerId'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'previousOwnerId',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdIsNotNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> previousOwnerIdIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'previousOwnerId'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'previousOwnerId',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdEqualTo(String? value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> previousOwnerIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'previousOwnerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'previousOwnerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdGreaterThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> previousOwnerIdGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'previousOwnerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'previousOwnerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdLessThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> previousOwnerIdLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'previousOwnerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'previousOwnerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> previousOwnerIdBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -2014,180 +1614,137 @@ extension IsarDigitalCertificateQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'previousOwnerId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'previousOwnerId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> previousOwnerIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'previousOwnerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'previousOwnerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> previousOwnerIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'previousOwnerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'previousOwnerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      previousOwnerIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'previousOwnerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'previousOwnerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      previousOwnerIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'previousOwnerId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'previousOwnerId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdIsEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> previousOwnerIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'previousOwnerId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'previousOwnerId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  previousOwnerIdIsNotEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> previousOwnerIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'previousOwnerId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'previousOwnerId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  qrCodeEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> qrCodeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'qrCode',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'qrCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  qrCodeGreaterThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> qrCodeGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'qrCode',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'qrCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  qrCodeLessThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> qrCodeLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'qrCode',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'qrCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  qrCodeBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> qrCodeBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -2195,277 +1752,211 @@ extension IsarDigitalCertificateQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'qrCode',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'qrCode',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  qrCodeStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> qrCodeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'qrCode',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'qrCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  qrCodeEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> qrCodeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'qrCode',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'qrCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  qrCodeContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      qrCodeContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'qrCode',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'qrCode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  qrCodeMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      qrCodeMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'qrCode',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'qrCode',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  qrCodeIsEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> qrCodeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'qrCode', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'qrCode',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  qrCodeIsNotEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> qrCodeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'qrCode', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'qrCode',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  registrationDateIsNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> registrationDateIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'registrationDate'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'registrationDate',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  registrationDateIsNotNull() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> registrationDateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'registrationDate'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'registrationDate',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  registrationDateEqualTo(DateTime? value) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> registrationDateEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'registrationDate', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'registrationDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  registrationDateGreaterThan(DateTime? value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> registrationDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'registrationDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'registrationDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  registrationDateLessThan(DateTime? value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> registrationDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'registrationDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'registrationDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  registrationDateBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> registrationDateBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'registrationDate',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'registrationDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  statusEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> statusEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'status',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  statusGreaterThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> statusGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'status',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  statusLessThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> statusLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'status',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  statusBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> statusBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -2473,180 +1964,137 @@ extension IsarDigitalCertificateQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'status',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'status',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  statusStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> statusStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'status',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  statusEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> statusEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'status',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  statusContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      statusContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'status',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'status',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  statusMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      statusMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'status',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'status',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  statusIsEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> statusIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'status', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'status',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  statusIsNotEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> statusIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'status', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'status',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  trustLevelEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> trustLevelEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'trustLevel',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'trustLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  trustLevelGreaterThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> trustLevelGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'trustLevel',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'trustLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  trustLevelLessThan(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> trustLevelLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'trustLevel',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'trustLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  trustLevelBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> trustLevelBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -2654,640 +2102,586 @@ extension IsarDigitalCertificateQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'trustLevel',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'trustLevel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  trustLevelStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> trustLevelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'trustLevel',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'trustLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  trustLevelEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> trustLevelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'trustLevel',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'trustLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  trustLevelContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      trustLevelContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'trustLevel',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'trustLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  trustLevelMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+          QAfterFilterCondition>
+      trustLevelMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'trustLevel',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'trustLevel',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  trustLevelIsEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> trustLevelIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'trustLevel', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'trustLevel',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  trustLevelIsNotEmpty() {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> trustLevelIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'trustLevel', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'trustLevel',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  updatedAtEqualTo(DateTime value) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> updatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'updatedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> updatedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  updatedAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> updatedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarDigitalCertificate,
-    IsarDigitalCertificate,
-    QAfterFilterCondition
-  >
-  updatedAtBetween(
+  QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate,
+      QAfterFilterCondition> updatedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'updatedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'updatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
 
-extension IsarDigitalCertificateQueryObject
-    on
-        QueryBuilder<
-          IsarDigitalCertificate,
-          IsarDigitalCertificate,
-          QFilterCondition
-        > {}
+extension IsarDigitalCertificateQueryObject on QueryBuilder<
+    IsarDigitalCertificate, IsarDigitalCertificate, QFilterCondition> {}
 
-extension IsarDigitalCertificateQueryLinks
-    on
-        QueryBuilder<
-          IsarDigitalCertificate,
-          IsarDigitalCertificate,
-          QFilterCondition
-        > {}
+extension IsarDigitalCertificateQueryLinks on QueryBuilder<
+    IsarDigitalCertificate, IsarDigitalCertificate, QFilterCondition> {}
 
 extension IsarDigitalCertificateQuerySortBy
     on QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QSortBy> {
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByCreatedAt() {
+      sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByCreatedAtDesc() {
+      sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByDataAgeDays() {
+      sortByDataAgeDays() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataAgeDays', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByDataAgeDaysDesc() {
+      sortByDataAgeDaysDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataAgeDays', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByDomainId() {
+      sortByDomainId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByDomainIdDesc() {
+      sortByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByExpiryDate() {
+      sortByExpiryDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'expiryDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByExpiryDateDesc() {
+      sortByExpiryDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'expiryDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByHorseId() {
+      sortByHorseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByHorseIdDesc() {
+      sortByHorseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByHorseName() {
+      sortByHorseName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseName', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByHorseNameDesc() {
+      sortByHorseNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseName', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByIssueDate() {
+      sortByIssueDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'issueDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByIssueDateDesc() {
+      sortByIssueDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'issueDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByOwnerId() {
+      sortByOwnerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByOwnerIdDesc() {
+      sortByOwnerIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByOwnerName() {
+      sortByOwnerName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerName', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByOwnerNameDesc() {
+      sortByOwnerNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerName', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByPreviousOwnerId() {
+      sortByPreviousOwnerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'previousOwnerId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByPreviousOwnerIdDesc() {
+      sortByPreviousOwnerIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'previousOwnerId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByQrCode() {
+      sortByQrCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'qrCode', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByQrCodeDesc() {
+      sortByQrCodeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'qrCode', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByRegistrationDate() {
+      sortByRegistrationDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'registrationDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByRegistrationDateDesc() {
+      sortByRegistrationDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'registrationDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByStatus() {
+      sortByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByStatusDesc() {
+      sortByStatusDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByTrustLevel() {
+      sortByTrustLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'trustLevel', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByTrustLevelDesc() {
+      sortByTrustLevelDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'trustLevel', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByUpdatedAt() {
+      sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  sortByUpdatedAtDesc() {
+      sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 }
 
-extension IsarDigitalCertificateQuerySortThenBy
-    on
-        QueryBuilder<
-          IsarDigitalCertificate,
-          IsarDigitalCertificate,
-          QSortThenBy
-        > {
+extension IsarDigitalCertificateQuerySortThenBy on QueryBuilder<
+    IsarDigitalCertificate, IsarDigitalCertificate, QSortThenBy> {
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByCreatedAt() {
+      thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByCreatedAtDesc() {
+      thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByDataAgeDays() {
+      thenByDataAgeDays() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataAgeDays', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByDataAgeDaysDesc() {
+      thenByDataAgeDaysDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dataAgeDays', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByDomainId() {
+      thenByDomainId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByDomainIdDesc() {
+      thenByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByExpiryDate() {
+      thenByExpiryDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'expiryDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByExpiryDateDesc() {
+      thenByExpiryDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'expiryDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByHorseId() {
+      thenByHorseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByHorseIdDesc() {
+      thenByHorseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByHorseName() {
+      thenByHorseName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseName', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByHorseNameDesc() {
+      thenByHorseNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseName', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenById() {
+      thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByIdDesc() {
+      thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByIssueDate() {
+      thenByIssueDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'issueDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByIssueDateDesc() {
+      thenByIssueDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'issueDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByOwnerId() {
+      thenByOwnerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByOwnerIdDesc() {
+      thenByOwnerIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByOwnerName() {
+      thenByOwnerName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerName', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByOwnerNameDesc() {
+      thenByOwnerNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerName', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByPreviousOwnerId() {
+      thenByPreviousOwnerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'previousOwnerId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByPreviousOwnerIdDesc() {
+      thenByPreviousOwnerIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'previousOwnerId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByQrCode() {
+      thenByQrCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'qrCode', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByQrCodeDesc() {
+      thenByQrCodeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'qrCode', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByRegistrationDate() {
+      thenByRegistrationDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'registrationDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByRegistrationDateDesc() {
+      thenByRegistrationDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'registrationDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByStatus() {
+      thenByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByStatusDesc() {
+      thenByStatusDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByTrustLevel() {
+      thenByTrustLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'trustLevel', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByTrustLevelDesc() {
+      thenByTrustLevelDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'trustLevel', Sort.desc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByUpdatedAt() {
+      thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QAfterSortBy>
-  thenByUpdatedAtDesc() {
+      thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -3297,121 +2691,114 @@ extension IsarDigitalCertificateQuerySortThenBy
 extension IsarDigitalCertificateQueryWhereDistinct
     on QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct> {
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByCreatedAt() {
+      distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByDataAgeDays() {
+      distinctByDataAgeDays() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dataAgeDays');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByDomainId({bool caseSensitive = true}) {
+      distinctByDomainId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'domainId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByExpiryDate() {
+      distinctByExpiryDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'expiryDate');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByHorseId({bool caseSensitive = true}) {
+      distinctByHorseId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'horseId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByHorseName({bool caseSensitive = true}) {
+      distinctByHorseName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'horseName', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByIssueDate() {
+      distinctByIssueDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'issueDate');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByOwnerId({bool caseSensitive = true}) {
+      distinctByOwnerId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'ownerId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByOwnerName({bool caseSensitive = true}) {
+      distinctByOwnerName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'ownerName', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByPreviousOwnerId({bool caseSensitive = true}) {
+      distinctByPreviousOwnerId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'previousOwnerId',
-        caseSensitive: caseSensitive,
-      );
+      return query.addDistinctBy(r'previousOwnerId',
+          caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByQrCode({bool caseSensitive = true}) {
+      distinctByQrCode({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'qrCode', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByRegistrationDate() {
+      distinctByRegistrationDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'registrationDate');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByStatus({bool caseSensitive = true}) {
+      distinctByStatus({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'status', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByTrustLevel({bool caseSensitive = true}) {
+      distinctByTrustLevel({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'trustLevel', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, IsarDigitalCertificate, QDistinct>
-  distinctByUpdatedAt() {
+      distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'updatedAt');
     });
   }
 }
 
-extension IsarDigitalCertificateQueryProperty
-    on
-        QueryBuilder<
-          IsarDigitalCertificate,
-          IsarDigitalCertificate,
-          QQueryProperty
-        > {
+extension IsarDigitalCertificateQueryProperty on QueryBuilder<
+    IsarDigitalCertificate, IsarDigitalCertificate, QQueryProperty> {
   QueryBuilder<IsarDigitalCertificate, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
@@ -3419,105 +2806,105 @@ extension IsarDigitalCertificateQueryProperty
   }
 
   QueryBuilder<IsarDigitalCertificate, DateTime, QQueryOperations>
-  createdAtProperty() {
+      createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, int?, QQueryOperations>
-  dataAgeDaysProperty() {
+      dataAgeDaysProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dataAgeDays');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, String, QQueryOperations>
-  domainIdProperty() {
+      domainIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'domainId');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, DateTime?, QQueryOperations>
-  expiryDateProperty() {
+      expiryDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'expiryDate');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, String, QQueryOperations>
-  horseIdProperty() {
+      horseIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'horseId');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, String?, QQueryOperations>
-  horseNameProperty() {
+      horseNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'horseName');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, DateTime?, QQueryOperations>
-  issueDateProperty() {
+      issueDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'issueDate');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, String, QQueryOperations>
-  ownerIdProperty() {
+      ownerIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'ownerId');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, String, QQueryOperations>
-  ownerNameProperty() {
+      ownerNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'ownerName');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, String?, QQueryOperations>
-  previousOwnerIdProperty() {
+      previousOwnerIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'previousOwnerId');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, String, QQueryOperations>
-  qrCodeProperty() {
+      qrCodeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'qrCode');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, DateTime?, QQueryOperations>
-  registrationDateProperty() {
+      registrationDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'registrationDate');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, String, QQueryOperations>
-  statusProperty() {
+      statusProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'status');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, String, QQueryOperations>
-  trustLevelProperty() {
+      trustLevelProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'trustLevel');
     });
   }
 
   QueryBuilder<IsarDigitalCertificate, DateTime, QQueryOperations>
-  updatedAtProperty() {
+      updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'updatedAt');
     });

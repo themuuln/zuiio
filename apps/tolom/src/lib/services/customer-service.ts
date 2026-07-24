@@ -363,43 +363,44 @@ export async function getSharedCustomers(
 
   if (error) throw new Error(error.message);
 
-  // Batch fetch vehicle counts and org names in parallel
+  // Batch fetch vehicle counts
   const customerIds = (customers ?? []).map((c) => c.id);
-  const orgIds = [...new Set((customers ?? []).map((c) => c.organization_id))];
+  let vehicleCounts = new Map<string, number>();
 
-  const [countResult, orgResult] = await Promise.all([
-    customerIds.length > 0
-      ? withDbCapture(
-          "getSharedCustomers:vehicleCounts",
-          supabase
-            .from("vehicle_owners")
-            .select("customer_id", { count: "exact" })
-            .in("customer_id", customerIds)
-            .is("owned_until", null),
-        )
-      : Promise.resolve({ data: null }),
-    orgIds.length > 0
-      ? withDbCapture(
-          "getSharedCustomers:orgNames",
-          supabase.from("organizations").select("id, name").in("id", orgIds),
-        )
-      : Promise.resolve({ data: null }),
-  ]);
+  if (customerIds.length > 0) {
+    const { data: counts } = await withDbCapture(
+      "getSharedCustomers:vehicleCounts",
+      supabase
+        .from("vehicle_owners")
+        .select("customer_id", { count: "exact" })
+        .in("customer_id", customerIds)
+        .is("owned_until", null),
+    );
 
-  // Build vehicle count map
-  const vehicleCounts = new Map<string, number>();
-  if (countResult.data) {
-    for (const row of countResult.data) {
-      const cid = row.customer_id as string;
-      vehicleCounts.set(cid, (vehicleCounts.get(cid) ?? 0) + 1);
+    if (counts) {
+      const countMap = new Map<string, number>();
+      for (const row of counts) {
+        const cid = row.customer_id as string;
+        countMap.set(cid, (countMap.get(cid) ?? 0) + 1);
+      }
+      vehicleCounts = countMap;
     }
   }
 
-  // Build org name map
+  // Fetch org names for attribution badges
+  const orgIds = [...new Set((customers ?? []).map((c) => c.organization_id))];
   const orgNames = new Map<string, string>();
-  if (orgResult.data) {
-    for (const org of orgResult.data) {
-      orgNames.set(org.id, org.name);
+
+  if (orgIds.length > 0) {
+    const { data: orgs } = await withDbCapture(
+      "getSharedCustomers:orgNames",
+      supabase.from("organizations").select("id, name").in("id", orgIds),
+    );
+
+    if (orgs) {
+      for (const org of orgs) {
+        orgNames.set(org.id, org.name);
+      }
     }
   }
 
@@ -442,11 +443,10 @@ export async function getSharedCustomer(
   const { data, error } = await supabase
     .from("customers")
     .select(
-      "id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, created_at, updated_at, organizations!inner(id, sharing_enabled, name)",
+      "id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, created_at, updated_at",
     )
     .eq("id", id)
     .neq("organization_id", viewerOrgId)
-    .eq("organizations.sharing_enabled", true)
     .is("deleted_at", null)
     .single();
 
@@ -454,9 +454,18 @@ export async function getSharedCustomer(
     throw new NotFoundError("Customer not found");
   }
 
-  const orgRow = data as unknown as { organizations?: { name?: string } };
-  const orgName = orgRow.organizations?.name ?? "Unknown";
-  return { ...data, organization_name: orgName } as unknown as Customer;
+  // Verify the owning org has sharing enabled
+  const { data: ownerOrg } = await supabase
+    .from("organizations")
+    .select("id, sharing_enabled, name")
+    .eq("id", data.organization_id)
+    .single();
+
+  if (!ownerOrg?.sharing_enabled) {
+    throw new NotFoundError("Customer not found");
+  }
+
+  return { ...data, organization_name: ownerOrg.name } as unknown as Customer;
 }
 
 /**

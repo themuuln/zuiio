@@ -18,7 +18,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { NewCustomerDrawer } from "@/components/customers/new-customer-drawer";
+import { NewCustomerSheet } from "@/components/customers/new-customer-drawer";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
 import {
   type SortableItem,
@@ -36,7 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
-import { NewVehicleDrawer } from "@/components/vehicles/new-vehicle-drawer";
+import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-drawer";
 import {
   useVehicleSearch,
   type VehicleSearchResult,
@@ -176,12 +176,12 @@ export function AssignDialog({
         );
       })
       .map((wo) => ({
-        id: wo.vehicle?.id ?? "",
-        plate_number: wo.vehicle?.plate_number ?? "",
-        make: wo.vehicle?.make ?? "",
-        model: wo.vehicle?.model ?? "",
-        year: wo.vehicle?.year ?? null,
-        color: wo.vehicle?.color ?? null,
+        id: wo.vehicle!.id,
+        plate_number: wo.vehicle!.plate_number,
+        make: wo.vehicle!.make ?? "",
+        model: wo.vehicle!.model ?? "",
+        year: wo.vehicle!.year,
+        color: wo.vehicle!.color,
         customer: null,
         _fromQueue: true as const,
         _workOrderId: wo.id,
@@ -669,7 +669,7 @@ export function AssignDialog({
         </DragOverlay>
       </DndContext>
 
-      <NewVehicleDrawer
+      <NewVehicleSheet
         open={showNewVehicle}
         onOpenChange={setShowNewVehicle}
         initialPlateNumber={search.trim() || undefined}
@@ -679,7 +679,7 @@ export function AssignDialog({
           setTimeout(() => searchRef.current?.focus(), 100);
         }}
       />
-      <NewCustomerDrawer
+      <NewCustomerSheet
         open={showNewCustomer}
         onOpenChange={setShowNewCustomer}
         onSuccess={() => {

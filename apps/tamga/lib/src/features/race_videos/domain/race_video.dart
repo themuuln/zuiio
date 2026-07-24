@@ -85,3 +85,5 @@ class VideoAccess {
 
   bool get isValid => expiresAt == null || expiresAt!.isAfter(DateTime.now());
 }
+
+

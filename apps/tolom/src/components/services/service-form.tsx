@@ -18,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreateService } from "@/lib/queries/use-wizard-data";
+import { reportServerError } from "@/lib/sentry-report-server";
 import type { CreateServiceCatalogParams, ServiceCatalog } from "@/lib/types";
 import { serviceSchema as sharedServiceSchema } from "@/lib/validation/service-schema";
 
@@ -29,7 +30,6 @@ const serviceSchema = z.object({
   name: sharedServiceSchema.shape.name,
   name_mn: sharedServiceSchema.shape.nameMn,
   default_price: sharedServiceSchema.shape.defaultPrice,
-  default_cost: sharedServiceSchema.shape.defaultCost,
   category: sharedServiceSchema.shape.category,
   description: sharedServiceSchema.shape.description,
 });
@@ -70,10 +70,6 @@ export function ServiceForm({
         initialData?.default_price != null
           ? String(initialData.default_price)
           : "",
-      default_cost:
-        initialData?.default_cost != null
-          ? String(initialData.default_cost)
-          : "",
       category: initialData?.category ?? "",
       description: initialData?.description ?? "",
     },
@@ -87,10 +83,6 @@ export function ServiceForm({
         name: data.name.trim(),
         name_mn: data.name_mn?.trim() || undefined,
         default_price: Number(data.default_price),
-        default_cost:
-          currentMode === "full" && data.default_cost
-            ? Number(data.default_cost)
-            : undefined,
         description:
           currentMode === "full"
             ? data.description?.trim() || undefined
@@ -187,43 +179,27 @@ export function ServiceForm({
         </div>
 
         {currentMode === "full" && (
-          <>
-            <div className="grid gap-3 sm:grid-cols-2 animate-fade-in">
-              <Field>
-                <FieldLabel>{st("category")}</FieldLabel>
-                <FieldContent>
-                  <Input
-                    placeholder={st("categoryPlaceholderForm")}
-                    {...form.register("category")}
-                  />
-                </FieldContent>
-              </Field>
+          <div className="grid gap-3 sm:grid-cols-2 animate-fade-in">
+            <Field>
+              <FieldLabel>{st("category")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder={st("categoryPlaceholderForm")}
+                  {...form.register("category")}
+                />
+              </FieldContent>
+            </Field>
 
-              <Field>
-                <FieldLabel>{st("description")}</FieldLabel>
-                <FieldContent>
-                  <Input
-                    placeholder={st("descriptionPlaceholder")}
-                    {...form.register("description")}
-                  />
-                </FieldContent>
-              </Field>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 animate-fade-in">
-              <Field>
-                <FieldLabel>{st("cost")} (₮)</FieldLabel>
-                <FieldContent>
-                  <CurrencyInput
-                    placeholder="0"
-                    value={Number(form.watch("default_cost")) || 0}
-                    onChange={(val) =>
-                      form.setValue("default_cost", String(val))
-                    }
-                  />
-                </FieldContent>
-              </Field>
-            </div>
-          </>
+            <Field>
+              <FieldLabel>{st("description")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder={st("descriptionPlaceholder")}
+                  {...form.register("description")}
+                />
+              </FieldContent>
+            </Field>
+          </div>
         )}
       </FieldGroup>
 

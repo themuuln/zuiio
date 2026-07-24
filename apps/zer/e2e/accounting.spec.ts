@@ -370,7 +370,8 @@ test.describe("Accounting — Journal Entries", () => {
     // Check if balanced indicator shows
     await page.waitForTimeout(1000);
     const balancedText = page.getByText("Тэнцүү ✓");
-    const _isBalanced = await balancedText.isVisible().catch(() => false);
+    const isBalanced = await balancedText.isVisible().catch(() => false);
+    console.log("Entry is balanced:", isBalanced);
 
     // Submit via evaluate
     await page.evaluate(() => {
@@ -398,10 +399,17 @@ test.describe("Accounting — Journal Entries", () => {
     const hasError = await errorToast.isVisible().catch(() => false);
 
     if (hasSuccess) {
+      console.log("Journal entry created successfully");
     } else if (hasError) {
+      console.log(
+        "Error creating journal entry:",
+        await errorToast.textContent(),
+      );
     } else {
+      console.log("No toast appeared — checking for validation errors");
       const serverError = page.locator(".bg-destructive\\/15").first();
       if (await serverError.isVisible().catch(() => false)) {
+        console.log("Server error:", await serverError.textContent());
       }
     }
   });
@@ -456,6 +464,7 @@ test.describe("Accounting — Journal Entries", () => {
       await page.waitForTimeout(800);
       await expect(detailHeading).not.toBeVisible({ timeout: 3000 });
     } else {
+      console.log("Detail drawer did not appear");
     }
   });
 
@@ -546,6 +555,7 @@ test.describe("Accounting — Journal Entries", () => {
       });
       const editVisible = await editHeading.isVisible().catch(() => false);
       if (editVisible) {
+        console.log("Edit drawer opened successfully");
         await page.keyboard.press("Escape");
         await page.waitForTimeout(500);
       }
@@ -559,7 +569,7 @@ test.describe("Accounting — Trial Balance", () => {
 
     // Trial balance tab should be active by default
     const emptyState = page.getByText("Туршилтын баланс хоосон");
-    const _table = page.locator("table");
+    const table = page.locator("table");
     const isEmpty = await emptyState.isVisible().catch(() => false);
 
     if (isEmpty) {
@@ -601,10 +611,14 @@ test.describe("Accounting — Navigation & URL-driven", () => {
     const isVisible = await drawerHeading.isVisible().catch(() => false);
 
     if (isVisible) {
+      console.log("Drawer auto-opened from ?create=true");
       // Verify URL was cleaned
       const currentUrl = page.url();
       expect(currentUrl).not.toContain("create=true");
     } else {
+      console.log(
+        "Drawer did not auto-open — may already be closed or create event consumed",
+      );
     }
   });
 });

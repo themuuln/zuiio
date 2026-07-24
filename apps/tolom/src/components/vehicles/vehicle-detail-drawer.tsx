@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -224,19 +225,13 @@ interface VehicleDetailSheetProps {
   vehicleId: string | null;
 }
 
-export function VehicleDetailDrawer({
+export function VehicleDetailSheet({
   open,
   onOpenChange,
   vehicleId,
 }: VehicleDetailSheetProps) {
-  const t = useTranslations("vehicles") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const commonT = useTranslations("common") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("vehicles");
+  const commonT = useTranslations("common");
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
   const queryClient = useQueryClient();
@@ -380,15 +375,10 @@ export function VehicleDetailDrawer({
   return (
     <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
-            {isLoadingData ? (
-              <Loader2 className="size-5 animate-spin text-primary" />
-            ) : (
-              <Pencil className="size-5 text-primary" />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
+        <DetailSheetHeader
+          icon={Pencil}
+          iconLoading={isLoadingData}
+          title={
             <DrawerTitle className="text-base truncate">
               {isLoadingData
                 ? t("loading")
@@ -396,61 +386,63 @@ export function VehicleDetailDrawer({
                   ? vehicle.plate_number
                   : t("vehicleNotFound")}
             </DrawerTitle>
-            {vehicle && (
-              <div className="mt-0.5 flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">
-                  {[vehicle.year, vehicle.make, vehicle.model]
-                    .filter(Boolean)
-                    .join(" ")}
-                </span>
-              </div>
-            )}
-          </div>
-          {vehicle && !editing && (
-            <div className="flex shrink-0 items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => {
-                  setForm(syncForm(vehicle));
-                  setEditing(true);
-                }}
-              >
-                <Pencil className="size-4" />
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      className="text-destructive"
-                    />
-                  }
+          }
+          subtitle={
+            vehicle ? (
+              <span className="text-xs text-muted-foreground">
+                {[vehicle.year, vehicle.make, vehicle.model]
+                  .filter(Boolean)
+                  .join(" ")}
+              </span>
+            ) : undefined
+          }
+          actions={
+            vehicle && !editing ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => {
+                    setForm(syncForm(vehicle));
+                    setEditing(true);
+                  }}
                 >
-                  <Trash2 className="size-4" />
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {t("deleteConfirm")}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteMutation.mutate()}
-                      variant="destructive"
-                    >
-                      {commonT("delete")}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          )}
-        </div>
+                  <Pencil className="size-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-destructive"
+                      />
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t("deleteConfirm")}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMutation.mutate()}
+                        variant="destructive"
+                      >
+                        {commonT("delete")}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            ) : undefined
+          }
+        />
       </DrawerHeader>
 
       {/* Loading */}
@@ -798,10 +790,7 @@ function VehicleEditForm({
   form: VehicleFormState;
   onChange: (updater: (prev: VehicleFormState) => VehicleFormState) => void;
 }) {
-  const t = useTranslations("vehicles") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("vehicles");
   const [showMore, setShowMore] = useState(false);
 
   const setField = (field: keyof VehicleFormState, value: string) => {

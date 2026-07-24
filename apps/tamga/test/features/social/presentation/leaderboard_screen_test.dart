@@ -46,6 +46,7 @@ final List<LeaderboardEntry> _mockEntries = [
   ),
 ];
 
+
 void main() {
   // ══════════════════════════════════════════════════════════════════
   // VAL-SOCIAL-003: Leaderboard screen exists showing ranked breeders
@@ -183,8 +184,7 @@ void main() {
       expect(
         source.contains('LeaderboardTimePeriod.values'),
         isTrue,
-        reason:
-            'Should iterate over all time period values to render filter chips',
+        reason: 'Should iterate over all time period values to render filter chips',
       );
       // The labels (7 хоног, 30 хоног, Бүгд) are rendered via FilterChip
       expect(
@@ -277,9 +277,8 @@ void main() {
         ProviderScope(
           overrides: [
             leaderboardProvider.overrideWith((ref) => _mockEntries),
-            leaderboardAvailableRegionsProvider.overrideWith(
-              (ref) => ['Төв аймаг', 'Хэнтий аймаг', 'Архангай аймаг'],
-            ),
+            leaderboardAvailableRegionsProvider
+                .overrideWith((ref) => ['Төв аймаг', 'Хэнтий аймаг', 'Архангай аймаг']),
           ],
           child: const MaterialApp(home: LeaderboardScreen()),
         ),
@@ -338,15 +337,13 @@ void main() {
     });
 
     testWidgets('shows empty state when no entries', (tester) async {
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            leaderboardProvider.overrideWith(
-              (ref) async => <LeaderboardEntry>[],
-            ),
-            leaderboardAvailableRegionsProvider.overrideWith(
-              (ref) => ['Төв аймаг', 'Хэнтий аймаг', 'Архангай аймаг'],
-            ),
+            leaderboardProvider.overrideWith((ref) async => <LeaderboardEntry>[]),
+            leaderboardAvailableRegionsProvider
+                .overrideWith((ref) => ['Төв аймаг', 'Хэнтий аймаг', 'Архангай аймаг']),
           ],
           child: const MaterialApp(home: LeaderboardScreen()),
         ),
@@ -367,9 +364,8 @@ void main() {
         ProviderScope(
           overrides: [
             leaderboardProvider.overrideWith((ref) => _mockEntries),
-            leaderboardAvailableRegionsProvider.overrideWith(
-              (ref) => ['Төв аймаг', 'Хэнтий аймаг', 'Архангай аймаг'],
-            ),
+            leaderboardAvailableRegionsProvider
+                .overrideWith((ref) => ['Төв аймаг', 'Хэнтий аймаг', 'Архангай аймаг']),
           ],
           child: const MaterialApp(home: LeaderboardScreen()),
         ),
@@ -402,9 +398,8 @@ void main() {
         ProviderScope(
           overrides: [
             leaderboardProvider.overrideWith((ref) => _mockEntries),
-            leaderboardAvailableRegionsProvider.overrideWith(
-              (ref) => ['Төв аймаг', 'Хэнтий аймаг', 'Архангай аймаг'],
-            ),
+            leaderboardAvailableRegionsProvider
+                .overrideWith((ref) => ['Төв аймаг', 'Хэнтий аймаг', 'Архангай аймаг']),
           ],
           child: const MaterialApp(home: LeaderboardScreen()),
         ),
@@ -429,9 +424,8 @@ void main() {
         ProviderScope(
           overrides: [
             leaderboardProvider.overrideWith((ref) => _mockEntries),
-            leaderboardAvailableRegionsProvider.overrideWith(
-              (ref) => ['Төв аймаг', 'Хэнтий аймаг', 'Архангай аймаг'],
-            ),
+            leaderboardAvailableRegionsProvider
+                .overrideWith((ref) => ['Төв аймаг', 'Хэнтий аймаг', 'Архангай аймаг']),
           ],
           child: const MaterialApp(home: LeaderboardScreen()),
         ),

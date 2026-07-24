@@ -494,14 +494,13 @@ export async function getCurrentUserProfile(
 
   return {
     id: user.id,
-    email: user.email ?? "",
+    email: "",
     username: profile?.username ?? null,
     phone: profile?.phone ?? (user.phone as string) ?? null,
     fullName:
       profile?.full_name ??
       (meta?.full_name as string) ??
       (meta?.name as string) ??
-      user.email?.split("@")[0] ??
       null,
     avatarUrl: profile?.avatar_url ?? (meta?.avatar_url as string) ?? null,
     organizationId: membership?.organization_id ?? null,

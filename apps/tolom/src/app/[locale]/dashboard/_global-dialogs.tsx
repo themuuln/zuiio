@@ -3,110 +3,110 @@
 import dynamic from "next/dynamic";
 import { usePageHeader } from "@/hooks/use-page-header";
 
-// Lazy-load all drawer components — they only mount when their `open` prop is true
-const NewCustomerDrawer = dynamic(
+// Lazy-load all sheet components — they only mount when their `open` prop is true
+const NewCustomerSheet = dynamic(
   () =>
     import("@/components/customers/new-customer-drawer").then(
-      (m) => m.NewCustomerDrawer,
+      (m) => m.NewCustomerSheet,
     ),
   { ssr: false },
 );
-const NewVehicleDrawer = dynamic(
+const NewVehicleSheet = dynamic(
   () =>
     import("@/components/vehicles/new-vehicle-drawer").then(
-      (m) => m.NewVehicleDrawer,
+      (m) => m.NewVehicleSheet,
     ),
   { ssr: false },
 );
-const NewExpenseDrawer = dynamic(
+const NewExpenseSheet = dynamic(
   () =>
     import("@/components/expenses/new-expense-drawer").then(
-      (m) => m.NewExpenseDrawer,
+      (m) => m.NewExpenseSheet,
     ),
   { ssr: false },
 );
-const NewWorkOrderDrawer = dynamic(
+const NewWorkOrderSheet = dynamic(
   () =>
     import("@/components/work-orders/new-work-order-drawer").then(
-      (m) => m.NewWorkOrderDrawer,
+      (m) => m.NewWorkOrderSheet,
     ),
   { ssr: false },
 );
-const SupplierDetailDrawer = dynamic(
+const SupplierDetailSheet = dynamic(
   () =>
     import("@/components/inventory/supplier-detail-drawer").then(
-      (m) => m.SupplierDetailDrawer,
+      (m) => m.SupplierDetailSheet,
     ),
   { ssr: false },
 );
-const ExpenseDetailDrawer = dynamic(
+const ExpenseDetailSheet = dynamic(
   () =>
     import("@/components/expenses/expense-detail-drawer").then(
-      (m) => m.ExpenseDetailDrawer,
+      (m) => m.ExpenseDetailSheet,
     ),
   { ssr: false },
 );
-const PurchaseOrderDetailDrawer = dynamic(
+const PurchaseOrderDetailSheet = dynamic(
   () =>
     import("@/components/inventory/purchase-order-detail-drawer").then(
-      (m) => m.PurchaseOrderDetailDrawer,
+      (m) => m.PurchaseOrderDetailSheet,
     ),
   { ssr: false },
 );
-const VehicleDetailDrawer = dynamic(
+const VehicleDetailSheet = dynamic(
   () =>
     import("@/components/vehicles/vehicle-detail-drawer").then(
-      (m) => m.VehicleDetailDrawer,
+      (m) => m.VehicleDetailSheet,
     ),
   { ssr: false },
 );
-const CustomerDetailDrawer = dynamic(
+const CustomerDetailSheet = dynamic(
   () =>
     import("@/components/customers/customer-detail-drawer").then(
-      (m) => m.CustomerDetailDrawer,
+      (m) => m.CustomerDetailSheet,
     ),
   { ssr: false },
 );
-const PartsCarDetailDrawer = dynamic(
+const PartsCarDetailSheet = dynamic(
   () =>
     import("@/components/inventory/parts-car-detail-drawer").then(
-      (m) => m.PartsCarDetailDrawer,
+      (m) => m.PartsCarDetailSheet,
     ),
   { ssr: false },
 );
 
-const NewSupplierDrawer = dynamic(
+const NewSupplierSheet = dynamic(
   () =>
     import("@/components/inventory/new-supplier-drawer").then(
-      (m) => m.NewSupplierDrawer,
+      (m) => m.NewSupplierSheet,
     ),
   { ssr: false },
 );
-const NewPurchaseOrderDrawer = dynamic(
+const NewPurchaseOrderSheet = dynamic(
   () =>
     import("@/components/inventory/new-purchase-order-drawer").then(
-      (m) => m.NewPurchaseOrderDrawer,
+      (m) => m.NewPurchaseOrderSheet,
     ),
   { ssr: false },
 );
-const AppointmentCreateDrawer = dynamic(
+const AppointmentCreateSheet = dynamic(
   () =>
     import("@/components/appointments/create-drawer").then(
-      (m) => m.AppointmentCreateDrawer,
+      (m) => m.AppointmentCreateSheet,
     ),
   { ssr: false },
 );
-const NewPartsCarDrawer = dynamic(
+const NewPartsCarSheet = dynamic(
   () =>
     import("@/components/inventory/new-parts-car-drawer").then(
-      (m) => m.NewPartsCarDrawer,
+      (m) => m.NewPartsCarSheet,
     ),
   { ssr: false },
 );
-const WorkOrderDetailDrawer = dynamic(
+const WorkOrderDetailSheet = dynamic(
   () =>
     import("@/components/work-orders/work-order-detail-drawer").then(
-      (m) => m.WorkOrderDetailDrawer,
+      (m) => m.WorkOrderDetailSheet,
     ),
   { ssr: false },
 );
@@ -147,80 +147,80 @@ export function GlobalDialogs() {
 
   return (
     <>
-      <NewCustomerDrawer
+      <NewCustomerSheet
         open={isNewCustomerDialogOpen}
         onOpenChange={setNewCustomerDialogOpen}
       />
-      <NewVehicleDrawer
+      <NewVehicleSheet
         open={isNewVehicleDialogOpen}
         onOpenChange={setNewVehicleDialogOpen}
       />
-      <NewExpenseDrawer
+      <NewExpenseSheet
         open={isNewExpenseSheetOpen}
         onOpenChange={setNewExpenseSheetOpen}
       />
-      <NewWorkOrderDrawer
+      <NewWorkOrderSheet
         open={isNewWorkOrderSheetOpen}
         onOpenChange={setNewWorkOrderSheetOpen}
       />
-      <SupplierDetailDrawer
+      <SupplierDetailSheet
         open={detailSupplierId !== null}
         onOpenChange={(open) =>
           setDetailSupplierId(open ? detailSupplierId : null)
         }
         supplierId={detailSupplierId}
       />
-      <ExpenseDetailDrawer
+      <ExpenseDetailSheet
         open={detailExpenseId !== null}
         onOpenChange={(open) =>
           setDetailExpenseId(open ? detailExpenseId : null)
         }
         expenseId={detailExpenseId}
       />
-      <PurchaseOrderDetailDrawer
+      <PurchaseOrderDetailSheet
         open={detailPOId !== null}
         onOpenChange={(open) => setDetailPOId(open ? detailPOId : null)}
         poId={detailPOId}
       />
-      <VehicleDetailDrawer
+      <VehicleDetailSheet
         open={detailVehicleId !== null}
         onOpenChange={(open) =>
           setDetailVehicleId(open ? detailVehicleId : null)
         }
         vehicleId={detailVehicleId}
       />
-      <CustomerDetailDrawer
+      <CustomerDetailSheet
         open={detailCustomerId !== null}
         onOpenChange={(open) =>
           setDetailCustomerId(open ? detailCustomerId : null)
         }
         customerId={detailCustomerId}
       />
-      <PartsCarDetailDrawer
+      <PartsCarDetailSheet
         open={detailPartsCarId !== null}
         onOpenChange={(open) =>
           setDetailPartsCarId(open ? detailPartsCarId : null)
         }
         carId={detailPartsCarId}
       />
-      <NewSupplierDrawer
+      <NewSupplierSheet
         open={isNewSupplierSheetOpen}
         onOpenChange={setNewSupplierSheetOpen}
       />
-      <NewPurchaseOrderDrawer
+      <NewPurchaseOrderSheet
         open={isNewPOSheetOpen}
         onOpenChange={setNewPOSheetOpen}
       />
-      <AppointmentCreateDrawer
+      <AppointmentCreateSheet
         open={isNewAppointmentSheetOpen}
         onOpenChange={setNewAppointmentSheetOpen}
         orgId=""
       />
-      <NewPartsCarDrawer
+      <NewPartsCarSheet
         open={isNewPartsCarSheetOpen}
         onOpenChange={setNewPartsCarSheetOpen}
       />
-      <WorkOrderDetailDrawer
+      <WorkOrderDetailSheet
         open={detailWorkOrderId !== null}
         onOpenChange={(open) =>
           setDetailWorkOrderId(open ? detailWorkOrderId : null)

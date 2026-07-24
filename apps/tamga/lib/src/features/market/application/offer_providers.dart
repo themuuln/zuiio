@@ -14,10 +14,10 @@ import 'market_providers.dart';
 /// Зарын бүх саналыг авах.
 final offersForListingProvider =
     FutureProvider.family<List<MarketOffer>, String>((ref, listingId) async {
-      final repository = await ref.watch(marketRepositoryProvider.future);
-      final result = await repository.fetchOffersForListing(listingId);
-      return result.getOrThrow();
-    });
+  final repository = await ref.watch(marketRepositoryProvider.future);
+  final result = await repository.fetchOffersForListing(listingId);
+  return result.getOrThrow();
+});
 
 /// Хэрэглэгчийн оролцсон бүх саналыг авах.
 final offersForUserProvider = FutureProvider<List<MarketOffer>>((ref) async {

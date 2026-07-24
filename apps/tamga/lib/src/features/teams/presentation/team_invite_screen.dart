@@ -39,7 +39,9 @@ class _TeamInviteScreenState extends ConsumerState<TeamInviteScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Гишүүн урих')),
+      appBar: AppBar(
+        title: const Text('Гишүүн урих'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Form(
@@ -64,9 +66,7 @@ class _TeamInviteScreenState extends ConsumerState<TeamInviteScreen> {
                   hintText: '99112233 эсвэл email@example.com',
                   prefixIcon: const Icon(Icons.person_outline),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppSpacing.cornerRadius,
-                    ),
+                    borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
                   ),
                 ),
                 keyboardType: TextInputType.emailAddress,
@@ -113,9 +113,7 @@ class _TeamInviteScreenState extends ConsumerState<TeamInviteScreen> {
                   margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: InkWell(
                     onTap: () => setState(() => _selectedRole = role),
-                    borderRadius: BorderRadius.circular(
-                      AppSpacing.cornerRadius,
-                    ),
+                    borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
                     child: Padding(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       child: Row(
@@ -127,9 +125,7 @@ class _TeamInviteScreenState extends ConsumerState<TeamInviteScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isSelected
-                                    ? roleColor
-                                    : colorScheme.outline,
+                                color: isSelected ? roleColor : colorScheme.outline,
                                 width: isSelected ? 7 : 2,
                               ),
                             ),

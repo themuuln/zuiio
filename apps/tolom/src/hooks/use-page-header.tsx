@@ -7,9 +7,9 @@ export interface PageTab {
   label: string;
 }
 
-// ─── Drawer / Detail ID Registry ──────────────────────────────
+// ─── Sheet / Detail ID Registry ───────────────────────────────
 
-const DRAWER_NAMES = [
+const SHEET_NAMES = [
   "newCustomer",
   "newVehicle",
   "newExpense",
@@ -30,12 +30,12 @@ const DETAIL_NAMES = [
   "workOrder",
 ] as const;
 
-type DrawerName = (typeof DRAWER_NAMES)[number];
+type SheetName = (typeof SHEET_NAMES)[number];
 type DetailName = (typeof DETAIL_NAMES)[number];
 
-const INITIAL_DRAWERS = Object.fromEntries(
-  DRAWER_NAMES.map((name) => [name, false]),
-) as Record<DrawerName, boolean>;
+const INITIAL_SHEETS = Object.fromEntries(
+  SHEET_NAMES.map((name) => [name, false]),
+) as Record<SheetName, boolean>;
 
 const INITIAL_DETAILS = Object.fromEntries(
   DETAIL_NAMES.map((name) => [name, null]),
@@ -48,14 +48,14 @@ interface PageHeaderContextValue {
   setTabs: (tabs: PageTab[]) => void;
   setActiveTab: (tab: string) => void;
   setActions: (actions: ReactNode) => void;
-  // Drawer controls
-  openDrawer: (name: DrawerName) => void;
-  closeDrawer: (name: DrawerName) => void;
-  toggleDrawer: (name: DrawerName) => void;
+  // Sheet controls
+  openSheet: (name: SheetName) => void;
+  closeSheet: (name: SheetName) => void;
+  toggleSheet: (name: SheetName) => void;
   // Detail ID controls
   setDetailId: (name: DetailName, id: string | null) => void;
   clearDetailId: (name: DetailName) => void;
-  // Legacy getters (for backward compat — new code should use openDrawer/closeDrawer)
+  // Legacy getters (for backward compat — new code should use openSheet/closeSheet)
   isNewCustomerDialogOpen: boolean;
   setNewCustomerDialogOpen: (open: boolean) => void;
   isNewVehicleDialogOpen: boolean;
@@ -92,7 +92,7 @@ interface PageHeaderState {
   tabs: PageTab[];
   activeTab: string;
   actions: ReactNode;
-  drawers: Record<DrawerName, boolean>;
+  sheets: Record<SheetName, boolean>;
   detailIds: Record<DetailName, string | null>;
 }
 
@@ -104,17 +104,17 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
   const [tabs, setTabs] = useState<PageTab[]>([]);
   const [activeTab, setActiveTab] = useState("");
   const [actions, setActions] = useState<ReactNode>(null);
-  const [drawers, setDrawers] =
-    useState<Record<DrawerName, boolean>>(INITIAL_DRAWERS);
+  const [sheets, setSheets] =
+    useState<Record<SheetName, boolean>>(INITIAL_SHEETS);
   const [detailIds, setDetailIds] =
     useState<Record<DetailName, string | null>>(INITIAL_DETAILS);
 
-  const openDrawer = (name: DrawerName) =>
-    setDrawers((prev) => ({ ...prev, [name]: true }));
-  const closeDrawer = (name: DrawerName) =>
-    setDrawers((prev) => ({ ...prev, [name]: false }));
-  const toggleDrawer = (name: DrawerName) =>
-    setDrawers((prev) => ({ ...prev, [name]: !prev[name] }));
+  const openSheet = (name: SheetName) =>
+    setSheets((prev) => ({ ...prev, [name]: true }));
+  const closeSheet = (name: SheetName) =>
+    setSheets((prev) => ({ ...prev, [name]: false }));
+  const toggleSheet = (name: SheetName) =>
+    setSheets((prev) => ({ ...prev, [name]: !prev[name] }));
 
   const setDetailId = (name: DetailName, id: string | null) =>
     setDetailIds((prev) => ({ ...prev, [name]: id }));
@@ -122,8 +122,8 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
     setDetailIds((prev) => ({ ...prev, [name]: null }));
 
   // Legacy wrapper: convert per-feature setter to generic one
-  const makeDrawerSetter = (name: DrawerName) => (open: boolean) =>
-    open ? openDrawer(name) : closeDrawer(name);
+  const makeSheetSetter = (name: SheetName) => (open: boolean) =>
+    open ? openSheet(name) : closeSheet(name);
 
   const makeDetailSetter = (name: DetailName) => (id: string | null) =>
     setDetailId(name, id);
@@ -131,35 +131,35 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
   return (
     <PageHeaderContext.Provider
       value={{
-        state: { tabs, activeTab, actions, drawers, detailIds },
+        state: { tabs, activeTab, actions, sheets, detailIds },
         setTabs: (newTabs) => {
           setTabs(newTabs);
           setActiveTab(newTabs[0]?.value ?? "");
         },
         setActiveTab,
         setActions,
-        openDrawer,
-        closeDrawer,
-        toggleDrawer,
+        openSheet,
+        closeSheet,
+        toggleSheet,
         setDetailId,
         clearDetailId,
         // Legacy getters/setters
-        isNewCustomerDialogOpen: drawers.newCustomer,
-        setNewCustomerDialogOpen: makeDrawerSetter("newCustomer"),
-        isNewVehicleDialogOpen: drawers.newVehicle,
-        setNewVehicleDialogOpen: makeDrawerSetter("newVehicle"),
-        isNewExpenseSheetOpen: drawers.newExpense,
-        setNewExpenseSheetOpen: makeDrawerSetter("newExpense"),
-        isNewWorkOrderSheetOpen: drawers.newWorkOrder,
-        setNewWorkOrderSheetOpen: makeDrawerSetter("newWorkOrder"),
-        isNewSupplierSheetOpen: drawers.newSupplier,
-        setNewSupplierSheetOpen: makeDrawerSetter("newSupplier"),
-        isNewPOSheetOpen: drawers.newPO,
-        setNewPOSheetOpen: makeDrawerSetter("newPO"),
-        isNewAppointmentSheetOpen: drawers.newAppointment,
-        setNewAppointmentSheetOpen: makeDrawerSetter("newAppointment"),
-        isNewPartsCarSheetOpen: drawers.newPartsCar,
-        setNewPartsCarSheetOpen: makeDrawerSetter("newPartsCar"),
+        isNewCustomerDialogOpen: sheets.newCustomer,
+        setNewCustomerDialogOpen: makeSheetSetter("newCustomer"),
+        isNewVehicleDialogOpen: sheets.newVehicle,
+        setNewVehicleDialogOpen: makeSheetSetter("newVehicle"),
+        isNewExpenseSheetOpen: sheets.newExpense,
+        setNewExpenseSheetOpen: makeSheetSetter("newExpense"),
+        isNewWorkOrderSheetOpen: sheets.newWorkOrder,
+        setNewWorkOrderSheetOpen: makeSheetSetter("newWorkOrder"),
+        isNewSupplierSheetOpen: sheets.newSupplier,
+        setNewSupplierSheetOpen: makeSheetSetter("newSupplier"),
+        isNewPOSheetOpen: sheets.newPO,
+        setNewPOSheetOpen: makeSheetSetter("newPO"),
+        isNewAppointmentSheetOpen: sheets.newAppointment,
+        setNewAppointmentSheetOpen: makeSheetSetter("newAppointment"),
+        isNewPartsCarSheetOpen: sheets.newPartsCar,
+        setNewPartsCarSheetOpen: makeSheetSetter("newPartsCar"),
         detailSupplierId: detailIds.supplier,
         setDetailSupplierId: makeDetailSetter("supplier"),
         detailExpenseId: detailIds.expense,

@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
-import { apiError } from "@/lib/api-response";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-
 interface ExportColumnDef {
   key: string;
   label: string;
@@ -69,15 +67,26 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await mutationRateLimiter.check(ip);
   if (!rateCheck.allowed) {
-    return apiError("RATE_LIMITED", "Too many requests", 429, {
-      "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)),
-    });
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
+    );
   }
   const body: ExportRequestBody = await request.json();
   const { columns, data, sheetName = "Sheet1", title } = body;
 
   if (!data.length) {
-    return apiError("VALIDATION", "No data to export", 400);
+    return NextResponse.json(
+      { error: { message: "No data to export" } },
+      { status: 400 },
+    );
   }
 
   const filename =

@@ -5,7 +5,6 @@ import { ValidationError } from "@/lib/errors";
 import { normalizeMongolianPhone } from "@/lib/form-validation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-
 interface AddMemberParams {
   email?: string;
   identifier?: string;

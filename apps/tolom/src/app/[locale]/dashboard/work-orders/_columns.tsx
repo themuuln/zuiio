@@ -77,7 +77,7 @@ export function createColumns(
     {
       accessorKey: "id",
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return <DataTableColumnHeader column={column} title={t("id")} />;
       },
       cell: ({ row }) => (
@@ -89,7 +89,7 @@ export function createColumns(
     {
       id: "customer",
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return <DataTableColumnHeader column={column} title={t("customer")} />;
       },
       cell: ({ row }) => {
@@ -111,7 +111,7 @@ export function createColumns(
     {
       accessorKey: "vehicle",
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return <DataTableColumnHeader column={column} title={t("vehicle")} />;
       },
       cell: ({ row }) => {
@@ -135,7 +135,7 @@ export function createColumns(
       id: "mechanic",
       accessorFn: (row) => row.mechanic?.full_name ?? "",
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return <DataTableColumnHeader column={column} title={t("mechanic")} />;
       },
       cell: ({ row }) => {
@@ -155,7 +155,7 @@ export function createColumns(
     {
       accessorKey: "status",
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return <DataTableColumnHeader column={column} title={t("status")} />;
       },
       cell: ({ row }) => {
@@ -189,11 +189,11 @@ export function createColumns(
       id: "age",
       accessorKey: "created_at",
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return <DataTableColumnHeader column={column} title={t("age")} />;
       },
       cell: ({ row }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         const now = useClientNow();
         const days = getDaysSince(row.original.created_at, now);
         return (
@@ -208,7 +208,7 @@ export function createColumns(
       accessorKey: "grand_total",
       meta: { align: "right" as const },
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return <DataTableColumnHeader column={column} title={t("total")} />;
       },
       cell: ({ row }) => {
@@ -227,7 +227,7 @@ export function createColumns(
       accessorKey: "services_cost",
       meta: { align: "right" as const },
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return (
           <DataTableColumnHeader column={column} title={t("servicesCost")} />
         );
@@ -246,7 +246,7 @@ export function createColumns(
       accessorKey: "parts_cost",
       meta: { align: "right" as const },
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return <DataTableColumnHeader column={column} title={t("partsCost")} />;
       },
       cell: ({ row }) => {
@@ -263,13 +263,13 @@ export function createColumns(
       accessorKey: "gross_profit",
       meta: { align: "right" as const },
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return (
           <DataTableColumnHeader column={column} title={t("grossProfit")} />
         );
       },
       cell: ({ row }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         const val = row.original.gross_profit;
         const lossReason = row.original.loss_reason;
         if (val === undefined)
@@ -310,11 +310,11 @@ export function createColumns(
       accessorKey: "margin_percent",
       meta: { align: "right" as const },
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return <DataTableColumnHeader column={column} title={t("margin")} />;
       },
       cell: ({ row }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         const val = row.original.margin_percent;
         const lossReason = row.original.loss_reason;
         if (val === undefined)
@@ -354,7 +354,7 @@ export function createColumns(
       id: "loss_reason",
       accessorKey: "loss_reason",
       header: ({ column }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         return (
           <DataTableColumnHeader column={column} title={t("lossReason")} />
         );
@@ -374,13 +374,13 @@ export function createColumns(
     {
       id: "actions",
       cell: ({ row }) => {
-        const t = useTranslations("workOrders") as (key: string) => string;
+        const t = useTranslations("workOrders");
         const wo = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon-xs">
                   <MoreHorizontal className="size-4" />
                 </Button>
               }

@@ -43,8 +43,6 @@ import '../../features/shared/data/isar_schemas/isar_trial_slot.dart';
 import '../../features/shared/data/isar_schemas/isar_team.dart';
 import '../../features/shared/data/isar_schemas/isar_team_invitation.dart';
 import '../../features/shared/data/isar_schemas/isar_team_member.dart';
-import '../../features/shared/data/isar_schemas/isar_event_record.dart';
-import '../../features/shared/data/isar_schemas/isar_sighting_report.dart';
 
 /// Singleton Isar database.
 ///
@@ -95,8 +93,6 @@ class IsarDatabase {
     IsarFeedLogSchema,
     IsarTrainingLogSchema,
     IsarPerformanceRecordSchema,
-    IsarEventRecordSchema,
-    IsarSightingReportSchema,
     IsarTeamSchema,
     IsarTeamMemberSchema,
     IsarTeamInvitationSchema,

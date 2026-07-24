@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, Mail, RefreshCw, Trash2 } from "lucide-react";
+import type { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -31,7 +32,7 @@ interface PendingInvitesProps {
   onCopyLink: (token: string) => void;
   onResend: (inviteId: string) => void;
   onCancel: (inviteId: string) => void;
-  t: (key: string, values?: Record<string, string | number>) => string;
+  t: ReturnType<typeof useTranslations<"organization.memberManagement">>;
 }
 
 export function PendingInvites({

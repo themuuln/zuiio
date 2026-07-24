@@ -14,10 +14,8 @@ final savedSearchRepositoryProvider = FutureProvider<MarketRepository>((ref) {
 // ── Хадгалсан хайлтын жагсаалт ───────────────────────────────────
 
 /// Тухайн хэрэглэгчийн хадгалсан хайлтуудын жагсаалт.
-final savedSearchesProvider = FutureProvider.family<List<SavedSearch>, String>((
-  ref,
-  userId,
-) async {
+final savedSearchesProvider =
+    FutureProvider.family<List<SavedSearch>, String>((ref, userId) async {
   final repository = await ref.watch(savedSearchRepositoryProvider.future);
   final result = await repository.fetchSavedSearches(userId);
   return result.getOrThrow();
@@ -32,17 +30,17 @@ final savedSearchesProvider = FutureProvider.family<List<SavedSearch>, String>((
 /// [filters] — одоогийн шүүлтүүрийн Map хэлбэр
 final saveSavedSearchProvider =
     FutureProvider.family<void, SaveSavedSearchParams>((ref, params) async {
-      final repository = await ref.watch(savedSearchRepositoryProvider.future);
-      final now = DateTime.now();
-      final search = SavedSearch(
-        id: 'saved-search-${now.millisecondsSinceEpoch}',
-        userId: params.userId,
-        filters: params.filters,
-        name: params.name,
-        createdAt: now,
-      );
-      await repository.saveSavedSearch(search);
-    });
+  final repository = await ref.watch(savedSearchRepositoryProvider.future);
+  final now = DateTime.now();
+  final search = SavedSearch(
+    id: 'saved-search-${now.millisecondsSinceEpoch}',
+    userId: params.userId,
+    filters: params.filters,
+    name: params.name,
+    createdAt: now,
+  );
+  await repository.saveSavedSearch(search);
+});
 
 /// Хадгалсан хайлт үүсгэх параметр.
 class SaveSavedSearchParams {
@@ -60,10 +58,8 @@ class SaveSavedSearchParams {
 // ── Хадгалсан хайлт устгах ───────────────────────────────────────
 
 /// Хадгалсан хайлт устгах provider.
-final deleteSavedSearchProvider = FutureProvider.family<void, String>((
-  ref,
-  id,
-) async {
+final deleteSavedSearchProvider =
+    FutureProvider.family<void, String>((ref, id) async {
   final repository = await ref.watch(savedSearchRepositoryProvider.future);
   await repository.deleteSavedSearch(id);
 });
@@ -73,13 +69,16 @@ final deleteSavedSearchProvider = FutureProvider.family<void, String>((
 /// Хадгалсан хайлтын нэрийг шинэчлэх provider.
 final renameSavedSearchProvider =
     FutureProvider.family<void, RenameSavedSearchParams>((ref, params) async {
-      final repository = await ref.watch(savedSearchRepositoryProvider.future);
-      await repository.updateSavedSearchName(params.id, params.newName);
-    });
+  final repository = await ref.watch(savedSearchRepositoryProvider.future);
+  await repository.updateSavedSearchName(params.id, params.newName);
+});
 
 /// Хадгалсан хайлтын нэр шинэчлэх параметр.
 class RenameSavedSearchParams {
-  const RenameSavedSearchParams({required this.id, required this.newName});
+  const RenameSavedSearchParams({
+    required this.id,
+    required this.newName,
+  });
 
   final String id;
   final String newName;
@@ -159,8 +158,7 @@ bool _matchesSearch(
     final filterBreed = (filters['breed'] as String?).orEmpty.toLowerCase();
     if (filterBreed.isNotEmpty) {
       final title = (listingData['title'] as String?).orEmpty.toLowerCase();
-      final desc = (listingData['description'] as String?).orEmpty
-          .toLowerCase();
+      final desc = (listingData['description'] as String?).orEmpty.toLowerCase();
       if (!title.contains(filterBreed) && !desc.contains(filterBreed)) {
         return false;
       }

@@ -28,10 +28,26 @@ const IsarEventRegistrationSchema = CollectionSchema(
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'eventId': PropertySchema(id: 2, name: r'eventId', type: IsarType.string),
-    r'horseId': PropertySchema(id: 3, name: r'horseId', type: IsarType.string),
-    r'notes': PropertySchema(id: 4, name: r'notes', type: IsarType.string),
-    r'ownerId': PropertySchema(id: 5, name: r'ownerId', type: IsarType.string),
+    r'eventId': PropertySchema(
+      id: 2,
+      name: r'eventId',
+      type: IsarType.string,
+    ),
+    r'horseId': PropertySchema(
+      id: 3,
+      name: r'horseId',
+      type: IsarType.string,
+    ),
+    r'notes': PropertySchema(
+      id: 4,
+      name: r'notes',
+      type: IsarType.string,
+    ),
+    r'ownerId': PropertySchema(
+      id: 5,
+      name: r'ownerId',
+      type: IsarType.string,
+    ),
     r'registeredAt': PropertySchema(
       id: 6,
       name: r'registeredAt',
@@ -47,7 +63,7 @@ const IsarEventRegistrationSchema = CollectionSchema(
       id: 8,
       name: r'updatedAt',
       type: IsarType.dateTime,
-    ),
+    )
   },
   estimateSize: _isarEventRegistrationEstimateSize,
   serialize: _isarEventRegistrationSerialize,
@@ -65,7 +81,7 @@ const IsarEventRegistrationSchema = CollectionSchema(
           name: r'domainId',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
     ),
     r'horseId': IndexSchema(
@@ -78,9 +94,9 @@ const IsarEventRegistrationSchema = CollectionSchema(
           name: r'horseId',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
-    ),
+    )
   },
   links: {},
   embeddedSchemas: {},
@@ -141,10 +157,8 @@ IsarEventRegistration _isarEventRegistrationDeserialize(
   object.notes = reader.readStringOrNull(offsets[4]);
   object.ownerId = reader.readString(offsets[5]);
   object.registeredAt = reader.readDateTime(offsets[6]);
-  object.status =
-      _IsarEventRegistrationstatusValueEnumMap[reader.readByteOrNull(
-        offsets[7],
-      )] ??
+  object.status = _IsarEventRegistrationstatusValueEnumMap[
+          reader.readByteOrNull(offsets[7])] ??
       RegistrationStatus.registered;
   object.updatedAt = reader.readDateTime(offsets[8]);
   return object;
@@ -172,11 +186,9 @@ P _isarEventRegistrationDeserializeProp<P>(
     case 6:
       return (reader.readDateTime(offset)) as P;
     case 7:
-      return (_IsarEventRegistrationstatusValueEnumMap[reader.readByteOrNull(
-                offset,
-              )] ??
-              RegistrationStatus.registered)
-          as P;
+      return (_IsarEventRegistrationstatusValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          RegistrationStatus.registered) as P;
     case 8:
       return (reader.readDateTime(offset)) as P;
     default:
@@ -200,16 +212,12 @@ Id _isarEventRegistrationGetId(IsarEventRegistration object) {
 }
 
 List<IsarLinkBase<dynamic>> _isarEventRegistrationGetLinks(
-  IsarEventRegistration object,
-) {
+    IsarEventRegistration object) {
   return [];
 }
 
 void _isarEventRegistrationAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  IsarEventRegistration object,
-) {
+    IsarCollection<dynamic> col, Id id, IsarEventRegistration object) {
   object.id = id;
 }
 
@@ -232,15 +240,13 @@ extension IsarEventRegistrationByIndex
   }
 
   Future<List<IsarEventRegistration?>> getAllByDomainId(
-    List<String> domainIdValues,
-  ) {
+      List<String> domainIdValues) {
     final values = domainIdValues.map((e) => [e]).toList();
     return getAllByIndex(r'domainId', values);
   }
 
   List<IsarEventRegistration?> getAllByDomainIdSync(
-    List<String> domainIdValues,
-  ) {
+      List<String> domainIdValues) {
     final values = domainIdValues.map((e) => [e]).toList();
     return getAllByIndexSync(r'domainId', values);
   }
@@ -267,10 +273,8 @@ extension IsarEventRegistrationByIndex
     return putAllByIndex(r'domainId', objects);
   }
 
-  List<Id> putAllByDomainIdSync(
-    List<IsarEventRegistration> objects, {
-    bool saveLinks = true,
-  }) {
+  List<Id> putAllByDomainIdSync(List<IsarEventRegistration> objects,
+      {bool saveLinks = true}) {
     return putAllByIndexSync(r'domainId', objects, saveLinks: saveLinks);
   }
 }
@@ -278,29 +282,27 @@ extension IsarEventRegistrationByIndex
 extension IsarEventRegistrationQueryWhereSort
     on QueryBuilder<IsarEventRegistration, IsarEventRegistration, QWhere> {
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterWhere>
-  anyId() {
+      anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension IsarEventRegistrationQueryWhere
-    on
-        QueryBuilder<
-          IsarEventRegistration,
-          IsarEventRegistration,
-          QWhereClause
-        > {
+extension IsarEventRegistrationQueryWhere on QueryBuilder<IsarEventRegistration,
+    IsarEventRegistration, QWhereClause> {
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterWhereClause>
-  idEqualTo(Id id) {
+      idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterWhereClause>
-  idNotEqualTo(Id id) {
+      idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -323,7 +325,7 @@ extension IsarEventRegistrationQueryWhere
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterWhereClause>
-  idGreaterThan(Id id, {bool include = false}) {
+      idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -332,7 +334,7 @@ extension IsarEventRegistrationQueryWhere
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterWhereClause>
-  idLessThan(Id id, {bool include = false}) {
+      idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -341,274 +343,219 @@ extension IsarEventRegistrationQueryWhere
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterWhereClause>
-  idBetween(
+      idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterWhereClause>
-  domainIdEqualTo(String domainId) {
+      domainIdEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'domainId', value: [domainId]),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'domainId',
+        value: [domainId],
+      ));
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterWhereClause>
-  domainIdNotEqualTo(String domainId) {
+      domainIdNotEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'domainId',
-                lower: [],
-                upper: [domainId],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'domainId',
-                lower: [domainId],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'domainId',
+              lower: [],
+              upper: [domainId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'domainId',
+              lower: [domainId],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'domainId',
-                lower: [domainId],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'domainId',
-                lower: [],
-                upper: [domainId],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'domainId',
+              lower: [domainId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'domainId',
+              lower: [],
+              upper: [domainId],
+              includeUpper: false,
+            ));
       }
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterWhereClause>
-  horseIdEqualTo(String horseId) {
+      horseIdEqualTo(String horseId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'horseId', value: [horseId]),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'horseId',
+        value: [horseId],
+      ));
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterWhereClause>
-  horseIdNotEqualTo(String horseId) {
+      horseIdNotEqualTo(String horseId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'horseId',
-                lower: [],
-                upper: [horseId],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'horseId',
-                lower: [horseId],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'horseId',
+              lower: [],
+              upper: [horseId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'horseId',
+              lower: [horseId],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'horseId',
-                lower: [horseId],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'horseId',
-                lower: [],
-                upper: [horseId],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'horseId',
+              lower: [horseId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'horseId',
+              lower: [],
+              upper: [horseId],
+              includeUpper: false,
+            ));
       }
     });
   }
 }
 
-extension IsarEventRegistrationQueryFilter
-    on
-        QueryBuilder<
-          IsarEventRegistration,
-          IsarEventRegistration,
-          QFilterCondition
-        > {
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  createdAtEqualTo(DateTime value) {
+extension IsarEventRegistrationQueryFilter on QueryBuilder<
+    IsarEventRegistration, IsarEventRegistration, QFilterCondition> {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'createdAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  createdAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> createdAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'createdAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  createdAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> createdAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'createdAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  createdAtBetween(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> createdAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'createdAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'createdAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  domainIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> domainIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  domainIdGreaterThan(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> domainIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  domainIdLessThan(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> domainIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  domainIdBetween(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> domainIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -616,180 +563,137 @@ extension IsarEventRegistrationQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'domainId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'domainId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  domainIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> domainIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  domainIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> domainIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  domainIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+          QAfterFilterCondition>
+      domainIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'domainId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'domainId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  domainIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+          QAfterFilterCondition>
+      domainIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'domainId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'domainId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  domainIdIsEmpty() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> domainIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'domainId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'domainId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  domainIdIsNotEmpty() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> domainIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'domainId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'domainId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  eventIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> eventIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'eventId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'eventId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  eventIdGreaterThan(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> eventIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'eventId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'eventId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  eventIdLessThan(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> eventIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'eventId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'eventId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  eventIdBetween(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> eventIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -797,180 +701,137 @@ extension IsarEventRegistrationQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'eventId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'eventId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  eventIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> eventIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'eventId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'eventId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  eventIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> eventIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'eventId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'eventId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  eventIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+          QAfterFilterCondition>
+      eventIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'eventId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'eventId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  eventIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+          QAfterFilterCondition>
+      eventIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'eventId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'eventId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  eventIdIsEmpty() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> eventIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'eventId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'eventId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  eventIdIsNotEmpty() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> eventIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'eventId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'eventId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  horseIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> horseIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  horseIdGreaterThan(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> horseIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  horseIdLessThan(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> horseIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  horseIdBetween(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> horseIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -978,277 +839,211 @@ extension IsarEventRegistrationQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'horseId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'horseId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  horseIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> horseIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  horseIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> horseIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  horseIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+          QAfterFilterCondition>
+      horseIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'horseId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'horseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  horseIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+          QAfterFilterCondition>
+      horseIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'horseId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'horseId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  horseIdIsEmpty() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> horseIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'horseId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'horseId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  horseIdIsNotEmpty() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> horseIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'horseId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'horseId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  idEqualTo(Id value) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  idGreaterThan(Id value, {bool include = false}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  idLessThan(Id value, {bool include = false}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  idBetween(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesIsNull() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> notesIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'notes'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'notes',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesIsNotNull() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> notesIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'notes'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'notes',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesEqualTo(String? value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> notesEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'notes',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesGreaterThan(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> notesGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'notes',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesLessThan(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> notesLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'notes',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesBetween(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> notesBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -1256,180 +1051,137 @@ extension IsarEventRegistrationQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'notes',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'notes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> notesStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'notes',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> notesEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'notes',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+          QAfterFilterCondition>
+      notesContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'notes',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+          QAfterFilterCondition>
+      notesMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'notes',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'notes',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesIsEmpty() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> notesIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'notes', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'notes',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  notesIsNotEmpty() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> notesIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'notes', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'notes',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  ownerIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> ownerIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  ownerIdGreaterThan(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> ownerIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  ownerIdLessThan(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> ownerIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  ownerIdBetween(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> ownerIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1437,466 +1189,387 @@ extension IsarEventRegistrationQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'ownerId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  ownerIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> ownerIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  ownerIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> ownerIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  ownerIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+          QAfterFilterCondition>
+      ownerIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  ownerIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+          QAfterFilterCondition>
+      ownerIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'ownerId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  ownerIdIsEmpty() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> ownerIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'ownerId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  ownerIdIsNotEmpty() {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> ownerIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'ownerId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  registeredAtEqualTo(DateTime value) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> registeredAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'registeredAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'registeredAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  registeredAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> registeredAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'registeredAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'registeredAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  registeredAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> registeredAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'registeredAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'registeredAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  registeredAtBetween(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> registeredAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'registeredAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'registeredAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  statusEqualTo(RegistrationStatus value) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> statusEqualTo(RegistrationStatus value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'status', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'status',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  statusGreaterThan(RegistrationStatus value, {bool include = false}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> statusGreaterThan(
+    RegistrationStatus value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'status',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'status',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  statusLessThan(RegistrationStatus value, {bool include = false}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> statusLessThan(
+    RegistrationStatus value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'status',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'status',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  statusBetween(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> statusBetween(
     RegistrationStatus lower,
     RegistrationStatus upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'status',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'status',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  updatedAtEqualTo(DateTime value) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> updatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'updatedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> updatedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  updatedAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> updatedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarEventRegistration,
-    IsarEventRegistration,
-    QAfterFilterCondition
-  >
-  updatedAtBetween(
+  QueryBuilder<IsarEventRegistration, IsarEventRegistration,
+      QAfterFilterCondition> updatedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'updatedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'updatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
 
-extension IsarEventRegistrationQueryObject
-    on
-        QueryBuilder<
-          IsarEventRegistration,
-          IsarEventRegistration,
-          QFilterCondition
-        > {}
+extension IsarEventRegistrationQueryObject on QueryBuilder<
+    IsarEventRegistration, IsarEventRegistration, QFilterCondition> {}
 
-extension IsarEventRegistrationQueryLinks
-    on
-        QueryBuilder<
-          IsarEventRegistration,
-          IsarEventRegistration,
-          QFilterCondition
-        > {}
+extension IsarEventRegistrationQueryLinks on QueryBuilder<IsarEventRegistration,
+    IsarEventRegistration, QFilterCondition> {}
 
 extension IsarEventRegistrationQuerySortBy
     on QueryBuilder<IsarEventRegistration, IsarEventRegistration, QSortBy> {
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByCreatedAt() {
+      sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByCreatedAtDesc() {
+      sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByDomainId() {
+      sortByDomainId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByDomainIdDesc() {
+      sortByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByEventId() {
+      sortByEventId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'eventId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByEventIdDesc() {
+      sortByEventIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'eventId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByHorseId() {
+      sortByHorseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByHorseIdDesc() {
+      sortByHorseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByNotes() {
+      sortByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByNotesDesc() {
+      sortByNotesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByOwnerId() {
+      sortByOwnerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByOwnerIdDesc() {
+      sortByOwnerIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByRegisteredAt() {
+      sortByRegisteredAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'registeredAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByRegisteredAtDesc() {
+      sortByRegisteredAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'registeredAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByStatus() {
+      sortByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByStatusDesc() {
+      sortByStatusDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByUpdatedAt() {
+      sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  sortByUpdatedAtDesc() {
+      sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -1906,140 +1579,140 @@ extension IsarEventRegistrationQuerySortBy
 extension IsarEventRegistrationQuerySortThenBy
     on QueryBuilder<IsarEventRegistration, IsarEventRegistration, QSortThenBy> {
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByCreatedAt() {
+      thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByCreatedAtDesc() {
+      thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByDomainId() {
+      thenByDomainId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByDomainIdDesc() {
+      thenByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByEventId() {
+      thenByEventId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'eventId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByEventIdDesc() {
+      thenByEventIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'eventId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByHorseId() {
+      thenByHorseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByHorseIdDesc() {
+      thenByHorseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenById() {
+      thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByIdDesc() {
+      thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByNotes() {
+      thenByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByNotesDesc() {
+      thenByNotesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByOwnerId() {
+      thenByOwnerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByOwnerIdDesc() {
+      thenByOwnerIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByRegisteredAt() {
+      thenByRegisteredAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'registeredAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByRegisteredAtDesc() {
+      thenByRegisteredAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'registeredAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByStatus() {
+      thenByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByStatusDesc() {
+      thenByStatusDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.desc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByUpdatedAt() {
+      thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QAfterSortBy>
-  thenByUpdatedAtDesc() {
+      thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -2049,76 +1722,71 @@ extension IsarEventRegistrationQuerySortThenBy
 extension IsarEventRegistrationQueryWhereDistinct
     on QueryBuilder<IsarEventRegistration, IsarEventRegistration, QDistinct> {
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QDistinct>
-  distinctByCreatedAt() {
+      distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QDistinct>
-  distinctByDomainId({bool caseSensitive = true}) {
+      distinctByDomainId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'domainId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QDistinct>
-  distinctByEventId({bool caseSensitive = true}) {
+      distinctByEventId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'eventId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QDistinct>
-  distinctByHorseId({bool caseSensitive = true}) {
+      distinctByHorseId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'horseId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QDistinct>
-  distinctByNotes({bool caseSensitive = true}) {
+      distinctByNotes({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'notes', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QDistinct>
-  distinctByOwnerId({bool caseSensitive = true}) {
+      distinctByOwnerId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'ownerId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QDistinct>
-  distinctByRegisteredAt() {
+      distinctByRegisteredAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'registeredAt');
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QDistinct>
-  distinctByStatus() {
+      distinctByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'status');
     });
   }
 
   QueryBuilder<IsarEventRegistration, IsarEventRegistration, QDistinct>
-  distinctByUpdatedAt() {
+      distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'updatedAt');
     });
   }
 }
 
-extension IsarEventRegistrationQueryProperty
-    on
-        QueryBuilder<
-          IsarEventRegistration,
-          IsarEventRegistration,
-          QQueryProperty
-        > {
+extension IsarEventRegistrationQueryProperty on QueryBuilder<
+    IsarEventRegistration, IsarEventRegistration, QQueryProperty> {
   QueryBuilder<IsarEventRegistration, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
@@ -2126,63 +1794,63 @@ extension IsarEventRegistrationQueryProperty
   }
 
   QueryBuilder<IsarEventRegistration, DateTime, QQueryOperations>
-  createdAtProperty() {
+      createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
     });
   }
 
   QueryBuilder<IsarEventRegistration, String, QQueryOperations>
-  domainIdProperty() {
+      domainIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'domainId');
     });
   }
 
   QueryBuilder<IsarEventRegistration, String, QQueryOperations>
-  eventIdProperty() {
+      eventIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'eventId');
     });
   }
 
   QueryBuilder<IsarEventRegistration, String, QQueryOperations>
-  horseIdProperty() {
+      horseIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'horseId');
     });
   }
 
   QueryBuilder<IsarEventRegistration, String?, QQueryOperations>
-  notesProperty() {
+      notesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'notes');
     });
   }
 
   QueryBuilder<IsarEventRegistration, String, QQueryOperations>
-  ownerIdProperty() {
+      ownerIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'ownerId');
     });
   }
 
   QueryBuilder<IsarEventRegistration, DateTime, QQueryOperations>
-  registeredAtProperty() {
+      registeredAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'registeredAt');
     });
   }
 
   QueryBuilder<IsarEventRegistration, RegistrationStatus, QQueryOperations>
-  statusProperty() {
+      statusProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'status');
     });
   }
 
   QueryBuilder<IsarEventRegistration, DateTime, QQueryOperations>
-  updatedAtProperty() {
+      updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'updatedAt');
     });

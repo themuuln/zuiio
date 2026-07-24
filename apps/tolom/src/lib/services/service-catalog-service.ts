@@ -18,9 +18,9 @@ const crud = createCrudService<
 >({
   tableName: "service_catalog",
   selectColumns:
-    "id, organization_id, name, name_mn, category, description, default_price, default_cost, is_active, estimated_duration_minutes, interval_months, interval_km, created_at, updated_at, deleted_at",
+    "id, organization_id, name, name_mn, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, created_at, updated_at, deleted_at",
   selectColumnsById:
-    "id, organization_id, name, name_mn, category, description, default_price, default_cost, is_active, estimated_duration_minutes, interval_months, interval_km, global_service_id, branch_id, created_by, updated_by, created_at, updated_at, deleted_at",
+    "id, organization_id, name, name_mn, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, global_service_id, branch_id, created_by, updated_by, created_at, updated_at, deleted_at",
   cacheTagKey: (orgId: string) => cacheTags.serviceCatalog(orgId),
   orderBy: { column: "name", direction: "asc" },
   fieldMap: {
@@ -30,7 +30,6 @@ const crud = createCrudService<
       category: "category",
       description: "description",
       default_price: "default_price",
-      default_cost: "default_cost",
       is_active: "is_active",
     },
     transforms: {
@@ -72,15 +71,14 @@ interface CreateServiceParams {
   category?: string;
   description?: string;
   default_price: number;
-  default_cost?: number | null;
 }
+
 interface UpdateServiceParams {
   name?: string;
   name_mn?: string | null;
   category?: string;
   description?: string;
   default_price?: number;
-  default_cost?: number | null;
   is_active?: boolean;
 }
 

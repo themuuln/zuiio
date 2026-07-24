@@ -3,11 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { capture } from "@zuiio/capture";
 import { useEffect, useState } from "react";
-import { Controller, type Resolver, useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { createDiscount } from "@/app/(dashboard)/discounts/actions";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Combobox,
   ComboboxContent,
@@ -95,9 +95,9 @@ export function DiscountCreateDrawer({
     control,
     watch,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<DiscountValues>({
-    resolver: zodResolver(discountSchema) as Resolver<DiscountValues>,
+    resolver: zodResolver(discountSchema) as any,
     defaultValues: {
       name: "",
       description: "",
@@ -323,7 +323,7 @@ export function DiscountCreateDrawer({
       }
     >
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmit(onSubmit as any)}
         className="space-y-5"
         id="discount-form"
       >
@@ -360,21 +360,12 @@ export function DiscountCreateDrawer({
                   onValueChange={field.onChange}
                   className="grid grid-cols-2 gap-2"
                 >
-                  <label
-                    htmlFor="dc-type-percentage"
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm has-[data-checked]:border-primary has-[data-checked]:bg-primary/5"
-                  >
-                    <RadioGroupItem
-                      value="percentage"
-                      id="dc-type-percentage"
-                    />
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm has-[data-checked]:border-primary has-[data-checked]:bg-primary/5">
+                    <RadioGroupItem value="percentage" />
                     Хувь
                   </label>
-                  <label
-                    htmlFor="dc-type-fixed"
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm has-[data-checked]:border-primary has-[data-checked]:bg-primary/5"
-                  >
-                    <RadioGroupItem value="fixed_amount" id="dc-type-fixed" />
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm has-[data-checked]:border-primary has-[data-checked]:bg-primary/5">
+                    <RadioGroupItem value="fixed_amount" />
                     Тогтмол дүн
                   </label>
                 </RadioGroup>

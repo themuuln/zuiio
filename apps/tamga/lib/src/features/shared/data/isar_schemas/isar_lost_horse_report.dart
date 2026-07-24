@@ -132,12 +132,10 @@ class IsarLostHorseReport {
         orElse: () => AnimalType.horse,
       ),
       ages: (ages ?? [])
-          .map(
-            (e) => AnimalAge.values.firstWhere(
-              (a) => a.name == e,
-              orElse: () => AnimalAge.unaga,
-            ),
-          )
+          .map((e) => AnimalAge.values.firstWhere(
+                (a) => a.name == e,
+                orElse: () => AnimalAge.unaga,
+              ))
           .toList(),
       gender: gender != null
           ? HorseGender.values.firstWhere(

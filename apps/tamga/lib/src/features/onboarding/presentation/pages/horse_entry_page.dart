@@ -102,13 +102,23 @@ class _HorseEntryPageState extends State<HorseEntryPage> {
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.lg,
-            AppSpacing.page,
+            AppSpacing.section,
             AppSpacing.lg,
             0,
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Back button
+              GestureDetector(
+                onTap: widget.onBack,
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(Icons.chevron_left, size: 28, color: tc.primary),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
 
               // Title
               Text(
@@ -305,44 +315,30 @@ class _HorseEntryPageState extends State<HorseEntryPage> {
           ),
         ),
 
-        // ── Bottom actions — back + continue ──
+        // ── CTA button ──
         SafeArea(
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
-              AppSpacing.sm,
+              0,
               AppSpacing.lg,
               AppSpacing.lg,
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
+                  width: double.infinity,
                   height: 48,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: widget.onBack,
-                        icon: Icon(Icons.chevron_left, color: tc.primary),
-                        style: IconButton.styleFrom(
-                          backgroundColor: tc.surfaceContainerLow,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                  child: FilledButton(
+                    onPressed: _canContinue ? _submit : null,
+                    child: const Text(
+                      'Үргэлжлүүлэх',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: _canContinue ? _submit : null,
-                          child: const Text(
-                            'Үргэлжлүүлэх',
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -364,9 +360,10 @@ class _HorseEntryPageState extends State<HorseEntryPage> {
             ),
           ),
         ),
-        ],
-      );
+      ],
+    );
   }
+
   void _showBreedPicker(BuildContext context) {
     final tc = TamgaColors.of(context);
     final breeds = [

@@ -60,10 +60,7 @@ function readNiche(org: Organization | undefined): NicheSettings {
 }
 
 export function VehicleNicheForm({ organization }: VehicleNicheFormProps) {
-  const t = useTranslations("settings") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("settings");
   const [niche, setNiche] = useState<NicheSettings>(DEFAULT_NICHE);
   const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
 

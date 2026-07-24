@@ -73,3 +73,5 @@ if (errors > 0) {
   );
   process.exit(1);
 }
+
+console.log("✅ No console.error in catch blocks found.");

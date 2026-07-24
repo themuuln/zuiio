@@ -45,8 +45,7 @@ class HorseDocumentsScreen extends ConsumerWidget {
             return EmptyState(
               icon: Icons.folder_open,
               title: 'Баримт байхгүй байна',
-              description:
-                  'Эмчийн гэрчилгээ, даатгал, бүртгэлийн баримт зэрэг файлуудыг энд хадгална уу.',
+              description: 'Эмчийн гэрчилгээ, даатгал, бүртгэлийн баримт зэрэг файлуудыг энд хадгална уу.',
               actionLabel: 'Эхний баримтаа нэмэх',
               onAction: () => _showUploadSheet(ctx, ref),
             );

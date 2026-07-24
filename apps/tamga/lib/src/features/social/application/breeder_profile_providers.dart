@@ -14,10 +14,8 @@ import '../domain/breeder_profile.dart';
 /// - [marketRepositoryProvider] — худалдагчийн профайл, зарууд
 /// - [sellerRatingSummaryProvider] — үнэлгээний хураангуй
 /// - [horsesProvider] — морины тоо
-final breederProfileProvider = FutureProvider.family<BreederProfile, String>((
-  ref,
-  sellerId,
-) async {
+final breederProfileProvider =
+    FutureProvider.family<BreederProfile, String>((ref, sellerId) async {
   final repository = await ref.watch(marketRepositoryProvider.future);
 
   // ── Seller profile (нэр, байршил) ──
@@ -29,9 +27,8 @@ final breederProfileProvider = FutureProvider.family<BreederProfile, String>((
   // ── Үнэлгээ ──
   SellerRatingSummary ratingSummary;
   try {
-    ratingSummary = await ref.watch(
-      sellerRatingSummaryProvider(sellerId).future,
-    );
+    ratingSummary =
+        await ref.watch(sellerRatingSummaryProvider(sellerId).future);
   } catch (_) {
     ratingSummary = const SellerRatingSummary(
       averageRating: 0.0,
@@ -41,7 +38,8 @@ final breederProfileProvider = FutureProvider.family<BreederProfile, String>((
   }
 
   // ── Сүүлийн зарууд ──
-  final sellerListingsResult = await repository.fetchListingsBySeller(sellerId);
+  final sellerListingsResult =
+      await repository.fetchListingsBySeller(sellerId);
   final sellerListings = sellerListingsResult.getOrDefault(<MarketListing>[]);
   final sortedListings = List<MarketListing>.from(sellerListings)
     ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -53,7 +51,8 @@ final breederProfileProvider = FutureProvider.family<BreederProfile, String>((
           title: l.title,
           priceAmount: l.priceAmount,
           currency: l.currency,
-          thumbnailUrl: l.mediaUrls.isNotEmpty ? l.mediaUrls.first : null,
+          thumbnailUrl:
+              l.mediaUrls.isNotEmpty ? l.mediaUrls.first : null,
           status: l.status.label,
         ),
       )
@@ -66,15 +65,15 @@ final breederProfileProvider = FutureProvider.family<BreederProfile, String>((
   } catch (_) {
     allHorses = [];
   }
-  final totalHorses = allHorses.where((h) => h.ownerId == sellerId).length;
+  final totalHorses =
+      allHorses.where((h) => h.ownerId == sellerId).length;
 
   // ── Гишүүнээр элссэн огноо ──
   // Хэрэв seller profile дээр байхгүй бол хамгийн эртний зараас тооцоолно.
   DateTime? memberSince;
   if (sellerListings.isNotEmpty) {
-    final earliestListing = sellerListings.reduce(
-      (a, b) => a.createdAt.isBefore(b.createdAt) ? a : b,
-    );
+    final earliestListing = sellerListings
+        .reduce((a, b) => a.createdAt.isBefore(b.createdAt) ? a : b);
     memberSince = earliestListing.createdAt;
   }
 
@@ -84,9 +83,8 @@ final breederProfileProvider = FutureProvider.family<BreederProfile, String>((
     averageRating: ratingSummary.averageRating,
     totalRatings: ratingSummary.totalCount,
     listingsCount: sellerListings.length,
-    completedSalesCount: sellerListings
-        .where((l) => l.status == MarketListingStatus.sold)
-        .length,
+    completedSalesCount:
+        sellerListings.where((l) => l.status == MarketListingStatus.sold).length,
   );
 
   return BreederProfile(

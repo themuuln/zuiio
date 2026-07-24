@@ -40,11 +40,7 @@ class HealthLogsScreen extends ConsumerWidget {
 
           // Sort by date descending.
           final sorted = List<HealthLog>.of(logs)
-            ..sort(
-              (a, b) => (b.date ?? DateTime(2000)).compareTo(
-                a.date ?? DateTime(2000),
-              ),
-            );
+            ..sort((a, b) => (b.date ?? DateTime(2000)).compareTo(a.date ?? DateTime(2000)));
 
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(
@@ -88,3 +84,5 @@ class HealthLogsScreen extends ConsumerWidget {
     );
   }
 }
+
+

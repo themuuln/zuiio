@@ -1,5 +1,6 @@
 "use client";
 
+import type { useTranslations } from "next-intl";
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
@@ -33,7 +34,7 @@ export type CustomerEditValues = z.infer<typeof customerEditSchema>;
 
 interface CustomerEditFormProps {
   form: UseFormReturn<CustomerEditValues>;
-  t: (key: string) => string;
+  t: ReturnType<typeof useTranslations<"customers">>;
 }
 
 export function CustomerEditForm({ form, t }: CustomerEditFormProps) {

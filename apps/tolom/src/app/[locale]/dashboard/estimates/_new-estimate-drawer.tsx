@@ -1,4 +1,5 @@
 "use client";
+
 import { useOrgMutation } from "@zuiio/query";
 import {
   Edit3,
@@ -29,8 +30,7 @@ import { VehicleSelect } from "@/components/work-orders/vehicle-select";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { usePartSearch } from "@/lib/queries/use-part-search";
-import { useServiceSearch } from "@/lib/queries/use-service-search";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { Customer, Vehicle } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
@@ -97,18 +97,12 @@ type NewEstimateSheetProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export function NewEstimateDrawer({
+export function NewEstimateSheet({
   open,
   onOpenChange,
 }: NewEstimateSheetProps) {
-  const t = useTranslations("estimates") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const commonT = useTranslations("common") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("estimates");
+  const commonT = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
   const { data: org } = useCurrentOrg();
@@ -129,17 +123,18 @@ export function NewEstimateDrawer({
     )?.settings?.default_tax_rate ?? 10;
 
   const [serviceSearch, setServiceSearch] = useState("");
+  const [services, setServices] = useState<
+    { id: string; name: string; default_price: number }[]
+  >([]);
+  const [searchingServices, setSearchingServices] = useState(false);
+
   const [partSearch, setPartSearch] = useState("");
+  const [parts, setParts] = useState<
+    { id: string; part_name: string; unit_price: number }[]
+  >([]);
+  const [searchingParts, setSearchingParts] = useState(false);
   const [serviceDrawerOpen, setServiceDrawerOpen] = useState(false);
   const [partDrawerOpen, setPartDrawerOpen] = useState(false);
-  const { data: servicesData, isPending: searchingServices } = useServiceSearch(
-    orgId,
-    serviceSearch,
-  );
-  const { data: partsData, isPending: searchingParts } = usePartSearch(
-    orgId,
-    partSearch,
-  );
 
   const form = useForm<QuoteValues>({
     resolver: zodResolver(quoteSchema),
@@ -239,6 +234,50 @@ export function NewEstimateDrawer({
 
   const removeLine = (id: string) => {
     setLines((current) => current.filter((line) => line.id !== id));
+  };
+
+  const searchServices = async (query: string) => {
+    setServiceSearch(query);
+    if (!orgId || query.trim().length < 2) {
+      setServices([]);
+      return;
+    }
+
+    setSearchingServices(true);
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/services?q=${encodeURIComponent(query.trim())}`,
+      );
+      const json = await res.json();
+      setServices(json.data ?? []);
+    } catch (error) {
+      reportServerError("Unexpected error", error);
+      setServices([]);
+    } finally {
+      setSearchingServices(false);
+    }
+  };
+
+  const searchParts = async (query: string) => {
+    setPartSearch(query);
+    if (!orgId || query.trim().length < 2) {
+      setParts([]);
+      return;
+    }
+
+    setSearchingParts(true);
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory?q=${encodeURIComponent(query.trim())}`,
+      );
+      const json = await res.json();
+      setParts(json.data ?? []);
+    } catch (error) {
+      reportServerError("Unexpected error", error);
+      setParts([]);
+    } finally {
+      setSearchingParts(false);
+    }
   };
 
   const subtotal = lines.reduce((sum, line) => sum + line.line_total, 0);
@@ -642,12 +681,12 @@ export function NewEstimateDrawer({
         <DetailDrawer.Body>
           <SearchInput
             placeholder={t("searchServicesPlaceholder")}
-            onSearch={setServiceSearch}
+            onSearch={searchServices}
             loading={searchingServices}
             debounceMs={400}
           />
           <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto mt-4">
-            {(servicesData ?? []).map((service) => (
+            {services.map((service) => (
               <button
                 key={service.id}
                 type="button"
@@ -655,6 +694,7 @@ export function NewEstimateDrawer({
                 onClick={() => {
                   addServiceLine(service);
                   setServiceSearch("");
+                  setServices([]);
                   setServiceDrawerOpen(false);
                 }}
               >
@@ -668,9 +708,7 @@ export function NewEstimateDrawer({
                 </Typography.Text>
               </button>
             ))}
-            {serviceSearch &&
-            (servicesData ?? []).length === 0 &&
-            !searchingServices ? (
+            {serviceSearch && services.length === 0 && !searchingServices ? (
               <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
                 {commonT("noResults")}
               </div>
@@ -695,12 +733,12 @@ export function NewEstimateDrawer({
         <DetailDrawer.Body>
           <SearchInput
             placeholder={t("searchPartsPlaceholder")}
-            onSearch={setPartSearch}
+            onSearch={searchParts}
             loading={searchingParts}
             debounceMs={400}
           />
           <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto mt-4">
-            {(partsData ?? []).map((part) => (
+            {parts.map((part) => (
               <button
                 key={part.id}
                 type="button"
@@ -708,6 +746,7 @@ export function NewEstimateDrawer({
                 onClick={() => {
                   addPartLine(part);
                   setPartSearch("");
+                  setParts([]);
                   setPartDrawerOpen(false);
                 }}
               >
@@ -721,7 +760,7 @@ export function NewEstimateDrawer({
                 </Typography.Text>
               </button>
             ))}
-            {partSearch && (partsData ?? []).length === 0 && !searchingParts ? (
+            {partSearch && parts.length === 0 && !searchingParts ? (
               <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
                 {commonT("noResults")}
               </div>

@@ -1,8 +1,8 @@
 "use client";
 
 import { Trash } from "@phosphor-icons/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -109,7 +109,9 @@ export function BundlesContent({
       accessorKey: "sku",
       header: "SKU",
       cell: ({ row }) => (
-        <span className="text-muted-foreground">{row.original.sku ?? "-"}</span>
+        <span className="text-muted-foreground">
+          {row.original.sku ?? "-"}
+        </span>
       ),
     },
     {
@@ -122,13 +124,17 @@ export function BundlesContent({
       accessorKey: "cost_price",
       header: "Өртөг",
       cell: ({ row }) =>
-        row.original.cost_price ? formatCurrency(row.original.cost_price) : "-",
+        row.original.cost_price
+          ? formatCurrency(row.original.cost_price)
+          : "-",
     },
     {
       accessorKey: "sale_price",
       header: "Борлуулалтын үнэ",
       cell: ({ row }) =>
-        row.original.sale_price ? formatCurrency(row.original.sale_price) : "-",
+        row.original.sale_price
+          ? formatCurrency(row.original.sale_price)
+          : "-",
     },
     {
       accessorKey: "is_active",
@@ -146,7 +152,10 @@ export function BundlesContent({
         const bundle = row.original;
         return (
           <div className="flex items-center gap-1">
-            <BundleEditDrawer bundle={toEditData(bundle)} products={products} />
+            <BundleEditDrawer
+              bundle={toEditData(bundle)}
+              products={products}
+            />
             <Button
               variant="ghost"
               size="icon"
@@ -172,7 +181,9 @@ export function BundlesContent({
           <p className="text-lg font-medium text-muted-foreground">
             Багц байхгүй байна
           </p>
-          <p className="text-sm text-muted-foreground">Шинэ багц нэмнэ үү.</p>
+          <p className="text-sm text-muted-foreground">
+            Шинэ багц нэмнэ үү.
+          </p>
         </div>
         <BundleDetailDrawer
           bundle={

@@ -28,8 +28,7 @@ async function DataFetcher({
               "id, invoice_number, issue_date, due_date, total_amount, paid_amount, status, contacts(name)",
             )
             .eq("organization_id", organizationId)
-            .order("created_at", { ascending: false })
-            .limit(500),
+            .order("created_at", { ascending: false }),
           branchId,
           isBranchScoped,
           urlBranch,

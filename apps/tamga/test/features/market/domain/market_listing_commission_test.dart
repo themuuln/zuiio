@@ -44,19 +44,13 @@ void main() {
     });
 
     test('can set commissionRate and commissionAmount', () {
-      final listing = createListing(
-        commissionRate: 0.05,
-        commissionAmount: 25000,
-      );
+      final listing = createListing(commissionRate: 0.05, commissionAmount: 25000);
       expect(listing.commissionRate, 0.05);
       expect(listing.commissionAmount, 25000);
     });
 
     test('commission fields survive copyWith', () {
-      final listing = createListing(
-        commissionRate: 0.05,
-        commissionAmount: 25000,
-      );
+      final listing = createListing(commissionRate: 0.05, commissionAmount: 25000);
       final copied = listing.copyWith(title: 'New Title');
 
       expect(copied.commissionRate, 0.05);
@@ -79,10 +73,7 @@ void main() {
     });
 
     test('copyWith can clear commissionAmount', () {
-      final listing = createListing(
-        commissionRate: 0.05,
-        commissionAmount: 25000,
-      );
+      final listing = createListing(commissionRate: 0.05, commissionAmount: 25000);
       final copied = listing.copyWith(commissionAmount: null);
 
       expect(copied.commissionAmount, isNull);

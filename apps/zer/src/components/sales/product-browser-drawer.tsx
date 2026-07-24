@@ -36,7 +36,7 @@ export function ProductBrowserDrawer({
     return products.filter(
       (p) =>
         p.name.toLowerCase().includes(lowered) ||
-        p.barcode?.toLowerCase().includes(lowered),
+        (p.barcode && p.barcode.toLowerCase().includes(lowered)),
     );
   }, [products, query]);
 

@@ -3,8 +3,8 @@
  * Replace raw <p> elements with Typography components.
  * Uses a state machine to correctly pair opening/closing tags.
  */
-import fs from "node:fs";
-import path from "node:path";
+import fs from "fs";
+import path from "path";
 
 const SRC = path.resolve("src");
 const SKIP_DIRS = new Set(["components/ui", "node_modules"]);
@@ -81,10 +81,10 @@ function processFile(filePath) {
       // Replace <p with Typography variant
       const before = line.substring(0, match.index);
       const after = line.substring(match.index + 2);
-      line = `${before}<Typography.${variant}${after}`;
+      line = before + "<Typography." + variant + after;
 
       // Reset regex lastIndex since we modified the string
-      pOpenRegex.lastIndex = match.index + `<Typography.${variant}`.length;
+      pOpenRegex.lastIndex = match.index + ("<Typography." + variant).length;
     }
 
     // Find </p> closing tags in this line
@@ -93,8 +93,9 @@ function processFile(filePath) {
       const variant = tagStack.pop() || "Text";
       const before = line.substring(0, match.index);
       const after = line.substring(match.index + 4);
-      line = `${before}</Typography.${variant}>${after}`;
-      pCloseRegex.lastIndex = match.index + `</Typography.${variant}>`.length;
+      line = before + "</Typography." + variant + ">" + after;
+      pCloseRegex.lastIndex =
+        match.index + ("</Typography." + variant + ">").length;
       modified = true;
     }
 
@@ -105,7 +106,7 @@ function processFile(filePath) {
       line.includes("</p>")
     ) {
       const variant = tagStack.pop() || "Text";
-      line = line.replace("</p>", `</Typography.${variant}>`);
+      line = line.replace("</p>", "</Typography." + variant + ">");
       modified = true;
     }
 
@@ -139,9 +140,11 @@ function processFile(filePath) {
 }
 
 const files = findTsxFiles(SRC);
-let _changed = 0;
+let changed = 0;
 for (const file of files) {
   if (processFile(file)) {
-    _changed++;
+    changed++;
+    console.log(`✓ ${path.relative(process.cwd(), file)}`);
   }
 }
+console.log(`\nDone: ${changed} files modified`);

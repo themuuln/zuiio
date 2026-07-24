@@ -13,10 +13,7 @@ export default function PartDetailError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const commonT = useTranslations("common") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const commonT = useTranslations("common");
   useEffect(() => {
     reportError(error, "dashboard/inventory/parts/[partId]");
   }, [error]);

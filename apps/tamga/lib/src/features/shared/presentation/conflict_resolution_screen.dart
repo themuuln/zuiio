@@ -94,16 +94,22 @@ class ConflictResolutionScreen extends ConsumerWidget {
                 ),
         );
       },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, _) => Scaffold(body: Center(child: Text('Алдаа: $err'))),
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (err, _) => Scaffold(
+        body: Center(child: Text('Алдаа: $err')),
+      ),
     );
   }
 }
 
 /// Нэг зөрчилдөөний кард — local/remote хувилбаруудыг харуулна.
 class _ConflictCard extends StatefulWidget {
-  const _ConflictCard({required this.conflict, required this.coordinator});
+  const _ConflictCard({
+    required this.conflict,
+    required this.coordinator,
+  });
 
   final SyncConflict conflict;
   final CloudSyncCoordinator coordinator;
@@ -349,7 +355,10 @@ class _ConflictCardState extends State<_ConflictCard> {
 
 /// Цагийн тэмдэг харуулах чип.
 class _TimestampChip extends StatelessWidget {
-  const _TimestampChip({required this.label, required this.timestamp});
+  const _TimestampChip({
+    required this.label,
+    required this.timestamp,
+  });
 
   final String label;
   final DateTime timestamp;
@@ -492,11 +501,9 @@ class _DiffFieldRow extends StatelessWidget {
   String _formatFieldName(String name) {
     // Convert camelCase to readable: "updatedAt" → "Updated At"
     return name[0].toUpperCase() +
-        name
-            .substring(1)
-            .replaceAllMapped(
-              RegExp(r'([a-z])([A-Z])'),
-              (m) => '${m[1]} ${m[2]}',
-            );
+        name.substring(1).replaceAllMapped(
+          RegExp(r'([a-z])([A-Z])'),
+          (m) => '${m[1]} ${m[2]}',
+        );
   }
 }

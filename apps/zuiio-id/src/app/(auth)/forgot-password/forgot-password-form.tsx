@@ -1,18 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
+import Link from "next/link";
 import { forgotPassword } from "./actions";
 
 export function ForgotPasswordForm() {
-  const [state, formAction, isPending] = useActionState(
-    forgotPassword,
-    undefined,
-  );
+  const [state, formAction, isPending] = useActionState(forgotPassword, undefined);
 
   if (state?.success) {
     return (
-      <div className="flex animate-fade-in flex-col gap-6">
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Имэйл илгээгдлээ
@@ -32,7 +29,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="flex animate-fade-in flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Нууц үг мартсан
@@ -44,10 +41,7 @@ export function ForgotPasswordForm() {
 
       <form action={formAction} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="email"
-            className="text-sm font-medium text-foreground"
-          >
+          <label htmlFor="email" className="text-sm font-medium text-foreground">
             Имэйл
           </label>
           <input
@@ -56,13 +50,13 @@ export function ForgotPasswordForm() {
             type="email"
             autoComplete="email"
             required
-            className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             placeholder="name@example.com"
           />
         </div>
 
         {state?.formError && (
-          <div className="animate-slide-up rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {state.formError}
           </div>
         )}
@@ -70,7 +64,7 @@ export function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="active-scale h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Илгээж байна…" : "Нууц үг сэргээх"}
         </button>
@@ -78,10 +72,7 @@ export function ForgotPasswordForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         Буцах{" "}
-        <Link
-          href="/login"
-          className="font-medium text-foreground transition-colors hover:text-primary hover:underline"
-        >
+        <Link href="/login" className="font-medium text-primary hover:underline">
           нэвтрэх хуудас руу
         </Link>
       </p>

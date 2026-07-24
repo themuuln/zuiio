@@ -1,8 +1,8 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { BrandConfig } from "@zuiio/branding";
 import { generateBrandCSS } from "@zuiio/branding";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOnlineStatus } from "@zuiio/hooks";
 import { toast } from "sonner";
 import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
@@ -36,10 +36,7 @@ export function useBrandThemeQuery(orgId: string | null) {
     queryKey: [THEME_QUERY_KEY, orgId],
     queryFn: async (): Promise<BrandThemeResponse> => {
       if (!orgId) {
-        return {
-          branding: { theme: "zuiio", radius: 0.5, logo_url: null },
-          isDefault: true,
-        };
+        return { branding: { theme: "zuiio", radius: 0.5, logo_url: null }, isDefault: true };
       }
       const res = await fetch(`/api/organizations/${orgId}/theme`);
       if (!res.ok) throw new Error("Failed to fetch theme");
@@ -77,18 +74,11 @@ export function useUpdateBrandTheme(orgId: string | null) {
         body: config,
         queryKeysToInvalidate: [[THEME_QUERY_KEY, orgId]],
       });
-      return {
-        branding: config,
-        isDefault: false,
-        queued: true,
-      } as BrandThemeResponse & { queued: true };
+      return { branding: config, isDefault: false, queued: true } as BrandThemeResponse & { queued: true };
     },
     onMutate: async (config) => {
       // Snapshot current value for rollback
-      const previous = queryClient.getQueryData<BrandThemeResponse>([
-        THEME_QUERY_KEY,
-        orgId,
-      ]);
+      const previous = queryClient.getQueryData<BrandThemeResponse>([THEME_QUERY_KEY, orgId]);
 
       // Optimistic: update query cache and inject style
       queryClient.setQueryData<BrandThemeResponse>([THEME_QUERY_KEY, orgId], {
@@ -103,10 +93,7 @@ export function useUpdateBrandTheme(orgId: string | null) {
       // Rollback
       const prev = context?.previous;
       if (prev) {
-        queryClient.setQueryData<BrandThemeResponse>(
-          [THEME_QUERY_KEY, orgId],
-          prev,
-        );
+        queryClient.setQueryData<BrandThemeResponse>([THEME_QUERY_KEY, orgId], prev);
         applyBrandThemeStyle(generateBrandCSS(prev.branding));
       }
       toast.error("Failed to save theme");

@@ -292,8 +292,8 @@ class CloudSyncCoordinator {
 
       // Co-ownership sync (non-fatal — failure doesn't abort the sync)
       try {
-        final coOwnershipCount = (await coOwnershipRepository.syncCoOwnership())
-            .getOrThrow();
+        final coOwnershipCount =
+            (await coOwnershipRepository.syncCoOwnership()).getOrThrow();
         pullCount += coOwnershipCount;
       } catch (_) {
         // Co-ownership sync failed gracefully; count remains 0.
@@ -428,10 +428,7 @@ class CloudSyncCoordinator {
             AppException(
               message: 'Unknown entity type for sync: ${item.entityType}',
               code: 'UNKNOWN_ENTITY_TYPE',
-              details: {
-                'entityId': item.entityId,
-                'entityType': item.entityType,
-              },
+              details: {'entityId': item.entityId, 'entityType': item.entityType},
             ),
           );
       }
@@ -466,8 +463,7 @@ class CloudSyncCoordinator {
         entityType: 'horse',
         entityId: item.entityId,
         localData: item.data,
-        remoteData:
-            item.data, // Бодит remote өгөгдлийг энд харьцуулах боломжтой
+        remoteData: item.data, // Бодит remote өгөгдлийг энд харьцуулах боломжтой
       );
       addConflict(conflict);
       return const Result.ok(true);

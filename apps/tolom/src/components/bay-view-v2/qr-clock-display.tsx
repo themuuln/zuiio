@@ -54,10 +54,7 @@ export function QrClockDisplay({
   mechanicId: _mechanicId,
   mechanicName,
 }: QrClockDisplayProps) {
-  const t = useTranslations(
-    // biome-ignore lint/suspicious/noExplicitAny: 'clock' namespace not in generated next-intl types but valid at runtime
-    "clock" as any,
-  ) as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("clock");
   const [state, setState] = useState<QrState>("loading");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -309,7 +306,8 @@ export function QrClockDisplay({
           {state === "active" && qrDataUrl && (
             <div className="flex flex-col items-center gap-2">
               {/* QR Code */}
-              <div className="rounded-xl border border-border/60 bg-white dark:bg-gray-900 p-3 shadow-sm">
+              <div className="rounded-xl border border-border/60 bg-white p-3 shadow-sm">
+                {/* biome-ignore lint/performance/noImgElement: data URI, Next.js Image doesn't support base64 */}
                 <img
                   src={qrDataUrl}
                   alt="Clock-in QR code"

@@ -32,10 +32,6 @@
     "react-grab-mcp": {
       "command": "npx",
       "args": ["-y", "@react-grab/mcp", "--stdio"]
-    },
-    "playwright": {
-      "command": "npx",
-      "args": ["@playwright/mcp@latest"]
     }
   }
 }

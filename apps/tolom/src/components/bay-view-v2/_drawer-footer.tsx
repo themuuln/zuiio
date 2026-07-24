@@ -5,7 +5,6 @@ import {
   ArrowRight,
   CheckCircle2,
   FileText,
-  Loader2,
   X,
 } from "lucide-react";
 import { useMemo } from "react";
@@ -21,7 +20,6 @@ interface DrawerFooterProps {
   wo: WorkOrderDetail;
   invoicePublicToken: string | null;
   saving: boolean;
-  pendingAction?: string | null;
   confirmStatus: string | null;
   statusNotes: string;
   creatingInvoice: boolean;
@@ -109,7 +107,6 @@ export function DrawerFooter({
   wo,
   invoicePublicToken,
   saving,
-  pendingAction,
   confirmStatus,
   statusNotes,
   creatingInvoice,
@@ -241,20 +238,15 @@ export function DrawerFooter({
           {actions.map((action) => {
             const Icon = action.icon;
             const isDefault = (action.variant ?? "default") === "default";
-            const isPending = pendingAction === action.key;
             return (
               <Button
                 key={action.key}
                 variant={isDefault ? "default" : "outline"}
                 className="h-9 px-4 text-xs font-semibold"
                 onClick={action.onClick}
-                disabled={saving || isPending}
+                disabled={saving}
               >
-                {isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Icon className="size-4" />
-                )}
+                <Icon className="size-4" />
                 {t(action.labelKey)}
               </Button>
             );

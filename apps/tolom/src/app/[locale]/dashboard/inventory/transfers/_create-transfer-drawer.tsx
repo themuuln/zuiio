@@ -51,17 +51,14 @@ interface CreateTransferSheetProps {
   currentBranchId: string | null;
 }
 
-export function CreateTransferDrawer({
+export function CreateTransferSheet({
   open,
   onOpenChange,
   orgId,
   branches,
   currentBranchId,
 }: CreateTransferSheetProps) {
-  const t = useTranslations("inventory") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("inventory");
   const createTransfer = useCreateTransfer(orgId);
   const { data: parts = [] } = usePartsCatalog(orgId);
 

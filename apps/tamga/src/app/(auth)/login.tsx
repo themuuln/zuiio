@@ -1,24 +1,11 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
-
-  async function handleOAuthLogin(provider: "google" | "apple") {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: "tamga://login-callback",
-      },
-    });
-    if (error) {
-      Alert.alert("Алдаа", error.message);
-    }
-  }
   const router = useRouter();
 
   async function handleLogin() {
@@ -52,7 +39,7 @@ export default function LoginScreen() {
       <TextInput
         className="bg-card border border-border rounded-lg px-4 py-3 text-foreground mb-4"
         placeholder="Утасны дугаа"
-        placeholderTextColor="rgb(var(--muted-foreground))"
+        placeholderTextColor="hsl(var(--muted-foreground))"
         keyboardType="phone-pad"
         value={phone}
         onChangeText={setPhone}
@@ -67,29 +54,6 @@ export default function LoginScreen() {
         <Text className="text-primary-foreground font-semibold">
           {loading ? "Илгээж байна..." : "Нэвтрэх"}
         </Text>
-      </TouchableOpacity>
-      {/* Divider */}
-      <View className="flex-row items-center my-6">
-        <View className="flex-1 h-px bg-border" />
-        <Text className="mx-4 text-muted-foreground text-sm">Эсвэл</Text>
-        <View className="flex-1 h-px bg-border" />
-      </View>
-
-      {/* Social auth buttons */}
-      <TouchableOpacity
-        className="flex-row items-center justify-center gap-3 bg-card border border-border rounded-lg py-3 mb-3"
-        onPress={() => handleOAuthLogin("google")}
-      >
-        <Ionicons name="logo-google" size={20} />
-        <Text className="text-foreground font-medium">Google-ээр нэвтрэх</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        className="flex-row items-center justify-center gap-3 bg-foreground rounded-lg py-3 mb-3"
-        onPress={() => handleOAuthLogin("apple")}
-      >
-        <Ionicons name="logo-apple" size={20} color="#fff" />
-        <Text className="text-background font-medium">Apple-ээр нэвтрэх</Text>
       </TouchableOpacity>
 
       <Link href="/(auth)/register" asChild>

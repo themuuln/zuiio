@@ -11,7 +11,7 @@ import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
-import { useMemo, ViewTransition } from "react";
+import { ViewTransition } from "react";
 import { logout } from "@/app/(dashboard)/actions";
 import { QuickCreateDropdown } from "@/components/erp/quick-create-dropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -55,7 +55,6 @@ type DashboardShellProps = {
   organizationName: string | null;
   logoUrl: string | null;
   userFullName: string | null;
-  userEmail: string | null;
   enabledFeatures: string[];
   hasMultiBranch: boolean;
   orgSettings: OrgSettings;
@@ -67,7 +66,6 @@ function SidebarNav({
   logoUrl,
   organizationName,
   userFullName,
-  userEmail,
   initials,
   isBranchScoped,
   hasMultiBranch,
@@ -81,7 +79,6 @@ function SidebarNav({
   logoUrl: string | null;
   organizationName: string | null;
   userFullName: string | null;
-  userEmail: string | null;
   initials: string;
   isBranchScoped: boolean;
   hasMultiBranch: boolean;
@@ -95,7 +92,7 @@ function SidebarNav({
   return (
     <>
       <SidebarHeader>
-        {isBranchScoped || !hasMultiBranch ? (
+        {(isBranchScoped || !hasMultiBranch) ? (
           <div className="flex items-center gap-2 overflow-hidden rounded-md border border-sidebar-border/40 bg-sidebar-accent/30 p-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0">
             <div className="flex aspect-square size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary text-primary-foreground">
               {logoUrl ? (
@@ -133,9 +130,7 @@ function SidebarNav({
         ) : (
           <Select
             value={selectedBranchId ?? ""}
-            onValueChange={(value) => {
-              if (value !== null) handleBranchChange(value);
-            }}
+            onValueChange={handleBranchChange}
           >
             <SelectTrigger
               className={cn(
@@ -180,7 +175,9 @@ function SidebarNav({
               align="start"
               side="bottom"
               sideOffset={4}
+              position="popper"
               className="max-h-[50vh] min-w-[14rem]"
+              avoidCollisions={true}
             >
               <SelectItem value="">
                 <Storefront className="size-4" />
@@ -230,12 +227,14 @@ function SidebarNav({
                     <SidebarMenuItem key={item.href}>
                       <ViewTransition>
                         <SidebarMenuButton
+                          asChild
                           isActive={isActive}
                           tooltip={item.title}
-                          render={<Link href={item.href} />}
                         >
-                          <Icon />
-                          <span>{item.title}</span>
+                          <Link href={item.href}>
+                            <Icon />
+                            <span>{item.title}</span>
+                          </Link>
                         </SidebarMenuButton>
                       </ViewTransition>
                     </SidebarMenuItem>
@@ -251,16 +250,17 @@ function SidebarNav({
         <SidebarMenu>
           <SidebarMenuItem>
             <ViewTransition>
-              <SidebarMenuButton render={<Link href="/settings" />}>
-                <Avatar className="size-6">
-                  <AvatarFallback className="text-xs">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate">
-                  {userFullName ||
-                    (userEmail ? userEmail.split("@")[0] : "Хэрэглэгч")}
-                </span>
+              <SidebarMenuButton asChild>
+                <Link href="/settings">
+                  <Avatar className="size-6">
+                    <AvatarFallback className="text-xs">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate">
+                    {userFullName || "Хэрэглэгч"}
+                  </span>
+                </Link>
               </SidebarMenuButton>
             </ViewTransition>
           </SidebarMenuItem>
@@ -280,6 +280,21 @@ function SidebarNav({
     </>
   );
 }
+
+// ─── Sidebar state context (shared between shop & non-shop branches) ────
+
+const SidebarStateContext = React.createContext<{
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}>({
+  open: true,
+  setOpen: () => {},
+});
+
+export function useSidebarState() {
+  return React.useContext(SidebarStateContext);
+}
+
 // ─── Main Shell ────────────────────────────────────────────────────────
 
 export function DashboardShell({
@@ -288,7 +303,6 @@ export function DashboardShell({
   organizationName,
   logoUrl,
   userFullName,
-  userEmail,
   enabledFeatures,
   hasMultiBranch,
   orgSettings,
@@ -297,11 +311,6 @@ export function DashboardShell({
     () => filterNavGroups(navGroups, enabledFeatures, hasMultiBranch),
     [enabledFeatures, hasMultiBranch],
   );
-  const orgSettingsValue = useMemo(
-    () => ({ ...orgSettings, organizationId: organizationId ?? "" }),
-    [orgSettings, organizationId],
-  );
-
   const pathname = usePathname();
   const router = useRouter();
   // Prefetch critical pages for instant navigation
@@ -356,104 +365,107 @@ export function DashboardShell({
     prevPathRef.current = pathname;
   }, [pathname]);
 
-  // Display name with email prefix fallback
-  const displayName =
-    userFullName ?? (userEmail ? userEmail.split("@")[0] : null) ?? "Хэрэглэгч";
-
-  const initials =
-    displayName && displayName !== "Хэрэглэгч"
-      ? displayName
-          .split(" ")
-          .map((name) => name[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2)
-      : userEmail
-        ? userEmail[0].toUpperCase()
-        : "?";
+  const initials = userFullName
+    ? userFullName
+        .split(" ")
+        .map((name) => name[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "??";
 
   const isShop = pathname.startsWith("/shop");
-  return (
-    <Drawer.Provider>
-      <RealtimeSubscriptions orgId={organizationId} />
-      {isShop ? (
-        <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <Sidebar collapsible="offcanvas" className="z-50">
-            <SidebarNav
-              logoUrl={logoUrl}
-              organizationName={organizationName}
-              userFullName={userFullName}
-              userEmail={userEmail}
-              initials={initials}
-              isBranchScoped={isBranchScoped}
-              hasMultiBranch={hasMultiBranch}
-              currentBranch={currentBranch}
-              selectedBranchId={selectedBranchId}
-              handleBranchChange={handleBranchChange}
-              branches={branches}
-              visibleGroups={visibleGroups}
-              pathname={pathname}
-            />
-          </Sidebar>
-          <div className="flex min-h-svh w-full flex-1 flex-col">
-            <OrgSettingsProvider value={orgSettingsValue}>
-              {children}
-            </OrgSettingsProvider>
-          </div>
-        </SidebarProvider>
-      ) : (
-        <>
-          <Drawer.IndentBackground className="pointer-events-none fixed inset-0 z-10 bg-black/10 opacity-0 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:opacity-100 dark:bg-black/40" />
-          <Drawer.Indent
-            className="relative z-0 min-h-dvh transition-[transform,border-radius] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:origin-[center_top] data-active:scale-[calc(0.97+0.03*var(--drawer-swipe-progress))] data-active:translate-y-[calc(0.5rem*(1-var(--drawer-swipe-progress)))] data-active:rounded-tl-2xl data-active:rounded-tr-2xl"
-            style={
-              {
-                "--indent-transition":
-                  "calc(1 - clamp(0, calc(var(--drawer-swipe-progress) * 100000), 1))",
-                transitionDuration:
-                  "calc(450ms * var(--indent-transition)), calc(350ms * var(--indent-transition))",
-              } as React.CSSProperties
-            }
-          >
-            <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
-              <Sidebar collapsible="icon">
-                <SidebarNav
-                  logoUrl={logoUrl}
-                  organizationName={organizationName}
-                  userFullName={userFullName}
-                  userEmail={userEmail}
-                  initials={initials}
-                  isBranchScoped={isBranchScoped}
-                  hasMultiBranch={hasMultiBranch}
-                  currentBranch={currentBranch}
-                  selectedBranchId={selectedBranchId}
-                  handleBranchChange={handleBranchChange}
-                  branches={branches}
-                  visibleGroups={visibleGroups}
-                  pathname={pathname}
-                />
-              </Sidebar>
 
-              <SidebarInset>
-                <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-                  <SidebarTrigger className="-ml-1" />
-                  <Separator orientation="vertical" className="mr-2 h-4" />
-                  <div className="ml-auto">
-                    {organizationId && (
-                      <QuickCreateDropdown organizationId={organizationId} />
-                    )}
+  return (
+    <SidebarStateContext.Provider
+      value={{ open: sidebarOpen, setOpen: setSidebarOpen }}
+    >
+      <Drawer.Provider>
+        <RealtimeSubscriptions orgId={organizationId} />
+        {isShop ? (
+          <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <Sidebar collapsible="offcanvas" className="z-50">
+              <SidebarNav
+                logoUrl={logoUrl}
+                organizationName={organizationName}
+                userFullName={userFullName}
+                initials={initials}
+                isBranchScoped={isBranchScoped}
+                hasMultiBranch={hasMultiBranch}
+                currentBranch={currentBranch}
+                selectedBranchId={selectedBranchId}
+                handleBranchChange={handleBranchChange}
+                branches={branches}
+                visibleGroups={visibleGroups}
+                pathname={pathname}
+              />
+            </Sidebar>
+            <div className="flex min-h-svh w-full flex-1 flex-col">
+              <OrgSettingsProvider
+                value={{ ...orgSettings, organizationId: organizationId ?? "" }}
+              >
+                {children}
+              </OrgSettingsProvider>
+            </div>
+          </SidebarProvider>
+        ) : (
+          <>
+            <Drawer.IndentBackground className="pointer-events-none fixed inset-0 z-10 bg-black/10 opacity-0 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:opacity-100 dark:bg-black/40" />
+            <Drawer.Indent
+              className="relative z-0 min-h-dvh transition-[transform,border-radius] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:origin-[center_top] data-active:scale-[calc(0.97+0.03*var(--drawer-swipe-progress))] data-active:translate-y-[calc(0.5rem*(1-var(--drawer-swipe-progress)))] data-active:rounded-tl-2xl data-active:rounded-tr-2xl"
+              style={
+                {
+                  "--indent-transition":
+                    "calc(1 - clamp(0, calc(var(--drawer-swipe-progress) * 100000), 1))",
+                  transitionDuration:
+                    "calc(450ms * var(--indent-transition)), calc(350ms * var(--indent-transition))",
+                } as React.CSSProperties
+              }
+            >
+              <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <Sidebar collapsible="icon">
+                  <SidebarNav
+                    logoUrl={logoUrl}
+                    organizationName={organizationName}
+                    userFullName={userFullName}
+                    initials={initials}
+                    isBranchScoped={isBranchScoped}
+                    hasMultiBranch={hasMultiBranch}
+                    currentBranch={currentBranch}
+                    selectedBranchId={selectedBranchId}
+                    handleBranchChange={handleBranchChange}
+                    branches={branches}
+                    visibleGroups={visibleGroups}
+                    pathname={pathname}
+                  />
+                </Sidebar>
+
+                <SidebarInset>
+                  <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+                    <SidebarTrigger className="-ml-1" />
+                    <Separator orientation="vertical" className="mr-2 h-4" />
+                    <div className="ml-auto">
+                      {organizationId && (
+                        <QuickCreateDropdown organizationId={organizationId} />
+                      )}
+                    </div>
+                  </header>
+                  <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
+                    <OrgSettingsProvider
+                      value={{
+                        ...orgSettings,
+                        organizationId: organizationId ?? "",
+                      }}
+                    >
+                      {children}
+                    </OrgSettingsProvider>
                   </div>
-                </header>
-                <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-                  <OrgSettingsProvider value={orgSettingsValue}>
-                    {children}
-                  </OrgSettingsProvider>
-                </div>
-              </SidebarInset>
-            </SidebarProvider>
-          </Drawer.Indent>
-        </>
-      )}
-    </Drawer.Provider>
+                </SidebarInset>
+              </SidebarProvider>
+            </Drawer.Indent>
+          </>
+        )}
+      </Drawer.Provider>
+    </SidebarStateContext.Provider>
   );
 }

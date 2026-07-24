@@ -4,9 +4,9 @@ import { useOrgMutation } from "@zuiio/query";
 import { Dices, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { z } from "zod";
-import { VariantEditorDrawer } from "@/components/services/variant-editor-drawer";
+
+import { VariantEditorSheet } from "@/components/services/variant-editor-drawer";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -26,11 +26,10 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useForm } from "@/lib/hooks/use-form";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useCreateService } from "@/lib/queries/use-wizard-data";
-import type { CreateServiceCatalogParams, ServiceCatalog } from "@/lib/types";
+import type { ServiceCatalog } from "@/lib/types";
 
 // ── Schema ─────────────────────────────────────────────────────
 
@@ -41,7 +40,6 @@ const editServiceSchema = z.object({
     .string()
     .min(1, "Price is required")
     .refine((val) => !Number.isNaN(parseFloat(val)), "Enter a valid price"),
-  defaultCost: z.string().optional(),
   category: z.string().optional(),
   description: z.string().optional(),
 });
@@ -57,20 +55,14 @@ interface EditServiceSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditServiceDrawer({
+export function EditServiceSheet({
   service,
   categories,
   open,
   onOpenChange,
 }: EditServiceSheetProps) {
-  const t = useTranslations("services") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const commonT = useTranslations("common") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("services");
+  const commonT = useTranslations("common");
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 
@@ -78,42 +70,29 @@ export function EditServiceDrawer({
   const [showVariants, setShowVariants] = useState(false);
 
   const form = useForm<EditServiceValues>({
+    resolver: zodResolver(editServiceSchema),
     defaultValues: {
       name: "",
       nameMn: "",
       defaultPrice: "",
-      defaultCost: "",
       category: "",
       description: "",
     },
   });
 
-  // Reset form when service changes or when opening for create
+  // Reset form when service changes
   useEffect(() => {
     if (service) {
       form.reset({
         name: service.name,
         nameMn: service.name_mn ?? "",
         defaultPrice: String(service.default_price),
-        defaultCost:
-          service.default_cost != null ? String(service.default_cost) : "",
         category: service.category ?? "",
         description: service.description ?? "",
       });
       setCategoryInput("");
-    } else if (open) {
-      // Opening in create mode — reset to defaults
-      form.reset({
-        name: "",
-        nameMn: "",
-        defaultPrice: "",
-        defaultCost: "",
-        category: "",
-        description: "",
-      });
-      setCategoryInput("");
     }
-  }, [service, form, open]);
+  }, [service, form]);
 
   const watchedCategory = form.watch("category");
 
@@ -130,35 +109,11 @@ export function EditServiceDrawer({
       onOpenChange(false);
       form.reset();
     },
-    onError: (error) => {
-      toast.error(t("failedToUpdate"), {
-        description: error instanceof Error ? error.message : undefined,
-      });
-    },
   });
 
-  const createMutation = useCreateService(orgId ?? undefined);
-  const isCreating = service === null;
-
   const handleSave = form.handleSubmit((data) => {
-    if (isCreating) {
-      const payload: CreateServiceCatalogParams = {
-        name: data.name.trim(),
-        name_mn: data.nameMn?.trim() || undefined,
-        default_price: Number(data.defaultPrice),
-        default_cost: data.defaultCost ? Number(data.defaultCost) : undefined,
-        category: data.category?.trim() || undefined,
-        description: data.description?.trim() || undefined,
-      };
-      createMutation.mutate(payload, {
-        onSuccess: () => {
-          onOpenChange(false);
-          form.reset();
-        },
-      });
-    } else if (service) {
-      updateMutation.mutate({ serviceId: service.id, data });
-    }
+    if (!service) return;
+    updateMutation.mutate({ serviceId: service.id, data });
   });
 
   const handleOpenChange = (open: boolean) => {
@@ -173,7 +128,7 @@ export function EditServiceDrawer({
       size="lg"
       modal={false}
       nestedContent={
-        <VariantEditorDrawer
+        <VariantEditorSheet
           entityType="service"
           entityId={service?.id ?? null}
           entityName={service?.name ?? ""}
@@ -196,9 +151,7 @@ export function EditServiceDrawer({
           </Button>
         }
       >
-        <DetailDrawer.Title>
-          {isCreating ? t("addService") : t("editService")}
-        </DetailDrawer.Title>
+        <DetailDrawer.Title>{t("editService")}</DetailDrawer.Title>
         <DetailDrawer.Description>
           {t("editServiceDescription")}
         </DetailDrawer.Description>
@@ -252,18 +205,6 @@ export function EditServiceDrawer({
                   {form.formState.errors.defaultPrice.message}
                 </FieldError>
               )}
-            </FieldContent>
-          </Field>
-          {/* Default Cost */}
-          <Field>
-            <FieldLabel>{t("cost")} (₮)</FieldLabel>
-            <FieldContent>
-              <CurrencyInput
-                value={Number(form.watch("defaultCost")) || 0}
-                onChange={(val) => form.setValue("defaultCost", String(val))}
-                min={0}
-                placeholder="0"
-              />
             </FieldContent>
           </Field>
 
@@ -349,21 +290,13 @@ export function EditServiceDrawer({
             size="lg"
             className="flex-1"
             onClick={handleSave}
-            disabled={
-              isCreating ? createMutation.isPending : updateMutation.isPending
-            }
+            disabled={updateMutation.isPending}
           >
-            {(
-              isCreating
-                ? createMutation.isPending
-                : updateMutation.isPending
-            ) ? (
+            {updateMutation.isPending ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" />
                 {t("saving")}
               </span>
-            ) : isCreating ? (
-              t("createService")
             ) : (
               commonT("save")
             )}

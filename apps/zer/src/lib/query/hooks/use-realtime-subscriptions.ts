@@ -5,6 +5,7 @@ import {
   brandKeys,
   contactKeys,
   expenseKeys,
+  inventoryKeys,
   productKeys,
   saleKeys,
 } from "@/lib/query/keys";
@@ -15,10 +16,7 @@ import { createClient } from "@/lib/supabase/client";
  * expenses, brands) that invalidate the corresponding React Query caches on any
  * INSERT/UPDATE/DELETE.
  *
- * Stock decrements from sales are handled by the products channel (the sale
- * writes to products.current_stock via the process_shop_sale RPC), so the sales
- * entry no longer needs to invalidate inventory keys.
- *
+ * Sales changes also invalidate the inventory/stock cache.
  * Cleans up all channels when the component unmounts or orgId changes.
  *
  * Pass `null` or `undefined` for orgId to skip subscription setup
@@ -38,7 +36,7 @@ export function useRealtimeSubscriptions(orgId: string | null | undefined) {
       },
       {
         table: "sales",
-        queryKeys: [saleKeys.lists(orgId!)],
+        queryKeys: [saleKeys.lists(orgId!), inventoryKeys.lists(orgId!)],
         filter: `organization_id=eq.${orgId}`,
       },
       {

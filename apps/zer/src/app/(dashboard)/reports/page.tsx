@@ -5,7 +5,6 @@ import { PageShell } from "@/components/erp/page-shell";
 import { CommissionSummary } from "@/components/reports/commission-summary";
 import { ExpenseBreakdown } from "@/components/reports/expense-breakdown";
 import { FinancialSummary } from "@/components/reports/financial-summary";
-import { InventoryValuation } from "@/components/reports/inventory-valuation";
 import { PendingSales } from "@/components/reports/pending-sales";
 import { ProductSalesTable } from "@/components/reports/product-sales-table";
 import {
@@ -54,9 +53,8 @@ async function DataFetcher({ from, to }: { from: string; to: string }) {
         <PendingSales data={report.pendingSales} />
         <PendingSalesChart data={report.pendingSales} />
       </div>
-      <CommissionSummary data={report.commissionSummary} />
 
-      <InventoryValuation />
+      <CommissionSummary data={report.commissionSummary} />
     </>
   );
 }

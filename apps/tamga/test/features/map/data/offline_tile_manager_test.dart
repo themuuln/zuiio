@@ -20,9 +20,8 @@ class _MockAssetBundle extends CachingAssetBundle {
 Future<String> setupTestPathProvider() async {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  final tempDir = Directory.systemTemp.createTempSync(
-    'tamga_offline_tile_test_',
-  );
+  final tempDir =
+      Directory.systemTemp.createTempSync('tamga_offline_tile_test_');
 
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(
@@ -63,10 +62,8 @@ void main() {
       final appDir = Directory(tempPath);
       final pmtilesPath = '${appDir.path}/mongolia.pmtiles';
       await File(pmtilesPath).writeAsBytes(
-        List<int>.generate(
-          700,
-          (i) => [0x50, 0x4D, 0x54, 0x69, 0x6C, 0x65, 0x73][i % 7],
-        ),
+        List<int>.generate(700,
+            (i) => [0x50, 0x4D, 0x54, 0x69, 0x6C, 0x65, 0x73][i % 7]),
       );
 
       manager = OfflineTileManager(
@@ -116,9 +113,9 @@ void main() {
       // Create only MBTiles file
       final appDir = Directory(tempPath);
       final mbtilesPath = '${appDir.path}/mongolia.mbtiles';
-      await File(
-        mbtilesPath,
-      ).writeAsBytes(List<int>.generate(300, (i) => [0x00, 0x01, 0x02][i % 3]));
+      await File(mbtilesPath).writeAsBytes(
+        List<int>.generate(300, (i) => [0x00, 0x01, 0x02][i % 3]),
+      );
 
       manager = OfflineTileManager(
         tileCache: TileCacheManager(maxCacheSizeBytes: 100 * 1024),
@@ -191,9 +188,8 @@ void main() {
     });
 
     test('installPmtiles returns false for non-existent source', () async {
-      final result = await manager.installPmtiles(
-        '/nonexistent/source.pmtiles',
-      );
+      final result =
+          await manager.installPmtiles('/nonexistent/source.pmtiles');
       expect(result, false);
     });
   });

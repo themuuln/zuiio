@@ -142,10 +142,7 @@ const AreaInteractiveChart = dynamic(
 
 export function ChartAreaInteractive() {
   const isMobile = useIsMobile();
-  const t = useTranslations("dateRangePicker") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("dateRangePicker");
   const [timeRange, setTimeRange] = React.useState("90d");
 
   React.useEffect(() => {

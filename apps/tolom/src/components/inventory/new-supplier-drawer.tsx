@@ -9,7 +9,7 @@ interface NewSupplierSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function NewSupplierDrawer({
+export function NewSupplierSheet({
   open,
   onOpenChange,
 }: NewSupplierSheetProps) {

@@ -23,11 +23,8 @@ void main() {
 
     test('displayName is non-empty for all values', () {
       for (final metric in MetricType.values) {
-        expect(
-          metric.displayName.isNotEmpty,
-          isTrue,
-          reason: '${metric.name} should have a non-empty displayName',
-        );
+        expect(metric.displayName.isNotEmpty, isTrue,
+            reason: '${metric.name} should have a non-empty displayName');
       }
     });
 
@@ -282,31 +279,28 @@ void main() {
 
     // ── Serialization — Supabase JSON ────────────────────────
 
-    test(
-      'toSupabaseJson uses snake_case keys and includes ownerId/updated_at',
-      () {
-        final record = PerformanceRecord(
-          id: 'pr-1',
-          horseId: 'horse-1',
-          metric: MetricType.speed,
-          value: 45.0,
-          unit: 'км/ц',
-          notes: 'Хурд хэмжилт',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        final json = record.toSupabaseJson(ownerId: 'user-1');
+    test('toSupabaseJson uses snake_case keys and includes ownerId/updated_at', () {
+      final record = PerformanceRecord(
+        id: 'pr-1',
+        horseId: 'horse-1',
+        metric: MetricType.speed,
+        value: 45.0,
+        unit: 'км/ц',
+        notes: 'Хурд хэмжилт',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      final json = record.toSupabaseJson(ownerId: 'user-1');
 
-        expect(json['owner_id'], 'user-1');
-        expect(json['id'], 'pr-1');
-        expect(json['horse_id'], 'horse-1');
-        expect(json['metric'], 'speed');
-        expect(json['value'], 45.0);
-        expect(json['unit'], 'км/ц');
-        expect(json['notes'], 'Хурд хэмжилт');
-        expect(json['updated_at'], isA<String>());
-      },
-    );
+      expect(json['owner_id'], 'user-1');
+      expect(json['id'], 'pr-1');
+      expect(json['horse_id'], 'horse-1');
+      expect(json['metric'], 'speed');
+      expect(json['value'], 45.0);
+      expect(json['unit'], 'км/ц');
+      expect(json['notes'], 'Хурд хэмжилт');
+      expect(json['updated_at'], isA<String>());
+    });
 
     test('fromSupabaseJson deserializes snake_case', () {
       final supabase = {

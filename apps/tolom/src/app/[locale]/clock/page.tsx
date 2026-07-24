@@ -23,10 +23,7 @@ type ScanState =
   | "error";
 
 export default function ClockPage() {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const { profile, loading: roleLoading } = useCurrentUserRole();
   const {
     startScanning,

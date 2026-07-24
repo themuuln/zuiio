@@ -44,7 +44,8 @@ class ActiveReportsScreen extends ConsumerWidget {
                         child: EmptyState(
                           icon: Icons.pets_outlined,
                           title: 'Хаяж морь байхгүй байна',
-                          description: 'Одоогоор хаяж морийн мэдээлэл байхгүй',
+                          description:
+                              'Одоогоор хаяж морийн мэдээлэл байхгүй',
                         ),
                       );
               }
@@ -67,7 +68,7 @@ class ActiveReportsScreen extends ConsumerWidget {
                                 currentPos.latitude,
                                 currentPos.longitude,
                               ) /
-                              1000;
+                            1000;
                     return LostHorseCard(
                       report: report,
                       distanceKm: distanceKm,
@@ -123,7 +124,9 @@ class _FilterBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: colors.surface,
-        border: Border(bottom: BorderSide(color: colors.outline.withAlpha(60))),
+        border: Border(
+          bottom: BorderSide(color: colors.outline.withAlpha(60)),
+        ),
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: TamgaSpacing.md,
@@ -139,9 +142,8 @@ class _FilterBar extends StatelessWidget {
               isActive: filter.aimag != null,
               onTap: () => _showAimagPicker(context),
               onClear: filter.aimag != null
-                  ? () => ref
-                        .read(lostHorseFilterProvider.notifier)
-                        .setAimag(null)
+                  ? () =>
+                      ref.read(lostHorseFilterProvider.notifier).setAimag(null)
                   : null,
             ),
             const SizedBox(width: TamgaSpacing.sm),
@@ -152,8 +154,8 @@ class _FilterBar extends StatelessWidget {
               onTap: () => _showAnimalTypePicker(context),
               onClear: filter.animalType != null
                   ? () => ref
-                        .read(lostHorseFilterProvider.notifier)
-                        .setAnimalType(null)
+                      .read(lostHorseFilterProvider.notifier)
+                      .setAnimalType(null)
                   : null,
             ),
             const SizedBox(width: TamgaSpacing.sm),
@@ -164,8 +166,8 @@ class _FilterBar extends StatelessWidget {
               onTap: () => _showCoatColorPicker(context),
               onClear: filter.coatColor != null
                   ? () => ref
-                        .read(lostHorseFilterProvider.notifier)
-                        .setCoatColor(null)
+                      .read(lostHorseFilterProvider.notifier)
+                      .setCoatColor(null)
                   : null,
             ),
             const SizedBox(width: TamgaSpacing.sm),
@@ -176,8 +178,8 @@ class _FilterBar extends StatelessWidget {
               onTap: () => _showStatusPicker(context),
               onClear: filter.status != null
                   ? () => ref
-                        .read(lostHorseFilterProvider.notifier)
-                        .setStatus(null)
+                      .read(lostHorseFilterProvider.notifier)
+                      .setStatus(null)
                   : null,
             ),
             if (filter.hasAnyFilter) ...[
@@ -210,9 +212,7 @@ class _FilterBar extends StatelessWidget {
             vertical: TamgaSpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: isActive
-                ? colors.primaryContainer
-                : colors.surfaceContainerHigh,
+            color: isActive ? colors.primaryContainer : colors.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isActive
@@ -236,7 +236,9 @@ class _FilterBar extends StatelessWidget {
               Icon(
                 isActive ? Icons.check_circle : Icons.expand_more,
                 size: 16,
-                color: isActive ? colors.primary : colors.onSurfaceVariant,
+                color: isActive
+                    ? colors.primary
+                    : colors.onSurfaceVariant,
               ),
               if (onClear != null) ...[
                 const SizedBox(width: 2),
@@ -419,9 +421,8 @@ class _FilterBar extends StatelessWidget {
                                   color: isSelected
                                       ? colors.primary
                                       : colors.onSurface,
-                                  weight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
+                                  weight:
+                                      isSelected ? FontWeight.w600 : FontWeight.normal,
                                 ),
                               ),
                             ),

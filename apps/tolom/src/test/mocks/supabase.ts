@@ -46,7 +46,6 @@ export type MockSupabaseClient = ReturnType<typeof createMockSupabaseClient>;
 export function createMockSupabaseClient() {
   const qb: Record<string, ReturnType<typeof vi.fn>> & {
     then: Function;
-    catch: Function;
   } = {} as any;
 
   // Track what the query builder should resolve to when awaited.
@@ -92,42 +91,23 @@ export function createMockSupabaseClient() {
   }
   qb.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
 
-  // Queue for one-shot resolve values (sequential awaits).
-  const resolveOnceQueue: { data: unknown; error: unknown }[] = [];
-
   // Make qb thenable: `await qb` resolves to thenResolveData.
   // This mirrors real Supabase: .select().eq() is both chainable AND a Promise.
   qb.then = (
     onFulfilled?: (value: any) => any,
     onRejected?: (reason: any) => any,
-  ) => {
-    // Use resolveOnce queue if available, else persistent resolveWith
-    if (resolveOnceQueue.length > 0) {
-      return Promise.resolve(
-        resolveOnceQueue.shift() ?? { data: null, error: null },
-      ).then(onFulfilled, onRejected);
-    }
-    return Promise.resolve(thenResolveData).then(onFulfilled, onRejected);
-  };
-  qb.catch = (onRejected?: (reason: any) => any) =>
-    Promise.resolve(thenResolveData).catch(onRejected);
+  ) => Promise.resolve(thenResolveData).then(onFulfilled, onRejected);
 
   // Expose internals so tests can control what the query builder resolves to.
   // Usage: client.__qb.resolveWith({ data: [...], error: null });
   const __qb = {
-    /** Set the value that `await qb` resolves to (persistent until next resolve). */
+    /** Set the value that `await qb` resolves to. */
     resolveWith(value: unknown) {
       thenResolveData = value as { data: unknown; error: unknown };
-    },
-    /** Resolve the NEXT await(s) only, then fall back to resolveWith value.
-     *  Each call pushes one item onto a queue — for multi-await scenarios. */
-    resolveOnce(value: unknown) {
-      resolveOnceQueue.push(value as { data: unknown; error: unknown });
     },
     /** Reset to default { data: null, error: null }. */
     reset() {
       thenResolveData = { data: null, error: null };
-      resolveOnceQueue.length = 0;
     },
   };
 
@@ -179,26 +159,4 @@ export function createMockSupabaseClient() {
   };
 
   return mock;
-}
-
-// ── Server client mock helper ─────────────────────────────────
-// Eliminates boilerplate in module tests that need to mock the
-// server-side createClient() from src/lib/supabase/server.ts.
-//
-// Usage:
-//   import { setupMockServerClient, createMockSupabaseClient } from "@/test/mocks/supabase";
-//
-//   const { mockCreateClient, mockClient } = setupMockServerClient();
-//   mockCreateClient.mockResolvedValue(mockClient as never);
-//   // mockClient.from(...) works out of the box
-//   const { myService } = await import("./my-service");
-//   await myService();
-
-/** The mock module to import into tests — exported so beforeEach can clear it. */
-export type MockCreateClient = ReturnType<typeof vi.fn>;
-
-export function setupMockServerClient() {
-  const mockClient = createMockSupabaseClient();
-  const mockCreateClient = vi.fn();
-  return { mockClient, mockCreateClient };
 }

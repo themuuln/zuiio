@@ -1,85 +1,100 @@
 import { describe, expect, it } from "vitest";
 import {
   FEATURE_KEYS,
+  type FeatureKey,
   getNextPlanWithFeature,
   getPlanFeatures,
   isPlanFeatureEnabled,
   PLAN_FEATURES,
 } from "./plan-features";
 
-describe("FEATURE_KEYS", () => {
-  it("defines expected feature keys", () => {
-    expect(FEATURE_KEYS).toHaveProperty("WORK_ORDERS");
-    expect(FEATURE_KEYS).toHaveProperty("BAY_VIEW");
-    expect(FEATURE_KEYS).toHaveProperty("CUSTOMERS");
-    expect(FEATURE_KEYS).toHaveProperty("VEHICLES");
-    expect(FEATURE_KEYS).toHaveProperty("INVENTORY");
-    expect(FEATURE_KEYS).toHaveProperty("FINANCE");
-    expect(FEATURE_KEYS).toHaveProperty("SETTINGS");
-  });
-});
-
 describe("PLAN_FEATURES", () => {
-  it("has all plan types", () => {
-    expect(PLAN_FEATURES).toHaveProperty("starter");
-    expect(PLAN_FEATURES).toHaveProperty("pro");
-    expect(PLAN_FEATURES).toHaveProperty("business");
-    expect(PLAN_FEATURES).toHaveProperty("enterprise");
+  it("has all 4 plan tiers", () => {
+    expect(Object.keys(PLAN_FEATURES)).toEqual([
+      "starter",
+      "pro",
+      "business",
+      "enterprise",
+    ]);
   });
 
-  it("enterprise has 'all'", () => {
+  it("enterprise has 'all' sentinel", () => {
     expect(PLAN_FEATURES.enterprise).toBe("all");
   });
-});
 
-describe("getPlanFeatures", () => {
-  it("returns array of features for starter", () => {
+  it("starter plan has reasonable features", () => {
     const features = getPlanFeatures("starter");
-    expect(Array.isArray(features)).toBe(true);
-    expect(features.length).toBeGreaterThan(0);
+    expect(features).toContain(FEATURE_KEYS.WORK_ORDERS);
+    expect(features).toContain(FEATURE_KEYS.CUSTOMERS);
+    expect(features).toContain(FEATURE_KEYS.VEHICLES);
+    expect(features).toContain(FEATURE_KEYS.FINANCE);
   });
 
-  it("returns all features for enterprise", () => {
+  it("starter plan does NOT have inventory/payroll", () => {
+    const features = getPlanFeatures("starter");
+    expect(features).not.toContain(FEATURE_KEYS.INVENTORY);
+    expect(features).not.toContain(FEATURE_KEYS.PAYROLL);
+  });
+
+  it("pro plan adds inventory and payroll", () => {
+    const features = getPlanFeatures("pro");
+    expect(features).toContain(FEATURE_KEYS.INVENTORY);
+    expect(features).toContain(FEATURE_KEYS.PAYROLL);
+    expect(features).toContain(FEATURE_KEYS.WORK_ORDERS); // inherited from starter
+  });
+
+  it("business plan adds purchase orders and price rules", () => {
+    const features = getPlanFeatures("business");
+    expect(features).toContain(FEATURE_KEYS.PURCHASE_ORDERS);
+    expect(features).toContain(FEATURE_KEYS.PRICE_RULES);
+    expect(features).toContain(FEATURE_KEYS.PAYROLL); // inherited from pro
+  });
+
+  it("enterprise plan returns all known feature keys", () => {
     const features = getPlanFeatures("enterprise");
-    expect(features).toEqual(Object.values(FEATURE_KEYS));
-  });
-
-  it("starter has fewer features than business", () => {
-    const starter = getPlanFeatures("starter");
-    const business = getPlanFeatures("business");
-    expect(starter.length).toBeLessThan(business.length);
+    const allKeys = Object.values(FEATURE_KEYS);
+    for (const key of allKeys) {
+      expect(features).toContain(key);
+    }
   });
 });
 
 describe("isPlanFeatureEnabled", () => {
-  it("returns true for core features on starter", () => {
+  it("returns true for features in the plan", () => {
     expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.WORK_ORDERS)).toBe(
       true,
     );
-    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.CUSTOMERS)).toBe(true);
   });
 
-  it("returns false for pro features on starter", () => {
+  it("returns false for features not in the plan", () => {
     expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.INVENTORY)).toBe(false);
-    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.PAYROLL)).toBe(false);
   });
 
   it("returns true for all features on enterprise", () => {
-    expect(isPlanFeatureEnabled("enterprise", FEATURE_KEYS.INVENTORY)).toBe(
-      true,
-    );
-    expect(isPlanFeatureEnabled("enterprise", FEATURE_KEYS.PAYROLL)).toBe(true);
+    const allKeys = Object.values(FEATURE_KEYS) as FeatureKey[];
+    for (const key of allKeys) {
+      expect(isPlanFeatureEnabled("enterprise", key)).toBe(true);
+    }
   });
 });
 
 describe("getNextPlanWithFeature", () => {
-  it("returns null for enterprise (already highest)", () => {
-    const result = getNextPlanWithFeature("enterprise", FEATURE_KEYS.CUSTOMERS);
-    expect(result).toBeNull();
+  it("returns pro for inventory on starter", () => {
+    expect(getNextPlanWithFeature("starter", FEATURE_KEYS.INVENTORY)).toBe(
+      "pro",
+    );
   });
 
-  it("returns a plan upgrade suggestion for missing features", () => {
-    const result = getNextPlanWithFeature("starter", FEATURE_KEYS.INVENTORY);
-    expect(result).toBe("pro");
+  it("returns null for feature already available on current plan", () => {
+    expect(
+      getNextPlanWithFeature("starter", FEATURE_KEYS.WORK_ORDERS),
+    ).toBeNull();
+    expect(getNextPlanWithFeature("pro", FEATURE_KEYS.INVENTORY)).toBeNull();
+  });
+
+  it("returns null for enterprise (no higher tier)", () => {
+    expect(
+      getNextPlanWithFeature("enterprise", FEATURE_KEYS.INVENTORY),
+    ).toBeNull();
   });
 });

@@ -5,19 +5,15 @@ test.describe("Products module", () => {
   test("create drawer renders all form fields", async ({ page }) => {
     await page.goto("/products", { waitUntil: "domcontentloaded" });
 
-    await test.step("Open create drawer", async () => {
-      await openDrawerByText(page, "Шинэ бүтээгдэхүүн");
-    });
-
-    await test.step("Verify form fields are visible", async () => {
-      await expect(page.getByLabel("Нэр")).toBeVisible({ timeout: 10000 });
-      await expect(page.getByLabel("SKU")).toBeVisible();
-      await expect(page.getByLabel("Өртөг үнэ")).toBeVisible();
-      await expect(page.getByLabel("Зарах үнэ")).toBeVisible();
-      await expect(page.getByLabel("Эхний үлдэгдэл")).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: "Хадгалах" }),
-      ).toBeVisible();
+    await openDrawerByText(page, "Шинэ бүтээгдэхүүн");
+    await expect(page.locator("#name")).toBeVisible({ timeout: 10000 });
+    await expect(page.locator("#sku")).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("#cost_price")).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("#sale_price")).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("#current_stock")).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("#min_stock")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("create-product-submit")).toBeVisible({
+      timeout: 5000,
     });
   });
 

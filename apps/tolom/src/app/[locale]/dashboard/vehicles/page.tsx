@@ -28,10 +28,7 @@ import { createColumns, type VehicleRow } from "./_columns";
 export default function VehiclesPage() {
   const { search, setSearch } = useTableFilters("vehicles");
   const { setNewVehicleDialogOpen, setDetailVehicleId } = usePageHeader();
-  const t = useTranslations("vehicles") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("vehicles");
   const now = useClientNow();
 
   const { data: org, isError: orgError } = useCurrentOrg();

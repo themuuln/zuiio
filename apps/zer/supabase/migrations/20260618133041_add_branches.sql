@@ -600,14 +600,6 @@ CREATE POLICY "discount_conditions_insert_own_org" ON public.discount_conditions
     AND has_permission('discounts.create'::public.app_permission)
   );
 
-DROP POLICY IF EXISTS "commission_payouts_select" ON public.commission_payouts;
-DROP POLICY IF EXISTS "commission_payouts_insert" ON public.commission_payouts;
-DROP POLICY IF EXISTS "commission_payouts_update" ON public.commission_payouts;
-DROP POLICY IF EXISTS "commission_payouts_delete" ON public.commission_payouts;
-DROP POLICY IF EXISTS "commission_payout_items_select" ON public.commission_payout_items;
-DROP POLICY IF EXISTS "commission_payout_items_insert" ON public.commission_payout_items;
-DROP POLICY IF EXISTS "commission_payout_items_update" ON public.commission_payout_items;
-DROP POLICY IF EXISTS "commission_payout_items_delete" ON public.commission_payout_items;
 -- --- Commission Payouts ---
 CREATE POLICY "commission_payouts_select" ON public.commission_payouts
   FOR SELECT USING (

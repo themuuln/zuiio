@@ -29,9 +29,8 @@ class SupabaseVetProfileRepository
           .select('*, service_providers!inner(location_aimag)');
 
       final profiles = (response as List<dynamic>)
-          .map(
-            (row) => VetProfile.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) =>
+              VetProfile.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(profiles);
@@ -48,13 +47,14 @@ class SupabaseVetProfileRepository
 
       final response = await client
           .from('vet_profiles')
-          .select('*, service_providers!inner(location_aimag)')
+          .select(
+            '*, service_providers!inner(location_aimag)',
+          )
           .eq('service_providers.location_aimag', aimag);
 
       final profiles = (response as List<dynamic>)
-          .map(
-            (row) => VetProfile.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) =>
+              VetProfile.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(profiles);
@@ -77,7 +77,9 @@ class SupabaseVetProfileRepository
 
       if (response == null) return const Result.ok(null);
 
-      return Result.ok(VetProfile.fromSupabaseJson(response));
+      return Result.ok(
+        VetProfile.fromSupabaseJson(response),
+      );
     } catch (e) {
       return Result.fail(wrapError(e));
     }

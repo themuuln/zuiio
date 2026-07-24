@@ -1,5 +1,5 @@
 "use client";
-import { Check, Minus, Plus, ShoppingCart } from "@phosphor-icons/react";
+import { Check, ShoppingCart } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
@@ -11,14 +11,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DrawerFooter } from "@/components/ui/drawer-footer";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
-import { useOrgSettings } from "@/lib/org-settings-context";
 import {
   fetchVariantGroups,
   fetchVariants,
   useVariantGroups,
 } from "@/lib/query/hooks/use-product-variants";
 import { variantKeys } from "@/lib/query/keys";
-import { getCartItemKey } from "@/lib/shop-cart";
 import { cn } from "@/lib/utils";
 
 export type ProductCardProduct = {
@@ -35,31 +33,6 @@ export type ProductCardProduct = {
   brand_logo_url: string | null;
 };
 
-const LOW_STOCK_THRESHOLD = 5;
-
-function StockChip({ stock, unit }: { stock: number; unit: string }) {
-  const low = stock > 0 && stock <= LOW_STOCK_THRESHOLD;
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
-        low
-          ? "border-destructive/30 bg-destructive/10 text-destructive"
-          : "border-border bg-muted text-muted-foreground",
-      )}
-    >
-      <span
-        className={cn(
-          "size-1.5 rounded-full",
-          low ? "bg-destructive" : "bg-primary",
-        )}
-        aria-hidden="true"
-      />
-      Үлдэгдэл {stock} {unit}
-    </span>
-  );
-}
-
 export const ProductCard = memo(function ProductCard({
   product,
   variant = "card",
@@ -69,27 +42,7 @@ export const ProductCard = memo(function ProductCard({
   variant?: "card" | "tile";
   cartQuantity?: number;
 }) {
-  const { addItem, updateQuantity, removeItem } = useCart();
-  const price = Number(product.sale_price ?? 0);
-  const stock = Number(product.current_stock ?? 0);
-  const unit = product.unit ?? "ш";
-  const { trackStock } = useOrgSettings();
-  const isOutOfStock = trackStock && stock <= 0;
-  const inCart = cartQuantity > 0;
-  const productCartKey = getCartItemKey({ productId: product.id });
-  const maxStock = trackStock ? stock : Number.POSITIVE_INFINITY;
-  const atMaxStock = cartQuantity >= maxStock;
-  const handleIncrement = () => {
-    if (isOutOfStock || atMaxStock) return;
-    updateQuantity(productCartKey, cartQuantity + 1);
-  };
-  const handleDecrement = () => {
-    if (cartQuantity <= 1) {
-      removeItem(productCartKey);
-    } else {
-      updateQuantity(productCartKey, cartQuantity - 1);
-    }
-  };
+  const { addItem } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const [selectedVariant, setSelectedVariant] =
     useState<SelectedVariant | null>(null);
@@ -144,10 +97,15 @@ export const ProductCard = memo(function ProductCard({
   // Show "added" feedback briefly
   useEffect(() => {
     if (justAdded) {
-      const t = setTimeout(() => setJustAdded(false), 1400);
+      const t = setTimeout(() => setJustAdded(false), 1200);
       return () => clearTimeout(t);
     }
   }, [justAdded]);
+
+  const price = Number(product.sale_price ?? 0);
+  const stock = Number(product.current_stock ?? 0);
+  const unit = product.unit ?? "ш";
+  const isOutOfStock = stock <= 0;
 
   const addButtonContent = justAdded ? (
     <>
@@ -176,7 +134,7 @@ export const ProductCard = memo(function ProductCard({
       name: product.name,
       unitPrice: price,
       unit,
-      maxStock: trackStock ? stock : Number.POSITIVE_INFINITY,
+      maxStock: stock,
     });
     setJustAdded(true);
   };
@@ -192,9 +150,9 @@ export const ProductCard = memo(function ProductCard({
       name: product.name,
       unitPrice: Number(selectedVariant.sale_price ?? product.sale_price ?? 0),
       unit,
-      maxStock: trackStock
-        ? Number(selectedVariant.current_stock ?? product.current_stock ?? 0)
-        : Number.POSITIVE_INFINITY,
+      maxStock: Number(
+        selectedVariant.current_stock ?? product.current_stock ?? 0,
+      ),
       variantId: selectedVariant.variant_id,
       variantLabels: selectedVariant.option_labels,
       variantOptionIds: selectedVariant.option_ids,
@@ -216,8 +174,7 @@ export const ProductCard = memo(function ProductCard({
         className={cn(
           "group flex flex-col gap-0 overflow-hidden py-0 transition-all",
           isOutOfStock && "opacity-60",
-          justAdded &&
-            "ring-2 ring-primary/40 scale-[1.015] transition-transform",
+          justAdded && "ring-2 ring-primary/30",
         )}
       >
         {/* Image */}
@@ -237,6 +194,7 @@ export const ProductCard = memo(function ProductCard({
                 !isTile && "group-hover:scale-105",
                 isOutOfStock && "opacity-50",
               )}
+              aspectRatio={isTile ? "1/1" : "4/3"}
             />
           ) : (
             <span
@@ -270,8 +228,8 @@ export const ProductCard = memo(function ProductCard({
 
           {/* Just-added check overlay */}
           {justAdded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 backdrop-blur-[1px] animate-in fade-in-0 duration-200">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg animate-in zoom-in-50 duration-300">
+            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 backdrop-blur-[1px]">
+              <div className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
                 <Check className="size-5" weight="bold" />
               </div>
             </div>
@@ -300,7 +258,16 @@ export const ProductCard = memo(function ProductCard({
               <p className="text-lg font-bold tabular-nums tracking-tight">
                 {price.toLocaleString()}₮
               </p>
-              {trackStock && <StockChip stock={stock} unit={unit} />}
+              <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
+                <span>
+                  Үлдэгдэл {stock} {unit}
+                </span>
+                {stock > 0 && stock <= 5 && (
+                  <span className="text-amber-600 dark:text-amber-400">
+                    (Дуусах дөхсөн)
+                  </span>
+                )}
+              </div>
             </>
           ) : (
             <>
@@ -324,68 +291,36 @@ export const ProductCard = memo(function ProductCard({
               <p className="text-base font-bold tabular-nums tracking-tight">
                 {price.toLocaleString()}₮
               </p>
-              {trackStock && <StockChip stock={stock} unit={unit} />}
+              <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
+                <span>
+                  Үлдэгдэл {stock} {unit}
+                </span>
+                {stock > 0 && stock <= 5 && (
+                  <span className="text-amber-600 dark:text-amber-400">
+                    (Дуусах дөхсөн)
+                  </span>
+                )}
+              </div>
             </>
           )}
 
-          {inCart && !hasVariants ? (
-            <div
-              className={cn(
-                "mt-auto flex h-[44px] items-center justify-between gap-1 rounded-md border border-primary/30 bg-primary/5 px-1.5",
-                isOutOfStock && "opacity-50",
-              )}
-            >
-              <button
-                type="button"
-                aria-label="Хасах"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDecrement();
-                }}
-                className="flex size-9 shrink-0 items-center justify-center rounded-md text-lg font-bold text-foreground/70 transition-colors hover:bg-primary/10 hover:text-foreground active:scale-95"
-              >
-                <Minus className="size-4" weight="bold" />
-              </button>
-              <span className="min-w-6 text-center text-sm font-bold tabular-nums">
-                {cartQuantity}
-              </span>
-              <button
-                type="button"
-                aria-label="Нэмэх"
-                disabled={atMaxStock}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleIncrement();
-                }}
-                className={cn(
-                  "flex size-9 shrink-0 items-center justify-center rounded-md text-lg font-bold transition-colors hover:bg-primary/10 active:scale-95",
-                  atMaxStock
-                    ? "cursor-not-allowed text-muted-foreground/40"
-                    : "text-primary",
-                )}
-              >
-                <Plus className="size-4" weight="bold" />
-              </button>
-            </div>
-          ) : (
-            <Button
-              size="sm"
-              className={cn(
-                "mt-auto h-[44px] w-full gap-2 text-sm font-semibold transition-all",
-                justAdded && "bg-primary hover:bg-primary",
-                hasVariants &&
-                  "border border-dashed border-border bg-muted/40 text-foreground disabled:opacity-100",
-              )}
-              disabled={isOutOfStock}
-              onPointerEnter={prefetchVariants}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAddToCart();
-              }}
-            >
-              {addButtonContent}
-            </Button>
-          )}
+          <Button
+            size="sm"
+            className={cn(
+              "mt-auto h-[44px] w-full gap-2 text-sm font-semibold transition-all",
+              justAdded && "bg-emerald-600 hover:bg-emerald-600",
+              hasVariants &&
+                "border border-dashed border-border bg-muted/40 text-foreground disabled:opacity-100",
+            )}
+            disabled={isOutOfStock}
+            onPointerEnter={prefetchVariants}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart();
+            }}
+          >
+            {addButtonContent}
+          </Button>
         </CardContent>
       </Card>
 

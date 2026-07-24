@@ -41,14 +41,8 @@ interface TaxReportSummary {
 }
 
 export default function TaxReportPage() {
-  const t = useTranslations("reports") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const commonT = useTranslations("common") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("reports");
+  const commonT = useTranslations("common");
   const _router = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId ?? "";

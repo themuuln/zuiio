@@ -9,12 +9,9 @@ export function SectionHeader({
 }) {
   return (
     <div className="mb-5">
-      <div className="flex items-center gap-3">
-        <div className="h-6 w-1 rounded-full bg-primary/60" />
-        <Typography.H3 className="m-0">{title}</Typography.H3>
-      </div>
+      <Typography.H3 className="m-0">{title}</Typography.H3>
       {description && (
-        <Typography.Muted className="mt-1 ml-4">{description}</Typography.Muted>
+        <Typography.Muted className="mt-1">{description}</Typography.Muted>
       )}
     </div>
   );

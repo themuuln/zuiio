@@ -1,6 +1,5 @@
 {
-  "root": false,
-  "$schema": "https://biomejs.dev/schemas/2.5.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -13,8 +12,7 @@
       "!.next",
       "!dist",
       "!build",
-      "!.vitepress/cache",
-      "!.lighthouserc.js"
+      "!.vitepress/cache"
     ]
   },
   "formatter": {
@@ -30,71 +28,13 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended",
-      "a11y": {
-        "useAltText": "warn",
-        "useValidAnchor": "warn",
-        "useButtonType": "warn",
-        "useHtmlLang": "warn",
-        "useKeyWithClickEvents": "warn",
-        "useValidAriaProps": "warn",
-        "useValidAriaValues": "warn",
-        "noAriaHiddenOnFocusable": "warn",
-        "noNoninteractiveTabindex": "warn",
-        "noPositiveTabindex": "warn",
-        "noRedundantAlt": "warn",
-        "noSvgWithoutTitle": "warn",
-        "useAriaPropsForRole": "warn",
-        "useHeadingContent": "warn",
-        "useIframeTitle": "warn",
-        "useMediaCaption": "warn",
-        "useSemanticElements": "warn",
-        "useFocusableInteractive": "warn",
-        "useAnchorContent": "warn",
-        "noLabelWithoutControl": "warn"
-      },
+      "recommended": true,
       "correctness": {
         "noUnusedVariables": "error",
         "noUnusedImports": "error"
       },
       "style": {
         "noNonNullAssertion": "warn",
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "paths": {
-              "@radix-ui/react-accordion": "Use @base-ui/react/accordion instead.",
-              "@radix-ui/react-alert-dialog": "Use @base-ui/react/alert-dialog instead.",
-              "@radix-ui/react-aspect-ratio": "Use @base-ui/react/aspect-ratio instead.",
-              "@radix-ui/react-avatar": "Use @base-ui/react/avatar instead.",
-              "@radix-ui/react-button": "Use @base-ui/react/button instead.",
-              "@radix-ui/react-checkbox": "Use @base-ui/react/checkbox instead.",
-              "@radix-ui/react-collapsible": "Use @base-ui/react/collapsible instead.",
-              "@radix-ui/react-context-menu": "Use @base-ui/react/context-menu instead.",
-              "@radix-ui/react-dialog": "Use @base-ui/react/dialog instead.",
-              "@radix-ui/react-dropdown-menu": "Use @base-ui/react/menu instead.",
-              "@radix-ui/react-hover-card": "Use @base-ui/react/hover-card instead.",
-              "@radix-ui/react-label": "Use @base-ui/react/field instead.",
-              "@radix-ui/react-menubar": "Use @base-ui/react/menubar instead.",
-              "@radix-ui/react-navigation-menu": "Use base-ui primitives instead.",
-              "@radix-ui/react-popover": "Use @base-ui/react/popover instead.",
-              "@radix-ui/react-progress": "Use @base-ui/react/progress instead.",
-              "@radix-ui/react-radio-group": "Use @base-ui/react/radio-group instead.",
-              "@radix-ui/react-scroll-area": "Use @base-ui/react/scroll-area instead.",
-              "@radix-ui/react-select": "Use @base-ui/react/select instead.",
-              "@radix-ui/react-separator": "Use @base-ui/react/separator instead.",
-              "@radix-ui/react-slider": "Use @base-ui/react/slider instead.",
-              "@radix-ui/react-slot": "Use @base-ui/react/merge-props or use-render instead.",
-              "@radix-ui/react-switch": "Use @base-ui/react/switch instead.",
-              "@radix-ui/react-tabs": "Use @base-ui/react/tabs instead.",
-              "@radix-ui/react-toast": "Use sonner instead.",
-              "@radix-ui/react-toggle": "Use @base-ui/react/toggle instead.",
-              "@radix-ui/react-toggle-group": "Use @base-ui/react/toggle-group instead.",
-              "@radix-ui/react-tooltip": "Use @base-ui/react/tooltip instead.",
-              "radix-ui": "Use @base-ui/react/* instead. The radix-ui bundle is deprecated."
-            }
-          }
-        },
         "useTemplate": "error"
       },
       "suspicious": {
@@ -104,7 +44,6 @@
             "allow": ["warn", "error"]
           }
         },
-        "noArrayIndexKey": "warn",
         "noExplicitAny": "error",
         "noUnknownAtRules": "off",
         "noDebugger": "error"
@@ -124,64 +63,85 @@
             "noArrayIndexKey": "off",
             "noDocumentCookie": "off"
           },
-          "style": {
-            "noRestrictedImports": "off"
-          },
           "security": {
             "noDangerouslySetInnerHtml": "off"
           },
           "a11y": {
-            "useSemanticElements": "warn",
-            "useFocusableInteractive": "warn",
-            "noLabelWithoutControl": "warn",
-            "useAnchorContent": "warn",
-            "useButtonType": "warn"
+            "useSemanticElements": "off",
+            "useFocusableInteractive": "off",
+            "noStaticElementInteractions": "off",
+            "noSvgWithoutTitle": "off",
+            "useAriaPropsSupportedByRole": "off",
+            "noLabelWithoutControl": "off"
           }
         }
       }
     },
     {
-      "includes": ["src/app/(dashboard)/bom/**"],
+      "includes": ["e2e/**", "playwright.config.ts", "recipes.ts"],
       "linter": {
         "rules": {
           "suspicious": {
             "noConsole": "off",
             "noExplicitAny": "off",
-            "noDebugger": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["src/app/(dashboard)/products/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noConsole": "off",
-            "noExplicitAny": "off",
+            "noDebugger": "off",
             "noTemplateCurlyInString": "off"
+          },
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off",
+            "noUnusedFunctionParameters": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off"
           }
         }
       }
     },
     {
-      "includes": ["src/app/(dashboard)/shop/**"],
+      "includes": [".vitepress/**", "docs/**"],
       "linter": {
         "rules": {
           "suspicious": {
             "noConsole": "off",
             "noExplicitAny": "off",
+            "noTemplateCurlyInString": "off",
             "noAssignInExpressions": "off"
+          },
+          "correctness": {
+            "noUnusedImports": "off"
+          },
+          "complexity": {
+            "noForEach": "off",
+            "noCommaOperator": "off"
+          },
+          "style": {
+            "useTemplate": "off"
           }
         }
       }
     },
     {
-      "includes": ["src/components/midscene/**"],
+      "includes": [
+        "scripts/**",
+        "sentry.client.config.ts",
+        "sentry.edge.config.ts",
+        "sentry.server.config.ts"
+      ],
       "linter": {
         "rules": {
-          "security": {
-            "noDangerouslySetInnerHtml": "off"
+          "suspicious": {
+            "noConsole": "off",
+            "noExplicitAny": "off",
+            "noAssignInExpressions": "off",
+            "noImplicitAnyLet": "off"
+          },
+          "correctness": {
+            "noUnusedImports": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off",
+            "useNodejsImportProtocol": "off"
           }
         }
       }

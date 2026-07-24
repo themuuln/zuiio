@@ -38,8 +38,7 @@ export function ExpensesContent() {
           "id, category, amount, description, payment_method, expense_date",
         )
         .eq("organization_id", organizationId)
-        .order("expense_date", { ascending: false })
-        .limit(500);
+        .order("expense_date", { ascending: false });
       if (effectiveBranchId) {
         q = q.eq("branch_id", effectiveBranchId);
       }

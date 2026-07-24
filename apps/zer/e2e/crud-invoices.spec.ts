@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openDrawerByText } from "./helpers";
+import { openDrawerByText, setFormField } from "./helpers";
 
 test.describe("Invoices module", () => {
   test("page loads correctly", async ({ page }) => {
@@ -52,6 +52,7 @@ test.describe("Invoices module", () => {
       const toast = page.locator("[data-sonner-toast]").first();
       const toastVisible = await toast.isVisible().catch(() => false);
       if (toastVisible) {
+        console.log("Invoice created successfully");
       }
     }
   });

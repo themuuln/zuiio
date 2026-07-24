@@ -21,10 +21,7 @@ class LocalDocumentRepository
     extends LocalRepository<DocumentRecord, IsarDocumentRecord>
     implements DocumentRepository {
   LocalDocumentRepository({IsarStorage? storage, SyncQueue? syncQueue})
-    : super(
-        storage: storage ?? IsarStorage.instance,
-        syncQueue: syncQueue ?? SyncQueue(),
-      );
+    : super(storage: storage ?? IsarStorage.instance, syncQueue: syncQueue ?? SyncQueue());
 
   @override
   IsarCollection<IsarDocumentRecord> get collection => storage.documentRecords;

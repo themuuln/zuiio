@@ -40,7 +40,7 @@ export function ProductsContent() {
         supabase
           .from("products")
           .select(
-            "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url), image_url, has_variants, is_public",
+            "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url), image_url",
             { count: "exact" },
           )
           .eq("organization_id", organizationId)
@@ -63,8 +63,6 @@ export function ProductsContent() {
           cost_price: product.cost_price,
           current_stock: product.current_stock,
           min_stock: product.min_stock,
-          has_variants: product.has_variants,
-          is_public: product.is_public,
           category_id: product.category_id,
           category_name:
             (product.categories as { name: string } | null)?.name ?? null,

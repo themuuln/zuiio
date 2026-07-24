@@ -10,20 +10,24 @@ void main() {
   group('HealthTimelineChart', () {
     testWidgets('renders loading state', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: HealthTimelineChart.loading())),
+        const MaterialApp(
+          home: Scaffold(
+            body: HealthTimelineChart.loading(),
+          ),
+        ),
       );
 
-      expect(
-        find.text('Эрүүл мэндийн хандлага ачааллаж байна...'),
-        findsOneWidget,
-      );
+      expect(find.text('Эрүүл мэндийн хандлага ачааллаж байна...'),
+          findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('renders empty state', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: HealthTimelineChart(healthTrends: [])),
+          home: Scaffold(
+            body: HealthTimelineChart(healthTrends: []),
+          ),
         ),
       );
 

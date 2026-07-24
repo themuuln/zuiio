@@ -22,7 +22,6 @@ import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import {
   type DrawerDetailResponse,
   drawerDetailKeys,
-  useDrawerCatalogs,
   useDrawerQueries,
 } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
@@ -30,6 +29,7 @@ import { savePostServiceData } from "@/lib/services/post-service-service";
 import type { WorkOrderDetail } from "@/lib/types/composite";
 import type { MechanicRef } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
+import type { CatalogPartItem, CatalogServiceItem } from "./_drawer-types";
 import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
 import { CustomerPickerModal } from "./_customer-picker-modal";
 import { DrawerCelebration } from "./_drawer-celebration";
@@ -38,11 +38,7 @@ import { DrawerHeaderSection } from "./_drawer-header";
 import { DrawerSkeleton } from "./_drawer-loading";
 import { DrawerNestedForms } from "./_drawer-nested-forms";
 import { DrawerSkeletonLayout } from "./_drawer-skeleton-layout";
-import type {
-  CatalogPartItem,
-  CatalogServiceItem,
-  WorkOrderDetailDrawerProps,
-} from "./_drawer-types";
+import type { WorkOrderDetailDrawerProps } from "./_drawer-types";
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
 import { resolvePaymentMethodFees } from "./_payment-fees";
 import { createInvoiceAndRecordPayment } from "./_payment-helpers";
@@ -61,21 +57,24 @@ export function WorkOrderDetailDrawer({
   assignMechanicMutation: drawerAssignMechanicMutation,
   assignCustomerMutation: drawerAssignCustomerMutation,
 }: WorkOrderDetailDrawerProps) {
-  const t = useTranslations("bayView") as (
-    key: string,
-    values?: Record<string, string | number | Date>,
-  ) => string;
+  const t = useTranslations("bayView");
 
   const queryClient = useQueryClient();
 
   // ── Data layer ──
-  const { orgId, orgIdRef, wo, setWo, isLoading, error } =
-    useDrawerQueries(workOrderId);
 
-  const { catalog, partsCatalog, mechanics, orgSettings } = useDrawerCatalogs(
+  const {
     orgId,
-    open,
-  );
+    orgIdRef,
+    wo,
+    setWo,
+    catalog,
+    partsCatalog,
+    mechanics,
+    orgSettings,
+    isLoading,
+    error,
+  } = useDrawerQueries(workOrderId);
 
   const paymentMethodFees = useMemo(
     () => resolvePaymentMethodFees(orgSettings?.payment_method_fees),
@@ -261,11 +260,6 @@ export function WorkOrderDetailDrawer({
       : undefined,
   });
 
-  // ── Per-button loading state ──
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const isSaving =
-    saving || completeMutation.isPending || pendingAction !== null;
-
   // ── Local-only state ──
 
   const [showCustomerPicker, setShowCustomerPicker] = useState(false);
@@ -349,15 +343,9 @@ export function WorkOrderDetailDrawer({
     const orgIdVal = orgIdRef.current;
     if (!orgIdVal || !workOrderId) return;
 
-    const prevWo = wo;
-    // Optimistic: update UI immediately
-    setWo((prev) =>
-      prev ? ({ ...prev, status: "Completed" } as WorkOrderDetail) : prev,
-    );
-    setPendingAction("complete");
-
     try {
       await completeMutation.mutateAsync({ status: "Completed" });
+      await fetchWo(true);
       toast.dismiss();
       toast.success(t("workOrderCompleted"));
       setShowCelebration(true);
@@ -367,31 +355,9 @@ export function WorkOrderDetailDrawer({
       }, 1500);
       onRefresh();
     } catch {
-      // Rollback on error
-      if (prevWo) setWo(prevWo);
       toast.error(t("failedToComplete"));
-    } finally {
-      setPendingAction(null);
     }
   }
-  // Wrapped onChangeStatus to track which button is loading
-  const handleWrappedChangeStatus = useCallback(
-    async (status: string) => {
-      const actionKey =
-        status === "Diagnosing"
-          ? "diagnose"
-          : status === "In Progress"
-            ? "work"
-            : null;
-      if (actionKey) setPendingAction(actionKey);
-      try {
-        await changeStatus(status);
-      } finally {
-        if (actionKey) setPendingAction(null);
-      }
-    },
-    [changeStatus],
-  );
 
   async function handleMarkReady() {
     if (workOrderId) {
@@ -542,11 +508,7 @@ export function WorkOrderDetailDrawer({
       <DetailDrawer
         open={open}
         onOpenChange={handleOpenChange}
-        className={cn(
-          isFullScreen
-            ? "!max-w-full !w-full"
-            : "sm:max-w-[46rem] lg:max-w-[68rem] xl:max-w-[78rem]",
-        )}
+        size="full"
         backdropClassName={
           isFullScreen ? "bg-black/80 !backdrop-blur-none" : undefined
         }
@@ -582,7 +544,6 @@ export function WorkOrderDetailDrawer({
           className={cn(
             "flex flex-col min-h-0 flex-1 overflow-hidden transition-[transform,opacity] duration-300 ease-out",
             transitioning ? "scale-[0.98] opacity-95" : "scale-100 opacity-100",
-            isSaving && "pointer-events-none opacity-60",
           )}
         >
           {error?.message && !wo ? (
@@ -615,15 +576,14 @@ export function WorkOrderDetailDrawer({
               nuatEnabled={wo.nuat_enabled ?? false}
               onNuatToggle={handleNuatToggle}
               taxRate={orgSettings?.default_tax_rate ?? 0}
-              saving={isSaving}
+              saving={saving}
               confirmStatus={confirmStatus}
               statusNotes={statusNotes}
               creatingInvoice={creatingInvoice}
               canCancel={canCancel}
               canInvoice={canInvoice}
               invoicePublicToken={invoicePublicToken}
-              pendingAction={pendingAction}
-              onChangeStatus={handleWrappedChangeStatus}
+              onChangeStatus={changeStatus}
               onConfirmCancel={handleConfirmCancel}
               onStatusNotesChange={setStatusNotes}
               onMarkReady={handleMarkReady}
@@ -674,7 +634,6 @@ export function WorkOrderDetailDrawer({
           noMatchMessage={t("noMatchService")}
           addAsNewLabel={t("addAsNew")}
           filterAllLabel={t("filterAll")}
-          title={t("addService")}
         />
         <CatalogPickerDrawer
           open={showAddPart}
@@ -693,7 +652,9 @@ export function WorkOrderDetailDrawer({
             } as CatalogPartItem)
           }
           isAdded={(item) =>
-            wo?.parts?.some((p) => p.part_id === item.id) ??
+            wo?.parts?.some(
+              (p) => p.part_id === item.id,
+            ) ??
             wo?.parts?.some(
               (p) =>
                 p.part_id === null &&
@@ -705,7 +666,6 @@ export function WorkOrderDetailDrawer({
           noMatchMessage={t("noMatchPart")}
           addAsNewLabel={t("addAsNew")}
           filterAllLabel={t("filterAll")}
-          title={t("addPart")}
         />
         <DrawerNestedForms
           wo={wo}

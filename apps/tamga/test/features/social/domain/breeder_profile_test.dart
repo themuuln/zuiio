@@ -50,7 +50,10 @@ void main() {
     });
 
     test('memberSinceLabel returns dash when no memberSince', () {
-      const profile = BreederProfile(id: 'seller-2', displayName: 'Test');
+      const profile = BreederProfile(
+        id: 'seller-2',
+        displayName: 'Test',
+      );
       expect(profile.memberSinceLabel, '—');
     });
 
@@ -66,21 +69,21 @@ void main() {
       expect(copy.memberSince, isNull);
     });
 
-    test(
-      'equality is based on id, displayName, totalHorses, averageRating',
-      () {
-        const same = BreederProfile(
-          id: 'seller-1',
-          displayName: 'Болд',
-          totalHorses: 25,
-          averageRating: 4.5,
-        );
-        expect(testProfile, same);
-      },
-    );
+    test('equality is based on id, displayName, totalHorses, averageRating', () {
+      const same = BreederProfile(
+        id: 'seller-1',
+        displayName: 'Болд',
+        totalHorses: 25,
+        averageRating: 4.5,
+      );
+      expect(testProfile, same);
+    });
 
     test('different ids are not equal', () {
-      const different = BreederProfile(id: 'seller-2', displayName: 'Болд');
+      const different = BreederProfile(
+        id: 'seller-2',
+        displayName: 'Болд',
+      );
       expect(testProfile, isNot(different));
     });
 

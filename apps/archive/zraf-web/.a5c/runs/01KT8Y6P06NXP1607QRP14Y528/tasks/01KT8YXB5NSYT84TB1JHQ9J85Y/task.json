@@ -1,0 +1,665 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "packageJsonCreated": {
+          "type": "boolean"
+        },
+        "packageJsonPath": {
+          "type": "string"
+        },
+        "qualityGates": {
+          "type": "object"
+        },
+        "qualityGatesPath": {
+          "type": "string"
+        },
+        "sdkInstalled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "packageJsonCreated",
+        "sdkInstalled"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "isNewProject": true,
+        "profile": {
+          "architecture": {
+            "dataFlow": "Static JSON → fetch() → LearningEngine → React context → Screens → localStorage",
+            "entryPoints": [
+              "src/app/layout.tsx",
+              "src/app/page.tsx"
+            ],
+            "modules": [
+              {
+                "description": "Next.js App Router pages",
+                "name": "app",
+                "path": "src/app"
+              },
+              {
+                "description": "8 screen components + app shell",
+                "name": "components",
+                "path": "src/components"
+              },
+              {
+                "description": "use-learning context provider",
+                "name": "hooks",
+                "path": "src/hooks"
+              },
+              {
+                "description": "Core logic: data-loader, learning-engine, models, question-bank, storage, utils",
+                "name": "lib",
+                "path": "src/lib"
+              },
+              {
+                "description": "Static JSON question bank + images",
+                "name": "data",
+                "path": "public/data"
+              }
+            ],
+            "pattern": "client-side SPA with static data"
+          },
+          "bottlenecks": [
+            {
+              "description": "Single commit codebase — no granular history",
+              "id": "bn-repo-0",
+              "impact": "Hard to trace feature evolution",
+              "location": "repo-wide"
+            }
+          ],
+          "cicd": {
+            "configPaths": [],
+            "pipelines": [],
+            "provider": null
+          },
+          "claudeMdInstructions": [
+            "Ship to tester quickly — prioritize working features over perfection",
+            "Trunk-based workflow, feature branches for bigger changes",
+            "Autonomous mode — no breakpoints for routine work",
+            "Vercel deployment target — watch asset sizes"
+          ],
+          "conventions": {
+            "additionalRules": [
+              "React Compiler enabled",
+              "suppressHydrationWarning",
+              "All client-side, no RSC"
+            ],
+            "codeStyle": {
+              "formatter": "Biome",
+              "linter": "Biome"
+            },
+            "errorHandling": "try-catch with silent fallback",
+            "importOrder": [
+              "@/ aliases",
+              "external"
+            ],
+            "naming": {
+              "components": "kebab-case files, PascalCase exports",
+              "hooks": "use-*.tsx",
+              "lib": "kebab-case"
+            },
+            "testingConventions": "None configured"
+          },
+          "createdAt": "2026-06-04T09:13:30.000Z",
+          "description": "Mongolian driving theory exam prep app — practice questions, mock exams, progress tracking. Client-side only with localStorage persistence.",
+          "goals": [
+            {
+              "category": "productivity",
+              "description": "Ship to tester quickly for feedback",
+              "id": "goal-productivity-0",
+              "priority": "high",
+              "status": "active"
+            },
+            {
+              "category": "quality",
+              "description": "Deploy on Vercel for 1-person testing",
+              "id": "goal-quality-0",
+              "priority": "high",
+              "status": "active"
+            },
+            {
+              "category": "quality",
+              "description": "Optimize static assets to fit Vercel deployment limits",
+              "id": "goal-quality-1",
+              "priority": "high",
+              "status": "active"
+            }
+          ],
+          "installedAgents": [],
+          "installedProcesses": [
+            "cradle/project-install"
+          ],
+          "installedSkills": [],
+          "painPoints": [
+            {
+              "category": "quality",
+              "description": "No test suite",
+              "id": "pp-quality-0",
+              "severity": "medium",
+              "suggestedRemediation": "Add Vitest + Playwright for E2E"
+            },
+            {
+              "category": "devops",
+              "description": "Deployment size exceeds Vercel free tier (178MB > 100MB)",
+              "id": "pp-devops-0",
+              "severity": "high",
+              "suggestedRemediation": "Clean unused assets, compress images"
+            },
+            {
+              "category": "devops",
+              "description": "No CI/CD",
+              "id": "pp-devops-1",
+              "severity": "low"
+            }
+          ],
+          "preferences": {
+            "autonomy": "autonomous",
+            "branchStrategy": "trunk-based",
+            "releaseCadence": "manual/continuous"
+          },
+          "projectName": "ZRAf",
+          "repositories": [
+            {
+              "path": "/Users/themuuln/coding/personal/zraf-web",
+              "url": "local"
+            }
+          ],
+          "team": [
+            {
+              "name": "Temuulen",
+              "responsibilities": [
+                "Full-stack development",
+                "Design",
+                "Deployment"
+              ],
+              "role": "Solo developer"
+            }
+          ],
+          "techStack": {
+            "buildTools": [
+              "Next.js (Turbopack)",
+              "PostCSS"
+            ],
+            "frameworks": [
+              {
+                "category": "meta-framework",
+                "name": "Next.js",
+                "version": "16.2.6"
+              },
+              {
+                "category": "UI library",
+                "name": "React",
+                "version": "19.2.4"
+              },
+              {
+                "category": "utility CSS",
+                "name": "Tailwind CSS",
+                "version": "4"
+              },
+              {
+                "category": "build optimization",
+                "name": "React Compiler",
+                "version": "1.0.0"
+              }
+            ],
+            "infrastructure": [
+              {
+                "category": "hosting",
+                "name": "Vercel"
+              }
+            ],
+            "languages": [
+              {
+                "name": "TypeScript",
+                "role": "primary"
+              },
+              {
+                "name": "CSS",
+                "role": "styling"
+              }
+            ],
+            "packageManagers": [
+              "pnpm"
+            ]
+          },
+          "tools": {
+            "formatting": [
+              {
+                "command": "biome format --write",
+                "name": "Biome",
+                "version": "2.2.0"
+              }
+            ],
+            "linting": [
+              {
+                "command": "biome check",
+                "name": "Biome",
+                "version": "2.2.0"
+              }
+            ],
+            "testing": []
+          },
+          "updatedAt": "2026-06-04T09:13:30.000Z",
+          "version": 1,
+          "workflows": [
+            {
+              "description": "Local dev",
+              "name": "development",
+              "steps": [
+                "pnpm dev",
+                "Edit",
+                "Biome check"
+              ],
+              "triggers": [
+                "manual"
+              ]
+            },
+            {
+              "description": "Push to main triggers Vercel deploy",
+              "name": "deploy",
+              "triggers": [
+                "git push main"
+              ]
+            },
+            {
+              "description": "Work on main, feature branches for bigger changes",
+              "name": "trunk-based",
+              "steps": [
+                "git checkout -b feat/...",
+                "Work",
+                "Merge to main"
+              ]
+            }
+          ]
+        },
+        "projectRoot": "/Users/themuuln/coding/personal/zraf-web",
+        "toolSelection": {
+          "justifications": {
+            "gsd/execute": "Core execution process for implementing features",
+            "gsd/verify": "Verification after each feature to catch issues early",
+            "next-best-practices": "Project uses Next.js 16 with RSC, App Router, Tailwind — needs best practices guidance",
+            "next-cache-components": "Next.js 16 cache components for performance",
+            "uiux": "UI/UX is central to this educational app",
+            "webapp-testing": "E2E testing with Playwright for the deployed Vercel site"
+          },
+          "prioritized": {
+            "mustHave": [
+              "gsd/execute",
+              "gsd/verify"
+            ],
+            "niceToHave": [
+              "next-best-practices",
+              "uiux",
+              "webapp-testing"
+            ]
+          },
+          "recommendedAgents": [],
+          "recommendedMethodology": "iterative-ship — fast iteration with verification gates, no heavy process overhead for solo dev",
+          "recommendedProcesses": [
+            "gsd/execute",
+            "gsd/verify"
+          ],
+          "recommendedSkills": [
+            "next-best-practices",
+            "next-cache-components",
+            "uiux",
+            "webapp-testing"
+          ],
+          "remediations": [
+            {
+              "painPointId": "pp-devops-0",
+              "process": "gsd/execute",
+              "recommendation": "Clean unused assets from public/ and compress images"
+            },
+            {
+              "painPointId": "pp-quality-0",
+              "process": "gsd/verify",
+              "recommendation": "Add Vitest unit tests + Playwright E2E when ready for production"
+            }
+          ]
+        }
+      },
+      "instructions": [
+        "**1. .a5c/package.json**: Ensure .a5c/package.json exists in the project root:",
+        "  - If it does not exist, create it with name \"<projectName>-a5c\", version \"1.0.0\", type \"module\"",
+        "  - Ensure @a5c-ai/babysitter-sdk is listed as a dependency (use \"latest\" if no version specified)",
+        "  - Run `cd .a5c && npm install` to install dependencies if package.json was created or modified",
+        "  - Do NOT overwrite an existing package.json — only add missing dependencies",
+        "**2. Quality Gates Configuration**: Create or update .a5c/quality-gates.json:",
+        "  - qualityThreshold: use BABYSITTER_QUALITY_THRESHOLD env var default (80)",
+        "  - testCoverage: set minimum coverage target based on project maturity (new: 60%, existing: match current)",
+        "  - linting: reference the project linting tools from the profile (eslint, prettier, etc.)",
+        "  - formatting: reference formatting tools from the profile",
+        "  - commitChecks: list pre-commit checks (lint, type-check, test) appropriate for the project",
+        "  - deployGates: list deployment gates (tests pass, no lint errors, coverage met)",
+        "  - If profile has CI/CD configured, note quality gate integration points",
+        "**3. Verification**: Confirm .a5c/package.json is valid JSON and dependencies are installable",
+        "IMPORTANT: Always use the babysitter CLI for profile operations — never import SDK profile functions directly"
+      ],
+      "outputFormat": "JSON with packageJsonCreated (boolean), packageJsonPath (string), qualityGatesPath (string), sdkInstalled (boolean), qualityGates (object with configured gates)",
+      "role": "DevOps engineer specializing in project infrastructure, CI/CD quality gates, and testing standards",
+      "task": "Ensure the .a5c/ directory has a package.json with @a5c-ai/babysitter-sdk as a dependency, and configure quality gates for the project. This task is idempotent — do not overwrite existing configuration, only add what is missing."
+    }
+  },
+  "description": "Create .a5c/package.json with babysitter-sdk dependency, configure quality thresholds, and set up testing/linting enforcement gates",
+  "io": {
+    "inputJsonPath": "tasks/01KT8YXB5NSYT84TB1JHQ9J85Y/input.json",
+    "outputJsonPath": "tasks/01KT8YXB5NSYT84TB1JHQ9J85Y/result.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "agent",
+    "cradle",
+    "infrastructure",
+    "quality-gates"
+  ],
+  "title": "Initialize .a5c infrastructure and quality gates",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KT8YXB5NSYT84TB1JHQ9J85Y",
+  "taskId": "initialize-a5c-infra",
+  "invocationKey": "cradle/project-install:S000013:initialize-a5c-infra",
+  "stepId": "S000013",
+  "inputs": {
+    "isNewProject": true,
+    "profile": {
+      "architecture": {
+        "dataFlow": "Static JSON → fetch() → LearningEngine → React context → Screens → localStorage",
+        "entryPoints": [
+          "src/app/layout.tsx",
+          "src/app/page.tsx"
+        ],
+        "modules": [
+          {
+            "description": "Next.js App Router pages",
+            "name": "app",
+            "path": "src/app"
+          },
+          {
+            "description": "8 screen components + app shell",
+            "name": "components",
+            "path": "src/components"
+          },
+          {
+            "description": "use-learning context provider",
+            "name": "hooks",
+            "path": "src/hooks"
+          },
+          {
+            "description": "Core logic: data-loader, learning-engine, models, question-bank, storage, utils",
+            "name": "lib",
+            "path": "src/lib"
+          },
+          {
+            "description": "Static JSON question bank + images",
+            "name": "data",
+            "path": "public/data"
+          }
+        ],
+        "pattern": "client-side SPA with static data"
+      },
+      "bottlenecks": [
+        {
+          "description": "Single commit codebase — no granular history",
+          "id": "bn-repo-0",
+          "impact": "Hard to trace feature evolution",
+          "location": "repo-wide"
+        }
+      ],
+      "cicd": {
+        "configPaths": [],
+        "pipelines": [],
+        "provider": null
+      },
+      "claudeMdInstructions": [
+        "Ship to tester quickly — prioritize working features over perfection",
+        "Trunk-based workflow, feature branches for bigger changes",
+        "Autonomous mode — no breakpoints for routine work",
+        "Vercel deployment target — watch asset sizes"
+      ],
+      "conventions": {
+        "additionalRules": [
+          "React Compiler enabled",
+          "suppressHydrationWarning",
+          "All client-side, no RSC"
+        ],
+        "codeStyle": {
+          "formatter": "Biome",
+          "linter": "Biome"
+        },
+        "errorHandling": "try-catch with silent fallback",
+        "importOrder": [
+          "@/ aliases",
+          "external"
+        ],
+        "naming": {
+          "components": "kebab-case files, PascalCase exports",
+          "hooks": "use-*.tsx",
+          "lib": "kebab-case"
+        },
+        "testingConventions": "None configured"
+      },
+      "createdAt": "2026-06-04T09:13:30.000Z",
+      "description": "Mongolian driving theory exam prep app — practice questions, mock exams, progress tracking. Client-side only with localStorage persistence.",
+      "goals": [
+        {
+          "category": "productivity",
+          "description": "Ship to tester quickly for feedback",
+          "id": "goal-productivity-0",
+          "priority": "high",
+          "status": "active"
+        },
+        {
+          "category": "quality",
+          "description": "Deploy on Vercel for 1-person testing",
+          "id": "goal-quality-0",
+          "priority": "high",
+          "status": "active"
+        },
+        {
+          "category": "quality",
+          "description": "Optimize static assets to fit Vercel deployment limits",
+          "id": "goal-quality-1",
+          "priority": "high",
+          "status": "active"
+        }
+      ],
+      "installedAgents": [],
+      "installedProcesses": [
+        "cradle/project-install"
+      ],
+      "installedSkills": [],
+      "painPoints": [
+        {
+          "category": "quality",
+          "description": "No test suite",
+          "id": "pp-quality-0",
+          "severity": "medium",
+          "suggestedRemediation": "Add Vitest + Playwright for E2E"
+        },
+        {
+          "category": "devops",
+          "description": "Deployment size exceeds Vercel free tier (178MB > 100MB)",
+          "id": "pp-devops-0",
+          "severity": "high",
+          "suggestedRemediation": "Clean unused assets, compress images"
+        },
+        {
+          "category": "devops",
+          "description": "No CI/CD",
+          "id": "pp-devops-1",
+          "severity": "low"
+        }
+      ],
+      "preferences": {
+        "autonomy": "autonomous",
+        "branchStrategy": "trunk-based",
+        "releaseCadence": "manual/continuous"
+      },
+      "projectName": "ZRAf",
+      "repositories": [
+        {
+          "path": "/Users/themuuln/coding/personal/zraf-web",
+          "url": "local"
+        }
+      ],
+      "team": [
+        {
+          "name": "Temuulen",
+          "responsibilities": [
+            "Full-stack development",
+            "Design",
+            "Deployment"
+          ],
+          "role": "Solo developer"
+        }
+      ],
+      "techStack": {
+        "buildTools": [
+          "Next.js (Turbopack)",
+          "PostCSS"
+        ],
+        "frameworks": [
+          {
+            "category": "meta-framework",
+            "name": "Next.js",
+            "version": "16.2.6"
+          },
+          {
+            "category": "UI library",
+            "name": "React",
+            "version": "19.2.4"
+          },
+          {
+            "category": "utility CSS",
+            "name": "Tailwind CSS",
+            "version": "4"
+          },
+          {
+            "category": "build optimization",
+            "name": "React Compiler",
+            "version": "1.0.0"
+          }
+        ],
+        "infrastructure": [
+          {
+            "category": "hosting",
+            "name": "Vercel"
+          }
+        ],
+        "languages": [
+          {
+            "name": "TypeScript",
+            "role": "primary"
+          },
+          {
+            "name": "CSS",
+            "role": "styling"
+          }
+        ],
+        "packageManagers": [
+          "pnpm"
+        ]
+      },
+      "tools": {
+        "formatting": [
+          {
+            "command": "biome format --write",
+            "name": "Biome",
+            "version": "2.2.0"
+          }
+        ],
+        "linting": [
+          {
+            "command": "biome check",
+            "name": "Biome",
+            "version": "2.2.0"
+          }
+        ],
+        "testing": []
+      },
+      "updatedAt": "2026-06-04T09:13:30.000Z",
+      "version": 1,
+      "workflows": [
+        {
+          "description": "Local dev",
+          "name": "development",
+          "steps": [
+            "pnpm dev",
+            "Edit",
+            "Biome check"
+          ],
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "description": "Push to main triggers Vercel deploy",
+          "name": "deploy",
+          "triggers": [
+            "git push main"
+          ]
+        },
+        {
+          "description": "Work on main, feature branches for bigger changes",
+          "name": "trunk-based",
+          "steps": [
+            "git checkout -b feat/...",
+            "Work",
+            "Merge to main"
+          ]
+        }
+      ]
+    },
+    "projectRoot": "/Users/themuuln/coding/personal/zraf-web",
+    "toolSelection": {
+      "justifications": {
+        "gsd/execute": "Core execution process for implementing features",
+        "gsd/verify": "Verification after each feature to catch issues early",
+        "next-best-practices": "Project uses Next.js 16 with RSC, App Router, Tailwind — needs best practices guidance",
+        "next-cache-components": "Next.js 16 cache components for performance",
+        "uiux": "UI/UX is central to this educational app",
+        "webapp-testing": "E2E testing with Playwright for the deployed Vercel site"
+      },
+      "prioritized": {
+        "mustHave": [
+          "gsd/execute",
+          "gsd/verify"
+        ],
+        "niceToHave": [
+          "next-best-practices",
+          "uiux",
+          "webapp-testing"
+        ]
+      },
+      "recommendedAgents": [],
+      "recommendedMethodology": "iterative-ship — fast iteration with verification gates, no heavy process overhead for solo dev",
+      "recommendedProcesses": [
+        "gsd/execute",
+        "gsd/verify"
+      ],
+      "recommendedSkills": [
+        "next-best-practices",
+        "next-cache-components",
+        "uiux",
+        "webapp-testing"
+      ],
+      "remediations": [
+        {
+          "painPointId": "pp-devops-0",
+          "process": "gsd/execute",
+          "recommendation": "Clean unused assets from public/ and compress images"
+        },
+        {
+          "painPointId": "pp-quality-0",
+          "process": "gsd/verify",
+          "recommendation": "Add Vitest unit tests + Playwright E2E when ready for production"
+        }
+      ]
+    }
+  }
+}

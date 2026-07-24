@@ -175,7 +175,9 @@ void main() {
         expect(resolveResult.isSuccess, true);
 
         final allReports = await repository.fetchAllReports();
-        final resolved = allReports.value.firstWhere((r) => r.id == reportId);
+        final resolved = allReports.value.firstWhere(
+          (r) => r.id == reportId,
+        );
         expect(resolved.status, ListingReportStatus.resolved);
       });
     });

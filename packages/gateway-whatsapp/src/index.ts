@@ -1,1 +1,0 @@
-export { WhatsAppChannel } from "./channel";

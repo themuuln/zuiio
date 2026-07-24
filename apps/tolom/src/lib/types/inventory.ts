@@ -18,7 +18,6 @@ export interface PartsCatalogItem {
   name: string;
   name_mn: string | null;
   part_number: string | null;
-  barcode: string | null;
   category: string | null;
   description: string | null;
   unit: string;
@@ -32,11 +31,11 @@ export interface PartsCatalogItem {
   created_at: string;
   updated_at: string;
 }
+
 export interface CreatePartParams {
   name?: string;
   name_mn?: string;
   part_number?: string;
-  barcode?: string;
   category?: string;
   description?: string;
   unit?: string;
@@ -46,11 +45,11 @@ export interface CreatePartParams {
   location?: string;
   global_part_id?: string | null;
 }
+
 export interface UpdatePartParams {
   name?: string;
   name_mn?: string;
   part_number?: string;
-  barcode?: string;
   category?: string;
   description?: string;
   unit?: string;

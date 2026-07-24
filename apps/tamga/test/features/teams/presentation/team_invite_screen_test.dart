@@ -46,10 +46,7 @@ class _MockTeamRepository implements TeamRepository {
 
   @override
   Future<Result<Team>> getTeam(String teamId) async {
-    if (team == null)
-      return Result.fail(
-        AppException(message: 'Not found', code: 'TEAM_NOT_FOUND'),
-      );
+    if (team == null) return Result.fail(AppException(message: 'Not found', code: 'TEAM_NOT_FOUND'));
     return Result.ok(team!);
   }
 
@@ -61,9 +58,7 @@ class _MockTeamRepository implements TeamRepository {
   @override
   Future<Result<TeamMember>> inviteMember(TeamMember member) async {
     if (failInvite) {
-      return Result.fail(
-        AppException(message: 'Invite failed', code: 'INVITE_FAILED'),
-      );
+      return Result.fail(AppException(message: 'Invite failed', code: 'INVITE_FAILED'));
     }
     invited = true;
     invitedMember = member;
@@ -87,17 +82,13 @@ class _MockTeamRepository implements TeamRepository {
     if (idx >= 0) {
       members[idx] = members[idx].copyWith(role: newRole);
     }
-    return Result.ok(
-      members.isNotEmpty
-          ? members[idx]
-          : TeamMember(
-              id: 'm1',
-              teamId: teamId,
-              userId: userId,
-              role: newRole,
-              joinedAt: DateTime.now(),
-            ),
-    );
+    return Result.ok(members.isNotEmpty ? members[idx] : TeamMember(
+      id: 'm1',
+      teamId: teamId,
+      userId: userId,
+      role: newRole,
+      joinedAt: DateTime.now(),
+    ));
   }
 
   @override
@@ -108,13 +99,9 @@ class _MockTeamRepository implements TeamRepository {
   // ── Invitation Methods ──
 
   @override
-  Future<Result<TeamInvitation>> createInvitation(
-    TeamInvitation invitation,
-  ) async {
+  Future<Result<TeamInvitation>> createInvitation(TeamInvitation invitation) async {
     if (failInvite) {
-      return Result.fail(
-        AppException(message: 'Invite failed', code: 'INVITE_FAILED'),
-      );
+      return Result.fail(AppException(message: 'Invite failed', code: 'INVITE_FAILED'));
     }
     invited = true;
     invitations.add(invitation);
@@ -122,14 +109,9 @@ class _MockTeamRepository implements TeamRepository {
   }
 
   @override
-  Future<Result<List<TeamInvitation>>> getPendingInvitations(
-    String userId,
-  ) async {
+  Future<Result<List<TeamInvitation>>> getPendingInvitations(String userId) async {
     final pending = invitations
-        .where(
-          (i) =>
-              i.invitedUserId == userId && i.status == InvitationStatus.pending,
-        )
+        .where((i) => i.invitedUserId == userId && i.status == InvitationStatus.pending)
         .toList();
     return Result.ok(pending);
   }
@@ -138,15 +120,11 @@ class _MockTeamRepository implements TeamRepository {
   Future<Result<TeamMember>> acceptInvitation(String invitationId) async {
     final idx = invitations.indexWhere((i) => i.id == invitationId);
     if (idx < 0) {
-      return Result.fail(
-        AppException(message: 'Not found', code: 'INVITATION_NOT_FOUND'),
-      );
+      return Result.fail(AppException(message: 'Not found', code: 'INVITATION_NOT_FOUND'));
     }
     final inv = invitations[idx];
     if (inv.status != InvitationStatus.pending) {
-      return Result.fail(
-        AppException(message: 'Not pending', code: 'INVITATION_NOT_PENDING'),
-      );
+      return Result.fail(AppException(message: 'Not pending', code: 'INVITATION_NOT_PENDING'));
     }
     invitations[idx] = inv.copyWith(status: InvitationStatus.accepted);
     final member = TeamMember(
@@ -164,28 +142,11 @@ class _MockTeamRepository implements TeamRepository {
   Future<Result<void>> declineInvitation(String invitationId) async {
     final idx = invitations.indexWhere((i) => i.id == invitationId);
     if (idx < 0) {
-      return Result.fail(
-        AppException(message: 'Not found', code: 'INVITATION_NOT_FOUND'),
-      );
+      return Result.fail(AppException(message: 'Not found', code: 'INVITATION_NOT_FOUND'));
     }
-    invitations[idx] = invitations[idx].copyWith(
-      status: InvitationStatus.declined,
-    );
+    invitations[idx] = invitations[idx].copyWith(status: InvitationStatus.declined);
     return const Result.ok(null);
   }
-
-  @override
-  Future<Result<void>> addHorseToTeam(
-    String teamId,
-    String horseId, {
-    String? addedBy,
-  }) async => const Result.ok(null);
-
-  @override
-  Future<Result<void>> removeHorseFromTeam(
-    String teamId,
-    String horseId,
-  ) async => const Result.ok(null);
 }
 
 // ── Test Helpers ───────────────────────────────────────────────────
@@ -221,11 +182,13 @@ Widget createTeamInviteScreen({
       teamRepositoryProvider.overrideWithValue(mockRepo),
       authStateProvider.overrideWith(() => _FakeAuthStateNotifier(authState)),
       subscriptionTierProvider.overrideWith(
-        (ref) async =>
-            isStableTier ? SubscriptionTier.stable : SubscriptionTier.free,
+        (ref) async => isStableTier ? SubscriptionTier.stable : SubscriptionTier.free,
       ),
     ],
-    child: MaterialApp(theme: AppTheme.light(), home: const TeamInviteScreen()),
+    child: MaterialApp(
+      theme: AppTheme.light(),
+      home: const TeamInviteScreen(),
+    ),
   );
 }
 

@@ -7,14 +7,15 @@ import {
   Warehouse as WarehouseIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
 import { capture } from "@zuiio/capture";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
+import { DataTable } from "@/components/ui/data-table";
 import {
   type WarehouseDetailData,
   WarehouseDetailDrawer,
@@ -25,7 +26,6 @@ import {
 } from "@/components/inventory/warehouse-edit-drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
 import {
   Dialog,
   DialogContent,

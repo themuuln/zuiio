@@ -17,7 +17,10 @@ Widget createRaceResultsEditorScreen({
   return ProviderScope(
     child: MaterialApp(
       theme: AppTheme.light(),
-      home: RaceResultsEditorScreen(race: race, entries: entries),
+      home: RaceResultsEditorScreen(
+        race: race,
+        entries: entries,
+      ),
     ),
   );
 }
@@ -122,10 +125,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find the result input field (there are 2 entries, so 2 result fields)
-      final resultFields = find.widgetWithText(
-        TextFormField,
-        'Үр дүн (цаг/амжилт)',
-      );
+      final resultFields = find.widgetWithText(TextFormField, 'Үр дүн (цаг/амжилт)');
       expect(resultFields, findsNWidgets(2));
     });
   });

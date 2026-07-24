@@ -13,42 +13,40 @@ import 'booking_providers.dart';
 import 'services_providers.dart';
 
 /// Одоогийн хэрэглэгчийн үйлчилгээ үзүүлэгчийн профайл.
-final myServiceProviderProfileProvider = FutureProvider<ServiceProvider?>((
-  ref,
-) async {
-  final authState = await ref.watch(authStateProvider.future);
-  final userId = authState.userId;
-  if (userId == null) return null;
+final myServiceProviderProfileProvider =
+    FutureProvider<ServiceProvider?>((ref) async {
+      final authState = await ref.watch(authStateProvider.future);
+      final userId = authState.userId;
+      if (userId == null) return null;
 
-  final repository = await ref.watch(serviceProviderRepositoryProvider.future);
-  final result = await repository.fetchAll();
+      final repository =
+          await ref.watch(serviceProviderRepositoryProvider.future);
+      final result = await repository.fetchAll();
 
-  final providers = result.getOrThrow();
-  return providers.where((p) => p.userId == userId).firstOrNull;
-});
+      final providers = result.getOrThrow();
+      return providers.where((p) => p.userId == userId).firstOrNull;
+    });
 
 /// Үйлчилгээ үзүүлэгчийн ирээдүйн захиалгууд.
-final providerUpcomingBookingsProvider = FutureProvider<List<ServiceBooking>>((
-  ref,
-) async {
-  final provider = await ref.watch(myServiceProviderProfileProvider.future);
-  if (provider == null) return [];
+final providerUpcomingBookingsProvider =
+    FutureProvider<List<ServiceBooking>>((ref) async {
+      final provider = await ref.watch(myServiceProviderProfileProvider.future);
+      if (provider == null) return [];
 
-  final bookings = await ref.watch(myBookingsProvider.future);
-  return bookings
-      .where((b) => b.providerId == provider.id && b.isActive)
-      .toList();
-});
+      final bookings = await ref.watch(myBookingsProvider.future);
+      return bookings
+          .where((b) => b.providerId == provider.id && b.isActive)
+          .toList();
+    });
 
 /// Үйлчилгээ үзүүлэгчийн өнгөрсөн захиалгууд.
-final providerPastBookingsProvider = FutureProvider<List<ServiceBooking>>((
-  ref,
-) async {
-  final provider = await ref.watch(myServiceProviderProfileProvider.future);
-  if (provider == null) return [];
+final providerPastBookingsProvider =
+    FutureProvider<List<ServiceBooking>>((ref) async {
+      final provider = await ref.watch(myServiceProviderProfileProvider.future);
+      if (provider == null) return [];
 
-  final bookings = await ref.watch(myBookingsProvider.future);
-  return bookings
-      .where((b) => b.providerId == provider.id && !b.isActive)
-      .toList();
-});
+      final bookings = await ref.watch(myBookingsProvider.future);
+      return bookings
+          .where((b) => b.providerId == provider.id && !b.isActive)
+          .toList();
+    });

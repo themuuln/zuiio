@@ -11,32 +11,31 @@ import 'market_providers.dart';
 // ── Verification Repository ─────────────────────────────────────────
 
 /// Provider for the verification repository.
-final verificationRepositoryProvider = FutureProvider<MarketRepository>((
-  ref,
-) async {
-  return LocalMarketRepositoryV2(
-    storage: IsarStorage.instance,
-    syncQueue: SyncQueue(),
-  );
-});
+final verificationRepositoryProvider = FutureProvider<MarketRepository>(
+  (ref) async {
+    return LocalMarketRepositoryV2(
+      storage: IsarStorage.instance,
+      syncQueue: SyncQueue(),
+    );
+  },
+);
 
 // ── Verification Summary ─────────────────────────────────────────────
 
 /// Provider that fetches the seller verification summary for the current user.
 final sellerVerificationSummaryProvider =
     FutureProvider<SellerVerificationStatusSummary>((ref) async {
-      final userId = currentSupabaseUserId() ?? 'anonymous';
-      final repository = await ref.watch(verificationRepositoryProvider.future);
-      final result = await repository.fetchSellerVerificationSummary(userId);
-      return result.getOrThrow();
-    });
+  final userId = currentSupabaseUserId() ?? 'anonymous';
+  final repository = await ref.watch(verificationRepositoryProvider.future);
+  final result = await repository.fetchSellerVerificationSummary(userId);
+  return result.getOrThrow();
+});
 
 // ── Phone Verification ─────────────────────────────────────────────
 
 /// Provider that fetches phone verification status for the current user.
-final phoneVerificationProvider = FutureProvider<SellerPhoneVerification?>((
-  ref,
-) async {
+final phoneVerificationProvider =
+    FutureProvider<SellerPhoneVerification?>((ref) async {
   final userId = currentSupabaseUserId() ?? 'anonymous';
   final repository = await ref.watch(verificationRepositoryProvider.future);
   final result = await repository.fetchPhoneVerification(userId);
@@ -44,9 +43,8 @@ final phoneVerificationProvider = FutureProvider<SellerPhoneVerification?>((
 });
 
 /// Notifier for performing phone verification actions.
-final phoneVerificationNotifierProvider = Provider<PhoneVerificationNotifier>((
-  ref,
-) {
+final phoneVerificationNotifierProvider =
+    Provider<PhoneVerificationNotifier>((ref) {
   return PhoneVerificationNotifier(ref);
 });
 
@@ -57,9 +55,12 @@ class PhoneVerificationNotifier {
 
   /// Хэрэглэгчийн утасны баталгаажуулалтыг хадгалаад,
   /// түүний бүх зарыг баталгаажуулсан болгоно.
-  Future<void> completePhoneVerification({required String phone}) async {
+  Future<void> completePhoneVerification({
+    required String phone,
+  }) async {
     final userId = currentSupabaseUserId() ?? 'anonymous';
-    final repository = await _ref.read(verificationRepositoryProvider.future);
+    final repository =
+        await _ref.read(verificationRepositoryProvider.future);
     final now = DateTime.now();
 
     // Save phone verification record
@@ -88,9 +89,8 @@ class PhoneVerificationNotifier {
 // ── E-Mongolia Verification ────────────────────────────────────────
 
 /// Provider that fetches E-Mongolia verification status for the current user.
-final eMongoliaVerificationProvider = FutureProvider<EMongoliaVerification?>((
-  ref,
-) async {
+final eMongoliaVerificationProvider =
+    FutureProvider<EMongoliaVerification?>((ref) async {
   final userId = currentSupabaseUserId() ?? 'anonymous';
   final repository = await ref.watch(verificationRepositoryProvider.future);
   final result = await repository.fetchEMongoliaVerification(userId);
@@ -100,8 +100,8 @@ final eMongoliaVerificationProvider = FutureProvider<EMongoliaVerification?>((
 /// Notifier for E-Mongolia verification actions.
 final eMongoliaVerificationNotifierProvider =
     Provider<EMongoliaVerificationNotifier>((ref) {
-      return EMongoliaVerificationNotifier(ref);
-    });
+  return EMongoliaVerificationNotifier(ref);
+});
 
 class EMongoliaVerificationNotifier {
   EMongoliaVerificationNotifier(this._ref);
@@ -118,7 +118,8 @@ class EMongoliaVerificationNotifier {
     List<String> documentUrls = const [],
   }) async {
     final userId = currentSupabaseUserId() ?? 'anonymous';
-    final repository = await _ref.read(verificationRepositoryProvider.future);
+    final repository =
+        await _ref.read(verificationRepositoryProvider.future);
     final now = DateTime.now();
 
     final verification = EMongoliaVerification(

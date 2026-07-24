@@ -16,9 +16,7 @@ import 'document_repository.dart';
 /// Upload: compress file → upload to Supabase Storage bucket → insert row.
 /// List: query `documents` table with horse_id filter.
 /// Delete: remove from Storage + delete row.
-class SupabaseDocumentRepository
-    with SupabaseRepositoryMixin
-    implements DocumentRepository {
+class SupabaseDocumentRepository with SupabaseRepositoryMixin implements DocumentRepository {
   SupabaseDocumentRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 
@@ -146,10 +144,7 @@ class SupabaseDocumentRepository
           .order('created_at', ascending: false);
 
       final documents = (response as List<dynamic>)
-          .map(
-            (row) =>
-                DocumentRecord.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => DocumentRecord.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(documents);
@@ -176,10 +171,7 @@ class SupabaseDocumentRepository
       final response = await query.order('created_at', ascending: false);
 
       final documents = (response as List<dynamic>)
-          .map(
-            (row) =>
-                DocumentRecord.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => DocumentRecord.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(documents);
@@ -189,4 +181,5 @@ class SupabaseDocumentRepository
   }
 
   // ── Helpers ──────────────────────────────────────────────────────
+
 }

@@ -43,7 +43,8 @@ class SellerPhoneVerification {
       sellerId: sellerId ?? this.sellerId,
       phone: phone ?? this.phone,
       isVerified: isVerified ?? this.isVerified,
-      verifiedAt: clearVerifiedAt ? null : (verifiedAt ?? this.verifiedAt),
+      verifiedAt:
+          clearVerifiedAt ? null : (verifiedAt ?? this.verifiedAt),
     );
   }
 
@@ -143,13 +144,19 @@ class EMongoliaVerification {
     return EMongoliaVerification(
       id: id ?? this.id,
       sellerId: sellerId ?? this.sellerId,
-      eMongoliaId: clearEMongoliaId ? null : (eMongoliaId ?? this.eMongoliaId),
-      fullName: clearFullName ? null : (fullName ?? this.fullName),
+      eMongoliaId: clearEMongoliaId
+          ? null
+          : (eMongoliaId ?? this.eMongoliaId),
+      fullName:
+          clearFullName ? null : (fullName ?? this.fullName),
       isVerified: isVerified ?? this.isVerified,
-      verifiedAt: clearVerifiedAt ? null : (verifiedAt ?? this.verifiedAt),
-      submittedAt: clearSubmittedAt ? null : (submittedAt ?? this.submittedAt),
+      verifiedAt:
+          clearVerifiedAt ? null : (verifiedAt ?? this.verifiedAt),
+      submittedAt:
+          clearSubmittedAt ? null : (submittedAt ?? this.submittedAt),
       documentUrls: documentUrls ?? this.documentUrls,
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      errorMessage:
+          clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
 
@@ -169,7 +176,9 @@ class EMongoliaVerification {
           ? DateTime.parse(json['submittedAt'] as String)
           : null,
       documentUrls:
-          (json['documentUrls'] as List<dynamic>?)?.cast<String>() ?? [],
+          (json['documentUrls'] as List<dynamic>?)
+                  ?.cast<String>() ??
+              [],
       errorMessage: json['errorMessage'] as String?,
     );
   }

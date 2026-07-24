@@ -43,6 +43,7 @@ test.describe("Dashboard — AI Driven", () => {
     >(
       "List the recent sales displayed on the dashboard with contact name and amount",
     );
+    console.log("Recent sales from dashboard:", recentSales);
     expect(Array.isArray(recentSales)).toBe(true);
   });
 });

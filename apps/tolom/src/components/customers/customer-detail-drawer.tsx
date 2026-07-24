@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import {
   Item,
   ItemContent,
@@ -123,7 +124,7 @@ interface CustomerDetailSheetProps {
   customerId: string | null;
 }
 
-export function CustomerDetailDrawer({
+export function CustomerDetailSheet({
   open,
   onOpenChange,
   customerId,
@@ -233,17 +234,10 @@ export function CustomerDetailDrawer({
   return (
     <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DetailDrawer.Header>
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
-            {isLoadingData ? (
-              <Loader2 className="size-5 animate-spin text-primary" />
-            ) : customer?.type === "company" ? (
-              <Building2 className="size-5 text-primary" />
-            ) : (
-              <Pencil className="size-5 text-primary" />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
+        <DetailSheetHeader
+          icon={customer?.type === "company" ? Building2 : Pencil}
+          iconLoading={isLoadingData}
+          title={
             <DetailDrawer.Title className="text-base truncate">
               {isLoadingData
                 ? "Loading…"
@@ -251,56 +245,60 @@ export function CustomerDetailDrawer({
                   ? getDisplayName(customer)
                   : t("customerNotFound")}
             </DetailDrawer.Title>
-            {customer && (
-              <div className="mt-0.5 flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">
-                  {customer.phone || "—"}
-                </span>
-              </div>
-            )}
-          </div>
-          {customer && !editing && (
-            <div className="flex shrink-0 items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => {
-                  form.reset(syncForm(customer));
-                  setEditing(true);
-                }}
-              >
-                <Pencil className="size-4" />
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      className="text-destructive"
-                    />
-                  }
+          }
+          subtitle={
+            customer ? (
+              <span className="text-xs text-muted-foreground">
+                {customer.phone || "—"}
+              </span>
+            ) : undefined
+          }
+          actions={
+            customer && !editing ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => {
+                    form.reset(syncForm(customer));
+                    setEditing(true);
+                  }}
                 >
-                  <Trash2 className="size-4" />
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {t("deleteConfirm")}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => deleteMutation.mutate()}>
-                      {commonT("delete")}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          )}
-        </div>
+                  <Pencil className="size-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-destructive"
+                      />
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t("deleteConfirm")}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMutation.mutate()}
+                      >
+                        {commonT("delete")}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            ) : undefined
+          }
+        />
       </DetailDrawer.Header>
 
       {isLoadingData && (
@@ -389,10 +387,7 @@ export function CustomerDetailDrawer({
                 {t("details")}
               </span>
               <div className="mt-2">
-                <CustomerEditForm
-                  form={form}
-                  t={t as (key: string) => string}
-                />
+                <CustomerEditForm form={form} t={t} />
               </div>
             </form>
           )}

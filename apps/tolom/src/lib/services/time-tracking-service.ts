@@ -213,10 +213,8 @@ async function upsertDailyHours(
   let totalHours = 0;
   if (logs) {
     for (const log of logs) {
-      const clockOut = log.clock_out;
-      if (!clockOut) continue;
       const start = new Date(log.clock_in).getTime();
-      const end = new Date(clockOut).getTime();
+      const end = new Date(log.clock_out!).getTime();
       totalHours += (end - start) / (1000 * 60 * 60);
     }
   }

@@ -42,20 +42,36 @@ class _RankSelectionPageState extends State<RankSelectionPage> {
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.lg,
-            AppSpacing.page,
+            AppSpacing.section,
             AppSpacing.lg,
             0,
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Back button
+              GestureDetector(
+                onTap: widget.onBack,
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(
+                    Icons.arrow_back_ios,
+                    size: 24,
+                    color: tc.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
               // Title
               Text(
                 'Алдар цол',
                 style: TextStyle(
-                  fontSize: 34,
+                  fontSize: 28,
                   fontWeight: FontWeight.w600,
                   color: tc.onSurface,
+                  letterSpacing: 0.36,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -149,58 +165,58 @@ class _RankSelectionPageState extends State<RankSelectionPage> {
           ),
         ),
 
-        // ── Bottom actions — back + continue ──
+        // ── CTA buttons ──
         SafeArea(
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
-              AppSpacing.sm,
+              0,
               AppSpacing.lg,
               AppSpacing.lg,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            child: Row(
               children: [
-                SizedBox(
-                  height: 48,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: widget.onBack,
-                        icon: Icon(Icons.chevron_left, color: tc.primary),
-                        style: IconButton.styleFrom(
-                          backgroundColor: tc.surfaceContainerLow,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                // Skip button
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: () => widget.onContinue('no_rank'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: tc.onSurfaceVariant,
+                        side: BorderSide(color: tc.outline),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.cornerRadius,
                           ),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () =>
-                              widget.onContinue(_selectedRank ?? 'no_rank'),
-                          child: const Text(
-                            'Үргэлжлүүлэх',
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                          ),
+                      child: const Text(
+                        'Алгасах',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                SizedBox(
-                  width: double.infinity,
-                  height: 44,
-                  child: TextButton(
-                    onPressed: () => widget.onContinue('no_rank'),
-                    child: Text(
-                      'Алгасах',
-                      style: TextStyle(
-                        fontSize: 17,
-                        color: tc.onSurfaceVariant,
+                const SizedBox(width: AppSpacing.md),
+
+                // Continue button
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: FilledButton(
+                      onPressed: () =>
+                          widget.onContinue(_selectedRank ?? 'no_rank'),
+                      child: const Text(
+                        'Үргэлжлүүлэх',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),

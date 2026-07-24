@@ -94,7 +94,7 @@ export function ReturnCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const [_variantSelections, setVariantSelections] = useState<
+  const [variantSelections, setVariantSelections] = useState<
     Record<number, SelectedVariant | null>
   >({});
 

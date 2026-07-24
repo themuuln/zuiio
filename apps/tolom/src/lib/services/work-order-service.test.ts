@@ -936,7 +936,7 @@ describe("getWorkOrderTotals", () => {
       }),
     );
 
-    const totals = await getWorkOrderTotals(mockClient as any, "org-1", "wo-1");
+    const totals = await getWorkOrderTotals(mockClient as any, "wo-1");
 
     expect(totals.servicesTotal).toBe(350); // 100*2 + 50*3
     expect(totals.partsTotal).toBe(200); // 200*1
@@ -981,7 +981,7 @@ describe("getWorkOrderTotals", () => {
       }),
     );
 
-    const totals = await getWorkOrderTotals(mockClient as any, "org-1", "wo-1");
+    const totals = await getWorkOrderTotals(mockClient as any, "wo-1");
 
     // Services: (100*2=200) + (50*3=150) = 350
     expect(totals.servicesTotal).toBe(350);
@@ -1005,7 +1005,7 @@ describe("getWorkOrderTotals", () => {
       }),
     );
 
-    const totals = await getWorkOrderTotals(mockClient as any, "org-1", "wo-1");
+    const totals = await getWorkOrderTotals(mockClient as any, "wo-1");
 
     // servicesTotal=50, servicesDiscount=100 → grandTotal would be -50
     expect(totals.servicesTotal).toBe(50);

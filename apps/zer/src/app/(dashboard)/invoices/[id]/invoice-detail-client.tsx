@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowsClockwise, Prohibit, ShareNetwork } from "@phosphor-icons/react";
+import { ShareNetwork } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  createInvoiceShareLink,
-  revokeInvoiceShareLink,
-  rotateInvoiceShareLink,
-} from "../actions";
+import { createInvoiceShareLink } from "../actions";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Хүлээгдэж буй",
@@ -41,15 +37,11 @@ const STATUS_VARIANTS: Record<
 
 export function InvoiceDetailClient({
   invoiceId,
-  tokenHash,
-  expiresAt,
-  revokedAt,
+  token,
   status,
 }: {
   invoiceId: string;
-  tokenHash: string | null;
-  expiresAt: string | null;
-  revokedAt: string | null;
+  token: string | null;
   status: string;
 }) {
   const [shareOpen, setShareOpen] = useState(false);
@@ -57,14 +49,9 @@ export function InvoiceDetailClient({
   const [shareResult, setShareResult] = useState<{
     token?: string;
     error?: string;
-    success?: boolean;
-  } | null>(null);
+  } | null>(token ? { token } : null);
   const [pending, setPending] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const hasExistingLink = !!tokenHash && !revokedAt;
-  const isExpired = expiresAt ? new Date(expiresAt) < new Date() : false;
-  const isRevoked = !!revokedAt;
 
   const shareUrl =
     shareResult?.token && !shareResult?.error
@@ -80,24 +67,6 @@ export function InvoiceDetailClient({
     setShareResult(result);
   }
 
-  async function handleRotateLink() {
-    setPending(true);
-    const formData = new FormData();
-    formData.append("invoice_id", invoiceId);
-    const result = await rotateInvoiceShareLink(undefined, formData);
-    setPending(false);
-    setShareResult(result);
-  }
-
-  async function handleRevokeLink() {
-    setPending(true);
-    const formData = new FormData();
-    formData.append("invoice_id", invoiceId);
-    const result = await revokeInvoiceShareLink(undefined, formData);
-    setPending(false);
-    setShareResult(result);
-  }
-
   function handleCopy() {
     if (inputRef.current) {
       inputRef.current.select();
@@ -106,15 +75,6 @@ export function InvoiceDetailClient({
         setTimeout(() => setCopied(false), 2000);
       });
     }
-  }
-
-  function formatExpiry(dateStr: string): string {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("mn-MN", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
   }
 
   return (
@@ -127,7 +87,7 @@ export function InvoiceDetailClient({
         open={shareOpen}
         onOpenChange={(next) => {
           setShareOpen(next);
-          if (next) setShareResult(null);
+          if (next && token && !shareResult) setShareResult({ token });
         }}
       >
         <DialogTrigger asChild>
@@ -143,13 +103,8 @@ export function InvoiceDetailClient({
               Холбоос үүсгэж, хэн ч нэвтрэхгүйгээр үзэх боломжтой.
             </DialogDescription>
           </DialogHeader>
-
-          {/* Show newly created URL — one-time display */}
           {shareUrl ? (
             <div className="flex flex-col gap-4">
-              <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                Энэ холбоосыг дахин харах боломжгүй. Хуулж хадгална уу.
-              </div>
               <Label htmlFor="share-url">Холбоос</Label>
               <div className="flex gap-2">
                 <Input
@@ -164,47 +119,7 @@ export function InvoiceDetailClient({
                 </Button>
               </div>
             </div>
-          ) : hasExistingLink ? (
-            /* Show existing link management */
-            <div className="flex flex-col gap-4">
-              {expiresAt && (
-                <p className="text-sm text-muted-foreground">
-                  {isExpired
-                    ? `Хугацаа дууссан: ${formatExpiry(expiresAt)}`
-                    : `Хүчинтэй хугацаа: ${formatExpiry(expiresAt)} хүртэл`}
-                </p>
-              )}
-              {isRevoked && (
-                <p className="text-sm text-destructive">Цуцлагдсан</p>
-              )}
-              {shareResult?.error && (
-                <p className="text-sm text-destructive">{shareResult.error}</p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRotateLink}
-                  disabled={pending}
-                  className="gap-1"
-                >
-                  <ArrowsClockwise className="size-3.5" />
-                  {pending ? "Шинэчлэж байна..." : "Шинэчлэх"}
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleRevokeLink}
-                  disabled={pending}
-                  className="gap-1"
-                >
-                  <Prohibit className="size-3.5" />
-                  Цуцлах
-                </Button>
-              </div>
-            </div>
           ) : (
-            /* No link exists — show create button */
             <div className="flex flex-col gap-4">
               {shareResult?.error && (
                 <p className="text-sm text-destructive">{shareResult.error}</p>

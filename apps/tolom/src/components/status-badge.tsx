@@ -5,16 +5,11 @@ import { cn } from "@/lib/utils";
 
 const STATUS_CLASS: Record<WorkOrderStatus, string> = {
   New: "border-info/30 bg-info/10 text-info",
-  Diagnosing:
-    "border-yellow-300 bg-yellow-100 text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
-  "In Progress":
-    "border-orange-300 bg-orange-100 text-orange-800 dark:border-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-  "Ready for Pickup":
-    "border-green-300 bg-green-100 text-green-800 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300",
-  Completed:
-    "border-gray-300 bg-gray-100 text-gray-800 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300",
-  Cancelled:
-    "border-red-300 bg-red-100 text-red-800 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300",
+  Diagnosing: "border-yellow-300 bg-yellow-100 text-yellow-800",
+  "In Progress": "border-orange-300 bg-orange-100 text-orange-800",
+  "Ready for Pickup": "border-green-300 bg-green-100 text-green-800",
+  Completed: "border-gray-300 bg-gray-100 text-gray-800",
+  Cancelled: "border-red-300 bg-red-100 text-red-800",
 };
 
 const STATUS_KEY: Record<WorkOrderStatus, string> = {
@@ -33,10 +28,7 @@ export function StatusBadge({
   status: WorkOrderStatus;
   className?: string;
 }) {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
   const label = t(STATUS_KEY[status] ?? status);
 
   return (

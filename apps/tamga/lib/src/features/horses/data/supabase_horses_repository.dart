@@ -11,9 +11,7 @@ import 'horses_repository.dart';
 ///
 /// Performs CRUD against the `horses` table. All methods return
 /// [Result] to keep the data layer free of raw throws.
-class SupabaseHorsesRepository
-    with SupabaseRepositoryMixin
-    implements HorsesRepository {
+class SupabaseHorsesRepository with SupabaseRepositoryMixin implements HorsesRepository {
   SupabaseHorsesRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 
@@ -150,4 +148,5 @@ class SupabaseHorsesRepository
       return Result.fail(wrapError(e));
     }
   }
+
 }

@@ -7,7 +7,8 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ExportButton } from "@/components/export-button";
-import { ServiceModelPricesDrawer } from "@/components/services/service-model-prices-drawer";
+import { ServiceForm } from "@/components/services/service-form";
+import { ServiceModelPricesSheet } from "@/components/services/service-model-prices-drawer";
 
 import {
   AlertDialog,
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTablePage } from "@/components/ui/data-table-page";
 import {
   Empty,
@@ -41,13 +43,10 @@ import type { ServiceCatalog } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 
 import { createColumns } from "./_columns";
-import { EditServiceDrawer } from "./_edit-service-drawer";
+import { EditServiceSheet } from "./_edit-service-drawer";
 
 export default function ServicesPageClient() {
-  const st = useTranslations("services") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const st = useTranslations("services");
   const now = useClientNow();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
@@ -64,7 +63,7 @@ export default function ServicesPageClient() {
   const error = queryError ? queryError.message : null;
 
   const [search, setSearch] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [editingService, setEditingService] = useState<ServiceCatalog | null>(
     null,
@@ -107,14 +106,7 @@ export default function ServicesPageClient() {
     if (!orgId || !serviceToDelete) return;
     deleteMutation.mutate(
       { id: serviceToDelete.id },
-      {
-        onSettled: () => setServiceToDelete(null),
-        onError: (error) => {
-          toast.error(st("failedToDelete"), {
-            description: error instanceof Error ? error.message : undefined,
-          });
-        },
-      },
+      { onSettled: () => setServiceToDelete(null) },
     );
   };
 
@@ -166,7 +158,7 @@ export default function ServicesPageClient() {
         <EmptyTitle>{st("noServices")}</EmptyTitle>
       </EmptyHeader>
       <EmptyContent>
-        <Button variant="outline" onClick={() => setCreating(true)}>
+        <Button variant="outline" onClick={() => setShowAdd(true)}>
           <Plus className="size-4" />
           {st("addFirstService")}
         </Button>
@@ -208,6 +200,25 @@ export default function ServicesPageClient() {
       </div>
     ) : undefined;
 
+  // ── Inline add form ──
+
+  const addForm = showAdd ? (
+    <Card className="border-border">
+      <CardHeader>
+        <CardTitle>{st("addNewService")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ServiceForm
+          onSuccess={() => {
+            setShowAdd(false);
+            toast.success(st("serviceCreated"));
+          }}
+          onCancel={() => setShowAdd(false)}
+        />
+      </CardContent>
+    </Card>
+  ) : undefined;
+
   return (
     <>
       <DataTablePage
@@ -247,13 +258,15 @@ export default function ServicesPageClient() {
             <Button
               size="default"
               className="h-12"
-              onClick={() => setCreating(true)}
+              onClick={() => setShowAdd(!showAdd)}
             >
-              <Plus className="size-5" /> {st("addService")}
+              <Plus className="size-5" />{" "}
+              {showAdd ? st("cancel") : st("addService")}
             </Button>
           </div>
         }
         filters={categoryFilters}
+        beforeTable={addForm}
         onRowClick={(row) => setEditingService(row)}
         emptyState={emptyState}
         renderMobileCard={(service) => {
@@ -286,7 +299,7 @@ export default function ServicesPageClient() {
               <div className="flex items-center gap-1 pt-1 border-t border-border/50">
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="icon-xs"
                   onClick={(e) => {
                     e.stopPropagation();
                     setEditingService(service);
@@ -296,7 +309,7 @@ export default function ServicesPageClient() {
                 </Button>
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="icon-xs"
                   onClick={(e) => {
                     e.stopPropagation();
                     setServiceToDelete(service);
@@ -311,19 +324,16 @@ export default function ServicesPageClient() {
         }}
       />
 
-      <EditServiceDrawer
+      <EditServiceSheet
         service={editingService}
         categories={categories}
-        open={editingService !== null || creating}
+        open={editingService !== null}
         onOpenChange={(open) => {
-          if (!open) {
-            setEditingService(null);
-            setCreating(false);
-          }
+          if (!open) setEditingService(null);
         }}
       />
 
-      <ServiceModelPricesDrawer
+      <ServiceModelPricesSheet
         serviceId={modelPricesService?.id ?? null}
         serviceName={modelPricesService?.name ?? ""}
         defaultPrice={modelPricesService?.default_price ?? 0}

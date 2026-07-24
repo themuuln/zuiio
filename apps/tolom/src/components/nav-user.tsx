@@ -27,7 +27,7 @@ export function NavUser() {
   const router = useRouter();
 
   const displayName = profile?.fullName ?? t("user");
-  const displayIdentifier = profile?.username ?? profile?.email ?? "";
+  const displayIdentifier = profile?.username ?? "";
   const initials = getInitials(profile?.fullName ?? null);
 
   const handleSignOut = async () => {

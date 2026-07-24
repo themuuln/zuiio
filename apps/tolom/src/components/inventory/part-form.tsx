@@ -24,6 +24,7 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreatePart } from "@/lib/queries/use-wizard-data";
+import { reportServerError } from "@/lib/sentry-report-server";
 import type { CreatePartParams, PartsCatalogItem } from "@/lib/types";
 import { partSchema as sharedPartSchema } from "@/lib/validation/part-schema";
 import PartPhotoUpload from "./part-photo-upload";
@@ -36,7 +37,6 @@ const partSchema = z.object({
   name_mn: sharedPartSchema.shape.nameMn,
   name: sharedPartSchema.shape.name,
   part_number: sharedPartSchema.shape.partNumber,
-  barcode: sharedPartSchema.shape.barcode,
   default_price: sharedPartSchema.shape.defaultPrice,
   purchase_price: sharedPartSchema.shape.purchasePrice,
   category: sharedPartSchema.shape.category,
@@ -99,7 +99,6 @@ export function PartForm({
       name_mn: initialData?.name_mn ?? "",
       name: initialData?.name ?? "",
       part_number: initialData?.part_number ?? "",
-      barcode: initialData?.barcode ?? "",
       default_price:
         initialData?.default_price != null
           ? String(initialData.default_price)
@@ -145,7 +144,6 @@ export function PartForm({
       const payload: CreatePartParams = {
         name: nameEn || nameMn,
         part_number: data.part_number?.trim() || undefined,
-        barcode: data.barcode?.trim() || undefined,
         default_price: data.default_price?.trim()
           ? Number(data.default_price)
           : undefined,
@@ -179,9 +177,6 @@ export function PartForm({
         });
       } else {
         part = await createPartMutation.mutateAsync(payload);
-        form.reset();
-        setImageUrl(null);
-        setImageDirty(false);
       }
       onSuccess?.(part);
     } catch (err: unknown) {
@@ -203,13 +198,13 @@ export function PartForm({
               value="quick"
               className="flex-1 w-full rounded-md py-1 text-xs justify-center cursor-pointer"
             >
-              {t("quickAdd")}
+              Quick Add
             </TabsTrigger>
             <TabsTrigger
               value="full"
               className="flex-1 w-full rounded-md py-1 text-xs justify-center cursor-pointer"
             >
-              {t("fullDetails")}
+              Full Details
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -281,55 +276,46 @@ export function PartForm({
 
         {/* ── Part Number + Category (full) or Part Number + Price (quick) ── */}
         {currentMode === "full" ? (
-          <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field>
-                <FieldLabel>Part Number</FieldLabel>
-                <FieldContent>
-                  <Input
-                    placeholder="e.g. OF-101"
-                    disabled={readOnly}
-                    {...form.register("part_number")}
-                  />
-                </FieldContent>
-              </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field>
+              <FieldLabel>Part Number</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="e.g. OF-101"
+                  {...form.register("part_number")}
+                />
+              </FieldContent>
+            </Field>
 
-              <Field>
-                <FieldLabel>Category</FieldLabel>
-                <FieldContent>
-                  <CreatableCombobox
-                    items={allCategories}
-                    value={selectedCategory}
-                    onValueChange={(cat) => {
-                      if (cat) {
-                        form.setValue("category", cat.name);
-                      } else {
-                        form.setValue("category", "");
-                      }
-                    }}
-                    onCreateItem={handleCreateCategory}
-                    itemToStringLabel={(item) => item?.name ?? ""}
-                    isItemEqualToValue={(a, b) => a?.name === b?.name}
-                    placeholder="Select category"
-                    disabled={readOnly}
-                    className="h-11"
-                  />
-                </FieldContent>
-              </Field>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field>
-                <FieldLabel>Barcode</FieldLabel>
-                <FieldContent>
-                  <Input
-                    placeholder="Scan or enter barcode"
-                    disabled={readOnly}
-                    {...form.register("barcode")}
-                  />
-                </FieldContent>
-              </Field>
-            </div>
-          </>
+            <Field>
+              <FieldLabel>Category</FieldLabel>
+              <FieldContent>
+                <CreatableCombobox
+                  items={allCategories}
+                  value={selectedCategory}
+                  onValueChange={(cat) => {
+                    if (cat) {
+                      form.setValue("category", cat.name);
+                    } else {
+                      form.setValue("category", "");
+                    }
+                  }}
+                  onCreateItem={handleCreateCategory}
+                  isCreating={createCategory.isPending}
+                  createLabel={(name) =>
+                    t("inventory.createCategory", { name })
+                  }
+                  isItemEqualToValue={(a: { id: string }, b: { id: string }) =>
+                    a.id === b.id
+                  }
+                  placeholder="e.g. Filters, Suspension"
+                  showTrigger
+                  disabled={readOnly}
+                  className="h-11"
+                />
+              </FieldContent>
+            </Field>
+          </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             <Field>
@@ -350,11 +336,7 @@ export function PartForm({
                   min={0}
                   placeholder="15000"
                   disabled={readOnly}
-                  value={
-                    form.watch("default_price")?.trim()
-                      ? Number(form.watch("default_price"))
-                      : undefined
-                  }
+                  value={Number(form.watch("default_price")) || 0}
                   onChange={(val) =>
                     form.setValue("default_price", String(val))
                   }
@@ -378,11 +360,7 @@ export function PartForm({
                 <CurrencyInput
                   min={0}
                   placeholder="15000"
-                  value={
-                    form.watch("default_price")?.trim()
-                      ? Number(form.watch("default_price"))
-                      : undefined
-                  }
+                  value={Number(form.watch("default_price")) || 0}
                   onChange={(val) =>
                     form.setValue("default_price", String(val))
                   }
@@ -401,11 +379,7 @@ export function PartForm({
                 <CurrencyInput
                   min={0}
                   placeholder="10000"
-                  value={
-                    form.watch("purchase_price")?.trim()
-                      ? Number(form.watch("purchase_price"))
-                      : undefined
-                  }
+                  value={Number(form.watch("purchase_price")) || 0}
                   onChange={(val) =>
                     form.setValue("purchase_price", String(val))
                   }
@@ -475,12 +449,12 @@ export function PartForm({
             {mutation.isPending ? (
               <span className="flex items-center gap-2 justify-center">
                 <Loader2 className="size-4 animate-spin" />
-                {commonT("saving")}
+                Saving...
               </span>
             ) : isUpdate ? (
-              t("updatePart")
+              "Update Part"
             ) : (
-              t("createPart")
+              "Create Part"
             )}
           </Button>
         </div>

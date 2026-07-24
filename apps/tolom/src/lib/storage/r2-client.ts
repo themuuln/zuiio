@@ -35,14 +35,6 @@ export function getR2Client(): S3Client {
   return _client;
 }
 
-/** Returns the R2 bucket name. Throws if not configured. */
-export function getR2Bucket(): string {
-  const bucket = process.env.R2_BUCKET;
-  if (!bucket) {
-    throw new Error("Missing R2_BUCKET environment variable. Set R2_BUCKET.");
-  }
-  return bucket;
-}
 /** Returns true if all required R2 env vars are set. */
 export function isR2Configured(): boolean {
   return Boolean(

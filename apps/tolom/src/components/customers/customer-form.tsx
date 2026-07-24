@@ -27,6 +27,7 @@ import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreateCustomer } from "@/lib/queries/use-wizard-data";
+import { reportServerError } from "@/lib/sentry-report-server";
 import type { CreateCustomerParams, Customer } from "@/lib/types";
 import { customerSchema as sharedCustomerSchema } from "@/lib/validation/customer-schema";
 import { emailSchema } from "@/lib/validation/schemas";
@@ -63,14 +64,8 @@ export function CustomerForm({
 }: CustomerFormProps) {
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? "";
-  const t = useTranslations("customers") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const commonT = useTranslations("common") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("customers");
+  const commonT = useTranslations("common");
 
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);
   const [error, setError] = useState<string | null>(null);

@@ -53,8 +53,8 @@ export function ForecastCard({ forecast, loading }: ForecastCardProps) {
               <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
                 <span>
                   {t("daysElapsed", {
-                    elapsed: String(forecast.days_elapsed),
-                    total: String(forecast.total_days),
+                    elapsed: forecast.days_elapsed,
+                    total: forecast.total_days,
                   })}
                 </span>
                 <span>

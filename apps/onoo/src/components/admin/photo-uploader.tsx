@@ -1,9 +1,8 @@
 "use client";
 
-import { Upload, X } from "lucide-react";
-import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PhotoUploaderProps {
@@ -71,7 +70,9 @@ export function PhotoUploader({
           ? "Зураг амжилттай нэмэгдлээ"
           : "Лого амжилттай нэмэгдлээ",
       );
-      onUploaded(entityType === "player" ? body.photo_url : body.logo_url);
+      onUploaded(
+        entityType === "player" ? body.photo_url : body.logo_url,
+      );
       setPreview(null);
       if (inputRef.current) inputRef.current.value = "";
     } catch (err) {
@@ -91,12 +92,9 @@ export function PhotoUploader({
       <div className="flex items-center gap-3">
         {displayUrl ? (
           <div className="relative">
-            <Image
+            <img
               src={displayUrl}
               alt=""
-              width={64}
-              height={64}
-              unoptimized
               className="size-16 rounded-full object-cover"
             />
             {preview && (

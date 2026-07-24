@@ -96,9 +96,9 @@ class FeaturedEventsTestWidget extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
                 'Онцлох арга хэмжээ',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             // Horizontal scrollable list (matches home screen: height 120)
@@ -112,7 +112,10 @@ class FeaturedEventsTestWidget extends ConsumerWidget {
                   final event = events[index];
                   return SizedBox(
                     width: 420,
-                    child: EventCard(event: event, onTap: () {}),
+                    child: EventCard(
+                      event: event,
+                      onTap: () {},
+                    ),
                   );
                 },
               ),
@@ -126,7 +129,9 @@ class FeaturedEventsTestWidget extends ConsumerWidget {
   }
 }
 
-ProviderScope _buildTestWidget({required List<Event> featuredEvents}) {
+ProviderScope _buildTestWidget({
+  required List<Event> featuredEvents,
+}) {
   return ProviderScope(
     overrides: [
       // Override featuredEventsProvider to return mock data
@@ -139,7 +144,9 @@ ProviderScope _buildTestWidget({required List<Event> featuredEvents}) {
     child: MaterialApp(
       theme: AppTheme.light(),
       home: Scaffold(
-        body: SingleChildScrollView(child: const FeaturedEventsTestWidget()),
+        body: SingleChildScrollView(
+          child: const FeaturedEventsTestWidget(),
+        ),
       ),
     ),
   );
@@ -151,35 +158,34 @@ void main() {
   // ══════════════════════════════════════════════════════════════
   group('VAL-EVENTS-006: Featured events section', () {
     testWidgets(
-      'shows "Онцлох арга хэмжээ" section with horizontal scroll when featured events exist',
-      (tester) async {
-        // Set large viewport to avoid EventCard overflow in horizontal list
-        tester.view.physicalSize = const Size(2000, 2000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(() {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
-        });
+        'shows "Онцлох арга хэмжээ" section with horizontal scroll when featured events exist',
+        (tester) async {
+      // Set large viewport to avoid EventCard overflow in horizontal list
+      tester.view.physicalSize = const Size(2000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
 
-        await tester.pumpWidget(
-          _buildTestWidget(featuredEvents: [_featuredEvent]),
-        );
-        await tester.pump();
-        await tester.pump();
+      await tester.pumpWidget(
+        _buildTestWidget(featuredEvents: [_featuredEvent]),
+      );
+      await tester.pump();
+      await tester.pump();
 
-        // Section title should be visible
-        expect(find.text('Онцлох арга хэмжээ'), findsOneWidget);
+      // Section title should be visible
+      expect(find.text('Онцлох арга хэмжээ'), findsOneWidget);
 
-        // The featured event title should be visible (from EventCard)
-        expect(find.text('Онцлох уралдаан'), findsOneWidget);
+      // The featured event title should be visible (from EventCard)
+      expect(find.text('Онцлох уралдаан'), findsOneWidget);
 
-        // The horizontal ListView should be present
-        final horizontalListViews = find.byWidgetPredicate(
-          (w) => w is ListView && w.scrollDirection == Axis.horizontal,
-        );
-        expect(horizontalListViews, findsOneWidget);
-      },
-    );
+      // The horizontal ListView should be present
+      final horizontalListViews = find.byWidgetPredicate(
+        (w) => w is ListView && w.scrollDirection == Axis.horizontal,
+      );
+      expect(horizontalListViews, findsOneWidget);
+    });
 
     testWidgets('multiple featured events appear in the horizontal list', (
       tester,
@@ -221,7 +227,10 @@ void main() {
 
       await tester.pumpWidget(
         _buildTestWidget(
-          featuredEvents: [_featuredEvent, _anotherFeaturedEvent],
+          featuredEvents: [
+            _featuredEvent,
+            _anotherFeaturedEvent,
+          ],
         ),
       );
       await tester.pump();
@@ -266,7 +275,9 @@ void main() {
     testWidgets('featured section is not shown when no featured events', (
       tester,
     ) async {
-      await tester.pumpWidget(_buildTestWidget(featuredEvents: []));
+      await tester.pumpWidget(
+        _buildTestWidget(featuredEvents: []),
+      );
       await tester.pump();
       await tester.pump();
 
@@ -280,7 +291,9 @@ void main() {
     testWidgets('empty list hides section title and event cards', (
       tester,
     ) async {
-      await tester.pumpWidget(_buildTestWidget(featuredEvents: []));
+      await tester.pumpWidget(
+        _buildTestWidget(featuredEvents: []),
+      );
       await tester.pump();
       await tester.pump();
 

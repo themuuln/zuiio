@@ -3,7 +3,6 @@ import {
   Buildings,
   Calculator,
   ChartBar,
-  CheckCircle,
   ClipboardText,
   Clock,
   Coin,
@@ -171,29 +170,6 @@ export const navGroups: NavGroup[] = [
         href: "/accounting",
         icon: Calculator,
         featureKey: "accounting",
-      },
-    ],
-  },
-  {
-    label: "Үйлдвэрлэл",
-    items: [
-      {
-        title: "BOM",
-        href: "/bom",
-        icon: Cube,
-        featureKey: "boms",
-      },
-      {
-        title: "Үйлдвэрлэлийн захиалга",
-        href: "/production",
-        icon: ClipboardText,
-        featureKey: "production_orders",
-      },
-      {
-        title: "Чанарын хяналт",
-        href: "/quality",
-        icon: CheckCircle,
-        featureKey: "quality_control",
       },
     ],
   },

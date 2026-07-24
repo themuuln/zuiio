@@ -1,9 +1,6 @@
 import { redirect } from "next/navigation";
-import { AdminHeader } from "@/components/admin/admin-header";
-import { AdminLayoutProvider } from "@/components/admin/admin-layout-context";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { createClient } from "@/lib/supabase/server";
-import { AdminLayoutClient } from "./_components/layout-client";
+import { SidebarNav } from "./_components/sidebar-nav";
 
 export default async function AdminLayout({
   children,
@@ -12,29 +9,29 @@ export default async function AdminLayout({
 }) {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session?.user) {
+  if (!user) {
     redirect("/admin/login");
   }
 
   return (
-    <AdminLayoutProvider>
-      {/* Mobile sidebar closes on escape via the key handler in the context */}
-      <div className="flex h-screen bg-background">
-        <AdminSidebar />
-
-        <div className="flex flex-1 flex-col md:pl-0">
-          <AdminHeader />
-
-          <main className="flex-1 overflow-auto pt-14">
-            <div className="p-6">
-              <AdminLayoutClient>{children}</AdminLayoutClient>
-            </div>
-          </main>
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <aside className="flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+        <div className="flex h-14 items-center border-b border-sidebar-border px-4">
+          <span className="text-lg font-bold tracking-tight text-sidebar-primary">
+            Оноо
+          </span>
         </div>
-      </div>
-    </AdminLayoutProvider>
+        <div className="flex-1 overflow-y-auto p-3">
+          <SidebarNav />
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 overflow-auto p-6">{children}</main>
+    </div>
   );
 }

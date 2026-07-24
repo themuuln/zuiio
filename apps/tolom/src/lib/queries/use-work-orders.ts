@@ -42,18 +42,16 @@ export function useWorkOrders(
       search,
       branchId ?? "all",
     ],
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchWorkOrders(orgId, {
+    queryFn: () =>
+      fetchWorkOrders(orgId!, {
         params: {
           ...(status ? { status } : {}),
           ...(search ? { q: search } : {}),
           ...(branchId ? { branch_id: branchId } : {}),
         },
-      });
-    },
+      }),
     enabled: !!orgId,
     placeholderData: (previousData) => previousData,
-    staleTime: 30_000,
+    staleTime: 15_000,
   });
 }

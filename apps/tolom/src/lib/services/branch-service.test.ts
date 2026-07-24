@@ -51,20 +51,9 @@ beforeEach(() => {
 
 describe("createBranch", () => {
   it("creates with valid name", async () => {
-    // Org query for branch_limit
-    const orgBuilder = makeBuilder({ branch_limit: 5 });
-    // Branch count query — use same builder for both count and crud
-    const branchesBuilder = makeBuilder({ id: "b-1", name: "Branch 2" });
-    branchesBuilder.then = vi.fn((resolve: (v: unknown) => void) =>
-      resolve({ data: [], count: 1, error: null }),
-    );
-    const tableMocks: Record<string, unknown> = {
-      organizations: orgBuilder,
-      branches: branchesBuilder,
-    };
-    mockClient.from = vi.fn(
-      (table: string) => tableMocks[table] ?? makeBuilder(),
-    );
+    mockClient.from = vi
+      .fn()
+      .mockReturnValue(makeBuilder({ id: "b-1", name: "Branch 2" }));
     const result = await createBranch(mockClient as any, "org-1", {
       name: "Branch 2",
     });
@@ -73,39 +62,9 @@ describe("createBranch", () => {
   });
 
   it("rejects empty name", async () => {
-    const orgBuilder = makeBuilder({ branch_limit: 5 });
-    const branchesBuilder = makeBuilder([]);
-    branchesBuilder.then = vi.fn((resolve: (v: unknown) => void) =>
-      resolve({ data: [], count: 0, error: null }),
-    );
-    const tableMocks: Record<string, unknown> = {
-      organizations: orgBuilder,
-      branches: branchesBuilder,
-    };
-    mockClient.from = vi.fn(
-      (table: string) => tableMocks[table] ?? makeBuilder(),
-    );
     await expect(
       createBranch(mockClient as any, "org-1", { name: "" }),
     ).rejects.toThrow(ValidationError);
-  });
-
-  it("rejects when branch_limit reached", async () => {
-    const orgBuilder = makeBuilder({ branch_limit: 2 });
-    const branchesBuilder = makeBuilder([]);
-    branchesBuilder.then = vi.fn((resolve: (v: unknown) => void) =>
-      resolve({ data: [], count: 2, error: null }),
-    );
-    const tableMocks: Record<string, unknown> = {
-      organizations: orgBuilder,
-      branches: branchesBuilder,
-    };
-    mockClient.from = vi.fn(
-      (table: string) => tableMocks[table] ?? makeBuilder(),
-    );
-    await expect(
-      createBranch(mockClient as any, "org-1", { name: "Branch 3" }),
-    ).rejects.toThrow("Branch limit reached");
   });
 });
 

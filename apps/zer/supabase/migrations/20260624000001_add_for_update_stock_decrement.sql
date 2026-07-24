@@ -42,7 +42,7 @@ BEGIN
 
   -- Lock all product rows first (prevents deadlocks by ordering)
   -- Then validate stock for every item before making any changes
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) AS item ORDER BY (item->>'product_id')::TEXT
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) ORDER BY (item->>'product_id')::TEXT
   LOOP
     v_product_id := (v_item->>'product_id')::UUID;
     v_variant_id := NULLIF(v_item->>'variant_id', '')::UUID;
@@ -101,7 +101,7 @@ BEGIN
   END IF;
 
   -- All items validated — now update
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) AS item ORDER BY (item->>'product_id')::TEXT
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) ORDER BY (item->>'product_id')::TEXT
   LOOP
     v_product_id := (v_item->>'product_id')::UUID;
     v_variant_id := NULLIF(v_item->>'variant_id', '')::UUID;

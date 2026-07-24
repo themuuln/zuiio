@@ -13,10 +13,10 @@ class AgeBucket {
 /// хуваарилалт, үүлдэр/өнгөөр бүлэглэлтийг тооцоолно.
 class HerdAnalytics {
   HerdAnalytics({required this.horses})
-    : totalHorses = horses.length,
-      ageDistribution = _computeAgeDistribution(horses),
-      genderSplit = _computeGenderSplit(horses),
-      breedBreakdown = _computeBreedBreakdown(horses);
+      : totalHorses = horses.length,
+        ageDistribution = _computeAgeDistribution(horses),
+        genderSplit = _computeGenderSplit(horses),
+        breedBreakdown = _computeBreedBreakdown(horses);
 
   /// Бүх морьдын жагсаалт.
   final List<Horse> horses;

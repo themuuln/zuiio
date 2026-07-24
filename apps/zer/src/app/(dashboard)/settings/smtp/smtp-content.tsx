@@ -2,11 +2,11 @@
 
 import { EnvelopeSimple } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
 import { withDbCapture } from "@zuiio/capture";
 import { PageShell } from "@/components/erp/page-shell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { DeleteButton, ToggleButton } from "./actions-client";
 import { AddSmtpForm } from "./add-form";

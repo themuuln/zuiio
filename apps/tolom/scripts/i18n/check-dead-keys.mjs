@@ -147,11 +147,24 @@ for (const key of ALL_KEYS) {
 
 deadKeys.sort();
 
+// ── Report ───────────────────────────────────────────────────
+
+console.log(`\n📦 Scanned ${files.length} source files`);
+console.log(`📝 ${ALL_KEYS.size} total message keys`);
+
 if (deadKeys.length === 0) {
+  console.log("✅ All message keys are referenced in source.\n");
   process.exit(0);
 }
-for (const _key of deadKeys.slice(0, 50)) {
+
+console.log(`\n⚠️  ${deadKeys.length} potentially unused keys:\n`);
+for (const key of deadKeys.slice(0, 50)) {
+  console.log(`   ${key}`);
 }
 if (deadKeys.length > 50) {
+  console.log(`   ... and ${deadKeys.length - 50} more`);
 }
+console.log(
+  "\n💡 Tip: These may be false positives if keys are constructed dynamically or referenced via variables.\n",
+);
 process.exit(0);

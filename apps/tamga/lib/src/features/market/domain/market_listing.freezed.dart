@@ -12,8 +12,7 @@ part of 'market_listing.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
 mixin _$MarketListing {
@@ -54,39 +53,37 @@ mixin _$MarketListing {
 /// @nodoc
 abstract class $MarketListingCopyWith<$Res> {
   factory $MarketListingCopyWith(
-    MarketListing value,
-    $Res Function(MarketListing) then,
-  ) = _$MarketListingCopyWithImpl<$Res, MarketListing>;
+          MarketListing value, $Res Function(MarketListing) then) =
+      _$MarketListingCopyWithImpl<$Res, MarketListing>;
   @useResult
-  $Res call({
-    String id,
-    String horseId,
-    String sellerId,
-    String title,
-    String description,
-    int priceAmount,
-    String currency,
-    MarketSaleType saleType,
-    MarketListingStatus status,
-    String locationLabel,
-    List<String> disciplineTags,
-    List<String> documentTags,
-    List<String> mediaUrls,
-    bool isSellerVerified,
-    DateTime createdAt,
-    DateTime updatedAt,
-    int viewsCount,
-    bool isFavorite,
-    @Deprecated('Use boostLevel/vipLevel instead') bool isFeatured,
-    BoostLevel boostLevel,
-    DateTime? boostExpiresAt,
-    VipLevel vipLevel,
-    DateTime? vipExpiresAt,
-    SellerBadgeType sellerBadge,
-    DateTime? sellerBadgeExpiresAt,
-    double? commissionRate,
-    int? commissionAmount,
-  });
+  $Res call(
+      {String id,
+      String horseId,
+      String sellerId,
+      String title,
+      String description,
+      int priceAmount,
+      String currency,
+      MarketSaleType saleType,
+      MarketListingStatus status,
+      String locationLabel,
+      List<String> disciplineTags,
+      List<String> documentTags,
+      List<String> mediaUrls,
+      bool isSellerVerified,
+      DateTime createdAt,
+      DateTime updatedAt,
+      int viewsCount,
+      bool isFavorite,
+      @Deprecated('Use boostLevel/vipLevel instead') bool isFeatured,
+      BoostLevel boostLevel,
+      DateTime? boostExpiresAt,
+      VipLevel vipLevel,
+      DateTime? vipExpiresAt,
+      SellerBadgeType sellerBadge,
+      DateTime? sellerBadgeExpiresAt,
+      double? commissionRate,
+      int? commissionAmount});
 }
 
 /// @nodoc
@@ -130,119 +127,116 @@ class _$MarketListingCopyWithImpl<$Res, $Val extends MarketListing>
     Object? commissionRate = freezed,
     Object? commissionAmount = freezed,
   }) {
-    return _then(
-      _value.copyWith(
-            id: null == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
-                      as String,
-            horseId: null == horseId
-                ? _value.horseId
-                : horseId // ignore: cast_nullable_to_non_nullable
-                      as String,
-            sellerId: null == sellerId
-                ? _value.sellerId
-                : sellerId // ignore: cast_nullable_to_non_nullable
-                      as String,
-            title: null == title
-                ? _value.title
-                : title // ignore: cast_nullable_to_non_nullable
-                      as String,
-            description: null == description
-                ? _value.description
-                : description // ignore: cast_nullable_to_non_nullable
-                      as String,
-            priceAmount: null == priceAmount
-                ? _value.priceAmount
-                : priceAmount // ignore: cast_nullable_to_non_nullable
-                      as int,
-            currency: null == currency
-                ? _value.currency
-                : currency // ignore: cast_nullable_to_non_nullable
-                      as String,
-            saleType: null == saleType
-                ? _value.saleType
-                : saleType // ignore: cast_nullable_to_non_nullable
-                      as MarketSaleType,
-            status: null == status
-                ? _value.status
-                : status // ignore: cast_nullable_to_non_nullable
-                      as MarketListingStatus,
-            locationLabel: null == locationLabel
-                ? _value.locationLabel
-                : locationLabel // ignore: cast_nullable_to_non_nullable
-                      as String,
-            disciplineTags: null == disciplineTags
-                ? _value.disciplineTags
-                : disciplineTags // ignore: cast_nullable_to_non_nullable
-                      as List<String>,
-            documentTags: null == documentTags
-                ? _value.documentTags
-                : documentTags // ignore: cast_nullable_to_non_nullable
-                      as List<String>,
-            mediaUrls: null == mediaUrls
-                ? _value.mediaUrls
-                : mediaUrls // ignore: cast_nullable_to_non_nullable
-                      as List<String>,
-            isSellerVerified: null == isSellerVerified
-                ? _value.isSellerVerified
-                : isSellerVerified // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            createdAt: null == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-            updatedAt: null == updatedAt
-                ? _value.updatedAt
-                : updatedAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-            viewsCount: null == viewsCount
-                ? _value.viewsCount
-                : viewsCount // ignore: cast_nullable_to_non_nullable
-                      as int,
-            isFavorite: null == isFavorite
-                ? _value.isFavorite
-                : isFavorite // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            isFeatured: null == isFeatured
-                ? _value.isFeatured
-                : isFeatured // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            boostLevel: null == boostLevel
-                ? _value.boostLevel
-                : boostLevel // ignore: cast_nullable_to_non_nullable
-                      as BoostLevel,
-            boostExpiresAt: freezed == boostExpiresAt
-                ? _value.boostExpiresAt
-                : boostExpiresAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime?,
-            vipLevel: null == vipLevel
-                ? _value.vipLevel
-                : vipLevel // ignore: cast_nullable_to_non_nullable
-                      as VipLevel,
-            vipExpiresAt: freezed == vipExpiresAt
-                ? _value.vipExpiresAt
-                : vipExpiresAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime?,
-            sellerBadge: null == sellerBadge
-                ? _value.sellerBadge
-                : sellerBadge // ignore: cast_nullable_to_non_nullable
-                      as SellerBadgeType,
-            sellerBadgeExpiresAt: freezed == sellerBadgeExpiresAt
-                ? _value.sellerBadgeExpiresAt
-                : sellerBadgeExpiresAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime?,
-            commissionRate: freezed == commissionRate
-                ? _value.commissionRate
-                : commissionRate // ignore: cast_nullable_to_non_nullable
-                      as double?,
-            commissionAmount: freezed == commissionAmount
-                ? _value.commissionAmount
-                : commissionAmount // ignore: cast_nullable_to_non_nullable
-                      as int?,
-          )
-          as $Val,
-    );
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      horseId: null == horseId
+          ? _value.horseId
+          : horseId // ignore: cast_nullable_to_non_nullable
+              as String,
+      sellerId: null == sellerId
+          ? _value.sellerId
+          : sellerId // ignore: cast_nullable_to_non_nullable
+              as String,
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      description: null == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String,
+      priceAmount: null == priceAmount
+          ? _value.priceAmount
+          : priceAmount // ignore: cast_nullable_to_non_nullable
+              as int,
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as String,
+      saleType: null == saleType
+          ? _value.saleType
+          : saleType // ignore: cast_nullable_to_non_nullable
+              as MarketSaleType,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as MarketListingStatus,
+      locationLabel: null == locationLabel
+          ? _value.locationLabel
+          : locationLabel // ignore: cast_nullable_to_non_nullable
+              as String,
+      disciplineTags: null == disciplineTags
+          ? _value.disciplineTags
+          : disciplineTags // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      documentTags: null == documentTags
+          ? _value.documentTags
+          : documentTags // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      mediaUrls: null == mediaUrls
+          ? _value.mediaUrls
+          : mediaUrls // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      isSellerVerified: null == isSellerVerified
+          ? _value.isSellerVerified
+          : isSellerVerified // ignore: cast_nullable_to_non_nullable
+              as bool,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      updatedAt: null == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      viewsCount: null == viewsCount
+          ? _value.viewsCount
+          : viewsCount // ignore: cast_nullable_to_non_nullable
+              as int,
+      isFavorite: null == isFavorite
+          ? _value.isFavorite
+          : isFavorite // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isFeatured: null == isFeatured
+          ? _value.isFeatured
+          : isFeatured // ignore: cast_nullable_to_non_nullable
+              as bool,
+      boostLevel: null == boostLevel
+          ? _value.boostLevel
+          : boostLevel // ignore: cast_nullable_to_non_nullable
+              as BoostLevel,
+      boostExpiresAt: freezed == boostExpiresAt
+          ? _value.boostExpiresAt
+          : boostExpiresAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      vipLevel: null == vipLevel
+          ? _value.vipLevel
+          : vipLevel // ignore: cast_nullable_to_non_nullable
+              as VipLevel,
+      vipExpiresAt: freezed == vipExpiresAt
+          ? _value.vipExpiresAt
+          : vipExpiresAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      sellerBadge: null == sellerBadge
+          ? _value.sellerBadge
+          : sellerBadge // ignore: cast_nullable_to_non_nullable
+              as SellerBadgeType,
+      sellerBadgeExpiresAt: freezed == sellerBadgeExpiresAt
+          ? _value.sellerBadgeExpiresAt
+          : sellerBadgeExpiresAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      commissionRate: freezed == commissionRate
+          ? _value.commissionRate
+          : commissionRate // ignore: cast_nullable_to_non_nullable
+              as double?,
+      commissionAmount: freezed == commissionAmount
+          ? _value.commissionAmount
+          : commissionAmount // ignore: cast_nullable_to_non_nullable
+              as int?,
+    ) as $Val);
   }
 }
 
@@ -250,40 +244,38 @@ class _$MarketListingCopyWithImpl<$Res, $Val extends MarketListing>
 abstract class _$$MarketListingImplCopyWith<$Res>
     implements $MarketListingCopyWith<$Res> {
   factory _$$MarketListingImplCopyWith(
-    _$MarketListingImpl value,
-    $Res Function(_$MarketListingImpl) then,
-  ) = __$$MarketListingImplCopyWithImpl<$Res>;
+          _$MarketListingImpl value, $Res Function(_$MarketListingImpl) then) =
+      __$$MarketListingImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({
-    String id,
-    String horseId,
-    String sellerId,
-    String title,
-    String description,
-    int priceAmount,
-    String currency,
-    MarketSaleType saleType,
-    MarketListingStatus status,
-    String locationLabel,
-    List<String> disciplineTags,
-    List<String> documentTags,
-    List<String> mediaUrls,
-    bool isSellerVerified,
-    DateTime createdAt,
-    DateTime updatedAt,
-    int viewsCount,
-    bool isFavorite,
-    @Deprecated('Use boostLevel/vipLevel instead') bool isFeatured,
-    BoostLevel boostLevel,
-    DateTime? boostExpiresAt,
-    VipLevel vipLevel,
-    DateTime? vipExpiresAt,
-    SellerBadgeType sellerBadge,
-    DateTime? sellerBadgeExpiresAt,
-    double? commissionRate,
-    int? commissionAmount,
-  });
+  $Res call(
+      {String id,
+      String horseId,
+      String sellerId,
+      String title,
+      String description,
+      int priceAmount,
+      String currency,
+      MarketSaleType saleType,
+      MarketListingStatus status,
+      String locationLabel,
+      List<String> disciplineTags,
+      List<String> documentTags,
+      List<String> mediaUrls,
+      bool isSellerVerified,
+      DateTime createdAt,
+      DateTime updatedAt,
+      int viewsCount,
+      bool isFavorite,
+      @Deprecated('Use boostLevel/vipLevel instead') bool isFeatured,
+      BoostLevel boostLevel,
+      DateTime? boostExpiresAt,
+      VipLevel vipLevel,
+      DateTime? vipExpiresAt,
+      SellerBadgeType sellerBadge,
+      DateTime? sellerBadgeExpiresAt,
+      double? commissionRate,
+      int? commissionAmount});
 }
 
 /// @nodoc
@@ -291,9 +283,8 @@ class __$$MarketListingImplCopyWithImpl<$Res>
     extends _$MarketListingCopyWithImpl<$Res, _$MarketListingImpl>
     implements _$$MarketListingImplCopyWith<$Res> {
   __$$MarketListingImplCopyWithImpl(
-    _$MarketListingImpl _value,
-    $Res Function(_$MarketListingImpl) _then,
-  ) : super(_value, _then);
+      _$MarketListingImpl _value, $Res Function(_$MarketListingImpl) _then)
+      : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -326,156 +317,154 @@ class __$$MarketListingImplCopyWithImpl<$Res>
     Object? commissionRate = freezed,
     Object? commissionAmount = freezed,
   }) {
-    return _then(
-      _$MarketListingImpl(
-        id: null == id
-            ? _value.id
-            : id // ignore: cast_nullable_to_non_nullable
-                  as String,
-        horseId: null == horseId
-            ? _value.horseId
-            : horseId // ignore: cast_nullable_to_non_nullable
-                  as String,
-        sellerId: null == sellerId
-            ? _value.sellerId
-            : sellerId // ignore: cast_nullable_to_non_nullable
-                  as String,
-        title: null == title
-            ? _value.title
-            : title // ignore: cast_nullable_to_non_nullable
-                  as String,
-        description: null == description
-            ? _value.description
-            : description // ignore: cast_nullable_to_non_nullable
-                  as String,
-        priceAmount: null == priceAmount
-            ? _value.priceAmount
-            : priceAmount // ignore: cast_nullable_to_non_nullable
-                  as int,
-        currency: null == currency
-            ? _value.currency
-            : currency // ignore: cast_nullable_to_non_nullable
-                  as String,
-        saleType: null == saleType
-            ? _value.saleType
-            : saleType // ignore: cast_nullable_to_non_nullable
-                  as MarketSaleType,
-        status: null == status
-            ? _value.status
-            : status // ignore: cast_nullable_to_non_nullable
-                  as MarketListingStatus,
-        locationLabel: null == locationLabel
-            ? _value.locationLabel
-            : locationLabel // ignore: cast_nullable_to_non_nullable
-                  as String,
-        disciplineTags: null == disciplineTags
-            ? _value._disciplineTags
-            : disciplineTags // ignore: cast_nullable_to_non_nullable
-                  as List<String>,
-        documentTags: null == documentTags
-            ? _value._documentTags
-            : documentTags // ignore: cast_nullable_to_non_nullable
-                  as List<String>,
-        mediaUrls: null == mediaUrls
-            ? _value._mediaUrls
-            : mediaUrls // ignore: cast_nullable_to_non_nullable
-                  as List<String>,
-        isSellerVerified: null == isSellerVerified
-            ? _value.isSellerVerified
-            : isSellerVerified // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        createdAt: null == createdAt
-            ? _value.createdAt
-            : createdAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-        updatedAt: null == updatedAt
-            ? _value.updatedAt
-            : updatedAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-        viewsCount: null == viewsCount
-            ? _value.viewsCount
-            : viewsCount // ignore: cast_nullable_to_non_nullable
-                  as int,
-        isFavorite: null == isFavorite
-            ? _value.isFavorite
-            : isFavorite // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        isFeatured: null == isFeatured
-            ? _value.isFeatured
-            : isFeatured // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        boostLevel: null == boostLevel
-            ? _value.boostLevel
-            : boostLevel // ignore: cast_nullable_to_non_nullable
-                  as BoostLevel,
-        boostExpiresAt: freezed == boostExpiresAt
-            ? _value.boostExpiresAt
-            : boostExpiresAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime?,
-        vipLevel: null == vipLevel
-            ? _value.vipLevel
-            : vipLevel // ignore: cast_nullable_to_non_nullable
-                  as VipLevel,
-        vipExpiresAt: freezed == vipExpiresAt
-            ? _value.vipExpiresAt
-            : vipExpiresAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime?,
-        sellerBadge: null == sellerBadge
-            ? _value.sellerBadge
-            : sellerBadge // ignore: cast_nullable_to_non_nullable
-                  as SellerBadgeType,
-        sellerBadgeExpiresAt: freezed == sellerBadgeExpiresAt
-            ? _value.sellerBadgeExpiresAt
-            : sellerBadgeExpiresAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime?,
-        commissionRate: freezed == commissionRate
-            ? _value.commissionRate
-            : commissionRate // ignore: cast_nullable_to_non_nullable
-                  as double?,
-        commissionAmount: freezed == commissionAmount
-            ? _value.commissionAmount
-            : commissionAmount // ignore: cast_nullable_to_non_nullable
-                  as int?,
-      ),
-    );
+    return _then(_$MarketListingImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      horseId: null == horseId
+          ? _value.horseId
+          : horseId // ignore: cast_nullable_to_non_nullable
+              as String,
+      sellerId: null == sellerId
+          ? _value.sellerId
+          : sellerId // ignore: cast_nullable_to_non_nullable
+              as String,
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      description: null == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String,
+      priceAmount: null == priceAmount
+          ? _value.priceAmount
+          : priceAmount // ignore: cast_nullable_to_non_nullable
+              as int,
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as String,
+      saleType: null == saleType
+          ? _value.saleType
+          : saleType // ignore: cast_nullable_to_non_nullable
+              as MarketSaleType,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as MarketListingStatus,
+      locationLabel: null == locationLabel
+          ? _value.locationLabel
+          : locationLabel // ignore: cast_nullable_to_non_nullable
+              as String,
+      disciplineTags: null == disciplineTags
+          ? _value._disciplineTags
+          : disciplineTags // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      documentTags: null == documentTags
+          ? _value._documentTags
+          : documentTags // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      mediaUrls: null == mediaUrls
+          ? _value._mediaUrls
+          : mediaUrls // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      isSellerVerified: null == isSellerVerified
+          ? _value.isSellerVerified
+          : isSellerVerified // ignore: cast_nullable_to_non_nullable
+              as bool,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      updatedAt: null == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      viewsCount: null == viewsCount
+          ? _value.viewsCount
+          : viewsCount // ignore: cast_nullable_to_non_nullable
+              as int,
+      isFavorite: null == isFavorite
+          ? _value.isFavorite
+          : isFavorite // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isFeatured: null == isFeatured
+          ? _value.isFeatured
+          : isFeatured // ignore: cast_nullable_to_non_nullable
+              as bool,
+      boostLevel: null == boostLevel
+          ? _value.boostLevel
+          : boostLevel // ignore: cast_nullable_to_non_nullable
+              as BoostLevel,
+      boostExpiresAt: freezed == boostExpiresAt
+          ? _value.boostExpiresAt
+          : boostExpiresAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      vipLevel: null == vipLevel
+          ? _value.vipLevel
+          : vipLevel // ignore: cast_nullable_to_non_nullable
+              as VipLevel,
+      vipExpiresAt: freezed == vipExpiresAt
+          ? _value.vipExpiresAt
+          : vipExpiresAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      sellerBadge: null == sellerBadge
+          ? _value.sellerBadge
+          : sellerBadge // ignore: cast_nullable_to_non_nullable
+              as SellerBadgeType,
+      sellerBadgeExpiresAt: freezed == sellerBadgeExpiresAt
+          ? _value.sellerBadgeExpiresAt
+          : sellerBadgeExpiresAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      commissionRate: freezed == commissionRate
+          ? _value.commissionRate
+          : commissionRate // ignore: cast_nullable_to_non_nullable
+              as double?,
+      commissionAmount: freezed == commissionAmount
+          ? _value.commissionAmount
+          : commissionAmount // ignore: cast_nullable_to_non_nullable
+              as int?,
+    ));
   }
 }
 
 /// @nodoc
 
 class _$MarketListingImpl extends _MarketListing {
-  const _$MarketListingImpl({
-    required this.id,
-    required this.horseId,
-    required this.sellerId,
-    required this.title,
-    this.description = '',
-    this.priceAmount = 0,
-    this.currency = 'MNT',
-    required this.saleType,
-    required this.status,
-    this.locationLabel = '',
-    final List<String> disciplineTags = const [],
-    final List<String> documentTags = const [],
-    final List<String> mediaUrls = const [],
-    this.isSellerVerified = false,
-    required this.createdAt,
-    required this.updatedAt,
-    this.viewsCount = 0,
-    this.isFavorite = false,
-    @Deprecated('Use boostLevel/vipLevel instead') this.isFeatured = false,
-    this.boostLevel = BoostLevel.none,
-    this.boostExpiresAt,
-    this.vipLevel = VipLevel.none,
-    this.vipExpiresAt,
-    this.sellerBadge = SellerBadgeType.none,
-    this.sellerBadgeExpiresAt,
-    this.commissionRate,
-    this.commissionAmount,
-  }) : _disciplineTags = disciplineTags,
-       _documentTags = documentTags,
-       _mediaUrls = mediaUrls,
-       super._();
+  const _$MarketListingImpl(
+      {required this.id,
+      required this.horseId,
+      required this.sellerId,
+      required this.title,
+      this.description = '',
+      this.priceAmount = 0,
+      this.currency = 'MNT',
+      required this.saleType,
+      required this.status,
+      this.locationLabel = '',
+      final List<String> disciplineTags = const [],
+      final List<String> documentTags = const [],
+      final List<String> mediaUrls = const [],
+      this.isSellerVerified = false,
+      required this.createdAt,
+      required this.updatedAt,
+      this.viewsCount = 0,
+      this.isFavorite = false,
+      @Deprecated('Use boostLevel/vipLevel instead') this.isFeatured = false,
+      this.boostLevel = BoostLevel.none,
+      this.boostExpiresAt,
+      this.vipLevel = VipLevel.none,
+      this.vipExpiresAt,
+      this.sellerBadge = SellerBadgeType.none,
+      this.sellerBadgeExpiresAt,
+      this.commissionRate,
+      this.commissionAmount})
+      : _disciplineTags = disciplineTags,
+        _documentTags = documentTags,
+        _mediaUrls = mediaUrls,
+        super._();
 
   @override
   final String id;
@@ -591,18 +580,12 @@ class _$MarketListingImpl extends _MarketListing {
             (identical(other.status, status) || other.status == status) &&
             (identical(other.locationLabel, locationLabel) ||
                 other.locationLabel == locationLabel) &&
-            const DeepCollectionEquality().equals(
-              other._disciplineTags,
-              _disciplineTags,
-            ) &&
-            const DeepCollectionEquality().equals(
-              other._documentTags,
-              _documentTags,
-            ) &&
-            const DeepCollectionEquality().equals(
-              other._mediaUrls,
-              _mediaUrls,
-            ) &&
+            const DeepCollectionEquality()
+                .equals(other._disciplineTags, _disciplineTags) &&
+            const DeepCollectionEquality()
+                .equals(other._documentTags, _documentTags) &&
+            const DeepCollectionEquality()
+                .equals(other._mediaUrls, _mediaUrls) &&
             (identical(other.isSellerVerified, isSellerVerified) ||
                 other.isSellerVerified == isSellerVerified) &&
             (identical(other.createdAt, createdAt) ||
@@ -635,35 +618,35 @@ class _$MarketListingImpl extends _MarketListing {
 
   @override
   int get hashCode => Object.hashAll([
-    runtimeType,
-    id,
-    horseId,
-    sellerId,
-    title,
-    description,
-    priceAmount,
-    currency,
-    saleType,
-    status,
-    locationLabel,
-    const DeepCollectionEquality().hash(_disciplineTags),
-    const DeepCollectionEquality().hash(_documentTags),
-    const DeepCollectionEquality().hash(_mediaUrls),
-    isSellerVerified,
-    createdAt,
-    updatedAt,
-    viewsCount,
-    isFavorite,
-    isFeatured,
-    boostLevel,
-    boostExpiresAt,
-    vipLevel,
-    vipExpiresAt,
-    sellerBadge,
-    sellerBadgeExpiresAt,
-    commissionRate,
-    commissionAmount,
-  ]);
+        runtimeType,
+        id,
+        horseId,
+        sellerId,
+        title,
+        description,
+        priceAmount,
+        currency,
+        saleType,
+        status,
+        locationLabel,
+        const DeepCollectionEquality().hash(_disciplineTags),
+        const DeepCollectionEquality().hash(_documentTags),
+        const DeepCollectionEquality().hash(_mediaUrls),
+        isSellerVerified,
+        createdAt,
+        updatedAt,
+        viewsCount,
+        isFavorite,
+        isFeatured,
+        boostLevel,
+        boostExpiresAt,
+        vipLevel,
+        vipExpiresAt,
+        sellerBadge,
+        sellerBadgeExpiresAt,
+        commissionRate,
+        commissionAmount
+      ]);
 
   @JsonKey(ignore: true)
   @override
@@ -673,35 +656,34 @@ class _$MarketListingImpl extends _MarketListing {
 }
 
 abstract class _MarketListing extends MarketListing {
-  const factory _MarketListing({
-    required final String id,
-    required final String horseId,
-    required final String sellerId,
-    required final String title,
-    final String description,
-    final int priceAmount,
-    final String currency,
-    required final MarketSaleType saleType,
-    required final MarketListingStatus status,
-    final String locationLabel,
-    final List<String> disciplineTags,
-    final List<String> documentTags,
-    final List<String> mediaUrls,
-    final bool isSellerVerified,
-    required final DateTime createdAt,
-    required final DateTime updatedAt,
-    final int viewsCount,
-    final bool isFavorite,
-    @Deprecated('Use boostLevel/vipLevel instead') final bool isFeatured,
-    final BoostLevel boostLevel,
-    final DateTime? boostExpiresAt,
-    final VipLevel vipLevel,
-    final DateTime? vipExpiresAt,
-    final SellerBadgeType sellerBadge,
-    final DateTime? sellerBadgeExpiresAt,
-    final double? commissionRate,
-    final int? commissionAmount,
-  }) = _$MarketListingImpl;
+  const factory _MarketListing(
+      {required final String id,
+      required final String horseId,
+      required final String sellerId,
+      required final String title,
+      final String description,
+      final int priceAmount,
+      final String currency,
+      required final MarketSaleType saleType,
+      required final MarketListingStatus status,
+      final String locationLabel,
+      final List<String> disciplineTags,
+      final List<String> documentTags,
+      final List<String> mediaUrls,
+      final bool isSellerVerified,
+      required final DateTime createdAt,
+      required final DateTime updatedAt,
+      final int viewsCount,
+      final bool isFavorite,
+      @Deprecated('Use boostLevel/vipLevel instead') final bool isFeatured,
+      final BoostLevel boostLevel,
+      final DateTime? boostExpiresAt,
+      final VipLevel vipLevel,
+      final DateTime? vipExpiresAt,
+      final SellerBadgeType sellerBadge,
+      final DateTime? sellerBadgeExpiresAt,
+      final double? commissionRate,
+      final int? commissionAmount}) = _$MarketListingImpl;
   const _MarketListing._() : super._();
 
   @override

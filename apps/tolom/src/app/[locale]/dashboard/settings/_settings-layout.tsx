@@ -3,6 +3,9 @@ import { Separator } from "@/components/ui/separator";
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
+// Route renders user-specific content — legitimate cache opt-out.
+export const instant = false;
+
 export function SettingsBlock({
   children,
   className,

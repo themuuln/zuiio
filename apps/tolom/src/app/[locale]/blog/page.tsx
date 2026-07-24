@@ -27,9 +27,9 @@ const ARTICLES = [1, 2, 3, 4, 5, 6].map((n) => ({
 const CATEGORIES = ["all", "updates", "guides", "tips", "industry"] as const;
 
 export default function BlogPage() {
-  const t = useTranslations("blog") as (key: string) => string;
-  const appT = useTranslations("app") as (key: string) => string;
-  const _authT = useTranslations("auth") as (key: string) => string;
+  const t = useTranslations("blog");
+  const appT = useTranslations("app");
+  const _authT = useTranslations("auth");
   const [activeCategory, setActiveCategory] = useState("all");
 
   return (

@@ -72,7 +72,7 @@ describe("DetailDrawer", () => {
     expect(shrinkItems.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("renders proper width when size is specified", () => {
+  it("renders proper width class when size is specified", () => {
     const { $ } = renderDrawer(
       <DetailDrawer open onOpenChange={() => {}}>
         <DetailDrawer.Header>
@@ -84,9 +84,8 @@ describe("DetailDrawer", () => {
       </DetailDrawer>,
     );
 
-    // Base UI renders drawer content in a popup with role="dialog"
-    const dialog = $('[role="dialog"]');
-    expect(dialog).toBeInTheDocument();
+    const content = $('[class*="max-w-2xl"]');
+    expect(content).toBeInTheDocument();
   });
 
   it("renders Divider component", () => {

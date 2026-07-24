@@ -1,30 +1,27 @@
-import { Suspense } from "react";
-import { LogoutForm } from "./logout-form";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-export default function LogoutPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ next?: string }>;
-}) {
-  return (
-    <Suspense>
-      <LogoutPageInner searchParams={searchParams} />
-    </Suspense>
-  );
-}
-
-async function LogoutPageInner({
+/**
+ * Logout route — clears the identity-project session.
+ *
+ * Accepts a `next` query parameter for allowlisted product return URLs.
+ * Only relative paths or exact origin matches are followed.
+ */
+export default async function LogoutPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
   const params = await searchParams;
+  const supabase = await createClient();
 
-  return (
-    <div className="flex flex-col items-center gap-4 text-center">
-      <h1 className="text-xl font-semibold">Гарах</h1>
-      <p className="text-sm text-muted-foreground">Гарч байна…</p>
-      <LogoutForm next={params.next} />
-    </div>
-  );
+  await supabase.auth.signOut();
+
+  // Only follow allowlisted relative redirects
+  const next = params.next;
+  if (next && next.startsWith("/") && !next.includes("://")) {
+    redirect(next);
+  }
+
+  redirect("/login");
 }

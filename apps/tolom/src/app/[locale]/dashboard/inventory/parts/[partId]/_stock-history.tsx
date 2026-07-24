@@ -25,10 +25,7 @@ interface StockHistoryProps {
 }
 
 export function StockHistory({ movements, isPending }: StockHistoryProps) {
-  const t = useTranslations("inventory") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("inventory");
   const movementLabels = getMovementLabels(t);
 
   return (

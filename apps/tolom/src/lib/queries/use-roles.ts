@@ -39,10 +39,7 @@ export function useRoles(
 ): UseQueryResult<ManagedRole[], Error> {
   return useQuery({
     queryKey: roleKeys.list(orgId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchRoles(orgId);
-    },
+    queryFn: () => fetchRoles(orgId!),
     enabled: !!orgId,
     staleTime: 60_000,
   });
@@ -53,10 +50,7 @@ export function usePermissions(
 ): UseQueryResult<PermissionRecord[], Error> {
   return useQuery({
     queryKey: roleKeys.permissions(orgId ?? ""),
-    queryFn: () => {
-      if (!orgId) throw new Error("orgId required");
-      return fetchPermissions(orgId);
-    },
+    queryFn: () => fetchPermissions(orgId!),
     enabled: !!orgId,
     staleTime: 5 * 60_000,
   });

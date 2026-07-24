@@ -2,8 +2,6 @@
 
 *Psychologically optimized for Mongolian B2B SaaS — May 2026*
 
-
-> **Тэмдэглэл:** Энэхүү баримт бичигт "Core" гэж нэрлэгдсэн төлөвлөгөө нь системийн админ самбарт **"Starter"** нэртэй харагдана. Доорх хүснэгтэд үүнийг тусгасан болно.
 **Exchange rate reference**: ~₮3,576 = $1 USD (Bank of Mongolia, May 2026)
 
 ---

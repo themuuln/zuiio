@@ -41,7 +41,8 @@ class _PerformanceScreenState extends ConsumerState<PerformanceScreen> {
           horseId: widget.horseId,
           records: records,
           selectedMetric: _selectedMetric,
-          onMetricChanged: (metric) => setState(() => _selectedMetric = metric),
+          onMetricChanged: (metric) =>
+              setState(() => _selectedMetric = metric),
           onRefresh: () =>
               ref.invalidate(performanceRecordsProvider(widget.horseId)),
         ),
@@ -138,17 +139,17 @@ class _PerformanceContent extends StatelessWidget {
         return ad.compareTo(bd);
       });
     final chartData = sorted
-        .map(
-          (r) => DataPoint(
-            x: (r.date ?? DateTime(2020)).millisecondsSinceEpoch.toDouble(),
-            y: r.value,
-          ),
-        )
+        .map((r) => DataPoint(
+              x: (r.date ?? DateTime(2020)).millisecondsSinceEpoch.toDouble(),
+              y: r.value,
+            ))
         .toList();
-    final xLabels = sorted.map((r) {
-      final d = r.date ?? DateTime(2020);
-      return '${d.month}/${d.day}';
-    }).toList();
+    final xLabels = sorted
+        .map((r) {
+          final d = r.date ?? DateTime(2020);
+          return '${d.month}/${d.day}';
+        })
+        .toList();
 
     return RefreshIndicator(
       onRefresh: () async => onRefresh(),
@@ -183,11 +184,7 @@ class _PerformanceContent extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(
-                              Icons.trending_up,
-                              size: 18,
-                              color: colors.primary,
-                            ),
+                            Icon(Icons.trending_up, size: 18, color: colors.primary),
                             const SizedBox(width: AppSpacing.sm),
                             Text(
                               'Тренд',
@@ -201,8 +198,7 @@ class _PerformanceContent extends StatelessWidget {
                         PerformanceTrendChart(
                           dataPoints: chartData,
                           xLabels: xLabels,
-                          yLabel:
-                              filtered.isNotEmpty && filtered.first.unit != null
+                          yLabel: filtered.isNotEmpty && filtered.first.unit != null
                               ? filtered.first.unit!
                               : '',
                           height: 200,
@@ -244,10 +240,13 @@ class _PerformanceContent extends StatelessWidget {
             ),
           if (filtered.isNotEmpty)
             SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final record = filtered[index];
-                return _MeasurementTile(record: record);
-              }, childCount: filtered.length),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final record = filtered[index];
+                  return _MeasurementTile(record: record);
+                },
+                childCount: filtered.length,
+              ),
             ),
         ],
       ),
@@ -346,10 +345,7 @@ class _MeasurementTile extends StatelessWidget {
         '${effectiveDate.year}-${effectiveDate.month.toString().padLeft(2, '0')}-${effectiveDate.day.toString().padLeft(2, '0')}';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: 4,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 4),
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -399,7 +395,10 @@ class _MeasurementTile extends StatelessWidget {
               ),
               Text(
                 dateStr,
-                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
+                style: TextStyle(
+                  color: colors.onSurfaceVariant,
+                  fontSize: 11,
+                ),
               ),
             ],
           ),
@@ -490,7 +489,10 @@ class _NewMeasurementDialogState extends State<_NewMeasurementDialog> {
                   ),
                 ),
                 items: MetricType.values.map((m) {
-                  return DropdownMenuItem(value: m, child: Text(m.displayName));
+                  return DropdownMenuItem(
+                    value: m,
+                    child: Text(m.displayName),
+                  );
                 }).toList(),
                 onChanged: (v) {
                   if (v != null) setState(() => _selectedMetric = v);

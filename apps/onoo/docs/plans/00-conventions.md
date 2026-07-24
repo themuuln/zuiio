@@ -1,6 +1,6 @@
 # Execution Conventions (read before any phase spec)
 
-This file is for AI implementers. Read order: `AGENTS.md` → `docs/tasks/INDEX.md` → this file → the task file for your work. Do not make architectural decisions yourself — every decision you need is in these files. If a spec contradicts the codebase, stop and report the contradiction instead of improvising.
+This file is for AI implementers. Read order: `AGENTS.md` → this file → the phase spec for your task. Do not make architectural decisions yourself — every decision you need is in these files. If a spec contradicts the codebase, stop and report the contradiction instead of improvising.
 
 ## Stack facts (verified 2026-07-15)
 
@@ -53,42 +53,6 @@ Sanctioned additions, and only when their task says so: `recharts` (installed vi
 - Anything Expo/mobile
 - `supabase/functions/manual-box-entry/` — ❌ deleted (Task 1.5). `src/app/api/import/route.ts` now submits via `cmd_submit_source`.
 
-
-## Task workflow
-
-### Picking work
-1. **Read `docs/tasks/INDEX.md`** — find the "Available Work" section (tasks with `⬜` status, no blockers).
-2. **Select highest priority first** (P0 > P1 > P2 > P3). Within priority, top-to-bottom is the recommended order.
-3. **Read the task file** at `docs/tasks/T-<ID>-<name>.md` — it has the complete spec.
-4. **Mark it in progress** by changing its status to `🟡` in INDEX.md.
-
-### While working
-- Follow the task file's Implementation Steps and Done When criteria.
-- Refer to Data Access Rules, Migration Rules, and UI Rules below — they are non-negotiable.
-- If blocked, mark the task with `🔴` in INDEX.md and explain the blocker.
-- Keep `docs/plans/EXECUTION-STATUS.md` in sync with INDEX.md.
-
-### Completing work
-1. Verify against all _Done When_ criteria from the task file.
-2. Run the full Definition of Done checklist below.
-3. Update **four places** in the same commit:
-   - `docs/tasks/INDEX.md` — set status to `✅`
-   - `docs/ROADMAP.md` — tick the matching checkbox (`- [x]`)
-   - `docs/plans/EXECUTION-STATUS.md` — update status and notes
-   - `docs/pm-manifest.yaml` — update task status (if it changed)
-
-### Creating new tasks
-1. Copy `docs/tasks/TEMPLATE.md` to `docs/tasks/T-<ID>-<name>.md`.
-2. Fill in all sections following the template.
-3. Add the task to the appropriate phase table in `docs/tasks/INDEX.md`.
-4. Add the task entry to `docs/plans/EXECUTION-STATUS.md`.
-5. Add the matching checkbox to `docs/ROADMAP.md`.
-6. Add the task to `docs/pm-manifest.yaml`.
-
-### Gap/feature ideas
-- Gaps live in `docs/tasks/gaps/G-*.md`, not in the main work queue.
-- To promote a gap to a task: move its content to a T-* file, add it to INDEX.md and ROADMAP.md, and leave a back-reference in the gap file.
-
 ## Definition of done (every task)
 
 1. `pnpm exec tsc --noEmit` passes.
@@ -96,6 +60,4 @@ Sanctioned additions, and only when their task says so: `recharts` (installed vi
 3. If `packages/core` was touched: `pnpm -F @onoo/core test` passes.
 4. Page renders correctly at 360px viewport and shows its empty state when data is absent.
 5. The matching checkbox in `docs/ROADMAP.md` is ticked in the same commit.
-6. Task status updated to `✅` in `docs/tasks/INDEX.md`.
-7. Status updated in `docs/plans/EXECUTION-STATUS.md`.
-8. No new console errors in `pnpm dev`.
+6. No new console errors in `pnpm dev`.

@@ -1,0 +1,30 @@
+{
+  "recommendedProcesses": [
+    "gsd/execute",
+    "gsd/verify"
+  ],
+  "recommendedSkills": [
+    "next-best-practices",
+    "next-cache-components",
+    "uiux",
+    "webapp-testing"
+  ],
+  "recommendedAgents": [],
+  "recommendedMethodology": "iterative-ship — fast iteration with verification gates, no heavy process overhead for solo dev",
+  "justifications": {
+    "gsd/execute": "Core execution process for implementing features",
+    "gsd/verify": "Verification after each feature to catch issues early",
+    "next-best-practices": "Project uses Next.js 16 with RSC, App Router, Tailwind — needs best practices guidance",
+    "next-cache-components": "Next.js 16 cache components for performance",
+    "uiux": "UI/UX is central to this educational app",
+    "webapp-testing": "E2E testing with Playwright for the deployed Vercel site"
+  },
+  "prioritized": {
+    "mustHave": ["gsd/execute", "gsd/verify"],
+    "niceToHave": ["next-best-practices", "uiux", "webapp-testing"]
+  },
+  "remediations": [
+    {"painPointId": "pp-devops-0", "recommendation": "Clean unused assets from public/ and compress images", "process": "gsd/execute"},
+    {"painPointId": "pp-quality-0", "recommendation": "Add Vitest unit tests + Playwright E2E when ready for production", "process": "gsd/verify"}
+  ]
+}

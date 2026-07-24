@@ -156,39 +156,32 @@ void main() {
 
     test('lostCount defaults to 1', () {
       final report = _createReport();
-      expect(report.lostCount, 1, reason: 'lostCount should default to 1');
+      expect(report.lostCount, 1,
+          reason: 'lostCount should default to 1');
     });
 
     test('photoUrls defaults to empty list', () {
       final report = _createReport();
-      expect(
-        report.photoUrls,
-        isEmpty,
-        reason: 'photoUrls should default to empty list',
-      );
+      expect(report.photoUrls, isEmpty,
+          reason: 'photoUrls should default to empty list');
     });
 
     test('videoUrls defaults to empty list', () {
       final report = _createReport();
-      expect(
-        report.videoUrls,
-        isEmpty,
-        reason: 'videoUrls should default to empty list',
-      );
+      expect(report.videoUrls, isEmpty,
+          reason: 'videoUrls should default to empty list');
     });
 
     test('animalType defaults to horse', () {
       final report = _createReport();
-      expect(
-        report.animalType,
-        AnimalType.horse,
-        reason: 'animalType should default to Адуу/horse',
-      );
+      expect(report.animalType, AnimalType.horse,
+          reason: 'animalType should default to Адуу/horse');
     });
 
     test('ages defaults to empty list', () {
       final report = _createReport();
-      expect(report.ages, isEmpty, reason: 'ages should default to empty list');
+      expect(report.ages, isEmpty,
+          reason: 'ages should default to empty list');
     });
 
     // ── Media serialization (VAL-MEDIA-003) ──
@@ -203,20 +196,14 @@ void main() {
         lastSeenAt: now,
         createdAt: now,
         updatedAt: now,
-        photoUrls: [
-          'https://example.com/photo1.jpg',
-          'https://example.com/photo2.jpg',
-        ],
+        photoUrls: ['https://example.com/photo1.jpg', 'https://example.com/photo2.jpg'],
         videoUrls: ['https://example.com/video1.mp4'],
       );
 
       final json = report.toJson();
       final restored = LostHorseReport.fromJson(json);
 
-      expect(restored.photoUrls, [
-        'https://example.com/photo1.jpg',
-        'https://example.com/photo2.jpg',
-      ]);
+      expect(restored.photoUrls, ['https://example.com/photo1.jpg', 'https://example.com/photo2.jpg']);
       expect(restored.videoUrls, ['https://example.com/video1.mp4']);
     });
 
@@ -267,20 +254,14 @@ void main() {
 
     test('tamgaImageUrl defaults to null', () {
       final report = _createReport();
-      expect(
-        report.tamgaImageUrl,
-        isNull,
-        reason: 'tamgaImageUrl should default to null',
-      );
+      expect(report.tamgaImageUrl, isNull,
+          reason: 'tamgaImageUrl should default to null');
     });
 
     test('earMarkDescription defaults to null', () {
       final report = _createReport();
-      expect(
-        report.earMarkDescription,
-        isNull,
-        reason: 'earMarkDescription should default to null',
-      );
+      expect(report.earMarkDescription, isNull,
+          reason: 'earMarkDescription should default to null');
     });
 
     // ── Contact phone serialization (VAL-CONTACT-001, VAL-CONTACT-002) ──
@@ -316,11 +297,8 @@ void main() {
 
     test('contactPhone defaults to null', () {
       final report = _createReport();
-      expect(
-        report.contactPhone,
-        isNull,
-        reason: 'contactPhone should default to null',
-      );
+      expect(report.contactPhone, isNull,
+          reason: 'contactPhone should default to null');
     });
 
     test('copyWith updates contactPhone', () {
@@ -334,29 +312,20 @@ void main() {
 
     test('pricingTier defaults to free', () {
       final report = _createReport();
-      expect(
-        report.pricingTier,
-        LostHorsePricingTier.free,
-        reason: 'pricingTier should default to free/Энгийн',
-      );
+      expect(report.pricingTier, LostHorsePricingTier.free,
+          reason: 'pricingTier should default to free/Энгийн');
     });
 
     test('expiresAt defaults to null', () {
       final report = _createReport();
-      expect(
-        report.expiresAt,
-        isNull,
-        reason: 'expiresAt should default to null',
-      );
+      expect(report.expiresAt, isNull,
+          reason: 'expiresAt should default to null');
     });
 
     test('renewalRequested defaults to false', () {
       final report = _createReport();
-      expect(
-        report.renewalRequested,
-        isFalse,
-        reason: 'renewalRequested should default to false',
-      );
+      expect(report.renewalRequested, isFalse,
+          reason: 'renewalRequested should default to false');
     });
 
     test('pricing fields toJson/fromJson roundtrip (free tier)', () {
@@ -514,7 +483,10 @@ void main() {
       );
 
       expect(updated.tamgaImageUrl, 'https://example.com/tamga.jpg');
-      expect(updated.earMarkDescription, 'Баруун чихэнд дугуй тэмдэг');
+      expect(
+        updated.earMarkDescription,
+        'Баруун чихэнд дугуй тэмдэг',
+      );
     });
 
     test('distanceTo returns meters', () {

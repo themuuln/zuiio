@@ -1,130 +1,103 @@
 /**
- * Integration test helpers for real Postgres database testing.
+ * Integration test helpers for Onoo.
  *
- * Connects directly to a local Postgres instance (no Docker/Supabase services).
- * RLS policies that call auth.uid() are made testable via SET ROLE + SET LOCAL.
+ * Provides database pool management, test user creation, and
+ * user-identity helpers for SECURITY DEFINER functions that
+ * check auth.uid().
  *
- * Usage:
- *   import { getPool, asUser, cleanTables, createTestUsers } from "@/test/setup-integration";
+ * Connect via psql-compatible DB_URL (from `supabase status`):
+ *   postgresql://postgres:postgres@127.0.0.1:54323/postgres
  *
- * @vitest-environment node
+ * Run tests with `pnpm test:integration`.
  */
 
-import { Pool, type PoolClient } from "pg";
+import crypto from "node:crypto";
+import type { Pool, PoolClient } from "pg";
+import { Pool as PgPool } from "pg";
 
-let pool: Pool | null = null;
+const DB_URL =
+  process.env.DB_URL ??
+  "postgresql://postgres:postgres@127.0.0.1:54323/postgres";
 
-/** Database URL — defaults to local Supabase Postgres. */
-function dbUrl(): string {
-  return (
-    process.env.INTEGRATION_DATABASE_URL ||
-    "postgresql://postgres:postgres@127.0.0.1:54323/postgres"
-  );
-}
+let poolSingleton: Pool | null = null;
 
-/** Get or create the singleton connection pool. */
-export async function getPool(): Promise<Pool> {
-  if (!pool) {
-    pool = newPool();
-  }
-  return pool;
-}
-
-/** Create a fresh pool (bypasses singleton — for parallel test files). */
 export function newPool(): Pool {
-  return new Pool({ connectionString: dbUrl(), max: 5 });
+  return new PgPool({ connectionString: DB_URL });
 }
 
-/** Close the singleton pool. Call in afterAll or teardown. */
+export async function getPool(): Promise<Pool> {
+  if (!poolSingleton) {
+    poolSingleton = new PgPool({ connectionString: DB_URL });
+  }
+  return poolSingleton;
+}
+
 export async function closePool(): Promise<void> {
-  if (pool) {
-    await pool.end();
-    pool = null;
+  if (poolSingleton) {
+    await poolSingleton.end();
+    poolSingleton = null;
   }
 }
 
-// ── RLS context ─────────────────────────────────────────────────────────
+export interface CreateTestUserOptions {
+  email?: string;
+}
+
+export async function createTestUser(
+  pool: Pool,
+  options?: CreateTestUserOptions,
+): Promise<{ id: string }> {
+  const id = crypto.randomUUID();
+  const email =
+    options?.email ?? `test-${id.slice(0, 8)}@onoo-test.mn`;
+  const now = new Date().toISOString();
+
+  // Insert into auth.users with the minimum required fields
+  await pool.query(
+    `INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, aud, role)
+     VALUES ($1, '00000000-0000-0000-0000-000000000000', $2,
+             crypt('password123', gen_salt('bf')),
+             $3, '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb,
+             $3, $3, 'authenticated', 'authenticated')`,
+    [id, email, now],
+  );
+
+  // Ensure a matching profile row exists (used as FK target by awards etc.)
+  await pool.query(
+    `INSERT INTO public.profiles (id, display_name)
+     VALUES ($1, $2)
+     ON CONFLICT (id) DO NOTHING`,
+    [id, `Test User ${id.slice(0, 6)}`],
+  );
+
+  return { id };
+}
 
 /**
- * Execute a callback as the authenticated role for RLS enforcement.
+ * Execute `fn` on `client` with the session configured as `userId`.
  *
- * Switches to `authenticated` role (not table owner) so RLS policies
- * that target `TO authenticated` are enforced. Also sets
- * `request.jwt.claim.sub` for `auth.uid()` resolution.
+ * Sets ROLE to 'authenticated' and overrides request.jwt.claim.sub so that
+ * auth.uid() returns `userId` inside SECURITY DEFINER functions.
+ *
+ * Resets both after the callback completes or throws.
  */
-export async function asUser<T>(
+export async function asUser(
   client: PoolClient,
   userId: string,
-  fn: () => Promise<T>,
-): Promise<T> {
-  const original = (await client.query("SELECT current_role AS r")).rows[0].r;
+  fn: () => Promise<void>,
+): Promise<void> {
   try {
-    await client.query("SET ROLE authenticated");
+    await client.query("SET ROLE 'authenticated'");
+    // is_local = false so the setting persists across auto-committed queries
     await client.query(
       "SELECT set_config('request.jwt.claim.sub', $1, false)",
       [userId],
     );
-    return await fn();
+    await fn();
   } finally {
-    await client.query(`SET ROLE ${original}`);
+    await client.query("RESET ROLE");
+    await client.query(
+      "SELECT set_config('request.jwt.claim.sub', '', false)",
+    );
   }
-}
-
-/** Clear the RLS user context (reverts to no authenticated user). */
-export async function clearUserContext(client: PoolClient): Promise<void> {
-  await client.query("SELECT set_config('request.jwt.claim.sub', '', false)");
-}
-
-// ── Database helpers ────────────────────────────────────────────────────
-
-/**
- * Truncate all user tables in the public schema.
- * Call in beforeEach to isolate tests.
- */
-export async function cleanTables(pool: Pool): Promise<void> {
-  const result = await pool.query(`
-    SELECT tablename
-    FROM pg_catalog.pg_tables
-    WHERE schemaname = 'public'
-      AND tablename NOT IN ('_prisma_migrations')
-      AND tableowner = current_user
-  `);
-
-  const tables = result.rows.map((r) => `"${r.tablename}"`).join(", ");
-  if (tables.length > 0) {
-    await pool.query(`TRUNCATE TABLE ${tables} CASCADE`);
-  }
-}
-
-/**
- * Insert a test user into auth.users.
- * Works with both the stub table (Docker-less) and real Supabase auth.users (Docker).
- */
-export async function createTestUser(
-  pool: Pool,
-  overrides: Partial<{ email: string; id: string }> = {},
-): Promise<{ id: string; email: string }> {
-  const id = overrides.id ?? crypto.randomUUID();
-  const email = overrides.email ?? `${id}@onoo-test.mn`;
-  const { rows } = await pool.query(
-    `INSERT INTO auth.users (id, email, is_sso_user, is_anonymous)
-     VALUES ($1, $2, false, false)
-     RETURNING id, email`,
-    [id, email],
-  );
-  return rows[0];
-}
-
-/**
- * Create multiple test users in one batch.
- */
-export async function createTestUsers(
-  pool: Pool,
-  count: number,
-): Promise<Array<{ id: string; email: string }>> {
-  const users: Array<{ id: string; email: string }> = [];
-  for (let i = 0; i < count; i++) {
-    users.push(await createTestUser(pool));
-  }
-  return users;
 }

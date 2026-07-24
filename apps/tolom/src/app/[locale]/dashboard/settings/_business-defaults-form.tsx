@@ -177,10 +177,7 @@ export function BusinessDefaultsForm({
   currentLocale,
   onSubmit,
 }: BusinessDefaultsFormProps) {
-  const t = useTranslations("settings") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("settings");
 
   const rhfForm = useForm<BusinessDefaultsValues>({
     resolver: zodResolver(businessDefaultsSchema),

@@ -19,10 +19,14 @@ import type {
 
 // ── Helpers ────────────────────────────────────────────────────
 
-async function getOrgId(db: SupabaseClient, userId_?: string): Promise<string> {
+async function getOrgId(db: SupabaseClient): Promise<string> {
   const supabase = db;
-  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
-  if (!userId) throw new UnauthorizedError();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError) capture(authError);
+  if (!user) throw new UnauthorizedError();
   const { data, error: rpcError } = await supabase.rpc(
     "get_user_organization_id",
   );
@@ -160,7 +164,6 @@ export async function getAppointment(
 export async function createAppointment(
   db: SupabaseClient,
   params: CreateAppointmentParams,
-  userId_?: string,
 ): Promise<AppointmentDetail> {
   if (!params.customer_id) throw new ValidationError("Customer is required");
   if (!params.vehicle_id) throw new ValidationError("Vehicle is required");
@@ -168,9 +171,9 @@ export async function createAppointment(
   if (!params.scheduled_at) throw new ValidationError("Date/time is required");
 
   const supabase = db;
-  const orgId = await getOrgId(db, userId_);
-  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
-  if (!userId) throw new UnauthorizedError();
+  const orgId = await getOrgId(db);
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) throw new UnauthorizedError();
 
   const resolvedBranchId = await resolveBranchId(
     supabase,
@@ -193,8 +196,8 @@ export async function createAppointment(
       mechanic_id: params.mechanic_id ?? null,
       notes: params.notes?.trim() ?? null,
       source_estimate_id: params.source_estimate_id ?? null,
-      created_by: userId,
-      updated_by: userId,
+      created_by: user.id,
+      updated_by: user.id,
     })
     .select("id")
     .single();
@@ -208,7 +211,7 @@ export async function createAppointment(
     action: "create",
     table_name: "appointments",
     record_id: data.id,
-    user_id: userId,
+    user_id: user.id,
     organization_id: orgId,
     new_data: data,
   });
@@ -230,11 +233,10 @@ export async function updateAppointment(
   db: SupabaseClient,
   id: string,
   params: UpdateAppointmentParams,
-  userId_?: string,
 ): Promise<AppointmentDetail> {
   const supabase = db;
-  const orgId = await getOrgId(db, userId_);
-  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  const orgId = await getOrgId(db);
+  const user = (await supabase.auth.getUser()).data.user;
 
   const { data: existingRecord, error: fetchError } = await supabase
     .from("appointments")
@@ -247,7 +249,7 @@ export async function updateAppointment(
     .single();
   if (fetchError) capture(fetchError);
 
-  const updates: Record<string, unknown> = { updated_by: userId ?? null };
+  const updates: Record<string, unknown> = { updated_by: user?.id ?? null };
 
   if (params.title !== undefined) updates.title = params.title.trim();
   if (params.scheduled_at !== undefined)
@@ -274,7 +276,7 @@ export async function updateAppointment(
     action: "update",
     table_name: "appointments",
     record_id: id,
-    user_id: userId,
+    user_id: user?.id,
     organization_id: orgId,
     old_data: existingRecord as Record<string, unknown> | undefined,
   });
@@ -307,11 +309,10 @@ export async function updateAppointmentStatus(
 export async function deleteAppointment(
   db: SupabaseClient,
   id: string,
-  userId_?: string,
 ): Promise<void> {
   const supabase = db;
-  const orgId = await getOrgId(db, userId_);
-  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  const orgId = await getOrgId(db);
+  const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const { data: existingRecord, error: fetchError } = await supabase
     .from("appointments")

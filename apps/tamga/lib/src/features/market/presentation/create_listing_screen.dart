@@ -124,10 +124,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       Future.microtask(() async {
         if (!mounted) return;
         final userId = currentSupabaseUserId() ?? 'anonymous';
-        final repository = await ref.read(
-          verificationRepositoryProvider.future,
-        );
-        final result = await repository.fetchSellerVerificationSummary(userId);
+        final repository =
+            await ref.read(verificationRepositoryProvider.future);
+        final result =
+            await repository.fetchSellerVerificationSummary(userId);
         final summary = result.getOrThrow();
 
         if (!summary.isVerified && mounted) {
@@ -249,7 +249,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       }
 
       // Mixed: one local, one uploaded — convert to single-list model
-      final combined = <dynamic>[..._localPhotos, ..._uploadedUrls];
+      final combined = <dynamic>[
+        ..._localPhotos,
+        ..._uploadedUrls,
+      ];
       final temp = combined[a];
       combined[a] = combined[b];
       combined[b] = temp;
@@ -548,9 +551,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                             onTap: () => _movePhotoLeft(index),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.surface.withValues(
-                                  alpha: 0.85,
-                                ),
+                                color: theme.colorScheme.surface
+                                    .withValues(alpha: 0.85),
                                 shape: BoxShape.circle,
                               ),
                               padding: const EdgeInsets.all(2),
@@ -571,9 +573,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                             onTap: () => _movePhotoRight(index),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.surface.withValues(
-                                  alpha: 0.85,
-                                ),
+                                color: theme.colorScheme.surface
+                                    .withValues(alpha: 0.85),
                                 shape: BoxShape.circle,
                               ),
                               padding: const EdgeInsets.all(2),
@@ -611,9 +612,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                         right: 4,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withValues(
-                              alpha: 0.75,
-                            ),
+                            color: theme.colorScheme.surface
+                                .withValues(alpha: 0.75),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           padding: const EdgeInsets.symmetric(
@@ -943,12 +943,13 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
         // Trigger saved search matching for the new/updated listing
         try {
-          final notifications = await ref.read(
-            marketNotificationsProvider.future,
-          );
+          final notifications =
+              await ref.read(marketNotificationsProvider.future);
           await notifications.triggerMatchingForListing(listing);
         } catch (e) {
-          debugPrint('[CreateListing] Saved search matching error: $e');
+          debugPrint(
+            '[CreateListing] Saved search matching error: $e',
+          );
         }
 
         if (mounted) {

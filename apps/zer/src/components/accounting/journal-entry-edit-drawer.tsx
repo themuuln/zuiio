@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash } from "@phosphor-icons/react";
+import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/drawer-footer";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -109,6 +111,7 @@ export function JournalEntryEditDrawer({
     control,
     watch,
     setValue,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<JournalEntryValues>({
     resolver: zodResolver(journalEntrySchema),
@@ -387,13 +390,11 @@ export function JournalEntryEditDrawer({
           )}
         </div>
 
-        {errors.lines &&
-          !Array.isArray(errors.lines) &&
-          "message" in errors.lines && (
-            <p className="text-xs text-destructive">
-              {String(errors.lines.message)}
-            </p>
-          )}
+        {errors.lines && !Array.isArray(errors.lines) && (
+          <p className="text-xs text-destructive">
+            {(errors.lines as any)?.message}
+          </p>
+        )}
 
         <ErrorBanner error={editMutation.error} />
       </form>

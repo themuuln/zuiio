@@ -46,8 +46,8 @@ class OfflineTileManager {
   /// An optional [assetBundle] can be provided for testing — when omitted,
   /// defaults to [rootBundle].
   OfflineTileManager({TileCacheManager? tileCache, AssetBundle? assetBundle})
-    : tileCache = tileCache ?? TileCacheManager(),
-      _assetBundle = assetBundle ?? rootBundle;
+      : tileCache = tileCache ?? TileCacheManager(),
+        _assetBundle = assetBundle ?? rootBundle;
 
   /// Returns the path to the offline tile file (PMTiles preferred, then MBTiles).
   Future<String?> getOfflineTilesPath() async {

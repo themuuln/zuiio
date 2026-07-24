@@ -66,11 +66,7 @@ enum LostHorsePricingTier {
   featured('Онцлох', 5000, 7),
   vip('VIP', 9900, 14);
 
-  const LostHorsePricingTier(
-    this.displayName,
-    this.priceMnt,
-    this.durationDays,
-  );
+  const LostHorsePricingTier(this.displayName, this.priceMnt, this.durationDays);
 
   /// Mongolian display name for this pricing tier.
   final String displayName;

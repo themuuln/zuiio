@@ -45,7 +45,9 @@ Widget wrapForTest({
     overrides: overrides,
     child: MaterialApp(
       theme: AppTheme.light(),
-      home: Scaffold(body: child),
+      home: Scaffold(
+        body: child,
+      ),
     ),
   );
 }
@@ -101,14 +103,16 @@ void main() {
       await tester.pump();
 
       // Banner should not be visible when online
-      expect(find.text('Offline — Локал өгөгдөл харуулж байна'), findsNothing);
+      expect(
+        find.text('Offline — Локал өгөгдөл харуулж байна'),
+        findsNothing,
+      );
     });
   });
 
   group('OfflineBanner - last sync time', () {
-    testWidgets('shows last sync time when available', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('shows last sync time when available',
+        (WidgetTester tester) async {
       when(() => mockMonitor.current).thenReturn(ConnectionStatus.offline);
       final syncState = SyncState(
         status: SyncStatus.synced,
@@ -128,9 +132,8 @@ void main() {
       expect(find.textContaining('Сүүлд синк хийсэн'), findsOneWidget);
     });
 
-    testWidgets('banner works without last sync time (null)', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('banner works without last sync time (null)',
+        (WidgetTester tester) async {
       when(() => mockMonitor.current).thenReturn(ConnectionStatus.offline);
 
       await tester.pumpWidget(
@@ -148,12 +151,14 @@ void main() {
       );
 
       // No sync time text
-      expect(find.textContaining('Сүүлд синк хийсэн'), findsNothing);
+      expect(
+        find.textContaining('Сүүлд синк хийсэн'),
+        findsNothing,
+      );
     });
 
-    testWidgets('shows correct relative time format for minutes', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('shows correct relative time format for minutes',
+        (WidgetTester tester) async {
       when(() => mockMonitor.current).thenReturn(ConnectionStatus.offline);
       final syncState = SyncState(
         status: SyncStatus.synced,
@@ -169,12 +174,14 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Сүүлд синк хийсэн: 3 минутын өмнө'), findsOneWidget);
+      expect(
+        find.text('Сүүлд синк хийсэн: 3 минутын өмнө'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('shows correct relative time format for hours', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('shows correct relative time format for hours',
+        (WidgetTester tester) async {
       when(() => mockMonitor.current).thenReturn(ConnectionStatus.offline);
       final syncState = SyncState(
         status: SyncStatus.synced,
@@ -190,12 +197,14 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Сүүлд синк хийсэн: 2 цагийн өмнө'), findsOneWidget);
+      expect(
+        find.text('Сүүлд синк хийсэн: 2 цагийн өмнө'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('shows correct relative time format for "just now"', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('shows correct relative time format for "just now"',
+        (WidgetTester tester) async {
       when(() => mockMonitor.current).thenReturn(ConnectionStatus.offline);
       final syncState = SyncState(
         status: SyncStatus.synced,
@@ -211,7 +220,11 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Сүүлд синк хийсэн: саяхан'), findsOneWidget);
+      expect(
+        find.text('Сүүлд синк хийсэн: саяхан'),
+        findsOneWidget,
+      );
     });
   });
+
 }

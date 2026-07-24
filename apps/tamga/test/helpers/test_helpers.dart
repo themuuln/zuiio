@@ -257,7 +257,8 @@ BreedingRecord createMockBreedingRecord({
 }) {
   final breedDate = breedingDate ?? DateTime(2026, 1, 1);
   final expectedDate =
-      expectedFoalingDate ?? DateTime(2026, 12, 6); // ~340 days after breedDate
+      expectedFoalingDate ??
+      DateTime(2026, 12, 6); // ~340 days after breedDate
   return BreedingRecord(
     id: id,
     sireId: sireId,

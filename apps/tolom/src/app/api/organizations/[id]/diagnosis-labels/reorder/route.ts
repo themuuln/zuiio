@@ -1,5 +1,5 @@
+import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import { ok } from "@/lib/api-response";
 import { ValidationError } from "@/lib/errors";
 export const PATCH = createRouteHandler(
   async ({ request, orgId, supabase }) => {
@@ -28,6 +28,6 @@ export const PATCH = createRouteHandler(
       if (result.error) throw result.error;
     }
 
-    return ok({ success: true });
+    return NextResponse.json({ success: true });
   },
 );

@@ -51,31 +51,25 @@ async function recalculateEstimateTotals(
   estimateId: string,
   orgId: string,
 ): Promise<void> {
-  const [itemsResult, estimateResult] = await Promise.all([
-    db
-      .from("estimate_items")
-      .select(
-        "unit_price, quantity, discount_amount, discount_percentage, line_total",
-      )
-      .eq("estimate_id", estimateId)
-      .eq("organization_id", orgId),
-    db
-      .from("estimates")
-      .select("discount_amount, discount_percentage, tax_total")
-      .eq("id", estimateId)
-      .eq("organization_id", orgId)
-      .single(),
-  ]);
-
-  const items = itemsResult.data;
-  const itemsError = itemsResult.error;
-  const estimate = estimateResult.data;
-  const estimateError = estimateResult.error;
+  const { data: items, error: itemsError } = await db
+    .from("estimate_items")
+    .select(
+      "unit_price, quantity, discount_amount, discount_percentage, line_total",
+    )
+    .eq("estimate_id", estimateId)
+    .eq("organization_id", orgId);
 
   if (itemsError)
     capture(itemsError, {
       context: "[estimate-service] recalculateEstimateTotals",
     });
+
+  const { data: estimate, error: estimateError } = await db
+    .from("estimates")
+    .select("discount_amount, discount_percentage, tax_total")
+    .eq("id", estimateId)
+    .eq("organization_id", orgId)
+    .single();
 
   if (estimateError)
     capture(estimateError, {
@@ -230,15 +224,14 @@ export async function createEstimate(
   db: SupabaseClient,
   orgId: string,
   params: CreateEstimateParams,
-  userId_?: string,
 ): Promise<EstimateDetail> {
   if (!params.customer_id) throw new ValidationError("Customer is required");
   if (!params.vehicle_id) throw new ValidationError("Vehicle is required");
   if (!params.items?.length)
     throw new ValidationError("At least one item is required");
 
-  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
-  if (!userId) throw new UnauthorizedError();
+  const user = (await db.auth.getUser()).data.user;
+  if (!user) throw new UnauthorizedError();
 
   // Generate estimate number
   const { data: estNum, error: estNumError } = await db.rpc(
@@ -269,8 +262,8 @@ export async function createEstimate(
       discount_percentage: params.discount_percentage ?? 0,
       tax_total: params.tax_total ?? 0,
       appointment_id: params.appointment_id ?? null,
-      created_by: userId,
-      updated_by: userId,
+      created_by: user.id,
+      updated_by: user.id,
     })
     .select("id")
     .single();
@@ -300,7 +293,7 @@ export async function createEstimate(
     }),
     sort_order: item.sort_order ?? i,
     notes: item.notes ?? null,
-    created_by: userId,
+    created_by: user.id,
   }));
 
   const { error: itemsError } = await db
@@ -321,7 +314,7 @@ export async function createEstimate(
     action: "create",
     table_name: "estimates",
     record_id: estimate.id,
-    user_id: userId,
+    user_id: user.id,
     organization_id: orgId,
     new_data: {
       estimate_number: estimateNumber,
@@ -350,9 +343,8 @@ export async function updateEstimate(
   id: string,
   orgId: string,
   params: UpdateEstimateParams,
-  userId_?: string,
 ): Promise<EstimateDetail> {
-  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
+  const user = (await db.auth.getUser()).data.user;
 
   const { data: oldEstimate, error: oldError } = await db
     .from("estimates")
@@ -367,7 +359,7 @@ export async function updateEstimate(
     capture(oldError, { context: "[estimate-service] updateEstimate" });
 
   const updates: Record<string, unknown> = {
-    updated_by: userId ?? null,
+    updated_by: user?.id ?? null,
   };
 
   if (params.notes !== undefined) updates.notes = params.notes?.trim() ?? null;
@@ -395,7 +387,7 @@ export async function updateEstimate(
     action: "update",
     table_name: "estimates",
     record_id: id,
-    user_id: userId ?? undefined,
+    user_id: user?.id ?? undefined,
     organization_id: orgId,
     old_data: oldEstimate ?? undefined,
     new_data: updates,
@@ -439,7 +431,7 @@ export async function updateEstimate(
       }),
       sort_order: item.sort_order ?? i,
       notes: item.notes ?? null,
-      created_by: userId ?? null,
+      created_by: user?.id ?? null,
     }));
 
     const { error: itemsError } = await db
@@ -513,10 +505,9 @@ export async function convertEstimateToWorkOrder(
   db: SupabaseClient,
   estimateId: string,
   orgId: string,
-  userId_?: string,
 ): Promise<import("@/lib/types").WorkOrderDetail> {
-  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
-  if (!userId) throw new UnauthorizedError();
+  const user = (await db.auth.getUser()).data.user;
+  if (!user) throw new UnauthorizedError();
 
   // Fetch the estimate with items
   const estimate = await getEstimate(db, estimateId, orgId);
@@ -559,8 +550,8 @@ export async function convertEstimateToWorkOrder(
       notes: estimate.notes,
       discount_amount: estimate.discount_amount,
       discount_percentage: estimate.discount_percentage,
-      created_by: userId,
-      updated_by: userId,
+      created_by: user.id,
+      updated_by: user.id,
     })
     .select("id")
     .single();
@@ -576,7 +567,7 @@ export async function convertEstimateToWorkOrder(
       organization_id: orgId,
       status: "New",
       notes: `Created from estimate #${estimate.estimate_number}`,
-      created_by: userId,
+      created_by: user.id,
     });
 
   if (statusHistoryError)
@@ -585,34 +576,31 @@ export async function convertEstimateToWorkOrder(
     });
 
   // Add each estimate item as a service or part on the work order
-  // Run in parallel since items are independent
-  await Promise.all(
-    estimate.items.map(async (item) => {
-      if (item.item_type === "service" || item.item_type === "custom") {
-        await addServiceToWorkOrder(db, wo.id, orgId, {
-          service_catalog_id:
-            item.source_service_id ?? "00000000-0000-0000-0000-000000000000",
-          service_name: item.description,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          discount_amount: item.discount_amount,
-          discount_percentage: item.discount_percentage,
-          notes: item.notes ?? undefined,
-        });
-      } else if (item.item_type === "part") {
-        await addPartToWorkOrder(db, wo.id, orgId, {
-          part_id: item.source_part_id ?? undefined,
-          part_name: item.description,
-          part_number: undefined,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          discount_amount: item.discount_amount,
-          discount_percentage: item.discount_percentage,
-          notes: item.notes ?? undefined,
-        });
-      }
-    }),
-  );
+  for (const item of estimate.items) {
+    if (item.item_type === "service" || item.item_type === "custom") {
+      await addServiceToWorkOrder(db, wo.id, orgId, {
+        service_catalog_id:
+          item.source_service_id ?? "00000000-0000-0000-0000-000000000000",
+        service_name: item.description,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        discount_amount: item.discount_amount,
+        discount_percentage: item.discount_percentage,
+        notes: item.notes ?? undefined,
+      });
+    } else if (item.item_type === "part") {
+      await addPartToWorkOrder(db, wo.id, orgId, {
+        part_id: item.source_part_id ?? undefined,
+        part_name: item.description,
+        part_number: undefined,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        discount_amount: item.discount_amount,
+        discount_percentage: item.discount_percentage,
+        notes: item.notes ?? undefined,
+      });
+    }
+  }
 
   // Recalculate totals
   await recalculateWorkOrderTotals(db, wo.id);
@@ -623,7 +611,7 @@ export async function convertEstimateToWorkOrder(
     .update({
       status: "converted",
       converted_work_order_id: wo.id,
-      updated_by: userId,
+      updated_by: user.id,
     })
     .eq("id", estimateId)
     .eq("organization_id", orgId);
@@ -641,7 +629,7 @@ export async function convertEstimateToWorkOrder(
     action: "update",
     table_name: "estimates",
     record_id: estimateId,
-    user_id: userId,
+    user_id: user.id,
     organization_id: orgId,
     old_data: oldEstimateData,
     new_data: { status: "converted", converted_work_order_id: wo.id },
@@ -654,5 +642,5 @@ export async function convertEstimateToWorkOrder(
 
   // Return the work order detail
   const { getWorkOrder } = await import("@/lib/services/work-order-service");
-  return getWorkOrder(db, wo.id, orgId);
+  return getWorkOrder(db, wo.id);
 }

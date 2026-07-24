@@ -104,9 +104,11 @@ class _RaceFormScreenState extends ConsumerState<RaceFormScreen> {
       final authState = ref.read(authStateProvider).valueOrNull;
       final userId = authState?.userId ?? '';
 
-      final race =
-          widget.initialRace ??
-          Race(id: const Uuid().v4(), name: '', organizerId: userId);
+      final race = widget.initialRace ?? Race(
+        id: const Uuid().v4(),
+        name: '',
+        organizerId: userId,
+      );
 
       final updatedRace = race.copyWith(
         name: _nameController.text.trim(),

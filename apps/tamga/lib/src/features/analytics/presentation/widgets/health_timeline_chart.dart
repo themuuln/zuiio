@@ -8,7 +8,10 @@ import '../../domain/health_analytics.dart';
 /// [healthTrends] -аар цаг хугацааны шугаман диаграммыг харуулна.
 /// Ачаалалт, алдаа, хоосон төлөвүүдийг дэмжинэ.
 class HealthTimelineChart extends StatelessWidget {
-  const HealthTimelineChart({super.key, required this.healthTrends});
+  const HealthTimelineChart({
+    super.key,
+    required this.healthTrends,
+  });
 
   /// Ачаалалт төлөв.
   const HealthTimelineChart.loading({super.key}) : healthTrends = null;
@@ -43,9 +46,7 @@ class HealthTimelineChart extends StatelessWidget {
 
     // Цагийн тэнхлэгийг эрэмбэлэх
     final sortedDates = dateSet.toList()..sort();
-    final dateLabels = sortedDates
-        .map((d) => '${d.year}-${d.month.toString().padLeft(2, '0')}')
-        .toList();
+    final dateLabels = sortedDates.map((d) => '${d.year}-${d.month.toString().padLeft(2, '0')}').toList();
 
     // Хамгийн их утга
     final maxCount = healthTrends!.fold<int>(
@@ -56,16 +57,16 @@ class HealthTimelineChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Эрүүл мэндийн хандлага', style: theme.textTheme.titleSmall),
+        Text(
+          'Эрүүл мэндийн хандлага',
+          style: theme.textTheme.titleSmall,
+        ),
         const SizedBox(height: 16),
         Expanded(
           child: LineChart(
             LineChartData(
               minX: 0,
-              maxX: (sortedDates.length - 1).toDouble().clamp(
-                1,
-                double.infinity,
-              ),
+              maxX: (sortedDates.length - 1).toDouble().clamp(1, double.infinity),
               minY: 0,
               maxY: (maxCount * 1.2).ceilToDouble().clamp(1, double.infinity),
               gridData: FlGridData(
@@ -166,7 +167,10 @@ class HealthTimelineChart extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  Text(key, style: theme.textTheme.bodySmall),
+                  Text(
+                    key,
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ],
               );
             }).toList(),
@@ -188,9 +192,8 @@ class HealthTimelineChart extends StatelessWidget {
       final spots = sortedDates.asMap().entries.map((dateEntry) {
         final dateIndex = dateEntry.key;
         final date = dateEntry.value;
-        final matching = data.where(
-          (d) => d.date.year == date.year && d.date.month == date.month,
-        );
+        final matching = data.where((d) =>
+            d.date.year == date.year && d.date.month == date.month);
         final count = matching.isEmpty ? 0 : matching.first.count;
         return FlSpot(dateIndex.toDouble(), count.toDouble());
       }).toList();
@@ -229,17 +232,10 @@ class HealthTimelineChart extends StatelessWidget {
       Colors.teal,
     ];
     final keys = [
-      'Вакцинжуулалт',
-      'Туулгалт',
-      'Эмчилгээ',
-      'Эмчийн үзлэг',
-      'Эмээл',
-      'Тайралт',
+      'Вакцинжуулалт', 'Туулгалт', 'Эмчилгээ', 'Эмчийн үзлэг', 'Эмээл', 'Тайралт',
     ];
     final idx = keys.indexOf(label);
-    return colors[idx >= 0
-        ? idx % colors.length
-        : label.hashCode % colors.length];
+    return colors[idx >= 0 ? idx % colors.length : label.hashCode % colors.length];
   }
 
   double _calcInterval(int maxCount) {

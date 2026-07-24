@@ -1,8 +1,4 @@
-import {
-  keepPreviousData,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type {
   GlobalPartCatalog,
@@ -77,10 +73,10 @@ const fetchPurchaseOrders = createOrgQuery<PurchaseOrderWithSupplier[]>(
 
 export function usePartsCatalog(
   orgId: string | undefined,
-  _branchId?: string | null,
+  branchId?: string | null,
 ) {
   return useQuery({
-    queryKey: inventoryKeys.parts(orgId ?? ""),
+    queryKey: inventoryKeys.parts(orgId ?? "", branchId),
     queryFn: () => fetchPartsCatalog(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 300_000, // 5 min — catalog rarely changes after setup
@@ -130,7 +126,6 @@ export function useInventoryBalances(
         params: branchId ? { branch_id: branchId } : { fast: "true" },
       }),
     enabled: !!orgId,
-    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
@@ -153,7 +148,6 @@ export function useInventoryMovements(
         },
       }),
     enabled: !!orgId,
-    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
@@ -178,7 +172,6 @@ export function usePurchaseOrders(
         params: branchId ? { branch_id: branchId } : undefined,
       }),
     enabled: !!orgId,
-    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
@@ -210,7 +203,6 @@ export function useStockThresholds(
         params: branchId ? { branch_id: branchId } : undefined,
       }),
     enabled: !!orgId,
-    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 }
@@ -222,7 +214,6 @@ export function usePartsCars(orgId: string | undefined) {
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
     queryFn: () => fetchPartsCars(orgId ?? ""),
     enabled: !!orgId,
-    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
@@ -359,8 +350,6 @@ export function useCreateSupplier(orgId: string | undefined) {
         organization_id: orgId ?? "",
         branch_id: null,
         name: body.name,
-        lead_time_days: null,
-        min_order_quantity: null,
         contact_person: body.contact_person ?? null,
         phone: body.phone ?? null,
         email: body.email ?? null,
@@ -426,16 +415,6 @@ export function useUpdatePart(orgId: string | undefined) {
     successMessage: "Part updated",
   });
 }
-export function useDeletePart(orgId: string | undefined) {
-  return useOrgMutation<PartsCatalogItem, string>({
-    endpoint: (id) => `/api/organizations/${orgId}/inventory/parts/${id}`,
-    method: "DELETE",
-    queryKey: inventoryKeys.parts(orgId ?? ""),
-    invalidateKeys: [inventoryKeys.balances(orgId ?? "")],
-    optimisticUpdate: (cached, id) => cached.filter((p) => p.id !== id),
-    successMessage: "Part deleted",
-  });
-}
 
 export function useCreatePurchaseOrder(orgId: string | undefined) {
   return useOrgMutation<
@@ -481,26 +460,6 @@ export function useReceivePurchaseOrder(orgId: string | undefined) {
       inventoryKeys.parts(orgId ?? ""),
       inventoryKeys.movements(orgId ?? ""),
     ],
-  });
-}
-
-export function useReceiveByBarcode(
-  orgId: string | undefined,
-  poId: string | undefined,
-) {
-  return useOrgMutation<PurchaseOrderItem, { poId: string; barcode: string }>({
-    endpoint: (vars) =>
-      `/api/organizations/${orgId}/inventory/purchase-orders/${vars.poId}/receive-barcode`,
-    method: "POST",
-    queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
-    invalidateKeys: [
-      inventoryKeys.purchaseOrderItems(poId ?? ""),
-      inventoryKeys.purchaseOrders(orgId ?? ""),
-      inventoryKeys.balances(orgId ?? ""),
-      inventoryKeys.parts(orgId ?? ""),
-      inventoryKeys.movements(orgId ?? ""),
-    ],
-    bodyFn: (vars) => ({ barcode: vars.barcode }),
   });
 }
 
@@ -624,43 +583,5 @@ export function useDeletePartsCar(orgId: string | undefined) {
     endpoint: (id) => `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
     method: "DELETE",
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
-  });
-}
-
-export function useVehicleModelParts(
-  orgId: string | undefined,
-  partId: string | undefined,
-) {
-  return useQuery({
-    queryKey: inventoryKeys.vehicleModelParts(orgId ?? "", partId ?? ""),
-    queryFn: async () => {
-      if (!orgId || !partId) return [];
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/parts/${partId}/vehicle-models`,
-      );
-      if (!res.ok) throw new Error("Failed to fetch vehicle fitment");
-      const json = await res.json();
-      return json.data ?? [];
-    },
-    enabled: !!orgId && !!partId,
-  });
-}
-
-export function useSupplierPriceHistory(
-  orgId: string | undefined,
-  partId: string | undefined,
-) {
-  return useQuery({
-    queryKey: inventoryKeys.supplierPriceHistory(orgId ?? "", partId ?? ""),
-    queryFn: async () => {
-      if (!orgId || !partId) return [];
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/parts/${partId}/purchase-history`,
-      );
-      if (!res.ok) throw new Error("Failed to fetch purchase history");
-      const json = await res.json();
-      return json.data ?? [];
-    },
-    enabled: !!orgId && !!partId,
   });
 }

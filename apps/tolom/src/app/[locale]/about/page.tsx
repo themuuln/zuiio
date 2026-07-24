@@ -21,7 +21,7 @@ const VALUES = [
   { key: "value2", icon: "👁️" },
   { key: "value3", icon: "🔒" },
   { key: "value4", icon: "📈" },
-] as const;
+];
 
 export default function AboutPage() {
   const t = useTranslations("about");

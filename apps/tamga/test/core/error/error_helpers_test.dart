@@ -20,10 +20,8 @@ void main() {
     });
 
     test('SocketException with host lookup failure', () {
-      final error = const SocketException(
-        'host lookup failed',
-        osError: OSError('nodename nor servname provided'),
-      );
+      final error = const SocketException('host lookup failed',
+          osError: OSError('nodename nor servname provided'));
       final message = friendlyErrorMessage(error);
 
       expect(message, contains('Сүлжээнд холбогдож чадсангүй'));

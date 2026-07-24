@@ -2,7 +2,6 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.1.126"],
   cacheComponents: true,
   images: {
     remotePatterns: [
@@ -10,13 +9,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
-  reactCompiler: true,
-  // TypeScript validation is handled by `pnpm validate` before build.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  reactCompiler: process.env.NODE_ENV === "development",
   experimental: {
-    useTypeScriptCli: true,
     inlineCss: true,
     staleTimes: {
       dynamic: 30,
@@ -24,7 +18,6 @@ const nextConfig: NextConfig = {
     },
     optimizePackageImports: [
       "@phosphor-icons/react",
-      "@phosphor-icons/react/dist/ssr",
       "@tanstack/react-query",
       "date-fns",
       "lucide-react",
@@ -48,30 +41,13 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-XSS-Protection", value: "1; mode=block" },
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
-          },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
         ],
       },
       {
         source: "/sw.js",
         headers: [
-          {
-            key: "Cache-Control",
-            value: "no-cache, no-store, must-revalidate",
-          },
-        ],
-      },
-      {
-        source: "/r/:path*",
-        headers: [
-          { key: "X-Robots-Tag", value: "noindex, nofollow" },
-          { key: "Referrer-Policy", value: "no-referrer" },
-          {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate",
-          },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
         ],
       },
     ];

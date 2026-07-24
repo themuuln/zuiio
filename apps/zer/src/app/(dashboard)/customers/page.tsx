@@ -46,8 +46,7 @@ async function DataFetcher() {
       .select("id, name, phone, email, address, balance")
       .eq("organization_id", organizationId)
       .eq("type", "customer")
-      .order("created_at", { ascending: false })
-      .limit(500),
+      .order("created_at", { ascending: false }),
   );
 
   const tableData: CustomerRow[] =

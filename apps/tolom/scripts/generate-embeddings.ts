@@ -58,7 +58,7 @@ async function processTable(tableName: string, textFields: readonly string[]) {
   );
 
   for (let i = 0; i < (rows?.length ?? 0); i += BATCH_SIZE) {
-    const batch = rows?.slice(i, i + BATCH_SIZE);
+    const batch = rows!.slice(i, i + BATCH_SIZE);
     for (const row of batch) {
       const text = textFields
         .map((f) =>

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-16T16:30:00Z",
+  "title": "Design System: Zuiio Website",
+  "extensions": {
+    "colorMeta": {
+      "brand-violet": { "role": "primary", "displayName": "Brand Violet", "canonical": "oklch(0.5 0.26 275)", "tonalRamp": ["oklch(0.38 0.24 275)", "oklch(0.5 0.26 275)", "oklch(0.65 0.22 275)"] },
+      "brand-teal": { "role": "secondary", "displayName": "Brand Teal", "canonical": "oklch(0.7 0.16 195)", "tonalRamp": ["oklch(0.7 0.16 195)", "oklch(0.82 0.12 195)"] },
+      "background": { "role": "neutral", "displayName": "Background", "canonical": "oklch(0.99 0.003 275)" },
+      "foreground": { "role": "neutral", "displayName": "Foreground", "canonical": "oklch(0.12 0.018 275)" },
+      "muted-foreground": { "role": "neutral", "displayName": "Muted Foreground", "canonical": "oklch(0.45 0.025 275)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Instrument Serif", "purpose": "Hero headlines and section headings. Editorial serif with genuine contrast against Geist body." },
+      "body": { "displayName": "Geist", "purpose": "Body text, UI labels, navigation. Clean modern sans-serif." }
+    },
+    "shadows": [
+      { "name": "xs", "value": "0 1px 2px oklch(0 0 0 / 0.05)", "purpose": "Button resting state" },
+      { "name": "sm", "value": "0 1px 3px oklch(0 0 0 / 0.1), 0 1px 2px -1px oklch(0 0 0 / 0.1)", "purpose": "Button hover, small lift" },
+      { "name": "md", "value": "0 4px 6px -1px oklch(0 0 0 / 0.1), 0 2px 4px -2px oklch(0 0 0 / 0.1)", "purpose": "Card resting state" },
+      { "name": "brand", "value": "0 0 0 1px oklch(0.50 0.26 275 / 0.15), 0 4px 12px oklch(0.50 0.26 275 / 0.12)", "purpose": "Primary button focus with violet glow" },
+      { "name": "card-hover", "value": "0 4px 12px oklch(0 0 0 / 0.08), 0 2px 4px oklch(0 0 0 / 0.06)", "purpose": "Card hover state" }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Default easing for all transitions and animations" },
+      { "name": "ease-move", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Movement transitions" },
+      { "name": "duration-fast", "value": "120ms", "purpose": "Button state changes" },
+      { "name": "duration-base", "value": "200ms", "purpose": "Card hover, general transitions" },
+      { "name": "duration-slow", "value": "280ms", "purpose": "Entrance animations" }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main CTA button with violet background and white text.",
+      "html": "<button class=\"btn-primary\">Get started</button>",
+      "css": ".btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 12px; background: var(--color-primary); color: var(--color-primary-foreground); padding: 0.75rem 1.5rem; font-size: var(--text-sm); font-weight: 600; box-shadow: var(--shadow-xs); transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 120ms cubic-bezier(0.23, 1, 0.32, 1), background-color 120ms cubic-bezier(0.23, 1, 0.32, 1); } .btn-primary:hover { background: color-mix(in oklch, var(--color-primary) 90%, transparent); transform: translateY(-1px); box-shadow: var(--shadow-sm); } .btn-primary:active { transform: scale(0.97) translateY(0); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined button for secondary actions.",
+      "html": "<button class=\"btn-secondary\">Learn more</button>",
+      "css": ".btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 12px; border: 1px solid var(--color-border); background: var(--color-background); color: var(--color-foreground); padding: 0.75rem 1.5rem; font-size: var(--text-sm); font-weight: 600; transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1), background-color 120ms cubic-bezier(0.23, 1, 0.32, 1), border-color 120ms cubic-bezier(0.23, 1, 0.32, 1); } .btn-secondary:hover { background: var(--color-muted); border-color: var(--color-foreground); transform: translateY(-1px); } .btn-secondary:active { transform: scale(0.97) translateY(0); }"
+    },
+    {
+      "name": "Bento Cell",
+      "kind": "card",
+      "refersTo": "bento-cell",
+      "description": "Feature card with border, hover lift, and card background.",
+      "html": "<div class=\"bento-cell\"><h3>Feature</h3><p>Description</p></div>",
+      "css": ".bento-cell { border-radius: 16px; border: 1px solid var(--color-border); background: var(--color-card); padding: 1.5rem; transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 200ms cubic-bezier(0.23, 1, 0.32, 1); } .bento-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Practical Workshop",
+    "overview": "A design system for Mongolian business software that respects its audience's intelligence and time. No decorative flourishes, no corporate theater, no adapted-from-English templates. Every element earns its space with real information. The aesthetic is clean and confident: Instrument Serif headings carry editorial weight, Geist body text communicates with clarity, and a committed violet/teal palette gives the brand a distinctive two-tone identity.",
+    "keyCharacteristics": ["Serif + sans font pairing with genuine contrast", "Committed violet/teal palette", "Fluid type scale via clamp()", "Content-first design", "Mongolian-first: Cyrillic before English"],
+    "rules": [
+      { "name": "The Two-Accent Rule", "body": "Violet and teal are the only accent colors. No third accent without replacing one.", "section": "colors" },
+      { "name": "The Balance Rule", "body": "All h1-h3 use text-wrap: balance. All paragraphs use text-wrap: pretty.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Shadows appear only as response to state.", "section": "elevation" }
+    ],
+    "dos": ["Use Instrument Serif for headings, Geist for body", "Use text-wrap: balance on h1-h3", "Vary section spacing for rhythm", "Show real product evidence", "Include origin badge in hero", "Use prefers-reduced-motion"],
+    "donts": ["Use border-left/right > 1px as colored accent", "Use gradient text", "Use bounce/elastic easing", "Pair border + wide shadow on same element", "Use border-radius >= 24px on cards", "Put eyebrows above every section", "Ship identical card grids", "Use generic SaaS cream background", "Adapt-from-English templates"]
+  }
+}

@@ -23,11 +23,8 @@ void main() {
 
     test('displayName is non-empty for all values', () {
       for (final type in TrainingLogType.values) {
-        expect(
-          type.displayName.isNotEmpty,
-          isTrue,
-          reason: '${type.name} should have a non-empty displayName',
-        );
+        expect(type.displayName.isNotEmpty, isTrue,
+            reason: '${type.name} should have a non-empty displayName');
       }
     });
 
@@ -331,37 +328,34 @@ void main() {
 
     // ── Serialization — Supabase JSON ────────────────────────
 
-    test(
-      'toSupabaseJson uses snake_case keys and includes ownerId/updated_at',
-      () {
-        final log = TrainingLog(
-          id: 'tl-1',
-          horseId: 'horse-1',
-          type: TrainingLogType.sprint,
-          date: DateTime(2026, 6, 1),
-          durationMinutes: 20,
-          distanceKm: 3.0,
-          notes: 'Спринт',
-          handlerName: 'Дорж',
-          weather: 'Нартай',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        final json = log.toSupabaseJson(ownerId: 'user-1');
+    test('toSupabaseJson uses snake_case keys and includes ownerId/updated_at', () {
+      final log = TrainingLog(
+        id: 'tl-1',
+        horseId: 'horse-1',
+        type: TrainingLogType.sprint,
+        date: DateTime(2026, 6, 1),
+        durationMinutes: 20,
+        distanceKm: 3.0,
+        notes: 'Спринт',
+        handlerName: 'Дорж',
+        weather: 'Нартай',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      final json = log.toSupabaseJson(ownerId: 'user-1');
 
-        expect(json['owner_id'], 'user-1');
-        expect(json['id'], 'tl-1');
-        expect(json['horse_id'], 'horse-1');
-        expect(json['type'], 'sprint');
-        expect(json['date'], '2026-06-01T00:00:00.000');
-        expect(json['duration_minutes'], 20);
-        expect(json['distance_km'], 3.0);
-        expect(json['notes'], 'Спринт');
-        expect(json['handler_name'], 'Дорж');
-        expect(json['weather'], 'Нартай');
-        expect(json['updated_at'], isA<String>());
-      },
-    );
+      expect(json['owner_id'], 'user-1');
+      expect(json['id'], 'tl-1');
+      expect(json['horse_id'], 'horse-1');
+      expect(json['type'], 'sprint');
+      expect(json['date'], '2026-06-01T00:00:00.000');
+      expect(json['duration_minutes'], 20);
+      expect(json['distance_km'], 3.0);
+      expect(json['notes'], 'Спринт');
+      expect(json['handler_name'], 'Дорж');
+      expect(json['weather'], 'Нартай');
+      expect(json['updated_at'], isA<String>());
+    });
 
     test('fromSupabaseJson deserializes snake_case', () {
       final supabase = {

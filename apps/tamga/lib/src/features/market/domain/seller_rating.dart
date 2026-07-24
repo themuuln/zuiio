@@ -67,9 +67,7 @@ class SellerRating {
       rating: rating ?? this.rating,
       review: review ?? this.review,
       createdAt: createdAt ?? this.createdAt,
-      sellerResponse: clearResponse
-          ? null
-          : (sellerResponse ?? this.sellerResponse),
+      sellerResponse: clearResponse ? null : (sellerResponse ?? this.sellerResponse),
       responseAt: clearResponseAt ? null : (responseAt ?? this.responseAt),
     );
   }

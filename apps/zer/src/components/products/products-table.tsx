@@ -1,20 +1,12 @@
 "use client";
 
-import {
-  ArrowLeft,
-  ArrowRight,
-  StackSimple,
-} from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
 
-import {
-  deleteProduct,
-  toggleProductPublication,
-} from "@/app/(dashboard)/products/actions";
+import { deleteProduct } from "@/app/(dashboard)/products/actions";
 import {
   type ProductDetailData,
   ProductDetailDrawer,
@@ -23,9 +15,7 @@ import {
   type ProductEditData,
   ProductEditDrawer,
 } from "@/components/products/product-edit-drawer";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { TableActionsCell } from "@/components/ui/table-actions-cell";
@@ -52,8 +42,6 @@ export type ProductRow = {
   brand_name: string | null;
   brand_logo_url: string | null;
   image_url: string | null;
-  has_variants: boolean | null;
-  is_public: boolean | null;
 };
 
 function toEditData(product: ProductRow): ProductEditData {
@@ -71,7 +59,6 @@ function toEditData(product: ProductRow): ProductEditData {
     sale_price: product.sale_price,
     current_stock: product.current_stock,
     min_stock: product.min_stock,
-    is_public: product.is_public,
   };
 }
 
@@ -117,26 +104,6 @@ export function ProductsTable({
   );
   const { data: selectedVariants } = useProductVariants(selectedProduct?.id);
   const { data: brands } = useBrands(organizationId ?? "");
-  const [isPending, startTransition] = useTransition();
-
-  const handleTogglePublication = useCallback(
-    (productId: string, currentIsPublic: boolean) => {
-      startTransition(async () => {
-        const result = await toggleProductPublication(
-          productId,
-          !currentIsPublic,
-        );
-        if (result && "error" in result) {
-          toast.error(result.error);
-        } else {
-          toast.success(
-            currentIsPublic ? "Нийтлэлээс хэвлэлээ." : "Каталогт нийтлэгдлээ.",
-          );
-        }
-      });
-    },
-    [],
-  );
 
   const toDetailData = (product: ProductRow): ProductDetailData => ({
     id: product.id,
@@ -258,12 +225,8 @@ export function ProductsTable({
       {
         accessorKey: "current_stock",
         header: "Одоогийн үлдэгдэл",
-        cell: ({ row }) => {
-          if (row.original.has_variants) {
-            return <span className="text-muted-foreground">Вариант</span>;
-          }
-          return Number(row.getValue("current_stock") ?? 0).toFixed(2);
-        },
+        cell: ({ row }) =>
+          Number(row.getValue("current_stock") ?? 0).toFixed(2),
       },
       {
         accessorKey: "min_stock",
@@ -275,42 +238,6 @@ export function ProductsTable({
         header: "Ангилал",
         cell: ({ row }) => row.getValue("category_name") ?? "-",
       },
-      {
-        id: "has_variants",
-        header: "Вариант",
-        cell: ({ row }) => {
-          if (!row.original.has_variants) {
-            return <span className="text-muted-foreground">-</span>;
-          }
-          return (
-            <Badge variant="secondary" className="gap-1">
-              <StackSimple className="size-3" />
-              Варианттай
-            </Badge>
-          );
-        },
-        enableSorting: false,
-      },
-      {
-        id: "is_public",
-        header: "Нийтлэл",
-        cell: ({ row }) => {
-          const isPublic = row.original.is_public ?? false;
-          return (
-            <Checkbox
-              checked={isPublic}
-              disabled={isPending}
-              onCheckedChange={() =>
-                handleTogglePublication(row.original.id, isPublic)
-              }
-              aria-label={isPublic ? "Нийтлэлээс хасах" : "Каталогт нийтлэх"}
-            />
-          );
-        },
-        enableSorting: false,
-        enableHiding: false,
-      },
-
       {
         id: "actions",
         header: "",
@@ -326,7 +253,7 @@ export function ProductsTable({
         enableHiding: false,
       },
     ],
-    [handleDelete, deletePending, isPending, handleTogglePublication],
+    [handleDelete, deletePending],
   );
 
   const searchParams = useSearchParams();

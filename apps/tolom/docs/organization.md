@@ -32,7 +32,7 @@ Organization карт дээрх зүүн дээрх зүйл (pencil) дарж 
 
 | Талбар | Тайлбар |
 |--------|---------|
-| **Plan** | Захиалгын төрөл: Starter, Pro, Business, Enterprise |
+| **Plan** | Захиалгын төрөл: Core, Pro, Business, Enterprise |
 | **Status** | Идэвхтэй эсэх төлөв |
 | **Started** | Эхлэсэн огноо |
 | **Trial ends** | Trial хугацаа дуусах огноо (хэрэв trial байвал) |

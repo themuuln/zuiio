@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -42,16 +41,6 @@ final preservedRouteAfterReAuthProvider = StateProvider<String?>((ref) => null);
 class AuthStateNotifier extends StreamNotifier<AuthState> {
   @override
   Stream<AuthState> build() async* {
-    // Dev mode: skip Supabase, auto-authenticate.
-    if (kDebugMode) {
-      yield const AuthState.authenticated(
-        userId: 'dev-user-000',
-        email: 'dev@tamga.local',
-        displayName: 'Development User',
-      );
-      return;
-    }
-
     // Эхлээд одоогийн төлөвийг шалгана.
     final repository = ref.read(authRepositoryProvider);
     final currentResult = await repository.getCurrentUser();
@@ -124,7 +113,10 @@ class AuthStateNotifier extends StreamNotifier<AuthState> {
     required String token,
   }) async {
     final repository = ref.read(authRepositoryProvider);
-    final result = await repository.verifyPhoneOtp(phone: phone, token: token);
+    final result = await repository.verifyPhoneOtp(
+      phone: phone,
+      token: token,
+    );
     if (result.isFailure) {
       throw result.error;
     }

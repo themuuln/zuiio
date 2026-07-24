@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
-import { drawerDetailKeys } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
 import {
   getWorkOrderParts,
@@ -102,14 +101,11 @@ export function useInvoiceMutations({
       `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
     method: "PATCH",
     queryKey: workOrderKeys.all(orgId ?? ""),
-    optimisticQueryKey:
-      orgId && workOrderId
-        ? drawerDetailKeys.all(orgId, workOrderId)
-        : undefined,
     invalidateKeys: branchId
       ? ([bayViewKeys.data(branchId)] as const)
       : undefined,
-    onSuccess: () => {
+    onSuccess: (_data, _vars) => {
+      fetchWo(true);
       onRefresh();
     },
   });

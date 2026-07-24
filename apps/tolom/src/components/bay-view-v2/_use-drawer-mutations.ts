@@ -16,7 +16,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
-import { drawerDetailKeys } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
 import type { WorkOrderDetail } from "@/lib/types";
 import type { PaymentMethodFees } from "./_payment-fees";
@@ -46,7 +45,6 @@ interface UseDrawerMutationsParams {
    */
   assignMechanicMutation?: {
     mutateAsync: (vars: { woId: string; mechanicId: string }) => Promise<void>;
-    isPending?: boolean;
   };
   assignCustomerMutation?: {
     mutateAsync: (vars: {
@@ -54,7 +52,6 @@ interface UseDrawerMutationsParams {
       customerId: string | null;
       customerName?: string | null;
     }) => Promise<void>;
-    isPending?: boolean;
   };
 }
 
@@ -139,6 +136,7 @@ export function useDrawerMutations({
     branchId,
     wo,
     setWo,
+    fetchWo,
     onRefresh,
   });
 
@@ -171,6 +169,11 @@ export function useDrawerMutations({
     transferBanks,
   });
 
+  // ── Local state ───────────────────────────────────────────────────
+
+  const [saving, setSaving] = useState(false);
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+
   // ── Fallback mutations (used when pre-built hooks not provided) ──
 
   const patchWorkOrderMutation = useOrgMutation<
@@ -181,26 +184,14 @@ export function useDrawerMutations({
       `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
     method: "PATCH",
     queryKey: workOrderKeys.all(orgId ?? ""),
-    optimisticQueryKey:
-      orgId && workOrderId
-        ? drawerDetailKeys.all(orgId, workOrderId)
-        : undefined,
     invalidateKeys: branchId
       ? ([bayViewKeys.data(branchId)] as const)
       : undefined,
     onSuccess: () => {
+      fetchWo(true);
       onRefresh();
     },
   });
-
-  // ── Loading state (computed from mutation pending) ─────────────────
-
-  const saving =
-    assignMechanicMutation?.isPending ||
-    assignCustomerMutation?.isPending ||
-    patchWorkOrderMutation.isPending;
-
-  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
 
   // ── Mechanic assignment ──
 
@@ -237,7 +228,9 @@ export function useDrawerMutations({
           mechanic_id: mechanicId || null,
         });
       }
+      fetchWo(true);
       onRefresh();
+      toast.dismiss();
       toast.success(mechanicId ? "Mechanic assigned" : "Mechanic removed");
     } catch (err) {
       reportServerError("Unexpected error", err);
@@ -245,6 +238,8 @@ export function useDrawerMutations({
       toast.error(
         err instanceof Error ? err.message : "Failed to assign mechanic",
       );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -285,7 +280,9 @@ export function useDrawerMutations({
           customer_id: customerId,
         });
       }
+      fetchWo(true);
       onRefresh();
+      toast.dismiss();
       if (customerId) {
         toast.success("Customer assigned");
       }
@@ -295,6 +292,8 @@ export function useDrawerMutations({
       toast.error(
         err instanceof Error ? err.message : "Failed to assign customer",
       );
+    } finally {
+      setSaving(false);
     }
   }
 

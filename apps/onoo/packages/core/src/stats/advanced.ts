@@ -155,10 +155,7 @@ export function calculatePPM(line: BoxScoreLine): number {
 /**
  * Points per 36 minutes (standardized)
  */
-export function calculatePer36(
-  line: BoxScoreLine,
-  stat: keyof BoxScoreLine,
-): number {
+export function calculatePer36(line: BoxScoreLine, stat: keyof BoxScoreLine): number {
   if (line.minutes === 0) return 0;
   const value = line[stat];
   if (typeof value !== "number") return 0;

@@ -36,8 +36,7 @@ async function DataFetcher({
             "id, order_number, order_date, expected_date, status, total_amount, notes, created_at, contacts!purchase_orders_supplier_id_fkey(name), profiles!purchase_orders_created_by_fkey(full_name)",
           )
           .eq("organization_id", organizationId)
-          .order("created_at", { ascending: false })
-          .limit(500),
+          .order("created_at", { ascending: false }),
         branchId,
         isBranchScoped,
         urlBranch,

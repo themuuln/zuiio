@@ -9,7 +9,6 @@ import 'package:share_plus/share_plus.dart';
 import '../domain/herd_analytics.dart';
 import '../domain/health_analytics.dart';
 import '../domain/financial_analytics.dart';
-import '../domain/breeding_analytics.dart';
 
 /// Аналитик өгөгдлийг CSV / PDF рүү экспортлох үйлчилгээ.
 ///
@@ -24,7 +23,6 @@ class AnalyticsExportService {
     required HerdAnalytics herd,
     required HealthAnalytics health,
     required FinancialAnalytics financial,
-    BreedingAnalytics? breeding,
   }) async {
     final rows = <List<String>>[];
 
@@ -93,33 +91,6 @@ class AnalyticsExportService {
     rows.add(['Борлуулсан зарууд', '${financial.soldListings}']);
     rows.add(['Дундаж үнэ', '${financial.averageSalePrice}']);
 
-    // ── Үржүүлгийн аналитик ──
-    if (breeding != null && breeding.totalBreedings > 0) {
-      rows.add([]);
-      rows.add(['--- Үржүүлгийн Аналитик ---']);
-      rows.add(['Идэвхтэй хээлтүүлэг', '${breeding.activeBreedings}']);
-      rows.add(['Нийт хээлтүүлэг', '${breeding.totalBreedings}']);
-      rows.add([
-        'Төллөлтийн амжилт',
-        '${breeding.foalingSuccessRate.toStringAsFixed(1)}%',
-      ]);
-
-      if (breeding.recentBreedings.isNotEmpty) {
-        rows.add([]);
-        rows.add(['Хээлтүүлгийн бүртгэлүүд']);
-        rows.add(['Эцэг', 'Эх', 'Хээлтсэн', 'Төллөх хугацаа', 'Төлөв']);
-        for (final record in breeding.recentBreedings) {
-          rows.add([
-            record.sireName,
-            record.damName,
-            '${record.breedingDate.year}-${record.breedingDate.month.toString().padLeft(2, '0')}-${record.breedingDate.day.toString().padLeft(2, '0')}',
-            '${record.expectedFoalingDate.year}-${record.expectedFoalingDate.month.toString().padLeft(2, '0')}-${record.expectedFoalingDate.day.toString().padLeft(2, '0')}',
-            record.statusDisplayName,
-          ]);
-        }
-      }
-    }
-
     final csvData = const ListToCsvConverter().convert(rows);
     await _saveAndShare(csvData, 'analytics_report.csv');
   }
@@ -131,7 +102,6 @@ class AnalyticsExportService {
     required HerdAnalytics herd,
     required HealthAnalytics health,
     required FinancialAnalytics financial,
-    BreedingAnalytics? breeding,
   }) async {
     final pdf = pw.Document();
 
@@ -224,34 +194,6 @@ class AnalyticsExportService {
             pw.Text('Идэвхтэй зарууд: ${financial.activeListings}'),
             pw.Text('Борлуулсан зарууд: ${financial.soldListings}'),
             pw.Text('Дундаж үнэ: ${financial.averageSalePrice}'),
-
-            // ── Үржүүлгийн аналитик ──
-            if (breeding != null && breeding.totalBreedings > 0) ...[
-              pw.SizedBox(height: 16),
-              pw.Header(level: 1, text: 'Үржүүлгийн Аналитик'),
-              pw.Text('Идэвхтэй хээлтүүлэг: ${breeding.activeBreedings}'),
-              pw.Text('Нийт хээлтүүлэг: ${breeding.totalBreedings}'),
-              pw.Text(
-                'Төллөлтийн амжилт: ${breeding.foalingSuccessRate.toStringAsFixed(1)}%',
-              ),
-              pw.SizedBox(height: 12),
-
-              if (breeding.recentBreedings.isNotEmpty) ...[
-                pw.Header(level: 2, text: 'Хээлтүүлгийн бүртгэлүүд'),
-                _buildTable(
-                  headers: ['Эцэг', 'Эх', 'Хээлтсэн', 'Төлөх', 'Төлөв'],
-                  rows: breeding.recentBreedings.map((r) {
-                    return [
-                      r.sireName,
-                      r.damName,
-                      '${r.breedingDate.year}-${r.breedingDate.month.toString().padLeft(2, '0')}-${r.breedingDate.day.toString().padLeft(2, '0')}',
-                      '${r.expectedFoalingDate.year}-${r.expectedFoalingDate.month.toString().padLeft(2, '0')}-${r.expectedFoalingDate.day.toString().padLeft(2, '0')}',
-                      r.statusDisplayName,
-                    ];
-                  }).toList(),
-                ),
-              ],
-            ],
           ];
         },
       ),
@@ -260,9 +202,8 @@ class AnalyticsExportService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/analytics_report.pdf');
     await file.writeAsBytes(await pdf.save());
-    await Share.shareXFiles([
-      XFile(file.path),
-    ], subject: 'Tamga Analytics Report');
+    await Share.shareXFiles([XFile(file.path)],
+        subject: 'Tamga Analytics Report');
   }
 
   // ── Helpers ─────────────────────────────────────────────────────
@@ -272,9 +213,8 @@ class AnalyticsExportService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$fileName');
     await file.writeAsString(csvData);
-    await Share.shareXFiles([
-      XFile(file.path),
-    ], subject: 'Tamga Analytics Report');
+    await Share.shareXFiles([XFile(file.path)],
+        subject: 'Tamga Analytics Report');
   }
 
   /// PDF дотор хүснэгт үүсгэх.
@@ -285,11 +225,22 @@ class AnalyticsExportService {
     return pw.TableHelper.fromTextArray(
       headers: headers,
       data: rows,
-      border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-      headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+      border: pw.TableBorder.all(
+        color: PdfColors.grey300,
+        width: 0.5,
+      ),
+      headerStyle: pw.TextStyle(
+        fontWeight: pw.FontWeight.bold,
+        fontSize: 10,
+      ),
       cellStyle: const pw.TextStyle(fontSize: 9),
-      headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-      cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.centerRight},
+      headerDecoration: const pw.BoxDecoration(
+        color: PdfColors.grey200,
+      ),
+      cellAlignments: {
+        0: pw.Alignment.centerLeft,
+        1: pw.Alignment.centerRight,
+      },
     );
   }
 }

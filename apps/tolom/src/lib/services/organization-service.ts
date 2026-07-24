@@ -178,26 +178,31 @@ export async function getUserOrganization(
 ): Promise<Organization | null> {
   const supabase = db;
 
-  const { data, error: _error } = await supabase
+  const { data: membership } = await supabase
     .from("organization_users")
-    .select(
-      "organization_id, organizations!inner(id, name, slug, logo_url, settings, is_active, branch_limit, created_at)",
-    )
+    .select("organization_id")
     .eq("user_id", userId)
     .is("removed_at", null)
-    .is("organizations.deleted_at", null)
     .maybeSingle();
 
-  if (!data) return null;
+  if (!membership) return null;
 
-  return data.organizations as unknown as Organization;
+  const { data: org } = await supabase
+    .from("organizations")
+    .select(
+      "id, name, slug, logo_url, settings, is_active, branch_limit, created_at",
+    )
+    .eq("id", membership.organization_id)
+    .is("deleted_at", null)
+    .single();
+
+  return (org ?? null) as unknown as Organization | null;
 }
 
 export async function updateOrganization(
   db: SupabaseClient,
   orgId: string,
   params: UpdateOrganizationParams,
-  userId_?: string,
 ): Promise<Organization> {
   const supabase = db;
 
@@ -214,7 +219,7 @@ export async function updateOrganization(
   };
 
   const updates = buildUpdates(params, fieldMap);
-  updates.updated_by = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  updates.updated_by = (await supabase.auth.getUser()).data.user?.id;
 
   if (Object.keys(updates).length <= 1) {
     throw new ValidationError("No fields to update");

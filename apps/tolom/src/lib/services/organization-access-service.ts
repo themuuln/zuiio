@@ -17,12 +17,11 @@ function isValidPin(pin: string): boolean {
 
 export async function listUserOrganizations(
   db: SupabaseClient,
-  userId_?: string,
 ): Promise<UserOrganizationAccessOption[]> {
   const supabase = db;
-  const user = userId_
-    ? { id: userId_ }
-    : (await supabase.auth.getUser()).data.user;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     throw new UnauthorizedError();

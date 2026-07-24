@@ -38,8 +38,8 @@ class _RaceResultsEditorScreenState
   /// Бүртгэл тус бүрийн засварлагдсан утгууд.
   ///
   /// key: entry id, value: (result, placement, prize)
-  final Map<String, ({String result, String placement, String prize})> _edits =
-      {};
+  final Map<String, ({String result, String placement, String prize})>
+      _edits = {};
 
   @override
   void initState() {
@@ -97,7 +97,10 @@ class _RaceResultsEditorScreenState
       if (failCount == 0) {
         ref.invalidate(raceEntriesProvider(widget.race.id));
         ref.invalidate(activeRaceEntriesProvider(widget.race.id));
-        TamgaToast.showSuccess(context, 'Үр дүн амжилттай хадгалагдлаа');
+        TamgaToast.showSuccess(
+          context,
+          'Үр дүн амжилттай хадгалагдлаа',
+        );
         Navigator.of(context).pop(true);
       } else {
         TamgaToast.showError(

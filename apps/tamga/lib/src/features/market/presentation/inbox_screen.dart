@@ -168,9 +168,7 @@ class _ConversationListTile extends ConsumerWidget {
             children: [
               // Listing thumbnail (or placeholder for report conversations)
               ClipRRect(
-                borderRadius: BorderRadius.circular(
-                  AppSpacing.cornerRadiusSmall,
-                ),
+                borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusSmall),
                 child: SizedBox(
                   width: 56,
                   height: 56,
@@ -196,9 +194,8 @@ class _ConversationListTile extends ConsumerWidget {
                           child: Text(
                             title,
                             style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: hasUnread
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
+                              fontWeight:
+                                  hasUnread ? FontWeight.w700 : FontWeight.w500,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -225,9 +222,8 @@ class _ConversationListTile extends ConsumerWidget {
                               color: hasUnread
                                   ? theme.colorScheme.onSurface
                                   : theme.colorScheme.onSurfaceVariant,
-                              fontWeight: hasUnread
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
+                              fontWeight:
+                                  hasUnread ? FontWeight.w600 : FontWeight.normal,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,

@@ -95,8 +95,7 @@ class _VideoFeedList extends ConsumerWidget {
           return const EmptyState(
             icon: Icons.videocam_off_outlined,
             title: 'Бичлэг байхгүй',
-            description:
-                'Энэ ангилалд бичлэг олдсонгүй. Дээрх товчоор бичлэг нэмэх боломжтой.',
+            description: 'Энэ ангилалд бичлэг олдсонгүй. Дээрх товчоор бичлэг нэмэх боломжтой.',
           );
         }
         return ListView.builder(

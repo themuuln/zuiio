@@ -216,15 +216,35 @@ void main() {
   group('Team equality', () {
     test('two teams with same id are equal', () {
       final now = DateTime(2026, 6, 18);
-      final a = Team(id: 't1', name: 'Баг', ownerUserId: 'u1', createdAt: now);
-      final b = Team(id: 't1', name: 'Баг', ownerUserId: 'u1', createdAt: now);
+      final a = Team(
+        id: 't1',
+        name: 'Баг',
+        ownerUserId: 'u1',
+        createdAt: now,
+      );
+      final b = Team(
+        id: 't1',
+        name: 'Баг',
+        ownerUserId: 'u1',
+        createdAt: now,
+      );
       expect(a, b);
     });
 
     test('two teams with different ids are not equal', () {
       final now = DateTime(2026, 6, 18);
-      final a = Team(id: 't1', name: 'Баг', ownerUserId: 'u1', createdAt: now);
-      final b = Team(id: 't2', name: 'Баг', ownerUserId: 'u1', createdAt: now);
+      final a = Team(
+        id: 't1',
+        name: 'Баг',
+        ownerUserId: 'u1',
+        createdAt: now,
+      );
+      final b = Team(
+        id: 't2',
+        name: 'Баг',
+        ownerUserId: 'u1',
+        createdAt: now,
+      );
       expect(a == b, isFalse);
     });
 

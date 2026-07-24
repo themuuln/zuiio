@@ -1,12 +1,8 @@
-import Image from "next/image";
-import { cn } from "@/lib/utils";
-
 interface PlayerAvatarProps {
   photoUrl?: string | null;
   name: string;
   primaryColor?: string | null;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl";
-  className?: string;
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 const SIZE_MAP = {
@@ -14,7 +10,6 @@ const SIZE_MAP = {
   md: 48,
   lg: 64,
   xl: 96,
-  "2xl": 128,
 } as const;
 
 const TEXT_SIZE_MAP = {
@@ -22,7 +17,6 @@ const TEXT_SIZE_MAP = {
   md: "text-sm",
   lg: "text-base",
   xl: "text-2xl",
-  "2xl": "text-4xl",
 } as const;
 
 function getInitials(name: string): string {
@@ -30,7 +24,7 @@ function getInitials(name: string): string {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((word) => word.charAt(0))
+    .map((w) => w[0]!)
     .join("")
     .toUpperCase();
 }
@@ -40,33 +34,28 @@ export function PlayerAvatar({
   name,
   primaryColor,
   size = "md",
-  className,
 }: PlayerAvatarProps) {
   const px = SIZE_MAP[size];
 
   if (photoUrl) {
     return (
-      <Image
+      <img
         src={photoUrl}
         alt={name}
         width={px}
         height={px}
-        className={cn("shrink-0 rounded-full object-cover", className)}
+        className="shrink-0 rounded-full object-cover"
       />
     );
   }
 
   return (
     <div
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-full font-bold text-sidebar-foreground",
-        TEXT_SIZE_MAP[size],
-        className,
-      )}
+      className={`flex shrink-0 items-center justify-center rounded-full font-bold text-white ${TEXT_SIZE_MAP[size]}`}
       style={{
         width: px,
         height: px,
-        backgroundColor: primaryColor || "var(--color-sidebar)",
+        backgroundColor: primaryColor || "#1e293b",
       }}
       aria-hidden="true"
     >

@@ -64,9 +64,7 @@ class LocalCoOwnershipRepository implements CoOwnershipRepository {
       if (stored.isEmpty) {
         // Seed if empty
         final seeded = await _seedIfEmpty();
-        return Result.ok(
-          seeded.where((item) => item.horseId == horseId).toList(),
-        );
+        return Result.ok(seeded.where((item) => item.horseId == horseId).toList());
       }
       return Result.ok(stored.map((e) => e.toDomain()).toList());
     } catch (e) {
@@ -165,23 +163,17 @@ class LocalCoOwnershipRepository implements CoOwnershipRepository {
       }
 
       // Push local changes to cloud first
-      await client
-          .from('co_ownerships')
-          .upsert(
-            local
-                .map(
-                  (item) => {
-                    'id': item.id,
-                    'horse_id': item.horseId,
-                    'co_owner_name': item.coOwnerName,
-                    'phone': item.phone,
-                    'role': item.role,
-                    'permissions': item.permissions,
-                    'owner_id': userId,
-                  },
-                )
-                .toList(),
-          );
+      await client.from('co_ownerships').upsert(
+        local.map((item) => {
+          'id': item.id,
+          'horse_id': item.horseId,
+          'co_owner_name': item.coOwnerName,
+          'phone': item.phone,
+          'role': item.role,
+          'permissions': item.permissions,
+          'owner_id': userId,
+        }).toList(),
+      );
 
       // Then fetch all co-ownerships from cloud
       final response = await client

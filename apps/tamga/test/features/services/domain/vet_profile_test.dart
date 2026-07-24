@@ -42,7 +42,10 @@ void main() {
     });
 
     test('creates VetProfile with default values', () {
-      final profile = VetProfile(id: 'vet-2', providerId: 'provider-2');
+      final profile = VetProfile(
+        id: 'vet-2',
+        providerId: 'provider-2',
+      );
 
       expect(profile.specialization, []);
       expect(profile.licenseNumber, null);

@@ -4,9 +4,8 @@ import { capture, withDbCapture } from "@zuiio/capture";
 import { postPurchaseToJournal } from "@/lib/accounting";
 import { requireWriteAction } from "@/lib/action-utils";
 import { withBranchFilter } from "@/lib/branches";
-import { revalidateEntities, revalidateEntityTag } from "@/lib/revalidate";
+import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
-import { purchaseSchema } from "@/lib/validation-schemas";
 
 export async function createPurchaseOrder(
   _prevState: { error?: string } | undefined,
@@ -37,18 +36,6 @@ export async function createPurchaseOrder(
   const expectedDate = getString(formData, "expected_date") || null;
   const notes = getString(formData, "notes") || null;
   const itemsJson = getString(formData, "items");
-  const parsedPurchase = purchaseSchema.safeParse({
-    supplier_id: supplierId,
-    order_date: orderDate,
-    expected_date: expectedDate,
-    notes,
-    items: itemsJson,
-  });
-  if (!parsedPurchase.success) {
-    return {
-      error: parsedPurchase.error.issues[0]?.message || "Мэдээлэл буруу байна.",
-    };
-  }
 
   if (hasSuppliers && !supplierId) {
     return { error: "Нийлүүлэгч сонгоно уу." };
@@ -268,7 +255,6 @@ export async function updatePurchaseOrderStatus(
   }
 
   revalidateEntities(["purchases", "inventory", "products"]);
-  revalidateEntityTag("products", organizationId);
   return { success: true as const, error: undefined };
 }
 
@@ -350,6 +336,5 @@ export async function receivePurchaseOrderItems(
   }
 
   revalidateEntities(["purchases"]);
-  revalidateEntityTag("products", organizationId);
   return { success: true as const, error: undefined };
 }

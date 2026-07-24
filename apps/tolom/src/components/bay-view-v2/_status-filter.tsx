@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { STATUS_DOT, STATUS_FILTER_ACTIVE } from "./_constants";
 

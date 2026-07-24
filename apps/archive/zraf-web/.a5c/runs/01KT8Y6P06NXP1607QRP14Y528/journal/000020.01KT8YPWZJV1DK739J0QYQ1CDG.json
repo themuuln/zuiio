@@ -1,0 +1,22 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-06-04T09:16:27.506Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KT8YPWYY2SK57N8EE4H5VFNT",
+    "invocationKey": "cradle/project-install:S000010:update-claude-md",
+    "invocationHash": "a2cde04d5afed5d77fd6f0de06f852d5818c6d1f92ec148a7125a9b2d8afb8cf",
+    "stepId": "S000010",
+    "taskId": "update-claude-md",
+    "kind": "agent",
+    "label": "agent",
+    "taskDefRef": "tasks/01KT8YPWYY2SK57N8EE4H5VFNT/task.json",
+    "labels": [
+      "agent",
+      "cradle",
+      "claude-md",
+      "documentation"
+    ]
+  },
+  "checksum": "81eba62d097ede2f646ff37572809f328f2e43a3f7b6c36af47e77bf60c3a2f2"
+}

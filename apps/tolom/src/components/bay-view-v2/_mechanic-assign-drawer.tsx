@@ -20,7 +20,7 @@ interface MechanicAssignSheetProps {
 
 // ── Main Component ──────────────────────────────────────────
 
-export function MechanicAssignDrawer({
+export function MechanicAssignSheet({
   trigger,
   mechanics,
   leadMechanicId,

@@ -4,7 +4,7 @@ import { LoginForm } from "./login-form";
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string; detail?: string }>;
+  searchParams: Promise<{ next?: string }>;
 }) {
   return (
     <Suspense fallback={null}>
@@ -16,14 +16,8 @@ export default function LoginPage({
 async function LoginFormLoader({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string; detail?: string }>;
+  searchParams: Promise<{ next?: string }>;
 }) {
   const params = await searchParams;
-  return (
-    <LoginForm
-      next={params.next ?? "/"}
-      error={params.error}
-      detail={params.detail}
-    />
-  );
+  return <LoginForm next={params.next ?? "/"} />;
 }

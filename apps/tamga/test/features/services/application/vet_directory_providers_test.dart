@@ -50,15 +50,14 @@ void main() {
         createTestVetProfile(id: 'v2'),
       ];
 
-      when(
-        () => mockRepository.fetchAll(),
-      ).thenAnswer((_) async => Result.ok(profiles));
+      when(() => mockRepository.fetchAll()).thenAnswer(
+        (_) async => Result.ok(profiles),
+      );
 
       final container = ProviderContainer(
         overrides: [
-          vetProfileRepositoryProvider.overrideWith(
-            (ref) => Future.value(mockRepository),
-          ),
+          vetProfileRepositoryProvider
+              .overrideWith((ref) => Future.value(mockRepository)),
         ],
       );
 
@@ -74,17 +73,18 @@ void main() {
     test('vetProfilesByAimagProvider filters by aimag', () async {
       when(
         () => mockRepository.fetchByAimag('Архангай'),
-      ).thenAnswer((_) async => Result.ok([createTestVetProfile(id: 'v1')]));
+      ).thenAnswer(
+        (_) async => Result.ok([createTestVetProfile(id: 'v1')]),
+      );
 
-      when(
-        () => mockRepository.fetchByAimag('Булган'),
-      ).thenAnswer((_) async => Result.ok([createTestVetProfile(id: 'v2')]));
+      when(() => mockRepository.fetchByAimag('Булган')).thenAnswer(
+        (_) async => Result.ok([createTestVetProfile(id: 'v2')]),
+      );
 
       final container = ProviderContainer(
         overrides: [
-          vetProfileRepositoryProvider.overrideWith(
-            (ref) => Future.value(mockRepository),
-          ),
+          vetProfileRepositoryProvider
+              .overrideWith((ref) => Future.value(mockRepository)),
         ],
       );
 
@@ -112,26 +112,30 @@ void main() {
           id: 'v1',
           specialization: ['general', 'dentistry'],
         ),
-        createTestVetProfile(id: 'v2', specialization: ['reproduction']),
-        createTestVetProfile(id: 'v3', specialization: ['general']),
+        createTestVetProfile(
+          id: 'v2',
+          specialization: ['reproduction'],
+        ),
+        createTestVetProfile(
+          id: 'v3',
+          specialization: ['general'],
+        ),
       ];
 
-      when(
-        () => mockRepository.fetchAll(),
-      ).thenAnswer((_) async => Result.ok(all));
+      when(() => mockRepository.fetchAll()).thenAnswer(
+        (_) async => Result.ok(all),
+      );
 
       final container = ProviderContainer(
         overrides: [
-          vetProfileRepositoryProvider.overrideWith(
-            (ref) => Future.value(mockRepository),
-          ),
+          vetProfileRepositoryProvider
+              .overrideWith((ref) => Future.value(mockRepository)),
         ],
       );
 
       final result = await container.read(
-        filteredVetProfilesProvider(
-          const VetFilter(specialization: 'general'),
-        ).future,
+        filteredVetProfilesProvider(const VetFilter(specialization: 'general'))
+            .future,
       );
 
       expect(result.length, 2);
@@ -142,15 +146,14 @@ void main() {
     });
 
     test('vetProfileByIdProvider returns a single profile', () async {
-      when(
-        () => mockRepository.fetchById('vet-1'),
-      ).thenAnswer((_) async => Result.ok(createTestVetProfile(id: 'vet-1')));
+      when(() => mockRepository.fetchById('vet-1')).thenAnswer(
+        (_) async => Result.ok(createTestVetProfile(id: 'vet-1')),
+      );
 
       final container = ProviderContainer(
         overrides: [
-          vetProfileRepositoryProvider.overrideWith(
-            (ref) => Future.value(mockRepository),
-          ),
+          vetProfileRepositoryProvider
+              .overrideWith((ref) => Future.value(mockRepository)),
         ],
       );
 

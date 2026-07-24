@@ -43,10 +43,7 @@ class _MockTeamRepository implements TeamRepository {
 
   @override
   Future<Result<Team>> getTeam(String teamId) async {
-    if (team == null)
-      return Result.fail(
-        AppException(message: 'Not found', code: 'TEAM_NOT_FOUND'),
-      );
+    if (team == null) return Result.fail(AppException(message: 'Not found', code: 'TEAM_NOT_FOUND'));
     return Result.ok(team!);
   }
 
@@ -72,15 +69,13 @@ class _MockTeamRepository implements TeamRepository {
     TeamRole newRole, {
     List<TeamPermission>? permissions,
   }) async {
-    return Result.ok(
-      TeamMember(
-        id: 'm1',
-        teamId: teamId,
-        userId: userId,
-        role: newRole,
-        joinedAt: DateTime.now(),
-      ),
-    );
+    return Result.ok(TeamMember(
+      id: 'm1',
+      teamId: teamId,
+      userId: userId,
+      role: newRole,
+      joinedAt: DateTime.now(),
+    ));
   }
 
   @override
@@ -91,43 +86,24 @@ class _MockTeamRepository implements TeamRepository {
   // ── Invitation Methods (unused in these tests) ──
 
   @override
-  Future<Result<TeamInvitation>> createInvitation(
-    TeamInvitation invitation,
-  ) async {
+  Future<Result<TeamInvitation>> createInvitation(TeamInvitation invitation) async {
     return Result.ok(invitation);
   }
 
   @override
-  Future<Result<List<TeamInvitation>>> getPendingInvitations(
-    String userId,
-  ) async {
+  Future<Result<List<TeamInvitation>>> getPendingInvitations(String userId) async {
     return const Result.ok([]);
   }
 
   @override
   Future<Result<TeamMember>> acceptInvitation(String invitationId) async {
-    return Result.fail(
-      AppException(message: 'Not implemented', code: 'NOT_IMPLEMENTED'),
-    );
+    return Result.fail(AppException(message: 'Not implemented', code: 'NOT_IMPLEMENTED'));
   }
 
   @override
   Future<Result<void>> declineInvitation(String invitationId) async {
     return const Result.ok(null);
   }
-
-  @override
-  Future<Result<void>> addHorseToTeam(
-    String teamId,
-    String horseId, {
-    String? addedBy,
-  }) async => const Result.ok(null);
-
-  @override
-  Future<Result<void>> removeHorseFromTeam(
-    String teamId,
-    String horseId,
-  ) async => const Result.ok(null);
 }
 
 // ── Test Helpers ───────────────────────────────────────────────────
@@ -187,8 +163,7 @@ Widget createStableProfileScreen({
       teamRepositoryProvider.overrideWithValue(mockRepo),
       authStateProvider.overrideWith(() => _FakeAuthStateNotifier(authState)),
       subscriptionTierProvider.overrideWith(
-        (ref) async =>
-            isStableTier ? SubscriptionTier.stable : SubscriptionTier.free,
+        (ref) async => isStableTier ? SubscriptionTier.stable : SubscriptionTier.free,
       ),
     ],
     child: MaterialApp(

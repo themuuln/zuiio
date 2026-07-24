@@ -48,7 +48,7 @@ interface NewPartsCarSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function NewPartsCarDrawer({
+export function NewPartsCarSheet({
   open,
   onOpenChange,
 }: NewPartsCarSheetProps) {

@@ -4,26 +4,11 @@ import type { AiOptions, Tool, ToolParam } from "./types";
 // OpenAI-compatible message types (not exported — internal to this module)
 // ---------------------------------------------------------------------------
 
-export interface TextPart {
-	type: "text";
-	text: string;
-}
-
-export interface ImageUrlPart {
-	type: "image_url";
-	image_url: {
-		url: string;
-		detail?: "auto" | "low" | "high";
-	};
-}
-
-export type MultimodalContent = string | null | Array<TextPart | ImageUrlPart>;
-
 export interface Message {
-	role: "system" | "user" | "assistant" | "tool";
-	content: MultimodalContent;
-	tool_calls?: ToolCall[];
-	tool_call_id?: string;
+ role: "system" | "user" | "assistant" | "tool";
+ content: string | null;
+ tool_calls?: ToolCall[];
+ tool_call_id?: string;
 }
 
 interface ToolCall {
@@ -101,14 +86,12 @@ function toolsToOpenAi(tools: Tool[]): OpenAiTool[] {
 // ---------------------------------------------------------------------------
 
 export interface RunWithToolsOpts extends AiOptions {
-	systemPrompt: string;
-	userMessage: string;
-	/** Optional image URLs or base64 data URLs for vision-capable models. */
-	images?: string[];
-	tools: Tool[];
-	maxRounds?: number;
-	/** Prior conversation messages to include before the current user message. */
-	conversationHistory?: Message[];
+ systemPrompt: string;
+ userMessage: string;
+ tools: Tool[];
+ maxRounds?: number;
+ /** Prior conversation messages to include before the current user message. */
+ conversationHistory?: Message[];
 }
 
 /**
@@ -121,17 +104,16 @@ export interface RunWithToolsOpts extends AiOptions {
  * Returns the final natural-language answer (Mongolian prose).
  */
 export async function runWithTools(opts: RunWithToolsOpts): Promise<string> {
-const {
-	apiKey,
-	baseUrl = "https://api.deepseek.com",
-	model = "deepseek-chat",
-	systemPrompt,
-	userMessage,
-	images,
-	tools,
-	maxRounds = 3,
-	conversationHistory,
-} = opts;
+ const {
+  apiKey,
+  baseUrl = "https://api.deepseek.com",
+  model = "deepseek-chat",
+  systemPrompt,
+  userMessage,
+  tools,
+  maxRounds = 3,
+  conversationHistory,
+ } = opts;
 
  const openAiTools = toolsToOpenAi(tools);
  const toolByName = new Map(tools.map((t) => [t.name, t]));
@@ -144,18 +126,8 @@ const {
  if (conversationHistory && conversationHistory.length > 0) {
   messages.push(...conversationHistory);
  }
-if (images && images.length > 0) {
-	const content: Array<TextPart | ImageUrlPart> = [
-		{ type: "text", text: userMessage },
-		...images.map((url) => ({
-			type: "image_url" as const,
-			image_url: { url, detail: "auto" as const },
-		})),
-	];
-	messages.push({ role: "user", content });
-} else {
-	messages.push({ role: "user", content: userMessage });
-}
+
+ messages.push({ role: "user", content: userMessage });
 
  let lastContent: string | null = null;
 
@@ -197,18 +169,11 @@ if (images && images.length > 0) {
    );
   }
 
-// Track text content — NEVER use reasoning_content as response fallback
-// (reasoning_content is the model's chain-of-thought, not the final answer)
-if (message.content) {
-	if (typeof message.content === "string") {
-		lastContent = message.content;
-	} else if (Array.isArray(message.content)) {
-		const textParts = message.content.filter(
-			(p): p is TextPart => p.type === "text",
-		);
-		lastContent = textParts.map((p) => p.text).join("");
-	}
-}
+  // Track text content — NEVER use reasoning_content as response fallback
+  // (reasoning_content is the model's chain-of-thought, not the final answer)
+  if (message.content) {
+   lastContent = message.content;
+  }
 
   // No tool calls → we're done
   if (!message.tool_calls || message.tool_calls.length === 0) {

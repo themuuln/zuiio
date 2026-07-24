@@ -4,7 +4,9 @@ import { createMockSupabaseClient } from "@/test/mocks/supabase";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/lib/cache/with-cache", () => ({
-  withCache: vi.fn((_key: string[], fn: () => unknown) => fn()),
+  withCache: vi.fn(
+    (_key: string[], fn: () => unknown) => fn(),
+  ),
 }));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
@@ -54,7 +56,7 @@ function createQueryBuilder<TData = unknown>(response?: {
   };
 }
 
-function _b<TData = unknown>(data?: TData, count?: number) {
+function b<TData = unknown>(data?: TData, count?: number) {
   return createQueryBuilder<TData>({ data, count });
 }
 
@@ -92,9 +94,7 @@ async function getRoles(db: ReturnType<typeof createMockSupabaseClient>) {
   // Permission assignments
   const { data: rolePerms } = await db
     .from("role_permissions")
-    .select(
-      "role_id, permissions!inner(id, name, resource, action, description)",
-    )
+    .select("role_id, permissions!inner(id, name, resource, action, description)")
     .in(
       "role_id",
       (roles ?? []).map((r: { id: string }) => r.id),
@@ -157,11 +157,7 @@ async function createRole(
 async function updateRole(
   db: ReturnType<typeof createMockSupabaseClient>,
   roleId: string,
-  updates: {
-    name?: string;
-    description?: string | null;
-    permissionIds?: string[];
-  },
+  updates: { name?: string; description?: string | null; permissionIds?: string[] },
 ) {
   // Verify role exists
   const { data: role } = await db
@@ -181,11 +177,13 @@ async function updateRole(
 
   const payload: Record<string, unknown> = {};
   if (updates.name !== undefined) payload.name = updates.name.trim();
-  if (updates.description !== undefined)
-    payload.description = updates.description?.trim() || null;
+  if (updates.description !== undefined) payload.description = updates.description?.trim() || null;
 
   if (Object.keys(payload).length > 0) {
-    const { error } = await db.from("roles").update(payload).eq("id", roleId);
+    const { error } = await db
+      .from("roles")
+      .update(payload)
+      .eq("id", roleId);
     if (error) throw new Error(`UPDATE_ERROR: ${error.message}`);
   }
 
@@ -226,10 +224,7 @@ async function deleteRole(
     throw new ForbiddenError("System roles cannot be modified");
   }
 
-  await db
-    .from("roles")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", roleId);
+  await db.from("roles").update({ deleted_at: new Date().toISOString() }).eq("id", roleId);
   await db.from("role_permissions").delete().eq("role_id", roleId);
 
   return { success: true };
@@ -246,18 +241,8 @@ describe("getRoles", () => {
 
   it("returns roles with member counts and permissions", async () => {
     const roles = [
-      {
-        id: "r1",
-        name: "Org Owner",
-        description: "Full access",
-        is_system: true,
-      },
-      {
-        id: "r2",
-        name: "Mechanic",
-        description: "Shop floor",
-        is_system: true,
-      },
+      { id: "r1", name: "Org Owner", description: "Full access", is_system: true },
+      { id: "r2", name: "Mechanic", description: "Shop floor", is_system: true },
     ];
     const memberCounts = [
       { role_id: "r1" },
@@ -265,16 +250,7 @@ describe("getRoles", () => {
       { role_id: "r2" },
     ];
     const rolePerms = [
-      {
-        role_id: "r1",
-        permissions: {
-          id: "p1",
-          name: "reports.read",
-          resource: "reports",
-          action: "read",
-          description: "View reports",
-        },
-      },
+      { role_id: "r1", permissions: { id: "p1", name: "reports.read", resource: "reports", action: "read", description: "View reports" } },
     ];
 
     mockClient.__qb.resolveWith({ data: roles, error: null });
@@ -285,24 +261,18 @@ describe("getRoles", () => {
       eq: vi.fn().mockReturnThis(),
       is: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve: (v: unknown) => void) =>
-        resolve({ data: roles, error: null }),
-      ),
+      then: vi.fn((resolve: (v: unknown) => void) => resolve({ data: roles, error: null })),
     };
     const memberBuilder = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       is: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve: (v: unknown) => void) =>
-        resolve({ data: memberCounts, error: null }),
-      ),
+      then: vi.fn((resolve: (v: unknown) => void) => resolve({ data: memberCounts, error: null })),
     };
     const permBuilder = {
       select: vi.fn().mockReturnThis(),
       in: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve: (v: unknown) => void) =>
-        resolve({ data: rolePerms, error: null }),
-      ),
+      then: vi.fn((resolve: (v: unknown) => void) => resolve({ data: rolePerms, error: null })),
     };
 
     mockClient.from
@@ -329,24 +299,18 @@ describe("getRoles", () => {
       eq: vi.fn().mockReturnThis(),
       is: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve: (v: unknown) => void) =>
-        resolve({ data: [], error: null }),
-      ),
+      then: vi.fn((resolve: (v: unknown) => void) => resolve({ data: [], error: null })),
     };
     const emptyMemberBuilder = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       is: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve: (v: unknown) => void) =>
-        resolve({ data: [], error: null }),
-      ),
+      then: vi.fn((resolve: (v: unknown) => void) => resolve({ data: [], error: null })),
     };
     const emptyPermBuilder = {
       select: vi.fn().mockReturnThis(),
       in: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve: (v: unknown) => void) =>
-        resolve({ data: [], error: null }),
-      ),
+      then: vi.fn((resolve: (v: unknown) => void) => resolve({ data: [], error: null })),
     };
 
     mockClient.from
@@ -421,12 +385,7 @@ describe("updateRole", () => {
   });
 
   it("updates custom role name and description", async () => {
-    const existing = {
-      id: CUSTOM_ROLE_ID,
-      name: "Junior",
-      description: null,
-      is_system: false,
-    };
+    const existing = { id: CUSTOM_ROLE_ID, name: "Junior", description: null, is_system: false };
 
     const fetchBuilder = {
       select: vi.fn().mockReturnThis(),
@@ -456,12 +415,7 @@ describe("updateRole", () => {
   });
 
   it("rejects update to system role", async () => {
-    const systemRole = {
-      id: ROLE_ID,
-      name: "Org Owner",
-      description: null,
-      is_system: true,
-    };
+    const systemRole = { id: ROLE_ID, name: "Org Owner", description: null, is_system: true };
 
     const fetchBuilder = {
       select: vi.fn().mockReturnThis(),
@@ -478,12 +432,7 @@ describe("updateRole", () => {
   });
 
   it("replaces permissions when permissionIds provided", async () => {
-    const existing = {
-      id: CUSTOM_ROLE_ID,
-      name: "Junior",
-      description: null,
-      is_system: false,
-    };
+    const existing = { id: CUSTOM_ROLE_ID, name: "Junior", description: null, is_system: false };
 
     const fetchBuilder = {
       select: vi.fn().mockReturnThis(),

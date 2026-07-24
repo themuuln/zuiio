@@ -1,15 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/sync/connection_status.dart';
 import '../../market/application/market_providers.dart';
 import '../../search/application/search_providers.dart';
 import '../../shared/presentation/offline_save_feedback.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../application/horses_providers.dart';
 import '../domain/horse_record.dart';
+import 'co_ownership_sheet.dart';
 import 'horse_detail_screen.dart';
 import 'horse_editor_sheet.dart';
 
@@ -22,127 +23,172 @@ class HorseCard extends ConsumerWidget {
   Widget build(BuildContext ctx, WidgetRef ref) {
     final theme = Theme.of(ctx);
     final colorScheme = theme.colorScheme;
-    final tamgaColors = TamgaColors.of(ctx);
     final certificateAsync = ref.watch(digitalCertificateProvider(horse.id));
 
-    return InkWell(
-      onTap: () {
-        Navigator.of(ctx).push(
-          MaterialPageRoute(builder: (_) => HorseDetailScreen(horse: horse)),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: tamgaColors.surfaceContainerLowest,
-          border: Border(
-            bottom: BorderSide(color: tamgaColors.border, width: 0.5),
-          ),
-        ),
+    return Card(
+      clipBehavior: Clip.hardEdge,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(ctx).push(
+            MaterialPageRoute(builder: (_) => HorseDetailScreen(horse: horse)),
+          );
+        },
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-          ),
-          child: Row(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Avatar ──
-              HorseAvatar(horse: horse, colorScheme: colorScheme),
-              const SizedBox(width: AppSpacing.md),
-              // ── Content ──
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // ── Header row: name + badges ──
+              Row(
+                children: [
+                  // Horse avatar
+                  HorseAvatar(horse: horse, colorScheme: colorScheme),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(horse.name, style: theme.textTheme.titleLarge),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          '${horse.relationLabel} • ${horse.coat} • ${horse.birthYear}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: '${horse.name} засах',
+                    onPressed: () async {
+                      final result = await showModalBottomSheet<HorseRecord>(
+                        context: ctx,
+                        isScrollControlled: true,
+                        builder: (_) => HorseEditorSheet(initialHorse: horse),
+                      );
+                      if (result != null) {
+                        final repo = await ref.read(
+                          horsesRepositoryProvider.future,
+                        );
+                        await repo.saveHorse(result);
+                        ref.invalidate(horsesProvider);
+                        ref.invalidate(searchCatalogProvider);
+                        if (ctx.mounted) {
+                          showOfflineAwareSaveFeedback(
+                            ctx,
+                            ConnectionMonitor.instance.current,
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              // ── Badges row ──
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  BadgeChip(
+                    label: horse.isOwnedByHousehold ? 'Өрхийн' : 'Гаднах',
+                    color: horse.isOwnedByHousehold
+                        ? colorScheme.tertiaryContainer
+                        : colorScheme.secondaryContainer,
+                  ),
+                  BadgeChip(
+                    label: horse.gender.displayName,
+                    color: colorScheme.secondaryContainer,
+                  ),
+                  BadgeChip(
+                    label: 'Шагнал ${horse.awardCount}',
+                    color: colorScheme.primaryContainer,
+                  ),
+                  BadgeChip(
+                    label: 'Үр төл ${horse.offspringCount}',
+                    color: colorScheme.surfaceContainerHighest,
+                  ),
+                  certificateAsync.maybeWhen(
+                    data: (cert) {
+                      if (cert != null) {
+                        return BadgeChip(
+                          label: 'Certified',
+                          color: colorScheme.tertiaryContainer,
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                    orElse: () => const SizedBox.shrink(),
+                  ),
+                  if (horse.lineageRootId != null)
+                    BadgeChip(
+                      label: 'Root ${horse.lineageRootId}',
+                      color: colorScheme.surfaceContainerLow,
+                    ),
+                ],
+              ),
+
+              // ── Owner stamp ──
+              if (horse.ownerStampSvg != null &&
+                  horse.ownerStampSvg!.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                Row(
                   children: [
-                    // Name row
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            horse.name,
-                            style: TamgaTypography.headline(
-                              weight: FontWeight.w600,
-                              color: tamgaColors.foreground,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        if (certificateAsync.maybeWhen(
-                          data: (cert) => cert != null,
-                          orElse: () => false,
-                        ))
-                          Icon(Icons.verified, size: 16, color: tamgaColors.primary),
-                      ],
+                    SvgPicture.string(
+                      horse.ownerStampSvg!,
+                      width: 32,
+                      height: 32,
+                      placeholderBuilder: (_) => const SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     ),
-                    const SizedBox(height: 2),
-                    // Detail line
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
-                      '${horse.gender.displayName} · ${horse.coat} · ${horse.birthYear}',
-                      style: TamgaTypography.callout(color: tamgaColors.mutedForeground),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    // Compact badges
-                    Wrap(
-                      spacing: AppSpacing.xs,
-                      runSpacing: AppSpacing.xs,
-                      children: [
-                        _CompactBadge(
-                          label: horse.isOwnedByHousehold ? 'Өрх' : 'Гаднах',
-                          color: tamgaColors.primary.withValues(alpha: 0.1),
-                          textColor: tamgaColors.primary,
-                        ),
-                        _CompactBadge(
-                          label: 'Шагнал ${horse.awardCount}',
-                          color: tamgaColors.primaryContainer.withValues(alpha: 0.5),
-                          textColor: tamgaColors.onPrimaryContainer,
-                        ),
-                        _CompactBadge(
-                          label: 'Үр төл ${horse.offspringCount}',
-                          color: tamgaColors.surfaceContainerHighest.withValues(alpha: 0.5),
-                          textColor: tamgaColors.onSurfaceVariant,
-                        ),
-                        if (horse.breedLineage != null)
-                          _CompactBadge(
-                            label: horse.breedLineage!.displayName,
-                            color: tamgaColors.tertiary.withValues(alpha: 0.1),
-                            textColor: tamgaColors.tertiary,
-                          ),
-                      ],
+                      'Тамга',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              // ── Edit button ──
-              IconButton(
-                tooltip: '${horse.name} засах',
-                onPressed: () async {
-                  final result = await showModalBottomSheet<HorseRecord>(
-                    context: ctx,
-                    isScrollControlled: true,
-                    builder: (_) => HorseEditorSheet(initialHorse: horse),
-                  );
-                  if (result != null) {
-                    final repo = await ref.read(
-                      horsesRepositoryProvider.future,
-                    );
-                    await repo.saveHorse(result);
-                    ref.invalidate(horsesProvider);
-                    ref.invalidate(searchCatalogProvider);
-                    if (ctx.mounted) {
-                      showOfflineAwareSaveFeedback(
-                        ctx,
-                        ConnectionMonitor.instance.current,
+              ],
+
+              // ── Notes preview ──
+              if (horse.notes.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  horse.notes,
+                  style: theme.textTheme.bodyMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+
+              // ── Footer actions ──
+              const Divider(height: AppSpacing.xl),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: ctx,
+                        isScrollControlled: true,
+                        builder: (_) => CoOwnershipSheet(
+                          horseId: horse.id,
+                          horseName: horse.name,
+                        ),
                       );
-                    }
-                  }
-                },
-                icon: Icon(Icons.edit_outlined, size: 18, color: tamgaColors.mutedForeground),
+                    },
+                    icon: const Icon(Icons.people_outline, size: 18),
+                    label: const Text('Хамтран эзэмшигчид'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -216,33 +262,30 @@ class HorseAvatar extends StatelessWidget {
     );
   }
 }
-/// Compact inline badge for horse cards.
-class _CompactBadge extends StatelessWidget {
-  const _CompactBadge({
-    required this.label,
-    required this.color,
-    required this.textColor,
-  });
 
+/// Бага бүртгэлийн дугуй.
+class BadgeChip extends StatelessWidget {
+  const BadgeChip({super.key, required this.label, required this.color});
   final String label;
   final Color color;
-  final Color textColor;
 
   @override
   Widget build(BuildContext ctx) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusPill),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.2,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs + 2,
+        ),
+        child: Text(
+          label,
+          style: Theme.of(
+            ctx,
+          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
     );

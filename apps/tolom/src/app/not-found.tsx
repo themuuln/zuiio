@@ -1,9 +1,8 @@
 import { cookies, headers } from "next/headers";
 import Link from "next/link";
-import { Suspense } from "react";
 import { Typography } from "@/components/ui/typography";
 
-async function NotFoundContent() {
+export default async function RootNotFoundPage() {
   const cookieStore = await cookies();
   const localeCookie = cookieStore.get("NEXT_LOCALE")?.value;
   let isMn = localeCookie === "mn";
@@ -36,13 +35,5 @@ async function NotFoundContent() {
         </Link>
       </div>
     </div>
-  );
-}
-
-export default function RootNotFoundPage() {
-  return (
-    <Suspense fallback={null}>
-      <NotFoundContent />
-    </Suspense>
   );
 }

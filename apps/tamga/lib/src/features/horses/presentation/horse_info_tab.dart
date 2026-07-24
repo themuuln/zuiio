@@ -80,31 +80,6 @@ class HorseInfoTab extends ConsumerWidget {
                 if (horse.registrationNo != null &&
                     horse.registrationNo!.isNotEmpty)
                   _DetailRow(label: 'Бүртгэл:', value: horse.registrationNo!),
-                if (horse.breedLineage != null)
-                  _DetailRow(
-                    label: 'Үүлдэр:',
-                    value: horse.breedLineage!.displayName,
-                  ),
-                if (horse.coatColor != null)
-                  _DetailRow(
-                    label: 'Зүс (нэршил):',
-                    value: horse.coatColor!.displayName,
-                  ),
-                if (horse.region != null && horse.region!.isNotEmpty)
-                  _DetailRow(label: 'Нутаг:', value: horse.region!),
-                if (horse.sum != null && horse.sum!.isNotEmpty)
-                  _DetailRow(label: 'Сум:', value: horse.sum!),
-                if (horse.tamgaBrandClan != null &&
-                    horse.tamgaBrandClan!.isNotEmpty)
-                  _DetailRow(
-                    label: 'Тамганы овог:',
-                    value: horse.tamgaBrandClan!,
-                  ),
-                if (horse.tamgaBrandGeneration != null)
-                  _DetailRow(
-                    label: 'Тамганы үе:',
-                    value: '${horse.tamgaBrandGeneration}',
-                  ),
               ],
             ),
           ),

@@ -5,4 +5,4 @@ desc: Overview of all features
 
 # Features
 
-- [API Reference](/api/)
+- [Api](/api.html)

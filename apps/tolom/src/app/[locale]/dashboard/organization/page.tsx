@@ -22,7 +22,6 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { PushNotificationSettings } from "@/components/push-notification-settings";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -39,6 +38,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { createOrgQuery } from "@/lib/queries/factory";
@@ -46,6 +46,7 @@ import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { PushNotificationSettings } from "@/components/push-notification-settings";
 
 const orgEditSchema = z.object({
   name: z
@@ -61,18 +62,9 @@ const fetchOrgDetail = createOrgQuery<Organization>("");
 const fetchSubscription = createOrgQuery<SubscriptionPlanInfo>("/subscription");
 
 export default function OrganizationPage() {
-  const t = useTranslations() as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const orgT = useTranslations("organization") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const pageT = useTranslations("organization.page") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations();
+  const orgT = useTranslations("organization");
+  const pageT = useTranslations("organization.page");
   const orgInfoQuery = useCurrentOrg();
   const orgId = orgInfoQuery.data?.orgId;
 
@@ -150,7 +142,7 @@ export default function OrganizationPage() {
     setEditing(false);
   };
 
-  const _loading = orgInfoQuery.isPending || orgLoading || subLoading;
+  const loading = orgInfoQuery.isPending || orgLoading || subLoading;
   const error =
     orgInfoQuery.error?.message ??
     orgError?.message ??
@@ -248,6 +240,35 @@ export default function OrganizationPage() {
     ],
     [orgT],
   );
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
+          <Skeleton className="h-6 w-28" />
+          <Skeleton className="mt-3 h-8 w-48" />
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={`summary-${i}`} className="h-20 rounded-2xl" />
+            ))}
+          </div>
+        </div>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+          {[1, 2].map((i) => (
+            <Card key={`card-${i}`}>
+              <CardHeader>
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-4 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-24 rounded-2xl" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (error && !organization) {
     return (

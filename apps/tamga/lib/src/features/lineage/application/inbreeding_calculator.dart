@@ -1,6 +1,3 @@
-import 'dart:collection';
-import '../../../shared/domain/horse.dart';
-
 class AncestorPath {
   AncestorPath({
     required this.ancestorId,
@@ -36,8 +33,12 @@ class InbreedingCalculator {
   static Map<String, Parents> buildParentMap() {
     final parentMap = <String, Parents>{};
 
-    // Seed pedigree data for built-in horses. For UI-added horses,
-    // use buildParentMapFromHorses() and merge via calculate().
+    // We hardcode the pedigree structure based on the repository seed and snapshot data
+    // to ensure complete accuracy across all records in the app:
+    //
+    // TODO: This is entirely hardcoded seed data. For horses added through the UI,
+    //       buildParentMap() must be populated dynamically from the lineage repository.
+    //       Currently, COI can only be computed for the built-in seed horses.
     // Khan Khuleg Line
     parentMap['khan-khuleg'] = const Parents(
       sireId: 'tenger-khuleg',
@@ -58,18 +59,6 @@ class InbreedingCalculator {
     return parentMap;
   }
 
-  /// Build a parent mapping dynamically from a list of Horse objects.
-  /// Only includes horses that have at least one parent (sireId or damId).
-  static Map<String, Parents> buildParentMapFromHorses(List<Horse> horses) {
-    final parentMap = <String, Parents>{};
-    for (final horse in horses) {
-      if (horse.sireId != null || horse.damId != null) {
-        parentMap[horse.id] = Parents(sireId: horse.sireId, damId: horse.damId);
-      }
-    }
-    return parentMap;
-  }
-
   // Find all paths from a horse to its ancestors up to maxDepth
   static List<List<String>> findAncestorPaths(
     String horseId,
@@ -84,21 +73,18 @@ class InbreedingCalculator {
 
       final parents = parentMap[currentId];
       if (parents == null) {
-        // Leaf ancestor — record the path
-        results.add(List.of(currentPath));
         return;
       }
 
       if (parents.sireId != null) {
-        currentPath.add(parents.sireId!);
-        traverse(parents.sireId!, currentPath);
-        currentPath.removeLast();
+        final next = [...currentPath, parents.sireId!];
+        results.add(next);
+        traverse(parents.sireId!, next);
       }
-
       if (parents.damId != null) {
-        currentPath.add(parents.damId!);
-        traverse(parents.damId!, currentPath);
-        currentPath.removeLast();
+        final next = [...currentPath, parents.damId!];
+        results.add(next);
+        traverse(parents.damId!, next);
       }
     }
 
@@ -110,19 +96,14 @@ class InbreedingCalculator {
   static InbreedingResult calculate(
     String sireId,
     String damId,
-    Map<String, String> nameMap, [
-    List<Horse>? horses,
-  ]) {
+    Map<String, String> nameMap,
+  ) {
     if (sireId == damId) {
       // Direct self-breeding (not standard but possible in calculation)
       return InbreedingResult(coi: 1.0, paths: []);
     }
 
-    // Start with seed data, then overlay with dynamic data from horses list
-    final parentMap = <String, Parents>{...buildParentMap()};
-    if (horses != null && horses.isNotEmpty) {
-      parentMap.addAll(buildParentMapFromHorses(horses));
-    }
+    final parentMap = buildParentMap();
 
     // 1. Find all paths from Sire to ancestors
     final sirePaths = findAncestorPaths(sireId, parentMap, nameMap);
@@ -193,71 +174,6 @@ class InbreedingCalculator {
       result *= base;
     }
     return result;
-  }
-
-  /// Pedigree Completeness Index (PCI)
-  /// Fraction of known ancestors across [generations] generations.
-  /// Returns 0.0 to 1.0 where 1.0 = fully known pedigree.
-  static double calculatePCI(
-    String horseId,
-    Map<String, Parents> parentMap, {
-    int generations = 4,
-  }) {
-    int known = 0;
-
-    // BFS to count known ancestors
-    final queue = Queue<String>();
-    queue.add(horseId);
-    int depth = 0;
-    while (queue.isNotEmpty && depth < generations) {
-      int levelSize = queue.length;
-      for (int i = 0; i < levelSize; i++) {
-        final id = queue.removeFirst();
-        final parents = parentMap[id];
-        if (parents?.sireId != null) {
-          known++;
-          queue.add(parents!.sireId!);
-        }
-        if (parents?.damId != null) {
-          known++;
-          queue.add(parents!.damId!);
-        }
-      }
-      depth++;
-    }
-
-    // Count expected ancestors at each reached generation
-    int expectedAtDepth = 0;
-    for (int d = 1; d <= depth && d <= generations; d++) {
-      expectedAtDepth += (1 << d);
-    }
-
-    return expectedAtDepth > 0 ? known / expectedAtDepth : 0.0;
-  }
-
-  /// Result including PCI
-  static ({double coi, double pci, int generations, String warning})
-  calculateWithPCI(
-    String horseId,
-    String sireId,
-    String damId,
-    Map<String, String> nameMap, {
-    Map<String, Parents>? parentMap,
-    List<Horse>? horses,
-    int generations = 4,
-  }) {
-    final effectiveMap = parentMap ?? buildParentMapFromHorses(horses ?? []);
-    final coiResult = calculate(sireId, damId, nameMap, horses);
-    final pci = calculatePCI(horseId, effectiveMap, generations: generations);
-    final warning = pci < 0.5
-        ? 'Аав ээжийн мэдээлэл дутуу байна (${(pci * 100).toStringAsFixed(0)}%)'
-        : '';
-    return (
-      coi: coiResult.coi,
-      pci: pci,
-      generations: generations,
-      warning: warning,
-    );
   }
 }
 

@@ -15,10 +15,10 @@ export default async function RootPage() {
   const cookieStore = await cookies();
   const existing = cookieStore.get("NEXT_LOCALE")?.value;
 
-  let locale: "en" | "mn" = "mn";
+  let locale = "mn";
 
   if (existing && ["mn", "en"].includes(existing)) {
-    locale = existing as "en" | "mn";
+    locale = existing;
   }
 
   redirect({ href: "/", locale });

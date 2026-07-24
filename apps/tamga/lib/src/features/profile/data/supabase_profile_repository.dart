@@ -66,4 +66,5 @@ class SupabaseProfileRepository with SupabaseRepositoryMixin {
       return Result.fail(wrapError(e));
     }
   }
+
 }

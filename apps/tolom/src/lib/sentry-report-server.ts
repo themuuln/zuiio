@@ -27,12 +27,9 @@ export function reportServerError(
   }
 
   // When message is generic but error is specific, derive context from the error
-  const contextMessage =
-    message === "Unexpected error" && error
-      ? error instanceof Error
-        ? error.message
-        : String(error)
-      : message;
+  const contextMessage = message === "Unexpected error" && error
+    ? (error instanceof Error ? error.message : String(error))
+    : message;
   capture(error ?? new Error(message), {
     context: `[server] ${contextMessage}`,
     ...context,

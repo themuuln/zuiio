@@ -82,8 +82,7 @@ final pastRacesProvider = FutureProvider<List<Race>>((ref) async {
         (r) =>
             r.status == RaceStatus.completed ||
             r.status == RaceStatus.cancelled ||
-            (r.date != null &&
-                r.date!.isBefore(now) &&
+            (r.date != null && r.date!.isBefore(now) &&
                 r.status != RaceStatus.upcoming),
       )
       .toList();
@@ -92,10 +91,8 @@ final pastRacesProvider = FutureProvider<List<Race>>((ref) async {
 /// Төрлөөр шүүсэн уралдаанууд.
 ///
 /// `RaceType` параметрээр шүүж, тухайн төрлийн уралдаануудыг буцаана.
-final racesByTypeProvider = FutureProvider.family<List<Race>, RaceType>((
-  ref,
-  type,
-) async {
+final racesByTypeProvider =
+    FutureProvider.family<List<Race>, RaceType>((ref, type) async {
   final races = await ref.watch(racesProvider.future);
   return races.where((r) => r.type == type).toList();
 });
@@ -103,10 +100,8 @@ final racesByTypeProvider = FutureProvider.family<List<Race>, RaceType>((
 /// Нэг уралдааны дэлгэрэнгүй мэдээлэл.
 ///
 /// ID-гаар тодорхой уралдааныг ачаална.
-final raceDetailProvider = FutureProvider.family<Race, String>((
-  ref,
-  raceId,
-) async {
+final raceDetailProvider =
+    FutureProvider.family<Race, String>((ref, raceId) async {
   final repository = ref.read(raceRepositoryProvider);
   final result = await repository.fetchById(raceId);
   return result.getOrThrow();
@@ -117,10 +112,8 @@ final raceDetailProvider = FutureProvider.family<Race, String>((
 /// Уралдааны бүртгэлүүд.
 ///
 /// Тухайн уралдаанд бүртгэгдсэн моридын жагсаалт.
-final raceEntriesProvider = FutureProvider.family<List<RaceEntry>, String>((
-  ref,
-  raceId,
-) async {
+final raceEntriesProvider =
+    FutureProvider.family<List<RaceEntry>, String>((ref, raceId) async {
   final repository = ref.read(raceEntryRepositoryProvider);
   final result = await repository.fetchByRace(raceId);
   return result.getOrThrow();
@@ -131,8 +124,8 @@ final raceEntriesProvider = FutureProvider.family<List<RaceEntry>, String>((
 /// Зөвхөн цуцлагдаагүй (scratched биш) бүртгэлүүдийг буцаана.
 final activeRaceEntriesProvider =
     FutureProvider.family<List<RaceEntry>, String>((ref, raceId) async {
-      final entries = await ref.watch(raceEntriesProvider(raceId).future);
-      return entries
-          .where((e) => e.status != RaceEntryStatus.scratched)
-          .toList();
-    });
+  final entries = await ref.watch(raceEntriesProvider(raceId).future);
+  return entries.where((e) => e.status != RaceEntryStatus.scratched).toList();
+});
+
+

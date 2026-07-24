@@ -15,7 +15,6 @@ import {
   requireRole,
 } from "@/lib/supabase/role-guard";
 import { createClient } from "@/lib/supabase/server";
-
 // ── Types ─────────────────────────────────────────────────────
 
 interface RouteContext {
@@ -79,7 +78,10 @@ function handleError(
       "API request failed",
     );
   } else {
-    logger.warn({ method, path, status, duration }, "API request failed");
+    logger.warn(
+      { method, path, status, duration },
+      "API request failed",
+    );
   }
 
   if (status >= 500) {
@@ -122,8 +124,10 @@ export function createRouteHandler(
       const supabase = await createClient();
       const {
         data: { user },
-        error: _getUserError,
+        error: getUserError,
       } = await supabase.auth.getUser();
+
+
 
       if (!user) throw new UnauthorizedError();
 
@@ -182,12 +186,11 @@ export function createRouteHandler(
       });
 
       const duration = Math.round(performance.now() - start);
-      const logFn =
-        response.status >= 500
-          ? logger.error
-          : response.status >= 400
-            ? logger.warn
-            : logger.info;
+      const logFn = response.status >= 500
+        ? logger.error
+        : response.status >= 400
+          ? logger.warn
+          : logger.info;
       logFn(
         {
           method,
@@ -231,7 +234,9 @@ export function createSimpleRouteHandler(
       let user: User | null = null;
 
       if (requireAuth) {
-        const { data, error: _getUserError } = await supabase.auth.getUser();
+        const { data, error: getUserError } = await supabase.auth.getUser();
+
+
 
         if (!data.user) throw new UnauthorizedError();
         user = data.user;
@@ -245,12 +250,11 @@ export function createSimpleRouteHandler(
       const response = await handler({ request, user: user as User, supabase });
 
       const duration = Math.round(performance.now() - start);
-      const logFn =
-        response.status >= 500
-          ? logger.error
-          : response.status >= 400
-            ? logger.warn
-            : logger.info;
+      const logFn = response.status >= 500
+        ? logger.error
+        : response.status >= 400
+          ? logger.warn
+          : logger.info;
       logFn(
         {
           method,

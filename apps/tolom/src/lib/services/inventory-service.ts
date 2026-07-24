@@ -25,7 +25,6 @@ const partFieldMap: FieldMap<UpdatePartParams> = {
     name: "name",
     name_mn: "name_mn",
     part_number: "part_number",
-    barcode: "barcode",
     category: "category",
     description: "description",
     unit: "unit",
@@ -39,7 +38,6 @@ const partFieldMap: FieldMap<UpdatePartParams> = {
     name: trimField,
     name_mn: trimField,
     part_number: (v) => (v as string) || null,
-    barcode: (v) => (v as string) || null,
     category: (v) => (v as string) || null,
     description: (v) => (v as string) || null,
     image_url: (v) => (v as string) || null,
@@ -57,39 +55,67 @@ export async function getPartsCatalog(
   pageSize?: number,
   limit = 50,
 ): Promise<PartsCatalogItem[] | PaginatedResponse<PartsCatalogItem>> {
+  const supabase = db;
   const usePagination = typeof page === "number" && page > 0;
   const effectivePage = usePagination ? page : 1;
   const effectivePageSize = usePagination ? (pageSize ?? 50) : limit;
 
-  const { data, error } = await withDbCapture(
-    "getPartsCatalog",
-    db.rpc("get_parts_catalog_with_popularity", {
-      p_org_id: orgId,
-      p_page: effectivePage,
-      p_page_size: effectivePageSize,
-    }),
-  );
+  let query = supabase
+    .from("parts_catalog")
+    .select(
+      "id, organization_id, name, name_mn, part_number, category, unit, default_price, is_active, purchase_price, image_url, location, created_at, deleted_at, global_part_id",
+      usePagination ? { count: "exact" } : undefined,
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null);
+
+  if (usePagination) {
+    const from = (effectivePage - 1) * effectivePageSize;
+    const to = from + effectivePageSize - 1;
+    query = query.range(from, to);
+  } else {
+    query = query.limit(limit + 1);
+  }
+
+  const { data: parts, error, count } = await query;
   if (error) throw new Error(error.message);
 
-  const result = (data as unknown as {
-    data: PartsCatalogItem[];
-    total: number;
-  }) ?? {
-    data: [],
-    total: 0,
-  };
+  const { data: assignments } = await supabase
+    .from("vehicle_model_parts")
+    .select("part_id")
+    .eq("organization_id", orgId);
+
+  const popularityMap: Record<string, number> = {};
+  if (assignments) {
+    const countMap: Record<string, number> = {};
+    for (const a of assignments) {
+      const pid = a.part_id as string;
+      countMap[pid] = (countMap[pid] || 0) + 1;
+    }
+    const maxModels = 26;
+    for (const [pid, count] of Object.entries(countMap)) {
+      popularityMap[pid] = Math.round((count / maxModels) * 100);
+    }
+  }
+
+  const result = (parts ?? []).map((p) => ({
+    ...p,
+    popularity_score: popularityMap[p.id] ?? 0,
+  }));
+
+  result.sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0));
 
   if (usePagination) {
     return {
-      data: result.data,
-      total: result.total,
+      data: result,
+      total: count ?? 0,
       page: effectivePage,
       pageSize: effectivePageSize,
-      totalPages: Math.ceil(result.total / effectivePageSize),
+      totalPages: Math.ceil((count ?? 0) / effectivePageSize),
     } as unknown as PaginatedResponse<PartsCatalogItem>;
   }
 
-  return result.data as unknown as PartsCatalogItem[];
+  return result as unknown as PartsCatalogItem[];
 }
 
 export async function getPart(
@@ -101,7 +127,7 @@ export async function getPart(
   const { data, error } = await supabase
     .from("parts_catalog")
     .select(
-      "id, organization_id, name, name_mn, part_number, barcode, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .eq("id", id)
     .eq("organization_id", orgId)
@@ -139,7 +165,7 @@ export async function createPart(
       updated_by: userId,
     })
     .select(
-      "id, organization_id, name, name_mn, part_number, barcode, category, description, unit, default_price, purchase_price, image_url, location, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, location, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .single();
   if (error || !data)
@@ -162,10 +188,9 @@ export async function updatePart(
   id: string,
   orgId: string,
   params: UpdatePartParams,
-  userId_?: string,
 ): Promise<PartsCatalogItem> {
   const supabase = db;
-  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const { data: existingRecord } = await supabase
     .from("parts_catalog")
@@ -185,7 +210,7 @@ export async function updatePart(
     .eq("id", id)
     .eq("organization_id", orgId)
     .select(
-      "id, organization_id, name, name_mn, part_number, barcode, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .single();
   if (error || !data) throw new NotFoundError("Part not found");
@@ -207,10 +232,9 @@ export async function deletePart(
   db: SupabaseClient,
   id: string,
   orgId: string,
-  userId_?: string,
 ): Promise<void> {
   const supabase = db;
-  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  const userId = (await supabase.auth.getUser()).data.user?.id;
   const { error } = await supabase
     .from("parts_catalog")
     .update({ deleted_at: new Date().toISOString(), updated_by: userId })
@@ -522,11 +546,10 @@ export async function setStockThreshold(
   db: SupabaseClient,
   orgId: string,
   params: CreateStockThresholdParams,
-  userId_?: string,
 ): Promise<StockThreshold> {
   if (!params.part_id) throw new ValidationError("Part is required");
   const supabase = db;
-  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
     strict: false,

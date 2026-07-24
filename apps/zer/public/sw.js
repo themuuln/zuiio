@@ -1,6 +1,8 @@
-const CACHE_VERSION = "zer-v3";
+const CACHE_VERSION = "zer-v2";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const NAV_CACHE = `${CACHE_VERSION}-nav`;
+
+const STATIC_ASSETS = ["/"];
 
 const isStaticAsset = (url) => {
   const { pathname } = new URL(url);
@@ -18,14 +20,10 @@ const isApi = (url) => {
   return pathname.startsWith("/api/") || pathname.startsWith("/rest/");
 };
 
-// Redirect responses (e.g. / → /login) must never be cached: serving a
-// redirected response to a navigation (redirect mode "manual") makes the
-// browser abort with ERR_FAILED instead of rendering the page.
-const isCacheable = (response) => response.ok && !response.redirected;
-
-self.addEventListener("install", (_event) => {
-  // No precache: "/" always 307s (auth-dependent), so there is nothing
-  // stable to warm. Caches fill lazily from real navigations instead.
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS)),
+  );
   self.skipWaiting();
 });
 
@@ -65,11 +63,9 @@ self.addEventListener("fetch", (event) => {
       caches.match(request).then((cached) => {
         const fetchPromise = fetch(request)
           .then((response) => {
-            if (isCacheable(response)) {
-              const copy = response.clone();
-              caches.open(NAV_CACHE).then((cache) => cache.put(request, copy));
-            }
-            return response;
+            const copy = response.clone();
+            caches.open(NAV_CACHE).then((cache) => cache.put(request, copy));
+            return copy;
           })
           .catch(() => cached);
 
@@ -83,10 +79,8 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(request)
       .then((response) => {
-        if (isCacheable(response)) {
-          const copy = response.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
-        }
+        const copy = response.clone();
+        caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
         return response;
       })
       .catch(() => caches.match(request)),

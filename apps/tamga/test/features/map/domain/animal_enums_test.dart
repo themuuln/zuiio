@@ -8,13 +8,9 @@ void main() {
 
   group('AnimalType', () {
     test('has exactly 5 values', () {
-      expect(
-        AnimalType.values.length,
-        5,
-        reason:
-            'Must have exactly 5 animal types: '
-            'Адуу, Үхэр, Хонь, Ямаа, Тэмээ',
-      );
+      expect(AnimalType.values.length, 5,
+          reason: 'Must have exactly 5 animal types: '
+              'Адуу, Үхэр, Хонь, Ямаа, Тэмээ');
     });
 
     test('contains all five types', () {
@@ -27,11 +23,8 @@ void main() {
 
     test('all displayNames are non-empty', () {
       for (final type in AnimalType.values) {
-        expect(
-          type.displayName.trim().isNotEmpty,
-          isTrue,
-          reason: '${type.name} should have a non-empty displayName',
-        );
+        expect(type.displayName.trim().isNotEmpty, isTrue,
+            reason: '${type.name} should have a non-empty displayName');
       }
     });
   });
@@ -41,13 +34,9 @@ void main() {
 
   group('HorseBreed', () {
     test('has exactly 4 values', () {
-      expect(
-        HorseBreed.values.length,
-        4,
-        reason:
-            'Must have exactly 4 breeds: '
-            'Монгол, Шинэ цагийн монгол, Цэвэр цусны, Эрлийз',
-      );
+      expect(HorseBreed.values.length, 4,
+          reason: 'Must have exactly 4 breeds: '
+              'Монгол, Шинэ цагийн монгол, Цэвэр цусны, Эрлийз');
     });
 
     test('contains all four breeds', () {
@@ -62,11 +51,8 @@ void main() {
 
   group('LostHorsePricingTier', () {
     test('has exactly 3 values', () {
-      expect(
-        LostHorsePricingTier.values.length,
-        3,
-        reason: 'Must have 3 tiers: Энгийн, Онцлох, VIP',
-      );
+      expect(LostHorsePricingTier.values.length, 3,
+          reason: 'Must have 3 tiers: Энгийн, Онцлох, VIP');
     });
 
     test('has correct display names', () {
@@ -80,11 +66,8 @@ void main() {
 
   group('AnimalAge', () {
     test('has correct values', () {
-      expect(
-        AnimalAge.values.length,
-        14,
-        reason: 'Must have 14 age classifications',
-      );
+      expect(AnimalAge.values.length, 14,
+          reason: 'Must have 14 age classifications');
     });
 
     test('key ages have correct display names', () {
@@ -102,27 +85,18 @@ void main() {
 
   group('horseCoatColors', () {
     test('has at least 40 entries', () {
-      expect(
-        horseCoatColors.length,
-        greaterThanOrEqualTo(40),
-        reason: 'Must have 40+ Mongolian coat color names',
-      );
+      expect(horseCoatColors.length, greaterThanOrEqualTo(40),
+          reason: 'Must have 40+ Mongolian coat color names');
     });
 
     test('contains no duplicates', () {
       final unique = horseCoatColors.toSet();
-      expect(
-        unique.length,
-        horseCoatColors.length,
-        reason: 'All coat color entries must be unique',
-      );
+      expect(unique.length, horseCoatColors.length,
+          reason: 'All coat color entries must be unique');
     });
 
     test('contains key colors', () {
-      expect(
-        horseCoatColors,
-        containsAll(['Хар', 'Цагаан', 'Хээр', 'Бор', 'Улаан']),
-      );
+      expect(horseCoatColors, containsAll(['Хар', 'Цагаан', 'Хээр', 'Бор', 'Улаан']));
     });
 
     test('all entries are non-empty', () {

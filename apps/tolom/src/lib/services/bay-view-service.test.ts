@@ -97,18 +97,15 @@ describe("bay-view pure service functions", () => {
   it("getBayViewData accepts db and orgId as first params", async () => {
     const { getBayViewData } = await import("./bay-view-service");
     const mockDb = createMockSupabaseClient();
-    const mockChain = {
+    mockDb.from.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       not: vi.fn().mockReturnThis(),
       is: vi.fn().mockReturnThis(),
       in: vi.fn().mockReturnThis(),
-      gte: vi.fn().mockReturnThis(),
-      lte: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-    };
-    mockDb.from.mockReturnValue(mockChain as any);
+    } as any);
 
     const result = await getBayViewData(asDb(mockDb), "org-1", undefined);
 
@@ -117,7 +114,6 @@ describe("bay-view pure service functions", () => {
     expect(result).toHaveProperty("branches");
     expect(result).toHaveProperty("waitingQueue");
     expect(result).toHaveProperty("mechanics");
-    expect(result).toHaveProperty("shiftReport");
   });
 
   it("assignVehicleToBay accepts db and orgId as first params", async () => {

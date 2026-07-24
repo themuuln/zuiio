@@ -67,10 +67,7 @@ export function DataExportSection({ orgId }: DataExportSectionProps) {
 }
 
 function ExportDataButton({ orgId }: { orgId: string }) {
-  const t = useTranslations("settings") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = useTranslations("settings");
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 

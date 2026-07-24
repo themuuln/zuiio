@@ -1,16 +1,16 @@
 "use client";
 
 import { FileText } from "@phosphor-icons/react";
-import type { ColumnDef } from "@tanstack/react-table";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/data-table";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { InvoiceCreateDrawer } from "@/components/invoices/invoice-create-drawer";
 import { InvoiceDetailDrawer } from "@/components/invoices/invoice-detail-drawer";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency } from "@/lib/format";
 import { dateColumn, textColumn } from "@/lib/table-columns";
 

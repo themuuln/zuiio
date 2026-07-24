@@ -14,10 +14,9 @@
  *   GITHUB_TOKEN (or PERSONAL_ACCESS_TOKEN) with repo scope
  */
 
-import { createSimpleRouteHandler } from "@/lib/api-handler";
-import { apiError, ok } from "@/lib/api-response";
+import { type NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-
+import { reportServerError } from "@/lib/sentry-report-server";
 interface SentryAlertPayload {
   id?: string;
   project?: string;
@@ -48,77 +47,85 @@ interface SentryAlertPayload {
   triggered_rule_id?: string;
 }
 
-export const POST = createSimpleRouteHandler(
-  async ({ request }) => {
-    // Parse the Sentry webhook payload
-    const payload: SentryAlertPayload = await request.json().catch(() => {
-      throw new Error("Invalid JSON body");
-    });
+export async function POST(request: NextRequest) {
+  // Parse the Sentry webhook payload
+  let payload: SentryAlertPayload;
+  try {
+    payload = (await request.json()) as SentryAlertPayload;
+  } catch (error) {
+    reportServerError("Unexpected error", error);
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
-    // Extract issue details
-    const issueId = payload.id || payload.event?.event_id;
-    const title =
-      payload.event?.title || payload.message || "Unknown Sentry error";
-    const culprit = payload.event?.culprit || "";
-    const level = payload.event?.level || "error";
+  // Extract issue details
+  const issueId = payload.id || payload.event?.event_id;
+  const title =
+    payload.event?.title || payload.message || "Unknown Sentry error";
+  const culprit = payload.event?.culprit || "";
+  const level = payload.event?.level || "error";
 
-    if (!issueId) {
-      return apiError("BAD_REQUEST", "Missing issue ID", 400);
-    }
+  if (!issueId) {
+    return NextResponse.json({ error: "Missing issue ID" }, { status: 400 });
+  }
 
-    const githubToken = process.env.GITHUB_TOKEN;
-    const repo =
-      process.env.GITHUB_REPOSITORY || process.env.VERCEL_GIT_REPO_SLUG;
+  const githubToken = process.env.GITHUB_TOKEN;
+  const repo =
+    process.env.GITHUB_REPOSITORY || process.env.VERCEL_GIT_REPO_SLUG;
 
-    if (!githubToken || !repo) {
-      // No GitHub token configured — log and return
-      logger.warn(
-        { issueId, title },
-        "sentry-webhook: GITHUB_TOKEN or repo not configured; skipping dispatch",
-      );
-      return ok({ received: true, dispatched: false });
-    }
-
-    // Resolve owner/repo from Vercel env or default
-    const owner = process.env.VERCEL_GIT_COMMIT_ORG || "themuuln";
-    const fullRepo =
-      process.env.GITHUB_REPOSITORY || `${owner}/${repo || "tolom"}`;
-
-    // Dispatch to GitHub Actions
-    const response = await fetch(
-      `https://api.github.com/repos/${fullRepo}/dispatches`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          "Content-Type": "application/json",
-          "User-Agent": "sentry-webhook-tolom",
-        },
-        body: JSON.stringify({
-          event_type: "sentry-issue",
-          client_payload: {
-            issue_id: issueId,
-            title: `[${level}] ${title}`,
-            culprit,
-            level,
-            url:
-              payload.url ||
-              `https://${process.env.SENTRY_ORG || "themuuln"}.sentry.io/issues/${issueId}/`,
-          },
-        }),
-      },
+  if (!githubToken || !repo) {
+    // No GitHub token configured — log and return
+    logger.warn(
+      { issueId, title },
+      "sentry-webhook: GITHUB_TOKEN or repo not configured; skipping dispatch",
     );
+    return NextResponse.json({ received: true, dispatched: false });
+  }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("sentry-webhook: GitHub dispatch failed", {
-        status: response.status,
-        error: errorText,
-      });
-      return apiError("DISPATCH_FAILED", "Failed to dispatch to GitHub", 502);
-    }
+  // Resolve owner/repo from Vercel env or default
+  const owner = process.env.VERCEL_GIT_COMMIT_ORG || "themuuln";
+  const fullRepo =
+    process.env.GITHUB_REPOSITORY || `${owner}/${repo || "tolom"}`;
 
-    return ok({ received: true, dispatched: true, issue_id: issueId });
-  },
-  { requireAuth: false },
-);
+  // Dispatch to GitHub Actions
+  const response = await fetch(
+    `https://api.github.com/repos/${fullRepo}/dispatches`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        "Content-Type": "application/json",
+        "User-Agent": "sentry-webhook-tolom",
+      },
+      body: JSON.stringify({
+        event_type: "sentry-issue",
+        client_payload: {
+          issue_id: issueId,
+          title: `[${level}] ${title}`,
+          culprit,
+          level,
+          url:
+            payload.url ||
+            `https://${process.env.SENTRY_ORG || "themuuln"}.sentry.io/issues/${issueId}/`,
+        },
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("sentry-webhook: GitHub dispatch failed", {
+      status: response.status,
+      error: errorText,
+    });
+    return NextResponse.json(
+      { error: "Failed to dispatch to GitHub" },
+      { status: 502 },
+    );
+  }
+
+  return NextResponse.json({
+    received: true,
+    dispatched: true,
+    issue_id: issueId,
+  });
+}

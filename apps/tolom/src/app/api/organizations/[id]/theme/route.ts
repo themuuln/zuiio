@@ -79,11 +79,7 @@ export const PUT = createRouteHandler(
     }
 
     const fontBody = body.font_body;
-    if (
-      fontBody != null &&
-      typeof fontBody === "string" &&
-      !getFont(fontBody)
-    ) {
+    if (fontBody != null && typeof fontBody === "string" && !getFont(fontBody)) {
       return apiError("VALIDATION", `Unknown body font: ${fontBody}`, 400);
     }
 
@@ -93,11 +89,7 @@ export const PUT = createRouteHandler(
       typeof fontHeading === "string" &&
       !getFont(fontHeading)
     ) {
-      return apiError(
-        "VALIDATION",
-        `Unknown heading font: ${fontHeading}`,
-        400,
-      );
+      return apiError("VALIDATION", `Unknown heading font: ${fontHeading}`, 400);
     }
 
     // --- Read current settings (preserve unrelated keys) ---
@@ -113,7 +105,8 @@ export const PUT = createRouteHandler(
 
     // Build BrandConfig from validated input (ignore logo_url — Tolom uses OrgLogoUpload)
     const config: BrandConfig = resolveBrandConfig({
-      theme: preset != null && typeof preset === "string" ? preset : undefined,
+      theme:
+        preset != null && typeof preset === "string" ? preset : undefined,
       radius: typeof radius === "number" ? radius : undefined,
       custom_colors:
         colors && typeof colors === "object"

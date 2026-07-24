@@ -36,7 +36,7 @@ export function useClockDevices(
 ): UseQueryResult<ClockDevice[], Error> {
   return useQuery({
     queryKey: clockDeviceKeys.list(orgId ?? ""),
-    queryFn: () => fetchClockDevices(orgId as string),
+    queryFn: () => fetchClockDevices(orgId!),
     enabled: !!orgId,
     staleTime: 60_000,
   });

@@ -42,7 +42,9 @@ class ContractScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 color: colors.primaryContainer,
-                borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
+                borderRadius: BorderRadius.circular(
+                  AppSpacing.cornerRadius,
+                ),
               ),
               child: Column(
                 children: [
@@ -76,7 +78,10 @@ class ContractScreen extends ConsumerWidget {
               label: 'Гэрээний дугаар',
               value: contract.id.substring(0, 8).toUpperCase(),
             ),
-            _InfoRow(label: 'Огноо / Date', value: contract.formattedDate),
+            _InfoRow(
+              label: 'Огноо / Date',
+              value: contract.formattedDate,
+            ),
 
             const Divider(height: AppSpacing.xxl),
 
@@ -175,7 +180,9 @@ class ContractScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: colors.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
+                borderRadius: BorderRadius.circular(
+                  AppSpacing.cornerRadius,
+                ),
               ),
               child: Column(
                 children: [
@@ -222,7 +229,10 @@ class ContractScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _shareContract(BuildContext context, WidgetRef ref) async {
+  Future<void> _shareContract(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final actions = ref.read(contractActionsProvider);
     await actions.shareContract(contract);
 
@@ -255,7 +265,11 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value, this.icon});
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    this.icon,
+  });
 
   final String label;
   final String value;

@@ -39,24 +39,22 @@ export function LandingFooter() {
               {t("footerProduct")}
             </Typography.H4>
             <ul className="flex flex-col gap-2">
-              {(["Features", "Pricing", "Integrations"] as const).map(
-                (item) => (
-                  <li key={item}>
-                    <Link
-                      href={
-                        item === "Pricing"
-                          ? "/pricing"
-                          : item === "Integrations"
-                            ? "/integrations"
-                            : "#features"
-                      }
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {t(`footerProduct${item}`)}
-                    </Link>
-                  </li>
-                ),
-              )}
+              {["Features", "Pricing", "Integrations"].map((item) => (
+                <li key={item}>
+                  <Link
+                    href={
+                      item === "Pricing"
+                        ? "/pricing"
+                        : item === "Integrations"
+                          ? "/integrations"
+                          : "#features"
+                    }
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {t(`footerProduct${item}`)}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -66,7 +64,7 @@ export function LandingFooter() {
               {t("footerCompany")}
             </Typography.H4>
             <ul className="flex flex-col gap-2">
-              {(["About", "Blog", "Contact"] as const).map((item) => (
+              {["About", "Blog", "Contact"].map((item) => (
                 <li key={item}>
                   <Link
                     href={
@@ -91,7 +89,7 @@ export function LandingFooter() {
               {t("footerSupport")}
             </Typography.H4>
             <ul className="flex flex-col gap-2">
-              {(["Docs", "FAQ", "Status"] as const).map((item) => (
+              {["Docs", "FAQ", "Status"].map((item) => (
                 <li key={item}>
                   <Link
                     href={

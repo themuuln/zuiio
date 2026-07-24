@@ -7,8 +7,8 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
+import { useEffect, useState } from "react";
 import { useShopHistoryDrawer } from "@/components/shop/shop-history-drawer";
 import { cn } from "@/lib/utils";
 

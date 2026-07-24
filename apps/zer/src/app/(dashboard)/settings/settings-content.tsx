@@ -13,7 +13,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/erp/theme-toggle";
 import type { RolePermission } from "@/components/roles/roles-client";
-import { BankAccountsSettings } from "@/components/settings/bank-accounts-settings";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -74,7 +73,6 @@ interface PosRow {
   has_checkout_customer: boolean | null;
   has_checkout_quick_amounts: boolean | null;
   has_receipt_drawer: boolean | null;
-  has_track_stock: boolean | null;
   shop_default_payment_method: string | null;
 }
 
@@ -97,11 +95,11 @@ interface LinkCode {
 
 interface SettingsData {
   org: OrgRow | null;
+  profile: { full_name: string | null } | null;
   posSettings: {
     has_checkout_customer: boolean;
     has_checkout_quick_amounts: boolean;
     has_receipt_drawer: boolean;
-    has_track_stock: boolean;
     shop_default_payment_method: string;
   };
   userId: string;
@@ -111,7 +109,6 @@ interface SettingsData {
   roles: RoleRow[];
   rolePermissions: RolePermission[];
   telegramLink: LinkedTelegramAccount | null;
-  profile: { full_name: string | null } | null;
 }
 
 export function SettingsContent() {
@@ -157,7 +154,7 @@ export function SettingsContent() {
             supabase
               .from("organizations")
               .select(
-                "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, has_track_stock, shop_default_payment_method",
+                "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, shop_default_payment_method",
               )
               .eq("id", organizationId)
               .single(),
@@ -191,7 +188,6 @@ export function SettingsContent() {
         has_checkout_quick_amounts:
           posRow?.has_checkout_quick_amounts !== false,
         has_receipt_drawer: posRow?.has_receipt_drawer !== false,
-        has_track_stock: posRow?.has_track_stock !== false,
         shop_default_payment_method:
           posRow?.shop_default_payment_method ?? "cash",
       };
@@ -376,6 +372,7 @@ export function SettingsContent() {
     org,
     profile,
     posSettings,
+    userId,
     userEmail,
     permissions,
     smtpCount,
@@ -508,12 +505,6 @@ export function SettingsContent() {
 
       {/* Shop / POS checkout settings */}
       <ShopPosSettings initial={posSettings} />
-      {/* Bank Accounts */}
-      <Card>
-        <CardContent className="pt-6">
-          <BankAccountsSettings />
-        </CardContent>
-      </Card>
 
       {/* Product Brand Presets */}
       {hasBrands && hasPresets ? (

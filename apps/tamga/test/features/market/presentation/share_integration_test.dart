@@ -108,14 +108,16 @@ void main() {
       expect(
         source.contains("'Check out this horse on Tamga: \$url'"),
         isTrue,
-        reason: 'Share text should use "Check out this horse on Tamga: \$url"',
+        reason:
+            'Share text should use "Check out this horse on Tamga: \$url"',
       );
 
       // Verify share subject
       expect(
         source.contains("'Tamga — \${listing.title}'"),
         isTrue,
-        reason: 'Share subject should be "Tamga — {listing.title}" format',
+        reason:
+            'Share subject should be "Tamga — {listing.title}" format',
       );
 
       // Verify button uses Icons.share_outlined
@@ -129,14 +131,16 @@ void main() {
       expect(
         source.contains("import 'package:flutter/services.dart'"),
         isFalse,
-        reason: 'Clipboard import should be removed in favor of share_plus',
+        reason:
+            'Clipboard import should be removed in favor of share_plus',
       );
 
       // Verify Clipboard.setData was removed
       expect(
         source.contains('Clipboard.setData'),
         isFalse,
-        reason: 'Clipboard.setData should be replaced by Share.share()',
+        reason:
+            'Clipboard.setData should be replaced by Share.share()',
       );
     });
   });
@@ -147,64 +151,63 @@ void main() {
 
   group('VAL-MARKET-004: Horse profile share button source verification', () {
     test(
-      'PublicHorseProfileScreen uses Share.share() with correct text',
-      () async {
-        final sourceFile = File(
-          'lib/src/features/horses/presentation/public_horse_profile_screen.dart',
-        );
-        final source = await sourceFile.readAsString();
+        'PublicHorseProfileScreen uses Share.share() with correct text',
+        () async {
+      final sourceFile = File(
+        'lib/src/features/horses/presentation/public_horse_profile_screen.dart',
+      );
+      final source = await sourceFile.readAsString();
 
-        // Verify share_plus import
-        expect(
-          source.contains("import 'package:share_plus/share_plus.dart'"),
-          isTrue,
-          reason: 'PublicHorseProfileScreen should import share_plus',
-        );
+      // Verify share_plus import
+      expect(
+        source.contains("import 'package:share_plus/share_plus.dart'"),
+        isTrue,
+        reason: 'PublicHorseProfileScreen should import share_plus',
+      );
 
-        // Verify Share.share() is called
-        expect(
-          source.contains('Share.share('),
-          isTrue,
-          reason: 'PublicHorseProfileScreen should call Share.share()',
-        );
+      // Verify Share.share() is called
+      expect(
+        source.contains('Share.share('),
+        isTrue,
+        reason: 'PublicHorseProfileScreen should call Share.share()',
+      );
 
-        // Verify URL format for horse
-        expect(
-          source.contains("'https://tamga.mn/horse/\${horse.id}'"),
-          isTrue,
-          reason: 'URL should use tamga.mn/horse/{id} format',
-        );
+      // Verify URL format for horse
+      expect(
+        source.contains("'https://tamga.mn/horse/\${horse.id}'"),
+        isTrue,
+        reason: 'URL should use tamga.mn/horse/{id} format',
+      );
 
-        // Verify share text (uses $url variable in string interpolation)
-        expect(
-          source.contains("'Check out this horse on Tamga: \$url'"),
-          isTrue,
-          reason:
-              'Share text should use "Check out this horse on Tamga: \$url"',
-        );
+      // Verify share text (uses $url variable in string interpolation)
+      expect(
+        source.contains("'Check out this horse on Tamga: \$url'"),
+        isTrue,
+        reason:
+            'Share text should use "Check out this horse on Tamga: \$url"',
+      );
 
-        // Verify share subject
-        expect(
-          source.contains("'Tamga — \${horse.name}'"),
-          isTrue,
-          reason: 'Share subject should be "Tamga — {horse.name}" format',
-        );
+      // Verify share subject
+      expect(
+        source.contains("'Tamga — \${horse.name}'"),
+        isTrue,
+        reason: 'Share subject should be "Tamga — {horse.name}" format',
+      );
 
-        // Verify button uses Icons.share_outlined
-        expect(
-          source.contains('Icons.share_outlined'),
-          isTrue,
-          reason: 'Share button should use Icons.share_outlined',
-        );
+      // Verify button uses Icons.share_outlined
+      expect(
+        source.contains('Icons.share_outlined'),
+        isTrue,
+        reason: 'Share button should use Icons.share_outlined',
+      );
 
-        // Verify TODO comment was removed
-        expect(
-          source.contains('// TODO: Share horse profile'),
-          isFalse,
-          reason: 'TODO comment should be replaced by actual implementation',
-        );
-      },
-    );
+      // Verify TODO comment was removed
+      expect(
+        source.contains('// TODO: Share horse profile'),
+        isFalse,
+        reason: 'TODO comment should be replaced by actual implementation',
+      );
+    });
   });
 
   // ══════════════════════════════════════════════════════════════════
@@ -212,32 +215,30 @@ void main() {
   // ══════════════════════════════════════════════════════════════════
 
   group('VAL-MARKET-004: Horse profile share button widget test', () {
-    testWidgets(
-      'PublicHorseProfileScreen has share button with share_outlined icon',
-      (WidgetTester tester) async {
-        // Build a simple MaterialApp with a Scaffold that replicates
-        // the share button pattern from PublicHorseProfileScreen.
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              appBar: AppBar(
-                title: const Text('Test Horse'),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.share_outlined),
-                    onPressed: () {
-                      // In production, Share.share() is called here
-                    },
-                  ),
-                ],
-              ),
+    testWidgets('PublicHorseProfileScreen has share button with share_outlined icon',
+        (WidgetTester tester) async {
+      // Build a simple MaterialApp with a Scaffold that replicates
+      // the share button pattern from PublicHorseProfileScreen.
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            appBar: AppBar(
+              title: const Text('Test Horse'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  onPressed: () {
+                    // In production, Share.share() is called here
+                  },
+                ),
+              ],
             ),
           ),
-        );
+        ),
+      );
 
-        // Verify the share_outlined icon button exists
-        expect(find.byIcon(Icons.share_outlined), findsOneWidget);
-      },
-    );
+      // Verify the share_outlined icon button exists
+      expect(find.byIcon(Icons.share_outlined), findsOneWidget);
+    });
   });
 }

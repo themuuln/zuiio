@@ -1,16 +1,6 @@
 // Database types and domain type aliases
-export type {
-  CompetitionType,
-  Database,
-  GameStatus,
-  Json,
-  MembershipRole,
-  MembershipScope,
-  Tables,
-  TablesInsert,
-  TablesUpdate,
-} from "./database";
-
+export type { Database, Json, GameStatus, MembershipRole, MembershipScope, CompetitionType } from "./database";
+export type { Tables, TablesInsert, TablesUpdate } from "./database";
 import { z } from "zod";
 import type { GameStatus, Tables } from "./database";
 

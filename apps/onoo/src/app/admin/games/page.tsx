@@ -1,55 +1,17 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { Plus } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  catalogRefApi,
-  type CompetitionRow,
-  type GameRow,
-  gamesApi,
-  teamSeasonsApi,
-  type VenueRow,
-} from "@/app/admin/_lib/api";
-import { AdminTableSkeleton } from "@/components/admin/admin-skeleton";
-import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { Plus, ArrowLeft } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -58,6 +20,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
+  gamesApi,
+  competitionsApi,
+  venuesApi,
+  teamSeasonsApi,
+  type GameRow,
+} from "@/app/admin/_lib/api";
 
 const gameSchema = z
   .object({
@@ -115,31 +108,26 @@ function statusLabel(status: string) {
 export default function AdminGamesPage() {
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
-  const [selectedCompetitionId, setSelectedCompetitionId] =
-    useState<string>("");
+  const [selectedCompetitionId, setSelectedCompetitionId] = useState<string>("");
 
   const { data: games = [], isPending: gamesPending } = useQuery({
     queryKey: ["admin", "games"],
     queryFn: () => gamesApi.list(),
   });
-  
 
-  const { data: ref } = useQuery({
-    queryKey: ["admin", "catalog", "reference"],
-    queryFn: () => catalogRefApi.get(),
-    staleTime: 3 * 60 * 1000,
+  const { data: competitions = [] } = useQuery({
+    queryKey: ["admin", "competitions"],
+    queryFn: () => competitionsApi.list(),
   });
-  const competitions = (ref?.competitions ?? []) as CompetitionRow[];
-  const venues = (ref?.venues ?? []) as VenueRow[];
+
+  const { data: venues = [] } = useQuery({
+    queryKey: ["admin", "venues"],
+    queryFn: () => venuesApi.list(),
+  });
 
   const { data: teamSeasons = [] } = useQuery({
     queryKey: ["admin", "team-seasons", selectedCompetitionId],
-    queryFn: () =>
-      teamSeasonsApi.list(
-        selectedCompetitionId
-          ? { competition_id: selectedCompetitionId }
-          : undefined,
-      ),
+    queryFn: () => teamSeasonsApi.list(selectedCompetitionId),
     enabled: !!selectedCompetitionId,
   });
 
@@ -170,7 +158,10 @@ export default function AdminGamesPage() {
     }
   }
 
-  function getTeamName(game: GameRow, side: "home" | "away"): string {
+  function getTeamName(
+    game: GameRow,
+    side: "home" | "away"
+  ): string {
     const ts = side === "home" ? game.home_team_season : game.away_team_season;
     return ts?.teams?.name ?? "Тодорхойгүй";
   }
@@ -352,17 +343,9 @@ export default function AdminGamesPage() {
         </CardHeader>
         <CardContent>
           {gamesPending ? (
-            <AdminTableSkeleton rows={5} />
+            <p className="text-muted-foreground">Ачаалж байна...</p>
           ) : games.length === 0 ? (
-            <Empty>
-              <EmptyMedia variant="icon" />
-              <EmptyHeader>
-                <EmptyTitle>Тоглолт олдсонгүй</EmptyTitle>
-                <EmptyDescription>
-                  Одоогоор тоглолт бүртгэгдээгүй байна.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+            <p className="text-muted-foreground">Тоглолт олдсонгүй</p>
           ) : (
             <Table>
               <TableHeader>
@@ -377,20 +360,15 @@ export default function AdminGamesPage() {
                 {games.map((game) => (
                   <TableRow key={game.id}>
                     <TableCell>
-                      {getTeamName(game, "home")} vs {getTeamName(game, "away")}
+                      {getTeamName(game, "home")} vs{" "}
+                      {getTeamName(game, "away")}
                     </TableCell>
                     <TableCell>
                       {format(new Date(game.scheduled_at), "yyyy-MM-dd HH:mm")}
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={
-                          statusBadgeVariant(game.status) as
-                            | "default"
-                            | "secondary"
-                            | "destructive"
-                            | "outline"
-                        }
+                        variant={statusBadgeVariant(game.status) as "default" | "secondary" | "destructive" | "outline"}
                         className={
                           game.status === "official"
                             ? "bg-green-600 text-white hover:bg-green-700"
