@@ -2,7 +2,7 @@
 
 import { FileText, Plus, Send, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { useTableFilters } from "@/lib/hooks/use-table-filters";
 import { useRouter } from "@/lib/i18n/navigation";
@@ -159,7 +160,6 @@ export default function EstimatesPage() {
   const orgId = org?.orgId;
   const selectedBranchId = useSelectedBranchId();
   const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
 
   const { search, setSearch, status, setStatus } = useTableFilters(
@@ -193,10 +193,7 @@ export default function EstimatesPage() {
     branchFilter,
   );
   const estimates = estimatesQuery.data ?? [];
-
-  useEffect(() => {
-    if (estimatesQuery.data) setHasLoadedOnce(true);
-  }, [estimatesQuery.data]);
+  const isFirstLoad = useIsFirstLoad(!!estimatesQuery.data);
 
   const summary = useMemo(() => {
     const active = estimates.filter((item) =>
@@ -237,7 +234,7 @@ export default function EstimatesPage() {
       <ListPageShell
         title={t("pageTitle")}
         description={t("pageSubtitle")}
-        loading={estimatesQuery.isPending && !hasLoadedOnce}
+        loading={estimatesQuery.isPending && isFirstLoad}
         error={
           estimatesQuery.error instanceof Error
             ? estimatesQuery.error.message
@@ -308,7 +305,7 @@ export default function EstimatesPage() {
                 onChange: setSearch,
                 onValueChange: setSearch,
                 placeholder: commonT("search"),
-                loading: estimatesQuery.isFetching && hasLoadedOnce,
+                loading: estimatesQuery.isFetching && !isFirstLoad,
                 focusShortcut: false,
               }}
               filters={<FilterChips items={chips} />}
@@ -351,7 +348,7 @@ export default function EstimatesPage() {
               </Empty>
             ) : (
               <div className="flex flex-col gap-3">
-                {estimatesQuery.isFetching && hasLoadedOnce ? (
+                {estimatesQuery.isFetching && !isFirstLoad ? (
                   <div className="grid gap-3">
                     {Array.from({ length: 2 }).map((_, index) => (
                       <Skeleton key={index} className="h-28 rounded-2xl" />

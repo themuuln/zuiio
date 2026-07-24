@@ -107,7 +107,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
               }
               nativeButton
               variant="ghost"
-              size="icon-sm"
+              size="icon"
             >
               <Pencil className="size-4" />
             </Button>
@@ -124,7 +124,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
               }
               nativeButton
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               className="text-destructive/70 hover:text-destructive"
             >
               <Trash2 className="size-4" />

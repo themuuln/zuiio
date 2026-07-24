@@ -164,7 +164,7 @@ function ServiceTimelineEntry({
           {entry.status === "Completed" ? (
             <CheckCircle2 className="size-3 text-white" />
           ) : (
-            <div className="size-2 bg-white" />
+            <div className="size-2 bg-white dark:bg-gray-900" />
           )}
         </div>
       </div>

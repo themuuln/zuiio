@@ -39,7 +39,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { createOrgQuery } from "@/lib/queries/factory";
@@ -151,7 +150,7 @@ export default function OrganizationPage() {
     setEditing(false);
   };
 
-  const loading = orgInfoQuery.isPending || orgLoading || subLoading;
+  const _loading = orgInfoQuery.isPending || orgLoading || subLoading;
   const error =
     orgInfoQuery.error?.message ??
     orgError?.message ??
@@ -249,35 +248,6 @@ export default function OrganizationPage() {
     ],
     [orgT],
   );
-
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
-          <Skeleton className="h-6 w-28" />
-          <Skeleton className="mt-3 h-8 w-48" />
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={`summary-${i}`} className="h-20 rounded-2xl" />
-            ))}
-          </div>
-        </div>
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-          {[1, 2].map((i) => (
-            <Card key={`card-${i}`}>
-              <CardHeader>
-                <Skeleton className="h-5 w-28" />
-                <Skeleton className="h-4 w-32" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-24 rounded-2xl" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   if (error && !organization) {
     return (

@@ -286,7 +286,7 @@ export default function ServicesPageClient() {
               <div className="flex items-center gap-1 pt-1 border-t border-border/50">
                 <Button
                   variant="ghost"
-                  size="icon-xs"
+                  size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     setEditingService(service);
@@ -296,7 +296,7 @@ export default function ServicesPageClient() {
                 </Button>
                 <Button
                   variant="ghost"
-                  size="icon-xs"
+                  size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     setServiceToDelete(service);

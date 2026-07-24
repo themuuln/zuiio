@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/empty";
 import { ChangeStatusDrawer } from "@/components/work-orders/change-status-drawer";
 import { useClientNow } from "@/hooks/use-client-now";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
@@ -180,7 +181,6 @@ export default function WorkOrdersPage() {
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [changeStatusWoId, setChangeStatusWoId] = useState<string | null>(null);
   const [changeStatusCurStatus, setChangeStatusCurStatus] = useState("");
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [todayStr, setTodayStr] = useState("");
   const [mounted, setMounted] = useState(false);
   const tableRef = useRef<Table<WorkOrderListItem> | null>(null);
@@ -234,12 +234,7 @@ export default function WorkOrdersPage() {
     error,
     refetch,
   } = useWorkOrders(org?.orgId, activeStatus, search, branchFilter);
-
-  useEffect(() => {
-    if (orders) {
-      setHasLoadedOnce(true);
-    }
-  }, [orders]);
+  const isFirstLoad = useIsFirstLoad(!!orders);
 
   const updateStatus = useUpdateWorkOrderStatus(org?.orgId);
 
@@ -335,7 +330,7 @@ export default function WorkOrdersPage() {
       <ListPageShell
         title={t("workOrders.title")}
         description={t("workOrders.subtitle")}
-        loading={isPending && !hasLoadedOnce && !orders}
+        loading={isPending && isFirstLoad && !orders}
         error={error?.message ?? null}
         onRetry={refetch}
         headerAction={

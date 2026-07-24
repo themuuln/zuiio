@@ -1,17 +1,13 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createSimpleRouteHandler } from "@/lib/api-handler";
+import { apiError, ok } from "@/lib/api-response";
 
 /**
  * Initiates SSO login through the Zuiio identity provider (`custom:zuiio`).
  * Returns the OAuth redirect URL for the client to navigate to.
  */
-export async function GET(request: Request) {
-  const supabase = await createClient();
+export const GET = createSimpleRouteHandler(async ({ request, supabase }) => {
+  const next = request.nextUrl.searchParams.get("next") ?? "/dashboard";
 
-  const url = new URL(request.url);
-  const next = url.searchParams.get("next") ?? "/dashboard";
-
-  // Build origin from the request host
   const proto = request.headers.get("x-forwarded-proto") ?? "http";
   const host = request.headers.get("host") ?? "localhost:3000";
   const origin = `${proto}://${host}`;
@@ -24,8 +20,8 @@ export async function GET(request: Request) {
   });
 
   if (error || !data.url) {
-    return NextResponse.json({ error: "auth_start_failed" }, { status: 500 });
+    return apiError("AUTH_START_FAILED", "Failed to start SSO login", 500);
   }
 
-  return NextResponse.json({ url: data.url, next });
-}
+  return ok({ url: data.url, next });
+});

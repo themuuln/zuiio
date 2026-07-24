@@ -227,7 +227,7 @@ export function createColumns(
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button variant="ghost" size="icon-xs">
+                <Button variant="ghost" size="icon">
                   <MoreHorizontal className="size-4" />
                 </Button>
               }

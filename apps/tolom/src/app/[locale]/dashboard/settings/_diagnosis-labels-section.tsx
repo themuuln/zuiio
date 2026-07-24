@@ -356,7 +356,7 @@ export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
                           <div className="flex items-center justify-end gap-1">
                             <Button
                               variant="ghost"
-                              size="icon-sm"
+                              size="icon"
                               onClick={() => {
                                 setEditingLabel(label);
                                 setDialogOpen(true);
@@ -366,7 +366,7 @@ export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
                             </Button>
                             <Button
                               variant="ghost"
-                              size="icon-sm"
+                              size="icon"
                               onClick={() => handleDelete(label.id)}
                             >
                               <Trash2 className="size-4 text-destructive" />

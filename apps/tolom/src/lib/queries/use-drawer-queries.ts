@@ -2,6 +2,7 @@
 
 import {
   keepPreviousData,
+  queryOptions,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -214,11 +215,41 @@ export const drawerCatalogKeys = {
   all: (orgId: string) => ["drawer-catalogs", orgId] as const,
 };
 
+// ── Query options factories — single source of truth for key + fn ──
+
+export const drawerDetailOptions = (orgId: string, woId: string) =>
+  queryOptions({
+    queryKey: drawerDetailKeys.all(orgId, woId),
+    queryFn: async (): Promise<DrawerDetailResponse> => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${woId}/detail`,
+      );
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data;
+    },
+    staleTime: 30_000,
+  });
+
+export const drawerCatalogsOptions = (orgId: string) =>
+  queryOptions({
+    queryKey: drawerCatalogKeys.all(orgId),
+    queryFn: async (): Promise<DrawerCatalogsResponse> => {
+      const res = await fetch(`/api/organizations/${orgId}/catalogs`);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data;
+    },
+    staleTime: 300_000,
+    gcTime: 600_000,
+  });
+
 // ── Prefetch: work order detail (call on hover) ────────────────
 
 /**
  * Warm the React Query cache before the drawer opens.
- * Prefetches the per-work-order detail endpoint.
+ * Uses ensureQueryData — returns cached data if within staleTime,
+ * otherwise fetches fresh data.
  */
 export async function prefetchDrawerData(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -226,19 +257,7 @@ export async function prefetchDrawerData(
   woId: string,
 ): Promise<void> {
   if (!orgId || !woId) return;
-
-  await queryClient.prefetchQuery({
-    queryKey: drawerDetailKeys.all(orgId, woId),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/detail`,
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as DrawerDetailResponse;
-    },
-    staleTime: 30_000,
-  });
+  await queryClient.ensureQueryData(drawerDetailOptions(orgId, woId));
 }
 
 // ── Prefetch: catalogs (call once, or on first drawer open) ────
@@ -252,17 +271,7 @@ export async function prefetchDrawerCatalogs(
   orgId: string | null | undefined,
 ): Promise<void> {
   if (!orgId) return;
-
-  await queryClient.prefetchQuery({
-    queryKey: drawerCatalogKeys.all(orgId),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/catalogs`);
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as DrawerCatalogsResponse;
-    },
-    staleTime: 300_000, // 5 min — catalogs rarely change
-  });
+  await queryClient.ensureQueryData(drawerCatalogsOptions(orgId));
 }
 
 // ── Drawer work order detail hook ──────────────────────────────
@@ -288,17 +297,8 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
 
   // ── Per-work-order detail query ──
   const detailQuery = useQuery({
-    queryKey: drawerDetailKeys.all(orgId ?? "", woId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/detail`,
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as DrawerDetailResponse;
-    },
+    ...drawerDetailOptions(orgId ?? "", woId ?? ""),
     enabled: !!orgId && !!woId,
-    staleTime: 30_000,
     retry: false,
     // Keep previous work order data visible when switching between drawers
     placeholderData: keepPreviousData,
@@ -364,16 +364,8 @@ export function useDrawerCatalogs(
   enabled: boolean,
 ): UseDrawerCatalogsResult {
   const catalogsQuery = useQuery({
-    queryKey: drawerCatalogKeys.all(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/catalogs`);
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as DrawerCatalogsResponse;
-    },
+    ...drawerCatalogsOptions(orgId ?? ""),
     enabled: !!orgId && enabled,
-    staleTime: 300_000, // 5 min — catalogs rarely change
-    gcTime: 600_000, // 10 min before garbage collection
     retry: false,
     placeholderData: keepPreviousData,
   });

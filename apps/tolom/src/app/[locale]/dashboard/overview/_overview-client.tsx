@@ -1,14 +1,15 @@
 "use client";
-
 import { Clock, DollarSign, TrendingUp, Users } from "lucide-react";
 import dynamicImport from "next/dynamic";
+
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { useSelectedBranchGuard } from "@/hooks/use-selected-branch-guard";
 import type { ExportColumn } from "@/lib/export";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
@@ -112,10 +113,7 @@ export default function OverviewPage() {
   });
 
   // Track first successful load
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  useEffect(() => {
-    if (data) setHasLoadedOnce(true);
-  }, [data]);
+  const isFirstLoad = useIsFirstLoad(!!data);
 
   const isDataLoading = !data || dashboardFetching;
 
@@ -183,7 +181,7 @@ export default function OverviewPage() {
   // ── Loading / Error states (inline, not early return) ──
   const showOrgSkeleton = orgLoading && !orgId;
   const hasOrgError = !!(orgError || (!orgId && !orgLoading));
-  const showDashError = !!(dashboardError && !data && !hasLoadedOnce);
+  const showDashError = !!(dashboardError && !data && isFirstLoad);
 
   const { summary } = data ?? {};
 

@@ -12,7 +12,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Controller } from "react-hook-form";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import {
   useCashOut,
@@ -57,14 +58,10 @@ export function CashRegisterClient() {
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [showCashOutDialog, setShowCashOutDialog] = useState(false);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const isFirstLoad = useIsFirstLoad(!!session);
 
   const isPending = orgLoading || sessionLoading;
-  const showSkeleton = isPending && !hasLoadedOnce;
-
-  useEffect(() => {
-    if (session) setHasLoadedOnce(true);
-  }, [session]);
+  const showSkeleton = isPending && isFirstLoad;
 
   return (
     <div className="flex flex-col gap-6 pb-8">

@@ -210,7 +210,7 @@ export function createColumns(
         return (
           <Button
             variant="ghost"
-            size="icon-xs"
+            size="icon"
             onClick={(e) => {
               e.stopPropagation();
               cb.onModelPrices(s);
@@ -241,7 +241,7 @@ export function createColumns(
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
-              size="icon-xs"
+              size="icon"
               onClick={(e) => {
                 e.stopPropagation();
                 cb.onEdit(s);
@@ -252,7 +252,7 @@ export function createColumns(
             </Button>
             <Button
               variant="ghost"
-              size="icon-xs"
+              size="icon"
               onClick={(e) => {
                 e.stopPropagation();
                 cb.onDelete(s);

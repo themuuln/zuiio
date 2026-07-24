@@ -309,7 +309,7 @@ export function QrClockDisplay({
           {state === "active" && qrDataUrl && (
             <div className="flex flex-col items-center gap-2">
               {/* QR Code */}
-              <div className="rounded-xl border border-border/60 bg-white p-3 shadow-sm">
+              <div className="rounded-xl border border-border/60 bg-white dark:bg-gray-900 p-3 shadow-sm">
                 <img
                   src={qrDataUrl}
                   alt="Clock-in QR code"

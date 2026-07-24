@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { useSelectedBranchGuard } from "@/hooks/use-selected-branch-guard";
 import type { ExportColumn } from "@/lib/export";
@@ -160,18 +161,13 @@ export default function DashboardPage() {
     period,
     branchId: null,
   });
-
-  // Track first successful load
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  useEffect(() => {
-    if (data) setHasLoadedOnce(true);
-  }, [data]);
+  const isFirstLoad = useIsFirstLoad(!!data);
 
   // Show skeletons only during initial load or when stale data was never loaded
   // During period switching, keepPreviousData shows old data — show subtle indicator instead
   const isInitialLoad = !data && dashboardLoading;
   const isPeriodSwitch = data && dashboardFetching;
-  const showSkeletons = isInitialLoad || (!hasLoadedOnce && !data);
+  const showSkeletons = isInitialLoad || (isFirstLoad && !data);
 
   const summary = data?.summary ?? null;
   const comparison = data?.summaryComparison ?? null;
@@ -231,7 +227,7 @@ export default function DashboardPage() {
     [t],
   );
 
-  const hasError = !!(orgError || (dashboardError && !hasLoadedOnce));
+  const hasError = !!(orgError || (dashboardError && isFirstLoad));
   const errorText = orgError
     ? "Failed to load organization"
     : (dashboardError?.message ?? null);

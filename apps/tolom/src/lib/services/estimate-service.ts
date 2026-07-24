@@ -585,31 +585,34 @@ export async function convertEstimateToWorkOrder(
     });
 
   // Add each estimate item as a service or part on the work order
-  for (const item of estimate.items) {
-    if (item.item_type === "service" || item.item_type === "custom") {
-      await addServiceToWorkOrder(db, wo.id, orgId, {
-        service_catalog_id:
-          item.source_service_id ?? "00000000-0000-0000-0000-000000000000",
-        service_name: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        discount_amount: item.discount_amount,
-        discount_percentage: item.discount_percentage,
-        notes: item.notes ?? undefined,
-      });
-    } else if (item.item_type === "part") {
-      await addPartToWorkOrder(db, wo.id, orgId, {
-        part_id: item.source_part_id ?? undefined,
-        part_name: item.description,
-        part_number: undefined,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        discount_amount: item.discount_amount,
-        discount_percentage: item.discount_percentage,
-        notes: item.notes ?? undefined,
-      });
-    }
-  }
+  // Run in parallel since items are independent
+  await Promise.all(
+    estimate.items.map(async (item) => {
+      if (item.item_type === "service" || item.item_type === "custom") {
+        await addServiceToWorkOrder(db, wo.id, orgId, {
+          service_catalog_id:
+            item.source_service_id ?? "00000000-0000-0000-0000-000000000000",
+          service_name: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount_amount: item.discount_amount,
+          discount_percentage: item.discount_percentage,
+          notes: item.notes ?? undefined,
+        });
+      } else if (item.item_type === "part") {
+        await addPartToWorkOrder(db, wo.id, orgId, {
+          part_id: item.source_part_id ?? undefined,
+          part_name: item.description,
+          part_number: undefined,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount_amount: item.discount_amount,
+          discount_percentage: item.discount_percentage,
+          notes: item.notes ?? undefined,
+        });
+      }
+    }),
+  );
 
   // Recalculate totals
   await recalculateWorkOrderTotals(db, wo.id);
