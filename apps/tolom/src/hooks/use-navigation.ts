@@ -16,6 +16,7 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
+import { useCallback, useMemo } from "react";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
 import { usePathname } from "@/lib/i18n/navigation";
 import { FEATURE_KEYS, type FeatureKey } from "@/lib/plan-features";
@@ -295,18 +296,29 @@ const settingsItems: NavItem[] = [
   },
 ];
 
-const sections: NavSection[] = [
-  {
-    labelKey: "nav.dashboard",
-    icon: LayoutDashboard,
-    items: primaryItems,
-  },
-  ...navGroups.map((group) => ({
-    labelKey: group.labelKey,
-    icon: group.icon,
-    items: group.children,
-  })),
-];
+const navFeatureMap: Record<string, FeatureKey | undefined> = {
+  "nav.group.inventory": FEATURE_KEYS.INVENTORY,
+  "nav.serviceReminders": FEATURE_KEYS.SERVICE_REMINDERS,
+  "nav.group.finances": FEATURE_KEYS.FINANCE,
+};
+
+const flattenItems = (items: NavItem[]): NavItem[] => {
+  const result: NavItem[] = [];
+  for (const item of items) {
+    result.push(item);
+    if (item.children) {
+      for (const child of item.children) {
+        if (child.href === item.href) continue;
+        result.push({
+          labelKey: child.labelKey,
+          href: child.href,
+          icon: item.icon,
+        });
+      }
+    }
+  }
+  return result;
+};
 
 export function useNavigation() {
   const pathname = usePathname();
@@ -318,182 +330,233 @@ export function useNavigation() {
   } = useCurrentUserRole();
   const { isFeatureEnabled, loading: featuresLoading } = useAvailableFeatures();
 
-  const mechanicHomeItem: NavItem = {
-    labelKey: "nav.bayView",
-    href: "/dashboard/bay-view",
-    icon: LayoutGrid,
-  };
+  const mechanicHomeItem = useMemo<NavItem>(
+    () => ({
+      labelKey: "nav.bayView",
+      href: "/dashboard/bay-view",
+      icon: LayoutGrid,
+    }),
+    [],
+  );
 
-  const isDefinitelyMechanic = !roleLoading && isMechanic;
+  const isDefinitelyMechanic = useMemo(
+    () => !roleLoading && isMechanic,
+    [roleLoading, isMechanic],
+  );
 
   // ── Permission-based filtering ──
-  const isPermissionAllowed = (perm?: {
-    resource: string;
-    action: string;
-  }): boolean => {
-    if (!perm) return true;
-    // Org Owner always has access
-    if (isOrgOwner) return true;
-    return hasPermission(
-      perm.resource,
-      perm.action as
-        | "read"
-        | "create"
-        | "update"
-        | "delete"
-        | "manage"
-        | "invite"
-        | "write",
-    );
-  };
-
-  // Map nav groups/items to feature keys so they can be gated
-  const navFeatureMap: Record<string, FeatureKey | undefined> = {
-    "nav.group.inventory": FEATURE_KEYS.INVENTORY,
-    "nav.serviceReminders": FEATURE_KEYS.SERVICE_REMINDERS,
-    "nav.group.finances": FEATURE_KEYS.FINANCE,
-  };
-
-  const isFeatureAllowed = (href: string): boolean => {
-    const featureKey = navFeatureMap[href];
-    if (!featureKey) return true;
-    return isFeatureEnabled(featureKey);
-  };
-
-  const isGroupAllowed = (
-    groupLabelKey: string,
-    groupPerm?: { resource: string; action: string },
-  ): boolean => {
-    // Permission gate first
-    if (groupPerm && !isPermissionAllowed(groupPerm)) return false;
-    // Then feature gate
-    const featureKey = navFeatureMap[groupLabelKey];
-    if (!featureKey) return true;
-    return isFeatureEnabled(featureKey);
-  };
-
-  // For mechanics: only show shop-floor items with mechanic safe items
-  let filteredNavGroups = isDefinitelyMechanic
-    ? navGroups
-        .filter((g) => g.labelKey === "nav.group.shopFloor")
-        .map((g) => ({
-          ...g,
-          children: g.children.filter((c) => c.href !== "/dashboard/bay-view"),
-        }))
-    : navGroups;
-
-  // Apply permission filtering then feature-flag filtering
-  filteredNavGroups = filteredNavGroups
-    .filter((g) => isGroupAllowed(g.labelKey, g.requiredPermission))
-    .map((g) => ({
-      ...g,
-      children: g.children.filter(
-        (c) =>
-          isPermissionAllowed(c.requiredPermission) && isFeatureAllowed(c.href),
-      ),
-    }))
-    .filter((g) => g.children.length > 0);
-
-  const filteredPrimaryItems = isDefinitelyMechanic
-    ? [mechanicHomeItem]
-    : primaryItems.filter((item) => isFeatureAllowed(item.href));
-
-  const filteredSettingsItems = isDefinitelyMechanic
-    ? []
-    : settingsItems.filter((s) =>
-        s.requiredPermission ? isPermissionAllowed(s.requiredPermission) : true,
+  const isPermissionAllowed = useCallback(
+    (perm?: { resource: string; action: string }): boolean => {
+      if (!perm) return true;
+      // Org Owner always has access
+      if (isOrgOwner) return true;
+      return hasPermission(
+        perm.resource,
+        perm.action as
+          | "read"
+          | "create"
+          | "update"
+          | "delete"
+          | "manage"
+          | "invite"
+          | "write",
       );
+    },
+    [isOrgOwner, hasPermission],
+  );
+
+  const isFeatureAllowed = useCallback(
+    (href: string): boolean => {
+      const featureKey = navFeatureMap[href];
+      if (!featureKey) return true;
+      return isFeatureEnabled(featureKey);
+    },
+    [isFeatureEnabled],
+  );
+
+  const isGroupAllowed = useCallback(
+    (
+      groupLabelKey: string,
+      groupPerm?: { resource: string; action: string },
+    ): boolean => {
+      // Permission gate first
+      if (groupPerm && !isPermissionAllowed(groupPerm)) return false;
+      // Then feature gate
+      const featureKey = navFeatureMap[groupLabelKey];
+      if (!featureKey) return true;
+      return isFeatureEnabled(featureKey);
+    },
+    [isPermissionAllowed, isFeatureEnabled],
+  );
+
+  // ── Derived values ──
+  const filteredNavGroups = useMemo(() => {
+    let result = isDefinitelyMechanic
+      ? navGroups
+          .filter((g) => g.labelKey === "nav.group.shopFloor")
+          .map((g) => ({
+            ...g,
+            children: g.children.filter(
+              (c) => c.href !== "/dashboard/bay-view",
+            ),
+          }))
+      : navGroups;
+
+    result = result
+      .filter((g) => isGroupAllowed(g.labelKey, g.requiredPermission))
+      .map((g) => ({
+        ...g,
+        children: g.children.filter(
+          (c) =>
+            isPermissionAllowed(c.requiredPermission) &&
+            isFeatureAllowed(c.href),
+        ),
+      }))
+      .filter((g) => g.children.length > 0);
+
+    return result;
+  }, [
+    isDefinitelyMechanic,
+    isGroupAllowed,
+    isPermissionAllowed,
+    isFeatureAllowed,
+  ]);
+
+  const filteredPrimaryItems = useMemo(
+    () =>
+      isDefinitelyMechanic
+        ? [mechanicHomeItem]
+        : primaryItems.filter((item) => isFeatureAllowed(item.href)),
+    [isDefinitelyMechanic, mechanicHomeItem, isFeatureAllowed],
+  );
+
+  const filteredSettingsItems = useMemo(
+    () =>
+      isDefinitelyMechanic
+        ? []
+        : settingsItems.filter((s) =>
+            s.requiredPermission
+              ? isPermissionAllowed(s.requiredPermission)
+              : true,
+          ),
+    [isDefinitelyMechanic, isPermissionAllowed],
+  );
 
   const filteredUtilityItems = utilityItems;
 
-  // Flatten NavItems including nested children for search/active matching
-  const flattenItems = (items: NavItem[]): NavItem[] => {
-    const result: NavItem[] = [];
-    for (const item of items) {
-      result.push(item);
-      if (item.children) {
-        for (const child of item.children) {
-          if (child.href === item.href) continue;
-          result.push({
-            labelKey: child.labelKey,
-            href: child.href,
-            icon: item.icon,
-          });
-        }
+  const filteredAllItems = useMemo(
+    () => [
+      ...filteredPrimaryItems,
+      ...filteredNavGroups.flatMap((group) => flattenItems(group.children)),
+      ...filteredUtilityItems,
+      ...filteredSettingsItems,
+    ],
+    [filteredPrimaryItems, filteredNavGroups, filteredSettingsItems],
+  );
+
+  const isActive = useCallback(
+    (href: string) => {
+      if (href === "/dashboard") {
+        return pathname === "/dashboard";
       }
-    }
-    return result;
-  };
+      if (pathname === href) return true;
+      if (pathname.startsWith(`${href}/`)) {
+        return !filteredAllItems.some(
+          (item) =>
+            item.href !== href &&
+            (pathname === item.href || pathname.startsWith(`${item.href}/`)),
+        );
+      }
+      return false;
+    },
+    [pathname, filteredAllItems],
+  );
 
-  const filteredAllItems = [
-    ...filteredPrimaryItems,
-    ...filteredNavGroups.flatMap((group) => flattenItems(group.children)),
-    ...filteredUtilityItems,
-    ...filteredSettingsItems,
-  ];
+  const sections = useMemo<NavSection[]>(
+    () => [
+      {
+        labelKey: "nav.dashboard",
+        icon: LayoutDashboard,
+        items: primaryItems,
+      },
+      ...navGroups.map((group) => ({
+        labelKey: group.labelKey,
+        icon: group.icon,
+        items: group.children,
+      })),
+    ],
+    [],
+  );
 
-  const isActive = (href: string) => {
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
-    }
-    if (pathname === href) return true;
-    if (pathname.startsWith(`${href}/`)) {
-      return !filteredAllItems.some(
-        (item) =>
-          item.href !== href &&
-          (pathname === item.href || pathname.startsWith(`${item.href}/`)),
-      );
-    }
-    return false;
-  };
+  const filteredSections = useMemo(
+    () =>
+      isDefinitelyMechanic
+        ? sections.filter(
+            (s) =>
+              s.labelKey === "nav.group.shopFloor" ||
+              s.labelKey === "nav.dashboard",
+          )
+        : sections,
+    [isDefinitelyMechanic, sections],
+  );
 
-  const filteredSections = isDefinitelyMechanic
-    ? sections.filter(
-        (s) =>
-          s.labelKey === "nav.group.shopFloor" ||
-          s.labelKey === "nav.dashboard",
-      )
-    : sections;
+  const fallbackItem = useMemo(
+    () => (isDefinitelyMechanic ? mechanicHomeItem : primaryItems[0]),
+    [isDefinitelyMechanic, mechanicHomeItem],
+  );
 
-  const fallbackItem = isDefinitelyMechanic
-    ? mechanicHomeItem
-    : primaryItems[0];
+  const resolvedCurrentItem = useMemo(
+    () =>
+      [...filteredAllItems]
+        .sort((a, b) => b.href.length - a.href.length)
+        .find((item) => isActive(item.href)) ?? fallbackItem,
+    [filteredAllItems, isActive, fallbackItem],
+  );
 
-  const resolvedCurrentItem =
-    [...filteredAllItems]
-      .sort((a, b) => b.href.length - a.href.length)
-      .find((item) => isActive(item.href)) ?? fallbackItem;
+  const resolvedCurrentGroup = useMemo(
+    () =>
+      filteredNavGroups.find((group) => {
+        if (
+          group.children.some((item) => item.href === resolvedCurrentItem.href)
+        )
+          return true;
+        return group.children.some((item) =>
+          item.children?.some((sub) => sub.href === resolvedCurrentItem.href),
+        );
+      }) ?? null,
+    [filteredNavGroups, resolvedCurrentItem],
+  );
 
-  const resolvedCurrentGroup =
-    filteredNavGroups.find((group) => {
-      if (group.children.some((item) => item.href === resolvedCurrentItem.href))
-        return true;
-      return group.children.some((item) =>
-        item.children?.some((sub) => sub.href === resolvedCurrentItem.href),
-      );
-    }) ?? null;
+  const resolvedCurrentSection = useMemo(
+    () =>
+      filteredSections.find((section) => {
+        if (
+          section.items.some((item) => item.href === resolvedCurrentItem.href)
+        )
+          return true;
+        return section.items.some((item) =>
+          item.children?.some((sub) => sub.href === resolvedCurrentItem.href),
+        );
+      }) ?? filteredSections[0],
+    [filteredSections, resolvedCurrentItem],
+  );
 
-  const resolvedCurrentSection =
-    filteredSections.find((section) => {
-      if (section.items.some((item) => item.href === resolvedCurrentItem.href))
-        return true;
-      return section.items.some((item) =>
-        item.children?.some((sub) => sub.href === resolvedCurrentItem.href),
-      );
-    }) ?? filteredSections[0];
-
-  const resolvedBreadcrumbs: NavBreadcrumb[] = resolvedCurrentGroup
-    ? [
-        { labelKey: "nav.dashboard", href: "/dashboard" },
-        { labelKey: resolvedCurrentGroup.labelKey },
-        { labelKey: resolvedCurrentItem.labelKey },
-      ]
-    : resolvedCurrentItem.href === "/dashboard"
-      ? [{ labelKey: "nav.dashboard" }]
-      : [
-          { labelKey: "nav.dashboard", href: "/dashboard" },
-          { labelKey: resolvedCurrentItem.labelKey },
-        ];
+  const resolvedBreadcrumbs = useMemo<NavBreadcrumb[]>(
+    () =>
+      resolvedCurrentGroup
+        ? [
+            { labelKey: "nav.dashboard", href: "/dashboard" },
+            { labelKey: resolvedCurrentGroup.labelKey },
+            { labelKey: resolvedCurrentItem.labelKey },
+          ]
+        : resolvedCurrentItem.href === "/dashboard"
+          ? [{ labelKey: "nav.dashboard" }]
+          : [
+              { labelKey: "nav.dashboard", href: "/dashboard" },
+              { labelKey: resolvedCurrentItem.labelKey },
+            ],
+    [resolvedCurrentGroup, resolvedCurrentItem],
+  );
 
   return {
     primaryItems: filteredPrimaryItems,

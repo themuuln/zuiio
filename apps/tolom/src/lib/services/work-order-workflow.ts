@@ -4,9 +4,9 @@ import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
+import { notifyWorkOrderAssigned } from "@/lib/services/push-triggers";
 import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
 import type { MechanicAssignment, WorkOrder } from "@/lib/types";
-import { notifyWorkOrderAssigned } from "@/lib/services/push-triggers";
 
 // ── Helper: insert status history ──────────────────────────────
 async function insertStatusHistory(
@@ -15,9 +15,9 @@ async function insertStatusHistory(
   orgId: string,
   previousStatus: string | null,
   status: string,
+  userId: string,
   notes?: string,
 ) {
-  const userId = (await supabase.auth.getUser()).data.user?.id;
   await supabase.from("work_order_status_history").insert({
     work_order_id: workOrderId,
     organization_id: orgId,
@@ -34,11 +34,12 @@ export async function updateWorkOrderStatus(
   id: string,
   orgId: string,
   newStatus: string,
-  notes?: string,
+  notes_?: string,
   lossReason?: string,
+  userId_?: string,
 ): Promise<WorkOrder> {
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
   const { data: currentWorkOrder, error: currentWorkOrderError } =
     await supabase
       .from("work_orders")
@@ -79,7 +80,8 @@ export async function updateWorkOrderStatus(
       orgId,
       previousStatus,
       newStatus,
-      notes,
+      userId ?? "",
+      notes_,
     );
   }
 
@@ -205,9 +207,10 @@ export async function assignMechanic(
   workOrderId: string,
   orgId: string,
   mechanicId: string,
+  userId_?: string,
 ): Promise<MechanicAssignment> {
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
 
   await supabase
     .from("mechanic_assignments")

@@ -1,70 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse, type NextRequest } from "next/server";
+import { createRouteHandlers } from "@/lib/supabase/admin-route";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+const teams = createRouteHandlers("teams", { select: "*, leagues(name)" });
 
-  const { data, error } = await supabase
-    .from("teams")
-    .select("*, leagues(name)")
-    .eq("id", id)
-    .single();
-
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
-}
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const body = await request.json();
-
-  const { data, error } = await supabase
-    .from("teams")
-    .update(body)
-    .eq("id", id)
-    .select("*, leagues(name)")
-    .single();
-
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
-}
-
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { error } = await supabase.from("teams").delete().eq("id", id);
-
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(null, { status: 204 });
-}
+export const GET = teams.getById();
+export const PUT = teams.update();
+export const DELETE = teams.remove();

@@ -16,7 +16,10 @@ export function NumericKeypad({
   onChange,
   children,
 }: NumericKeypadProps) {
-  const t = useTranslations("common");
+  const t = useTranslations("common") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [open, setOpen] = React.useState(false);
   const [buffer, setBuffer] = React.useState("");
   const previousRef = React.useRef(value);

@@ -36,6 +36,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { useRouter } from "@/lib/i18n/navigation";
 import {
   useConvertEstimate,
@@ -120,8 +121,14 @@ function getCustomerName(estimate: EstimateDetail) {
 }
 
 export default function EstimateDetailPage() {
-  const t = useTranslations("estimates");
-  const commonT = useTranslations("common");
+  const t = useTranslations("estimates") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const commonT = useTranslations("common") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const params = useParams();
   const estimateId = params.id as string;
   const router = useRouter();
@@ -146,7 +153,7 @@ export default function EstimateDetailPage() {
   const [editNotes, setEditNotes] = useState("");
   const [editTerms, setEditTerms] = useState("");
   const [editValidUntil, setEditValidUntil] = useState("");
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const isFirstLoad = useIsFirstLoad(!estimateQuery.isPending);
 
   useEffect(() => {
     if (!estimate || isEditing) return;
@@ -164,11 +171,6 @@ export default function EstimateDetailPage() {
       router.push(`/dashboard/work-orders/${convertEstimate.data.id}`);
     }
   }, [convertEstimate.data?.id, router]);
-  useEffect(() => {
-    if (!estimateQuery.isPending) {
-      setHasLoadedOnce(true);
-    }
-  }, [estimateQuery.isPending]);
 
   const editSubtotal = useMemo(
     () => editLines.reduce((sum, line) => sum + line.line_total, 0),
@@ -288,7 +290,7 @@ export default function EstimateDetailPage() {
     }
   };
 
-  const showSkeleton = estimateQuery.isPending && !hasLoadedOnce;
+  const showSkeleton = estimateQuery.isPending && isFirstLoad;
   if (!estimate && !showSkeleton) {
     return (
       <div className="px-4 pt-4 pb-6 md:px-6 mx-auto flex max-w-3xl flex-col gap-6 pb-8">

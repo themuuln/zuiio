@@ -2,20 +2,24 @@
 
 import { Banknote, CheckCircle2, ChevronLeft, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { Link } from "@/lib/i18n/navigation";
 import { useCashRegisterSessions } from "@/lib/queries/use-cash-register";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatCurrency } from "@/lib/utils";
 
 export function CashRegisterHistoryClient() {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
 
@@ -31,12 +35,8 @@ export function CashRegisterHistoryClient() {
   const sessions = data?.data ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / limit);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  useEffect(() => {
-    if (data) setHasLoadedOnce(true);
-  }, [data]);
-
-  const showSkeleton = orgLoading || (isPending && !hasLoadedOnce);
+  const isFirstLoad = useIsFirstLoad(!!data);
+  const showSkeleton = orgLoading || (isPending && isFirstLoad);
 
   return (
     <div className="flex flex-col gap-6 pb-8">

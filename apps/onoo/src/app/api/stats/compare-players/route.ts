@@ -1,133 +1,135 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+
+interface PublicLeaderRow {
+  competition_id: string;
+  player_id: string;
+  team_id: string;
+  team_name: string;
+  gp: number;
+  pts: number | null;
+  fgm: number | null;
+  fga: number | null;
+  tpm: number | null;
+  tpa: number | null;
+  ftm: number | null;
+  fta: number | null;
+  oreb: number | null;
+  dreb: number | null;
+  ast: number | null;
+  stl: number | null;
+  blk: number | null;
+  tov: number | null;
+}
+
+function percentage(made: number | null, attempted: number | null): number {
+  if (!attempted) return 0;
+  return ((made ?? 0) / attempted) * 100;
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const playerIds = searchParams.get("playerIds")?.split(",") || [];
-  const seasonId = searchParams.get("seasonId");
+  const playerIds = (searchParams.get("playerIds") ?? "")
+    .split(",")
+    .filter(Boolean);
+  const competitionId = searchParams.get("competitionId");
 
-  if (playerIds.length < 2 || playerIds.length > 5) {
+  if (playerIds.length !== 2 || new Set(playerIds).size !== 2) {
     return NextResponse.json(
-      { error: "2-5 playerIds required (comma-separated)" },
-      { status: 400 }
+      { error: "Хоёр өөр тоглогч сонгоно уу." },
+      { status: 400 },
     );
   }
 
   const supabase = await createClient();
+  let leadersQuery = supabase
+    .from("v_public_leaders")
+    .select("*")
+    .in("player_id", playerIds);
+  if (competitionId)
+    leadersQuery = leadersQuery.eq("competition_id", competitionId);
 
-  // Get players info
-  const { data: players, error: playersError } = await supabase
-    .from("players")
-    .select("id, canonical_name, name_latin, jersey_number, position")
-    .in("id", playerIds);
+  const [leadersResult, profilesResult] = await Promise.all([
+    leadersQuery,
+    supabase
+      .from("v_public_player_profiles")
+      .select("*")
+      .in("player_id", playerIds),
+  ]);
 
-  if (playersError) {
-    return NextResponse.json({ error: playersError.message }, { status: 500 });
+  if (leadersResult.error || profilesResult.error) {
+    return NextResponse.json(
+      {
+        error:
+          leadersResult.error?.message ??
+          profilesResult.error?.message ??
+          "Статистик ачаалж чадсангүй.",
+      },
+      { status: 500 },
+    );
   }
 
-  // Get stats for each player
-  const playerStats = await Promise.all(
-    playerIds.map(async (playerId) => {
-      let query = supabase
-        .from("season_player_stats")
-        .select(`
-          *,
-          team_seasons!inner (
-            id,
-            season:seasons (id, name),
-            teams (name, short_code)
-          )
-        `)
-        .eq("player_id", playerId);
+  const leaderRows = (leadersResult.data ?? []) as PublicLeaderRow[];
+  const result = playerIds.flatMap((playerId) => {
+    const availableRows = leaderRows
+      .filter((row) => row.player_id === playerId)
+      .sort((a, b) => b.gp - a.gp);
+    const stats = availableRows[0];
+    const profile = (profilesResult.data ?? []).find(
+      (row) =>
+        row.player_id === playerId &&
+        (!stats || row.competition_id === stats.competition_id),
+    );
+    if (!stats || !profile) return [];
 
-      if (seasonId) {
-        query = query.eq("team_seasons.season.id", seasonId);
-      }
-
-      const { data: stats, error } = await query;
-
-      if (error) throw error;
-
-      // Aggregate stats across seasons if no season filter
-      const aggregated = stats.reduce(
-        (acc, stat) => ({
-          gp: acc.gp + (stat.gp || 0),
-          minutes: acc.minutes + (stat.minutes || 0),
-          pts: acc.pts + (stat.pts || 0),
-          fgm: acc.fgm + (stat.fgm || 0),
-          fga: acc.fga + (stat.fga || 0),
-          tpm: acc.tpm + (stat.tpm || 0),
-          tpa: acc.tpa + (stat.tpa || 0),
-          ftm: acc.ftm + (stat.ftm || 0),
-          fta: acc.fta + (stat.fta || 0),
-          oreb: acc.oreb + (stat.oreb || 0),
-          dreb: acc.dreb + (stat.dreb || 0),
-          ast: acc.ast + (stat.ast || 0),
-          stl: acc.stl + (stat.stl || 0),
-          blk: acc.blk + (stat.blk || 0),
-          tov: acc.tov + (stat.tov || 0),
-          pf: acc.pf + (stat.pf || 0),
-        }),
-        {
-          gp: 0,
-          minutes: 0,
-          pts: 0,
-          fgm: 0,
-          fga: 0,
-          tpm: 0,
-          tpa: 0,
-          ftm: 0,
-          fta: 0,
-          oreb: 0,
-          dreb: 0,
-          ast: 0,
-          stl: 0,
-          blk: 0,
-          tov: 0,
-          pf: 0,
-        }
-      );
-
-      return {
-        playerId,
-        ...aggregated,
-        perGame: {
-          pts: aggregated.gp > 0 ? (aggregated.pts / aggregated.gp).toFixed(1) : "0.0",
-          reb: aggregated.gp > 0 ? ((aggregated.oreb + aggregated.dreb) / aggregated.gp).toFixed(1) : "0.0",
-          ast: aggregated.gp > 0 ? (aggregated.ast / aggregated.gp).toFixed(1) : "0.0",
-          stl: aggregated.gp > 0 ? (aggregated.stl / aggregated.gp).toFixed(1) : "0.0",
-          blk: aggregated.gp > 0 ? (aggregated.blk / aggregated.gp).toFixed(1) : "0.0",
-          tov: aggregated.gp > 0 ? (aggregated.tov / aggregated.gp).toFixed(1) : "0.0",
+    return [
+      {
+        id: playerId,
+        name: profile.player_name,
+        nameLatin: profile.player_name_latin,
+        photoUrl: profile.photo_url,
+        position: profile.player_position,
+        team: {
+          id: profile.team_id,
+          name: profile.team_name,
+          slug: profile.team_slug,
+          shortCode:
+            profile.team_short_code ??
+            profile.team_name.slice(0, 3).toUpperCase(),
+          logoUrl: profile.team_logo_url,
+          primaryColor: profile.team_primary_color,
         },
-        efficiency: {
-          efg:
-            aggregated.fga > 0
-              ? ((aggregated.fgm + 0.5 * aggregated.tpm) / aggregated.fga).toFixed(3)
-              : ".000",
-          ts:
-            aggregated.fga + 0.44 * aggregated.fta > 0
-              ? (
-                  aggregated.pts /
-                  (2 * (aggregated.fga + 0.44 * aggregated.fta))
-                ).toFixed(3)
-              : ".000",
-          astTo:
-            aggregated.tov > 0
-              ? (aggregated.ast / aggregated.tov).toFixed(2)
-              : aggregated.ast.toFixed(2),
+        competition: {
+          id: profile.competition_id,
+          name: profile.competition_name,
+          season: profile.season_name,
         },
-      };
-    })
-  );
-
-  // Merge player info with stats
-  const result = playerStats.map((stats) => {
-    const player = players?.find((p) => p.id === stats.playerId);
-    return {
-      ...player,
-      stats,
-    };
+        stats: {
+          gamesPlayed: stats.gp,
+          points: stats.pts ?? 0,
+          rebounds: (stats.oreb ?? 0) + (stats.dreb ?? 0),
+          assists: stats.ast ?? 0,
+          steals: stats.stl ?? 0,
+          blocks: stats.blk ?? 0,
+          turnovers: stats.tov ?? 0,
+          fieldGoalPercent: percentage(stats.fgm, stats.fga),
+          threePointPercent: percentage(stats.tpm, stats.tpa),
+          freeThrowPercent: percentage(stats.ftm, stats.fta),
+          assistTurnoverRatio:
+            (stats.tov ?? 0) > 0
+              ? (stats.ast ?? 0) / (stats.tov ?? 1)
+              : (stats.ast ?? 0),
+        },
+      },
+    ];
   });
+
+  if (result.length !== 2) {
+    return NextResponse.json(
+      { error: "Сонгосон тоглогчдын баталгаажсан статистик бүрдээгүй байна." },
+      { status: 404 },
+    );
+  }
 
   return NextResponse.json(result);
 }

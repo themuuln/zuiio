@@ -1,0 +1,298 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://agent-gateway/read-engine/catalog",
+	"title": "Read Engine Product Catalog",
+	"description": "Declarative manifest describing a product's data model. Each product (Tolom, Zer) provides one catalog. The Read Engine uses this to validate LLM read plans, compile PostgREST queries, and inject tenant isolation. The catalog describes datasets (tables/views), their fields, dimensions, measures, FK relations, and business-level metrics.",
+	"type": "object",
+	"required": ["id", "name", "description", "tenant", "datasets"],
+	"properties": {
+		"id": {
+			"type": "string",
+			"description": "Unique product identifier. Used to route LLM read plans to the correct catalog. Examples: \"tolom\", \"zer\".",
+			"pattern": "^[a-z][a-z0-9_-]*$"
+		},
+		"name": {
+			"type": "string",
+			"description": "Product display name in Mongolian. Shown to the LLM in system context. Example: \"Толом\"."
+		},
+		"description": {
+			"type": "string",
+			"description": "One-line product description in Mongolian. Helps the LLM understand the domain. Example: \"Автомашиин засвар үйлчилгээний менежмент\"."
+		},
+		"version": {
+			"type": "string",
+			"description": "Catalog schema version (semver). Used to detect stale catalogs. Example: \"1.0.0\".",
+			"pattern": "^\\d+\\.\\d+\\.\\d+$"
+		},
+		"tenant": {
+			"type": "object",
+			"description": "Tenant isolation configuration. The Read Engine injects this filter at compile time — NEVER from LLM input. Every query automatically gets `column = eq.tenantId` appended.",
+			"required": ["column", "source"],
+			"properties": {
+				"column": {
+					"type": "string",
+					"description": "Column name that holds the organization/tenant ID. Always injected by the engine. Example: \"organization_id\"."
+				},
+				"source": {
+					"type": "string",
+					"enum": ["jwt", "config"],
+					"description": "Where the tenant ID comes from. \"jwt\" = resolved from the bot user's JWT/session at runtime. \"config\" = hardcoded in ReadEngineConfig (for testing)."
+				}
+			}
+		},
+		"datasets": {
+			"type": "object",
+			"description": "Map of dataset ID → dataset definition. Dataset IDs are PostgREST table/view names. The LLM references these by ID in read plans.",
+			"additionalProperties": {
+				"$ref": "#/$defs/dataset"
+			}
+		},
+		"metrics": {
+			"type": "object",
+			"description": "Map of metric ID → business-level derived metric. These are pre-defined query templates the LLM can reference by name instead of building a full query from scratch.",
+			"additionalProperties": {
+				"$ref": "#/$defs/metric"
+			}
+		}
+	},
+	"$defs": {
+		"dataset": {
+			"type": "object",
+			"description": "A single dataset (PostgREST table or view). Describes all queryable fields, which fields can be dimensions or measures, and FK relations for nested embeds.",
+			"required": ["source", "displayName", "fields"],
+			"properties": {
+				"source": {
+					"type": "string",
+					"description": "PostgREST table/view name. This is the REST API endpoint path. Example: \"work_orders\" → GET /rest/v1/work_orders."
+				},
+				"displayName": {
+					"type": "string",
+					"description": "Dataset name in Mongolian. Used in LLM context and result formatting. Example: \"Ажлын захиалга\"."
+				},
+				"fields": {
+					"type": "object",
+					"description": "Map of column name → field definition. Every column in the table should be listed here, even if not queryable as dimension/measure.",
+					"additionalProperties": {
+						"$ref": "#/$defs/field"
+					}
+				},
+				"relations": {
+					"type": "object",
+					"description": "Map of relation alias → FK relation. Defines how to do PostgREST resource embedding (nested embeds). The alias is what the LLM uses in read plan dimensions and embeds. PostgREST auto-detects the FK direction — these declarations are for catalog validation and LLM context.",
+					"additionalProperties": {
+						"$ref": "#/$defs/relation"
+					}
+				}
+			}
+		},
+		"field": {
+			"type": "object",
+			"description": "A single column in a dataset. Defines the column's type and which query modes it participates in (dimension grouping, measure aggregation).",
+			"required": ["type"],
+			"properties": {
+				"type": {
+					"type": "string",
+					"enum": ["uuid", "string", "number", "text", "timestamp", "boolean"],
+					"description": "Postgres-compatible type. Maps to PostgREST filter operators: \"string\" → eq/neq/like/ilike/in, \"number\" → eq/gt/gte/lt/lte, \"timestamp\" → eq/gt/gte/lt/lte/is, \"boolean\" → eq/is, \"uuid\" → eq/in."
+				},
+				"pk": {
+					"type": "boolean",
+					"default": false,
+					"description": "Primary key column. Used for count distinct and as the default sort for detail queries. Example: true for the \"id\" column."
+				},
+				"dimension": {
+					"type": "boolean",
+					"default": false,
+					"description": "When true, this field can be used as a GROUP BY dimension. The LLM can place it in ReadPlanQuery.dimensions. Example: status, plate_number, make, full_name."
+				},
+				"time": {
+					"type": "boolean",
+					"default": false,
+					"description": "When true, this is a time-timestamp field suitable for time-range filters (gte/lte on dates) and time-based sorting. The Read Engine uses this to validate temporal filters and suggest time-range defaults."
+				},
+				"measures": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"enum": ["sum", "avg", "count", "max", "min"]
+					},
+					"description": "List of allowed aggregate operations for this field. Empty or absent = not aggregatable. Example: [\"sum\", \"avg\", \"count\", \"max\", \"min\"] for total_amount means the LLM can SUM(total_amount), AVG(total_amount), etc."
+				},
+				"displayName": {
+					"type": "string",
+					"description": "Field name in Mongolian for LLM context and result formatting. Example: \"Нийт дүн\" for total_amount."
+				},
+				"format": {
+					"type": "string",
+					"enum": [
+						"currency",
+						"percentage",
+						"duration",
+						"phone",
+						"email",
+						"date",
+						"datetime"
+					],
+					"description": "Display format hint. Used by the formatting layer when presenting results. \"currency\" = tugrik (₮), \"date\" = date only, \"datetime\" = date + time."
+				},
+				"nullable": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether this column can be NULL. When false, the engine can skip IS NULL / IS NOT NULL filters."
+				},
+				"enumValues": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["value", "label"],
+						"properties": {
+							"value": {
+								"type": "string",
+								"description": "The actual database value."
+							},
+							"label": {
+								"type": "string",
+								"description": "Mongolian display label for this enum value."
+							}
+						}
+					},
+					"description": "Allowed values for string/enum fields. When present, the LLM is constrained to filter on these values. Example for status: [{\"value\": \"open\", \"label\": \"Нээлттэй\"}, ...]."
+				}
+			}
+		},
+		"relation": {
+			"type": "object",
+			"description": "FK relationship for PostgREST resource embedding. PostgREST supports nested embeds via foreign keys — no arbitrary JOINs. The alias is used in PostgREST select syntax: ?select=*,<alias>:<target>(<fields>).",
+			"required": ["dataset", "join"],
+			"properties": {
+				"dataset": {
+					"type": "string",
+					"description": "Target dataset ID (must exist in the same catalog). Example: \"customers\"."
+				},
+				"join": {
+					"type": "string",
+					"description": "FK column on the SOURCE dataset that references the target dataset's primary key. Example: \"customer_id\" on work_orders → customers.id."
+				},
+				"displayName": {
+					"type": "string",
+					"description": "Relation name in Mongolian for LLM context. Example: \"Харилцагч\" for the customer relation."
+				},
+				"type": {
+					"type": "string",
+					"enum": ["one-to-one", "one-to-many"],
+					"default": "one-to-one",
+					"description": "Cardinality. \"one-to-one\" = each row has at most one related row (FK on this table). \"one-to-many\" = each row can have many related rows (FK on the target table). Affects how PostgREST returns embedded data: one-to-one embeds as an object, one-to-many as an array."
+				},
+				"fields": {
+					"type": "array",
+					"items": { "type": "string" },
+					"description": "Subset of target dataset fields to include when embedding. If absent, PostgREST includes all fields (select=*,target_table(*)). Use this to limit embedded data size."
+				}
+			}
+		},
+		"metric": {
+			"type": "object",
+			"description": "Business-level derived metric. A pre-defined query template that the LLM can reference by name instead of constructing a full read plan query. Useful for common KPIs: daily revenue, active orders, new customers.",
+			"required": ["displayName", "description", "query", "measures"],
+			"properties": {
+				"displayName": {
+					"type": "string",
+					"description": "Metric name in Mongolian. Example: \"Өдрийн орлого\" (Daily Revenue)."
+				},
+				"description": {
+					"type": "string",
+					"description": "What this metric measures, in Mongolian. Example: \"Төлсөн нэхэмжлэхүүдийн өдрийн нийт дүн\"."
+				},
+				"query": {
+					"type": "string",
+					"description": "Dataset ID this metric queries against (must exist in datasets). Example: \"invoice_payments\"."
+				},
+				"measures": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/metricMeasure"
+					},
+					"description": "Aggregations to compute. Same structure as ReadPlanQuery.measures. Example: [{\"field\": \"amount\", \"op\": \"sum\"}]."
+				},
+				"timeField": {
+					"type": "string",
+					"description": "Optional time field on the dataset used for time-range scoping. The Read Engine auto-applies today/month filters based on this. Example: \"paid_at\", \"created_at\"."
+				},
+				"filters": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/filter"
+					},
+					"description": "Static filters always applied when querying this metric. Example: [{\"field\": \"status\", \"op\": \"in\", \"value\": [\"completed\", \"delivered\"]}] for completed_work_orders."
+				}
+			}
+		},
+		"metricMeasure": {
+			"type": "object",
+			"required": ["field", "op"],
+			"properties": {
+				"field": {
+					"type": "string",
+					"description": "Field name to aggregate. Use \"*\" for count(*). Example: \"amount\"."
+				},
+				"op": {
+					"type": "string",
+					"enum": ["sum", "avg", "count", "min", "max"],
+					"description": "Aggregate operation. Maps to PostgREST aggregate functions when pgrst.db_aggregates_enabled is true."
+				},
+				"alias": {
+					"type": "string",
+					"description": "Output column name for the aggregate result. Example: \"total_revenue\"."
+				}
+			}
+		},
+		"filter": {
+			"type": "object",
+			"description": "A single filter condition. Used in both catalog metric definitions and LLM read plans. Maps directly to PostgREST query string operators.",
+			"required": ["field", "op"],
+			"properties": {
+				"field": {
+					"type": "string",
+					"description": "Column name to filter on. Must exist in the target dataset's fields."
+				},
+				"op": {
+					"type": "string",
+					"enum": [
+						"eq",
+						"neq",
+						"gt",
+						"gte",
+						"lt",
+						"lte",
+						"like",
+						"ilike",
+						"in",
+						"not_in",
+						"is",
+						"fts",
+						"plfts",
+						"match",
+						"imatch"
+					],
+					"description": "Filter operator. Maps to PostgREST operators: eq→=eq., neq→=neq., gt→=gt., gte→=gte., lt→=lt., lte→=lte., like→=like., ilike→=ilike., in→=in.(...), not_in→=not.in.(...), is→=is.(null|true|false), fts→=fts., plfts→=plfts., match→=match., imatch→=imatch."
+				},
+				"value": {
+					"oneOf": [
+						{ "type": "string" },
+						{ "type": "number" },
+						{ "type": "boolean" },
+						{ "type": "null" }
+					],
+					"description": "Filter value. For single-value operators (eq, gt, etc.). For \"is\", use null (IS NULL), true (IS TRUE), or false (IS FALSE)."
+				},
+				"values": {
+					"type": "array",
+					"items": {
+						"oneOf": [{ "type": "string" }, { "type": "number" }]
+					},
+					"description": "Filter values for list operators (in, not_in). Example: [\"completed\", \"delivered\"]."
+				}
+			}
+		}
+	}
+}

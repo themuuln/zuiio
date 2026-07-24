@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {

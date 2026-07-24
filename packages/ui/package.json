@@ -13,9 +13,9 @@
 		"@vitejs/plugin-react": "^6.0.3",
 		"@zuiio/config": "workspace:*",
 		"jsdom": "^29.1.1",
-		"react": "catalog:",
+		"react": "^19.2.7",
 		"sonner": "^2",
-		"typescript": "npm:@typescript/typescript6@^6.0.2",
+		"typescript": "^7.0.2",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

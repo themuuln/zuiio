@@ -1,6 +1,11 @@
 import { ok } from "@/lib/api-response";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
 export const GET = createPortalRouteHandler(async ({ customer, supabase }) => {
+  // Cascade stage 1: get the customer's vehicle IDs (from vehicle_owners)
+  // Cascade stage 2: get work_order IDs scoped to those vehicles
+  // Cascade stage 3: get invoices scoped to those work_orders
+  // Cascade stage 4: get invoice_items scoped to those invoices
+  // Each stage genuinely depends on IDs from the previous — cannot parallelize.
   const vehicleIds =
     (
       await supabase

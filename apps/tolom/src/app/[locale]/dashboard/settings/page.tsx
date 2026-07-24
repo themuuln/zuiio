@@ -1,13 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { generateBrandCSS, resolveBrandConfig } from "@zuiio/branding";
 import { useOrgMutation } from "@zuiio/query";
 import { Building2, Search, Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { generateBrandCSS, resolveBrandConfig } from "@zuiio/branding";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +23,6 @@ import { Typography } from "@/components/ui/typography";
 import { createOrgQuery } from "@/lib/queries/factory";
 import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { reportServerError } from "@/lib/sentry-report-server";
 import type { Organization } from "@/lib/types";
 import { setCookie } from "@/lib/utils";
 import { AppearanceCustomization } from "./_appearance-customization";
@@ -77,26 +76,6 @@ function SectionHeading({
   );
 }
 
-function LoadingSkeleton() {
-  return (
-    <div className="flex flex-col gap-4">
-      <Skeleton className="h-8 w-full max-w-md" />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="flex flex-col gap-2">
-          <Skeleton className="size-14 rounded-md" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-        </div>
-        <div className="flex flex-col gap-2 lg:col-span-2">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton key={`skeleton-${index}`} className="h-8 w-full" />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ErrorState({
   message,
   onRetry,
@@ -104,7 +83,10 @@ function ErrorState({
   readonly message: string;
   readonly onRetry: () => void;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   return (
     <div className="flex flex-col items-start gap-3 rounded-lg border border-destructive/20 px-4 py-3">
@@ -223,7 +205,10 @@ export default function SettingsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("general");
-  const t = useTranslations("settings");
+  const t = useTranslations("settings") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const settingsSections = useMemo(() => getSettingsSections(t), [t]);
 
   const orgInfoQuery = useCurrentOrg();
@@ -403,10 +388,6 @@ export default function SettingsPage() {
     section.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  if (orgInfoQuery.isPending || loading) {
-    return <LoadingSkeleton />;
-  }
-
   if (orgInfoQuery.error && !organization) {
     return (
       <ErrorState
@@ -416,7 +397,7 @@ export default function SettingsPage() {
     );
   }
 
-  if (!organization) {
+  if (!organization && !loading && !orgInfoQuery.isPending) {
     return (
       <ErrorState
         message={t("noOrganization")}
@@ -466,7 +447,23 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {filteredSections.length === 0 ? (
+      {!organization ? (
+        <div className="flex flex-col gap-4 py-4">
+          <Skeleton className="h-8 w-full max-w-md" />
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="flex flex-col gap-2">
+              <Skeleton className="size-14 rounded-md" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+            </div>
+            <div className="flex flex-col gap-2 lg:col-span-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={`settings-load-${i}`} className="h-8 w-full" />
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : filteredSections.length === 0 ? (
         <Empty className="border border-dashed py-8">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -489,7 +486,7 @@ export default function SettingsPage() {
             currency={form.defaultCurrency || DEFAULT_FORM.defaultCurrency}
             language={form.language || DEFAULT_FORM.language}
             onSelect={scrollToSection}
-            organizationName={organization.name}
+            organizationName={organization?.name ?? ""}
             sections={filteredSections}
             timezone={form.timezone || DEFAULT_FORM.timezone}
           />
@@ -511,7 +508,7 @@ export default function SettingsPage() {
                   form,
                   onSubmit: handleSubmit,
                   orgId: orgId ?? "",
-                  organization,
+                  organization: organization!,
                   preview,
                   saving: updateOrg.isPending,
                   setForm,

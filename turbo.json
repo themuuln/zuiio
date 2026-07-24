@@ -1,10 +1,24 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    ".npmrc",
+    "pnpm-workspace.yaml",
+    "tsconfig.json",
+    "config/**"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**", "app/**", "pages/**", "next.config.*", "tsconfig.json", "package.json", "tailwind.config.*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "!.next/dev/**",
+        "dist/**"
+      ],
       "env": [
         "NEXT_PUBLIC_SENTRY_DSN",
         "SENTRY_AUTH_TOKEN",
@@ -12,26 +26,7 @@
       ],
       "passThroughEnv": [
         "AGENT_GATEWAY_URL",
-        "RESEND_API_KEY",
-        "SUPABASE_SERVICE_ROLE_KEY",
-        "POSTGRES_URL",
-        "POSTGRES_PRISMA_URL",
-        "POSTGRES_URL_NON_POOLING",
-        "POSTGRES_USER",
-        "POSTGRES_HOST",
-        "POSTGRES_PASSWORD",
-        "POSTGRES_DATABASE",
-        "SUPABASE_ANON_KEY",
-        "SUPABASE_URL",
-        "SUPABASE_JWT_SECRET",
-        "SUPABASE_PUBLISHABLE_KEY",
-        "SUPABASE_SECRET_KEY",
-        "SMTP_HOST",
-        "SMTP_PORT",
-        "EMAIL_FROM",
-        "SMTP_USER",
-        "SMTP_SECURE",
-        "SMTP_PASS"
+        "GROQ_API_KEY"
       ]
     },
     "dev": {
@@ -39,14 +34,61 @@
       "persistent": true
     },
     "typecheck": {
-      "inputs": ["src/**", "app/**", "pages/**", "tsconfig.json", "package.json"]
+      "inputs": [
+        "src/**",
+        "app/**",
+        "pages/**",
+        "tsconfig.json",
+        "package.json"
+      ]
     },
     "lint": {
-      "inputs": ["src/**", "app/**", "pages/**", "package.json", "biome.json"]
+      "inputs": [
+        "src/**",
+        "app/**",
+        "pages/**",
+        "package.json",
+        "biome.json"
+      ]
     },
     "test": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**", "tests/**", "package.json", "vitest.config.*"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "src/**",
+        "tests/**",
+        "package.json",
+        "vitest.config.*"
+      ]
+    },
+    "test:coverage": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "src/**",
+        "tests/**",
+        "package.json",
+        "vitest.config.*"
+      ],
+      "outputs": [
+        "coverage/**"
+      ]
+    },
+    "test:e2e": {
+      "cache": false
+    },
+    "test:integration": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "src/__integration__/**",
+        "vitest.integration.config.ts",
+        "vitest.integration.setup.ts"
+      ],
+      "outputs": []
     }
   }
 }

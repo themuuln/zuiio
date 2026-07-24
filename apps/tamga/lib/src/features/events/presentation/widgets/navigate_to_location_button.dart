@@ -44,9 +44,7 @@ class NavigateToLocationButton extends StatelessWidget {
         onPressed: () => _openMapsApp(context),
         icon: const Icon(Icons.navigation_outlined),
         label: Text(label),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(48),
-        ),
+        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
       ),
     );
   }
@@ -59,13 +57,9 @@ class NavigateToLocationButton extends StatelessWidget {
     Uri uri;
 
     if (Platform.isAndroid) {
-      uri = Uri.parse(
-        'https://maps.google.com/maps?q=$lat,$lng',
-      );
+      uri = Uri.parse('https://maps.google.com/maps?q=$lat,$lng');
     } else if (Platform.isIOS) {
-      uri = Uri.parse(
-        'https://maps.apple.com/?ll=$lat,$lng&q=$lat,$lng',
-      );
+      uri = Uri.parse('https://maps.apple.com/?ll=$lat,$lng&q=$lat,$lng');
     } else {
       // Fallback for desktop / other platforms
       uri = Uri.parse('https://www.openstreetmap.org/?mlat=$lat&mlon=$lng');

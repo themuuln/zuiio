@@ -7,10 +7,7 @@ import 'market_providers.dart';
 
 /// View model for the moderation queue combining a report with its listing.
 class ModerationReportVm {
-  const ModerationReportVm({
-    required this.report,
-    required this.listing,
-  });
+  const ModerationReportVm({required this.report, required this.listing});
 
   final ListingReport report;
   final MarketListing listing;
@@ -19,8 +16,9 @@ class ModerationReportVm {
 }
 
 /// Fetches all reports and pairs them with their corresponding listings.
-final moderationQueueProvider =
-    FutureProvider<List<ModerationReportVm>>((ref) async {
+final moderationQueueProvider = FutureProvider<List<ModerationReportVm>>((
+  ref,
+) async {
   final repository = await ref.watch(marketRepositoryProvider.future);
   final allListings = await ref.watch(marketListingsProvider.future);
 
@@ -38,9 +36,7 @@ final moderationQueueProvider =
   }
 
   // Sort by most recent first
-  vms.sort(
-    (a, b) => b.report.createdAt.compareTo(a.report.createdAt),
-  );
+  vms.sort((a, b) => b.report.createdAt.compareTo(a.report.createdAt));
 
   return vms;
 });
@@ -107,9 +103,9 @@ Future<void> rejectReport(
 
   // Then set listing status to rejected
   await repository.saveListing(
-    (await repository.fetchListingById(listingId)).getOrThrow()!.copyWith(
-      status: MarketListingStatus.rejected,
-    ),
+    (await repository.fetchListingById(
+      listingId,
+    )).getOrThrow()!.copyWith(status: MarketListingStatus.rejected),
   );
 
   // Notify seller about the rejection with reason

@@ -62,7 +62,6 @@ import {
   useCreateVehicle,
   useCustomerSearch,
 } from "@/lib/queries/use-wizard-data";
-import { reportServerError } from "@/lib/sentry-report-server";
 import type { CreateVehicleParams, Customer, Vehicle } from "@/lib/types";
 import { vehicleSchema as sharedVehicleSchema } from "@/lib/validation/vehicle-schema";
 
@@ -160,7 +159,10 @@ export function VehicleForm({
   const queryClient = useQueryClient();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? "";
-  const t = useTranslations("vehicles");
+  const t = useTranslations("vehicles") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const commonT = useTranslations("common");
 
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);

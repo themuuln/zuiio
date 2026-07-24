@@ -122,6 +122,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         top: false,
         child: Column(
           children: [
+            // Step dots (not on welcome page — it has its own layout)
+            if (!isWelcomePage)
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: AppSpacing.lg,
+                  bottom: AppSpacing.sm,
+                ),
+                child: _StepDots(
+                  currentPage: _currentPage,
+                  pageCount: _pageCount,
+                ),
+              ),
+
             // Pages
             Expanded(
               child: Stack(
@@ -206,19 +219,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ],
               ),
             ),
-
-            // Step dots (not on welcome page — it has its own layout)
-            if (!isWelcomePage)
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: AppSpacing.lg,
-                  top: AppSpacing.sm,
-                ),
-                child: _StepDots(
-                  currentPage: _currentPage,
-                  pageCount: _pageCount,
-                ),
-              ),
           ],
         ),
       ),
@@ -245,9 +245,9 @@ class _StepDots extends StatelessWidget {
         final isActive = index == currentPage;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-          width: AppSpacing.sm,
-          height: AppSpacing.sm,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          width: isActive ? 10 : 8,
+          height: isActive ? 10 : 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: isActive ? tc.primary : tc.outline,

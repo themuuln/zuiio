@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Flag } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,16 +14,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 
 interface ReportErrorDialogProps {
   gameId?: string;
   playerId?: string;
 }
 
-export function ReportErrorDialog({ gameId, playerId }: ReportErrorDialogProps) {
+export function ReportErrorDialog({
+  gameId,
+  playerId,
+}: ReportErrorDialogProps) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [contact, setContact] = useState("");
@@ -87,9 +90,7 @@ export function ReportErrorDialog({ gameId, playerId }: ReportErrorDialogProps) 
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="report-message">
-                Алдааны талаархи тайлбар *
-              </Label>
+              <Label htmlFor="report-message">Алдааны талаархи тайлбар *</Label>
               <Textarea
                 id="report-message"
                 placeholder="Ямар алдаа байгааг тайлбарлана уу..."

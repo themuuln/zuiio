@@ -95,30 +95,30 @@ final _testEventWithoutLocation = Event(
 void _setupMapLibreMock() {
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(
-    const MethodChannel('plugins.flutter.io/maplibre_gl'),
-    (MethodCall methodCall) async {
-      // Return a simple map creation result
-      if (methodCall.method == 'map#waitForMap') {
-        return null;
-      }
-      if (methodCall.method == 'map#create') {
-        return 1; // map ID
-      }
-      if (methodCall.method == 'style#addSource') {
-        return null;
-      }
-      if (methodCall.method == 'style#addLayer') {
-        return null;
-      }
-      if (methodCall.method == 'style#removeLayer') {
-        return null;
-      }
-      if (methodCall.method == 'style#removeSource') {
-        return null;
-      }
-      return null;
-    },
-  );
+        const MethodChannel('plugins.flutter.io/maplibre_gl'),
+        (MethodCall methodCall) async {
+          // Return a simple map creation result
+          if (methodCall.method == 'map#waitForMap') {
+            return null;
+          }
+          if (methodCall.method == 'map#create') {
+            return 1; // map ID
+          }
+          if (methodCall.method == 'style#addSource') {
+            return null;
+          }
+          if (methodCall.method == 'style#addLayer') {
+            return null;
+          }
+          if (methodCall.method == 'style#removeLayer') {
+            return null;
+          }
+          if (methodCall.method == 'style#removeSource') {
+            return null;
+          }
+          return null;
+        },
+      );
 }
 
 // ── Overrides builder ───────────────────────────────────────────────
@@ -126,24 +126,26 @@ void _setupMapLibreMock() {
 Widget _buildTestApp(Widget child) {
   return ProviderScope(
     overrides: [
-      authStateProvider.overrideWith(() => FakeAuthStateNotifier(
-        const AuthState.authenticated(
-          userId: 'user-1',
-          email: 'user@test.com',
+      authStateProvider.overrideWith(
+        () => FakeAuthStateNotifier(
+          const AuthState.authenticated(
+            userId: 'user-1',
+            email: 'user@test.com',
+          ),
         ),
-      )),
-      localEventRegistrationRepositoryProvider
-          .overrideWithValue(MockEventRegistrationRepository()),
+      ),
+      localEventRegistrationRepositoryProvider.overrideWithValue(
+        MockEventRegistrationRepository(),
+      ),
       horsesProvider.overrideWith((ref) async => [_testHorse1]),
-      eventRegistrationsProvider(_testEventWithLocation.id)
-          .overrideWith((ref) async => []),
-      eventRegistrationsProvider(_testEventWithoutLocation.id)
-          .overrideWith((ref) async => []),
+      eventRegistrationsProvider(
+        _testEventWithLocation.id,
+      ).overrideWith((ref) async => []),
+      eventRegistrationsProvider(
+        _testEventWithoutLocation.id,
+      ).overrideWith((ref) async => []),
     ],
-    child: MaterialApp(
-      theme: AppTheme.light(),
-      home: child,
-    ),
+    child: MaterialApp(theme: AppTheme.light(), home: child),
   );
 }
 
@@ -165,10 +167,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           const Scaffold(
-            body: NavigateToLocationButton(
-              latitude: 47.92,
-              longitude: 106.92,
-            ),
+            body: NavigateToLocationButton(latitude: 47.92, longitude: 106.92),
           ),
         ),
       );
@@ -182,10 +181,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           const Scaffold(
-            body: NavigateToLocationButton(
-              latitude: null,
-              longitude: 106.92,
-            ),
+            body: NavigateToLocationButton(latitude: null, longitude: 106.92),
           ),
         ),
       );
@@ -198,10 +194,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           const Scaffold(
-            body: NavigateToLocationButton(
-              latitude: 47.92,
-              longitude: null,
-            ),
+            body: NavigateToLocationButton(latitude: 47.92, longitude: null),
           ),
         ),
       );
@@ -214,10 +207,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           const Scaffold(
-            body: NavigateToLocationButton(
-              latitude: null,
-              longitude: null,
-            ),
+            body: NavigateToLocationButton(latitude: null, longitude: null),
           ),
         ),
       );
@@ -236,10 +226,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           const Scaffold(
-            body: EventMapPreview(
-              latitude: 47.92,
-              longitude: 106.92,
-            ),
+            body: EventMapPreview(latitude: 47.92, longitude: 106.92),
           ),
         ),
       );
@@ -254,10 +241,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           const Scaffold(
-            body: EventMapPreview(
-              latitude: null,
-              longitude: 106.92,
-            ),
+            body: EventMapPreview(latitude: null, longitude: 106.92),
           ),
         ),
       );
@@ -271,10 +255,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           const Scaffold(
-            body: EventMapPreview(
-              latitude: 47.92,
-              longitude: null,
-            ),
+            body: EventMapPreview(latitude: 47.92, longitude: null),
           ),
         ),
       );
@@ -288,10 +269,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           const Scaffold(
-            body: EventMapPreview(
-              latitude: null,
-              longitude: null,
-            ),
+            body: EventMapPreview(latitude: null, longitude: null),
           ),
         ),
       );
@@ -309,11 +287,7 @@ void main() {
   group('EventLocationPicker', () {
     testWidgets('renders MapLibreMap', (tester) async {
       await tester.pumpWidget(
-        _buildTestApp(
-          const Scaffold(
-            body: EventLocationPicker(),
-          ),
-        ),
+        _buildTestApp(const Scaffold(body: EventLocationPicker())),
       );
       await tester.pump();
 
@@ -345,11 +319,7 @@ void main() {
 
     testWidgets('shows placeholder text when no location set', (tester) async {
       await tester.pumpWidget(
-        _buildTestApp(
-          const Scaffold(
-            body: EventLocationPicker(),
-          ),
-        ),
+        _buildTestApp(const Scaffold(body: EventLocationPicker())),
       );
       await tester.pump();
 
@@ -406,51 +376,45 @@ void main() {
   // ══════════════════════════════════════════════════════════════
 
   group('VAL-EVENTS-007: EventDetailScreen map preview', () {
-    testWidgets(
-      'shows map preview and nav button when lat/lng present',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestApp(
-            EventDetailScreen(event: _testEventWithLocation),
-          ),
-        );
-        // Allow providers to resolve
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
+    testWidgets('shows map preview and nav button when lat/lng present', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildTestApp(EventDetailScreen(event: _testEventWithLocation)),
+      );
+      // Allow providers to resolve
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-        // Scroll down to find the map preview and navigation button
-        await tester.scrollUntilVisible(
-          find.text('Байршилд очих'),
-          200,
-          scrollable: find.byType(Scrollable).first,
-        );
+      // Scroll down to find the map preview and navigation button
+      await tester.scrollUntilVisible(
+        find.text('Байршилд очих'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
 
-        // Map preview should be present
-        expect(find.byType(EventMapPreview), findsOneWidget);
-        expect(find.byType(MapLibreMap), findsOneWidget);
-        expect(find.text('Байршил'), findsOneWidget);
-        // Navigation button should be present
-        expect(find.text('Байршилд очих'), findsOneWidget);
-      },
-    );
+      // Map preview should be present
+      expect(find.byType(EventMapPreview), findsOneWidget);
+      expect(find.byType(MapLibreMap), findsOneWidget);
+      expect(find.text('Байршил'), findsOneWidget);
+      // Navigation button should be present
+      expect(find.text('Байршилд очих'), findsOneWidget);
+    });
 
-    testWidgets(
-      'hides map preview and nav button when lat/lng null',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestApp(
-            EventDetailScreen(event: _testEventWithoutLocation),
-          ),
-        );
-        await tester.pump();
+    testWidgets('hides map preview and nav button when lat/lng null', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildTestApp(EventDetailScreen(event: _testEventWithoutLocation)),
+      );
+      await tester.pump();
 
-        // Map preview should NOT be present
-        expect(find.byType(EventMapPreview), findsNothing);
-        expect(find.byType(MapLibreMap), findsNothing);
-        expect(find.text('Байршил'), findsNothing);
-        // Navigation button should NOT be present
-        expect(find.text('Байршилд очих'), findsNothing);
-      },
-    );
+      // Map preview should NOT be present
+      expect(find.byType(EventMapPreview), findsNothing);
+      expect(find.byType(MapLibreMap), findsNothing);
+      expect(find.text('Байршил'), findsNothing);
+      // Navigation button should NOT be present
+      expect(find.text('Байршилд очих'), findsNothing);
+    });
   });
 }

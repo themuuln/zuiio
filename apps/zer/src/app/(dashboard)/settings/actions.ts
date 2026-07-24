@@ -1,6 +1,6 @@
 "use server";
 
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
 import { requireActionContext, requireAppContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
@@ -217,6 +217,7 @@ export async function importBrandPresets(formData: FormData) {
             .insert({
               name: preset.category_name,
               organization_id: organizationId,
+              slug: "",
             })
             .select("id")
             .single();
@@ -335,6 +336,7 @@ export async function importProductPreset(formData: FormData) {
         .insert({
           name: preset.category_name,
           organization_id: organizationId,
+          slug: "",
         })
         .select("id")
         .single();
@@ -452,6 +454,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
           .insert({
             name: preset.category_name,
             organization_id: organizationId,
+            slug: "",
           })
           .select("id")
           .single();
@@ -548,6 +551,7 @@ const ALLOWED_FEATURE_SETTINGS = new Set([
   "has_checkout_customer",
   "has_checkout_quick_amounts",
   "has_receipt_drawer",
+  "has_track_stock",
 ]);
 
 export async function updateOrgFeatureSetting(
@@ -565,9 +569,12 @@ export async function updateOrgFeatureSetting(
     return { error: "Буруу тохиргоо." };
   }
 
-  const { error } = await supabase.from("organizations").update({
-    [setting]: value,
-  } as Database["public"]["Tables"]["organizations"]["Update"]);
+  const { error } = await withDbCapture(
+    "organizations: update feature setting",
+    supabase.from("organizations").update({
+      [setting]: value,
+    } as Database["public"]["Tables"]["organizations"]["Update"]),
+  );
 
   if (error) {
     capture(error, { context: "updateOrgFeatureSetting" });

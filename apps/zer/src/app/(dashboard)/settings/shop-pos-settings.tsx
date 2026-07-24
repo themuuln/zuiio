@@ -28,6 +28,7 @@ export type ShopPosSettingsValues = {
   has_checkout_customer: boolean;
   has_checkout_quick_amounts: boolean;
   has_receipt_drawer: boolean;
+  has_track_stock: boolean;
   shop_default_payment_method: string;
 };
 
@@ -42,7 +43,8 @@ const TOGGLES: {
   key:
     | "has_checkout_customer"
     | "has_checkout_quick_amounts"
-    | "has_receipt_drawer";
+    | "has_receipt_drawer"
+    | "has_track_stock";
   label: string;
   description: string;
 }[] = [
@@ -63,6 +65,12 @@ const TOGGLES: {
     label: "Баримтыг цонхонд харуулах",
     description:
       "Борлуулалт хийсний дараа баримтыг цонхонд харуулна. Баримт хэвлэх шаардлагагүй дэлгүүрт унтраана.",
+  },
+  {
+    key: "has_track_stock",
+    label: "Барааны үлдэгдэл хянах",
+    description:
+      "Унтраасан үед дэлгүүр бүх барааг боломжтой гэж харуулна (үлдэгдэл тооцохгүй). Эхний үлдэгдэл оруулаагүй дэлгүүрт зориулагдсан.",
   },
 ];
 

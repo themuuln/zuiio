@@ -57,7 +57,7 @@ import { vehicleModelKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { cn } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
-import { VehicleModelFormSheet } from "./_vehicle-model-form-drawer";
+import { VehicleModelFormDrawer } from "./_vehicle-model-form-drawer";
 
 const fetchVehicleModels =
   createOrgQuery<VehicleModelItem[]>("/vehicle-models");
@@ -133,7 +133,10 @@ function variantBodyTypeLabel(
 // ── Page component ────────────────────────────────────────────
 
 export default function VehicleModelsPage() {
-  const t = useTranslations("vehicleModels");
+  const t = useTranslations("vehicleModels") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const now = useClientNow();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
@@ -640,7 +643,7 @@ export default function VehicleModelsPage() {
       </Card>
 
       {/* ── Vehicle Model Form Sheet ─────────────────────── */}
-      <VehicleModelFormSheet
+      <VehicleModelFormDrawer
         mode={formMode}
         item={formItem}
         open={formOpen}

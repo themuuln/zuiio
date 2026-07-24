@@ -4,7 +4,7 @@ import { Calendar, CalendarDays, List, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
-import { AppointmentCreateSheet } from "@/components/appointments/create-drawer";
+import { AppointmentCreateDrawer } from "@/components/appointments/create-drawer";
 import { DispatchCalendar } from "@/components/dispatch-calendar";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
@@ -44,7 +44,10 @@ function formatTime(iso: string) {
 
 // ── Main Page ──────────────────────────────────────────────────
 export default function AppointmentsPage() {
-  const t = useTranslations("appointments");
+  const t = useTranslations("appointments") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
@@ -273,7 +276,7 @@ export default function AppointmentsPage() {
         </div>
       )}
 
-      <AppointmentCreateSheet
+      <AppointmentCreateDrawer
         open={createOpen}
         onOpenChange={setCreateOpen}
         orgId={orgId}

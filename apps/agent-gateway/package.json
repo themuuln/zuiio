@@ -1,0 +1,52 @@
+{
+	"name": "agent-gateway",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"packageManager": "pnpm@11.10.0",
+	"engines": {
+		"node": "24.x"
+	},
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+		"pages:build": "opennextjs-cloudflare build",
+		"pages:deploy": "opennextjs-cloudflare build && wrangler pages deploy .open-next/assets --project-name=agent-gateway",
+		"cf:deploy": "opennextjs-cloudflare build && wrangler deploy",
+		"lint": "biome check",
+		"format": "biome format --write",
+		"validate:types": "tsc --noEmit --incremental",
+		"validate": "pnpm validate:types && pnpm lint && pnpm test",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"test:unit": "vitest run tests/unit",
+		"test:integration": "vitest run tests/integration",
+		"test:e2e": "vitest run tests/e2e --testTimeout 60000"
+	},
+	"dependencies": {
+		"@supabase/supabase-js": "^2.110.6",
+		"@upstash/redis": "^1.38.0",
+		"@zuiio/ai-agent": "workspace:*",
+		"@zuiio/capture": "workspace:*",
+		"@zuiio/core": "workspace:*",
+		"next": "catalog:",
+		"qrcode": "^1.5.4",
+		"react": "catalog:",
+		"react-dom": "19.2.7",
+		"zod": "^4.4.3",
+		"@zuiio/gateway-core": "workspace:*"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.4",
+		"@opennextjs/cloudflare": "^1.20.1",
+		"@types/node": "^26.1.1",
+		"@types/qrcode": "^1.5.6",
+		"@types/react": "catalog:",
+		"@types/react-dom": "^19.2.3",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	}
+}

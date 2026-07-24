@@ -3,7 +3,7 @@ import { created } from "@/lib/api-response";
 import { ValidationError } from "@/lib/errors";
 import { recordPayment } from "@/lib/services/invoice-service";
 export const POST = createRouteHandler(
-  async ({ request, orgId, params, supabase }) => {
+  async ({ request, orgId, params, supabase, user }) => {
     const { invoiceId } = params;
     const body = await request.json();
 
@@ -11,12 +11,18 @@ export const POST = createRouteHandler(
       throw new ValidationError("A valid positive amount is required");
     }
 
-    const payments = await recordPayment(supabase, invoiceId, orgId, {
-      amount: Number(body.amount),
-      method: body.method ?? "cash",
-      reference: body.reference ?? undefined,
-      notes: body.notes ?? undefined,
-    });
+    const payments = await recordPayment(
+      supabase,
+      invoiceId,
+      orgId,
+      {
+        amount: Number(body.amount),
+        method: body.method ?? "cash",
+        reference: body.reference ?? undefined,
+        notes: body.notes ?? undefined,
+      },
+      user.id,
+    );
 
     return created(payments);
   },

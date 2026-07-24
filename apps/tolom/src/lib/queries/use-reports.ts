@@ -8,7 +8,11 @@
  * - Retry on failure
  * - Shared cache between tabs
  */
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
 import type {
   CustomerRetentionData,
   PnLSummary,
@@ -63,6 +67,7 @@ export function useReport(
       });
     },
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
     retry: 1,
   });
@@ -113,6 +118,7 @@ export function useReportInsights(
       });
     },
     enabled: !!orgId && enabled,
+    placeholderData: keepPreviousData,
     staleTime: 120_000,
     retry: 1,
   });
@@ -142,6 +148,7 @@ export function useReportForecast(
       });
     },
     enabled: !!orgId && enabled,
+    placeholderData: keepPreviousData,
     staleTime: 120_000,
     retry: 1,
   });
@@ -171,6 +178,7 @@ export function useReportTargets(
       });
     },
     enabled: !!orgId && enabled,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
     retry: 1,
   });
@@ -200,6 +208,7 @@ export function useReportRetention(
       });
     },
     enabled: !!orgId && enabled,
+    placeholderData: keepPreviousData,
     staleTime: 120_000,
     retry: 1,
   });
@@ -229,6 +238,7 @@ export function useReportPnl(
       });
     },
     enabled: !!orgId && enabled,
+    placeholderData: keepPreviousData,
     staleTime: 120_000,
     retry: 1,
   });
@@ -263,6 +273,7 @@ export function useReportServiceBreakdown(
       });
     },
     enabled: !!orgId && enabled,
+    placeholderData: keepPreviousData,
     staleTime: 120_000,
     retry: 1,
   });
@@ -281,6 +292,7 @@ export function useReportFinanceSummary(
       });
     },
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 }
@@ -298,6 +310,7 @@ export function useReportMechanicLeaderboard(
       });
     },
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 }

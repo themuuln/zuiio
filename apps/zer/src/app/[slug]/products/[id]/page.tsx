@@ -11,6 +11,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -125,13 +126,13 @@ async function ProductDetailDataFetcher({
           {/* Image gallery */}
           {images.length > 0 ? (
             <div className="mb-8 space-y-3">
-              {/* Main image */}
               <div className="relative overflow-hidden rounded-2xl bg-muted">
-                {/* biome-ignore lint/performance/noImgElement: Supabase storage URLs */}
-                <img
+                <OptimizedImage
                   src={images[0]}
                   alt={product.name}
                   className="aspect-[4/3] w-full object-cover"
+                  width={800}
+                  priority
                 />
               </div>
               {/* Thumbnails if multiple */}
@@ -142,12 +143,12 @@ async function ProductDetailDataFetcher({
                       key={img}
                       className="relative shrink-0 overflow-hidden rounded-lg border-2 border-border/60"
                     >
-                      {/* biome-ignore lint/performance/noImgElement: Supabase storage URLs */}
-                      <img
+                      <OptimizedImage
                         src={img}
                         alt={`${product.name} ${i + 1}`}
                         className="h-20 w-20 object-cover"
-                        loading="lazy"
+                        width={80}
+                        height={80}
                       />
                     </div>
                   ))}

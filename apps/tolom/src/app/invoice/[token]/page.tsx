@@ -43,7 +43,8 @@ const invoiceStatusConfig: Record<
 > = {
   draft: {
     label: "statusDraft",
-    className: "bg-gray-100 text-gray-700 border-gray-300",
+    className:
+      "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600",
     icon: Clock,
   },
   sent: {
@@ -68,7 +69,8 @@ const invoiceStatusConfig: Record<
   },
   cancelled: {
     label: "statusCancelled",
-    className: "bg-gray-100 text-gray-500 border-gray-300",
+    className:
+      "bg-gray-100 text-gray-500 border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600",
     icon: XCircle,
   },
 };
@@ -189,7 +191,10 @@ function InvoiceError({
 // ── Main page ────────────────────────────────────────────
 
 export default function PublicInvoicePage() {
-  const t = useTranslations("invoice");
+  const t = useTranslations("invoice") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const params = useParams();
   const token = params.token as string;
 

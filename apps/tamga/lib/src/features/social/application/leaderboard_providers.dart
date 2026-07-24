@@ -17,8 +17,9 @@ final leaderboardTimePeriodProvider = StateProvider<LeaderboardTimePeriod>(
 );
 
 /// Боломжтой аймгуудын жагсаалт — заруудын locationLabel-аас гаргаж авна.
-final leaderboardAvailableRegionsProvider =
-    FutureProvider<List<String>>((ref) async {
+final leaderboardAvailableRegionsProvider = FutureProvider<List<String>>((
+  ref,
+) async {
   final repository = await ref.watch(marketRepositoryProvider.future);
   final result = await repository.fetchListings();
   final listings = result.getOrDefault(<MarketListing>[]);
@@ -44,8 +45,7 @@ final leaderboardAvailableRegionsProvider =
 /// Чансааны өгөгдлийг бүрдүүлэх provider.
 ///
 /// Бүх зар, морь, үнэлгээг нэгтгэж үржүүлэгч тус бүрийн үзүүлэлтийг тооцоолно.
-final leaderboardProvider =
-    FutureProvider<List<LeaderboardEntry>>((ref) async {
+final leaderboardProvider = FutureProvider<List<LeaderboardEntry>>((ref) async {
   final region = ref.watch(leaderboardRegionProvider);
   final timePeriod = ref.watch(leaderboardTimePeriodProvider);
 
@@ -74,7 +74,9 @@ final leaderboardProvider =
   final List<MarketListing> filteredListings;
   if (cutoffDate != null) {
     final cutoff = cutoffDate;
-    filteredListings = allListings.where((l) => l.createdAt.isAfter(cutoff)).toList();
+    filteredListings = allListings
+        .where((l) => l.createdAt.isAfter(cutoff))
+        .toList();
   } else {
     filteredListings = allListings;
   }
@@ -128,44 +130,49 @@ final leaderboardProvider =
     }
 
     // Идэвхтэй зарууд
-    final activeListingsCount =
-        sellerListings.where((l) => l.status == MarketListingStatus.active).length;
+    final activeListingsCount = sellerListings
+        .where((l) => l.status == MarketListingStatus.active)
+        .length;
 
     // Борлуулсан зарууд
-    final completedSalesCount =
-        sellerListings.where((l) => l.status == MarketListingStatus.sold).length;
+    final completedSalesCount = sellerListings
+        .where((l) => l.status == MarketListingStatus.sold)
+        .length;
 
     // Үнэлгээ
     double averageRating;
     try {
-      final summary =
-          await ref.read(sellerRatingSummaryProvider(sellerId).future);
+      final summary = await ref.read(
+        sellerRatingSummaryProvider(sellerId).future,
+      );
       averageRating = summary.averageRating;
     } catch (_) {
       averageRating = 0.0;
     }
 
     // Морины тоо
-    final horseCount =
-        allHorses.where((h) => h.ownerId == sellerId).length;
+    final horseCount = allHorses.where((h) => h.ownerId == sellerId).length;
 
     // Нийт оноо: идэвхтэй зар * 10 + борлуулалт * 25 + дундаж үнэлгээ * 20 + морины тоо * 5
-    final totalScore = (activeListingsCount * 10) +
+    final totalScore =
+        (activeListingsCount * 10) +
         (completedSalesCount * 25) +
         (averageRating * 20).round() +
         (horseCount * 5);
 
-    entries.add(LeaderboardEntry(
-      rank: 0, // Дараа нь эрэмблэгдэнэ
-      breederId: sellerId,
-      breederName: breederName,
-      locationLabel: locationLabel,
-      totalScore: totalScore,
-      activeListingsCount: activeListingsCount,
-      completedSalesCount: completedSalesCount,
-      averageRating: averageRating,
-      horseCount: horseCount,
-    ));
+    entries.add(
+      LeaderboardEntry(
+        rank: 0, // Дараа нь эрэмблэгдэнэ
+        breederId: sellerId,
+        breederName: breederName,
+        locationLabel: locationLabel,
+        totalScore: totalScore,
+        activeListingsCount: activeListingsCount,
+        completedSalesCount: completedSalesCount,
+        averageRating: averageRating,
+        horseCount: horseCount,
+      ),
+    );
   }
 
   // Оноогоор эрэмблэх

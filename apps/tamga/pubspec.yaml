@@ -20,7 +20,7 @@ version: 1.0.0+1
 
 environment:
   sdk: ^3.10.3
-  flutter: 3.44.2
+  flutter: ">=3.44.2"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -105,6 +105,9 @@ dependencies:
   country_flags: ^4.1.0
   animation_kit: ^0.0.2
   email_validator: ^3.0.0
+
+  # AI-agent driven UI testing (debug mode only)
+  marionette_flutter: ^0.6.0
   web: ^1.1.1
 dev_dependencies:
   flutter_test:

@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { updateMember } from "@/lib/services/user-service";

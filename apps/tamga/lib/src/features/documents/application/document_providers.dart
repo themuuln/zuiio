@@ -26,22 +26,23 @@ final documentRepositoryProvider = Provider<DocumentRepository>((ref) {
 /// [horseId] — холбогдох морийн ID
 final documentsForHorseProvider =
     createListFamilyProvider<DocumentRecord, DocumentRepository, String>(
-  (ref) async => ref.watch(documentRepositoryProvider),
-  (repo, horseId) => repo.getDocumentsForHorse(horseId),
-);
+      (ref) async => ref.watch(documentRepositoryProvider),
+      (repo, horseId) => repo.getDocumentsForHorse(horseId),
+    );
 
 /// Тодорхой төрөлтэй баримтуудын provider.
-final documentsByTypeProvider = createListFamilyProvider<
-  DocumentRecord,
-  DocumentRepository,
-  ({DocumentType docType, String? horseId})
->(
-  (ref) async => ref.watch(documentRepositoryProvider),
-  (repo, params) => repo.getDocumentsByType(
-    docType: params.docType,
-    horseId: params.horseId,
-  ),
-);
+final documentsByTypeProvider =
+    createListFamilyProvider<
+      DocumentRecord,
+      DocumentRepository,
+      ({DocumentType docType, String? horseId})
+    >(
+      (ref) async => ref.watch(documentRepositoryProvider),
+      (repo, params) => repo.getDocumentsByType(
+        docType: params.docType,
+        horseId: params.horseId,
+      ),
+    );
 
 /// Баримт upload хийх mutation provider.
 final uploadDocumentProvider = Provider<DocumentRepository>(

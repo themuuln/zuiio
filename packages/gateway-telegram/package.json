@@ -1,0 +1,27 @@
+{
+	"name": "@zuiio/gateway-telegram",
+	"version": "0.1.0",
+	"license": "MIT",
+	"type": "module",
+	"types": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc"
+	},
+	"dependencies": {
+		"@zuiio/capture": "workspace:*",
+		"@zuiio/gateway-core": "workspace:*"
+	},
+	"devDependencies": {
+		"@supabase/supabase-js": "^2.110.6",
+		"@types/node": "^26.1.1",
+		"@typescript/native": "npm:typescript@^7.0.2",
+		"@zuiio/config": "workspace:*",
+		"typescript": "^7.0.2"
+	}
+}

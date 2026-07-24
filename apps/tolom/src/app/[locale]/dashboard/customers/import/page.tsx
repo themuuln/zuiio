@@ -12,7 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { Link } from "@/lib/i18n/navigation";
 import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -195,11 +196,14 @@ function PreviewCard({
 export default function ImportCustomersPage() {
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? null;
-  const t = useTranslations("customers");
+  const t = useTranslations("customers") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<ImportState>({ status: "idle" });
   const [dragOver, setDragOver] = useState(false);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const isFirstLoad = useIsFirstLoad(!orgQuery.isPending);
   const fileContentRef = useRef<string>("");
   const previewRef = useRef<{
     filename: string;
@@ -207,10 +211,6 @@ export default function ImportCustomersPage() {
     rows: PreviewRow[];
     totalRows: number;
   } | null>(null);
-
-  useEffect(() => {
-    if (!orgQuery.isPending) setHasLoadedOnce(true);
-  }, [orgQuery.isPending]);
   const queryClient = useQueryClient();
   const importMutation = useMutation({
     mutationFn: async () => {
@@ -345,7 +345,7 @@ export default function ImportCustomersPage() {
 
   return (
     <div className="flex max-w-4xl flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
-      {(orgQuery.error || (hasLoadedOnce && !orgId)) && (
+      {(orgQuery.error || (!isFirstLoad && !orgId)) && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
             <Typography.Text className="text-sm text-destructive">

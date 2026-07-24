@@ -1,5 +1,7 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { createSimpleRouteHandler } from "@/lib/api-handler";
+import { apiError, ok } from "@/lib/api-response";
 import { lookupPlate, type SmartCarVehicle } from "@/lib/smartcar/browser";
+
 // ---------------------------------------------------------------------------
 // In-memory cache (survives across requests in the same server process).
 // For production, swap with Redis or Upstash.
@@ -63,50 +65,50 @@ function checkRate(ip: string): boolean {
 // GET /api/smartcar/lookup?plate=4222УНА
 // ---------------------------------------------------------------------------
 
-export async function GET(request: NextRequest) {
-  const plate = request.nextUrl.searchParams.get("plate");
-  if (!plate) {
-    return NextResponse.json(
-      { error: "Missing ?plate= parameter" },
-      { status: 400 },
-    );
-  }
+export const GET = createSimpleRouteHandler(
+  async ({ request }) => {
+    const plate = request.nextUrl.searchParams.get("plate");
+    if (!plate) {
+      return apiError("MISSING_PARAM", "Missing ?plate= parameter", 400);
+    }
 
-  const normalized = normalizePlate(plate);
-  if (!normalized) {
-    return NextResponse.json(
-      {
-        error:
-          "Invalid plate format. Expected 4 digits + 3 Cyrillic letters (e.g. 4222УНА)",
-      },
-      { status: 400 },
-    );
-  }
+    const normalized = normalizePlate(plate);
+    if (!normalized) {
+      return apiError(
+        "INVALID_FORMAT",
+        "Invalid plate format. Expected 4 digits + 3 Cyrillic letters (e.g. 4222УНА)",
+        400,
+      );
+    }
 
-  // Rate limit
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!checkRate(ip)) {
-    return NextResponse.json(
-      { error: "Rate limit exceeded. Max 10 lookups per minute." },
-      { status: 429 },
-    );
-  }
+    // Rate limit
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    if (!checkRate(ip)) {
+      return apiError(
+        "RATE_LIMITED",
+        "Rate limit exceeded. Max 10 lookups per minute.",
+        429,
+      );
+    }
 
-  // Check cache
-  const cached = getCached(normalized);
-  if (cached) {
-    return NextResponse.json({ data: cached, cached: true });
-  }
+    // Check cache
+    const cached = getCached(normalized);
+    if (cached) {
+      return ok({ vehicle: cached, cached: true });
+    }
 
-  // Scrape SmartCar
-  const result = await lookupPlate(normalized);
+    // Scrape SmartCar
+    const result = await lookupPlate(normalized);
 
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: 404 });
-  }
+    if (!result.ok) {
+      return apiError("NOT_FOUND", result.error, 404);
+    }
 
-  setCache(normalized, result.data);
+    setCache(normalized, result.data);
 
-  return NextResponse.json({ data: result.data, cached: false });
-}
+    return ok({ vehicle: result.data, cached: false });
+  },
+  { requireAuth: false },
+);

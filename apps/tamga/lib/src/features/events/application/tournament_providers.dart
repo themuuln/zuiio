@@ -10,14 +10,15 @@ import 'events_providers.dart';
 /// Морины бүртгэлүүдийг ID-аар авах provider.
 final eventRegistrationsByHorseProvider =
     FutureProvider.family<List<EventRegistration>, String>((
-  ref,
-  horseId,
-) async {
-  final repository =
-      await ref.watch(eventRegistrationRepositoryProvider.future);
-  final result = await repository.fetchRegistrationsByHorse(horseId);
-  return result.getOrThrow();
-});
+      ref,
+      horseId,
+    ) async {
+      final repository = await ref.watch(
+        eventRegistrationRepositoryProvider.future,
+      );
+      final result = await repository.fetchRegistrationsByHorse(horseId);
+      return result.getOrThrow();
+    });
 
 /// Морины тэмцээний профайл.
 ///
@@ -60,7 +61,8 @@ final tournamentProfileProvider =
       if (horseEvents.isEmpty) return null;
 
       // Морины нэрийг олох
-      final horseName = events
+      final horseName =
+          events
               .where((e) => e.horseId == horseId)
               .map((e) => e.horseName)
               .firstOrNull ??

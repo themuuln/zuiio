@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
-import { ok } from "@/lib/api-response";
+import { apiError, ok } from "@/lib/api-response";
+
 /**
  * Public invoice endpoint — requires auth.
  * Returns invoice data by public_token.
@@ -14,10 +14,7 @@ export const GET = createSimpleRouteHandler(async ({ request, supabase }) => {
 
   if (error) throw error;
   if (!invoice) {
-    return NextResponse.json(
-      { error: { message: "Invoice not found" } },
-      { status: 404 },
-    );
+    return apiError("NOT_FOUND", "Invoice not found", 404);
   }
   return ok(invoice);
 });

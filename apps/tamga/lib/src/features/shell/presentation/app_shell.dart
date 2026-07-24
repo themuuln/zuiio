@@ -14,6 +14,7 @@ import '../../../app/app_config.dart';
 import 'feature_tour.dart';
 import 'fab_menu.dart';
 import 'quick_actions.dart';
+import '../../../core/theme/design_tokens.dart';
 
 /// Тухайн хэрэглэгчийн role-оос хамаарч өөр өөр хурдан үйлдлүүд гаргана.
 class AppShell extends ConsumerStatefulWidget {
@@ -39,24 +40,24 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     return [
       const NavigationDestination(
-        icon: Icon(Icons.home_outlined),
-        selectedIcon: Icon(Icons.home),
-        label: 'Нүүр',
+        icon: Icon(Icons.account_tree_outlined),
+        selectedIcon: Icon(Icons.account_tree),
+        label: 'Угшил',
       ),
       const NavigationDestination(
         icon: Icon(Icons.storefront_outlined),
         selectedIcon: Icon(Icons.storefront),
-        label: 'Арилжаа',
+        label: 'Зах зээл',
       ),
       const NavigationDestination(
-        icon: Icon(Icons.emoji_events_outlined),
-        selectedIcon: Icon(Icons.emoji_events),
-        label: 'Уралдаан',
+        icon: Icon(Icons.calendar_month_outlined),
+        selectedIcon: Icon(Icons.calendar_month),
+        label: 'Арга хэмжээ',
       ),
       const NavigationDestination(
-        icon: Icon(Icons.search_off_outlined),
-        selectedIcon: Icon(Icons.search_off),
-        label: 'Эрэл хайгуул',
+        icon: Icon(Icons.search_outlined),
+        selectedIcon: Icon(Icons.search),
+        label: 'Эрэл',
       ),
       NavigationDestination(
         icon: Badge(
@@ -104,6 +105,7 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final tamgaColors = TamgaColors.of(context);
     final authAsync = ref.watch(authStateProvider);
     final authState = authAsync.valueOrNull;
     final isUnauthenticated =
@@ -172,12 +174,30 @@ class _AppShellState extends ConsumerState<AppShell> {
             FeatureTour(onCompleted: _onTourCompleted),
 
           // Floating action button menu — бүх нэмэх үйлдлүүд нэг дороо
-          if (onboardingCompleted)
-            const Positioned.fill(child: FabMenu()),
+          if (onboardingCompleted) const Positioned.fill(child: FabMenu()),
         ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: widget.navigationShell.currentIndex,
+        indicatorColor: tamgaColors.primary.withValues(alpha: 0.12),
+        backgroundColor: tamgaColors.surfaceContainerLowest,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return TextStyle(
+              color: tamgaColors.primary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            );
+          }
+          return TextStyle(
+            color: tamgaColors.mutedForeground,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          );
+        }),
         destinations: _buildDestinations(
           authState,
           ref.watch(inboxUnreadCountProvider).valueOrNull ?? 0,
@@ -203,50 +223,46 @@ class _GuestRegistrationPrompt extends StatelessWidget {
     final theme = Theme.of(context);
     return SafeArea(
       top: false,
-      child: Material(
-        elevation: 6,
-        color: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.cloud_upload_outlined,
-                  size: 18,
-                  color: theme.colorScheme.onPrimaryContainer,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.cloud_upload_outlined,
+                size: 18,
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Өгөгдөө хамгаалахын тулд бүртгүүлнэ үү',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Өгөгдөө хамгаалахын тулд бүртгүүлнэ үү',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+            ),
+            const SizedBox(width: 12),
+            FilledButton.tonal(
+              onPressed: onRegister,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
               ),
-              const SizedBox(width: 12),
-              FilledButton.tonal(
-                onPressed: onRegister,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                ),
-                child: const Text('Бүртгүүлэх'),
-              ),
-            ],
-          ),
+              child: const Text('Бүртгүүлэх'),
+            ),
+          ],
         ),
       ),
     );
@@ -261,27 +277,24 @@ class _SyncStatusBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    return Material(
-      elevation: 2,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        color: _backgroundColor(theme),
-        child: Row(
-          children: [
-            _buildIcon(theme),
-            const SizedBox(width: 8),
-            Expanded(child: _buildText(theme)),
-            if (syncState.status == SyncStatus.error)
-              IconButton(
-                icon: const Icon(Icons.refresh, size: 18),
-                onPressed: () {
-                  ref.read(syncStateProvider.notifier).triggerSync();
-                },
-                tooltip: 'Дахин оролдох',
-              ),
-          ],
-        ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      color: _backgroundColor(theme),
+      child: Row(
+        children: [
+          _buildIcon(theme),
+          const SizedBox(width: 8),
+          Expanded(child: _buildText(theme)),
+          if (syncState.status == SyncStatus.error)
+            IconButton(
+              icon: const Icon(Icons.refresh, size: 18),
+              onPressed: () {
+                ref.read(syncStateProvider.notifier).triggerSync();
+              },
+              tooltip: 'Дахин оролдох',
+            ),
+        ],
       ),
     );
   }

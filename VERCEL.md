@@ -4,15 +4,16 @@
 
 This monorepo uses git submodules. Each app has its own repo but shares `@zuiio/*` packages via the workspace.
 
-### Option A: Deploy from Monorepo (Recommended)
+### Deploy from Monorepo (Recommended)
 
 Each Vercel project points to `themuuln/zuiio.git` with a Root Directory:
 
 | App | Root Directory | Notes |
 |-----|---------------|-------|
-| zer | `apps/zer` | SMB ERP |
-| website | `apps/website` | Company site |
+| website | `apps/website` | Company site (no env vars, fully static) |
+| zuiio-id | `apps/zuiio-id` | Central SSO (Supabase) |
 | agent-gateway | `apps/agent-gateway` | Telegram bot (has vercel.json) |
+| onoo | `apps/onoo` | Basketball stats (Supabase) |
 
 **Steps:**
 1. Vercel Dashboard → Project → Settings → General
@@ -20,13 +21,22 @@ Each Vercel project points to `themuuln/zuiio.git` with a Root Directory:
 3. Root Directory → `apps/<app-name>`
 4. Save → Redeploy
 
-### Option B: Deploy Standalone (for tolom)
+### Standalone Repos (Submodules)
 
-Tolom is a standalone repo (`themuuln/tolom.git`) and deploys directly:
+Some apps deploy from their own repo:
 
-| App | Git Repository | Root Directory |
-|-----|---------------|----------------|
-| tolom | `themuuln/tolom` | _(empty)_ |
+| App | Git Repository | Notes |
+|-----|---------------|-------|
+| zer | `themuuln/zer` | SMB ERP |
+| tolom | `themuuln/tolom` | Auto repair management |
+| tumurch | `themuuln/tumurch` | Gym platform |
+
+### Not on Vercel
+
+| App | Stack | Why |
+|-----|-------|-----|
+| tamga | Flutter | Mobile app, distributed via APK/GitHub Release |
+| agent-gateway | Next.js + Telegram | Can be Vercel or standalone |
 
 ## Turbo Scripts
 
@@ -37,10 +47,8 @@ Use these from the monorepo root:
 pnpm dev:zer
 pnpm dev:tolom
 pnpm dev:website
+pnpm dev:zuiio-id
 pnpm dev:agent-gateway
-
-# Run all apps in parallel
-pnpm dev
 
 # Typecheck everything
 pnpm typecheck

@@ -9,9 +9,7 @@ Widget createCard(BreedingAdvice advice) {
   return MaterialApp(
     theme: AppTheme.light(),
     home: Scaffold(
-      body: SingleChildScrollView(
-        child: BreedingResultCard(advice: advice),
-      ),
+      body: SingleChildScrollView(child: BreedingResultCard(advice: advice)),
     ),
   );
 }
@@ -23,11 +21,21 @@ void main() {
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows green theme for low inbreeding risk', (tester) async {
       final advice = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.low,
         riskScore: 15,
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Bay', probability: 50),
+          CoatColorPrediction(color: 'Chestnut', probability: 50),
+          CoatColorPrediction(color: 'Black', probability: 50),
+        ],
+        healthRisks: const [],
         healthNotes: 'Low risk pair with good genetic diversity.',
-        colorPredictions: ['Bay', 'Chestnut', 'Black'],
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: ['Excellent match'],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
 
       await tester.pumpWidget(createCard(advice));
@@ -45,13 +53,24 @@ void main() {
     // ════════════════════════════════════════════════════════════════
     // Medium risk (yellow/orange)
     // ════════════════════════════════════════════════════════════════
-    testWidgets('shows orange theme for medium inbreeding risk', (tester) async {
+    testWidgets('shows orange theme for medium inbreeding risk', (
+      tester,
+    ) async {
       final advice = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.medium,
         riskScore: 50,
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Gray', probability: 50),
+          CoatColorPrediction(color: 'Bay', probability: 50),
+        ],
+        healthRisks: const [],
         healthNotes: 'Medium risk — some shared ancestors detected.',
-        colorPredictions: ['Gray', 'Bay'],
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: ['Consider alternative pairing'],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
 
       await tester.pumpWidget(createCard(advice));
@@ -68,15 +87,23 @@ void main() {
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows red theme for high inbreeding risk', (tester) async {
       final advice = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.high,
         riskScore: 85,
-        healthNotes: 'High inbreeding risk detected. Strongly recommend '
-            'alternative pairing.',
-        colorPredictions: ['Gray', 'Roan'],
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Gray', probability: 50),
+          CoatColorPrediction(color: 'Roan', probability: 50),
+        ],
+        healthRisks: const [],
+        healthNotes: 'Test notes.',
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: [
           'Avoid this pairing',
           'Use completely unrelated bloodlines',
         ],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
 
       await tester.pumpWidget(createCard(advice));
@@ -93,12 +120,19 @@ void main() {
     // ════════════════════════════════════════════════════════════════
     testWidgets('displays health notes section', (tester) async {
       final advice = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.medium,
         riskScore: 40,
-        healthNotes: 'Both horses show good overall health. '
-            'No hereditary diseases detected.',
-        colorPredictions: ['Bay'],
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Bay', probability: 50),
+        ],
+        healthRisks: const [],
+        healthNotes: 'Test notes.',
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: ['Consider this pairing'],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
 
       await tester.pumpWidget(createCard(advice));
@@ -116,11 +150,21 @@ void main() {
     // ════════════════════════════════════════════════════════════════
     testWidgets('displays color predictions as chips', (tester) async {
       final advice = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.low,
         riskScore: 10,
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Bay', probability: 50),
+          CoatColorPrediction(color: 'Chestnut', probability: 50),
+          CoatColorPrediction(color: 'Black', probability: 50),
+        ],
+        healthRisks: const [],
         healthNotes: 'Good match.',
-        colorPredictions: ['Bay', 'Chestnut', 'Black'],
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: ['Good match'],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
 
       await tester.pumpWidget(createCard(advice));
@@ -137,24 +181,29 @@ void main() {
     // ════════════════════════════════════════════════════════════════
     testWidgets('displays breed suggestions list', (tester) async {
       final advice = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.medium,
         riskScore: 45,
-        healthNotes: 'Consider health screening.',
-        colorPredictions: ['Gray'],
-        breedSuggestions: [
-          'Consider line-breeding with caution',
-          'Use unrelated sire for better diversity',
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Gray', probability: 50),
         ],
+        healthRisks: const [],
+        healthNotes: 'Consider health screening.',
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
+        breedSuggestions: [
+          'Consider line-breeding with caution'
+              'Use unrelated sire for better diversity',
+        ],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
 
       await tester.pumpWidget(createCard(advice));
       await tester.pumpAndSettle();
 
       expect(find.text('Үүлдрийн зөвлөмж'), findsOneWidget);
-      expect(
-        find.text('Consider line-breeding with caution'),
-        findsOneWidget,
-      );
+      expect(find.text('Consider line-breeding with caution'), findsOneWidget);
       expect(
         find.text('Use unrelated sire for better diversity'),
         findsOneWidget,
@@ -166,11 +215,19 @@ void main() {
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows risk score progress bar', (tester) async {
       final advice = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.high,
         riskScore: 78,
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Gray', probability: 50),
+        ],
+        healthRisks: const [],
         healthNotes: 'High risk.',
-        colorPredictions: ['Gray'],
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: ['Avoid'],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
 
       await tester.pumpWidget(createCard(advice));

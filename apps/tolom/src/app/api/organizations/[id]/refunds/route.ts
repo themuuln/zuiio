@@ -7,6 +7,7 @@ import {
   recordRefund,
 } from "@/lib/services/refund-service";
 import { recordRefundSchema } from "@/lib/validation/refunds";
+
 function validate<T>(schema: z.ZodSchema<T>, data: unknown): T {
   const result = schema.safeParse(data);
   if (!result.success) {
@@ -37,12 +38,10 @@ export const GET = createRouteHandler(
       | "failed"
       | "cancelled"
       | undefined;
-    const limit = searchParams.get("limit")
-      ? Number.parseInt(searchParams.get("limit")!, 10)
-      : 20;
-    const offset = searchParams.get("offset")
-      ? Number.parseInt(searchParams.get("offset")!, 10)
-      : 0;
+    const limitParam = searchParams.get("limit");
+    const limit = limitParam ? Number.parseInt(limitParam, 10) : 20;
+    const offsetParam = searchParams.get("offset");
+    const offset = offsetParam ? Number.parseInt(offsetParam, 10) : 0;
 
     const refunds = await getRefunds(supabase, orgId, {
       status,
@@ -55,17 +54,23 @@ export const GET = createRouteHandler(
 );
 
 export const POST = createRouteHandler(
-  async ({ request, orgId, supabase }) => {
+  async ({ request, orgId, supabase, user }) => {
     const body = await request.json();
     const params = validate(recordRefundSchema, body);
 
-    const refunds = await recordRefund(supabase, params.invoice_id, orgId, {
-      amount: params.amount,
-      method: params.method,
-      reason: params.reason,
-      reference: params.reference,
-      notes: params.notes,
-    });
+    const refunds = await recordRefund(
+      supabase,
+      params.invoice_id,
+      orgId,
+      {
+        amount: params.amount,
+        method: params.method,
+        reason: params.reason,
+        reference: params.reference,
+        notes: params.notes,
+      },
+      user.id,
+    );
 
     return created(refunds);
   },

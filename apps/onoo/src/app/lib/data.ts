@@ -4,229 +4,75 @@
  * All queries read from curated v_public_* views which expose only
  * league_verified|official approved revisions. No mock data, no
  * catch-to-fallback. Honest empty states and error boundaries.
+ *
+ * Shared types and pure helpers live in ./shared and are re-exported here
+ * for backward compatibility. Prefer importing directly from ./shared in
+ * new code to avoid pulling server-only imports into client bundles.
  */
 
+import type { GameRoster, SportConfig, StatEvent } from "@onoo/core/types";
+import { cache } from "react";
+import { captureError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import type { Game } from "./types";
+import type { Json } from "@/lib/supabase/types";
+// Import shared types for internal use + re-export for backward compatibility
+import type {
+  AthleteAffiliation,
+  AthleteTimelineEvent,
+  BoxScoreRow,
+  GameWithTeams,
+  LeaderRow,
+  MvpRaceRow,
+  PlayByPlayRow,
+  PlayerAwardRow,
+  PlayerDirectoryRow,
+  PlayerGameLine,
+  PlayerProfileRow,
+  SearchAllResult,
+  ShotZoneStat,
+  StandingRow,
+  TeamRosterRow,
+} from "./shared";
 
-// ---------------------------------------------------------------------------
-// View-row types (match v_public_* column names exactly)
-// ---------------------------------------------------------------------------
+import { orderScorebarGames, shiftDate } from "./shared";
 
-export type GameWithTeams = Game & {
-  home_team_season_id: string;
-  home_team_name: string;
-  home_team_short_code: string;
-  home_team_logo_url: string | null;
-  away_team_season_id: string;
-  away_team_name: string;
-  away_team_short_code: string;
-  away_team_logo_url: string | null;
-  venue_name: string;
-  competition_name: string;
-  season_id: string;
-  season_name: string;
-  league_id: string;
-  league_name: string;
-  league_slug: string;
-  revision_id: string;
-  revision_number: number;
-  revision_approved_at: string;
-  source_submission_id: string;
-  source_type: string;
-  evidence_url: string | null;
-  source_reviewer_id: string;
-  source_reviewed_at: string;
-  // Backward-compatible aliases for pages using old mock field names
-  home_name: string;
-  home_short: string;
-  home_color: string | null;
-  away_name: string;
-  away_short: string;
-  away_color: string | null;
-  venue_city: string | null;
+export {
+  formatDate,
+  formatGameTime,
+  formatMinutes,
+  getDateRange,
+  getUlaanbaatarDate,
+  orderScorebarGames,
+  shiftDate,
+  statusLabel,
+  statusVariant,
+} from "./shared";
+export type {
+  AthleteAffiliation,
+  AthleteTimelineEvent,
+  BoxScoreRow,
+  GameWithTeams,
+  LeaderRow,
+  MvpRaceRow,
+  PlayByPlayRow,
+  PlayerAwardRow,
+  PlayerDirectoryRow,
+  PlayerGameLine,
+  PlayerProfileRow,
+  SearchAllResult,
+  ShotZoneStat,
+  StandingRow,
+  TeamRosterRow,
 };
 
-export type StandingRow = {
-  competition_id: string;
-  competition_name: string;
-  season_id: string;
-  season_name: string;
-  league_id: string;
-  league_slug: string;
-  team_season_id: string;
-  team_id: string;
-  team_name: string;
-  team_slug: string;
-  team_logo_url: string | null;
-  wins: number;
-  losses: number;
-  win_pct: number;
-  gb: number | null;
-  streak: string | null;
-  last10: string | null;
-  points_for: number | null;
-  points_against: number | null;
-  // Backward-compatible aliases
-  w: number;
-  l: number;
-  team_short: string;
-  team_color: string | null;
-};
-
-export type LeaderRow = {
-  competition_id: string;
-  competition_name: string;
-  season_id: string;
-  league_id: string;
-  player_id: string;
-  player_name: string;
-  player_name_latin: string | null;
-  player_position: string | null;
-  team_season_id: string;
-  team_id: string;
-  team_name: string;
-  gp: number;
-  mpg: number | null;
-  pts: number | null;
-  fgm: number | null;
-  fga: number | null;
-  tpm: number | null;
-  tpa: number | null;
-  ftm: number | null;
-  fta: number | null;
-  oreb: number | null;
-  dreb: number | null;
-  ast: number | null;
-  stl: number | null;
-  blk: number | null;
-  tov: number | null;
-  pf: number | null;
-  // Backward-compatible aliases
-  player_latin: string | null;
-  team_short: string;
-  team_color: string | null;
-  seconds_played: number | null;
-};
-
-export type BoxScoreRow = {
-  game_id: string;
-  revision_id: string;
-  revision_number: number;
-  revision_approved_at: string;
-  player_id: string;
-  player_name: string;
-  player_name_latin: string | null;
-  player_position: string | null;
-  team_season_id: string;
-  team_id: string;
-  team_name: string;
-  jersey_number: number | null;
-  seconds_played: number | null;
-  pts: number;
-  fgm: number;
-  fga: number;
-  tpm: number;
-  tpa: number;
-  ftm: number;
-  fta: number;
-  oreb: number;
-  dreb: number;
-  ast: number;
-  stl: number;
-  blk: number;
-  tov: number;
-  pf: number;
-  source_type: string;
-  evidence_url: string | null;
-  source_reviewed_at: string;
-  // Backward-compatible alias
-  team_short: string;
-};
-
-export type TeamRosterRow = {
-  team_season_id: string;
-  competition_id: string;
-  team_id: string;
-  team_name: string;
-  team_slug: string;
-  roster_entry_id: string;
-  jersey_number: number | null;
-  roster_position: string | null;
-  player_id: string;
-  player_name: string;
-  player_name_latin: string | null;
-  player_position: string | null;
-  photo_url: string | null;
-  // Backward-compatible aliases
-  id: string;
-  canonical_name: string;
-  name_latin: string | null;
-  position: string | null;
-};
-
-export type PlayerProfileRow = {
-  player_id: string;
-  player_name: string;
-  player_name_latin: string | null;
-  dob: string | null;
-  height_cm: number | null;
-  weight_kg: number | null;
-  player_position: string | null;
-  nationality: string;
-  photo_url: string | null;
-  team_season_id: string;
-  team_id: string;
-  team_name: string;
-  team_slug: string;
-  team_logo_url: string | null;
-  competition_id: string;
-  competition_name: string;
-  season_id: string;
-  season_name: string;
-  league_id: string;
-  league_name: string;
-  league_slug: string;
-  jersey_number: number | null;
-  games_played: number;
-  minutes_per_game: number | null;
-  points_per_game: number | null;
-  fgm_per_game: number | null;
-  fga_per_game: number | null;
-  tpm_per_game: number | null;
-  tpa_per_game: number | null;
-  ftm_per_game: number | null;
-  ftp_per_game: number | null;
-  oreb_per_game: number | null;
-  dreb_per_game: number | null;
-  ast_per_game: number | null;
-  stl_per_game: number | null;
-  blk_per_game: number | null;
-  tov_per_game: number | null;
-  pf_per_game: number | null;
-  // Backward-compatible aliases (pages use these from old mock data)
-  canonical_name: string;
-  name_latin: string | null;
-  position: string | null;
-};
-
-export type PlayByPlayRow = {
-  game_id: string;
-  event_id: string;
-  operation_id: string;
-  local_seq: number;
-  event_type: string;
-  period: number;
-  clock_seconds: number;
-  team_season_id: string;
-  team_name: string;
-  player_id: string | null;
-  player_name: string | null;
-  player_name_latin: string | null;
-  jersey_number: number | null;
-  payload: unknown;
-  created_at: string;
-};
+/** Return recent finalized games (most recent first), limited to `limit`. */
+export async function getRecentGames(limit = 4): Promise<GameWithTeams[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const allGames = await getGamesByDate(today);
+  return allGames
+    .filter((g) => g.status === "official" || g.status === "league_verified")
+    .slice(0, limit);
+}
 
 // ---------------------------------------------------------------------------
 // Public query functions — curated views only, no mocks
@@ -245,22 +91,91 @@ function mapGameRow(row: Record<string, unknown>): GameWithTeams {
     venue_city: null,
   };
 }
-export async function getGamesByDate(
-  dateStr: string,
-): Promise<GameWithTeams[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("v_public_games")
-    .select("*")
-    .gte("scheduled_at", `${dateStr}T00:00:00`)
-    .lt("scheduled_at", `${dateStr}T23:59:59`)
-    .order("scheduled_at");
+export const getGamesByDate = cache(
+  async (dateStr: string): Promise<GameWithTeams[]> => {
+    const supabase = await createClient();
+    const start = `${dateStr}T00:00:00`;
+    const end = `${dateStr}T23:59:59`;
 
-  if (error || !data) {
-    console.error("getGamesByDate error:", error?.message);
-    return [];
+    // Query both views in parallel — verified (v_public_games) and live/provisional (v_public_live_games)
+    const [{ data: verified, error: err1 }, { data: live, error: err2 }] =
+      await Promise.all([
+        supabase
+          .from("v_public_games")
+          .select("*")
+          .gte("scheduled_at", start)
+          .lt("scheduled_at", end)
+          .order("scheduled_at"),
+        supabase
+          .from("v_public_live_games")
+          .select("*")
+          .gte("scheduled_at", start)
+          .lt("scheduled_at", end)
+          .order("scheduled_at"),
+      ]);
+
+    if (err1) captureError("getGamesByDate/v_public_games", err1);
+    if (err2) captureError("getGamesByDate/v_public_live_games", err2);
+
+    const verifiedRows = (verified ?? []).map((r) =>
+      mapGameRow(r as Record<string, unknown>),
+    );
+    const liveRows = (live ?? []).map((r) =>
+      mapGameRow(r as Record<string, unknown>),
+    );
+
+    // Merge: verified takes priority for same id, live games fill the rest
+    const seen = new Set(verifiedRows.map((g) => g.id));
+    const merged = [
+      ...verifiedRows,
+      ...liveRows.filter((g) => !seen.has(g.id)),
+    ];
+
+    // Restore sort order by scheduled_at
+    merged.sort(
+      (a, b) =>
+        new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime(),
+    );
+    return merged;
+  },
+);
+
+export interface ScorebarStrip {
+  /** Games for `activeDate`, ordered live → upcoming → finals. */
+  games: GameWithTeams[];
+  /** Date whose games are shown — `today`, or the fallback match day. */
+  activeDate: string;
+  /** True when today had no games and an earlier match day is shown instead. */
+  isFallback: boolean;
+}
+
+/**
+ * Games for the site-wide scorebar strip. Returns today's games; if today has
+ * none, walks back up to 7 days to surface the most recent match day so the bar
+ * is never empty during sparse schedules. Bounded to at most 8 lightweight
+ * queries (1 in the common case).
+ */
+export async function getScorebarGames(today: string): Promise<ScorebarStrip> {
+  const todayGames = await getGamesByDate(today);
+  if (todayGames.length > 0) {
+    return {
+      games: orderScorebarGames(todayGames),
+      activeDate: today,
+      isFallback: false,
+    };
   }
-  return data.map((row: Record<string, unknown>) => mapGameRow(row));
+  for (let back = 1; back <= 7; back++) {
+    const date = shiftDate(today, -back);
+    const games = await getGamesByDate(date);
+    if (games.length > 0) {
+      return {
+        games: orderScorebarGames(games),
+        activeDate: date,
+        isFallback: true,
+      };
+    }
+  }
+  return { games: [], activeDate: today, isFallback: false };
 }
 
 export async function getLiveGames(): Promise<GameWithTeams[]> {
@@ -275,10 +190,19 @@ export async function getGameById(id: string): Promise<GameWithTeams | null> {
     .from("v_public_games")
     .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) return null;
-  return mapGameRow(data as Record<string, unknown>);
+  if (!error && data) return mapGameRow(data as Record<string, unknown>);
+
+  // Fall back to live/provisional view
+  const { data: live, error: liveErr } = await supabase
+    .from("v_public_live_games")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (liveErr || !live) return null;
+  return mapGameRow(live as Record<string, unknown>);
 }
 
 function mapStandingRow(row: Record<string, unknown>): StandingRow {
@@ -300,6 +224,8 @@ function mapLeaderRow(row: Record<string, unknown>): LeaderRow {
     team_short: l.team_name,
     team_color: null,
     seconds_played: null,
+    qualified: Boolean(l.qualified),
+    team_games_played: Number(l.team_games_played) || 0,
   };
 }
 export async function getStandings(): Promise<StandingRow[]> {
@@ -308,27 +234,42 @@ export async function getStandings(): Promise<StandingRow[]> {
     .from("v_public_standings")
     .select("*")
     .order("win_pct", { ascending: false });
-
   if (error || !data) {
-    console.error("getStandings error:", error?.message);
+    captureError("getStandings", error);
     return [];
   }
   return data.map((row: Record<string, unknown>) => mapStandingRow(row));
 }
 
-export async function getLeaders(): Promise<LeaderRow[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("v_public_leaders")
-    .select("*")
-    .order("pts", { ascending: false });
+export const getLeaders = cache(
+  async (
+    includeUnqualified = false,
+    searchQuery?: string,
+  ): Promise<LeaderRow[]> => {
+    const supabase = await createClient();
+    let query = supabase
+      .from("v_public_leaders")
+      .select("*")
+      .order("pts", { ascending: false });
 
-  if (error || !data) {
-    console.error("getLeaders error:", error?.message);
-    return [];
-  }
-  return data.map((row: Record<string, unknown>) => mapLeaderRow(row));
-}
+    if (!includeUnqualified) {
+      query = query.eq("qualified", true);
+    }
+
+    if (searchQuery && searchQuery.trim().length > 0) {
+      query = query.or(
+        `player_name.ilike.%${searchQuery.trim()}%,player_name_latin.ilike.%${searchQuery.trim()}%`,
+      );
+    }
+
+    const { data, error } = await query;
+    if (error || !data) {
+      captureError("getLeaders", error);
+      return [];
+    }
+    return data.map((row: Record<string, unknown>) => mapLeaderRow(row));
+  },
+);
 
 // getPlayers aliases getLeaders — pages import by name; may diverge later
 export const getPlayers = getLeaders;
@@ -342,9 +283,13 @@ export async function getTeamBySlug(slug: string): Promise<{
     primary_color: string | null;
     short_code: string;
     team_season_id: string;
+    social_links: Record<string, string>;
   };
   players: TeamRosterRow[];
   standings: StandingRow | undefined;
+  leaders: LeaderRow[];
+  recentGames: GameWithTeams[];
+  upcomingGames: GameWithTeams[];
 } | null> {
   const supabase = await createClient();
 
@@ -354,8 +299,16 @@ export async function getTeamBySlug(slug: string): Promise<{
     .eq("team_slug", slug);
 
   if (rosterErr || !roster || roster.length === 0) return null;
-
   const first = roster[0] as unknown as TeamRosterRow;
+
+  const { data: teamRow } = await supabase
+    .from("teams")
+    .select("social_links")
+    .eq("id", first.team_id)
+    .single();
+  const socialLinks =
+    (teamRow?.social_links as Record<string, string> | null) ?? {};
+
   const team = {
     id: first.team_id,
     name: first.team_name,
@@ -364,14 +317,39 @@ export async function getTeamBySlug(slug: string): Promise<{
     primary_color: null as string | null,
     short_code: first.team_name.slice(0, 3).toUpperCase(),
     team_season_id: first.team_season_id,
+    social_links: socialLinks,
   };
 
-  const { data: standings } = await supabase
-    .from("v_public_standings")
-    .select("*")
-    .eq("team_slug", slug)
-    .limit(1)
-    .single();
+  // Run standings, leaders, and games queries in parallel
+  const today = new Date().toISOString().slice(0, 10);
+  const [standingsResult, leadersResult, recentResult, upcomingResult] =
+    await Promise.all([
+      supabase
+        .from("v_public_standings")
+        .select("*")
+        .eq("team_slug", slug)
+        .limit(1)
+        .single(),
+      supabase
+        .from("v_public_leaders")
+        .select("*")
+        .eq("team_id", team.id)
+        .order("pts", { ascending: false }),
+      supabase
+        .from("v_public_games")
+        .select("*")
+        .or(`home_team_id.eq.${team.id},away_team_id.eq.${team.id}`)
+        .lt("scheduled_at", `${today}T23:59:59`)
+        .order("scheduled_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("v_public_games")
+        .select("*")
+        .or(`home_team_id.eq.${team.id},away_team_id.eq.${team.id}`)
+        .gte("scheduled_at", `${today}T00:00:00`)
+        .order("scheduled_at", { ascending: true })
+        .limit(8),
+    ]);
 
   return {
     team,
@@ -382,9 +360,22 @@ export async function getTeamBySlug(slug: string): Promise<{
       name_latin: r.player_name_latin as string | null,
       position: r.player_position as string | null,
     })) as TeamRosterRow[],
-    standings: standings
-      ? mapStandingRow(standings as Record<string, unknown>)
+    standings: standingsResult.data
+      ? mapStandingRow(standingsResult.data as Record<string, unknown>)
       : undefined,
+    leaders: leadersResult.data
+      ? leadersResult.data.map((row: Record<string, unknown>) =>
+          mapLeaderRow(row),
+        )
+      : [],
+    recentGames: recentResult.data
+      ? recentResult.data.map((row: Record<string, unknown>) => mapGameRow(row))
+      : [],
+    upcomingGames: upcomingResult.data
+      ? upcomingResult.data.map((row: Record<string, unknown>) =>
+          mapGameRow(row),
+        )
+      : [],
   };
 }
 
@@ -422,6 +413,72 @@ export async function getPlayerById(id: string): Promise<{
     seasonStats: [],
     gameLog: (gameLog as unknown as BoxScoreRow[]) ?? [],
   };
+}
+
+export async function getPlayerGameLog(
+  playerId: string,
+  competitionId?: string | null,
+): Promise<PlayerGameLine[]> {
+  const supabase = await createClient();
+  const { data: boxScore, error: boxScoreError } = await supabase
+    .from("v_public_box_score")
+    .select("*")
+    .eq("player_id", playerId);
+
+  if (boxScoreError || !boxScore || boxScore.length === 0) return [];
+
+  const stats = boxScore as unknown as BoxScoreRow[];
+  let gamesQuery = supabase
+    .from("v_public_games")
+    .select("*")
+    .in(
+      "id",
+      stats.map((line) => line.game_id),
+    );
+
+  if (competitionId)
+    gamesQuery = gamesQuery.eq("competition_id", competitionId);
+
+  const { data: games, error: gamesError } = await gamesQuery.order(
+    "scheduled_at",
+    { ascending: true },
+  );
+
+  if (gamesError || !games || games.length === 0) return [];
+
+  const gamesById = new Map(
+    games.map((row: Record<string, unknown>) => {
+      const game = mapGameRow(row);
+      return [game.id, game] as const;
+    }),
+  );
+
+  return stats.flatMap((line) => {
+    const game = gamesById.get(line.game_id);
+    if (!game) return [];
+
+    const isHomeTeam = line.team_season_id === game.home_team_season_id;
+    const teamScore = (isHomeTeam ? game.home_score : game.away_score) ?? 0;
+    const opponentScore = (isHomeTeam ? game.away_score : game.home_score) ?? 0;
+
+    return [
+      {
+        ...line,
+        game_date: game.scheduled_at,
+        opponent_name: isHomeTeam ? game.away_team_name : game.home_team_name,
+        opponent_short_code: isHomeTeam
+          ? game.away_team_short_code
+          : game.home_team_short_code,
+        opponent_logo_url: isHomeTeam
+          ? game.away_team_logo_url
+          : game.home_team_logo_url,
+        team_score: teamScore,
+        opponent_score: opponentScore,
+        result: teamScore > opponentScore ? "W" : "L",
+        is_home: isHomeTeam,
+      },
+    ];
+  });
 }
 
 export async function getBoxScore(gameId: string): Promise<BoxScoreRow[]> {
@@ -481,6 +538,87 @@ export async function getPlayerShootingProfile(
   };
 }
 
+export async function getPlayerShotZones(
+  playerId: string,
+  competitionId: string,
+): Promise<ShotZoneStat[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("v_public_shot_zones")
+    .select("zone_key, made, attempted")
+    .eq("player_id", playerId)
+    .eq("competition_id", competitionId)
+    .order("zone_key");
+
+  if (error || !data) return [];
+  return data as unknown as ShotZoneStat[];
+}
+/**
+ * Fetch individual shot data points with x/y coordinates from stat_events.
+ * Used for scatter overlay on the court heatmap.
+ */
+export async function getPlayerShotScatter(
+  playerId: string,
+  competitionId?: string | null,
+): Promise<
+  Array<{
+    x: number;
+    y: number;
+    made: boolean;
+    shot_type: string;
+    game_id: string;
+    period: number;
+  }>
+> {
+  const supabase = await createClient();
+
+  // Get game IDs for this competition
+  let gameQuery = supabase.from("games").select("id").eq("status", "official");
+
+  if (competitionId) {
+    gameQuery = gameQuery.eq("competition_id", competitionId);
+  }
+
+  const { data: games } = await gameQuery;
+  if (!games || games.length === 0) return [];
+
+  const gameIds = games.map((g) => g.id);
+
+  // Fetch shot events with coordinates
+  const { data: events } = await supabase
+    .from("stat_events")
+    .select("game_id, event_type, period, payload")
+    .eq("player_id", playerId)
+    .in("game_id", gameIds)
+    .in("event_type", [
+      "shot_2pt_made",
+      "shot_2pt_missed",
+      "shot_3pt_made",
+      "shot_3pt_missed",
+    ])
+    .is("deleted_at", null);
+
+  if (!events) return [];
+
+  return events
+    .filter((e) => {
+      const payload = e.payload as Record<string, unknown>;
+      return typeof payload.x === "number" && typeof payload.y === "number";
+    })
+    .map((e) => {
+      const payload = e.payload as Record<string, unknown>;
+      return {
+        x: payload.x as number,
+        y: payload.y as number,
+        made: e.event_type.includes("_made"),
+        shot_type: (payload.shot_type as string) || "jump",
+        game_id: e.game_id,
+        period: e.period,
+      };
+    });
+}
+
 export async function getPlayerSeasonAverages(
   playerId: string,
   competitionId: string,
@@ -511,9 +649,7 @@ export async function getPlayerSeasonAverages(
   };
 }
 
-export async function getLeagueAverages(
-  competitionId: string,
-): Promise<{
+export async function getLeagueAverages(competitionId: string): Promise<{
   averages: { pts: number; reb: number; ast: number; stl: number; blk: number };
   maxes: { pts: number; reb: number; ast: number; stl: number; blk: number };
 }> {
@@ -578,12 +714,14 @@ export async function getLeagueAverages(
   };
 }
 
-export async function getPlayerCompetitions(playerId: string): Promise<Array<{
-  competition_id: string;
-  competition_name: string;
-  season_name: string;
-  league_name: string;
-}>> {
+export async function getPlayerCompetitions(playerId: string): Promise<
+  Array<{
+    competition_id: string;
+    competition_name: string;
+    season_name: string;
+    league_name: string;
+  }>
+> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_public_player_profiles")
@@ -643,56 +781,627 @@ export async function getPlayerCareerTotals(playerId: string): Promise<{
 
   return { gp, pts, reb, ast };
 }
-
-
 // ---------------------------------------------------------------------------
-// Helpers (unchanged)
+// Awards & MVP Race
 // ---------------------------------------------------------------------------
 
-export function formatGameTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleTimeString("mn-MN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "Asia/Ulaanbaatar",
+/**
+ * Compute MVP race top 5 for a competition.
+ * EFF = pts + reb + 1.5×ast + 2×stl + 2×blk − tov per game.
+ * Returns top 5 qualified players ranked by EFF.
+ */
+export async function getMvpRace(competitionId: string): Promise<MvpRaceRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_leaders")
+    .select("*")
+    .eq("competition_id", competitionId)
+    .eq("qualified", true);
+
+  if (error || !data) return [];
+
+  const rows = (data as Record<string, unknown>[]).map((row) => {
+    const pts = (row.pts as number) ?? 0;
+    const reb = ((row.oreb as number) ?? 0) + ((row.dreb as number) ?? 0);
+    const ast = (row.ast as number) ?? 0;
+    const stl = (row.stl as number) ?? 0;
+    const blk = (row.blk as number) ?? 0;
+    const tov = (row.tov as number) ?? 0;
+    const gp = (row.gp as number) ?? 0;
+    const eff =
+      gp > 0 ? (pts + reb + 1.5 * ast + 2 * stl + 2 * blk - tov) / gp : 0;
+
+    return {
+      player_id: row.player_id as string,
+      canonical_name: row.player_name as string,
+      team_short_code: row.team_short_code as string,
+      photo_url:
+        (row.player_photo_url as string | null) ??
+        (row.photo_url as string | null),
+      eff: Math.round(eff * 10) / 10,
+      pts,
+      reb,
+      ast,
+      stl,
+      blk,
+      tov,
+      gp,
+      team_primary_color: row.team_primary_color as string | null,
+      team_slug: row.team_slug as string,
+    } satisfies MvpRaceRow;
   });
+
+  rows.sort((a, b) => b.eff - a.eff);
+  return rows.slice(0, 5);
 }
 
-export function formatDate(dateStr: string): string {
-  const d = new Date(`${dateStr}T12:00:00`);
-  return d.toLocaleDateString("mn-MN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
+/**
+ * Fetch public awards for a player from v_public_awards.
+ */
+export async function getPlayerAwards(
+  playerId: string,
+): Promise<PlayerAwardRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_awards")
+    .select("*")
+    .eq("player_id", playerId)
+    .order("granted_at", { ascending: false });
 
-export function formatMinutes(seconds: number | null): string {
-  if (!seconds) return "0:00";
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
+  if (error || !data) return [];
+  return data as unknown as PlayerAwardRow[];
 }
+// ---------------------------------------------------------------------------
+// Tournament Hub
+// ---------------------------------------------------------------------------
 
-export function statusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    scheduled: "Товлосон",
-    live_provisional: "Шууд",
-    final_pending_review: "Дууссан",
-    league_verified: "Баталгаажуулсан",
-    official: "Албан ёсны",
-    cancelled: "Цуцалсан",
-    postponed: "Хойшлогдсон",
+/**
+ * Fetch a single competition's details from v_public_standings.
+ * Returns null if the competition ID doesn't match any rows.
+ */
+export async function getCompetition(competitionId: string): Promise<{
+  id: string;
+  name: string;
+  season: string;
+  league: string;
+} | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_standings")
+    .select("competition_id, competition_name, season_name, league_id")
+    .eq("competition_id", competitionId)
+    .limit(1)
+    .single();
+
+  if (error || !data) return null;
+  return {
+    id: data.competition_id,
+    name: data.competition_name,
+    season: data.season_name,
+    league: data.league_id,
   };
-  return labels[status] ?? status;
+}
+// ---------------------------------------------------------------------------
+// Global search
+// ---------------------------------------------------------------------------
+
+export async function searchAll(query: string): Promise<SearchAllResult> {
+  const q = query.trim();
+  if (q.length === 0) return { players: [], teams: [], games: [] };
+
+  const supabase = await createClient();
+  const pattern = `%${q}%`;
+
+  const [playersRes, teamsRes, gamesRes] = await Promise.all([
+    supabase
+      .from("v_public_player_directory")
+      .select("*")
+      .or(
+        `player_name.ilike.${pattern},player_name_latin.ilike.${pattern},team_name.ilike.${pattern}`,
+      )
+      .order("points_per_game", { ascending: false })
+      .limit(20),
+    supabase
+      .from("v_public_standings")
+      .select("*")
+      .ilike("team_name", pattern)
+      .order("win_pct", { ascending: false })
+      .limit(10),
+    supabase
+      .from("v_public_games")
+      .select("*")
+      .or(`home_team_name.ilike.${pattern},away_team_name.ilike.${pattern}`)
+      .order("scheduled_at", { ascending: false })
+      .limit(10),
+  ]);
+
+  return {
+    players: playersRes.data
+      ? (playersRes.data as unknown as PlayerDirectoryRow[])
+      : [],
+    teams: teamsRes.data
+      ? teamsRes.data.map((row: Record<string, unknown>) => mapStandingRow(row))
+      : [],
+    games: gamesRes.data
+      ? gamesRes.data.map((row: Record<string, unknown>) => mapGameRow(row))
+      : [],
+  };
+}
+// ---------------------------------------------------------------------------
+// Quick search for command palette
+// ---------------------------------------------------------------------------
+
+export interface SearchResultPlayer {
+  id: string;
+  name: string;
+  team: string | null;
+  photo_url: string | null;
 }
 
-export function statusVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
-  if (status === "live_provisional") return "destructive";
-  if (status === "final_pending_review" || status === "league_verified")
-    return "secondary";
-  return "outline";
+export interface SearchResultTeam {
+  slug: string;
+  name: string;
+  short_code: string | null;
+}
+
+export interface SearchResult {
+  players: SearchResultPlayer[];
+  teams: SearchResultTeam[];
+}
+
+export async function searchPlayersAndTeams(
+  query: string,
+): Promise<SearchResult> {
+  const q = query.trim();
+  if (q.length < 2) return { players: [], teams: [] };
+
+  const supabase = await createClient();
+  const pattern = `%${q}%`;
+
+  const [playersRes, teamsRes] = await Promise.all([
+    supabase
+      .from("v_public_players")
+      .select("id, canonical_name, name_latin, photo_url, team_name")
+      .or(`canonical_name.ilike.${pattern},name_latin.ilike.${pattern}`)
+      .limit(8),
+    supabase
+      .from("teams")
+      .select("slug, name, short_code")
+      .or(`name.ilike.${pattern},short_code.ilike.${pattern}`)
+      .limit(4),
+  ]);
+
+  return {
+    players: (playersRes.data ?? []).map((row: Record<string, unknown>) => ({
+      id: row.id as string,
+      name: (row.canonical_name as string) ?? "",
+      team: (row.team_name as string) ?? null,
+      photo_url: (row.photo_url as string) ?? null,
+    })),
+    teams: (teamsRes.data ?? []).map((row: Record<string, unknown>) => ({
+      slug: row.slug as string,
+      name: (row.name as string) ?? "",
+      short_code: (row.short_code as string) ?? null,
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Live game helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Convert public PlayByPlayRow rows to StatEvent format for the LiveGameCenter
+ * client component. Fills missing DB-required fields with safe defaults.
+ */
+export function convertPlayByPlayToStatEvents(
+  rows: PlayByPlayRow[],
+): StatEvent[] {
+  return rows.map((row) => ({
+    id: row.event_id,
+    game_id: row.game_id,
+    operation_id: row.operation_id,
+    local_seq: row.local_seq,
+    event_type: row.event_type,
+    period: row.period,
+    clock_seconds: row.clock_seconds,
+    team_season_id: row.team_season_id ?? "",
+    player_id: row.player_id,
+    payload: row.payload as Json,
+    created_at: row.created_at,
+    // Fields not exposed in the public view — safe defaults
+    client_id: "",
+    created_by: "",
+    deleted_at: null,
+    superseded_by: null,
+    tracker_session_id: "",
+    void_reason: null,
+    voided_at: null,
+    voided_by: null,
+  }));
+}
+
+/** Fetch game roster entries for a given game. */
+export async function getGameRosters(gameId: string): Promise<GameRoster[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("game_rosters")
+    .select("*")
+    .eq("game_id", gameId);
+
+  if (error || !data) return [];
+  return data as GameRoster[];
+}
+
+/** Build a player_id → canonical_name map from already-fetched game rosters. */
+export async function getPlayerNameMap(
+  rosters: { player_id: string }[],
+): Promise<Record<string, string>> {
+  if (!rosters || rosters.length === 0) return {};
+
+  const supabase = await createClient();
+  const playerIds = rosters.map((r) => r.player_id);
+  const { data: players } = await supabase
+    .from("players")
+    .select("id, canonical_name")
+    .in("id", playerIds);
+
+  if (!players) return {};
+
+  const map: Record<string, string> = {};
+  for (const p of players) {
+    map[p.id] = p.canonical_name ?? p.id.slice(0, 8);
+  }
+  return map;
+}
+
+/**
+ * Get the sport config for a game by resolving its ruleset.
+ * Returns null when the game has no ruleset or the rules are malformed.
+ */
+export async function getGameSportConfig(
+  gameId: string,
+): Promise<SportConfig | null> {
+  const supabase = await createClient();
+
+  // We need the ruleset_id from the raw games table
+  const { data: game } = await supabase
+    .from("games")
+    .select("ruleset_id")
+    .eq("id", gameId)
+    .maybeSingle();
+
+  if (!game?.ruleset_id) return null;
+
+  const { data: ruleset } = await supabase
+    .from("basketball_rulesets")
+    .select("rules")
+    .eq("id", game.ruleset_id)
+    .maybeSingle();
+
+  if (!ruleset?.rules) return null;
+
+  // Attempt to parse as SportConfig
+  const r = ruleset.rules as Record<string, unknown>;
+  if (
+    typeof r.periods === "number" &&
+    typeof r.period_minutes === "number" &&
+    typeof r.overtime_minutes === "number" &&
+    typeof r.fouls_to_bonus === "number" &&
+    typeof r.personal_foul_limit === "number" &&
+    typeof r.players_on_court === "number"
+  ) {
+    return r as unknown as SportConfig;
+  }
+  return null;
+}
+
+/** Fetch all data needed by LiveGameCenter for a live game. */
+export async function getLiveGameData(gameId: string): Promise<{
+  events: StatEvent[];
+  rosters: GameRoster[];
+  sportConfig: SportConfig | null;
+  playerNameMap: Record<string, string>;
+}> {
+  const [playByPlay, rosters] = await Promise.all([
+    getPlayByPlay(gameId),
+    getGameRosters(gameId),
+  ]);
+
+  const events = convertPlayByPlayToStatEvents(playByPlay);
+
+  const [playerNameMap, sportConfig] = await Promise.all([
+    getPlayerNameMap(rosters),
+    getGameSportConfig(gameId),
+  ]);
+
+  return { events, rosters, sportConfig, playerNameMap };
+}
+
+// ---------------------------------------------------------------------------
+// Team advanced stats (Phase 7 — Team performance dashboard)
+// ---------------------------------------------------------------------------
+import { calculateTeamAdvancedStats } from "@onoo/core/stats";
+import type {
+  TeamAdvancedStatsPerGame,
+  TeamGameStatsRow,
+  TeamSeasonAggregates,
+} from "../lib/types/team-stats";
+
+/**
+ * Fetch per-game team advanced stats for a team season.
+ * Computes ORtg, DRtg, NetRtg, Pace, eFG%, TOV%, OREB%, FTA Rate, PIE
+ * for each game using @onoo/core pure functions.
+ */
+export async function getTeamGameStats(
+  teamSeasonId: string,
+): Promise<TeamAdvancedStatsPerGame[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_team_game_stats")
+    .select("*")
+    .eq("team_season_id", teamSeasonId)
+    .order("scheduled_at", { ascending: true });
+
+  if (error || !data) return [];
+
+  return (data as unknown as TeamGameStatsRow[]).map((row) => {
+    const teamStats = {
+      pts: row.team_pts,
+      fgm: row.team_fgm,
+      fga: row.team_fga,
+      tpm: row.team_tpm,
+      tpa: row.team_tpa,
+      ftm: row.team_ftm,
+      fta: row.team_fta,
+      oreb: row.team_oreb,
+      dreb: row.team_dreb,
+      ast: row.team_ast,
+      stl: row.team_stl,
+      blk: row.team_blk,
+      tov: row.team_tov,
+      pf: row.team_pf,
+    };
+    const oppStats = {
+      pts: row.opp_pts,
+      fgm: row.opp_fgm,
+      fga: row.opp_fga,
+      tpm: row.opp_tpm,
+      tpa: row.opp_tpa,
+      ftm: row.opp_ftm,
+      fta: row.opp_fta,
+      oreb: row.opp_oreb,
+      dreb: row.opp_dreb,
+      ast: row.opp_ast,
+      stl: row.opp_stl,
+      blk: row.opp_blk,
+      tov: row.opp_tov,
+      pf: row.opp_pf,
+    };
+
+    const adv = calculateTeamAdvancedStats(teamStats, oppStats);
+
+    return {
+      game_id: row.game_id,
+      scheduled_at: row.scheduled_at,
+      opponent_name: row.opp_team_name,
+      opponent_slug: row.opp_team_slug,
+      home_away: row.home_away,
+      team_score: row.team_pts,
+      opp_score: row.opp_pts,
+      result: row.team_pts > row.opp_pts ? "W" : "L",
+      ortg: Math.round(adv.ortg * 10) / 10,
+      drtg: Math.round(adv.drtg * 10) / 10,
+      net_rtg: Math.round(adv.netRtg * 10) / 10,
+      pace: Math.round(adv.pace * 10) / 10,
+      efg: Math.round(adv.efg * 1000) / 10,
+      tov_pct: Math.round(adv.tovPct * 1000) / 10,
+      oreb_pct: Math.round(adv.orebPct * 1000) / 10,
+      fta_rate: Math.round(adv.ftaRate * 1000) / 10,
+      pie: Math.round(adv.pie * 1000) / 10,
+    };
+  });
+}
+
+/**
+ * Compute season aggregates from per-game advanced stats.
+ */
+export function aggregateTeamStats(
+  games: TeamAdvancedStatsPerGame[],
+): TeamSeasonAggregates {
+  if (games.length === 0) {
+    return {
+      games_played: 0,
+      avg_ortg: 0,
+      avg_drtg: 0,
+      avg_net_rtg: 0,
+      avg_pace: 0,
+      avg_efg: 0,
+      avg_tov_pct: 0,
+      avg_oreb_pct: 0,
+      avg_fta_rate: 0,
+      avg_pie: 0,
+      wins: 0,
+      losses: 0,
+    };
+  }
+
+  const count = games.length;
+  const wins = games.filter((g) => g.result === "W").length;
+  const sum = (key: keyof TeamAdvancedStatsPerGame) =>
+    games.reduce((acc, g) => acc + (g[key] as number), 0);
+
+  return {
+    games_played: count,
+    avg_ortg: sum("ortg") / count,
+    avg_drtg: sum("drtg") / count,
+    avg_net_rtg: sum("net_rtg") / count,
+    avg_pace: sum("pace") / count,
+    avg_efg: sum("efg") / count,
+    avg_tov_pct: sum("tov_pct") / count,
+    avg_oreb_pct: sum("oreb_pct") / count,
+    avg_fta_rate: sum("fta_rate") / count,
+    avg_pie: sum("pie") / count,
+    wins,
+    losses: count - wins,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Player development (Phase 7 — Player development timeline)
+// ---------------------------------------------------------------------------
+
+export interface MonthlyStatRow {
+  month: string; // "2026-01"
+  monthLabel: string; // "2026 оны 1-р сар"
+  gamesPlayed: number;
+  avgPts: number;
+  avgReb: number;
+  avgAst: number;
+  avgStl: number;
+  avgBlk: number;
+  avgTov: number;
+  avgMpg: number;
+  avgEff: number;
+  fgp: number | null; // FG%
+  tpp: number | null; // 3P%
+  ftp: number | null; // FT%
+}
+
+/**
+ * Aggregate a player's game log into monthly averages.
+ * Groups by YYYY-MM, computes per-game averages for each stat.
+ */
+export function aggregateMonthlyStats(
+  games: PlayerGameLine[],
+): MonthlyStatRow[] {
+  if (games.length === 0) return [];
+
+  const months = new Map<string, PlayerGameLine[]>();
+
+  for (const game of games) {
+    const monthKey = game.game_date.slice(0, 7); // "2026-01"
+    const existing = months.get(monthKey) ?? [];
+    existing.push(game);
+    months.set(monthKey, existing);
+  }
+
+  const monthNames: Record<string, string> = {
+    "01": "1-р сар",
+    "02": "2-р сар",
+    "03": "3-р сар",
+    "04": "4-р сар",
+    "05": "5-р сар",
+    "06": "6-р сар",
+    "07": "7-р сар",
+    "08": "8-р сар",
+    "09": "9-р сар",
+    "10": "10-р сар",
+    "11": "11-р сар",
+    "12": "12-р сар",
+  };
+
+  return Array.from(months.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([monthKey, monthGames]) => {
+      const count = monthGames.length;
+      const year = monthKey.slice(0, 4);
+      const monthNum = monthKey.slice(5, 7);
+      const monthLabel = `${year} оны ${monthNames[monthNum] ?? monthNum}`;
+
+      const sum = <K extends keyof PlayerGameLine>(key: K): number =>
+        monthGames.reduce((acc, g) => acc + ((g[key] as number) ?? 0), 0);
+
+      const avg = (val: number) => (count > 0 ? val / count : 0);
+      const avgRounded = (val: number) => Math.round(avg(val) * 10) / 10;
+
+      const totalPts = sum("pts");
+      const totalReb = sum("oreb") + sum("dreb");
+      const totalFgm = sum("fgm");
+      const totalFga = sum("fga");
+      const totalTpm = sum("tpm");
+      const totalTpa = sum("tpa");
+      const totalFtm = sum("ftm");
+      const totalFta = sum("fta");
+      const totalEff =
+        totalPts +
+        totalReb +
+        1.5 * sum("ast") +
+        2 * sum("stl") +
+        2 * sum("blk") -
+        sum("tov");
+
+      return {
+        month: monthKey,
+        monthLabel,
+        gamesPlayed: count,
+        avgPts: avgRounded(totalPts),
+        avgReb: avgRounded(totalReb),
+        avgAst: avgRounded(sum("ast")),
+        avgStl: avgRounded(sum("stl")),
+        avgBlk: avgRounded(sum("blk")),
+        avgTov: avgRounded(sum("tov")),
+        avgMpg: avgRounded(sum("seconds_played") / 60),
+        avgEff: avgRounded(totalEff),
+        fgp:
+          totalFga > 0 ? Math.round((totalFgm / totalFga) * 1000) / 10 : null,
+        tpp:
+          totalTpa > 0 ? Math.round((totalTpm / totalTpa) * 1000) / 10 : null,
+        ftp:
+          totalFta > 0 ? Math.round((totalFtm / totalFta) * 1000) / 10 : null,
+      };
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Canonical identity queries
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch all affiliations for a canonical identity (player, student, etc.).
+ * Returns an empty array if none exist or the query fails.
+ */
+export async function getAthleteAffiliations(
+  canonicalIdentityId: string,
+): Promise<AthleteAffiliation[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .rpc("cmd_get_athlete_affiliations", {
+      p_canonical_identity_id: canonicalIdentityId,
+    });
+  return (data as AthleteAffiliation[]) ?? [];
+}
+
+/**
+ * Look up a player's canonical identity ID. Returns null if the player
+ * doesn't exist or has no canonical identity.
+ */
+export async function getPlayerCanonicalIdentity(
+  playerId: string,
+): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("players")
+    .select("canonical_identity_id")
+    .eq("id", playerId)
+    .maybeSingle();
+  return (data?.canonical_identity_id as string) ?? null;
+}
+
+/**
+ * Fetch the timeline of events for a canonical identity (games, enrollments).
+ * Events are ordered by date descending, limited to `limit` (default 10).
+ */
+export async function getAthleteTimeline(
+  canonicalIdentityId: string,
+  limit = 10,
+): Promise<AthleteTimelineEvent[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("v_athlete_timeline")
+    .select("*")
+    .eq("entity_id", canonicalIdentityId)
+    .order("event_date", { ascending: false })
+    .limit(limit);
+  return (data as AthleteTimelineEvent[]) ?? [];
 }

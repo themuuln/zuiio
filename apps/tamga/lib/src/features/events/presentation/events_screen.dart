@@ -70,7 +70,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Уралдаан'),
+        title: const Text('Арга хэмжээ'),
         leading: IconButton(
           onPressed: () => Navigator.of(ctx).pop(),
           icon: const Icon(Icons.arrow_back_ios_new),
@@ -199,11 +199,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen>
   /// шинэчилж, EventDetailScreen дээр хийсэн өөрчлөлтүүдийг тусгана.
   Future<void> _viewEvent(BuildContext ctx, Event event) async {
     if (!ctx.mounted) return;
-    await Navigator.of(ctx).push(
-      MaterialPageRoute(
-        builder: (_) => EventDetailScreen(event: event),
-      ),
-    );
+    await Navigator.of(
+      ctx,
+    ).push(MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)));
     // EventDetailScreen дээр засвар хийсэн бол өгөгдлийг шинэчлэх
     ref.invalidate(eventsProvider);
     ref.invalidate(paginatedEventsProvider);
@@ -327,7 +325,8 @@ class _EventList extends StatelessWidget {
           child: filtered.isEmpty
               ? EmptyState(
                   icon: Icons.event_busy_outlined,
-                  title: '"${activeFilter?.displayName ?? ''}" төрлийн үйл явдал байхгүй байна',
+                  title:
+                      '"${activeFilter?.displayName ?? ''}" төрлийн үйл явдал байхгүй байна',
                   description: 'Доорх + товчийг дарж үйл явдал нэмнэ үү.',
                 )
               : ListView.separated(
@@ -402,5 +401,3 @@ class _EventList extends StatelessWidget {
     );
   }
 }
-
-

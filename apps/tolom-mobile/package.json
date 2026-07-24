@@ -14,7 +14,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.0",
+    "@supabase/supabase-js": "^2.110.6",
     "@tanstack/react-query": "^5.0.0",
     "@zuiio/auth": "workspace:*",
     "@zuiio/branding": "workspace:*",
@@ -29,18 +29,18 @@
     "expo-splash-screen": "~57.0.2",
     "expo-status-bar": "~57.0.0",
     "nativewind": "^4.2.6",
-    "react": "19.2.3",
+    "react": "19.2.7",
     "react-native": "0.86.0",
-    "react-native-gesture-handler": "~2.32.0",
-    "react-native-reanimated": "~4.5.0",
-    "react-native-safe-area-context": "5.7.0",
-    "react-native-screens": "~4.25.2",
-    "tailwindcss": "^3.4.0"
+    "react-native-gesture-handler": "^3.1.0",
+    "react-native-reanimated": "~4.5.1",
+    "react-native-safe-area-context": "5.8.0",
+    "react-native-screens": "~4.26.1",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.16",
+    "@biomejs/biome": "^2.5.4",
     "@types/react": "~19.2.17",
-    "jest": "^29.0.0",
-    "typescript": "^6.0.3"
+    "jest": "^30.4.2",
+    "typescript": "^7.0.2"
   }
 }

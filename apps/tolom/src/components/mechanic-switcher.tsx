@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserPlus, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
-import { NewMechanicSheet } from "@/components/new-mechanic-drawer";
+import { NewMechanicDrawer } from "@/components/new-mechanic-drawer";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -160,7 +160,7 @@ export function MechanicSwitcher() {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-      <NewMechanicSheet
+      <NewMechanicDrawer
         open={showAddMechanic}
         onOpenChange={(open) => {
           setShowAddMechanic(open);

@@ -116,7 +116,9 @@ class MarketOffer {
       buyerId: json['buyerId'] as String,
       sellerId: json['sellerId'] as String,
       amount: json['amount'] as int,
-      status: MarketOfferStatus.fromString(json['status'] as String? ?? 'pending'),
+      status: MarketOfferStatus.fromString(
+        json['status'] as String? ?? 'pending',
+      ),
       counterAmount: json['counterAmount'] as int?,
       message: json['message'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -161,8 +163,17 @@ class MarketOffer {
 
   @override
   int get hashCode => Object.hash(
-      id, listingId, buyerId, sellerId, amount, status,
-      counterAmount, message, createdAt, respondedAt);
+    id,
+    listingId,
+    buyerId,
+    sellerId,
+    amount,
+    status,
+    counterAmount,
+    message,
+    createdAt,
+    respondedAt,
+  );
 
   @override
   String toString() =>

@@ -13,17 +13,18 @@ import 'services_providers.dart';
 // ── Vet directory providers ──────────────────────────────────────
 
 /// Бүх мал эмнэлгийн профайлууд.
-final allVetProfilesProvider = createListProvider<VetProfile, VetProfileRepository>(
-  (ref) => ref.watch(vetProfileRepositoryProvider.future),
-  (repo) => repo.fetchAll(),
-);
+final allVetProfilesProvider =
+    createListProvider<VetProfile, VetProfileRepository>(
+      (ref) => ref.watch(vetProfileRepositoryProvider.future),
+      (repo) => repo.fetchAll(),
+    );
 
 /// Аймгаар шүүсэн мал эмнэлгийн профайлууд.
 final vetProfilesByAimagProvider =
     createListFamilyProvider<VetProfile, VetProfileRepository, String>(
-  (ref) => ref.watch(vetProfileRepositoryProvider.future),
-  (repo, aimag) => repo.fetchByAimag(aimag),
-);
+      (ref) => ref.watch(vetProfileRepositoryProvider.future),
+      (repo, aimag) => repo.fetchByAimag(aimag),
+    );
 
 /// Шүүлтийн параметр.
 class VetFilter {
@@ -48,7 +49,9 @@ final filteredVetProfilesProvider =
     FutureProvider.family<List<VetProfile>, VetFilter>((ref, filter) async {
       List<VetProfile> profiles;
       if (filter.aimag != null && filter.aimag!.isNotEmpty) {
-        profiles = await ref.watch(vetProfilesByAimagProvider(filter.aimag!).future);
+        profiles = await ref.watch(
+          vetProfilesByAimagProvider(filter.aimag!).future,
+        );
       } else {
         profiles = await ref.watch(allVetProfilesProvider.future);
       }
@@ -63,9 +66,11 @@ final filteredVetProfilesProvider =
     });
 
 /// Мал эмнэлгийн профайлыг ID-аар авах.
-final vetProfileByIdProvider =
-    FutureProvider.family<VetProfile?, String>((ref, id) async {
-      final repository = await ref.watch(vetProfileRepositoryProvider.future);
-      final result = await repository.fetchById(id);
-      return result.getOrThrow();
-    });
+final vetProfileByIdProvider = FutureProvider.family<VetProfile?, String>((
+  ref,
+  id,
+) async {
+  final repository = await ref.watch(vetProfileRepositoryProvider.future);
+  final result = await repository.fetchById(id);
+  return result.getOrThrow();
+});

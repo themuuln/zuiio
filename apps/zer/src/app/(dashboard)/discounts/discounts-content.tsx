@@ -1,6 +1,7 @@
 "use client";
 
 import { Percent } from "@phosphor-icons/react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DiscountCreateDrawer } from "@/components/discounts/discount-create-drawer";
@@ -16,9 +17,8 @@ import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
-import type { ColumnDef } from "@tanstack/react-table";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { dateColumn, textColumn, actionsColumn } from "@/lib/table-columns";
+import { actionsColumn, dateColumn, textColumn } from "@/lib/table-columns";
 import type { DiscountRow } from "./page";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -119,9 +119,7 @@ export function DiscountsContent({ discounts }: { discounts: DiscountRow[] }) {
     },
     {
       accessorFn: (row) =>
-        row.type === "percentage"
-          ? `${row.value}%`
-          : formatCurrency(row.value),
+        row.type === "percentage" ? `${row.value}%` : formatCurrency(row.value),
       id: "value",
       header: "Утга",
       cell: ({ row }) =>

@@ -1,5 +1,17 @@
 // Stat engine: deriveBoxScore, standings, leaders
 // Pure functions — runs identically in browser, server, Edge Functions, and Expo
 
-export { deriveBoxScore } from './derive';
-export * from './advanced';
+export * from "./advanced";
+export { deriveBoxScore } from "./derive";
+export {
+  calculateDRtg,
+  calculateFourFactors,
+  calculateFTARate,
+  calculateNetRTG,
+  calculateORtg,
+  calculatePace,
+  calculatePIE,
+  calculateTeamAdvancedStats,
+  calculateTeamEFG,
+  calculateTOVPct,
+} from "./team-advanced";

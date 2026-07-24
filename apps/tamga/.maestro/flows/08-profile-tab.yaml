@@ -1,0 +1,29 @@
+# Profile Tab
+
+appId: mn.tamga.app
+name: Profile Tab
+
+onFlowStart:
+  - clearState
+
+---
+- launchApp
+
+- runFlow:
+    when:
+      visible: "Open"
+    file: ../subflows/dismiss-open-dialog.yaml
+
+# Navigate to horses tab
+- tapOn: "Морь, tab, 1 of 8"
+- extendedWaitUntil:
+    visible: "Миний морь"
+    timeout: 30000
+
+# Tap Профайл tab
+- tapOn: "Профайл, tab, 8 of 8"
+- extendedWaitUntil:
+    visible: "Батбаяр"
+    timeout: 10000
+
+- takeScreenshot: profile_tab

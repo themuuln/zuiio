@@ -17,7 +17,7 @@ export async function generateMetadata({
 }) {
   const { locale } = await params;
   const t = await getTranslations({
-    locale,
+    locale: locale as "en" | "mn",
     namespace: "auth.setupOrganization",
   });
   return {

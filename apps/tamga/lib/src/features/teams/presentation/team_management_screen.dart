@@ -83,9 +83,7 @@ class _TeamManagementContent extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Багийн удирдлага'),
-      ),
+      appBar: AppBar(title: const Text('Багийн удирдлага')),
       body: teamAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => TamgaErrorWidget(
@@ -147,9 +145,7 @@ class _TeamDetail extends ConsumerWidget {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerLow,
-          ),
+          decoration: BoxDecoration(color: colorScheme.surfaceContainerLow),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -263,9 +259,9 @@ class _TeamDetail extends ConsumerWidget {
   }
 
   void _navigateToInvite(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const TeamInviteScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const TeamInviteScreen()));
   }
 }
 
@@ -385,12 +381,8 @@ class _MemberTile extends ConsumerWidget {
                   Icons.more_vert,
                   color: colorScheme.onSurfaceVariant,
                 ),
-                onSelected: (action) => _handleAction(
-                  context,
-                  ref,
-                  action,
-                  member,
-                ),
+                onSelected: (action) =>
+                    _handleAction(context, ref, action, member),
                 itemBuilder: (_) => [
                   const PopupMenuItem(
                     value: _MemberAction.changeRole,
@@ -432,7 +424,11 @@ class _MemberTile extends ConsumerWidget {
     }
   }
 
-  void _showRoleChangeSheet(BuildContext context, WidgetRef ref, TeamMember member) {
+  void _showRoleChangeSheet(
+    BuildContext context,
+    WidgetRef ref,
+    TeamMember member,
+  ) {
     showModalBottomSheet(
       context: context,
       builder: (ctx) => _RoleChangeSheet(
@@ -455,7 +451,9 @@ class _MemberTile extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Гишүүн хасах'),
-        content: Text('${member.userId} гишүүнийг багаас хасахдаа итгэлтэй байна уу?'),
+        content: Text(
+          '${member.userId} гишүүнийг багаас хасахдаа итгэлтэй байна уу?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -532,7 +530,9 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.3,
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -552,7 +552,9 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
             final isSelected = _selectedRole == role;
 
             return InkWell(
-              onTap: _isSaving ? null : () => setState(() => _selectedRole = role),
+              onTap: _isSaving
+                  ? null
+                  : () => setState(() => _selectedRole = role),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   vertical: AppSpacing.sm,
@@ -589,7 +591,9 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.surfaceContainerHighest,
+                                    color: theme
+                                        .colorScheme
+                                        .surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -606,7 +610,9 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
                           Text(
                             role.defaultPermissions.length > 3
                                 ? '${role.defaultPermissions.length} зөвшөөрөл'
-                                : role.defaultPermissions.map((p) => p.displayName).join(', '),
+                                : role.defaultPermissions
+                                      .map((p) => p.displayName)
+                                      .join(', '),
                             style: theme.textTheme.bodySmall,
                           ),
                         ],

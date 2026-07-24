@@ -113,6 +113,7 @@ class _InbreedingCalculatorScreenState
               _selectedSireId!,
               _selectedDamId!,
               nameMap,
+              horses,
             );
           }
 

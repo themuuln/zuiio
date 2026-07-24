@@ -92,8 +92,7 @@ extension NotificationTypeX on NotificationType {
       'Геоференцийн хязгаараас гарсан/орсон мэдэгдлүүд',
     NotificationType.paymentVerified =>
       'Төлбөр баталгаажсан ба захиалга идэвхжсэн мэдэгдлүүд',
-    NotificationType.lostHorseRenewal =>
-      'Хаяж морийн зар сунгах сануулгууд',
+    NotificationType.lostHorseRenewal => 'Хаяж морийн зар сунгах сануулгууд',
   };
 
   /// String-ээс NotificationType руу хувиргах.

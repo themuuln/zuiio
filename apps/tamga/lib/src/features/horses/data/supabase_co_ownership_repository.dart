@@ -12,7 +12,9 @@ import '../domain/co_ownership.dart';
 import 'co_ownership_repository.dart';
 
 /// Хамтран өмчлөлийн cloud repository.
-class SupabaseCoOwnershipRepository with SupabaseRepositoryMixin implements CoOwnershipRepository {
+class SupabaseCoOwnershipRepository
+    with SupabaseRepositoryMixin
+    implements CoOwnershipRepository {
   const SupabaseCoOwnershipRepository._(this._client);
   factory SupabaseCoOwnershipRepository() =>
       SupabaseCoOwnershipRepository._(Supabase.instance.client);

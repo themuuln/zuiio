@@ -61,7 +61,10 @@ export function useWorkOrderDetailPage() {
   const router = useRouter();
   const { push, back } = router;
   const woId = params.id as string;
-  const t = useTranslations("workOrderDetail");
+  const t = useTranslations("workOrderDetail") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const queryClient = useQueryClient();
 
   // ── Local state ──

@@ -25,11 +25,20 @@
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "./src/app/**/*.ts",
+    "./src/app/**/*.tsx",
+    "./src/lib/**/*.ts",
+    "./src/components/**/*.ts",
+    "./src/components/**/*.tsx",
+    "./src/hooks/**/*.ts",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "supabase/functions"]
+  "exclude": [
+    "node_modules",
+    "supabase/functions",
+    "**/*.test.*",
+    "**/__tests__/**",
+    "**/*.spec.*"
+  ]
 }

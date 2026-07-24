@@ -2,12 +2,11 @@
 
 import { Loader2, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import {
   Table,
@@ -21,6 +20,7 @@ import { Typography } from "@/components/ui/typography";
 import {
   usePurchaseOrderItems,
   usePurchaseOrders,
+  useReceiveByBarcode,
   useReceivePurchaseOrder,
   useUpdatePurchaseOrder,
 } from "@/lib/queries/use-inventory";
@@ -42,12 +42,15 @@ const PO_STATUS_KEYS: Record<string, string> = {
   cancelled: "poStatusCancelled",
 };
 
-export function PurchaseOrderDetailSheet({
+export function PurchaseOrderDetailDrawer({
   open,
   onOpenChange,
   poId,
 }: PurchaseOrderDetailSheetProps) {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 
@@ -59,6 +62,9 @@ export function PurchaseOrderDetailSheet({
   );
   const receivePO = useReceivePurchaseOrder(orgId);
   const updatePO = useUpdatePurchaseOrder(orgId);
+  const receiveBarcode = useReceiveByBarcode(orgId, poId ?? undefined);
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [scanError, setScanError] = useState<string | null>(null);
 
   const po = useMemo(
     () => purchaseOrders.find((p) => p.id === poId),
@@ -79,6 +85,28 @@ export function PurchaseOrderDetailSheet({
       toast.error(err instanceof Error ? err.message : t("failedToReceive"));
     }
   }, [poId, receivePO, t]);
+
+  const handleBarcodeScan = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!poId || !barcodeInput.trim()) return;
+      setScanError(null);
+      try {
+        await receiveBarcode.mutateAsync({
+          poId,
+          barcode: barcodeInput.trim(),
+        });
+        setBarcodeInput("");
+        toast.dismiss();
+        toast.success(t("itemReceivedByBarcode"));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : t("scanFailed");
+        setScanError(msg);
+        reportServerError("Barcode receive failed", err);
+      }
+    },
+    [poId, barcodeInput, receiveBarcode, t],
+  );
 
   const handleStatusChange = useCallback(
     async (status: string) => {
@@ -106,17 +134,20 @@ export function PurchaseOrderDetailSheet({
   return (
     <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
-        <DetailSheetHeader
-          icon={Truck}
-          iconLoading={isLoading}
-          title={
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
+            {isLoading ? (
+              <Loader2 className="size-5 animate-spin text-primary" />
+            ) : (
+              <Truck className="size-5 text-primary" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
             <DrawerTitle className="text-base">
               {isLoading ? "Loading…" : po ? po.order_number : t("poNotFound")}
             </DrawerTitle>
-          }
-          subtitle={
-            po ? (
-              <>
+            {po ? (
+              <div className="mt-0.5 flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">
                   {t(PO_STATUS_KEYS[po.status] as string) ?? po.status}
                 </Badge>
@@ -124,10 +155,10 @@ export function PurchaseOrderDetailSheet({
                   {new Date(po.order_date).toLocaleDateString("mn-MN")}
                   {po.supplier?.name ? ` · ${po.supplier.name}` : ""}
                 </span>
-              </>
-            ) : undefined
-          }
-        />
+              </div>
+            ) : undefined}
+          </div>
+        </div>
       </DrawerHeader>
 
       {/* Loading */}
@@ -180,6 +211,43 @@ export function PurchaseOrderDetailSheet({
               >
                 <Truck className="size-4" /> {t("receiveStock")}
               </Button>
+            )}
+            {/* Barcode scan receive */}
+            {canReceive && (
+              <form
+                onSubmit={handleBarcodeScan}
+                className="flex flex-col gap-2 px-4 py-3 border-b border-border/50"
+              >
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t("scanToReceive")}
+                </span>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={barcodeInput}
+                    onChange={(e) => setBarcodeInput(e.target.value)}
+                    placeholder={t("enterBarcode")}
+                    className="flex-1 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={receiveBarcode.isPending || !barcodeInput.trim()}
+                  >
+                    {receiveBarcode.isPending ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Truck className="size-4" />
+                    )}
+                    {t("receiveItem")}
+                  </Button>
+                </div>
+                {scanError && (
+                  <Typography.Muted className="text-xs text-destructive">
+                    {scanError}
+                  </Typography.Muted>
+                )}
+              </form>
             )}
             {canCancel && (
               <Button

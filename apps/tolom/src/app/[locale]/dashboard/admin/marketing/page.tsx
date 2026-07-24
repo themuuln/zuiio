@@ -140,20 +140,7 @@ export default function MarketingPage() {
     [deleteMutation],
   );
 
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
-        <Skeleton className="h-8 w-48" />
-        <div className="grid gap-4 md:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={`skeleton-${i}`} className="h-24 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
+  if (!loading && !isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <ShieldAlert className="size-10 text-destructive" />
@@ -194,14 +181,20 @@ export default function MarketingPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Campaigns</CardDescription>
-            <CardTitle className="text-2xl">{campaigns.length}</CardTitle>
+            <CardTitle className="text-2xl">
+              {loading ? <Skeleton className="h-8 w-16" /> : campaigns.length}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Sent</CardDescription>
             <CardTitle className="text-2xl">
-              {totalSent.toLocaleString()}
+              {loading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                totalSent.toLocaleString()
+              )}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -209,7 +202,11 @@ export default function MarketingPage() {
           <CardHeader className="pb-2">
             <CardDescription>Opened</CardDescription>
             <CardTitle className="text-2xl">
-              {totalOpened.toLocaleString()}
+              {loading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                totalOpened.toLocaleString()
+              )}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -217,7 +214,11 @@ export default function MarketingPage() {
           <CardHeader className="pb-2">
             <CardDescription>Clicked</CardDescription>
             <CardTitle className="text-2xl">
-              {totalClicked.toLocaleString()}
+              {loading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                totalClicked.toLocaleString()
+              )}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -230,7 +231,27 @@ export default function MarketingPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y">
-            {campaigns.length === 0 ? (
+            {loading ? (
+              [1, 2, 3].map((i) => (
+                <div
+                  key={`sk-campaign-${i}`}
+                  className="flex items-center justify-between px-6 py-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="size-4 rounded-full" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="size-7" />
+                  </div>
+                </div>
+              ))
+            ) : campaigns.length === 0 ? (
               <div className="px-6 py-12 text-center text-sm text-muted-foreground">
                 No campaigns yet. Create your first campaign to get started.
               </div>

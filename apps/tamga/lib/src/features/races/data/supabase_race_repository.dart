@@ -10,7 +10,9 @@ import 'race_repository.dart';
 ///
 /// Maps [Race] ↔ Supabase row via the domain model's built-in
 /// `fromSupabaseJson` / `toSupabaseJson`.
-class SupabaseRaceRepository with SupabaseRepositoryMixin implements RaceRepository {
+class SupabaseRaceRepository
+    with SupabaseRepositoryMixin
+    implements RaceRepository {
   SupabaseRaceRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 
@@ -33,9 +35,7 @@ class SupabaseRaceRepository with SupabaseRepositoryMixin implements RaceReposit
           .order('date', ascending: false);
 
       final races = (response as List<dynamic>)
-          .map(
-            (row) => Race.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => Race.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(races);
@@ -77,9 +77,7 @@ class SupabaseRaceRepository with SupabaseRepositoryMixin implements RaceReposit
           .order('date', ascending: false);
 
       final races = (response as List<dynamic>)
-          .map(
-            (row) => Race.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => Race.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(races);
@@ -142,5 +140,4 @@ class SupabaseRaceRepository with SupabaseRepositoryMixin implements RaceReposit
       return Result.fail(wrapError(e));
     }
   }
-
 }

@@ -13,7 +13,10 @@ export default function DashboardError({
   error: Error & { digest?: string };
   unstable_retry: () => void;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   useEffect(() => {
     reportError(error, "dashboard");

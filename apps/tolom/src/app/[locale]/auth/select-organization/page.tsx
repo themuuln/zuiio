@@ -19,7 +19,7 @@ export async function generateMetadata({
 }) {
   const { locale } = await params;
   const t = await getTranslations({
-    locale,
+    locale: locale as "en" | "mn",
     namespace: "auth.selectOrganization",
   });
   return {
@@ -33,10 +33,12 @@ export default async function SelectOrganizationPage({
 }: {
   searchParams: Promise<{ redirectTo?: string }>;
 }) {
-  const [t, inviteT] = await Promise.all([
+  const [tRaw, inviteTRaw] = await Promise.all([
     getTranslations("auth.selectOrganization"),
     getTranslations("invite"),
   ]);
+  const t = tRaw as (key: string) => string;
+  const inviteT = inviteTRaw as (key: string) => string;
   const { redirectTo } = await searchParams;
 
   try {

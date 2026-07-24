@@ -57,9 +57,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            trainingLogsProvider('horse-1').overrideWith(
-              (ref) => completer.future,
-            ),
+            trainingLogsProvider(
+              'horse-1',
+            ).overrideWith((ref) => completer.future),
           ],
           child: MaterialApp(
             theme: AppTheme.light(),
@@ -78,10 +78,9 @@ void main() {
     // Error state
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows error widget on fetch failure', (tester) async {
-      await tester.pumpWidget(createTrainingScreen(
-        horseId: 'horse-1',
-        simulateError: true,
-      ));
+      await tester.pumpWidget(
+        createTrainingScreen(horseId: 'horse-1', simulateError: true),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(TamgaErrorWidget), findsOneWidget);
@@ -93,10 +92,9 @@ void main() {
     testWidgets('shows empty state when no training logs exist', (
       tester,
     ) async {
-      await tester.pumpWidget(createTrainingScreen(
-        horseId: 'horse-1',
-        logs: [],
-      ));
+      await tester.pumpWidget(
+        createTrainingScreen(horseId: 'horse-1', logs: []),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Дасгалжуулалтын бүртгэл байхгүй'), findsOneWidget);
@@ -126,10 +124,9 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createTrainingScreen(
-        horseId: 'horse-1',
-        logs: logs,
-      ));
+      await tester.pumpWidget(
+        createTrainingScreen(horseId: 'horse-1', logs: logs),
+      );
       await tester.pumpAndSettle();
 
       // Show type names (appear in both filter chips and log tiles)
@@ -165,10 +162,9 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createTrainingScreen(
-        horseId: 'horse-1',
-        logs: logs,
-      ));
+      await tester.pumpWidget(
+        createTrainingScreen(horseId: 'horse-1', logs: logs),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(WeeklyBarChart), findsOneWidget);
@@ -185,10 +181,9 @@ void main() {
         createMockTrainingLog(id: 'tl-4', type: TrainingLogType.rest),
       ];
 
-      await tester.pumpWidget(createTrainingScreen(
-        horseId: 'horse-1',
-        logs: logs,
-      ));
+      await tester.pumpWidget(
+        createTrainingScreen(horseId: 'horse-1', logs: logs),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -222,10 +217,9 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createTrainingScreen(
-        horseId: 'horse-1',
-        logs: logs,
-      ));
+      await tester.pumpWidget(
+        createTrainingScreen(horseId: 'horse-1', logs: logs),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -245,10 +239,9 @@ void main() {
     // FAB
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows FAB to add new training log', (tester) async {
-      await tester.pumpWidget(createTrainingScreen(
-        horseId: 'horse-1',
-        logs: [],
-      ));
+      await tester.pumpWidget(
+        createTrainingScreen(horseId: 'horse-1', logs: []),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(FloatingActionButton), findsOneWidget);

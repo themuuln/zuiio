@@ -117,7 +117,9 @@ void main() {
     });
 
     test('averageSalePrice returns 0 when no sold listings', () {
-      final activeOnly = listings.where((l) => l.status != MarketListingStatus.sold).toList();
+      final activeOnly = listings
+          .where((l) => l.status != MarketListingStatus.sold)
+          .toList();
       final analytics = FinancialAnalytics(listings: activeOnly);
       expect(analytics.averageSalePrice, 0);
     });
@@ -126,7 +128,8 @@ void main() {
       // revenue = 8,000,000, expenses = 400,000
       // ROI = ((8,000,000 - 400,000) / 400,000) * 100
       final analytics = FinancialAnalytics(listings: listings);
-      final expectedRoi = ((5000000 + 3000000 - (250000 + 150000)) / (250000 + 150000)) * 100;
+      final expectedRoi =
+          ((5000000 + 3000000 - (250000 + 150000)) / (250000 + 150000)) * 100;
       expect(analytics.roi, expectedRoi);
     });
 

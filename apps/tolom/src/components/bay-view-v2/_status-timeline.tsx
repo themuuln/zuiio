@@ -23,9 +23,9 @@ import type {
 } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 import {
+  STATUS_BORDER_LEFT,
   STATUS_DOT,
   STATUS_TRANSLATION_KEYS,
-  STATUS_BORDER_LEFT,
 } from "./_constants";
 import type { ServiceHistoryEntry } from "./_vehicle-registration-schema";
 
@@ -55,7 +55,7 @@ interface DedupedEntry {
 
 // ── Constants ───────────────────────────────────────────────
 
-const STATUS_FLOW = [
+const _STATUS_FLOW = [
   "New",
   "Diagnosing",
   "In Progress",
@@ -69,7 +69,6 @@ const TIME_FORMAT = new Intl.DateTimeFormat([], {
 });
 
 // ── Helpers ─────────────────────────────────────────────────
-
 
 function formatTimeRange(isoStart: string, isoEnd: string): string {
   const start = new Date(isoStart);
@@ -105,7 +104,6 @@ function formatRelativeTime(iso: string): string {
   if (day < 7) return `${day} өдрийн өмнө`;
   return formatDate(iso);
 }
-
 
 function deduplicateHistory(history: WorkOrderStatusHistory[]): DedupedEntry[] {
   // Sort ASC for grouping, then reverse for display
@@ -166,7 +164,7 @@ function ServiceTimelineEntry({
           {entry.status === "Completed" ? (
             <CheckCircle2 className="size-3 text-white" />
           ) : (
-            <div className="size-2 bg-white" />
+            <div className="size-2 bg-white dark:bg-gray-900" />
           )}
         </div>
       </div>
@@ -299,7 +297,10 @@ export function StatusTimeline(props: StatusTimelineProps) {
                 return (
                   <div
                     key={h.id}
-                    style={{ borderLeftColor: STATUS_BORDER_LEFT[h.status] ?? "#94a3b8" }}
+                    style={{
+                      borderLeftColor:
+                        STATUS_BORDER_LEFT[h.status] ?? "#94a3b8",
+                    }}
                     className={cn(
                       "flex items-baseline justify-between gap-2 py-1.5 border-l-2 pl-2.5 -ml-0.5",
                       isFirst ? "border-b border-border/40 pb-2.5 mb-0.5" : "",

@@ -1,21 +1,63 @@
+import {
+  BarChart3,
+  CalendarDays,
+  ChevronRight,
+  Eye,
+  Trophy,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GameCard } from "@/app/components/game-card";
+import { PublicEmptyState } from "@/app/components/public-empty-state";
+import { type GameWithTeams, getTeamBySlug } from "@/app/lib/data";
+import { PlayerAvatar } from "@/components/player-avatar";
 import { Badge } from "@/components/ui/badge";
-import { getTeamBySlug } from "../../lib/data";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ViewBeacon } from "@/components/view-beacon";
+import { RosterGrid } from "./components/roster-grid";
+import { TeamHeader } from "./components/team-header";
 
-type TeamPageProps = { params: Promise<{ slug: string }> };
+interface TeamPageProps {
+  params: Promise<{ slug: string }>;
+}
 
-export async function generateMetadata({ params }: TeamPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: TeamPageProps): Promise<Metadata> {
   const { slug } = await params;
   const data = await getTeamBySlug(slug);
   if (!data) return { title: "Баг олдсонгүй — Оноо" };
 
   return {
     title: `${data.team.name} — Оноо`,
-    description: `${data.team.name} багийн мэдээлэл, бүрэлдэхүүн, статистик.`,
+    description: `${data.team.name} багийн байрлал, форм, тоглогчид ба сүүлийн тоглолтууд.`,
+    alternates: {
+      canonical: `https://onoo.mn/teams/${slug}`,
+    },
   };
+}
+
+function getResult(game: GameWithTeams, teamId: string): "W" | "L" {
+  const isHome = game.home_team_id === teamId;
+  const teamScore = isHome ? (game.home_score ?? 0) : (game.away_score ?? 0);
+  const opponentScore = isHome
+    ? (game.away_score ?? 0)
+    : (game.home_score ?? 0);
+  return teamScore > opponentScore ? "W" : "L";
+}
+
+function formatPercent(value: number): string {
+  const percent = value <= 1 ? value * 100 : value;
+  return `${percent.toFixed(1)}%`;
 }
 
 export default async function TeamPage({ params }: TeamPageProps) {
@@ -23,129 +65,280 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const data = await getTeamBySlug(slug);
   if (!data) notFound();
 
-  const { team, players, standings } = data;
+  const { team, players, standings, leaders, recentGames, upcomingGames } =
+    data;
+  const nextGame = upcomingGames[0] ?? null;
+  const form = recentGames.slice(0, 5).map((game) => ({
+    gameId: game.id,
+    result: getResult(game, team.id),
+  }));
+  const totalGames = standings ? standings.w + standings.l : 0;
+  const averagePoints =
+    standings && totalGames > 0
+      ? (standings.points_for ?? 0) / totalGames
+      : null;
+  const pointDifference = standings
+    ? (standings.points_for ?? 0) - (standings.points_against ?? 0)
+    : null;
+  const leadersByPlayer = new Map(
+    leaders.map((leader) => [leader.player_id, leader]),
+  );
+
+  const recordDescription = standings
+    ? `${team.name} — Basketball team with ${standings.w} wins and ${standings.l} losses.`
+    : `${team.name} — Basketball team.`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SportsTeam",
+    name: team.name,
+    sport: "Basketball",
+    description: recordDescription,
+  };
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 space-y-6">
-      {/* Team header */}
-      <Card>
-        <CardContent className="flex items-center gap-6 py-8 px-6">
-          <span
-            className="inline-block size-16 rounded-full border-2 shrink-0"
-            style={{
-              backgroundColor: team.primary_color ?? "oklch(0.5 0 0)",
-            }}
-            aria-hidden="true"
-          />
-          <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">{team.name}</h1>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <span>{team.short_code}</span>
-              {standings && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span>
-                    {standings.w}-{standings.l}
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span>{((standings.w / (standings.w + standings.l)) * 100).toFixed(3)}</span>
-                </>
-              )}
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        <ViewBeacon entityType="team" entityId={team.slug} />
+        <TeamHeader
+          team={team}
+          standings={standings}
+          form={form}
+          averagePoints={averagePoints}
+          pointDifference={pointDifference}
+        />
+
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/teams/${slug}/analytics`}
+            className="inline-flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 text-xs font-medium text-card-foreground shadow-sm transition-colors hover:bg-accent"
+          >
+            <BarChart3 className="size-3.5" />
+            Дэвшилтэт үзүүлэлт
+          </Link>
+          <Link
+            href={`/teams/${slug}/scout`}
+            className="inline-flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 text-xs font-medium text-card-foreground shadow-sm transition-colors hover:bg-accent"
+          >
+            <Eye className="size-3.5" />
+            Скаутын тайлан
+          </Link>
+        </div>
+
+        <section className="grid gap-5 lg:grid-cols-12">
+          <div className="flex flex-col gap-4 lg:col-span-7">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Дараагийн сорилт
+              </p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight">
+                Дараагийн тоглолт
+              </h2>
             </div>
+            {nextGame ? (
+              <GameCard game={nextGame} />
+            ) : (
+              <PublicEmptyState
+                icon={CalendarDays}
+                title="Дараагийн тоглолт товлогдоогүй"
+                description="Лиг хуваарийг нийтлэхэд багийн дараагийн өрсөлдөгч энд гарна."
+                actionHref="/games"
+                actionLabel="Бүх тоглолт"
+              />
+            )}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Standings card */}
-      {standings && (
-        <section aria-labelledby="team-standings">
-          <h2 id="team-standings" className="sr-only">
-            Шалгуур
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Ялагдал" value={`${standings.w}`} />
-            <StatCard label="Оноотой" value={`${standings.l}`} />
-            <StatCard label="Хувь" value={((standings.w / (standings.w + standings.l)) * 100).toFixed(3)} />
-            <StatCard
-              label="Зөрүү"
-              value={`${0}`}
-            />
-          </div>
+          <Card className="shadow-none lg:col-span-5">
+            <CardHeader>
+              <CardTitle>Сүүлийн форм</CardTitle>
+              <CardDescription>
+                Сүүлийн таван баталгаажсан тоглолт
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {form.length > 0 ? (
+                <div className="flex flex-wrap gap-3">
+                  {form.map(({ gameId, result }) => (
+                    <Badge
+                      key={gameId}
+                      variant={result === "W" ? "default" : "destructive"}
+                      className="size-11 text-sm"
+                    >
+                      {result}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Баталгаажсан тоглолт бүрдмэгц форм энд харагдана.
+                </p>
+              )}
+              <div id="team-analytics" className="mt-6 grid grid-cols-2 gap-3">
+                <TeamMetric
+                  label="Дундаж оноо"
+                  value={averagePoints?.toFixed(1) ?? "—"}
+                />
+                <TeamMetric
+                  label="Ялалтын хувь"
+                  value={standings ? formatPercent(standings.win_pct) : "—"}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </section>
-      )}
 
-      {/* Roster */}
-      <section aria-labelledby="roster-heading" className="space-y-3">
-        <h2 id="roster-heading" className="text-xl font-semibold">
-          Бүрэлдэхүүн
-        </h2>
-        <Card>
-          <CardContent className="p-0 overflow-x-auto">
-            <table className="w-full text-sm" role="table">
-              <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="px-4 py-3 font-medium" scope="col">#</th>
-                  <th className="px-4 py-3 font-medium" scope="col">
-                    Тоглогч
-                  </th>
-                  <th className="px-4 py-3 font-medium" scope="col">
-                    Байрлал
-                  </th>
-                  <th className="px-4 py-3 font-medium" scope="col">
-                    Нэр (латин)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {players.map((p) => (
-                  <tr
-                    key={p.id}
-                    className="border-b last:border-0 transition-colors hover:bg-accent/30"
-                  >
-                    <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                      {p.jersey_number}
-                    </td>
-                    <td className="px-4 py-3 font-medium">
-                      <Link
-                        href={`/players/${p.id}`}
-                        className="hover:underline"
-                      >
-                        {p.canonical_name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant="outline">{p.position}</Badge>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {p.name_latin}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
-      </section>
-
-      <div>
-        <Link
-          href="/standings"
-          className="text-sm text-primary hover:underline"
+        <section
+          aria-labelledby="team-leaders-heading"
+          className="flex flex-col gap-4"
         >
-          ← Шалгуур руу буцах
-        </Link>
-      </div>
-    </main>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Багийн хөдөлгөгч хүч
+              </p>
+              <h2
+                id="team-leaders-heading"
+                className="mt-1 text-2xl font-bold tracking-tight"
+              >
+                Багийн тэргүүлэгчид
+              </h2>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/leaders">
+                Лигийн тэргүүлэгчид
+                <ChevronRight data-icon="inline-end" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+          {leaders.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-3">
+              {leaders.slice(0, 3).map((leader, index) => (
+                <Link
+                  key={leader.player_id}
+                  href={`/players/${leader.player_id}`}
+                  className="group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <Card
+                    className="h-full shadow-none transition-[background-color,transform] group-hover:bg-accent/40 group-active:scale-95 motion-reduce:transition-none"
+                    style={
+                      index === 0 && team.primary_color
+                        ? {
+                            borderTop: `3px solid ${team.primary_color}`,
+                          }
+                        : undefined
+                    }
+                  >
+                    <CardHeader>
+                      <Badge variant="secondary">#{index + 1}</Badge>
+                      <CardAction>
+                        <span className="stat-number text-2xl">
+                          {leader.pts?.toFixed(1) ?? "—"}
+                        </span>
+                      </CardAction>
+                    </CardHeader>
+                    <CardContent className="flex items-center gap-4">
+                      <PlayerAvatar
+                        photoUrl={leader.player_photo_url}
+                        name={leader.player_name}
+                        primaryColor={team.primary_color}
+                        size="xl"
+                      />
+                      <div className="min-w-0">
+                        <CardTitle className="truncate text-xl">
+                          {leader.player_name}
+                        </CardTitle>
+                        <CardDescription className="mt-2">
+                          {leader.gp} тоглолт ·{" "}
+                          {(leader.oreb ?? 0) + (leader.dreb ?? 0)} самбар
+                        </CardDescription>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <PublicEmptyState
+              icon={Trophy}
+              title="Багийн тэргүүлэгч тодроогүй"
+              description="Баталгаажсан улирлын статистик бүрдмэгц багийн шилдэг гурав энд гарна."
+            />
+          )}
+        </section>
+
+        <section
+          aria-labelledby="roster-heading"
+          className="flex flex-col gap-4"
+        >
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Багийн хүмүүс
+            </p>
+            <h2
+              id="roster-heading"
+              className="mt-1 text-2xl font-bold tracking-tight"
+            >
+              Бүрэлдэхүүн
+            </h2>
+          </div>
+          <RosterGrid
+            teamName={team.name}
+            primaryColor={team.primary_color}
+            players={players}
+            leadersByPlayer={leadersByPlayer}
+          />
+        </section>
+
+        <section
+          aria-labelledby="recent-team-games"
+          className="flex flex-col gap-4"
+        >
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Сүүлийн түүх
+            </p>
+            <h2
+              id="recent-team-games"
+              className="mt-1 text-2xl font-bold tracking-tight"
+            >
+              Сүүлийн тоглолтууд
+            </h2>
+          </div>
+          {recentGames.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {recentGames.slice(0, 4).map((game) => (
+                <GameCard key={game.id} game={game} />
+              ))}
+            </div>
+          ) : (
+            <PublicEmptyState
+              icon={CalendarDays}
+              title="Баталгаажсан тоглолт байхгүй"
+              description="Эхний тоглолтын үр дүн баталгаажмагц багийн түүх энд эхэлнэ."
+            />
+          )}
+        </section>
+      </main>
+    </>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+interface TeamMetricProps {
+  label: string;
+  value: string;
+}
+
+function TeamMetric({ label, value }: TeamMetricProps) {
   return (
-    <Card>
-      <CardContent className="py-4 text-center">
-        <div className="text-2xl font-bold tabular-nums">{value}</div>
-        <div className="text-xs text-muted-foreground mt-1">{label}</div>
-      </CardContent>
-    </Card>
+    <div className="rounded-lg bg-[var(--surface-3)] p-4">
+      <p className="stat-number text-2xl">{value}</p>
+      <p className="mt-1 text-xs font-semibold uppercase text-muted-foreground">
+        {label}
+      </p>
+    </div>
   );
 }

@@ -5,7 +5,7 @@ import React from "react";
 import { MechanicAvatarChip } from "@/components/mechanic-avatar-chip";
 import { cn } from "@/lib/utils";
 import type { BayCardMechanic, BayCardWorkOrder } from "./_bay-card-types";
-import { MechanicAssignSheet } from "./_mechanic-assign-drawer";
+import { MechanicAssignDrawer } from "./_mechanic-assign-drawer";
 import { MechanicDisplay } from "./_mechanic-display";
 
 interface BayCardMechanicsRowProps {
@@ -64,7 +64,7 @@ function BayCardMechanicsRowInner({
       {!isPreview &&
         (onAssignMechanic || onAddHelper) &&
         mechanics.length > 0 && (
-          <MechanicAssignSheet
+          <MechanicAssignDrawer
             trigger={
               <span
                 className={cn(

@@ -1,4 +1,5 @@
 "use server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
 import { after } from "next/server";
 import { requireWriteAction } from "@/lib/action-utils";
@@ -21,6 +22,15 @@ export async function createJournalEntry(
 
   if (!entryDate) {
     return { error: "Огноо шаардлагатай." };
+  }
+  // Check if the period is locked — check_period_locked not yet in generated Database types
+  const untypedDb = db as SupabaseClient;
+  const { data: isLocked } = await untypedDb.rpc("check_period_locked", {
+    p_check_date: entryDate,
+    p_org_id: organizationId,
+  });
+  if (isLocked === true) {
+    return { error: "Энэ мөчлөг хаагдсан байна. Засварлах боломжгүй." };
   }
 
   if (!description) {
@@ -393,20 +403,31 @@ export async function deleteJournalEntry(entryId: string) {
   const { organizationId, branchId, isBranchScoped } = ctx;
   const db = ctx.supabase;
 
-  // Lines are cascade-deleted by the FK constraint — enforce branch access if scoped
-  let deleteQuery = db
+  // Verify the entry exists and belongs to this org (and branch if scoped)
+  let verifyQuery = db
     .from("journal_entries")
-    .delete()
+    .select("id")
     .eq("id", entryId)
-    .eq("organization_id", organizationId);
+    .eq("organization_id", organizationId)
+    .is("deleted_at", null);
 
   if (isBranchScoped && branchId) {
-    deleteQuery = deleteQuery.eq("branch_id", branchId);
+    verifyQuery = verifyQuery.eq("branch_id", branchId);
   }
 
-  const { error } = await deleteQuery;
+  const { error: verifyError } = await verifyQuery.single();
+  if (verifyError) {
+    return { error: `Журналын бичилт олдсонгүй.` };
+  }
 
-  capture(error, { context: "deleteJournalEntry: delete entry" });
+  // Soft delete the journal entry — soft_delete_record not yet in generated Database types
+  const untypedDb = db as SupabaseClient;
+  const { error } = await untypedDb.rpc("soft_delete_record", {
+    p_table_name: "journal_entries",
+    p_record_id: entryId,
+  });
+
+  capture(error, { context: "deleteJournalEntry: soft delete entry" });
   if (error) {
     return { error: `Журналын бичилт устгахад алдаа гарлаа: ${error.message}` };
   }

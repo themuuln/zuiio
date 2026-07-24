@@ -1,6 +1,0 @@
-{
-  "installCommand": "cd .. && pnpm install --frozen-lockfile && cd apps/onoo",
-  "buildCommand": "cd .. && pnpm exec next build --prefix apps/onoo",
-  "outputDirectory": ".next",
-  "framework": "nextjs"
-}

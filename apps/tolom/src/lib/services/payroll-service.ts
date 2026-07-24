@@ -130,47 +130,53 @@ export async function listPayRates(
 ): Promise<PayRate[]> {
   const supabase = db;
 
-  let query = supabase
-    .from("mechanic_pay_rates")
-    .select(
-      "id, organization_id, mechanic_id, hourly_rate, effective_from, effective_to",
-    )
-    .eq("organization_id", orgId)
-    .is("effective_to", null);
-
   if (branchId) {
-    // Get mechanic IDs in the selected branch, then filter pay rates
-    const { data: branchMechanics } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("organization_id", orgId)
-      .eq("branch_id", branchId);
-    const mechanicIds = (branchMechanics ?? []).map((p) => p.id);
-    if (mechanicIds.length === 0) return [];
-    query = query.in("mechanic_id", mechanicIds);
-  }
-
-  const { data, error } = await query;
-
-  if (error) throw error;
-
-  const rates = (data ?? []) as PayRate[];
-
-  // Enrich with mechanic names
-  const mechanicIds = rates.map((r) => r.mechanic_id);
-  if (mechanicIds.length > 0) {
-    const { data: profiles } = await supabase
+    // Get branch mechanics with names in one query, then filter pay rates
+    const { data: branchProfiles } = await supabase
       .from("profiles")
       .select("id, full_name")
-      .in("id", mechanicIds);
-    const nameMap = new Map(profiles?.map((p) => [p.id, p.full_name]) ?? []);
-    return rates.map((r) => ({
+      .eq("organization_id", orgId)
+      .eq("branch_id", branchId);
+    const mechanicIds = (branchProfiles ?? []).map((p) => p.id);
+    if (mechanicIds.length === 0) return [];
+
+    const nameMap = new Map(
+      (branchProfiles ?? []).map((p) => [p.id, p.full_name]),
+    );
+
+    const { data, error } = await supabase
+      .from("mechanic_pay_rates")
+      .select(
+        "id, organization_id, mechanic_id, hourly_rate, effective_from, effective_to",
+      )
+      .eq("organization_id", orgId)
+      .is("effective_to", null)
+      .in("mechanic_id", mechanicIds);
+
+    if (error) throw error;
+
+    return ((data ?? []) as PayRate[]).map((r) => ({
       ...r,
       mechanic_name: nameMap.get(r.mechanic_id) ?? null,
     })) as PayRate[];
   }
 
-  return rates;
+  // No branch filter — use a join to fetch profile names in one query
+  const { data, error } = await supabase
+    .from("mechanic_pay_rates")
+    .select(
+      "id, organization_id, mechanic_id, hourly_rate, effective_from, effective_to, profiles(full_name)",
+    )
+    .eq("organization_id", orgId)
+    .is("effective_to", null);
+
+  if (error) throw error;
+
+  return ((data ?? []) as Array<Record<string, unknown>>).map((r) => {
+    const profile = r.profiles as { full_name?: string } | null;
+    const { profiles: _p, ...rest } = r;
+    return { ...rest, mechanic_name: profile?.full_name ?? null } as PayRate;
+  });
 }
 
 // ── Payroll Calculation ────────────────────────────
@@ -269,7 +275,10 @@ export async function calculateMonthlyPayroll(
     .in("mechanic_id", mechanicIds)
     .eq("period_start", periodStart);
 
-  const existingMap = new Map<string, { id: string; status: string; paid_at: string | null }>();
+  const existingMap = new Map<
+    string,
+    { id: string; status: string; paid_at: string | null }
+  >();
   for (const rec of existingRecords ?? []) {
     existingMap.set(rec.mechanic_id, rec);
   }
@@ -345,46 +354,54 @@ export async function getPayrollRecords(
   const lastDay = new Date(year, month, 0).getDate();
   const periodEnd = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 
-  let query = supabase
-    .from("payroll_records")
-    .select(
-      "id, organization_id, mechanic_id, period_start, period_end, total_hours, hourly_rate, gross_pay, status, paid_at, notes",
-    )
-    .eq("organization_id", orgId)
-    .eq("period_start", periodStart)
-    .eq("period_end", periodEnd);
-
   if (branchId) {
-    // Get mechanic IDs in the selected branch, then filter records
-    const { data: branchMechanics } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("organization_id", orgId)
-      .eq("branch_id", branchId);
-    const mechanicIds = (branchMechanics ?? []).map((p) => p.id);
-    if (mechanicIds.length === 0) return [];
-    query = query.in("mechanic_id", mechanicIds);
-  }
-
-  const { data } = await query;
-
-  const records = (data ?? []) as PayrollRecord[];
-
-  // Enrich with mechanic names
-  const mechanicIds = records.map((r) => r.mechanic_id);
-  if (mechanicIds.length > 0) {
-    const { data: profiles } = await supabase
+    // Get branch mechanics with names in one query, then filter records
+    const { data: branchProfiles } = await supabase
       .from("profiles")
       .select("id, full_name")
-      .in("id", mechanicIds);
-    const nameMap = new Map(profiles?.map((p) => [p.id, p.full_name]) ?? []);
-    return records.map((r) => ({
+      .eq("organization_id", orgId)
+      .eq("branch_id", branchId);
+    const mechanicIds = (branchProfiles ?? []).map((p) => p.id);
+    if (mechanicIds.length === 0) return [];
+
+    const nameMap = new Map(
+      (branchProfiles ?? []).map((p) => [p.id, p.full_name]),
+    );
+
+    const { data } = await supabase
+      .from("payroll_records")
+      .select(
+        "id, organization_id, mechanic_id, period_start, period_end, total_hours, hourly_rate, gross_pay, status, paid_at, notes",
+      )
+      .eq("organization_id", orgId)
+      .eq("period_start", periodStart)
+      .eq("period_end", periodEnd)
+      .in("mechanic_id", mechanicIds);
+
+    return ((data ?? []) as PayrollRecord[]).map((r) => ({
       ...r,
       mechanic_name: nameMap.get(r.mechanic_id) ?? null,
     })) as PayrollRecord[];
   }
 
-  return records;
+  // No branch filter — use a join for profile names
+  const { data } = await supabase
+    .from("payroll_records")
+    .select(
+      "id, organization_id, mechanic_id, period_start, period_end, total_hours, hourly_rate, gross_pay, status, paid_at, notes, profiles(full_name)",
+    )
+    .eq("organization_id", orgId)
+    .eq("period_start", periodStart)
+    .eq("period_end", periodEnd);
+
+  return ((data ?? []) as Array<Record<string, unknown>>).map((r) => {
+    const profile = r.profiles as { full_name?: string } | null;
+    const { profiles: _p, ...rest } = r;
+    return {
+      ...rest,
+      mechanic_name: profile?.full_name ?? null,
+    } as PayrollRecord;
+  });
 }
 
 /**

@@ -6,6 +6,7 @@ import { validateExpenseInput } from "@/lib/domain-rules";
 import { parseAmount } from "@/lib/erp";
 import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
+import { expenseSchema } from "@/lib/validation-schemas";
 
 export async function updateExpense(
   _prevState: { error?: string } | undefined,
@@ -21,6 +22,18 @@ export async function updateExpense(
   const expenseDate = getString(formData, "expense_date");
   const description = getString(formData, "description") || null;
   const paymentMethod = getString(formData, "payment_method") || "cash";
+  const parsedExpense = expenseSchema.safeParse({
+    category,
+    amount: formData.get("amount"),
+    expense_date: expenseDate,
+    description,
+    payment_method: paymentMethod,
+  });
+  if (!parsedExpense.success) {
+    return {
+      error: parsedExpense.error.issues[0]?.message || "Мэдээлэл буруу байна.",
+    };
+  }
 
   if (!id) return { error: "Зарлагын ID олдсонгүй." };
 

@@ -274,30 +274,33 @@ void main() {
 
     // ── Serialization — Supabase JSON ────────────────────────
 
-    test('toSupabaseJson uses snake_case keys and includes ownerId/updated_at', () {
-      final log = FeedLog(
-        id: 'fl-1',
-        scheduleId: 'fs-1',
-        horseId: 'horse-1',
-        date: DateTime(2026, 6, 1),
-        amountGiven: 4.5,
-        skipped: false,
-        notes: 'Өглөө',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      final json = log.toSupabaseJson(ownerId: 'user-1');
+    test(
+      'toSupabaseJson uses snake_case keys and includes ownerId/updated_at',
+      () {
+        final log = FeedLog(
+          id: 'fl-1',
+          scheduleId: 'fs-1',
+          horseId: 'horse-1',
+          date: DateTime(2026, 6, 1),
+          amountGiven: 4.5,
+          skipped: false,
+          notes: 'Өглөө',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        final json = log.toSupabaseJson(ownerId: 'user-1');
 
-      expect(json['owner_id'], 'user-1');
-      expect(json['id'], 'fl-1');
-      expect(json['schedule_id'], 'fs-1');
-      expect(json['horse_id'], 'horse-1');
-      expect(json['date'], '2026-06-01T00:00:00.000');
-      expect(json['amount_given'], 4.5);
-      expect(json['skipped'], false);
-      expect(json['notes'], 'Өглөө');
-      expect(json['updated_at'], isA<String>());
-    });
+        expect(json['owner_id'], 'user-1');
+        expect(json['id'], 'fl-1');
+        expect(json['schedule_id'], 'fs-1');
+        expect(json['horse_id'], 'horse-1');
+        expect(json['date'], '2026-06-01T00:00:00.000');
+        expect(json['amount_given'], 4.5);
+        expect(json['skipped'], false);
+        expect(json['notes'], 'Өглөө');
+        expect(json['updated_at'], isA<String>());
+      },
+    );
 
     test('fromSupabaseJson deserializes snake_case', () {
       final supabase = {

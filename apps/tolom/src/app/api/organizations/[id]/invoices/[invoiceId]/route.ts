@@ -3,7 +3,6 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import {
-
   addInvoiceItem,
   deleteInvoice,
   getInvoice,
@@ -14,6 +13,7 @@ import {
   updateInvoiceItem,
   updateInvoiceStatus,
 } from "@/lib/services/invoice-service";
+
 // ── Zod schemas for each PATCH action ────────────────────────
 // Zod errors are caught in the route handler and re-thrown as
 // ValidationError so the standard error handler returns 400.
@@ -77,7 +77,7 @@ export const GET = createRouteHandler(async ({ params, supabase }) => {
 });
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, params, supabase }) => {
+  async ({ request, orgId, params, supabase, user }) => {
     const { invoiceId } = params;
     const body = await request.json();
 
@@ -91,7 +91,12 @@ export const PATCH = createRouteHandler(
     }
 
     if (body.action === "mark_emailed") {
-      const invoice = await markInvoiceEmailed(supabase, invoiceId, orgId);
+      const invoice = await markInvoiceEmailed(
+        supabase,
+        invoiceId,
+        orgId,
+        user.id,
+      );
       return ok(invoice);
     }
 
@@ -103,18 +108,25 @@ export const PATCH = createRouteHandler(
         orgId,
         parsed.status,
         parsed.notes,
+        user.id,
       );
       return ok(invoice);
     }
 
     if (body.action === "record_payment") {
       const parsed = validate(recordPaymentSchema, body);
-      const payments = await recordPayment(supabase, invoiceId, orgId, {
-        amount: parsed.amount,
-        method: parsed.method,
-        reference: parsed.reference,
-        notes: parsed.notes,
-      });
+      const payments = await recordPayment(
+        supabase,
+        invoiceId,
+        orgId,
+        {
+          amount: parsed.amount,
+          method: parsed.method,
+          reference: parsed.reference,
+          notes: parsed.notes,
+        },
+        user.id,
+      );
       return ok(payments);
     }
 
@@ -179,9 +191,9 @@ export const PATCH = createRouteHandler(
 );
 
 export const DELETE = createRouteHandler(
-  async ({ orgId, params, supabase }) => {
+  async ({ orgId, params, supabase, user }) => {
     const { invoiceId } = params;
-    await deleteInvoice(supabase, invoiceId, orgId);
+    await deleteInvoice(supabase, invoiceId, orgId, user.id);
     return ok(null);
   },
   { rateLimit: true, subscription: true },

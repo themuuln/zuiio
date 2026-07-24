@@ -571,10 +571,7 @@ export async function getMonthlyReport(
     const weekEndDate = new Date(ws);
     weekEndDate.setDate(weekEndDate.getDate() + 6);
     // Skip weeks outside the target month
-    if (
-      weekEndDate.getMonth() !== month - 1 &&
-      ws.getMonth() !== month - 1
-    ) {
+    if (weekEndDate.getMonth() !== month - 1 && ws.getMonth() !== month - 1) {
       continue;
     }
     const wsStr = ws.toISOString().slice(0, 10);
@@ -585,7 +582,11 @@ export async function getMonthlyReport(
     let wServicesCount = 0;
     let wPartsCount = 0;
     let wWoCount = 0;
-    for (let d = new Date(ws); d <= weekEndDate && d <= monthEndDate; d.setDate(d.getDate() + 1)) {
+    for (
+      let d = new Date(ws);
+      d <= weekEndDate && d <= monthEndDate;
+      d.setDate(d.getDate() + 1)
+    ) {
       const dateStr = d.toISOString().slice(0, 10);
       const dayWoIds = woDateMap.get(dateStr) ?? [];
       let dayRevenue = 0;
@@ -599,11 +600,15 @@ export async function getMonthlyReport(
         dayParts += data.parts.length;
         for (const s of data.services) {
           dayRevenue += Number((s as Record<string, unknown>).final_price);
-          dayDiscounts += Number((s as Record<string, unknown>).discount_amount ?? 0);
+          dayDiscounts += Number(
+            (s as Record<string, unknown>).discount_amount ?? 0,
+          );
         }
         for (const p of data.parts) {
           dayRevenue += Number((p as Record<string, unknown>).final_price);
-          dayDiscounts += Number((p as Record<string, unknown>).discount_amount ?? 0);
+          dayDiscounts += Number(
+            (p as Record<string, unknown>).discount_amount ?? 0,
+          );
         }
       }
       wTotalRevenue += dayRevenue;

@@ -29,7 +29,10 @@ export function RefundReceipt({
   invoice,
   orgName,
 }: RefundReceiptProps) {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const printRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
@@ -86,7 +89,10 @@ export function RefundReceipt({
         </Button>
       </div>
 
-      <div ref={printRef} className="border rounded-lg p-6 bg-white text-black">
+      <div
+        ref={printRef}
+        className="border rounded-lg p-6 bg-white text-black dark:bg-gray-900 dark:text-white"
+      >
         <div className="header">
           <div className="org-name">{orgName}</div>
           <div className="title">{t("refund.receiptTitle")}</div>

@@ -1,5 +1,6 @@
 "use server";
 
+import { validatePassword } from "@/lib/password-policy";
 import { createClient } from "@/lib/supabase/server";
 
 export interface ResetPasswordState {
@@ -17,8 +18,9 @@ export async function resetPassword(
 
   const fieldErrors: Record<string, string[]> = {};
 
-  if (password.length < 8) {
-    fieldErrors.password = ["Нууц үг хамгийн багадаа 8 тэмдэгт байх ёстой."];
+  const passwordResult = validatePassword(password);
+  if (!passwordResult.valid) {
+    fieldErrors.password = passwordResult.errors;
   }
 
   if (password !== confirmPassword) {

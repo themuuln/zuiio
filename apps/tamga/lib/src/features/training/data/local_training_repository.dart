@@ -13,10 +13,7 @@ import 'training_repository.dart';
 class LocalTrainingRepository
     extends LocalRepository<TrainingLog, IsarTrainingLog>
     implements TrainingRepository {
-  LocalTrainingRepository({
-    required super.storage,
-    required super.syncQueue,
-  });
+  LocalTrainingRepository({required super.storage, required super.syncQueue});
 
   @override
   IsarCollection<IsarTrainingLog> get collection => storage.trainingLogs;
@@ -54,7 +51,8 @@ class LocalTrainingRepository
 
   @override
   Future<Result<List<PerformanceRecord>>> fetchPerformanceByHorse(
-      String horseId) async {
+    String horseId,
+  ) async {
     return Result.tryFuture(() async {
       final stored = await storage.performanceRecords
           .filter()
@@ -66,7 +64,8 @@ class LocalTrainingRepository
 
   @override
   Future<Result<PerformanceRecord>> savePerformance(
-      PerformanceRecord record) async {
+    PerformanceRecord record,
+  ) async {
     return Result.tryFuture(() async {
       final existing = await storage.performanceRecords
           .filter()

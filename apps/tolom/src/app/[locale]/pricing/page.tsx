@@ -189,8 +189,14 @@ function FeatureIcon({ status }: { status: FeatureStatus }) {
 }
 
 export default function PricingPage() {
-  const t = useTranslations("pricing");
-  const appT = useTranslations("app");
+  const t = useTranslations("pricing") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const appT = useTranslations("app") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   const [annual, setAnnual] = useState(false);
 

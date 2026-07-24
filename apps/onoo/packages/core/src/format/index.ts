@@ -14,7 +14,7 @@ export function formatClock(seconds: number): string {
  */
 export function formatStat(
   value: number | null | undefined,
-  type: "integer" | "decimal" | "percentage" = "integer"
+  type: "integer" | "decimal" | "percentage" = "integer",
 ): string {
   if (value === null || value === undefined) return "—";
 
@@ -23,7 +23,6 @@ export function formatStat(
       return `${(value * 100).toFixed(1)}%`;
     case "decimal":
       return value.toFixed(1);
-    case "integer":
     default:
       return Math.round(value).toString();
   }
@@ -35,7 +34,7 @@ export function formatStat(
 export function formatPlayerName(
   nameLatin: string | null,
   canonicalName: string,
-  locale: "mn" | "en" = "mn"
+  locale: "mn" | "en" = "mn",
 ): string {
   if (locale === "en" && nameLatin) return nameLatin;
   return canonicalName;
@@ -105,14 +104,17 @@ const EVENT_LABELS_EN: Record<string, string> = {
  */
 export function describeEvent(
   event: EventLike,
-  locale: "mn" | "en" = "mn"
+  locale: "mn" | "en" = "mn",
 ): string {
   const labels = locale === "mn" ? EVENT_LABELS_MN : EVENT_LABELS_EN;
   const base = labels[event.event_type] ?? event.event_type;
 
   // Add context for specific events
   if (event.event_type === "substitution" && event.payload) {
-    const p = event.payload as { in_player_id?: string; out_player_id?: string };
+    const p = event.payload as {
+      in_player_id?: string;
+      out_player_id?: string;
+    };
     if (p.in_player_id && p.out_player_id) {
       return locale === "mn"
         ? `${p.out_player_id} → ${p.in_player_id}`
@@ -123,9 +125,18 @@ export function describeEvent(
   if (event.event_type === "foul_personal" && event.payload) {
     const p = event.payload as { foul_type?: string };
     if (p.foul_type) {
-      const foulLabel = locale === "mn"
-        ? { shooting: "зэвсгийт", non_shooting: "зэвсгийт бус", offensive: "халагч" }
-        : { shooting: "shooting", non_shooting: "non-shooting", offensive: "offensive" };
+      const foulLabel =
+        locale === "mn"
+          ? {
+              shooting: "зэвсгийт",
+              non_shooting: "зэвсгийт бус",
+              offensive: "халагч",
+            }
+          : {
+              shooting: "shooting",
+              non_shooting: "non-shooting",
+              offensive: "offensive",
+            };
       return `${base} (${foulLabel[p.foul_type as keyof typeof foulLabel] ?? p.foul_type})`;
     }
   }

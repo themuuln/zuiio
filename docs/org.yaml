@@ -1,0 +1,158 @@
+# Zuiio — Organization & Product Catalog
+#
+# Single source of truth for company-level info and every product.
+# The website (apps/website) and any future apps reference this for canonical product data.
+# Keep this file updated when products launch, rebrand, or sunset.
+
+company:
+  name: Zuiio
+  name-local: Зуиио
+  tagline: "Software for Mongolian businesses"
+  tagline-local: "Монгол бизнесийн программ хангамж"
+  domain: zuiio.com
+  description: >
+    Zuiio builds software for Mongolian businesses — from ERP and auto repair
+    management to identity, gym operations, and consumer apps. Every product
+    is designed from the ground up for how Mongolia works.
+  description-local: >
+    Зуио нь Монгол бизнесүүдэд зориулсан программ хангамжийг бүтээдэг —
+    ERP, авто засварын удирдлагаас эхлэлтийн удирдлага, фитнес, хэрэглэгчийн
+    апп хүртэл. Бүх бүтээгдэхүүн Монголын нөхцөлд зориулан бүтээгдсэн.
+  founded: 2024
+  location: Ulaanbaatar, Mongolia
+
+platform:
+  name: Zuiio Platform
+  description: >
+    A shared platform of business and consumer products under one brand.
+    Shared packages for UI, utilities, and logic. Each app ships independently
+    but none starts from zero.
+
+products:
+  - id: zer
+    name: Zer
+    name-local: Зэр
+    slug: zer
+    tagline: "Mini ERP"
+    tagline-local: "Мини ERP"
+    audience: organizations
+    category: erp
+    status: live
+    description: >
+      Inventory, sales, expenses, customer management, and reporting —
+      everything Mongolian SMEs need to run their business operations.
+    description-local: >
+      Бараа материал, борлуулалт, зарлага, харилцагчийн бүртгэл, тайлан —
+      Монголын ЖДҮ-д бизнесээ удирдахад хэрэгтэй бүх боломжууд.
+    app_url: https://zer.zuiio.com
+    color: primary # oklch violet
+    features:
+      - Inventory & stock management
+      - Sales & expense tracking
+      - Customer management (CRM)
+      - Financial reports & analytics
+      - Offline mode with sync
+      - Mongolian tax & social insurance built-in
+
+  - id: tolom
+    name: Tolom
+    name-local: Толом
+    slug: tolom
+    tagline: "Auto Repair Management"
+    tagline-local: "Авто засварын удирдлага"
+    audience: organizations
+    category: field-service
+    status: live
+    description: >
+      Bay view scheduling, work orders, parts inventory, estimates, and
+      mechanic management for Mongolian auto repair shops.
+    description-local: >
+      Бэй виү, захиалга, сэлбэгийн бүртгэл, тооцоо, механикийн удирдлага —
+      Монголын авто засварын газруудад.
+    app_url: https://tolom.zuiio.com
+    color: teal
+    features:
+      - Bay view drag-and-drop scheduling
+      - Work orders & estimates
+      - Parts inventory
+      - Mechanic tracking & assignment
+      - Customer vehicle history
+      - Offline mode with sync
+
+  - id: tumurch
+    name: Tumurch
+    name-local: Түмүрч
+    slug: tumurch
+    tagline: "Gym Platform"
+    tagline-local: "Фитнес платформ"
+    audience: organizations + consumers
+    category: gym-fitness
+    status: live
+    description: >
+      All-in-one gym platform: workout logging and coaching for members,
+      plus gym operations — reception, memberships, billing, shop/POS,
+      inventory, and access control.
+    description-local: >
+      Бүрэн фитнес платформ: гишүүдэд зориулсан дасгалын бүртгэл, дасгалжуулагч,
+      мөн гүйлгээний удирдлага — хүлээн авалт, гишүүнчлэл, төлбөр, дэлгүүр/ПОС,
+      бараа материал, нэвтрэх хяналт.
+    app_url: https://tumurch.zuiio.com
+    color: amber
+    features:
+      - Workout logging (Hevy-level)
+      - Coaching & programming
+      - Membership & billing management
+      - Reception & check-in
+      - Shop / POS / inventory
+      - Access control integration
+
+  - id: tamga
+    name: Tamga
+    name-local: Тамга
+    slug: tamga
+    tagline: "Horse Management"
+    tagline-local: "Морьны удирдлага"
+    audience: consumers
+    category: livestock
+    status: live
+    description: >
+      Horse management system for herders — tracking bloodlines, health records,
+      training, and performance. Built as a consumer app under the Zuiio family.
+    description-local: >
+      Малчдад зориулсан морьны удирдлагын систем — угсаа, эрүүл мэндийн бүртгэл,
+      сургалт, гүйцэтгэлийг хянах. Зуиио брэндийн хэрэглэгчийн апп.
+    app_url: https://tamga.zuiio.com
+    color: rose
+    features:
+      - Horse registry & bloodlines
+      - Health records & vet tracking
+      - Training logs
+      - Performance statistics
+      - Photo & document storage
+      - Offline-first mobile app (Flutter)
+
+  - id: zuiio-id
+    name: Zuiio ID
+    name-local: Зуиио ID
+    slug: zuiio-id
+    tagline: "Single Sign-On"
+    tagline-local: "Нэг цонхон нэвтрэх"
+    audience: organizations
+    category: identity
+    status: live
+    description: >
+      Central identity platform for all Zuiio products. Single sign-on,
+      organization management, and SAML/OIDC federation — one login across
+      the entire Zuiio ecosystem.
+    description-local: >
+      Бүх Зуиио бүтээгдэхүүний төв хэрэглэгчийн удирдлага. Нэг цонхон нэвтрэх,
+      байгууллагын удирдлага, SAML/OIDC нэгдэл — бүх Зуиио экосистемд нэг нэвтрэлт.
+    app_url: https://id.zuiio.com
+    color: slate
+    features:
+      - Single sign-on (SSO)
+      - Organization & team management
+      - SAML / OIDC federation
+      - Multi-factor authentication
+      - API keys & service accounts
+      - Audit logging

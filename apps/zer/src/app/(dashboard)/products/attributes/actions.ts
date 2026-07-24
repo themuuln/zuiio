@@ -562,3 +562,304 @@ export async function seedBuddhistCategories() {
   revalidateEntity("products");
   return { success: true as const, created };
 }
+/* ------------------------------------------------------------------ */
+/*  Religious goods shop presets                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Check if the current org is a religious goods shop.
+ */
+export async function checkReligiousPresetsEnabled(): Promise<{
+  enabled: boolean;
+}> {
+  const ctx = await requireActionContext("products.read");
+  if ("error" in ctx) return { enabled: false };
+  const { supabase, organizationId } = ctx;
+
+  const { data } = await supabase
+    .from("organizations")
+    .select("company_type")
+    .eq("id", organizationId)
+    .maybeSingle();
+
+  return {
+    enabled:
+      (data as { company_type: string | null } | null)?.company_type ===
+      "religious",
+  };
+}
+
+/**
+ * Creates standard categories for a religious goods shop.
+ * Idempotent — skips categories that already exist (by slug).
+ */
+export async function seedReligiousCategories() {
+  const ctx = await requireActionContext("products.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
+
+  const categories = [
+    { name: "Бурхан, Хийд", slug: "statues-deities" },
+    { name: "Зурга", slug: "thangkas" },
+    { name: "Тахилын хэрэгсэл", slug: "ritual-items" },
+    { name: "Ном, Судар", slug: "scriptures-books" },
+    { name: "Эрдэнэ", slug: "jewelry-mala" },
+    { name: "Хадаг", slug: "ceremonial-scarves" },
+    { name: "Шашин хувцас", slug: "religious-clothing" },
+    { name: "Утлага, хонх", slug: "incense-bells" },
+    { name: "Дуут аяга", slug: "singing-bowls" },
+    { name: "Хийморь", slug: "wind-horse" },
+  ];
+
+  let created = 0;
+  for (const cat of categories) {
+    const { error } = await supabase
+      .from("categories")
+      .upsert(
+        { organization_id: organizationId, name: cat.name, slug: cat.slug },
+        { onConflict: "organization_id,slug", ignoreDuplicates: true },
+      );
+    if (error) {
+      capture(error, { context: "seedReligiousCategories: upsert" });
+    } else {
+      created++;
+    }
+  }
+  revalidateEntity("products");
+  return { success: true as const, created };
+}
+
+/**
+ * Creates seed products for a religious goods shop.
+ * Looks up categories by name (expects them to be seeded first).
+ * Idempotent — skips products that already exist (by SKU).
+ */
+export async function seedReligiousProducts() {
+  const ctx = await requireActionContext("products.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
+
+  // Fetch existing categories by name → id
+  const { data: catRows } = await supabase
+    .from("categories")
+    .select("id, name")
+    .eq("organization_id", organizationId);
+
+  const catMap = new Map<string, string>(
+    (catRows ?? []).map((c) => [c.name, c.id]),
+  );
+
+  const products = [
+    // --- Бурхан, Хийд (Statues & Deities) ---
+    {
+      name: "Будда — Жижиг (15см)",
+      sku: "REL-BUD-001",
+      unit: "ширхэг",
+      cost_price: 35_000,
+      sale_price: 65_000,
+      current_stock: 12,
+      min_stock: 3,
+      category: "Бурхан, Хийд",
+    },
+    {
+      name: "Будда — Дунд (30см)",
+      sku: "REL-BUD-002",
+      unit: "ширхэг",
+      cost_price: 80_000,
+      sale_price: 150_000,
+      current_stock: 8,
+      min_stock: 2,
+      category: "Бурхан, Хийд",
+    },
+    {
+      name: "Бурхан Гүрэн — Мөнгөн (25см)",
+      sku: "REL-BUD-003",
+      unit: "ширхэг",
+      cost_price: 120_000,
+      sale_price: 220_000,
+      current_stock: 5,
+      min_stock: 1,
+      category: "Бурхан, Хийд",
+    },
+
+    // --- Эрдэнэ (Mala / Prayer Beads) ---
+    {
+      name: "Эрхи — Лянхуа (108 ширхэг)",
+      sku: "REL-ERH-001",
+      unit: "ширхэг",
+      cost_price: 15_000,
+      sale_price: 35_000,
+      current_stock: 25,
+      min_stock: 5,
+      category: "Эрдэнэ",
+    },
+    {
+      name: "Эрхи — Модон (108 ширхэг)",
+      sku: "REL-ERH-002",
+      unit: "ширхэг",
+      cost_price: 8_000,
+      sale_price: 20_000,
+      current_stock: 30,
+      min_stock: 5,
+      category: "Эрдэнэ",
+    },
+
+    // --- Тахилын хэрэгсэл (Ritual Items) ---
+    {
+      name: "Тахилын аяга — Зэс (7 ширхэг)",
+      sku: "REL-TAH-001",
+      unit: "кг",
+      cost_price: 45_000,
+      sale_price: 85_000,
+      current_stock: 10,
+      min_stock: 2,
+      category: "Тахилын хэрэгсэл",
+    },
+    {
+      name: "Лхаа — Бурхан бүхий тахилын таваг",
+      sku: "REL-TAH-002",
+      unit: "ширхэг",
+      cost_price: 25_000,
+      sale_price: 55_000,
+      current_stock: 15,
+      min_stock: 3,
+      category: "Тахилын хэрэгсэл",
+    },
+
+    // --- Ном, Судар (Scriptures & Books) ---
+    {
+      name: "Ганжуур — Монгол орчуулгатай",
+      sku: "REL-NOM-001",
+      unit: "ширхэг",
+      cost_price: 30_000,
+      sale_price: 55_000,
+      current_stock: 20,
+      min_stock: 5,
+      category: "Ном, Судар",
+    },
+    {
+      name: "Хүдэр — Зүүд нойрны ном",
+      sku: "REL-NOM-002",
+      unit: "ширхэг",
+      cost_price: 12_000,
+      sale_price: 25_000,
+      current_stock: 18,
+      min_stock: 5,
+      category: "Ном, Судар",
+    },
+
+    // --- Хадаг (Ceremonial Scarves) ---
+    {
+      name: "Хадаг — Цагаан (5м)",
+      sku: "REL-HAT-001",
+      unit: "ширхэг",
+      cost_price: 5_000,
+      sale_price: 12_000,
+      current_stock: 50,
+      min_stock: 10,
+      category: "Хадаг",
+    },
+    {
+      name: "Хадаг — Шар (5м)",
+      sku: "REL-HAT-002",
+      unit: "ширхэг",
+      cost_price: 6_000,
+      sale_price: 15_000,
+      current_stock: 40,
+      min_stock: 10,
+      category: "Хадаг",
+    },
+
+    // --- Утлага, хонх (Incense & Bells) ---
+    {
+      name: "Утлага — Сандальны мод",
+      sku: "REL-INC-001",
+      unit: "кг",
+      cost_price: 18_000,
+      sale_price: 38_000,
+      current_stock: 20,
+      min_stock: 5,
+      category: "Утлага, хонх",
+    },
+    {
+      name: "Хонх — Зэсэн (Гүйлэн)",
+      sku: "REL-INC-002",
+      unit: "ширхэг",
+      cost_price: 22_000,
+      sale_price: 45_000,
+      current_stock: 14,
+      min_stock: 3,
+      category: "Утлага, хонх",
+    },
+
+    // --- Дуут аяга (Singing Bowls) ---
+    {
+      name: "Дуут аяга — Дунд (18см)",
+      sku: "REL-DUU-001",
+      unit: "ширхэг",
+      cost_price: 90_000,
+      sale_price: 180_000,
+      current_stock: 6,
+      min_stock: 2,
+      category: "Дуут аяга",
+    },
+
+    // --- Хийморь (Wind Horse Flags) ---
+    {
+      name: "Хийморь — 5 ширхэгийн багц",
+      sku: "REL-HII-001",
+      unit: "кг",
+      cost_price: 10_000,
+      sale_price: 22_000,
+      current_stock: 30,
+      min_stock: 8,
+      category: "Хийморь",
+    },
+
+    // --- Мани хүрд (Prayer Wheels) ---
+    {
+      name: "Мани хүрд — Гар (10см)",
+      sku: "REL-PRW-001",
+      unit: "ширхэг",
+      cost_price: 35_000,
+      sale_price: 65_000,
+      current_stock: 10,
+      min_stock: 3,
+      category: "Тахилын хэрэгсэл",
+    },
+  ];
+
+  let created = 0;
+  for (const p of products) {
+    const categoryId = catMap.get(p.category) ?? null;
+
+    // Check if product with this SKU already exists
+    const { data: existing } = await supabase
+      .from("products")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("sku", p.sku)
+      .maybeSingle();
+
+    if (existing) continue;
+
+    const { error } = await supabase.from("products").insert({
+      organization_id: organizationId,
+      name: p.name,
+      sku: p.sku,
+      unit: p.unit,
+      cost_price: p.cost_price,
+      sale_price: p.sale_price,
+      current_stock: p.current_stock,
+      min_stock: p.min_stock,
+      category_id: categoryId,
+    });
+    if (error) {
+      capture(error, { context: "seedReligiousProducts: insert" });
+    } else {
+      created++;
+    }
+  }
+  revalidateEntity("products");
+  return { success: true as const, created };
+}

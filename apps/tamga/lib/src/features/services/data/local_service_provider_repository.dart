@@ -9,9 +9,8 @@ import 'services_repository.dart';
 
 /// Isar дээр суурилсан локал үйлчилгээ үзүүлэгчийн репозитори.
 class LocalServiceProviderRepository implements ServiceProviderRepository {
-  LocalServiceProviderRepository({
-    required IsarStorage storage,
-  }) : _storage = storage;
+  LocalServiceProviderRepository({required IsarStorage storage})
+    : _storage = storage;
 
   final IsarStorage _storage;
 
@@ -24,9 +23,7 @@ class LocalServiceProviderRepository implements ServiceProviderRepository {
   }
 
   @override
-  Future<Result<List<ServiceProvider>>> fetchByType(
-    String providerType,
-  ) async {
+  Future<Result<List<ServiceProvider>>> fetchByType(String providerType) async {
     final type = ServiceProviderType.values.byName(providerType);
     return Result.tryFuture(() async {
       final stored = await _storage.serviceProviders

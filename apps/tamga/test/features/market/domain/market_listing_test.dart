@@ -357,22 +357,17 @@ void main() {
     });
 
     test('isPublished returns true for active and pending', () {
+      expect(createStatusListing(MarketListingStatus.active).isPublished, true);
       expect(
-        createStatusListing(MarketListingStatus.active).isPublished,
-        true,
-      );
-      expect(
-        createStatusListing(MarketListingStatus.pendingVerification)
-            .isPublished,
+        createStatusListing(
+          MarketListingStatus.pendingVerification,
+        ).isPublished,
         true,
       );
     });
 
     test('isPublished returns false for non-published statuses', () {
-      expect(
-        createStatusListing(MarketListingStatus.sold).isPublished,
-        false,
-      );
+      expect(createStatusListing(MarketListingStatus.sold).isPublished, false);
       expect(
         createStatusListing(MarketListingStatus.expired).isPublished,
         false,
@@ -383,28 +378,31 @@ void main() {
       );
     });
 
-    test('trustScore reflects seller verification and document/media presence', () {
-      final verifiedDocMedia = MarketListing(
-        id: 'test-1',
-        horseId: 'horse-1',
-        sellerId: 'seller-1',
-        title: 'Test',
-        description: 'Desc',
-        priceAmount: 1000000,
-        currency: 'MNT',
-        saleType: MarketSaleType.sale,
-        status: MarketListingStatus.active,
-        locationLabel: 'UB',
-        disciplineTags: const [],
-        documentTags: const ['doc1', 'doc2'],
-        mediaUrls: const ['https://example.com/img.jpg'],
-        isSellerVerified: true,
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
-      );
-      // 35 (verified) + 24 (2 docs * 12) + 20 (has media) = 79
-      expect(verifiedDocMedia.trustScore, 79);
-    });
+    test(
+      'trustScore reflects seller verification and document/media presence',
+      () {
+        final verifiedDocMedia = MarketListing(
+          id: 'test-1',
+          horseId: 'horse-1',
+          sellerId: 'seller-1',
+          title: 'Test',
+          description: 'Desc',
+          priceAmount: 1000000,
+          currency: 'MNT',
+          saleType: MarketSaleType.sale,
+          status: MarketListingStatus.active,
+          locationLabel: 'UB',
+          disciplineTags: const [],
+          documentTags: const ['doc1', 'doc2'],
+          mediaUrls: const ['https://example.com/img.jpg'],
+          isSellerVerified: true,
+          createdAt: DateTime(2026, 1, 1),
+          updatedAt: DateTime(2026, 1, 1),
+        );
+        // 35 (verified) + 24 (2 docs * 12) + 20 (has media) = 79
+        expect(verifiedDocMedia.trustScore, 79);
+      },
+    );
 
     test('trustScore caps document contribution at 45', () {
       final manyDocs = MarketListing(

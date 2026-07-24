@@ -48,7 +48,7 @@ interface VariantEditorSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function VariantEditorSheet({
+export function VariantEditorDrawer({
   entityType,
   entityId,
   entityName,
@@ -87,6 +87,7 @@ export function VariantEditorSheet({
     // Generate variants based on selected group + options
     const group = groups.find((g) => g.id === selectedGroupId);
     if (!group) return;
+    if (!entityId) return;
 
     const selectedLabels = groupOptions
       .filter((o) => selectedOptionIds.includes(o.id))
@@ -98,7 +99,7 @@ export function VariantEditorSheet({
 
     bulkGen.mutate({
       entity_type: entityType,
-      entity_id: entityId!,
+      entity_id: entityId,
       dimension_options: dimensionOptions,
     });
 
@@ -164,7 +165,8 @@ export function VariantEditorSheet({
         <div className="flex items-center justify-between">
           <DrawerTitle>{t("manageVariants")}</DrawerTitle>
           <Badge variant="secondary" className="shrink-0">
-            {variants.length} {t("variantCount", { count: variants.length })}
+            {variants.length}{" "}
+            {t("variantCount", { count: String(variants.length) })}
           </Badge>
         </div>
         <DrawerDescription>

@@ -1,0 +1,25 @@
+# Events Tab
+
+appId: mn.tamga.app
+name: Events Tab
+
+onFlowStart:
+  - clearState
+
+---
+- launchApp
+
+- runFlow:
+    when:
+      visible: "Open"
+    file: ../subflows/dismiss-open-dialog.yaml
+
+- extendedWaitUntil:
+    visible: "Миний морь"
+    timeout: 30000
+
+# Tap Эвент tab (text selector)
+- tapOn: "Эвент, tab, 4 of 8"
+- assertVisible: "Эвентүүд"
+
+- takeScreenshot: events_tab

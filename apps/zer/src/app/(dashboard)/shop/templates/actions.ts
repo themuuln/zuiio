@@ -279,7 +279,10 @@ export async function createOrderTemplate(
 
   if (itemsError) {
     // Rollback template
-    await supabase.from("order_templates").delete().eq("id", template.id);
+    await withDbCapture(
+      "order_templates: rollback delete",
+      supabase.from("order_templates").delete().eq("id", template.id),
+    );
     capture(itemsError, { context: "order_templates: insert items" });
     return {
       error: `Загварын бүтээгдэхүүн хадгалахад алдаа гарлаа: ${itemsError.message}`,

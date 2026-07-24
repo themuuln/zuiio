@@ -96,9 +96,7 @@ BEGIN
         AND updated_at >= _date_from
         AND updated_at < _date_to + 1
     ),
-    all_completed AS (
-      SELECT id FROM scope_wo WHERE status = 'Completed'
-    ),
+    -- ── all_completed removed — top_services, cat_breakdown now use completed_in_period ──
 
     -- ── Revenue: services + parts for completed WOs in period ──
     period_services AS (
@@ -152,14 +150,14 @@ BEGIN
       FULL JOIN daily_rev_parts p ON p.d = s.d
     ),
 
-    -- ── Top services ──
+    -- ── Top services (current period only) ──
     top_services AS (
       SELECT
         wos.service_name AS name,
         count(*) AS count,
         sum(wos.final_price) AS revenue
       FROM work_order_services wos
-      WHERE wos.work_order_id IN (SELECT id FROM all_completed)
+      WHERE wos.work_order_id IN (SELECT id FROM completed_in_period)
       GROUP BY wos.service_name
       ORDER BY revenue DESC
       LIMIT 10
@@ -186,7 +184,7 @@ BEGIN
       ORDER BY revenue DESC
     ),
 
-    -- ── Service category breakdown ──
+    -- ── Service category breakdown (current period only) ──
     cat_breakdown AS (
       SELECT
         COALESCE(sc.category, 'Бусад') AS category,
@@ -194,7 +192,7 @@ BEGIN
         sum(wos.final_price) AS revenue
       FROM work_order_services wos
       LEFT JOIN service_catalog sc ON sc.id = wos.service_catalog_id
-      WHERE wos.work_order_id IN (SELECT id FROM all_completed)
+      WHERE wos.work_order_id IN (SELECT id FROM completed_in_period)
       GROUP BY sc.category
       ORDER BY revenue DESC
     ),

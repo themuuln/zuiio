@@ -262,12 +262,13 @@ export async function deletePriceRule(
   db: SupabaseClient,
   id: string,
   orgId: string,
+  userId_?: string,
 ): Promise<void> {
   const supabase = db;
 
-  const {
-    data: { user: currentUser },
-  } = await supabase.auth.getUser();
+  const currentUser = userId_
+    ? { id: userId_ }
+    : (await supabase.auth.getUser()).data.user;
 
   const { error } = await supabase
     .from("price_rules")
@@ -407,50 +408,94 @@ export async function resolvePrice(
 ): Promise<PriceResolutionResult> {
   const supabase = db;
 
-  // ═══ Step 1: specific_price (parts only) ═══
-  if (input.type === "part" && input.part?.name) {
-    // Look up the part to get its UUID and default_price
-    const { data: catalogPart } = await supabase
-      .from("parts_catalog")
-      .select("id, default_price")
-      .eq("organization_id", orgId)
-      .ilike("name", input.part.name)
-      .is("deleted_at", null)
-      .maybeSingle();
-
-    if (catalogPart) {
-      input.basePrice = Number(catalogPart.default_price ?? 0);
-
-      if (input.vehicle) {
-        const { data: models } = await supabase
-          .from("vehicle_models")
-          .select("id")
+  // ═══ Steps 1+3: Run specific_price lookup and price history in parallel ═══
+  const [specificPriceResult, historyResult] = await Promise.all([
+    (async (): Promise<PriceResolutionResult | null> => {
+      if (input.type === "part" && input.part?.name) {
+        const { data: catalogPart } = await supabase
+          .from("parts_catalog")
+          .select("id, default_price")
           .eq("organization_id", orgId)
-          .eq("make", input.vehicle.make)
-          .eq("model", input.vehicle.model)
+          .ilike("name", input.part.name)
           .is("deleted_at", null)
-          .limit(1);
+          .maybeSingle();
 
-        if (models?.length) {
-          const { data: vmp } = await supabase
-            .from("vehicle_model_parts")
-            .select("specific_price")
+        if (catalogPart) {
+          input.basePrice = Number(catalogPart.default_price ?? 0);
+
+          if (input.vehicle) {
+            // Single join query instead of separate vehicle_models + vehicle_model_parts queries
+            const { data: vmp } = await supabase
+              .from("vehicle_model_parts")
+              .select("specific_price, vehicle_models!inner(id)")
+              .eq("organization_id", orgId)
+              .eq("part_id", catalogPart.id)
+              .eq("vehicle_models.make", input.vehicle.make)
+              .eq("vehicle_models.model", input.vehicle.model)
+              .eq("vehicle_models.organization_id", orgId)
+              .is("vehicle_models.deleted_at", null)
+              .limit(1)
+              .maybeSingle();
+
+            if (vmp?.specific_price != null) {
+              return {
+                price: Number(vmp.specific_price),
+                source: "specific_price",
+                explanation: `${input.vehicle.make} ${input.vehicle.model} specific price`,
+              };
+            }
+          }
+        }
+      }
+      return null;
+    })(),
+    (async (): Promise<PriceResolutionResult | null> => {
+      if (input.vehicle) {
+        if (input.type === "part" && input.part) {
+          const { data: history } = await supabase
+            .from("part_price_history")
+            .select("unit_price")
             .eq("organization_id", orgId)
-            .eq("vehicle_model_id", models[0].id)
-            .eq("part_id", catalogPart.id)
-            .maybeSingle();
+            .ilike("part_name", input.part.name)
+            .eq("vehicle_make", input.vehicle.make)
+            .eq("vehicle_model", input.vehicle.model)
+            .order("created_at", { ascending: false })
+            .limit(1);
 
-          if (vmp?.specific_price != null) {
+          if (history?.length && history[0].unit_price != null) {
             return {
-              price: Number(vmp.specific_price),
-              source: "specific_price",
-              explanation: `${input.vehicle.make} ${input.vehicle.model} specific price`,
+              price: Number(history[0].unit_price),
+              source: "price_history",
+              explanation: `Last price for ${input.vehicle.make} ${input.vehicle.model}`,
+            };
+          }
+        }
+
+        if (input.type === "service" && input.service) {
+          const { data: history } = await supabase
+            .from("service_price_history")
+            .select("unit_price")
+            .eq("organization_id", orgId)
+            .eq("vehicle_make", input.vehicle.make)
+            .eq("vehicle_model", input.vehicle.model)
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          if (history?.length && history[0].unit_price != null) {
+            return {
+              price: Number(history[0].unit_price),
+              source: "price_history",
+              explanation: `Last price for ${input.vehicle.make} ${input.vehicle.model}`,
             };
           }
         }
       }
-    }
-  }
+      return null;
+    })(),
+  ]);
+
+  // Step 1 result (specific_price) takes highest priority
+  if (specificPriceResult) return specificPriceResult;
 
   // ═══ Step 2: Price Rules ═══
   const rules = await getActivePriceRules(db, orgId);
@@ -515,47 +560,8 @@ export async function resolvePrice(
     };
   }
 
-  // ═══ Step 3: Price History ═══
-  if (input.vehicle) {
-    if (input.type === "part" && input.part) {
-      const { data: history } = await supabase
-        .from("part_price_history")
-        .select("unit_price")
-        .eq("organization_id", orgId)
-        .ilike("part_name", input.part.name)
-        .eq("vehicle_make", input.vehicle.make)
-        .eq("vehicle_model", input.vehicle.model)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (history && history.length > 0 && history[0].unit_price != null) {
-        return {
-          price: Number(history[0].unit_price),
-          source: "price_history",
-          explanation: `Last price for ${input.vehicle.make} ${input.vehicle.model}`,
-        };
-      }
-    }
-
-    if (input.type === "service" && input.service) {
-      const { data: history } = await supabase
-        .from("service_price_history")
-        .select("unit_price")
-        .eq("organization_id", orgId)
-        .eq("vehicle_make", input.vehicle.make)
-        .eq("vehicle_model", input.vehicle.model)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (history && history.length > 0 && history[0].unit_price != null) {
-        return {
-          price: Number(history[0].unit_price),
-          source: "price_history",
-          explanation: `Last price for ${input.vehicle.make} ${input.vehicle.model}`,
-        };
-      }
-    }
-  }
+  // Step 3 result (price_history) — lower priority than price rules
+  if (historyResult) return historyResult;
 
   // ═══ Step 4: Default price ═══
   return {

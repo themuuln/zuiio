@@ -1,7 +1,6 @@
 "use client";
 
 import { Loader2, Save } from "lucide-react";
-import type { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -61,13 +60,21 @@ interface EditMemberSheetProps {
     branchId: string | null;
   };
   roles: Role[];
-  branches: Branch[];
-  onSave: (memberId: string, data: EditMemberValues) => Promise<void>;
+  branches: Pick<Branch, "id" | "name">[];
+  onSave: (
+    memberId: string,
+    data: {
+      fullName?: string;
+      phone?: string;
+      roleId: string;
+      branchId?: string;
+    },
+  ) => Promise<void>;
   saving: boolean;
-  t: ReturnType<typeof useTranslations<"organization.memberManagement">>;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
-export function EditMemberSheet({
+export function EditMemberDrawer({
   open,
   onOpenChange,
   member,

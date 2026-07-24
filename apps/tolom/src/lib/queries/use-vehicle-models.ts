@@ -14,7 +14,10 @@ export function useMakes(
 ): ReturnType<typeof useQuery<string[], Error>> {
   return useQuery({
     queryKey: vehicleModelKeys.makes(orgId ?? ""),
-    queryFn: () => fetchMakes(orgId!, { params: { mode: "makes" } }),
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchMakes(orgId, { params: { mode: "makes" } });
+    },
     enabled: !!orgId,
     staleTime: 5 * 60_000,
   });
@@ -32,7 +35,8 @@ export function useModelsByMake(
   return useQuery({
     queryKey: vehicleModelKeys.modelsByMake(orgId ?? "", make),
     queryFn: async () => {
-      const models = await fetchModels(orgId!, { params: { make } });
+      if (!orgId) throw new Error("orgId required");
+      const models = await fetchModels(orgId, { params: { make } });
       return [...new Set(models.map((m) => m.model))];
     },
     enabled: !!orgId && !!make.trim(),

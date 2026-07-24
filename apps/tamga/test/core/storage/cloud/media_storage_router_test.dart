@@ -24,8 +24,11 @@ void main() {
         // The third segment should be {uuid}.jpg
         final filename = segments[2];
         expect(filename, endsWith('.jpg'));
-        expect(filename.length, greaterThan(30),
-            reason: 'Filename should contain uuid-like string + extension');
+        expect(
+          filename.length,
+          greaterThan(30),
+          reason: 'Filename should contain uuid-like string + extension',
+        );
       });
 
       test('supports custom extension', () {
@@ -46,8 +49,11 @@ void main() {
           reportId: 'report-1',
         );
 
-        expect(path1, isNot(equals(path2)),
-            reason: 'Each call should generate a unique UUID');
+        expect(
+          path1,
+          isNot(equals(path2)),
+          reason: 'Each call should generate a unique UUID',
+        );
       });
     });
 

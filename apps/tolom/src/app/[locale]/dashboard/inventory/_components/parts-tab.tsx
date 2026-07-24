@@ -6,11 +6,13 @@ import {
   ClipboardList,
   Eye,
   Gauge,
+  Loader2,
   Package,
   Pencil,
   Plus,
-  Loader2,
   Star,
+  Trash2,
+  Upload,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
@@ -46,6 +48,7 @@ import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { inventoryKeys } from "@/lib/queries/keys";
 import {
+  useDeletePart,
   useGlobalPartsCatalog,
   useInventoryBalances,
   usePartsCatalog,
@@ -84,8 +87,14 @@ export function PartsTab({
   onNavigate,
 }: PartsTabProps) {
   const locale = useLocale();
-  const t = useTranslations("inventory");
-  const commonT = useTranslations("common");
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const commonT = useTranslations("common") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const now = useClientNow();
   const qc = useQueryClient();
 
@@ -121,6 +130,9 @@ export function PartsTab({
   const [thresholdValue, setThresholdValue] = useState("");
   const [showDefaultThreshold, setShowDefaultThreshold] = useState(false);
   const [defaultThresholdValue, setDefaultThresholdValue] = useState("5");
+  const [deletingPart, setDeletingPart] = useState<PartsCatalogItem | null>(
+    null,
+  );
 
   // Local sorting
   const [sortKey, setSortKey] = useState<SortKey>("popularity");
@@ -164,6 +176,16 @@ export function PartsTab({
   ) => {
     await saveThreshold.mutateAsync({ partId, minimumQuantity });
     setEditingThreshold(null);
+  };
+  const deletePart = useDeletePart(orgId);
+  const handleDeletePart = async () => {
+    if (!deletingPart) return;
+    try {
+      await deletePart.mutateAsync(deletingPart.id);
+      setDeletingPart(null);
+    } catch {
+      // toast handled by mutation
+    }
   };
 
   const handleSort = useCallback(
@@ -372,6 +394,14 @@ export function PartsTab({
               >
                 <Plus className="size-4" />
                 Add Part
+              </Button>
+              <Button
+                variant="outline"
+                size="default"
+                render={<Link href="/dashboard/inventory/import" />}
+              >
+                <Upload className="size-4" />
+                Import
               </Button>
               <Button
                 variant="outline"
@@ -603,6 +633,15 @@ export function PartsTab({
                               title="Edit"
                             >
                               <Pencil className="size-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              onClick={() => setDeletingPart(part)}
+                              title={t("delete")}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="size-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -862,7 +901,9 @@ export function PartsTab({
                 description: editingPart.description ?? undefined,
                 unit: editingPart.unit ?? undefined,
                 default_price: editingPart.default_price ?? undefined,
+                purchase_price: editingPart.purchase_price ?? undefined,
                 image_url: editingPart.image_url ?? undefined,
+                location: editingPart.location ?? undefined,
               }}
               onSuccess={() => setEditingPart(null)}
               onCancel={() => setEditingPart(null)}
@@ -898,7 +939,6 @@ export function PartsTab({
           if (!open) setViewingPart(null);
         }}
         size="lg"
-        direction="bottom"
       >
         <DetailDrawer.Header>
           <DetailDrawer.Title>
@@ -917,7 +957,9 @@ export function PartsTab({
                 <CardContent className="p-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-muted-foreground">{t("price")}</span>
+                      <span className="text-muted-foreground">
+                        {t("price")}
+                      </span>
                       <p className="font-medium">
                         {viewingPart.default_price
                           ? formatMNT(viewingPart.default_price)
@@ -925,22 +967,30 @@ export function PartsTab({
                       </p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">{t("onHand")}</span>
+                      <span className="text-muted-foreground">
+                        {t("onHand")}
+                      </span>
                       <p className="font-medium">
-                        {balanceMap.get(viewingPart.id)?.quantity_on_hand ?? 0} {viewingPart.unit ?? "piece"}
+                        {balanceMap.get(viewingPart.id)?.quantity_on_hand ?? 0}{" "}
+                        {viewingPart.unit ?? "piece"}
                       </p>
                     </div>
                     {viewingPart.category && (
                       <div>
-                        <span className="text-muted-foreground">{t("category")}</span>
+                        <span className="text-muted-foreground">
+                          {t("category")}
+                        </span>
                         <p className="font-medium">{viewingPart.category}</p>
                       </div>
                     )}
                     {thresholdMap[viewingPart.id] != null && (
                       <div>
-                        <span className="text-muted-foreground">{t("minThreshold")}</span>
+                        <span className="text-muted-foreground">
+                          {t("minThreshold")}
+                        </span>
                         <p className="font-medium">
-                          {thresholdMap[viewingPart.id]} {viewingPart.unit ?? "piece"}
+                          {thresholdMap[viewingPart.id]}{" "}
+                          {viewingPart.unit ?? "piece"}
                         </p>
                       </div>
                     )}
@@ -989,13 +1039,11 @@ export function PartsTab({
               <Pencil className="size-4" />
               {t("edit")}
             </Button>
-            <Link 
+            <Link
               href={`/dashboard/inventory/parts/${viewingPart?.id}`}
               className="flex-1"
             >
-              <Button
-                className="w-full gap-1.5"
-              >
+              <Button className="w-full gap-1.5">
                 <Eye className="size-4" />
                 {t("viewFull")}
               </Button>
@@ -1081,6 +1129,49 @@ export function PartsTab({
                 disabled={Number(defaultThresholdValue) < 0}
               >
                 {t("confirm")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+      {/* Delete Part Confirmation Dialog */}
+      {deletingPart && (
+        <Dialog
+          open={!!deletingPart}
+          onOpenChange={(open) => {
+            if (!open) setDeletingPart(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{t("deletePart")}</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              {t("deletePartConfirm", {
+                name:
+                  locale === "mn" && deletingPart.name_mn
+                    ? deletingPart.name_mn
+                    : deletingPart.name,
+              })}
+            </p>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setDeletingPart(null)}
+                disabled={deletePart.isPending}
+              >
+                {commonT("cancel")}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeletePart}
+                disabled={deletePart.isPending}
+              >
+                {deletePart.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  t("delete")
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

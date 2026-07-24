@@ -1,4 +1,8 @@
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
 import type { DashboardData } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { dashboardKeys } from "./keys";
@@ -52,8 +56,9 @@ export function useDashboard(
     },
     enabled: !!orgId,
     staleTime: 300_000, // 5 min — realtime keeps it fresh
+    // Keep previous period visible while loading new one — instant filter switching
+    placeholderData: keepPreviousData,
     // No automatic retry — the UI shows a retry button via refetchDashboard().
     retry: 0,
   });
 }
-

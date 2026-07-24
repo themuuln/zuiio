@@ -1,4 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+/**
+ * Historical season stats import (bootstrap path — DEPRECATED for V2).
+ *
+ * In V2, all stats come from game-level tracking through the revision pipeline.
+ * This route exists only for bootstrapping historical season_player_stats from
+ * CSV. Instead of writing directly to the protected season_player_stats table,
+ * it creates source_submissions that enter the review pipeline.
+ *
+ * The submission's normalized_payload contains the full parsed CSV rows grouped
+ * by competition. An admin can then approve the submission and the stats are
+ * materialized via cmd_approve_source → cmd_create_revision → cmd_approve_revision.
+ *
+ * CSVs should have these columns (order-independent):
+ *   player_name, team_name, season, gp, minutes, pts, fgm, fga, tpm, tpa,
+ *   ftm, fta, oreb, dreb, ast, stl, blk, tov, pf
+ */
+import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 interface ImportRow {
@@ -33,7 +49,7 @@ export async function POST(request: NextRequest) {
     if (!file || !leagueId || !seasonName) {
       return NextResponse.json(
         { error: "file, leagueId, and seasonName required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -43,11 +59,13 @@ export async function POST(request: NextRequest) {
     if (lines.length < 2) {
       return NextResponse.json(
         { error: "CSV must have header + at least 1 data row" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const headers = (lines[0] ?? "").split(",").map((h) => h.trim().toLowerCase());
+    const headers = (lines[0] ?? "")
+      .split(",")
+      .map((h) => h.trim().toLowerCase());
     const rows: ImportRow[] = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -56,15 +74,23 @@ export async function POST(request: NextRequest) {
 
       headers.forEach((header, idx) => {
         const val = values[idx] || "";
-        row[header] = isNaN(Number(val)) ? val : Number(val);
+        row[header] = Number.isNaN(Number(val)) ? val : Number(val);
       });
 
       rows.push(row as unknown as ImportRow);
     }
 
     const supabase = await createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const currentUserId = session?.user?.id;
 
-    // Get or create season
+    if (!currentUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get or create season (reference data — not a protected table)
     let { data: season } = await supabase
       .from("seasons")
       .select("id")
@@ -80,7 +106,10 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (seasonError) {
-        return NextResponse.json({ error: seasonError.message }, { status: 500 });
+        return NextResponse.json(
+          { error: seasonError.message },
+          { status: 500 },
+        );
       }
       season = newSeason;
     }
@@ -96,7 +125,11 @@ export async function POST(request: NextRequest) {
     if (!competition) {
       const { data: newComp, error: compError } = await supabase
         .from("competitions")
-        .insert({ season_id: season.id, name: "Regular Season", type: "regular" })
+        .insert({
+          season_id: season.id,
+          name: "Regular Season",
+          type: "regular",
+        })
         .select("id")
         .single();
 
@@ -106,8 +139,12 @@ export async function POST(request: NextRequest) {
       competition = newComp;
     }
 
-    let imported = 0;
-    let skipped = 0;
+    // Resolve teams and players (reference data — fine)
+    const resolvedStats: Array<{
+      player_id: string;
+      team_season_id: string;
+      row: ImportRow;
+    }> = [];
     const errors: string[] = [];
 
     for (const row of rows) {
@@ -133,7 +170,6 @@ export async function POST(request: NextRequest) {
 
           if (teamError) {
             errors.push(`Team "${row.team_name}": ${teamError.message}`);
-            skipped++;
             continue;
           }
           team = newTeam;
@@ -156,7 +192,6 @@ export async function POST(request: NextRequest) {
 
           if (tsError) {
             errors.push(`TeamSeason: ${tsError.message}`);
-            skipped++;
             continue;
           }
           teamSeason = newTS;
@@ -181,64 +216,79 @@ export async function POST(request: NextRequest) {
 
           if (playerError) {
             errors.push(`Player "${row.player_name}": ${playerError.message}`);
-            skipped++;
             continue;
           }
           player = newPlayer;
         }
 
-        // Insert season_player_stats
-        const { error: statsError } = await supabase
-          .from("season_player_stats")
-          .upsert(
-            {
-              player_id: player.id,
-              team_season_id: teamSeason.id,
-              competition_id: competition.id,
-              gp: row.gp || 0,
-              minutes: row.minutes || 0,
-              pts: row.pts || 0,
-              fgm: row.fgm || 0,
-              fga: row.fga || 0,
-              tpm: row.tpm || 0,
-              tpa: row.tpa || 0,
-              ftm: row.ftm || 0,
-              fta: row.fta || 0,
-              oreb: row.oreb || 0,
-              dreb: row.dreb || 0,
-              ast: row.ast || 0,
-              stl: row.stl || 0,
-              blk: row.blk || 0,
-              tov: row.tov || 0,
-              pf: row.pf || 0,
-            },
-            { onConflict: "player_id,team_season_id,competition_id" }
-          );
-
-        if (statsError) {
-          errors.push(`Stats for "${row.player_name}": ${statsError.message}`);
-          skipped++;
-          continue;
-        }
-
-        imported++;
+        resolvedStats.push({
+          player_id: player.id,
+          team_season_id: teamSeason.id,
+          row,
+        });
       } catch (err) {
         errors.push(`Row ${row.player_name}: ${err}`);
-        skipped++;
       }
+    }
+
+    // Package resolved data as a source submission (enters the review pipeline)
+    const normalizedPayload = {
+      competition_id: competition.id,
+      season_id: season.id,
+      stats: resolvedStats.map((s) => ({
+        player_id: s.player_id,
+        team_season_id: s.team_season_id,
+        gp: s.row.gp || 0,
+        minutes: s.row.minutes || 0,
+        pts: s.row.pts || 0,
+        fgm: s.row.fgm || 0,
+        fga: s.row.fga || 0,
+        tpm: s.row.tpm || 0,
+        tpa: s.row.tpa || 0,
+        ftm: s.row.ftm || 0,
+        fta: s.row.fta || 0,
+        oreb: s.row.oreb || 0,
+        dreb: s.row.dreb || 0,
+        ast: s.row.ast || 0,
+        stl: s.row.stl || 0,
+        blk: s.row.blk || 0,
+        tov: s.row.tov || 0,
+        pf: s.row.pf || 0,
+      })),
+    };
+
+    // Create a submission — this enters the pipeline instead of writing
+    // directly to season_player_stats (which is a protected table in V2)
+    const { error: subError } = await supabase
+      .from("source_submissions")
+      .insert({
+        game_id: null, // Season-level import — not associated with a specific game
+        source_type: "import",
+        evidence_url: null,
+        submitted_by: currentUserId,
+        normalized_payload: normalizedPayload,
+        confidence: 1.0,
+        status: "pending",
+      });
+
+    if (subError) {
+      return NextResponse.json(
+        { error: `Failed to create submission: ${subError.message}` },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({
       success: true,
-      imported,
-      skipped,
-      errors: errors.slice(0, 10), // Return first 10 errors
-      total: rows.length,
+      rows_parsed: rows.length,
+      rows_resolved: resolvedStats.length,
+      errors: errors.slice(0, 10),
+      note: "Data entered as pending submission. Approve via admin Review UI to materialize into season_player_stats.",
     });
   } catch (err) {
     return NextResponse.json(
       { error: `Import failed: ${err}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

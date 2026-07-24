@@ -503,8 +503,8 @@ export function DataTablePagination<TData>({
         <div className="hidden text-sm text-muted-foreground sm:block">
           {table.getFilteredSelectedRowModel().rows.length > 0 &&
             t("rowsSelected", {
-              selected: table.getFilteredSelectedRowModel().rows.length,
-              total: table.getFilteredRowModel().rows.length,
+              selected: String(table.getFilteredSelectedRowModel().rows.length),
+              total: String(table.getFilteredRowModel().rows.length),
             })}
         </div>
         {showColumnVisibility && (
@@ -544,8 +544,8 @@ export function DataTablePagination<TData>({
         {/* Page indicator */}
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
           {t("pageOf", {
-            current: table.getState().pagination.pageIndex + 1,
-            total: table.getPageCount(),
+            current: String(table.getState().pagination.pageIndex + 1),
+            total: String(table.getPageCount()),
           })}
         </div>
 

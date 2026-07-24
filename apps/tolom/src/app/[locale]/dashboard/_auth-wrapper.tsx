@@ -1,10 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { SubscriptionGuard } from "@/components/subscription-guard";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { usePrewarm } from "@/lib/queries/use-prewarm";
+import { useSetOrgId } from "@/lib/stores";
 
 /**
  * Auth wrapper that handles authentication, subscription guard, and query prewarm.
@@ -13,8 +15,13 @@ import { usePrewarm } from "@/lib/queries/use-prewarm";
 export function AuthWrapper({ children }: { children: ReactNode }) {
   useRequireAuth();
   const { data: orgInfo } = useCurrentOrg();
+  const setOrgId = useSetOrgId();
 
-  // usePrewarm must be called unconditionally before any early return (Rules of Hooks).
+  useEffect(() => {
+    if (orgInfo?.orgId) {
+      setOrgId(orgInfo.orgId);
+    }
+  }, [orgInfo?.orgId, setOrgId]);
   // Its internal useEffect guards against undefined orgId and deduplicates.
   usePrewarm(orgInfo?.orgId);
 

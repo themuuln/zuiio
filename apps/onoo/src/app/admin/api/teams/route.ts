@@ -1,54 +1,26 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse, type NextRequest } from "next/server";
+import { createRouteHandlers } from "@/lib/supabase/admin-route";
 
-export async function GET(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+const teams = createRouteHandlers("teams", { select: "*, leagues(name)" });
 
-  const leagueId = request.nextUrl.searchParams.get("league_id");
+export const GET = teams.list((query, req) => {
+  const leagueId = req.nextUrl.searchParams.get("league_id");
+  return leagueId ? query.eq("league_id", leagueId) : query;
+});
 
-  let query = supabase.from("teams").select("*, leagues(name)");
-
-  if (leagueId) {
-    query = query.eq("league_id", leagueId);
-  }
-
-  const { data, error } = await query;
-
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
-}
-
-export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const body = await request.json();
-  const { league_id, name, short_code, slug, primary_color } = body;
-
+export const POST = teams.create((body) => {
+  const { league_id, name, short_code, slug, primary_color, social_links } = body;
   if (!league_id || !name || !short_code || !slug) {
-    return NextResponse.json(
-      { error: "league_id, name, short_code, and slug are required" },
-      { status: 400 },
-    );
+    return {
+      insert: body,
+      validate: "league_id, name, short_code, and slug are required",
+    };
   }
-
-  const { data, error } = await supabase
-    .from("teams")
-    .insert({ league_id, name, short_code, slug, primary_color: primary_color ?? null })
-    .select("*, leagues(name)")
-    .single();
-
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data, { status: 201 });
-}
+  return {
+    league_id,
+    name,
+    short_code,
+    slug,
+    primary_color: primary_color ?? null,
+    social_links: social_links ?? {},
+  };
+});

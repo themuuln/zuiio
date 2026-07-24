@@ -1,120 +1,176 @@
+import { CalendarDays, Radio } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { getGamesByDate, formatGameTime, statusLabel } from "../lib/data";
+import { Badge } from "@/components/ui";
+import { cn } from "@/lib/utils";
+import { PublicEmptyState } from "../components/public-empty-state";
+import { SwipeableGameCard } from "../components/swipeable-game-card";
+import {
+  formatDate,
+  type GameWithTeams,
+  getGamesByDate,
+  getUlaanbaatarDate,
+} from "../lib/data";
 import { DateNav } from "./components/date-nav";
 
 export const metadata: Metadata = {
   title: "Тоглолтууд — Оноо",
-  description: "Сагсан бөмбөгийн лигийн тоглолтуудын хуваарь ба үр дүн.",
+  description: "Сагсан бөмбөгийн лигийн тоглолтын хуваарь ба үр дүн.",
 };
+
+function isFinal(game: GameWithTeams): boolean {
+  return (
+    game.status === "final_pending_review" ||
+    game.status === "league_verified" ||
+    game.status === "official"
+  );
+}
 
 export default async function GamesPage({
   searchParams,
 }: {
   searchParams: Promise<{ date?: string }>;
 }) {
-  const { date: dateParam } = await searchParams;
-  const dateStr = dateParam ?? new Date().toISOString().slice(0, 10);
+  const { date } = await searchParams;
+  const dateStr = date ?? getUlaanbaatarDate();
   const games = await getGamesByDate(dateStr);
+  const liveGames = games.filter((game) => game.status === "live_provisional");
+  const upcomingGames = games.filter(
+    (game) =>
+      game.status === "scheduled" ||
+      game.status === "postponed" ||
+      game.status === "cancelled",
+  );
+  const completedGames = games.filter(isFinal);
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Тоглолтууд</h1>
-        <p className="text-muted-foreground">
-          Тоглолтын хуваарь ба үр дүн
-        </p>
-      </header>
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      {/* Header + date nav row */}
+      <div className="grid gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Хуваарь ба үр дүн
+          </p>
+          <h1 className="mt-2 font-display text-4xl leading-tight tracking-tight sm:text-5xl">
+            Тоглолтын төв
+          </h1>
+          <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">
+            Өдрийн бүх тоглолтыг шууд, удахгүй, дууссан төлөвөөр нь нэг дор
+            хараарай.
+          </p>
+        </div>
+        <div className="lg:col-span-5 lg:justify-self-end">
+          <p className="mb-2 text-sm font-semibold">{formatDate(dateStr)}</p>
+          <DateNav currentDate={dateStr} />
+        </div>
+      </div>
 
-      <DateNav currentDate={dateStr} />
+      {/* Quick stats bar */}
+      {games.length > 0 && (
+        <div
+          className="flex flex-wrap gap-4 rounded-lg bg-[var(--surface-2)] px-4 py-2.5 text-sm font-medium text-muted-foreground"
+          role="status"
+          aria-label="Өдрийн товч мэдээлэл"
+        >
+          {liveGames.length > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-destructive animate-pulse" />
+              {liveGames.length} шууд
+            </span>
+          )}
+          {upcomingGames.length > 0 && (
+            <span>{upcomingGames.length} удахгүй</span>
+          )}
+          {completedGames.length > 0 && (
+            <span>{completedGames.length} дууссан</span>
+          )}
+        </div>
+      )}
 
       {games.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            Энэ өдөр тоглолт товлогоогүй байна.
-          </CardContent>
-        </Card>
+        <PublicEmptyState
+          icon={CalendarDays}
+          title="Энэ өдөр тоглолтгүй"
+          description="Өөр өдөр сонгох эсвэл өнөөдрийн хуваарь руу буцаж шалгана уу."
+          actionHref={`/games?date=${getUlaanbaatarDate()}`}
+          actionLabel="Өнөөдөр рүү буцах"
+        />
       ) : (
-        <div className="grid gap-3">
-          {games.map((game) => (
-            <Link key={game.id} href={`/games/${game.id}`}>
-              <Card className="transition-colors hover:bg-accent/50">
-                <CardContent className="flex items-center gap-4 py-4 px-6">
-                  {/* Time / Status */}
-                  <div className="w-16 shrink-0 text-center">
-                    {game.status === "live_provisional" ? (
-                      <Badge variant="destructive">Шууд</Badge>
-                    ) : game.status === "final_pending_review" ||
-                      game.status === "league_verified" ? (
-                      <span className="text-xs text-muted-foreground">
-                        Дууссан
-                      </span>
-                    ) : (
-                      <span className="text-sm font-medium tabular-nums">
-                        {formatGameTime(game.scheduled_at)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Home team */}
-                  <div className="flex-1 text-right">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="text-sm font-medium">
-                        {game.home_name}
-                      </span>
-                      <span
-                        className="inline-block size-3 rounded-full border"
-                        style={{
-                          backgroundColor:
-                            game.home_color ?? "oklch(0.5 0 0)",
-                        }}
-                        aria-hidden="true"
-                      />
-                    </span>
-                  </div>
-
-                  {/* Score / Status */}
-                  <div className="w-20 shrink-0 text-center">
-                    {game.status === "final_pending_review" ||
-                    game.status === "league_verified" ? (
-                      <span className="text-lg font-bold tabular-nums">
-                        {game.home_score} — {game.away_score}
-                      </span>
-                    ) : game.status === "live_provisional" ? (
-                      <span className="text-lg font-bold tabular-nums text-red-500">
-                        {game.home_score ?? 0} — {game.away_score ?? 0}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        {statusLabel(game.status)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Away team */}
-                  <div className="flex-1">
-                    <span className="inline-flex items-center gap-2">
-                      <span
-                        className="inline-block size-3 rounded-full border"
-                        style={{
-                          backgroundColor:
-                            game.away_color ?? "oklch(0.5 0 0)",
-                        }}
-                        aria-hidden="true"
-                      />
-                      <span className="text-sm font-medium">
-                        {game.away_name}
-                      </span>
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+        <div className="flex flex-col gap-10">
+          {liveGames.length > 0 ? (
+            <GameGroup
+              id="live-games"
+              eyebrow="Яг одоо"
+              title="Шууд тоглолт"
+              games={liveGames}
+              live
+            />
+          ) : null}
+          {upcomingGames.length > 0 ? (
+            <GameGroup
+              id="upcoming-games"
+              eyebrow="Дараагийн бөмбөг"
+              title="Удахгүй эхлэх"
+              games={upcomingGames}
+            />
+          ) : null}
+          {completedGames.length > 0 ? (
+            <GameGroup
+              id="completed-games"
+              eyebrow="Баталгаажсан түүх"
+              title="Дууссан тоглолт"
+              games={completedGames}
+            />
+          ) : null}
         </div>
       )}
     </main>
+  );
+}
+
+interface GameGroupProps {
+  id: string;
+  eyebrow: string;
+  title: string;
+  games: GameWithTeams[];
+  live?: boolean;
+}
+
+function GameGroup({
+  id,
+  eyebrow,
+  title,
+  games,
+  live = false,
+}: GameGroupProps) {
+  return (
+    <section
+      aria-labelledby={id}
+      className="flex flex-col gap-5 border-b border-border/40 pb-8 last:border-b-0 last:pb-0"
+    >
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <p
+            className={cn(
+              "text-xs font-semibold uppercase tracking-wider",
+              live ? "text-destructive" : "text-muted-foreground",
+            )}
+          >
+            {eyebrow}
+          </p>
+          <h2 id={id} className="mt-1 text-2xl font-bold tracking-tight">
+            {title}
+          </h2>
+        </div>
+        <Badge variant={live ? "destructive" : "secondary"}>
+          {live ? <Radio data-icon="inline-start" aria-hidden="true" /> : null}
+          {games.length} тоглолт
+        </Badge>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {games.map((game) => (
+          <SwipeableGameCard key={game.id} game={game} featured={live} />
+        ))}
+      </div>
+    </section>
   );
 }

@@ -112,7 +112,8 @@ class FeatureFlag {
   static const pushNotifications = FeatureFlag(
     key: 'push_notifications',
     label: 'Push notification',
-    description: 'Firebase Cloud Messaging ашиглан мэдэгдэл илгээх (iOS APNs шаардлагатай)',
+    description:
+        'Firebase Cloud Messaging ашиглан мэдэгдэл илгээх (iOS APNs шаардлагатай)',
     defaultValue: false,
     category: FeatureCategory.release,
   );

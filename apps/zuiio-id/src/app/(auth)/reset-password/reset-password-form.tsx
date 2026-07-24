@@ -1,15 +1,20 @@
 "use client";
 
-import { useActionState } from "react";
 import Link from "next/link";
+import { useActionState, useState } from "react";
+import { EyeIcon, EyeSlashIcon } from "@/components/icons";
 import { resetPassword } from "./actions";
 
 export function ResetPasswordForm() {
-  const [state, formAction, isPending] = useActionState(resetPassword, undefined);
+  const [state, formAction, isPending] = useActionState(
+    resetPassword,
+    undefined,
+  );
+  const [showPassword, setShowPassword] = useState(false);
 
   if (state?.success) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex animate-fade-in flex-col gap-6">
         <div className="flex flex-col gap-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Нууц үг шинэчлэгдлээ
@@ -29,7 +34,7 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex animate-fade-in flex-col gap-6">
       <div className="flex flex-col gap-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Нууц үг шинэчлэх
@@ -41,38 +46,89 @@ export function ResetPasswordForm() {
 
       <form action={formAction} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-sm font-medium text-foreground">
+          <label
+            htmlFor="password"
+            className="text-sm font-medium text-foreground"
+          >
             Шинэ нууц үг
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                className="h-10 w-full rounded-lg border border-input bg-card px-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
+                tabIndex={-1}
+                aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
+              >
+                {showPassword ? (
+                  <EyeSlashIcon size={16} />
+                ) : (
+                  <EyeIcon size={16} />
+                )}
+              </button>
+            </div>
+            {!state?.fieldErrors?.password && (
+              <div className="flex flex-col gap-0.5">
+                <p className="text-xs text-muted-foreground">Шаардлагууд:</p>
+                <ul className="text-xs text-muted-foreground list-disc list-inside">
+                  <li>Хамгийн багадаа 8 тэмдэгт</li>
+                  <li>Дор хаяж нэг том үсэг (A-Z)</li>
+                  <li>Дор хаяж нэг жижиг үсэг (a-z)</li>
+                  <li>Дор хаяж нэг тоо (0-9)</li>
+                </ul>
+              </div>
+            )}
           </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            placeholder="••••••••"
-          />
           {state?.fieldErrors?.password && (
-            <p className="text-xs text-destructive">{state.fieldErrors.password[0]}</p>
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.password[0]}
+            </p>
           )}
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+          <label
+            htmlFor="confirmPassword"
+            className="text-sm font-medium text-foreground"
+          >
             Нууц үг давтах
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                className="h-10 w-full rounded-lg border border-input bg-card px-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
+                tabIndex={-1}
+                aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
+              >
+                {showPassword ? (
+                  <EyeSlashIcon size={16} />
+                ) : (
+                  <EyeIcon size={16} />
+                )}
+              </button>
+            </div>
           </label>
-          <input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            required
-            className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            placeholder="••••••••"
-          />
           {state?.fieldErrors?.confirmPassword && (
-            <p className="text-xs text-destructive">{state.fieldErrors.confirmPassword[0]}</p>
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.confirmPassword[0]}
+            </p>
           )}
         </div>
 
@@ -85,7 +141,7 @@ export function ResetPasswordForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+          className="active-scale h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Шинэчлэж байна…" : "Нууц үг шинэчлэх"}
         </button>

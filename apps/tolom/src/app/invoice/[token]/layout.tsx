@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
+import { Suspense } from "react";
 
 // Route renders user-specific content — legitimate cache opt-out.
 export const instant = false;
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   description: "View and pay your invoice online.",
 };
 
-export default async function InvoiceLayout({
+async function InvoiceIntlProvider({
   children,
 }: {
   children: React.ReactNode;
@@ -24,5 +25,17 @@ export default async function InvoiceLayout({
     <NextIntlClientProvider locale={locale} messages={messages}>
       {children}
     </NextIntlClientProvider>
+  );
+}
+
+export default function InvoiceLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense>
+      <InvoiceIntlProvider>{children}</InvoiceIntlProvider>
+    </Suspense>
   );
 }

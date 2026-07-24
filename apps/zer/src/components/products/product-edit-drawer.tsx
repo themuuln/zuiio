@@ -10,6 +10,7 @@ import {
 } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ import {
   VariantSummaryCard,
 } from "@/components/products/variant-manager-drawer";
 import { buttonVariants } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Combobox,
   ComboboxContent,
@@ -67,6 +69,7 @@ export interface ProductEditData {
   sale_price: number | null;
   current_stock: number | null;
   min_stock: number | null;
+  is_public?: boolean | null;
 }
 
 // Collect all preset categories across all company types
@@ -117,6 +120,7 @@ export function ProductEditDrawer({
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
+  const [isPublic, setIsPublic] = useState(product.is_public ?? false);
 
   // --- Unit combobox (creatable) ---
   const [unitQuery, setUnitQuery] = useState(product.unit ?? "ширхэг");
@@ -220,6 +224,11 @@ export function ProductEditDrawer({
     );
   }, [product.unit, product.category_name, product.brand_id, brands]);
 
+  // Sync publication state when product changes
+  useEffect(() => {
+    setIsPublic(product.is_public ?? false);
+  }, [product.is_public]);
+
   const handleBarcodeScan = (barcode: string) => {
     setValue("barcode", barcode);
     setIsBarcodeScannerOpen(false);
@@ -320,6 +329,7 @@ export function ProductEditDrawer({
     formData.append("sale_price", String(data.sale_price));
     formData.append("current_stock", String(data.current_stock));
     formData.append("min_stock", String(data.min_stock));
+    if (isPublic) formData.append("is_public", "on");
 
     // Attach variant data from state
     if (hasVariants) {
@@ -346,6 +356,7 @@ export function ProductEditDrawer({
           <span className="w-full">{children}</span>
         ) : (
           <button
+            type="button"
             className={buttonVariants({ variant: "ghost", size: "icon-xs" })}
           >
             <NotePencil className="size-3.5" />
@@ -627,6 +638,12 @@ export function ProductEditDrawer({
                 step="0.01"
                 {...register("current_stock", { valueAsNumber: true })}
               />
+              {hasVariants && (
+                <p className="text-xs text-muted-foreground">
+                  Варианттай бүтээгдэхүүний үлдэгдэл нь вариант тус бүрээр
+                  тооцогдоно.
+                </p>
+              )}
             </Field>
             <Field>
               <FieldLabel htmlFor="edit-min_stock">Доод үлдэгдэл</FieldLabel>
@@ -641,6 +658,35 @@ export function ProductEditDrawer({
           </FieldGroup>
         </div>
 
+        <div className="rounded-lg border border-border/80 bg-muted/30 p-4">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              id="edit-is_public"
+              checked={isPublic}
+              onCheckedChange={(checked) => setIsPublic(checked === true)}
+            />
+            <label
+              htmlFor="edit-is_public"
+              className="text-sm font-medium leading-none"
+            >
+              Нийтийн каталогт нийтлэх
+            </label>
+          </div>
+          <p className="mt-1.5 ml-7 text-xs text-muted-foreground">
+            Нийтэлбэл бүтээгдэхүүний нэр, зураг, үнэ, тайлбар нийтийн хуудаснаа
+            харагдана. Нөөц, SKU, өртөг үнэ нууц хэвээр үлдэнэ.
+          </p>
+          {isPublic && product.id && (
+            <Link
+              href={`/products/${product.id}`}
+              target="_blank"
+              className="ml-7 mt-1.5 inline-block text-xs text-primary hover:underline"
+            >
+              Нийтийн хуудас харах →
+            </Link>
+          )}
+        </div>
+
         <VariantManagerDrawer
           groups={variantGroups}
           onGroupsChange={setVariantGroups}
@@ -651,7 +697,6 @@ export function ProductEditDrawer({
           }}
           variantData={variantData}
           onVariantsChange={setVariantData}
-          parentTitle="\u0411\u04af\u0442\u044d\u044d\u0433\u0434\u04af\u04af\u043d\u0438\u0439\u043d \u0437\u0430\u0441\u0430\u0445"
           inline
         />
 

@@ -1,6 +1,10 @@
 "use client";
 
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type { AppointmentDetail } from "@/lib/types";
 import { createOrgQuery } from "./factory";
@@ -29,7 +33,7 @@ export function useAppointments(
   return useQuery({
     queryKey: appointmentKeys.list(orgId ?? "", date, branchId, dateRange),
     queryFn: () =>
-      fetchAppointments(orgId!, {
+      fetchAppointments(orgId as string, {
         params: {
           date,
           ...(dateRange
@@ -39,6 +43,7 @@ export function useAppointments(
         },
       }),
     enabled: !!orgId && (!!date || !!dateRange),
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency } from "@/lib/format";
 import { currencyColumn, dateColumn, textColumn } from "@/lib/table-columns";
 

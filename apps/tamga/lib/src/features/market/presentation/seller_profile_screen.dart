@@ -29,14 +29,14 @@ class SellerProfileScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Худалдагчийн профайл'),
-      ),
+      appBar: AppBar(title: const Text('Худалдагчийн профайл')),
       body: safetyAsync.when(
         data: (safety) {
           final profile = safety.sellerProfile;
           if (profile == null) {
-            return const Center(child: Text('Худалдагчийн мэдээлэл олдсонгүй.'));
+            return const Center(
+              child: Text('Худалдагчийн мэдээлэл олдсонгүй.'),
+            );
           }
 
           return CustomScrollView(
@@ -155,29 +155,24 @@ class SellerProfileScreen extends ConsumerWidget {
                     );
                   }
                   return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final rating = ratings[index];
-                        return _ReviewCard(
-                          rating: rating,
-                          isOwner: profile.sellerId == sellerId,
-                          onRespond: (ratingId, response) async {
-                            final repository = await ref.read(
-                              marketRepositoryProvider.future,
-                            );
-                            await repository.respondToReview(
-                              ratingId: ratingId,
-                              response: response,
-                            );
-                            ref.invalidate(sellerRatingsProvider(sellerId));
-                            ref.invalidate(
-                              sellerRatingSummaryProvider(sellerId),
-                            );
-                          },
-                        );
-                      },
-                      childCount: ratings.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final rating = ratings[index];
+                      return _ReviewCard(
+                        rating: rating,
+                        isOwner: profile.sellerId == sellerId,
+                        onRespond: (ratingId, response) async {
+                          final repository = await ref.read(
+                            marketRepositoryProvider.future,
+                          );
+                          await repository.respondToReview(
+                            ratingId: ratingId,
+                            response: response,
+                          );
+                          ref.invalidate(sellerRatingsProvider(sellerId));
+                          ref.invalidate(sellerRatingSummaryProvider(sellerId));
+                        },
+                      );
+                    }, childCount: ratings.length),
                   );
                 },
                 loading: () => SliverToBoxAdapter(
@@ -189,23 +184,18 @@ class SellerProfileScreen extends ConsumerWidget {
                 error: (err, _) => SliverToBoxAdapter(
                   child: TamgaErrorWidget(
                     message: 'Сэтгэгдлүүд ачаалахад алдаа гарлаа',
-                    onRetry: () => ref.invalidate(
-                      sellerRatingsProvider(sellerId),
-                    ),
+                    onRetry: () =>
+                        ref.invalidate(sellerRatingsProvider(sellerId)),
                   ),
                 ),
               ),
             ],
           );
         },
-        loading: () => Center(
-          child: const CircularProgressIndicator(),
-        ),
+        loading: () => Center(child: const CircularProgressIndicator()),
         error: (err, _) => TamgaErrorWidget(
           message: 'Худалдагчийн мэдээлэл ачаалахад алдаа гарлаа',
-          onRetry: () => ref.invalidate(
-            marketSafetySummaryProvider(listingId),
-          ),
+          onRetry: () => ref.invalidate(marketSafetySummaryProvider(listingId)),
         ),
       ),
     );
@@ -255,7 +245,8 @@ class _RatingSummaryCard extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: List.generate(5, (index) {
                           final star = index + 1;
-                          final filled = summary.hasRatings &&
+                          final filled =
+                              summary.hasRatings &&
                               star <= summary.averageRating.round();
                           return Icon(
                             filled ? Icons.star : Icons.star_border,
@@ -469,10 +460,7 @@ class _ReviewCardState extends State<_ReviewCard> {
             const SizedBox(height: AppSpacing.sm),
 
             // Сэтгэгдэл текст
-            Text(
-              r.review,
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text(r.review, style: theme.textTheme.bodyMedium),
             const SizedBox(height: AppSpacing.xs),
             Text(
               _formatDate(r.createdAt),

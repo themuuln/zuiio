@@ -9,11 +9,7 @@ void main() {
   group('AgeBarChart', () {
     testWidgets('renders loading state', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: AgeBarChart.loading(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: AgeBarChart.loading())),
       );
 
       expect(find.text('Насны хуваарилалт ачааллаж байна...'), findsOneWidget);
@@ -23,9 +19,7 @@ void main() {
     testWidgets('renders empty state', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: AgeBarChart(ageDistribution: []),
-          ),
+          home: Scaffold(body: AgeBarChart(ageDistribution: [])),
         ),
       );
 

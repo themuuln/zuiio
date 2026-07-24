@@ -10,7 +10,9 @@ import 'race_entry_repository.dart';
 ///
 /// Maps [RaceEntry] ↔ Supabase row via the domain model's built-in
 /// `fromSupabaseJson` / `toSupabaseJson`.
-class SupabaseRaceEntryRepository with SupabaseRepositoryMixin implements RaceEntryRepository {
+class SupabaseRaceEntryRepository
+    with SupabaseRepositoryMixin
+    implements RaceEntryRepository {
   SupabaseRaceEntryRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 
@@ -34,10 +36,7 @@ class SupabaseRaceEntryRepository with SupabaseRepositoryMixin implements RaceEn
           .order('placement', ascending: true);
 
       final entries = (response as List<dynamic>)
-          .map(
-            (row) =>
-                RaceEntry.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => RaceEntry.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(entries);
@@ -59,10 +58,7 @@ class SupabaseRaceEntryRepository with SupabaseRepositoryMixin implements RaceEn
           .order('created_at', ascending: false);
 
       final entries = (response as List<dynamic>)
-          .map(
-            (row) =>
-                RaceEntry.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => RaceEntry.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(entries);
@@ -98,9 +94,7 @@ class SupabaseRaceEntryRepository with SupabaseRepositoryMixin implements RaceEn
         status: RaceEntryStatus.registered,
       );
 
-      await client.from('race_entries').upsert(
-        entry.toSupabaseJson(),
-      );
+      await client.from('race_entries').upsert(entry.toSupabaseJson());
 
       return Result.ok(entry);
     } catch (e) {
@@ -126,9 +120,7 @@ class SupabaseRaceEntryRepository with SupabaseRepositoryMixin implements RaceEn
       final existing = RaceEntry.fromSupabaseJson(response);
       final updated = existing.copyWith(status: RaceEntryStatus.scratched);
 
-      await client.from('race_entries').upsert(
-        updated.toSupabaseJson(),
-      );
+      await client.from('race_entries').upsert(updated.toSupabaseJson());
 
       return Result.ok(updated);
     } catch (e) {
@@ -164,9 +156,7 @@ class SupabaseRaceEntryRepository with SupabaseRepositoryMixin implements RaceEn
         prize: prize,
       );
 
-      await client.from('race_entries').upsert(
-        updated.toSupabaseJson(),
-      );
+      await client.from('race_entries').upsert(updated.toSupabaseJson());
 
       return Result.ok(updated);
     } catch (e) {
@@ -181,5 +171,4 @@ class SupabaseRaceEntryRepository with SupabaseRepositoryMixin implements RaceEn
 
   String _randomSuffix() =>
       DateTime.now().microsecondsSinceEpoch.toRadixString(36);
-
 }

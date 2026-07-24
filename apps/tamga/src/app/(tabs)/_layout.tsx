@@ -1,64 +1,33 @@
 import { Tabs } from "expo-router";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { GlassTabBar } from "@/components/GlassTabBar";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "hsl(var(--primary))",
-        tabBarInactiveTintColor: "hsl(var(--muted-foreground))",
-        tabBarStyle: {
-          backgroundColor: "hsl(var(--background))",
-          borderTopColor: "hsl(var(--border))",
-        },
       }}
+      tabBar={(props) => <GlassTabBar {...props} />}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Морь",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="pets" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="lineage"
-        options={{
-          title: "Удам",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="account-tree" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="market"
-        options={{
-          title: "Зах",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="storefront" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="events"
-        options={{
-          title: "Эвент",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="event" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Профайл",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="person" size={size} color={color} />
-          ),
-        }}
-      />
+      {/* ── Visible tabs ── */}
+      <Tabs.Screen name="index" options={{ title: "Морь" }} />
+      <Tabs.Screen name="market" options={{ title: "Зах" }} />
+      <Tabs.Screen name="events" options={{ title: "Эвент" }} />
+      <Tabs.Screen name="profile" options={{ title: "Профайл" }} />
+      <Tabs.Screen name="more" options={{ title: "Бусад" }} />
+
+      {/* ── Hidden tabs (accessible via Бусад) ── */}
+      <Tabs.Screen name="search" options={{ href: undefined }} />
+      <Tabs.Screen name="lineage" options={{ href: undefined }} />
+      <Tabs.Screen name="documents" options={{ href: undefined }} />
+      <Tabs.Screen name="transfers" options={{ href: undefined }} />
+      <Tabs.Screen name="herd-tracking" options={{ href: undefined }} />
+      <Tabs.Screen name="pasture-management" options={{ href: undefined }} />
+      <Tabs.Screen name="subscription" options={{ href: undefined }} />
+      <Tabs.Screen name="updater" options={{ href: undefined }} />
+      <Tabs.Screen name="analytics" options={{ href: undefined }} />
+      <Tabs.Screen name="_notifications" options={{ href: undefined }} />
+      <Tabs.Screen name="_notifications-settings" options={{ href: undefined }} />
     </Tabs>
   );
 }

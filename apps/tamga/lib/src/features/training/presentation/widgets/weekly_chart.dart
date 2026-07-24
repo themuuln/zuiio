@@ -50,14 +50,16 @@ class WeeklyBarChart extends StatelessWidget {
             final maxVal = data.reduce((a, b) => a > b ? a : b);
             final effectiveMax = maxVal > 0 ? maxVal : 1.0;
             // Reserve space for value label + date label + gaps
-            final availableBarHeight = (constraints.maxHeight - 44).clamp(0.0, double.infinity);
+            final availableBarHeight = (constraints.maxHeight - 44).clamp(
+              0.0,
+              double.infinity,
+            );
 
             return Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: List.generate(7, (i) {
                 final value = i < data.length ? data[i] : 0.0;
-                final barHeight =
-                    (value / effectiveMax) * availableBarHeight;
+                final barHeight = (value / effectiveMax) * availableBarHeight;
                 final dayLabel = _dayLabels[i];
 
                 return Expanded(

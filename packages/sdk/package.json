@@ -1,0 +1,20 @@
+{
+  "name": "@zuiio/sdk",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2",
+    "react": "^19"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.110.6",
+    "@types/react": "^19",
+    "@zuiio/config": "workspace:*",
+    "typescript": "^7.0.2"
+  }
+}

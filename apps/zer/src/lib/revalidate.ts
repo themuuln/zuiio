@@ -29,6 +29,8 @@ export const ENTITY_PATHS = {
   branches: ["/settings/branches"],
   users: ["/settings/users"],
   roles: ["/settings/roles"],
+  production: ["/production", "/quality"],
+  quality: ["/quality"],
 } as const;
 
 export type EntityKey = keyof typeof ENTITY_PATHS;

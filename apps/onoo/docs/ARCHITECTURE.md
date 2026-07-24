@@ -1,51 +1,51 @@
-# Onoo V2 Architecture
+---
+> **English summary:** Trusted-game-record bounded context for Onoo's league-first web pilot. Data flow: Tracker journal → stat_events → cmd_* commands → derived tables → public projections (v_public_* views). Key principles: append-only stat_events, corrected via void+replacement with provenance, SECURITY DEFINER commands with empty search_path, RLS on every table, browser/API routes call commands never direct mutations. Non-goals during pilot: team/academy/commerce operations, mobile, claims, bulk historical imports.
+---
 
-## Purpose
+# Оноо-ийн итгэлтэй тоглолтын бүртгэлийн архитектур
 
-Onoo V2 produces a trusted, reviewable basketball record for a contracted web-first pilot. It does not treat browser state, direct table writes, or derived statistics as authoritative.
+## Зорилго ба хамрах хүрээ
 
-## Authoritative data flow
+Энэ баримт нь Оноо-ийн одоогийн лиг-эхлэлтэй web pilot-д ашиглагдаж буй trusted-game-record bounded context-ийг тодорхойлно. Энэ нь [бүтээгдэхүүний алсын хараа](VISION.md)-д тодорхойлсон сагсан бөмбөгийн бүрэн operating system-ийн нэг архитектурын хэсэг юм.
+
+Энэ trusted-record context нь browser state, шууд table write, эсвэл derived statistics-ийг эрх мэдэлтэй гэж үзэхгүй.
+
+## Эрх мэдэлтэй өгөгдлийн урсгал
 
 ```mermaid
 flowchart LR
-  Scorer[Assigned scorer] --> Journal[Durable per-game journal]
-  Journal --> Command[Scoped Supabase command]
-  Command --> Events[Immutable event record]
-  Events --> Source[Evidence-backed source submission]
-  Source --> Review[Official review]
-  Review --> Revision[Approved game revision]
-  Revision --> Projection[Rebuildable projections]
+  Tracker[Tracker journal] --> Events[stat_events]
+  Events --> Commands[cmd_* commands]
+  Commands --> Derived[Derived tables]
+  Derived --> Projection[Public projections]
   Projection --> Public[Curated security-invoker views]
 ```
 
-## Record layers
+## Бүртгэлийн давхаргууд
 
-| Layer | Authoritative content | Mutation rule |
+| Давхарга | Эрх мэдэлтэй агуулга | Mutation дүрэм |
 | --- | --- | --- |
-| Setup | league, season, roster, ruleset, assignments | authorized operations only |
-| Journal | ordered scorer operations and acknowledgement receipts | command-only, idempotent |
-| Source | tracker journal, official sheet, import, or manual evidence | submit then review |
-| Revision | normalized input, journal, projection, warnings | create then approve |
-| Projection | box score, standings, leaders | rebuilt from an approved revision only |
-| Publication | curated public views | verified/official and approved only |
+| Journal | tracker-с оруулсан анхны үйлдэл | Append-only |
+| Event store | `stat_events` | үйлдэл бүр нэг мөр |
+| Command layer | `cmd_*` процедурууд | зөвшөөрөгдсөн write |
+| Projection | box score, standings, leaders | зөвшөөрөгдсөн revision-ээс дахин бүтээгдэнэ |
+| Publication | curated public views | `final_pending_review` snapshot дээр provisional байдлаар эсвэл баталгаажсан revision-ээс public болно |
 
 ## Authorization
 
-- RLS is enabled on every public table.
-- Public users can read only curated approved information.
-- Assigned scorers can operate only their assigned game and active tracker session.
-- Approving officials and league operators review sources, revisions, and corrections.
-- Browser, API route, and Edge Function code must call commands; they must never directly mutate events, game status, or projection tables.
-- `SECURITY DEFINER` commands use empty search paths, explicit authorization, and grants only to `authenticated`.
+- Бүх public table дээр RLS идэвхтэй.
+- Public хэрэглэгчид зөвхөн curated, approved мэдээлэл уншина.
+- Browser, API route, Edge Function code нь command ашиглах ёстой; event, game status, projection table-ийг шууд өөрчлөх ёсгүй.
+- `SECURITY DEFINER` command-ууд хоосон search path, тодорхой authorization, зөвхөн `authenticated` role-д зориулсан grant ашиглана.
 
-## Durability
+## Тогтвортой байдал
 
-The tracker persists every operation in IndexedDB before network delivery. Each operation has a UUID idempotency key and session sequence number. The server acknowledges receipts; reloads replay only unacknowledged operations. A game has exactly one active writer session. Handoff closes the old session before opening the replacement.
+Tracker нь network руу илгээхээсээ өмнө үйлдэл бүрийг IndexedDB-д хадгална. Үйлдэл бүр UUID idempotency key ба session sequence number-тай. Server нь receipt ack буцаана; reload нь баталгаажуулаагүй үйлдлүүдийг л дахин тоглуулна. Нэг тоглолтод нэг л идэвхтэй writer session байна. Handoff нь хуучин session-ийг хаагаад дараагийнхыг нээнэ.
 
-## Publication and corrections
+## Publication ба засвар
 
-A public game must have a reviewed source and approved revision. Curated views expose the revision number, source type, review timestamp, and approved projection. Corrections create new evidence and revisions rather than rewriting history.
+Provisional public game нь closed-snapshot contract-аас ирэх ёстой, `final_pending_review` төлөв, source ба revision identity-г харуулах ёстой, мөн тодорхой provisional шошготой байх ёстой. Лигийн verification нь тогтвортой public URL-г өөрчлөхгүйгээр revision-ийг verified эсвэл official болгоно. Curated view-үүд нь status, revision number, source type, review timestamp, projection-ийн тохирох хувилбарыг харуулна. Засвар нь түүхийг дахин бичихийн оронд шинэ нотолгоо ба шинэ revision үүсгэнэ.
 
-## Non-goals during the pilot
+## Лигийн pilot-ийн үед хийхгүй зүйл
 
-Mobile rollout, push/follows, athlete claims, broad consumer analytics, and unreviewed historical imports are frozen until paid-proof gates are met.
+Багийн ажиллагаа, академийн ажиллагаа, commerce, guardian self-service, mobile rollout, push/follows, athlete claims, өргөн consumer analytics, review хийгдээгүй historical import нь энэ архитектурын хүрээнээс гадуур байна. Эдгээр нь roadmap дээрх өөрийн босгыг давсны дараа л орж ирнэ.

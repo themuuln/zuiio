@@ -16,8 +16,11 @@ void main() {
       for (var i = 0; i < 20; i++) {
         photos.add(File('/tmp/photo_$i.jpg'));
       }
-      expect(photos.length, 20,
-          reason: 'There should be no arbitrary limit on photos');
+      expect(
+        photos.length,
+        20,
+        reason: 'There should be no arbitrary limit on photos',
+      );
     });
 
     test('a photo can be removed from the list by index', () {
@@ -57,10 +60,7 @@ void main() {
       final photos = <File>[];
 
       // Simulate adding from gallery (multi-select)
-      photos.addAll([
-        File('/tmp/gallery_1.jpg'),
-        File('/tmp/gallery_2.jpg'),
-      ]);
+      photos.addAll([File('/tmp/gallery_1.jpg'), File('/tmp/gallery_2.jpg')]);
 
       // Simulate adding from camera (single capture)
       photos.add(File('/tmp/camera_1.jpg'));
@@ -74,10 +74,7 @@ void main() {
     });
 
     test('photos maintain order after multiple additions', () {
-      final photos = <File>[
-        File('/tmp/photo_1.jpg'),
-        File('/tmp/photo_2.jpg'),
-      ];
+      final photos = <File>[File('/tmp/photo_1.jpg'), File('/tmp/photo_2.jpg')];
 
       // Remove middle, add new one at the end
       photos.removeAt(0);
@@ -159,9 +156,9 @@ void main() {
       final reportId = 'report-123';
       final photoUrls = <String>[
         'https://supabase.co/storage/v1/object/public/'
-        'horse-photos/lost-horse-photos/report-123/abc.jpg',
+            'horse-photos/lost-horse-photos/report-123/abc.jpg',
         'https://supabase.co/storage/v1/object/public/'
-        'horse-photos/lost-horse-photos/report-123/def.jpg',
+            'horse-photos/lost-horse-photos/report-123/def.jpg',
       ];
 
       // Simulate inserting into lost_horse_media table

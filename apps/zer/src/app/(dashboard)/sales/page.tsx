@@ -48,7 +48,8 @@ async function SalesDataFetcher({
             "id, total_amount, paid_amount, sale_date, status, payment_method, contacts(name)",
           )
           .eq("organization_id", organizationId)
-          .order("sale_date", { ascending: false }),
+          .order("sale_date", { ascending: false })
+          .limit(500),
         branchId,
         isBranchScoped,
         urlBranch,
@@ -61,7 +62,8 @@ async function SalesDataFetcher({
         .select("id, name, sale_price, current_stock, unit, barcode, image_url")
         .eq("organization_id", organizationId)
         .is("deleted_at", null)
-        .order("name"),
+        .order("name")
+        .limit(1000),
     ),
   ]);
 

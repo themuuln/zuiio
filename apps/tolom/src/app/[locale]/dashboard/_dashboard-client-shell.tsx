@@ -31,22 +31,19 @@ function BranchIndicator() {
     </Badge>
   );
 }
-
 function DashboardHeader() {
   const { state, setActiveTab } = usePageHeader();
 
   return (
-    <PageHeader
-      tabs={state.tabs.length > 0 ? state.tabs : undefined}
-      activeTab={state.activeTab}
-      onTabChange={setActiveTab}
-      actions={
-        <>
-          <BranchIndicator />
-          {state.actions}
-        </>
-      }
-    />
+    <div className="flex items-center gap-3">
+      <PageHeader
+        tabs={state.tabs.length > 0 ? state.tabs : undefined}
+        activeTab={state.activeTab}
+        onTabChange={setActiveTab}
+        actions={state.actions}
+      />
+      <BranchIndicator />
+    </div>
   );
 }
 

@@ -3,6 +3,7 @@ import 'package:tamga/src/core/error/result.dart';
 import '../domain/geofence_alert.dart';
 import '../domain/horse_location.dart';
 import '../domain/lost_horse_report.dart';
+import '../domain/pasture_zone.dart';
 import '../domain/search_area.dart';
 
 /// Abstract interface for map operations.
@@ -43,6 +44,14 @@ abstract class MapRepository {
   Future<Result<void>> saveGeofenceAlert(GeofenceAlert alert);
   Future<Result<List<GeofenceAlert>>> getGeofenceAlerts(String userId);
   Future<Result<void>> acknowledgeAlert(String alertId);
+
+  // ── Pasture Zones ────────────────────────────────────────────────
+
+  Future<Result<List<PastureZone>>> getPastureZones(String userId);
+  Future<Result<PastureZone>> savePastureZone(PastureZone zone);
+  Future<Result<void>> deletePastureZone(String zoneId);
+  Future<Result<void>> assignHorseToZone(String zoneId, String horseId);
+  Future<Result<void>> unassignHorseFromZone(String zoneId, String horseId);
 
   // ── Real-time Streams ─────────────────────────────────────────────
 

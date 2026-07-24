@@ -45,7 +45,10 @@ const STATUS_COLORS: Record<string, string> = {
 const PLAN_OPTIONS = ["starter", "pro", "business", "enterprise"];
 
 export default function AdminPage() {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const updatePlan = useUpdateOrgPlan();
   const extendTrial = useExtendTrial();
 
@@ -57,6 +60,22 @@ export default function AdminPage() {
   const { data: orgs = [], isLoading: orgsLoading } = useAdminOrganizations();
 
   const loading = meLoading || (isSuperAdmin && orgsLoading);
+  const isAdmin = meData?.isAdmin === true;
+
+  // Guard: block non-admin users (don't fire during initial load to avoid flash)
+  if (!loading && !isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <ShieldAlert className="size-10 text-destructive" />
+        <Typography.H2 className="text-xl font-semibold">
+          Access Denied
+        </Typography.H2>
+        <Typography.Muted className="text-muted-foreground text-center max-w-md">
+          You need admin access to view this page.
+        </Typography.Muted>
+      </div>
+    );
+  }
 
   async function handlePlanChange(orgId: string, planType: string) {
     try {
@@ -78,36 +97,6 @@ export default function AdminPage() {
         err instanceof Error ? err.message : t("admin.failedToResetTrial"),
       );
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
-        <div>
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="mt-2 h-5 w-64" />
-        </div>
-        <div className="flex flex-col gap-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={`skeleton-${i}`} className="h-20 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!meData?.isAdmin) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <ShieldAlert className="size-10 text-destructive" />
-        <Typography.H2 className="text-xl font-semibold">
-          {t("admin.accessDenied")}
-        </Typography.H2>
-        <Typography.Muted className="text-muted-foreground text-center max-w-md">
-          {t("admin.accessDeniedDesc")}
-        </Typography.Muted>
-      </div>
-    );
   }
 
   const activeOrgs = orgs.filter(
@@ -133,7 +122,13 @@ export default function AdminPage() {
           </Badge>
           {isSuperAdmin && (
             <Badge variant="outline" className="text-xs">
-              {orgs.length} org{orgs.length === 1 ? "" : "s"}
+              {loading ? (
+                <Skeleton className="h-4 w-16 inline-block" />
+              ) : (
+                <>
+                  {orgs.length} org{orgs.length === 1 ? "" : "s"}
+                </>
+              )}
             </Badge>
           )}
         </div>
@@ -174,14 +169,18 @@ export default function AdminPage() {
       </div>
 
       {/* Stats (super admin only) */}
-      {isSuperAdmin && orgs.length > 0 && (
+      {isSuperAdmin && (
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Orgs</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{orgs.length}</div>
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-2xl font-bold">{orgs.length}</div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -189,9 +188,13 @@ export default function AdminPage() {
               <CardTitle className="text-sm font-medium">Active</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-emerald-600">
-                {activeOrgs}
-              </div>
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-2xl font-bold text-emerald-600">
+                  {activeOrgs}
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -199,9 +202,13 @@ export default function AdminPage() {
               <CardTitle className="text-sm font-medium">On Trial</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-cyan-600">
-                {trialOrgs}
-              </div>
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-2xl font-bold text-cyan-600">
+                  {trialOrgs}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -221,7 +228,28 @@ export default function AdminPage() {
               <span>{t("admin.status")}</span>
               <span className="text-right">{t("admin.actions")}</span>
             </div>
-            {orgs.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={`loading-org-${i}`}
+                  className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_230px] gap-3 md:gap-4 px-6 py-4 items-center"
+                >
+                  <div className="min-w-0 space-y-1.5">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-5 w-14" />
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Skeleton className="h-7 w-[42px]" />
+                    <Skeleton className="h-7 w-[42px]" />
+                    <Skeleton className="h-7 w-[42px]" />
+                    <Skeleton className="h-7 w-[66px]" />
+                    <Skeleton className="h-7 w-10" />
+                  </div>
+                </div>
+              ))
+            ) : orgs.length === 0 ? (
               <div className="px-6 py-12 text-center text-sm text-muted-foreground">
                 {t("admin.noOrgs")}
               </div>

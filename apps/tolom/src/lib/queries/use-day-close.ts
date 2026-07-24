@@ -5,7 +5,11 @@
  * background refetching, and mutation support.
  */
 
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type { EndOfDaySummary } from "@/lib/types";
 import { createOrgQuery } from "./factory";
@@ -53,6 +57,7 @@ export function useEodReport(
       });
     },
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
     retry: 1,
   });
@@ -74,7 +79,8 @@ export function useDayCloseStatus(
       return fetchDayCloseStatus(orgId, { params: { date } });
     },
     enabled: !!orgId,
-    staleTime: 10_000,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
     retry: 1,
   });
 }

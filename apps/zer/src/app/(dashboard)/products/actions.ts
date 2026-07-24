@@ -4,7 +4,7 @@ import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { validateProductInput } from "@/lib/domain-rules";
 import { checkLowStockAndNotify } from "@/lib/notification";
-import { revalidateEntity } from "@/lib/revalidate";
+import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 
 export async function updateProduct(
   _prevState: { error?: string } | undefined,
@@ -29,6 +29,7 @@ export async function updateProduct(
   const unit = formData.get("unit")?.toString() ?? "ширхэг";
   const brandId = formData.get("brand_id")?.toString() || null;
   const categoryName = formData.get("category_name")?.toString() || null;
+  const isPublic = formData.get("is_public") === "on";
 
   const validationError = validateProductInput({
     name,
@@ -62,7 +63,11 @@ export async function updateProduct(
     } else {
       const { data: created, error: createCatError } = await supabase
         .from("categories")
-        .insert({ name: categoryName.trim(), organization_id: organizationId })
+        .insert({
+          name: categoryName.trim(),
+          organization_id: organizationId,
+          slug: "",
+        })
         .select("id")
         .single();
       if (createCatError) {
@@ -84,9 +89,14 @@ export async function updateProduct(
       category_id: categoryId,
       cost_price: costPrice,
       sale_price: salePrice,
-      min_stock: minStock,
       ...(formData.has("current_stock") ? { current_stock: currentStock } : {}),
-    })
+      ...(isPublic !== undefined
+        ? {
+            is_public: isPublic,
+            published_at: isPublic ? new Date().toISOString() : null,
+          }
+        : {}),
+    } as never)
     .eq("id", id);
 
   if (error) {
@@ -253,6 +263,7 @@ export async function updateProduct(
   checkLowStockAndNotify(organizationId, name, currentStock, minStock);
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }
 
@@ -284,5 +295,33 @@ export async function deleteProduct(
 
   revalidateEntity("products");
   revalidateEntity("inventory");
+  revalidateEntityTag("products", organizationId);
+  return { success: true as const };
+}
+
+export async function toggleProductPublication(
+  productId: string,
+  isPublic: boolean,
+) {
+  const ctx = await requireActionContext("products.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
+
+  const { error } = await supabase
+    .from("products")
+    .update({
+      is_public: isPublic,
+      published_at: isPublic ? new Date().toISOString() : null,
+    } as never)
+    .eq("id", productId)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    capture(error, { context: "toggleProductPublication" });
+    return { error: "Нийтлэх статус өөрчлөхөд алдаа гарлаа." };
+  }
+
+  revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }

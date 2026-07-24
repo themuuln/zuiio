@@ -95,12 +95,11 @@ final renewLostHorseReportProvider =
     });
 
 /// Check and expire any overdue paid reports (run on app startup / screen load).
-final checkAndExpireReportsProvider =
-    FutureProvider<void>((ref) async {
-      final service = ref.read(expiryServiceProvider);
-      final result = await service.checkAndExpireAll();
-      if (result.isFailure) {
-        throw result.error;
-      }
-      ref.invalidate(activeLostHorsesProvider);
-    });
+final checkAndExpireReportsProvider = FutureProvider<void>((ref) async {
+  final service = ref.read(expiryServiceProvider);
+  final result = await service.checkAndExpireAll();
+  if (result.isFailure) {
+    throw result.error;
+  }
+  ref.invalidate(activeLostHorsesProvider);
+});

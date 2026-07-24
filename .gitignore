@@ -16,6 +16,8 @@ expo-env.d.ts
 
 # Vercel
 .vercel
+.vercel.bak/
+.impeccable/
 
 # Environment files — never commit secrets
 .env*
@@ -91,3 +93,4 @@ Thumbs.db
 
 # AI skills lock files
 skills-lock.json
+/apps/zer/.turbo/turbo-build.log

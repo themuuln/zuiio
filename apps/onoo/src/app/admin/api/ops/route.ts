@@ -1,12 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -54,6 +55,7 @@ export async function GET() {
     ]
       .filter(Boolean)
       .join("; ");
+    Sentry.captureException(new Error(msg));
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 

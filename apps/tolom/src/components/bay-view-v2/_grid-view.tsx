@@ -57,12 +57,7 @@ export const GridView = React.memo(function GridView({
   onReorderMechanics,
 }: GridViewProps) {
   return (
-    <div
-      className="grid w-full h-full min-h-0 [grid-auto-rows:1fr] gap-3"
-      style={{
-        gridTemplateColumns: "repeat(auto-fit, minmax(min(320px, 100%), 1fr))",
-      }}
-    >
+    <div className="grid w-full h-full min-h-0 gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 [grid-auto-rows:1fr]">
       {bays.map((bay) => (
         <ErrorSection key={bay.bayNumber} label={`Bay ${bay.bayNumber}`}>
           <BayCard

@@ -5,14 +5,12 @@ import '../../market/domain/market_listing.dart';
 /// Зах зээлийн мэдээллээр орлого, зарлага, ROI-г тооцоолно.
 class FinancialAnalytics {
   FinancialAnalytics({required this.listings})
-      : totalRevenue = _computeTotalRevenue(listings),
-        totalExpenses = _computeTotalExpenses(listings),
-        totalCommission = _computeTotalCommission(listings),
-        roi = _computeRoi(listings),
-        activeListings =
-            listings.where((l) => l.isActive).length,
-        soldListings =
-            listings.where((l) => l.isSold).length;
+    : totalRevenue = _computeTotalRevenue(listings),
+      totalExpenses = _computeTotalExpenses(listings),
+      totalCommission = _computeTotalCommission(listings),
+      roi = _computeRoi(listings),
+      activeListings = listings.where((l) => l.isActive).length,
+      soldListings = listings.where((l) => l.isSold).length;
 
   /// Зах зээлийн зарууд.
   final List<MarketListing> listings;
@@ -55,17 +53,11 @@ class FinancialAnalytics {
   }
 
   static int _computeTotalExpenses(List<MarketListing> listings) {
-    return listings.fold<int>(
-      0,
-      (sum, l) => sum + (l.commissionAmount ?? 0),
-    );
+    return listings.fold<int>(0, (sum, l) => sum + (l.commissionAmount ?? 0));
   }
 
   static int _computeTotalCommission(List<MarketListing> listings) {
-    return listings.fold<int>(
-      0,
-      (sum, l) => sum + (l.commissionAmount ?? 0),
-    );
+    return listings.fold<int>(0, (sum, l) => sum + (l.commissionAmount ?? 0));
   }
 
   static double _computeRoi(List<MarketListing> listings) {

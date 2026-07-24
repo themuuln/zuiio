@@ -1,6 +1,10 @@
 "use client";
 
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import { createOrgQuery } from "./factory";
 
@@ -53,7 +57,10 @@ export function useInvoiceStats(
 ): UseQueryResult<InvoiceStats, Error> {
   return useQuery({
     queryKey: invoiceKeys.stats(orgId ?? ""),
-    queryFn: () => fetchInvoiceStats(orgId!, { params: { type: "stats" } }),
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchInvoiceStats(orgId, { params: { type: "stats" } });
+    },
     enabled: !!orgId,
     staleTime: 60_000,
   });
@@ -65,11 +72,14 @@ export function useInvoices(
 ): UseQueryResult<Invoice[], Error> {
   return useQuery({
     queryKey: invoiceKeys.list(orgId ?? "", status),
-    queryFn: () =>
-      fetchInvoices(orgId!, {
+    queryFn: () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchInvoices(orgId, {
         params: status ? { status } : undefined,
-      }),
+      });
+    },
     enabled: !!orgId,
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }

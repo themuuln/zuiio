@@ -17,15 +17,15 @@ export interface GameLine {
 
 export interface Milestone {
   type:
-    | 'career_high_pts'
-    | 'career_high_reb'
-    | 'career_high_ast'
-    | 'career_high_stl'
-    | 'career_high_blk'
-    | 'double_double'
-    | 'triple_double'
-    | 'twenty_plus'
-    | 'double_digit_streak';
+    | "career_high_pts"
+    | "career_high_reb"
+    | "career_high_ast"
+    | "career_high_stl"
+    | "career_high_blk"
+    | "double_double"
+    | "triple_double"
+    | "twenty_plus"
+    | "double_digit_streak";
   stat?: string;
   value: number;
   game_date?: string;
@@ -35,9 +35,9 @@ export interface Milestone {
   streak?: number;
 }
 
-type StatKey = 'pts' | 'reb' | 'ast' | 'stl' | 'blk';
+type StatKey = "pts" | "reb" | "ast" | "stl" | "blk";
 
-const STAT_KEYS: StatKey[] = ['pts', 'reb', 'ast', 'stl', 'blk'];
+const STAT_KEYS: StatKey[] = ["pts", "reb", "ast", "stl", "blk"];
 
 /**
  * Detect milestones across a career's worth of game lines.
@@ -48,19 +48,19 @@ const STAT_KEYS: StatKey[] = ['pts', 'reb', 'ast', 'stl', 'blk'];
 export function detectMilestones(gameLines: GameLine[]): Milestone[] {
   if (gameLines.length === 0) return [];
 
-  const sorted = [...gameLines].sort(
-    (a, b) => a.game_date.localeCompare(b.game_date),
+  const sorted = [...gameLines].sort((a, b) =>
+    a.game_date.localeCompare(b.game_date),
   );
 
   const milestones: Milestone[] = [];
 
   // ── Career highs (first time each record is set) ────────────────────────
   const careerHighs: Record<StatKey, { value: number; game_date: string }> = {
-    pts: { value: -1, game_date: '' },
-    reb: { value: -1, game_date: '' },
-    ast: { value: -1, game_date: '' },
-    stl: { value: -1, game_date: '' },
-    blk: { value: -1, game_date: '' },
+    pts: { value: -1, game_date: "" },
+    reb: { value: -1, game_date: "" },
+    ast: { value: -1, game_date: "" },
+    stl: { value: -1, game_date: "" },
+    blk: { value: -1, game_date: "" },
   };
 
   for (const game of sorted) {
@@ -71,12 +71,12 @@ export function detectMilestones(gameLines: GameLine[]): Milestone[] {
     }
   }
 
-  const milestoneTypeMap: Record<StatKey, Milestone['type']> = {
-    pts: 'career_high_pts',
-    reb: 'career_high_reb',
-    ast: 'career_high_ast',
-    stl: 'career_high_stl',
-    blk: 'career_high_blk',
+  const milestoneTypeMap: Record<StatKey, Milestone["type"]> = {
+    pts: "career_high_pts",
+    reb: "career_high_reb",
+    ast: "career_high_ast",
+    stl: "career_high_stl",
+    blk: "career_high_blk",
   };
 
   for (const key of STAT_KEYS) {
@@ -97,9 +97,7 @@ export function detectMilestones(gameLines: GameLine[]): Milestone[] {
   let twentyPlusCount = 0;
 
   for (const game of sorted) {
-    const doubleDigitCount = STAT_KEYS.filter(
-      (key) => game[key] >= 10,
-    ).length;
+    const doubleDigitCount = STAT_KEYS.filter((key) => game[key] >= 10).length;
 
     if (doubleDigitCount >= 2) doubleDoubleCount++;
     if (doubleDigitCount >= 3) tripleDoubleCount++;
@@ -108,7 +106,7 @@ export function detectMilestones(gameLines: GameLine[]): Milestone[] {
 
   if (doubleDoubleCount > 0) {
     milestones.push({
-      type: 'double_double',
+      type: "double_double",
       value: 0,
       count: doubleDoubleCount,
     });
@@ -116,7 +114,7 @@ export function detectMilestones(gameLines: GameLine[]): Milestone[] {
 
   if (tripleDoubleCount > 0) {
     milestones.push({
-      type: 'triple_double',
+      type: "triple_double",
       value: 0,
       count: tripleDoubleCount,
     });
@@ -124,7 +122,7 @@ export function detectMilestones(gameLines: GameLine[]): Milestone[] {
 
   if (twentyPlusCount > 0) {
     milestones.push({
-      type: 'twenty_plus',
+      type: "twenty_plus",
       value: 0,
       count: twentyPlusCount,
     });
@@ -142,7 +140,7 @@ export function detectMilestones(gameLines: GameLine[]): Milestone[] {
 
   if (currentStreak > 0) {
     milestones.push({
-      type: 'double_digit_streak',
+      type: "double_digit_streak",
       value: 0,
       streak: currentStreak,
     });

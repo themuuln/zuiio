@@ -116,7 +116,15 @@ class MarketConversation {
 
   @override
   int get hashCode => Object.hash(
-      id, listingId, reportId, buyerId, sellerId, lastMessage, lastMessageAt, unreadCount);
+    id,
+    listingId,
+    reportId,
+    buyerId,
+    sellerId,
+    lastMessage,
+    lastMessageAt,
+    unreadCount,
+  );
 
   @override
   String toString() =>

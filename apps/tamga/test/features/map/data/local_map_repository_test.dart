@@ -358,9 +358,7 @@ void main() {
           'https://example.com/photo1.jpg',
           'https://example.com/photo2.jpg',
         ],
-        videoUrls: [
-          'https://example.com/video1.mp4',
-        ],
+        videoUrls: ['https://example.com/video1.mp4'],
       );
 
       final saveResult = await repository.reportLostHorse(report);

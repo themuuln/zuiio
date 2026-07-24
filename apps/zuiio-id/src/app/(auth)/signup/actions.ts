@@ -1,9 +1,10 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import type { AuthActionState } from "@/lib/auth/action-state";
 import { signContinuation } from "@/lib/auth/continuation";
-import { getSsoProduct, type ProductId } from "@config/sso-products";
+import { validatePassword } from "@/lib/password-policy";
+import { getEnabledProductById } from "@/lib/products/catalog";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Server Action: register a new central identity.
@@ -58,12 +59,13 @@ export async function signup(
     }
   }
 
-  if (!email || !email.includes("@")) {
+  if (!email?.includes("@")) {
     fieldErrors.email = ["Зөв имэйл хаяг оруулна уу."];
   }
 
-  if (password.length < 8) {
-    fieldErrors.password = ["Нууц үг хамгийн багадаа 8 тэмдэгт байх ёстой."];
+  const passwordResult = validatePassword(password);
+  if (!passwordResult.valid) {
+    fieldErrors.password = passwordResult.errors;
   }
 
   if (password !== confirmPassword) {
@@ -96,17 +98,14 @@ export async function signup(
 
   // If product continuation is present, sign and redirect back
   if (product && returnTo) {
-    const ssoProduct = getSsoProduct(product as ProductId);
+    const ssoProduct = await getEnabledProductById(product);
     if (ssoProduct) {
-      const { token } = signContinuation(
-        product as ProductId,
-        returnTo,
-      );
+      const { token } = signContinuation(product, returnTo);
       return {
         redirectTo: `/auth/callback?continuation=${token}`,
       };
     }
   }
 
-  return { redirectTo: "/account" };
+  return { redirectTo: `/verify-email?email=${encodeURIComponent(email)}` };
 }

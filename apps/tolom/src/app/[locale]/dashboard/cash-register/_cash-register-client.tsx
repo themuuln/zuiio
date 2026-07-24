@@ -12,25 +12,21 @@ import {
   Receipt,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Controller } from "react-hook-form";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import {
   useCashOut,
@@ -45,7 +41,10 @@ import { formatCurrency } from "@/lib/utils";
 // ── Main Client Component ──────────────────────────────────
 
 export function CashRegisterClient() {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
   const selectedBranchId = useSelectedBranchId();
@@ -59,14 +58,10 @@ export function CashRegisterClient() {
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [showCashOutDialog, setShowCashOutDialog] = useState(false);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const isFirstLoad = useIsFirstLoad(!!session);
 
   const isPending = orgLoading || sessionLoading;
-  const showSkeleton = isPending && !hasLoadedOnce;
-
-  useEffect(() => {
-    if (session) setHasLoadedOnce(true);
-  }, [session]);
+  const showSkeleton = isPending && isFirstLoad;
 
   return (
     <div className="flex flex-col gap-6 pb-8">
@@ -153,7 +148,10 @@ function SessionHeader({
   onClose: () => void;
   onCashOut: () => void;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   const expectedBalance =
     session.expected_balance ??
@@ -266,7 +264,10 @@ function TransactionList({
 }: {
   entries: NonNullable<ReturnType<typeof useCurrentSession>["data"]>["entries"];
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   return (
     <Card>
@@ -325,7 +326,10 @@ function TransactionList({
 // ── No Session Card ────────────────────────────────────────
 
 function NoSessionCard({ onOpen }: { onOpen: () => void }) {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   return (
     <Card>
@@ -369,21 +373,26 @@ function OpenSessionDialog({
   orgId: string | undefined;
   branchId: string | null;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const form = useForm<OpenSessionValues>({
     resolver: zodResolver(openSessionSchema),
     defaultValues: { balance: 0 },
   });
   const balance = form.watch("balance");
   const openSession = useOpenSession(orgId);
+  const formId = "open-session-form";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("cashRegister.openSession")}</DialogTitle>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>{t("cashRegister.openSession")}</DetailDrawer.Title>
+      </DetailDrawer.Header>
+      <DetailDrawer.Body>
         <form
+          id={formId}
           onSubmit={form.handleSubmit(async (data) => {
             await openSession.mutateAsync(
               { opening_balance: data.balance, branch_id: branchId },
@@ -420,22 +429,38 @@ function OpenSessionDialog({
               Count the cash in the drawer and enter the amount.
             </Typography.Muted>
           </div>
+        </form>
+      </DetailDrawer.Body>
+      <DetailDrawer.Footer>
+        <DetailDrawer.FooterActions>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+          >
+            {t("common.cancel")}
+          </Button>
           <Button
             type="submit"
+            form={formId}
             disabled={openSession.isPending || balance === 0}
+            className="flex-1"
           >
             {openSession.isPending ? (
-              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {t("common.saving")}
+              </>
             ) : (
-              <CheckCircle2 className="mr-1.5 size-3.5" />
+              <>
+                <CheckCircle2 className="size-4" />
+                {t("cashRegister.openSession")}
+              </>
             )}
-            {openSession.isPending
-              ? t("common.saving")
-              : t("cashRegister.openSession")}
           </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DetailDrawer.FooterActions>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }
 
@@ -459,13 +484,17 @@ function CloseSessionDialog({
   orgId: string | undefined;
   session: NonNullable<ReturnType<typeof useCurrentSession>["data"]>;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const form = useForm<CloseSessionValues>({
     resolver: zodResolver(closeSessionSchema),
     defaultValues: { balance: 0, note: "" },
   });
   const balanceValue = form.watch("balance");
   const closeSession = useCloseSession(orgId);
+  const formId = "close-session-form";
 
   const expectedBalance =
     session.expected_balance ??
@@ -474,14 +503,15 @@ function CloseSessionDialog({
   const _hasDiscrepancy = balanceValue > 0 && discrepancy !== 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("cashRegister.closeSession")}</DialogTitle>
-        </DialogHeader>
-
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>
+          {t("cashRegister.closeSession")}
+        </DetailDrawer.Title>
+      </DetailDrawer.Header>
+      <DetailDrawer.Body>
         {/* Summary before closing */}
-        <div className="rounded-lg border bg-muted/50 p-3 text-sm">
+        <div className="rounded-lg border bg-muted/50 p-3 text-sm mb-4">
           <div className="flex justify-between">
             <span className="text-muted-foreground">
               {t("cashRegister.openingBalance")}
@@ -516,6 +546,7 @@ function CloseSessionDialog({
         </div>
 
         <form
+          id={formId}
           onSubmit={form.handleSubmit(async (data) => {
             await closeSession.mutateAsync(
               {
@@ -604,26 +635,42 @@ function CloseSessionDialog({
               rows={2}
             />
           </div>
+        </form>
+      </DetailDrawer.Body>
+      <DetailDrawer.Footer>
+        <DetailDrawer.FooterActions>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+          >
+            {t("common.cancel")}
+          </Button>
           <Button
             type="submit"
+            form={formId}
             disabled={closeSession.isPending || balanceValue === 0}
+            className="flex-1"
           >
             {closeSession.isPending ? (
-              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {t("common.saving")}
+              </>
             ) : (
-              <CheckCircle2 className="mr-1.5 size-3.5" />
+              <>
+                <CheckCircle2 className="size-4" />
+                {t("cashRegister.closeSession")}
+              </>
             )}
-            {closeSession.isPending
-              ? t("common.saving")
-              : t("cashRegister.closeSession")}
           </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DetailDrawer.FooterActions>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }
 
-// ── Cash Out Dialog ────────────────────────────────────────
+// ── Cash Out Drawer ────────────────────────────────────────
 
 const cashOutSchema = z.object({
   amount: z.number().min(1, "Amount must be at least 1"),
@@ -643,7 +690,10 @@ function CashOutDialog({
   orgId: string | undefined;
   sessionId: string;
 }) {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const form = useForm<CashOutValues>({
     resolver: zodResolver(cashOutSchema),
     defaultValues: { amount: 0, description: "" },
@@ -651,14 +701,16 @@ function CashOutDialog({
   const amount = form.watch("amount");
   const description = form.watch("description");
   const cashOut = useCashOut(orgId);
+  const formId = "cash-out-form";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("cashRegister.addCashOut")}</DialogTitle>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>{t("cashRegister.addCashOut")}</DetailDrawer.Title>
+      </DetailDrawer.Header>
+      <DetailDrawer.Body>
         <form
+          id={formId}
           onSubmit={form.handleSubmit(async (data) => {
             await cashOut.mutateAsync(
               {
@@ -706,21 +758,37 @@ function CashOutDialog({
               placeholder={t("cashRegister.cashOutDescriptionPlaceholder")}
             />
           </div>
+        </form>
+      </DetailDrawer.Body>
+      <DetailDrawer.Footer>
+        <DetailDrawer.FooterActions>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+          >
+            {t("common.cancel")}
+          </Button>
           <Button
             type="submit"
+            form={formId}
             disabled={cashOut.isPending || amount <= 0 || !description.trim()}
+            className="flex-1"
           >
             {cashOut.isPending ? (
-              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {t("common.saving")}
+              </>
             ) : (
-              <MinusCircle className="mr-1.5 size-3.5" />
+              <>
+                <MinusCircle className="size-4" />
+                {t("cashRegister.addCashOut")}
+              </>
             )}
-            {cashOut.isPending
-              ? t("common.saving")
-              : t("cashRegister.addCashOut")}
           </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DetailDrawer.FooterActions>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

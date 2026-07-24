@@ -116,8 +116,7 @@ void main() {
       expect(
         sellerSource.contains('Үржүүлэгчийн профайл харах'),
         isTrue,
-        reason:
-            'Seller profile should have Үржүүлэгчийн профайл харах link',
+        reason: 'Seller profile should have Үржүүлэгчийн профайл харах link',
       );
     });
 
@@ -142,8 +141,7 @@ void main() {
       expect(
         sellerSource.contains("'sellerId': profile.sellerId"),
         isTrue,
-        reason:
-            'Seller profile should pass sellerId to breeder profile screen',
+        reason: 'Seller profile should pass sellerId to breeder profile screen',
       );
     });
   });
@@ -186,4 +184,3 @@ void main() {
     });
   });
 }
-

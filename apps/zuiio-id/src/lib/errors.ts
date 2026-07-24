@@ -23,6 +23,12 @@ export type AuthErrorCode =
   | "invalid_credentials"
   | "provider_denied"
   | "missing_product_entitlement"
+  | "consent_failed"
+  | "rate_limited"
+  | "mfa_required"
+  | "mfa_failed"
+  | "token_revocation_failed"
+  | "invalid_logout_request"
   | "generic_auth_error";
 
 export interface AuthError {
@@ -102,6 +108,30 @@ export const AUTH_ERRORS: Record<AuthErrorCode, AuthError> = {
   missing_product_entitlement: {
     code: "missing_product_entitlement",
     message: "Энэ бүтээгдэхүнд нэвтрэх эрх хүрэлцэхгүй.",
+  },
+  consent_failed: {
+    code: "consent_failed",
+    message: "Зөвшөөрлийг баталгаажуулахад алдаа гарлаа.",
+  },
+  rate_limited: {
+    code: "rate_limited",
+    message: "Хэт их хүсэлт илгээсэн. Түр хүлээнэ үү.",
+  },
+  mfa_required: {
+    code: "mfa_required",
+    message: "Нэмэлт нэвтрэх баталгаа шаардлагатай.",
+  },
+  mfa_failed: {
+    code: "mfa_failed",
+    message: "Нэмэлт нэвтрэх баталгаа буруу байна.",
+  },
+  token_revocation_failed: {
+    code: "token_revocation_failed",
+    message: "Токенийг цуцлахад алдаа гарлаа.",
+  },
+  invalid_logout_request: {
+    code: "invalid_logout_request",
+    message: "Гарах хүсэлт буруу байна.",
   },
   generic_auth_error: {
     code: "generic_auth_error",

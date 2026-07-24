@@ -9,11 +9,12 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { Link } from "@/lib/i18n/navigation";
 import {
   useInventoryBalances,
@@ -26,7 +27,10 @@ import { useSelectedBranchId } from "@/lib/stores";
 import { PartsTab } from "./_components/parts-tab";
 
 function InventoryPage() {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId ?? null;
   const selectedBranchId = useSelectedBranchId();
@@ -56,15 +60,9 @@ function InventoryPage() {
     branchFilter,
   );
 
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const isFirstLoad = useIsFirstLoad(!!orgId);
 
-  useEffect(() => {
-    if (orgId) {
-      setHasLoadedOnce(true);
-    }
-  }, [orgId]);
-
-  const showSkeleton = (orgLoading && !orgId) || !hasLoadedOnce;
+  const showSkeleton = (orgLoading && !orgId) || isFirstLoad;
 
   return (
     <div className="tablet-touch flex flex-col gap-6">

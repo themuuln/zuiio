@@ -20,9 +20,7 @@ void _registerFallbackValues() {
 }
 
 /// Builds an [AppLifecycleObserver] wrapped in a [ProviderScope].
-Widget buildTestApp({
-  required CloudSyncCoordinator coordinator,
-}) {
+Widget buildTestApp({required CloudSyncCoordinator coordinator}) {
   final overrides = <Override>[
     cloudSyncCoordinatorProvider.overrideWith((ref) async => coordinator),
     syncStateProvider.overrideWith((ref) {
@@ -36,11 +34,7 @@ Widget buildTestApp({
     overrides: overrides,
     child: MaterialApp(
       theme: AppTheme.light(),
-      home: Scaffold(
-        body: AppLifecycleObserver(
-          child: const SizedBox(),
-        ),
-      ),
+      home: Scaffold(body: AppLifecycleObserver(child: const SizedBox())),
     ),
   );
 }
@@ -60,23 +54,20 @@ void main() {
       final mockCoordinator = MockCloudSyncCoordinator();
 
       when(() => mockCoordinator.state).thenReturn(const SyncState());
-      when(() => mockCoordinator.stateStream)
-          .thenAnswer((_) => stateController.stream);
+      when(
+        () => mockCoordinator.stateStream,
+      ).thenAnswer((_) => stateController.stream);
       when(() => mockCoordinator.syncAll()).thenAnswer(
-        (_) async => const CloudSyncResult(
-          usedCloud: false,
-          message: '',
-        ),
+        (_) async => const CloudSyncResult(usedCloud: false, message: ''),
       );
 
-      await tester.pumpWidget(buildTestApp(
-        coordinator: mockCoordinator,
-      ));
+      await tester.pumpWidget(buildTestApp(coordinator: mockCoordinator));
       await tester.pump();
 
       // Call didChangeAppLifecycleState on the observer
-      final observer = tester.state(find.byType(AppLifecycleObserver))
-          as WidgetsBindingObserver;
+      final observer =
+          tester.state(find.byType(AppLifecycleObserver))
+              as WidgetsBindingObserver;
       observer.didChangeAppLifecycleState(AppLifecycleState.resumed);
       await tester.pump();
 
@@ -93,16 +84,16 @@ void main() {
       final mockCoordinator = MockCloudSyncCoordinator();
 
       when(() => mockCoordinator.state).thenReturn(const SyncState());
-      when(() => mockCoordinator.stateStream)
-          .thenAnswer((_) => stateController.stream);
+      when(
+        () => mockCoordinator.stateStream,
+      ).thenAnswer((_) => stateController.stream);
 
-      await tester.pumpWidget(buildTestApp(
-        coordinator: mockCoordinator,
-      ));
+      await tester.pumpWidget(buildTestApp(coordinator: mockCoordinator));
       await tester.pump();
 
-      final observer = tester.state(find.byType(AppLifecycleObserver))
-          as WidgetsBindingObserver;
+      final observer =
+          tester.state(find.byType(AppLifecycleObserver))
+              as WidgetsBindingObserver;
       observer.didChangeAppLifecycleState(AppLifecycleState.paused);
       await tester.pump();
 
@@ -118,16 +109,16 @@ void main() {
       final mockCoordinator = MockCloudSyncCoordinator();
 
       when(() => mockCoordinator.state).thenReturn(const SyncState());
-      when(() => mockCoordinator.stateStream)
-          .thenAnswer((_) => stateController.stream);
+      when(
+        () => mockCoordinator.stateStream,
+      ).thenAnswer((_) => stateController.stream);
 
-      await tester.pumpWidget(buildTestApp(
-        coordinator: mockCoordinator,
-      ));
+      await tester.pumpWidget(buildTestApp(coordinator: mockCoordinator));
       await tester.pump();
 
-      final observer = tester.state(find.byType(AppLifecycleObserver))
-          as WidgetsBindingObserver;
+      final observer =
+          tester.state(find.byType(AppLifecycleObserver))
+              as WidgetsBindingObserver;
       observer.didChangeAppLifecycleState(AppLifecycleState.inactive);
       await tester.pump();
 
@@ -145,21 +136,21 @@ void main() {
       final mockCoordinator = MockCloudSyncCoordinator();
 
       when(() => mockCoordinator.state).thenReturn(const SyncState());
-      when(() => mockCoordinator.stateStream)
-          .thenAnswer((_) => stateController.stream);
+      when(
+        () => mockCoordinator.stateStream,
+      ).thenAnswer((_) => stateController.stream);
       when(() => mockCoordinator.syncAll()).thenAnswer(
         (_) async => const CloudSyncResult(usedCloud: false, message: ''),
       );
 
       // Build with observer
-      await tester.pumpWidget(buildTestApp(
-        coordinator: mockCoordinator,
-      ));
+      await tester.pumpWidget(buildTestApp(coordinator: mockCoordinator));
       await tester.pump();
 
       // Verify observer is active — resume calls syncAll
-      final observer = tester.state(find.byType(AppLifecycleObserver))
-          as WidgetsBindingObserver;
+      final observer =
+          tester.state(find.byType(AppLifecycleObserver))
+              as WidgetsBindingObserver;
       observer.didChangeAppLifecycleState(AppLifecycleState.resumed);
       await tester.pump();
       verify(() => mockCoordinator.syncAll()).called(1);

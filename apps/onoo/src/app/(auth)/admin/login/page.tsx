@@ -1,16 +1,35 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState(process.env.NODE_ENV === "development" ? "admin@onoo.mn" : "");
-  const [password, setPassword] = useState(process.env.NODE_ENV === "development" ? "onoo2026" : "");
+  const devEmail = process.env.NEXT_PUBLIC_ADMIN_DEV_EMAIL ?? "admin@onoo.mn";
+  const devPassword = process.env.NEXT_PUBLIC_ADMIN_DEV_PASSWORD ?? "onoo2026";
+
+  const [email, setEmail] = useState(
+    process.env.NODE_ENV === "development" ? devEmail : "",
+  );
+  const [password, setPassword] = useState(
+    process.env.NODE_ENV === "development" ? devPassword : "",
+  );
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
+
+  const AUTH_ERRORS: Record<string, string> = {
+    "Invalid login credentials": "Имэйл эсвэл нууц үг буруу байна",
+    "Email not confirmed": "Имэйл баталгаажаагүй байна",
+    "Rate limit exceeded":
+      "Хэт олон удаа оролдсон. Түр хүлээгээд дахин оролдоно уу",
+    "Invalid email": "Имэйл хаяг буруу байна",
+  };
+
+  function getMongolianError(message: string): string {
+    return AUTH_ERRORS[message] ?? `Алдаа: ${message}`;
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -20,7 +39,7 @@ export default function LoginPage() {
       password,
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(getMongolianError(error.message));
     } else {
       router.push("/admin");
       router.refresh();

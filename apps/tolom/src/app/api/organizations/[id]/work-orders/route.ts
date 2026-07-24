@@ -27,9 +27,9 @@ export const GET = createRouteHandler(
 );
 
 export const POST = createRouteHandler(
-  async ({ request, orgId, supabase }) => {
+  async ({ request, orgId, supabase, user }) => {
     const body = await parseBody(request, createWorkOrderSchema);
-    const workOrder = await createWorkOrder(supabase, orgId, body);
+    const workOrder = await createWorkOrder(supabase, orgId, body, user.id);
     return created(workOrder);
   },
   {

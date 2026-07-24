@@ -1,1 +1,7 @@
 pnpm lint-staged
+
+# Secret scanning — blocks commits containing hardcoded secrets
+# Config: .gitleaks.toml at repo root
+if command -v gitleaks &> /dev/null; then
+  gitleaks protect --no-banner --staged --verbose
+fi

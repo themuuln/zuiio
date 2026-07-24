@@ -147,8 +147,14 @@ class TileCacheManager {
 
               // If tile overlaps Mongolia bbox, skip it (it's bundled)
               if (_rectanglesOverlap(
-                tileLon1, tileLat1, tileLon2, tileLat2,
-                minLon, minLat, maxLon, maxLat,
+                tileLon1,
+                tileLat1,
+                tileLon2,
+                tileLat2,
+                minLon,
+                minLat,
+                maxLon,
+                maxLat,
               )) {
                 await entity.delete();
               }
@@ -237,8 +243,14 @@ class TileCacheManager {
   /// Handles tile Y coordinates that decrease (north→south) by normalizing
   /// latitude ordering before checking.
   static bool _rectanglesOverlap(
-    double ax1, double ay1, double ax2, double ay2,
-    double bx1, double by1, double bx2, double by2,
+    double ax1,
+    double ay1,
+    double ax2,
+    double ay2,
+    double bx1,
+    double by1,
+    double bx2,
+    double by2,
   ) {
     // Normalize latitude ordering — tile Y goes north→south so ay1 may be > ay2.
     final aLatMin = min(ay1, ay2);

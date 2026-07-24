@@ -46,24 +46,25 @@ function FAQCard({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div
-      className={`cursor-pointer rounded-xl border bg-background p-5 transition-colors hover:bg-muted/50 ${
-        open ? "ring-1 ring-primary/20" : ""
+    <button
+      type="button"
+      className={`w-full cursor-pointer rounded-2xl border bg-background p-5 text-left transition-all duration-200 hover:bg-muted/30 hover:shadow-sm ${
+        open ? "ring-1 ring-primary/20 shadow-sm" : "border-border/60"
       }`}
       onClick={() => setOpen(!open)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          setOpen(!open);
-        }
-      }}
-      role="button"
-      tabIndex={0}
       aria-expanded={open}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <Question className="mt-0.5 size-5 shrink-0 text-primary" />
+          <div
+            className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors ${
+              open
+                ? "bg-primary/15 text-primary"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            <Question className="size-3.5" />
+          </div>
           <h3 className="text-sm font-medium">{question}</h3>
         </div>
         <CaretDown
@@ -73,11 +74,11 @@ function FAQCard({ question, answer }: { question: string; answer: string }) {
         />
       </div>
       {open && (
-        <p className="mt-4 border-l-2 border-primary/20 pl-4 text-sm leading-relaxed text-muted-foreground">
+        <p className="mt-4 border-l-2 border-primary/20 pl-4 text-sm leading-relaxed text-muted-foreground animate-in slide-in-from-left-2 duration-200">
           {answer}
         </p>
       )}
-    </div>
+    </button>
   );
 }
 
@@ -86,15 +87,18 @@ export function FAQ() {
     <section id="faq" className="border-t bg-muted/30 py-20 md:py-28">
       <div className="mx-auto max-w-6xl px-4">
         <div className="mb-12 max-w-2xl">
-          <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+          <p className="mb-3 text-xs font-medium uppercase tracking-widest text-primary">
+            Түгээмэл асуултууд
+          </p>
+          <h2 className="mb-4 font-display text-4xl leading-tight md:text-5xl">
             Түгээмэл асуултууд
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-base text-muted-foreground md:text-lg">
             Zer-ийн талаарх хамгийн түгээмэл асуулт, хариултууд.
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="mx-auto grid max-w-3xl gap-4">
           {faqs.map((faq) => (
             <FAQCard key={faq.id} question={faq.question} answer={faq.answer} />
           ))}

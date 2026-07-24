@@ -33,31 +33,19 @@ const IsarCoOwnershipRecordSchema = CollectionSchema(
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'horseId': PropertySchema(
-      id: 3,
-      name: r'horseId',
-      type: IsarType.string,
-    ),
+    r'horseId': PropertySchema(id: 3, name: r'horseId', type: IsarType.string),
     r'permissions': PropertySchema(
       id: 4,
       name: r'permissions',
       type: IsarType.stringList,
     ),
-    r'phone': PropertySchema(
-      id: 5,
-      name: r'phone',
-      type: IsarType.string,
-    ),
-    r'role': PropertySchema(
-      id: 6,
-      name: r'role',
-      type: IsarType.string,
-    ),
+    r'phone': PropertySchema(id: 5, name: r'phone', type: IsarType.string),
+    r'role': PropertySchema(id: 6, name: r'role', type: IsarType.string),
     r'updatedAt': PropertySchema(
       id: 7,
       name: r'updatedAt',
       type: IsarType.dateTime,
-    )
+    ),
   },
   estimateSize: _isarCoOwnershipRecordEstimateSize,
   serialize: _isarCoOwnershipRecordSerialize,
@@ -75,7 +63,7 @@ const IsarCoOwnershipRecordSchema = CollectionSchema(
           name: r'domainId',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
     ),
     r'horseId': IndexSchema(
@@ -88,9 +76,9 @@ const IsarCoOwnershipRecordSchema = CollectionSchema(
           name: r'horseId',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
-    )
+    ),
   },
   links: {},
   embeddedSchemas: {},
@@ -189,12 +177,16 @@ Id _isarCoOwnershipRecordGetId(IsarCoOwnershipRecord object) {
 }
 
 List<IsarLinkBase<dynamic>> _isarCoOwnershipRecordGetLinks(
-    IsarCoOwnershipRecord object) {
+  IsarCoOwnershipRecord object,
+) {
   return [];
 }
 
 void _isarCoOwnershipRecordAttach(
-    IsarCollection<dynamic> col, Id id, IsarCoOwnershipRecord object) {
+  IsarCollection<dynamic> col,
+  Id id,
+  IsarCoOwnershipRecord object,
+) {
   object.id = id;
 }
 
@@ -217,13 +209,15 @@ extension IsarCoOwnershipRecordByIndex
   }
 
   Future<List<IsarCoOwnershipRecord?>> getAllByDomainId(
-      List<String> domainIdValues) {
+    List<String> domainIdValues,
+  ) {
     final values = domainIdValues.map((e) => [e]).toList();
     return getAllByIndex(r'domainId', values);
   }
 
   List<IsarCoOwnershipRecord?> getAllByDomainIdSync(
-      List<String> domainIdValues) {
+    List<String> domainIdValues,
+  ) {
     final values = domainIdValues.map((e) => [e]).toList();
     return getAllByIndexSync(r'domainId', values);
   }
@@ -250,8 +244,10 @@ extension IsarCoOwnershipRecordByIndex
     return putAllByIndex(r'domainId', objects);
   }
 
-  List<Id> putAllByDomainIdSync(List<IsarCoOwnershipRecord> objects,
-      {bool saveLinks = true}) {
+  List<Id> putAllByDomainIdSync(
+    List<IsarCoOwnershipRecord> objects, {
+    bool saveLinks = true,
+  }) {
     return putAllByIndexSync(r'domainId', objects, saveLinks: saveLinks);
   }
 }
@@ -259,27 +255,29 @@ extension IsarCoOwnershipRecordByIndex
 extension IsarCoOwnershipRecordQueryWhereSort
     on QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QWhere> {
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterWhere>
-      anyId() {
+  anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension IsarCoOwnershipRecordQueryWhere on QueryBuilder<IsarCoOwnershipRecord,
-    IsarCoOwnershipRecord, QWhereClause> {
+extension IsarCoOwnershipRecordQueryWhere
+    on
+        QueryBuilder<
+          IsarCoOwnershipRecord,
+          IsarCoOwnershipRecord,
+          QWhereClause
+        > {
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterWhereClause>
-      idEqualTo(Id id) {
+  idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterWhereClause>
-      idNotEqualTo(Id id) {
+  idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -302,7 +300,7 @@ extension IsarCoOwnershipRecordQueryWhere on QueryBuilder<IsarCoOwnershipRecord,
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterWhereClause>
-      idGreaterThan(Id id, {bool include = false}) {
+  idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -311,7 +309,7 @@ extension IsarCoOwnershipRecordQueryWhere on QueryBuilder<IsarCoOwnershipRecord,
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterWhereClause>
-      idLessThan(Id id, {bool include = false}) {
+  idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -320,163 +318,203 @@ extension IsarCoOwnershipRecordQueryWhere on QueryBuilder<IsarCoOwnershipRecord,
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterWhereClause>
-      idBetween(
+  idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterWhereClause>
-      domainIdEqualTo(String domainId) {
+  domainIdEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'domainId',
-        value: [domainId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'domainId', value: [domainId]),
+      );
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterWhereClause>
-      domainIdNotEqualTo(String domainId) {
+  domainIdNotEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [],
-              upper: [domainId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [domainId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [],
+                upper: [domainId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [domainId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [domainId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [],
-              upper: [domainId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [domainId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [],
+                upper: [domainId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterWhereClause>
-      horseIdEqualTo(String horseId) {
+  horseIdEqualTo(String horseId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'horseId',
-        value: [horseId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'horseId', value: [horseId]),
+      );
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterWhereClause>
-      horseIdNotEqualTo(String horseId) {
+  horseIdNotEqualTo(String horseId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [],
-              upper: [horseId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [horseId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [],
+                upper: [horseId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [horseId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [horseId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [],
-              upper: [horseId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [horseId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [],
+                upper: [horseId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 }
 
-extension IsarCoOwnershipRecordQueryFilter on QueryBuilder<
-    IsarCoOwnershipRecord, IsarCoOwnershipRecord, QFilterCondition> {
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> coOwnerNameEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+extension IsarCoOwnershipRecordQueryFilter
+    on
+        QueryBuilder<
+          IsarCoOwnershipRecord,
+          IsarCoOwnershipRecord,
+          QFilterCondition
+        > {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  coOwnerNameEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'coOwnerName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'coOwnerName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> coOwnerNameGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'coOwnerName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> coOwnerNameLessThan(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  coOwnerNameGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'coOwnerName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'coOwnerName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> coOwnerNameBetween(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  coOwnerNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'coOwnerName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  coOwnerNameBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -484,193 +522,251 @@ extension IsarCoOwnershipRecordQueryFilter on QueryBuilder<
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'coOwnerName',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'coOwnerName',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> coOwnerNameStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  coOwnerNameStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'coOwnerName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'coOwnerName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> coOwnerNameEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  coOwnerNameEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'coOwnerName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'coOwnerName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      coOwnerNameContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  coOwnerNameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'coOwnerName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'coOwnerName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      coOwnerNameMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  coOwnerNameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'coOwnerName',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'coOwnerName',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> coOwnerNameIsEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  coOwnerNameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'coOwnerName',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'coOwnerName', value: ''),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> coOwnerNameIsNotEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  coOwnerNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'coOwnerName',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'coOwnerName', value: ''),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> createdAtEqualTo(DateTime value) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'createdAt', value: value),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> createdAtGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  createdAtGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'createdAt',
+          value: value,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> createdAtLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  createdAtLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'createdAt',
+          value: value,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> createdAtBetween(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  createdAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'createdAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'createdAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> domainIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  domainIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> domainIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> domainIdLessThan(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  domainIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> domainIdBetween(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  domainIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  domainIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -678,137 +774,180 @@ extension IsarCoOwnershipRecordQueryFilter on QueryBuilder<
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'domainId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'domainId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> domainIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  domainIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> domainIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  domainIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      domainIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  domainIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      domainIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  domainIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'domainId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'domainId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> domainIdIsEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  domainIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'domainId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'domainId', value: ''),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> domainIdIsNotEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  domainIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'domainId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'domainId', value: ''),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> horseIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  horseIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> horseIdGreaterThan(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  horseIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> horseIdLessThan(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  horseIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> horseIdBetween(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  horseIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -816,193 +955,251 @@ extension IsarCoOwnershipRecordQueryFilter on QueryBuilder<
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'horseId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'horseId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> horseIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  horseIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> horseIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  horseIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      horseIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  horseIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      horseIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  horseIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'horseId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'horseId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> horseIdIsEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  horseIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'horseId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'horseId', value: ''),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> horseIdIsNotEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  horseIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'horseId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'horseId', value: ''),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> idEqualTo(Id value) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> idGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  idGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> idLessThan(
-    Id value, {
-    bool include = false,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  idLessThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> idBetween(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsElementEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsElementEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'permissions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'permissions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsElementGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'permissions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsElementLessThan(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'permissions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'permissions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsElementBetween(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'permissions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsElementBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1010,162 +1207,174 @@ extension IsarCoOwnershipRecordQueryFilter on QueryBuilder<
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'permissions',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsElementStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'permissions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsElementEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'permissions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      permissionsElementContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'permissions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      permissionsElementMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'permissions',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsElementIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'permissions',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsElementIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'permissions',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsLengthEqualTo(int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'permissions',
-        length,
-        true,
-        length,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'permissions',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsIsEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsElementStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'permissions',
-        0,
-        true,
-        0,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'permissions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsIsNotEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsElementEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'permissions',
-        0,
-        false,
-        999999,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'permissions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsElementContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'permissions',
-        0,
-        true,
-        length,
-        include,
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'permissions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsElementMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'permissions',
-        length,
-        include,
-        999999,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'permissions',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> permissionsLengthBetween(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'permissions', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'permissions', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'permissions', length, true, length, true);
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'permissions', 0, true, 0, true);
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'permissions', 0, false, 999999, true);
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsLengthLessThan(int length, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'permissions', 0, true, length, include);
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsLengthGreaterThan(int length, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'permissions', length, include, 999999, true);
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  permissionsLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -1182,54 +1391,73 @@ extension IsarCoOwnershipRecordQueryFilter on QueryBuilder<
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> phoneEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  phoneEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'phone',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'phone',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> phoneGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'phone',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> phoneLessThan(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  phoneGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'phone',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'phone',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> phoneBetween(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  phoneLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'phone',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  phoneBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1237,137 +1465,180 @@ extension IsarCoOwnershipRecordQueryFilter on QueryBuilder<
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'phone',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'phone',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> phoneStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  phoneStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'phone',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'phone',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> phoneEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  phoneEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'phone',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'phone',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      phoneContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  phoneContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'phone',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'phone',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      phoneMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  phoneMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'phone',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'phone',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> phoneIsEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  phoneIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'phone',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'phone', value: ''),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> phoneIsNotEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  phoneIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'phone',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'phone', value: ''),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> roleEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  roleEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'role',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'role',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> roleGreaterThan(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  roleGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'role',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'role',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> roleLessThan(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  roleLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'role',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'role',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> roleBetween(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  roleBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1375,247 +1646,296 @@ extension IsarCoOwnershipRecordQueryFilter on QueryBuilder<
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'role',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'role',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> roleStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  roleStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'role',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'role',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> roleEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  roleEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'role',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'role',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      roleContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  roleContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'role',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'role',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-          QAfterFilterCondition>
-      roleMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  roleMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'role',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'role',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> roleIsEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  roleIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'role',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'role', value: ''),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> roleIsNotEmpty() {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  roleIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'role',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'role', value: ''),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> updatedAtEqualTo(DateTime value) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  updatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'updatedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'updatedAt', value: value),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> updatedAtGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  updatedAtGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'updatedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> updatedAtLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  updatedAtLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'updatedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
     });
   }
 
-  QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord,
-      QAfterFilterCondition> updatedAtBetween(
+  QueryBuilder<
+    IsarCoOwnershipRecord,
+    IsarCoOwnershipRecord,
+    QAfterFilterCondition
+  >
+  updatedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'updatedAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'updatedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
 
-extension IsarCoOwnershipRecordQueryObject on QueryBuilder<
-    IsarCoOwnershipRecord, IsarCoOwnershipRecord, QFilterCondition> {}
+extension IsarCoOwnershipRecordQueryObject
+    on
+        QueryBuilder<
+          IsarCoOwnershipRecord,
+          IsarCoOwnershipRecord,
+          QFilterCondition
+        > {}
 
-extension IsarCoOwnershipRecordQueryLinks on QueryBuilder<IsarCoOwnershipRecord,
-    IsarCoOwnershipRecord, QFilterCondition> {}
+extension IsarCoOwnershipRecordQueryLinks
+    on
+        QueryBuilder<
+          IsarCoOwnershipRecord,
+          IsarCoOwnershipRecord,
+          QFilterCondition
+        > {}
 
 extension IsarCoOwnershipRecordQuerySortBy
     on QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QSortBy> {
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByCoOwnerName() {
+  sortByCoOwnerName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'coOwnerName', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByCoOwnerNameDesc() {
+  sortByCoOwnerNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'coOwnerName', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByCreatedAt() {
+  sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByCreatedAtDesc() {
+  sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByDomainId() {
+  sortByDomainId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByDomainIdDesc() {
+  sortByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByHorseId() {
+  sortByHorseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByHorseIdDesc() {
+  sortByHorseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByPhone() {
+  sortByPhone() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'phone', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByPhoneDesc() {
+  sortByPhoneDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'phone', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByRole() {
+  sortByRole() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'role', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByRoleDesc() {
+  sortByRoleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'role', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByUpdatedAt() {
+  sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      sortByUpdatedAtDesc() {
+  sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -1625,112 +1945,112 @@ extension IsarCoOwnershipRecordQuerySortBy
 extension IsarCoOwnershipRecordQuerySortThenBy
     on QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QSortThenBy> {
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByCoOwnerName() {
+  thenByCoOwnerName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'coOwnerName', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByCoOwnerNameDesc() {
+  thenByCoOwnerNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'coOwnerName', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByCreatedAt() {
+  thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByCreatedAtDesc() {
+  thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByDomainId() {
+  thenByDomainId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByDomainIdDesc() {
+  thenByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByHorseId() {
+  thenByHorseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByHorseIdDesc() {
+  thenByHorseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenById() {
+  thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByIdDesc() {
+  thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByPhone() {
+  thenByPhone() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'phone', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByPhoneDesc() {
+  thenByPhoneDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'phone', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByRole() {
+  thenByRole() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'role', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByRoleDesc() {
+  thenByRoleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'role', Sort.desc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByUpdatedAt() {
+  thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QAfterSortBy>
-      thenByUpdatedAtDesc() {
+  thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -1740,64 +2060,69 @@ extension IsarCoOwnershipRecordQuerySortThenBy
 extension IsarCoOwnershipRecordQueryWhereDistinct
     on QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QDistinct> {
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QDistinct>
-      distinctByCoOwnerName({bool caseSensitive = true}) {
+  distinctByCoOwnerName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'coOwnerName', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QDistinct>
-      distinctByCreatedAt() {
+  distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QDistinct>
-      distinctByDomainId({bool caseSensitive = true}) {
+  distinctByDomainId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'domainId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QDistinct>
-      distinctByHorseId({bool caseSensitive = true}) {
+  distinctByHorseId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'horseId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QDistinct>
-      distinctByPermissions() {
+  distinctByPermissions() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'permissions');
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QDistinct>
-      distinctByPhone({bool caseSensitive = true}) {
+  distinctByPhone({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'phone', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QDistinct>
-      distinctByRole({bool caseSensitive = true}) {
+  distinctByRole({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'role', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, IsarCoOwnershipRecord, QDistinct>
-      distinctByUpdatedAt() {
+  distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'updatedAt');
     });
   }
 }
 
-extension IsarCoOwnershipRecordQueryProperty on QueryBuilder<
-    IsarCoOwnershipRecord, IsarCoOwnershipRecord, QQueryProperty> {
+extension IsarCoOwnershipRecordQueryProperty
+    on
+        QueryBuilder<
+          IsarCoOwnershipRecord,
+          IsarCoOwnershipRecord,
+          QQueryProperty
+        > {
   QueryBuilder<IsarCoOwnershipRecord, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
@@ -1805,42 +2130,42 @@ extension IsarCoOwnershipRecordQueryProperty on QueryBuilder<
   }
 
   QueryBuilder<IsarCoOwnershipRecord, String, QQueryOperations>
-      coOwnerNameProperty() {
+  coOwnerNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'coOwnerName');
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, DateTime, QQueryOperations>
-      createdAtProperty() {
+  createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, String, QQueryOperations>
-      domainIdProperty() {
+  domainIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'domainId');
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, String, QQueryOperations>
-      horseIdProperty() {
+  horseIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'horseId');
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, List<String>, QQueryOperations>
-      permissionsProperty() {
+  permissionsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'permissions');
     });
   }
 
   QueryBuilder<IsarCoOwnershipRecord, String, QQueryOperations>
-      phoneProperty() {
+  phoneProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'phone');
     });
@@ -1853,7 +2178,7 @@ extension IsarCoOwnershipRecordQueryProperty on QueryBuilder<
   }
 
   QueryBuilder<IsarCoOwnershipRecord, DateTime, QQueryOperations>
-      updatedAtProperty() {
+  updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'updatedAt');
     });

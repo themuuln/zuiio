@@ -166,8 +166,7 @@ ProviderScope _buildEventDetailScreen({
   EventRegistrationRepository? mockRepo,
   LocalNotificationService? mockNotificationService,
 }) {
-  final effectiveAuthState =
-      authState ?? const AuthState.unauthenticated();
+  final effectiveAuthState = authState ?? const AuthState.unauthenticated();
 
   return ProviderScope(
     overrides: [
@@ -207,20 +206,21 @@ void main() {
   // ══════════════════════════════════════════════════════════════
   group('VAL-EVENTS-004: Register horse from event detail', () {
     testWidgets(
-        'shows "Морь бүртгүүлэх" button when registrationEnabled is true',
-        (tester) async {
-      await tester.pumpWidget(
-        _buildEventDetailScreen(
-          event: _testEvent,
-          authState: const AuthState.authenticated(userId: 'user-1'),
-          horses: [_testHorse1, _testHorse2, _testHorseOtherUser],
-          registrations: [],
-        ),
-      );
-      await tester.pumpAndSettle();
+      'shows "Морь бүртгүүлэх" button when registrationEnabled is true',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildEventDetailScreen(
+            event: _testEvent,
+            authState: const AuthState.authenticated(userId: 'user-1'),
+            horses: [_testHorse1, _testHorse2, _testHorseOtherUser],
+            registrations: [],
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Морь бүртгүүлэх'), findsOneWidget);
-    });
+        expect(find.text('Морь бүртгүүлэх'), findsOneWidget);
+      },
+    );
   });
 
   // ══════════════════════════════════════════════════════════════
@@ -228,18 +228,19 @@ void main() {
   // ══════════════════════════════════════════════════════════════
   group('VAL-EVENTS-019: Button hidden when registrationEnabled=false', () {
     testWidgets(
-        '"Морь бүртгүүлэх" button is not shown when registrationEnabled is false',
-        (tester) async {
-      await tester.pumpWidget(
-        _buildEventDetailScreen(
-          event: _testEventNoRegistration,
-          authState: const AuthState.authenticated(userId: 'user-1'),
-        ),
-      );
-      await tester.pumpAndSettle();
+      '"Морь бүртгүүлэх" button is not shown when registrationEnabled is false',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildEventDetailScreen(
+            event: _testEventNoRegistration,
+            authState: const AuthState.authenticated(userId: 'user-1'),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Морь бүртгүүлэх'), findsNothing);
-    });
+        expect(find.text('Морь бүртгүүлэх'), findsNothing);
+      },
+    );
   });
 
   // ══════════════════════════════════════════════════════════════
@@ -285,9 +286,7 @@ void main() {
       expect(find.text('2'), findsWidgets);
     });
 
-    testWidgets('shows empty state when no horses registered', (
-      tester,
-    ) async {
+    testWidgets('shows empty state when no horses registered', (tester) async {
       await tester.pumpWidget(
         _buildEventDetailScreen(
           event: _testEvent,
@@ -487,64 +486,68 @@ void main() {
   // VAL-EVENTS-008: Contact Organizer info
   // ══════════════════════════════════════════════════════════════
   group('VAL-EVENTS-008: Contact Organizer section', () {
-    testWidgets('organizer section is hidden when all organizer fields are null',
-        (tester) async {
-      await tester.pumpWidget(
-        _buildEventDetailScreen(
-          event: _testEventNoOrganizer,
-          authState: const AuthState.authenticated(userId: 'user-1'),
-        ),
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      'organizer section is hidden when all organizer fields are null',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildEventDetailScreen(
+            event: _testEventNoOrganizer,
+            authState: const AuthState.authenticated(userId: 'user-1'),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Зохион байгуулагч'), findsNothing);
-    });
+        expect(find.text('Зохион байгуулагч'), findsNothing);
+      },
+    );
 
     testWidgets(
-        '"Зарлагчтай холбогдох" button is shown when organizer has contact info',
-        (tester) async {
-      await tester.pumpWidget(
-        _buildEventDetailScreen(
-          event: _testEventCompleted,
-          authState: const AuthState.authenticated(userId: 'user-1'),
-        ),
-      );
-      await tester.pumpAndSettle();
+      '"Зарлагчтай холбогдох" button is shown when organizer has contact info',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildEventDetailScreen(
+            event: _testEventCompleted,
+            authState: const AuthState.authenticated(userId: 'user-1'),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Зарлагчтай холбогдох'), findsOneWidget);
-    });
+        expect(find.text('Зарлагчтай холбогдох'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        '"Зарлагчтай холбогдох" button is hidden when organizer has no phone or email',
-        (tester) async {
-      // Event with only name but no phone/email
-      final eventWithNameOnly = Event(
-        id: 'evt-name-only',
-        horseId: 'horse-1',
-        title: 'Нэртэй тэмцээн',
-        eventType: EventType.race,
-        registrationEnabled: true,
-        organizerName: 'Зохион байгуулагч',
-        organizerPhone: null,
-        organizerEmail: null,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      await tester.pumpWidget(
-        _buildEventDetailScreen(
-          event: eventWithNameOnly,
-          authState: const AuthState.authenticated(userId: 'user-1'),
-        ),
-      );
-      await tester.pumpAndSettle();
+      '"Зарлагчтай холбогдох" button is hidden when organizer has no phone or email',
+      (tester) async {
+        // Event with only name but no phone/email
+        final eventWithNameOnly = Event(
+          id: 'evt-name-only',
+          horseId: 'horse-1',
+          title: 'Нэртэй тэмцээн',
+          eventType: EventType.race,
+          registrationEnabled: true,
+          organizerName: 'Зохион байгуулагч',
+          organizerPhone: null,
+          organizerEmail: null,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        await tester.pumpWidget(
+          _buildEventDetailScreen(
+            event: eventWithNameOnly,
+            authState: const AuthState.authenticated(userId: 'user-1'),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // Organizer section should still show (organizerName is set).
-      // The text "Зохион байгуулагч" appears both as the section title
-      // and as the displayed organizer name value.
-      expect(find.text('Зохион байгуулагч'), findsWidgets);
-      // But the contact button should be hidden (no phone or email)
-      expect(find.text('Зарлагчтай холбогдох'), findsNothing);
-    });
+        // Organizer section should still show (organizerName is set).
+        // The text "Зохион байгуулагч" appears both as the section title
+        // and as the displayed organizer name value.
+        expect(find.text('Зохион байгуулагч'), findsWidgets);
+        // But the contact button should be hidden (no phone or email)
+        expect(find.text('Зарлагчтай холбогдох'), findsNothing);
+      },
+    );
   });
 
   // ══════════════════════════════════════════════════════════════
@@ -604,53 +607,56 @@ void main() {
     });
 
     testWidgets(
-        'tapping "Сануулах" calls scheduleNotification with correct params',
-        (tester) async {
-      final mockNotificationService = MockLocalNotificationService();
-      final eventDate = DateTime(2030, 6, 1);
-      final expectedScheduledDate = eventDate.subtract(const Duration(days: 1));
+      'tapping "Сануулах" calls scheduleNotification with correct params',
+      (tester) async {
+        final mockNotificationService = MockLocalNotificationService();
+        final eventDate = DateTime(2030, 6, 1);
+        final expectedScheduledDate = eventDate.subtract(
+          const Duration(days: 1),
+        );
 
-      // Register fallback for NotificationType enum
-      registerFallbackValue(NotificationType.healthReminder);
+        // Register fallback for NotificationType enum
+        registerFallbackValue(NotificationType.healthReminder);
 
-      // Stub scheduleNotification to return success
-      when(
-        () => mockNotificationService.scheduleNotification(
-          id: any(named: 'id'),
-          title: any(named: 'title'),
-          body: any(named: 'body'),
-          scheduledDate: any(named: 'scheduledDate'),
-          type: any(named: 'type'),
-          referenceId: any(named: 'referenceId'),
-          referenceType: any(named: 'referenceType'),
-        ),
-      ).thenAnswer((_) async => const Result.ok(null));
+        // Stub scheduleNotification to return success
+        when(
+          () => mockNotificationService.scheduleNotification(
+            id: any(named: 'id'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: any(named: 'scheduledDate'),
+            type: any(named: 'type'),
+            referenceId: any(named: 'referenceId'),
+            referenceType: any(named: 'referenceType'),
+          ),
+        ).thenAnswer((_) async => const Result.ok(null));
 
-      await tester.pumpWidget(
-        _buildEventDetailScreen(
-          event: _testEventWithFutureDate,
-          authState: const AuthState.authenticated(userId: 'user-1'),
-          mockNotificationService: mockNotificationService,
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _buildEventDetailScreen(
+            event: _testEventWithFutureDate,
+            authState: const AuthState.authenticated(userId: 'user-1'),
+            mockNotificationService: mockNotificationService,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // Tap the "Сануулах" button
-      await tester.tap(find.text('Сануулах'));
-      await tester.pumpAndSettle();
+        // Tap the "Сануулах" button
+        await tester.tap(find.text('Сануулах'));
+        await tester.pumpAndSettle();
 
-      // Verify scheduleNotification was called with correct parameters
-      verify(
-        () => mockNotificationService.scheduleNotification(
-          id: _testEventWithFutureDate.id.hashCode.abs(),
-          title: 'Арга хэмжээний сануулга',
-          body: _testEventWithFutureDate.title,
-          scheduledDate: expectedScheduledDate,
-          type: NotificationType.healthReminder,
-          referenceId: _testEventWithFutureDate.id,
-          referenceType: 'event',
-        ),
-      ).called(1);
-    });
+        // Verify scheduleNotification was called with correct parameters
+        verify(
+          () => mockNotificationService.scheduleNotification(
+            id: _testEventWithFutureDate.id.hashCode.abs(),
+            title: 'Арга хэмжээний сануулга',
+            body: _testEventWithFutureDate.title,
+            scheduledDate: expectedScheduledDate,
+            type: NotificationType.healthReminder,
+            referenceId: _testEventWithFutureDate.id,
+            referenceType: 'event',
+          ),
+        ).called(1);
+      },
+    );
   });
 }

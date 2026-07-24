@@ -35,8 +35,14 @@ const SAMPLE_SERVICES = [1, 2, 3, 4, 5, 6];
 const DEFAULT_INTERVALS = [1, 2, 3, 4, 5, 6];
 
 export default function ServicesPage() {
-  const t = useTranslations("services");
-  const appT = useTranslations("app");
+  const t = useTranslations("services") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const appT = useTranslations("app") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   return (
     <div className="flex min-h-dvh flex-col">

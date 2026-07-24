@@ -30,14 +30,20 @@ import {
 import { useProfile } from "@/lib/queries/use-profile";
 import { reportServerError } from "@/lib/sentry-report-server";
 import type { UserProfile } from "@/lib/types";
-import { EditMemberSheet } from "./_edit-member-drawer";
-import { InviteSheet } from "./_invite-drawer";
+import { EditMemberDrawer } from "./_edit-member-drawer";
+import { InviteDrawer } from "./_invite-drawer";
 import { MemberList } from "./_member-list";
 import { PendingInvites } from "./_pending-invites";
 
 export default function MembersPage() {
-  const commonT = useTranslations("common");
-  const t = useTranslations("organization.memberManagement");
+  const commonT = useTranslations("common") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const t = useTranslations("organization.memberManagement") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   const { data: profile } = useProfile();
   const orgId = profile?.organizationId ?? "";
@@ -170,7 +176,7 @@ export default function MembersPage() {
         </div>
       </div>
 
-      <InviteSheet
+      <InviteDrawer
         open={inviteSheetOpen}
         onOpenChange={setInviteSheetOpen}
         sending={createInvite.isPending}
@@ -245,7 +251,7 @@ export default function MembersPage() {
       </div>
 
       {editingMember && (
-        <EditMemberSheet
+        <EditMemberDrawer
           open={!!editingMember}
           onOpenChange={(open) => {
             if (!open) setEditingMember(null);

@@ -13,10 +13,7 @@ import 'nutrition_repository.dart';
 class LocalNutritionRepository
     extends LocalRepository<FeedSchedule, IsarFeedSchedule>
     implements NutritionRepository {
-  LocalNutritionRepository({
-    required super.storage,
-    required super.syncQueue,
-  });
+  LocalNutritionRepository({required super.storage, required super.syncQueue});
 
   @override
   IsarCollection<IsarFeedSchedule> get collection => storage.feedSchedules;

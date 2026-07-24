@@ -42,7 +42,6 @@ export function ResponsiveFormModal({
   children,
   className,
   useDialogOnDesktop = false,
-  sheetSize = "xl",
   footer,
 }: ResponsiveFormModalProps) {
   const isMobile = useIsMobile();
@@ -122,7 +121,7 @@ export function ResponsiveFormModal({
 
   // Desktop: Right Side Sheet (standard) — now uses DetailDrawer
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} >
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header className="p-6 pb-2">
         <DetailDrawer.Title className="text-xl font-bold">
           {title}

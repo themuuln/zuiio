@@ -161,6 +161,14 @@ export function CategoryCreateDrawer({
                 itemToStringLabel={(item: string | null) => item ?? ""}
                 inputValue={categoryQuery}
                 onInputValueChange={setCategoryQuery}
+                onCreate={(label) => {
+                  if (!allCategories.includes(label)) {
+                    setAllCategories((prev) => [...prev, label]);
+                  }
+                  setSelectedCategory(label);
+                  setCategoryQuery("");
+                  setValue("name", label, { shouldValidate: true });
+                }}
               >
                 <ComboboxInput
                   placeholder="Хоол, ундаа"

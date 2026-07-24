@@ -163,7 +163,10 @@ interface DiagnosisLabelsSectionProps {
 }
 
 export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
-  const t = useTranslations("diagnosisLabels");
+  const t = useTranslations("diagnosisLabels") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: labels, isPending, error } = useDiagnosisLabels(orgId);
   const createLabel = useCreateDiagnosisLabel(orgId);
   const updateLabel = useUpdateDiagnosisLabel(orgId);
@@ -353,7 +356,7 @@ export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
                           <div className="flex items-center justify-end gap-1">
                             <Button
                               variant="ghost"
-                              size="icon-sm"
+                              size="icon"
                               onClick={() => {
                                 setEditingLabel(label);
                                 setDialogOpen(true);
@@ -363,7 +366,7 @@ export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
                             </Button>
                             <Button
                               variant="ghost"
-                              size="icon-sm"
+                              size="icon"
                               onClick={() => handleDelete(label.id)}
                             >
                               <Trash2 className="size-4 text-destructive" />

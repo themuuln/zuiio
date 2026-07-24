@@ -17,21 +17,13 @@ const IsarHealthLogSchema = CollectionSchema(
   name: r'IsarHealthLog',
   id: 2980641072404148757,
   properties: {
-    r'cost': PropertySchema(
-      id: 0,
-      name: r'cost',
-      type: IsarType.double,
-    ),
+    r'cost': PropertySchema(id: 0, name: r'cost', type: IsarType.double),
     r'createdAt': PropertySchema(
       id: 1,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'date': PropertySchema(
-      id: 2,
-      name: r'date',
-      type: IsarType.dateTime,
-    ),
+    r'date': PropertySchema(id: 2, name: r'date', type: IsarType.dateTime),
     r'domainId': PropertySchema(
       id: 3,
       name: r'domainId',
@@ -42,11 +34,7 @@ const IsarHealthLogSchema = CollectionSchema(
       name: r'farrierName',
       type: IsarType.string,
     ),
-    r'horseId': PropertySchema(
-      id: 5,
-      name: r'horseId',
-      type: IsarType.string,
-    ),
+    r'horseId': PropertySchema(id: 5, name: r'horseId', type: IsarType.string),
     r'logType': PropertySchema(
       id: 6,
       name: r'logType',
@@ -58,16 +46,12 @@ const IsarHealthLogSchema = CollectionSchema(
       name: r'medicament',
       type: IsarType.string,
     ),
-    r'notes': PropertySchema(
-      id: 8,
-      name: r'notes',
-      type: IsarType.string,
-    ),
+    r'notes': PropertySchema(id: 8, name: r'notes', type: IsarType.string),
     r'updatedAt': PropertySchema(
       id: 9,
       name: r'updatedAt',
       type: IsarType.dateTime,
-    )
+    ),
   },
   estimateSize: _isarHealthLogEstimateSize,
   serialize: _isarHealthLogSerialize,
@@ -85,7 +69,7 @@ const IsarHealthLogSchema = CollectionSchema(
           name: r'domainId',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
     ),
     r'horseId': IndexSchema(
@@ -98,7 +82,7 @@ const IsarHealthLogSchema = CollectionSchema(
           name: r'horseId',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
     ),
     r'logType': IndexSchema(
@@ -111,9 +95,9 @@ const IsarHealthLogSchema = CollectionSchema(
           name: r'logType',
           type: IndexType.value,
           caseSensitive: false,
-        )
+        ),
       ],
-    )
+    ),
   },
   links: {},
   embeddedSchemas: {},
@@ -181,7 +165,7 @@ IsarHealthLog _isarHealthLogDeserialize(
   object.id = id;
   object.logType =
       _IsarHealthLoglogTypeValueEnumMap[reader.readByteOrNull(offsets[6])] ??
-          LogType.vaccination;
+      LogType.vaccination;
   object.medicament = reader.readStringOrNull(offsets[7]);
   object.notes = reader.readString(offsets[8]);
   object.updatedAt = reader.readDateTime(offsets[9]);
@@ -208,9 +192,11 @@ P _isarHealthLogDeserializeProp<P>(
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
-      return (_IsarHealthLoglogTypeValueEnumMap[
-              reader.readByteOrNull(offset)] ??
-          LogType.vaccination) as P;
+      return (_IsarHealthLoglogTypeValueEnumMap[reader.readByteOrNull(
+                offset,
+              )] ??
+              LogType.vaccination)
+          as P;
     case 7:
       return (reader.readStringOrNull(offset)) as P;
     case 8:
@@ -248,7 +234,10 @@ List<IsarLinkBase<dynamic>> _isarHealthLogGetLinks(IsarHealthLog object) {
 }
 
 void _isarHealthLogAttach(
-    IsarCollection<dynamic> col, Id id, IsarHealthLog object) {
+  IsarCollection<dynamic> col,
+  Id id,
+  IsarHealthLog object,
+) {
   object.id = id;
 }
 
@@ -301,8 +290,10 @@ extension IsarHealthLogByIndex on IsarCollection<IsarHealthLog> {
     return putAllByIndex(r'domainId', objects);
   }
 
-  List<Id> putAllByDomainIdSync(List<IsarHealthLog> objects,
-      {bool saveLinks = true}) {
+  List<Id> putAllByDomainIdSync(
+    List<IsarHealthLog> objects, {
+    bool saveLinks = true,
+  }) {
     return putAllByIndexSync(r'domainId', objects, saveLinks: saveLinks);
   }
 }
@@ -327,17 +318,16 @@ extension IsarHealthLogQueryWhereSort
 extension IsarHealthLogQueryWhere
     on QueryBuilder<IsarHealthLog, IsarHealthLog, QWhereClause> {
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause> idEqualTo(
-      Id id) {
+    Id id,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause> idNotEqualTo(
-      Id id) {
+    Id id,
+  ) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -360,8 +350,9 @@ extension IsarHealthLogQueryWhere
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause> idGreaterThan(
-      Id id,
-      {bool include = false}) {
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -370,8 +361,9 @@ extension IsarHealthLogQueryWhere
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause> idLessThan(
-      Id id,
-      {bool include = false}) {
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -386,162 +378,187 @@ extension IsarHealthLogQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause> domainIdEqualTo(
-      String domainId) {
+    String domainId,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'domainId',
-        value: [domainId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'domainId', value: [domainId]),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause>
-      domainIdNotEqualTo(String domainId) {
+  domainIdNotEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [],
-              upper: [domainId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [domainId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [],
+                upper: [domainId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [domainId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [domainId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [],
-              upper: [domainId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [domainId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [],
+                upper: [domainId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause> horseIdEqualTo(
-      String horseId) {
+    String horseId,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'horseId',
-        value: [horseId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'horseId', value: [horseId]),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause>
-      horseIdNotEqualTo(String horseId) {
+  horseIdNotEqualTo(String horseId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [],
-              upper: [horseId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [horseId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [],
+                upper: [horseId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [horseId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [horseId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [],
-              upper: [horseId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [horseId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [],
+                upper: [horseId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause> logTypeEqualTo(
-      LogType logType) {
+    LogType logType,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'logType',
-        value: [logType],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'logType', value: [logType]),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause>
-      logTypeNotEqualTo(LogType logType) {
+  logTypeNotEqualTo(LogType logType) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'logType',
-              lower: [],
-              upper: [logType],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'logType',
-              lower: [logType],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'logType',
+                lower: [],
+                upper: [logType],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'logType',
+                lower: [logType],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'logType',
-              lower: [logType],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'logType',
-              lower: [],
-              upper: [logType],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'logType',
+                lower: [logType],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'logType',
+                lower: [],
+                upper: [logType],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterWhereClause>
-      logTypeGreaterThan(
-    LogType logType, {
-    bool include = false,
-  }) {
+  logTypeGreaterThan(LogType logType, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'logType',
-        lower: [logType],
-        includeLower: include,
-        upper: [],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'logType',
+          lower: [logType],
+          includeLower: include,
+          upper: [],
+        ),
+      );
     });
   }
 
@@ -550,12 +567,14 @@ extension IsarHealthLogQueryWhere
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'logType',
-        lower: [],
-        upper: [logType],
-        includeUpper: include,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'logType',
+          lower: [],
+          upper: [logType],
+          includeUpper: include,
+        ),
+      );
     });
   }
 
@@ -566,13 +585,15 @@ extension IsarHealthLogQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'logType',
-        lower: [lowerLogType],
-        includeLower: includeLower,
-        upper: [upperLogType],
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'logType',
+          lower: [lowerLogType],
+          includeLower: includeLower,
+          upper: [upperLogType],
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -580,20 +601,20 @@ extension IsarHealthLogQueryWhere
 extension IsarHealthLogQueryFilter
     on QueryBuilder<IsarHealthLog, IsarHealthLog, QFilterCondition> {
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      costIsNull() {
+  costIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'cost',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'cost'),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      costIsNotNull() {
+  costIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'cost',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'cost'),
+      );
     });
   }
 
@@ -602,43 +623,49 @@ extension IsarHealthLogQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'cost',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'cost',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      costGreaterThan(
+  costGreaterThan(
     double? value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'cost',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'cost',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      costLessThan(
+  costLessThan(
     double? value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'cost',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'cost',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
@@ -650,126 +677,125 @@ extension IsarHealthLogQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'cost',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'cost',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      createdAtEqualTo(DateTime value) {
+  createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'createdAt', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      createdAtGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  createdAtGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'createdAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      createdAtLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  createdAtLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'createdAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      createdAtBetween(
+  createdAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'createdAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'createdAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      dateIsNull() {
+  dateIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'date',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'date'),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      dateIsNotNull() {
+  dateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'date',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'date'),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition> dateEqualTo(
-      DateTime? value) {
+    DateTime? value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'date',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'date', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      dateGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  dateGreaterThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'date',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'date',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      dateLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  dateLessThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'date',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'date',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -780,64 +806,69 @@ extension IsarHealthLogQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'date',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'date',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      domainIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  domainIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      domainIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      domainIdLessThan(
+  domainIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      domainIdBetween(
+  domainIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
+  domainIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -845,153 +876,158 @@ extension IsarHealthLogQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'domainId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'domainId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      domainIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  domainIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      domainIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  domainIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      domainIdContains(String value, {bool caseSensitive = true}) {
+  domainIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      domainIdMatches(String pattern, {bool caseSensitive = true}) {
+  domainIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'domainId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'domainId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      domainIdIsEmpty() {
+  domainIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'domainId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'domainId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      domainIdIsNotEmpty() {
+  domainIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'domainId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'domainId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameIsNull() {
+  farrierNameIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'farrierName',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'farrierName'),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameIsNotNull() {
+  farrierNameIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'farrierName',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'farrierName'),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  farrierNameEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'farrierName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'farrierName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'farrierName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameLessThan(
+  farrierNameGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'farrierName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'farrierName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameBetween(
+  farrierNameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'farrierName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
+  farrierNameBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -999,135 +1035,140 @@ extension IsarHealthLogQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'farrierName',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'farrierName',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  farrierNameStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'farrierName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'farrierName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  farrierNameEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'farrierName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'farrierName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameContains(String value, {bool caseSensitive = true}) {
+  farrierNameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'farrierName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'farrierName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameMatches(String pattern, {bool caseSensitive = true}) {
+  farrierNameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'farrierName',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'farrierName',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameIsEmpty() {
+  farrierNameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'farrierName',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'farrierName', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      farrierNameIsNotEmpty() {
+  farrierNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'farrierName',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'farrierName', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      horseIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  horseIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      horseIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      horseIdLessThan(
+  horseIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      horseIdBetween(
+  horseIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
+  horseIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1135,108 +1176,109 @@ extension IsarHealthLogQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'horseId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'horseId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      horseIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  horseIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      horseIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  horseIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      horseIdContains(String value, {bool caseSensitive = true}) {
+  horseIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      horseIdMatches(String pattern, {bool caseSensitive = true}) {
+  horseIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'horseId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'horseId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      horseIdIsEmpty() {
+  horseIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'horseId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'horseId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      horseIdIsNotEmpty() {
+  horseIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'horseId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'horseId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition> idEqualTo(
-      Id value) {
+    Id value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      idGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1245,11 +1287,13 @@ extension IsarHealthLogQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1260,138 +1304,142 @@ extension IsarHealthLogQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      logTypeEqualTo(LogType value) {
+  logTypeEqualTo(LogType value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'logType',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'logType', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      logTypeGreaterThan(
-    LogType value, {
-    bool include = false,
-  }) {
+  logTypeGreaterThan(LogType value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'logType',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'logType',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      logTypeLessThan(
-    LogType value, {
-    bool include = false,
-  }) {
+  logTypeLessThan(LogType value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'logType',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'logType',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      logTypeBetween(
+  logTypeBetween(
     LogType lower,
     LogType upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'logType',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'logType',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentIsNull() {
+  medicamentIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'medicament',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'medicament'),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentIsNotNull() {
+  medicamentIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'medicament',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'medicament'),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  medicamentEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'medicament',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'medicament',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'medicament',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentLessThan(
+  medicamentGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'medicament',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'medicament',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentBetween(
+  medicamentLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'medicament',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
+  medicamentBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -1399,135 +1447,140 @@ extension IsarHealthLogQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'medicament',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'medicament',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  medicamentStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'medicament',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'medicament',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  medicamentEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'medicament',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'medicament',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentContains(String value, {bool caseSensitive = true}) {
+  medicamentContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'medicament',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'medicament',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentMatches(String pattern, {bool caseSensitive = true}) {
+  medicamentMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'medicament',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'medicament',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentIsEmpty() {
+  medicamentIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'medicament',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'medicament', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      medicamentIsNotEmpty() {
+  medicamentIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'medicament',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'medicament', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      notesEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  notesEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'notes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'notes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      notesGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'notes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      notesLessThan(
+  notesGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'notes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'notes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      notesBetween(
+  notesLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'notes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
+  notesBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1535,140 +1588,141 @@ extension IsarHealthLogQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'notes',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'notes',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      notesStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  notesStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'notes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'notes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      notesEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  notesEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'notes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'notes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      notesContains(String value, {bool caseSensitive = true}) {
+  notesContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'notes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'notes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      notesMatches(String pattern, {bool caseSensitive = true}) {
+  notesMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'notes',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'notes',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      notesIsEmpty() {
+  notesIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'notes',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'notes', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      notesIsNotEmpty() {
+  notesIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'notes',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'notes', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      updatedAtEqualTo(DateTime value) {
+  updatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'updatedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'updatedAt', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      updatedAtGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  updatedAtGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'updatedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      updatedAtLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  updatedAtLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'updatedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterFilterCondition>
-      updatedAtBetween(
+  updatedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'updatedAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'updatedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -1700,7 +1754,7 @@ extension IsarHealthLogQuerySortBy
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterSortBy>
-      sortByCreatedAtDesc() {
+  sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
@@ -1725,7 +1779,7 @@ extension IsarHealthLogQuerySortBy
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterSortBy>
-      sortByDomainIdDesc() {
+  sortByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
@@ -1738,7 +1792,7 @@ extension IsarHealthLogQuerySortBy
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterSortBy>
-      sortByFarrierNameDesc() {
+  sortByFarrierNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'farrierName', Sort.desc);
     });
@@ -1775,7 +1829,7 @@ extension IsarHealthLogQuerySortBy
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterSortBy>
-      sortByMedicamentDesc() {
+  sortByMedicamentDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'medicament', Sort.desc);
     });
@@ -1800,7 +1854,7 @@ extension IsarHealthLogQuerySortBy
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterSortBy>
-      sortByUpdatedAtDesc() {
+  sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -1828,7 +1882,7 @@ extension IsarHealthLogQuerySortThenBy
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterSortBy>
-      thenByCreatedAtDesc() {
+  thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
@@ -1853,7 +1907,7 @@ extension IsarHealthLogQuerySortThenBy
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterSortBy>
-      thenByDomainIdDesc() {
+  thenByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
@@ -1866,7 +1920,7 @@ extension IsarHealthLogQuerySortThenBy
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterSortBy>
-      thenByFarrierNameDesc() {
+  thenByFarrierNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'farrierName', Sort.desc);
     });
@@ -1915,7 +1969,7 @@ extension IsarHealthLogQuerySortThenBy
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterSortBy>
-      thenByMedicamentDesc() {
+  thenByMedicamentDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'medicament', Sort.desc);
     });
@@ -1940,7 +1994,7 @@ extension IsarHealthLogQuerySortThenBy
   }
 
   QueryBuilder<IsarHealthLog, IsarHealthLog, QAfterSortBy>
-      thenByUpdatedAtDesc() {
+  thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
@@ -1967,22 +2021,25 @@ extension IsarHealthLogQueryWhereDistinct
     });
   }
 
-  QueryBuilder<IsarHealthLog, IsarHealthLog, QDistinct> distinctByDomainId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<IsarHealthLog, IsarHealthLog, QDistinct> distinctByDomainId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'domainId', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<IsarHealthLog, IsarHealthLog, QDistinct> distinctByFarrierName(
-      {bool caseSensitive = true}) {
+  QueryBuilder<IsarHealthLog, IsarHealthLog, QDistinct> distinctByFarrierName({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'farrierName', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<IsarHealthLog, IsarHealthLog, QDistinct> distinctByHorseId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<IsarHealthLog, IsarHealthLog, QDistinct> distinctByHorseId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'horseId', caseSensitive: caseSensitive);
     });
@@ -1994,15 +2051,17 @@ extension IsarHealthLogQueryWhereDistinct
     });
   }
 
-  QueryBuilder<IsarHealthLog, IsarHealthLog, QDistinct> distinctByMedicament(
-      {bool caseSensitive = true}) {
+  QueryBuilder<IsarHealthLog, IsarHealthLog, QDistinct> distinctByMedicament({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'medicament', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<IsarHealthLog, IsarHealthLog, QDistinct> distinctByNotes(
-      {bool caseSensitive = true}) {
+  QueryBuilder<IsarHealthLog, IsarHealthLog, QDistinct> distinctByNotes({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'notes', caseSensitive: caseSensitive);
     });

@@ -1,0 +1,25 @@
+# Market Tab
+
+appId: mn.tamga.app
+name: Market Tab
+
+onFlowStart:
+  - clearState
+
+---
+- launchApp
+
+- runFlow:
+    when:
+      visible: "Open"
+    file: ../subflows/dismiss-open-dialog.yaml
+
+- extendedWaitUntil:
+    visible: "Миний морь"
+    timeout: 30000
+
+# Tap Зах tab (text selector)
+- tapOn: "Зах, tab, 3 of 8"
+- assertVisible: "Морины зах"
+
+- takeScreenshot: market_tab

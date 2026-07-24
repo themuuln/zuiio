@@ -1,8 +1,8 @@
 /// Үржүүлгийн зөвлөгөө өгөх дэлгэц.
 ///
 /// Хэрэглэгч хоёр морио сонгоод (аав + ээж) "Анализ хийх" товч дарж,
-/// цус ойртолтын эрсдэл, эрүүл мэндийн нийцэл, өнгөний таамаглал,
-/// үүлдрийн зөвлөмжийг харна.
+/// нийцлийн оноо, цус ойртолтын эрсдэл, өнгөний таамаглал,
+/// эрүүл мэндийн эрсдэл, үүлдрийн зөвлөмжийг харна.
 library;
 
 import 'package:flutter/material.dart';
@@ -41,14 +41,20 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
   // ── Геттерууд ───────────────────────────────────────────────────────
 
   List<Horse> get _stallions =>
-      ref.watch(horsesProvider).valueOrNull?.where(
-            (h) => h.gender == HorseGender.stallion,
-          ).toList() ?? [];
+      ref
+          .watch(horsesProvider)
+          .valueOrNull
+          ?.where((h) => h.gender == HorseGender.stallion)
+          .toList() ??
+      [];
 
   List<Horse> get _mares =>
-      ref.watch(horsesProvider).valueOrNull?.where(
-            (h) => h.gender == HorseGender.mare,
-          ).toList() ?? [];
+      ref
+          .watch(horsesProvider)
+          .valueOrNull
+          ?.where((h) => h.gender == HorseGender.mare)
+          .toList() ??
+      [];
 
   bool get _canAnalyze =>
       _selectedSireId != null &&
@@ -62,16 +68,21 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
     final horsesAsync = ref.watch(horsesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Үржүүлгийн зөвлөгөө'),
-      ),
-      body: horsesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => TamgaErrorWidget(
-          message: 'Морьдын мэдээлэл ачаалахад алдаа гарлаа: $err',
-          onRetry: () => ref.invalidate(horsesProvider),
-        ),
-        data: (_) => _buildContent(theme),
+      appBar: AppBar(title: const Text('Үржүүлгийн зөвлөгөө')),
+      body: Stack(
+        children: [
+          horsesAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => TamgaErrorWidget(
+              message: 'Морьдын мэдээлэл ачаалахад алдаа гарлаа: $err',
+              onRetry: () => ref.invalidate(horsesProvider),
+            ),
+            data: (_) => _buildContent(theme),
+          ),
+
+          // ── Loading overlay ──
+          if (_isLoading) _buildLoadingOverlay(theme),
+        ],
       ),
     );
   }
@@ -88,7 +99,8 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
             : stallions.isEmpty
             ? 'Азарга бүртгээгүй байна.'
             : 'Гүү бүртгээгүй байна.',
-        'Үржүүлгийн зөвлөгөө авахын тулд эхлээд азарга (stallion) болон гүү (mare) бүртгэнэ үү.',
+        'Үржүүлгийн зөвлөгөө авахын тулд эхлээд азарга (stallion) болон '
+        'гүү (mare) бүртгэнэ үү.',
       );
     }
 
@@ -140,12 +152,69 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
             _buildQuotaInfo(theme),
             const SizedBox(height: AppSpacing.lg),
             BreedingResultCard(advice: _result!),
+            const SizedBox(height: AppSpacing.lg),
+
+            // ── Дахин шинжлэх товч ──
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _isLoading ? null : _analyzePair,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Дахин шинжлэх'),
+              ),
+            ),
           ],
 
           // ── Квот дууссан (хязгаарт хүрсэн) ──
           if (!_isLoading && _error == null && _result == null)
             _buildQuotaWarning(theme),
         ],
+      ),
+    );
+  }
+
+  // ── Loading overlay ─────────────────────────────────────────────────
+
+  Widget _buildLoadingOverlay(ThemeData theme) {
+    return Container(
+      color: theme.colorScheme.scrim.withValues(alpha: 0.3),
+      child: Center(
+        child: Card(
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.xl),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xxxl,
+              vertical: AppSpacing.xxl,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'AI шинжилж байна...',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Гүүр мэдээлэл цуглуулж байна',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -157,10 +226,7 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        side: BorderSide(
-          color: theme.colorScheme.primaryContainer,
-          width: 1,
-        ),
+        side: BorderSide(color: theme.colorScheme.primaryContainer, width: 1),
         borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
       ),
       child: Padding(
@@ -188,7 +254,7 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Аав (sire) болон ээж (dam) морио сонгоод, AI-аас '
-              'цус ойртолтын эрсдэл, өнгөний таамаглал, '
+              'нийцлийн оноо, цус ойртолтын эрсдэл, өнгөний таамаглал, '
               'эрүүл мэндийн зөвлөмж авах.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -203,7 +269,10 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
   // ── Хос сонголт ─────────────────────────────────────────────────────
 
   Widget _buildPairSelector(
-      ThemeData theme, List<Horse> stallions, List<Horse> mares) {
+    ThemeData theme,
+    List<Horse> stallions,
+    List<Horse> mares,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -289,6 +358,9 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
       _error = null;
     });
 
+    // AI loading төлөвийг мөн шинэчлэх
+    ref.read(aiLoadingProvider.notifier).state = true;
+
     final repository = ref.read(aiRepositoryProvider);
     final query = BreedingQuery(
       sireId: _selectedSireId!,
@@ -296,6 +368,9 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
     );
 
     final result = await repository.getBreedingAdvice(query);
+
+    // AI loading төлөвийг буцаах
+    ref.read(aiLoadingProvider.notifier).state = false;
 
     if (!mounted) return;
 
@@ -325,7 +400,6 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
   // ── Квот дууссан анхааруулга ──────────────────────────────────────
 
   Widget _buildQuotaWarning(ThemeData theme) {
-    // Only show on initial load if quota is already exhausted
     return const SizedBox.shrink();
   }
 
@@ -368,7 +442,7 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
     if (quota == null) return '';
     if (quota.limit == null) return 'Хязгааргүй шинжилгээ';
     final remaining = quota.remaining ?? 0;
-    return 'Энэ сард ${quota.used}/ ${quota.limit} шинжилгээ ашигласан'
+    return 'Энэ сард ${quota.used}/${quota.limit} шинжилгээ ашигласан'
         ' ($remaining үлдсэн)';
   }
 
@@ -397,10 +471,7 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
   Widget _buildErrorState(ThemeData theme, AppException error) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-      child: TamgaErrorWidget(
-        message: error.message,
-        onRetry: _analyzePair,
-      ),
+      child: TamgaErrorWidget(message: error.message, onRetry: _analyzePair),
     );
   }
 

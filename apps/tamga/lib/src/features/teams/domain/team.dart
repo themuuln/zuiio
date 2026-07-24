@@ -39,8 +39,7 @@ class Team {
   final DateTime createdAt;
 
   /// Морины тоог нэмэгдүүлсэн шинэ Team буцаах.
-  Team incrementHorseCount() =>
-      copyWith(horseCount: horseCount + 1);
+  Team incrementHorseCount() => copyWith(horseCount: horseCount + 1);
 
   /// Морины тоог бууруулсан шинэ Team буцаах.
   Team decrementHorseCount() =>

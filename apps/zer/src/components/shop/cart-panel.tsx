@@ -1,7 +1,15 @@
 "use client";
 
-import { Minus, Plus, ShoppingCart, Trash } from "@phosphor-icons/react";
-import { memo, useCallback, useEffect, useState } from "react";
+import {
+  Archive,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Trash,
+  X,
+} from "@phosphor-icons/react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import { CheckoutDrawer } from "@/components/shop/checkout-drawer";
 import { Button } from "@/components/ui/button";
@@ -88,10 +96,51 @@ export function CartPanel() {
     updateQuantity,
     removeItem,
     clearCart,
+    removeDiscount,
+    holdSale,
+    restoreHeldSale,
+    removeHeldSale,
   } = useCart();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [heldOpen, setHeldOpen] = useState(false);
+  const [heldSales, setHeldSales] = useState<
+    { id: string; items: CartItem[]; discount: unknown; heldAt: string }[]
+  >([]);
   const [mounted, setMounted] = useState(false);
+  const heldRef = useRef<HTMLDivElement>(null);
   useEffect(() => setMounted(true), []);
+
+  // Refresh the held-sales list whenever the popover opens
+  useEffect(() => {
+    if (!heldOpen) return;
+    try {
+      const raw = window.localStorage.getItem("zer:shop:held-sales");
+      setHeldSales(raw ? (JSON.parse(raw) as typeof heldSales) : []);
+    } catch {
+      setHeldSales([]);
+    }
+  }, [heldOpen]);
+
+  // Close popover on outside click
+  useEffect(() => {
+    if (!heldOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (heldRef.current && !heldRef.current.contains(e.target as Node)) {
+        setHeldOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [heldOpen]);
+  // Refresh held-sales list from localStorage (called after mutations)
+  const refreshHeldSales = useCallback(() => {
+    try {
+      const raw = window.localStorage.getItem("zer:shop:held-sales");
+      setHeldSales(raw ? (JSON.parse(raw) as typeof heldSales) : []);
+    } catch {
+      setHeldSales([]);
+    }
+  }, []);
 
   // Force empty state on server/initial client render to avoid hydration mismatch
   // (CartProvider loads from sessionStorage in useEffect, which fires after paint)
@@ -119,18 +168,106 @@ export function CartPanel() {
             </span>
           )}
         </div>
-        {!showEmpty && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={clearCart}
-            className="h-8 gap-1.5 text-muted-foreground hover:text-destructive"
-          >
-            <Trash className="size-4" />
-            Хоослох
-          </Button>
-        )}
+        <div className="flex items-center gap-1">
+          {!showEmpty && (
+            <div className="relative" ref={heldRef}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 text-muted-foreground"
+                aria-haspopup="menu"
+                aria-expanded={heldOpen}
+                onClick={() => setHeldOpen((v) => !v)}
+              >
+                <Archive className="size-4" />
+                Тавигдсан
+              </Button>
+              {heldOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-20 mt-1 w-72 rounded-xl border border-border bg-popover p-2 shadow-lg"
+                >
+                  <p className="px-2 py-1 text-xs font-medium text-muted-foreground">
+                    Тавигдсан захиалгууд
+                  </p>
+                  {heldSales.length === 0 ? (
+                    <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+                      Тавигдсан захиалга байхгүй байна.
+                    </p>
+                  ) : (
+                    <ul className="flex flex-col gap-1">
+                      {heldSales.map((sale) => (
+                        <li
+                          key={sale.id}
+                          className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 hover:bg-muted/50"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-medium">
+                              {sale.items.length} төрөл ·{" "}
+                              {sale.items
+                                .reduce((n, i) => n + i.quantity, 0)
+                                .toLocaleString()}
+                              ш
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {new Date(sale.heldAt).toLocaleTimeString(
+                                "mn-MN",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => {
+                                restoreHeldSale(sale.id);
+                                setHeldOpen(false);
+                              }}
+                            >
+                              Сэргээх
+                            </Button>
+                            <button
+                              type="button"
+                              aria-label="Устгах"
+                              className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => {
+                                removeHeldSale(sale.id);
+                                setHeldSales((prev) =>
+                                  prev.filter((s) => s.id !== sale.id),
+                                );
+                              }}
+                            >
+                              <Trash className="size-3.5" />
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          {!showEmpty && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearCart}
+              className="h-8 gap-1.5 text-muted-foreground hover:text-destructive"
+            >
+              <Trash className="size-4" />
+              Хоослох
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Line items */}
@@ -171,33 +308,64 @@ export function CartPanel() {
             </span>
           </div>
           {discount && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <span className="min-w-0 flex-1 truncate text-muted-foreground">
                 Хөнгөлөлт
                 {discount.discountName ? ` (${discount.discountName})` : ""}
               </span>
-              <span className="tabular-nums text-emerald-600 dark:text-emerald-400">
+              <span className="flex shrink-0 items-center gap-1 tabular-nums text-primary">
                 -{discount.discountAmount.toLocaleString()}₮
+                <button
+                  type="button"
+                  aria-label="Хөнгөлөлт хасах"
+                  onClick={removeDiscount}
+                  className="flex size-4 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <X className="size-3" weight="bold" />
+                </button>
               </span>
             </div>
           )}
           <div className="flex items-center justify-between pt-1">
             <span className="text-sm font-medium">Нийт дүн</span>
             <span className="text-xl font-bold tabular-nums">
-              {(showEmpty ? 0 : discount ? discountedTotal : totalAmount).toLocaleString()}₮
+              {(showEmpty
+                ? 0
+                : discount
+                  ? discountedTotal
+                  : totalAmount
+              ).toLocaleString()}
+              ₮
             </span>
           </div>
         </div>
 
-        <Button
-          type="button"
-          size="lg"
-          className="w-full"
-          disabled={showEmpty}
-          onClick={() => setCheckoutOpen(true)}
-        >
-          Төлбөр тооцоо
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="flex-1"
+            disabled={showEmpty}
+            onClick={() => {
+              holdSale();
+              refreshHeldSales();
+              toast.success("Захиалгыг тавилаа.");
+            }}
+          >
+            <Archive className="size-4" />
+            Тавих
+          </Button>
+          <Button
+            type="button"
+            size="lg"
+            className="flex-[2]"
+            disabled={showEmpty}
+            onClick={() => setCheckoutOpen(true)}
+          >
+            Төлбөр тооцоо
+          </Button>
+        </div>
       </div>
 
       <CheckoutDrawer open={checkoutOpen} onOpenChange={setCheckoutOpen} />

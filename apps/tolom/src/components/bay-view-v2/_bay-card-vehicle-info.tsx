@@ -1,5 +1,3 @@
-"use client";
-
 import { Typography } from "@/components/ui/typography";
 import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
 import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";

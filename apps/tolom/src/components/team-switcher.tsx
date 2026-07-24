@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { QuickCreateBranchSheet } from "@/components/branches/quick-create-branch-drawer";
+import { QuickCreateBranchDrawer } from "@/components/branches/quick-create-branch-drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,7 +67,9 @@ export function TeamSwitcher() {
                 <span className="truncate font-medium">{name}</span>
                 <span className="truncate text-xs">{activeBranchName}</span>
               </div>
-              {canShowDropdown && <ChevronsUpDown className="ml-auto size-4 transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0" />}
+              {canShowDropdown && (
+                <ChevronsUpDown className="ml-auto size-4 transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0" />
+              )}
             </DropdownMenuTrigger>
             {canShowDropdown && (
               <DropdownMenuContent
@@ -104,7 +106,7 @@ export function TeamSwitcher() {
           </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
-      <QuickCreateBranchSheet
+      <QuickCreateBranchDrawer
         open={addBranchOpen}
         onOpenChange={setAddBranchOpen}
       />

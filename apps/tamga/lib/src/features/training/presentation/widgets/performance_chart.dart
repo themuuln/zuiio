@@ -146,15 +146,15 @@ class _TrendChartPainter extends CustomPainter {
       final labelText = TextPainter(
         text: TextSpan(
           text: labelValue.toStringAsFixed(1),
-          style: TextStyle(
-            color: labelColor,
-            fontSize: 10,
-          ),
+          style: TextStyle(color: labelColor, fontSize: 10),
         ),
         textDirection: TextDirection.ltr,
       );
       labelText.layout();
-      labelText.paint(canvas, Offset(chartRect.left - labelText.width - 4, y - labelText.height / 2));
+      labelText.paint(
+        canvas,
+        Offset(chartRect.left - labelText.width - 4, y - labelText.height / 2),
+      );
     }
 
     // ── Y axis label ──
@@ -162,7 +162,11 @@ class _TrendChartPainter extends CustomPainter {
       final yAxisLabel = TextPainter(
         text: TextSpan(
           text: yLabel,
-          style: TextStyle(color: labelColor, fontSize: 10, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            color: labelColor,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         textDirection: TextDirection.ltr,
       );
@@ -192,9 +196,11 @@ class _TrendChartPainter extends CustomPainter {
     final points = <Offset>[];
 
     for (var i = 0; i < dataPoints.length; i++) {
-      final x = chartRect.left +
+      final x =
+          chartRect.left +
           (chartRect.width * i / math.max(dataPoints.length - 1, 1));
-      final y = chartRect.top +
+      final y =
+          chartRect.top +
           chartRect.height -
           ((dataPoints[i].y - minY) / yRange * chartRect.height);
       points.add(Offset(x, y));
@@ -215,7 +221,8 @@ class _TrendChartPainter extends CustomPainter {
     // ── X axis labels ──
     if (xLabels != null) {
       for (var i = 0; i < xLabels!.length && i < dataPoints.length; i++) {
-        final x = chartRect.left +
+        final x =
+            chartRect.left +
             (chartRect.width * i / math.max(dataPoints.length - 1, 1));
         final label = TextPainter(
           text: TextSpan(
@@ -227,10 +234,7 @@ class _TrendChartPainter extends CustomPainter {
         label.layout();
         label.paint(
           canvas,
-          Offset(
-            x - label.width / 2,
-            chartRect.top + chartRect.height + 4,
-          ),
+          Offset(x - label.width / 2, chartRect.top + chartRect.height + 4),
         );
       }
     }

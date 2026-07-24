@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import type { Database } from "@/lib/supabase/types";
 
 export type SupabaseDb = SupabaseClient<Database>;
@@ -197,7 +197,10 @@ export async function createStockMovements(
     variant_id: item.variantId ?? null,
   }));
 
-  const { error } = await supabase.from("stock_movements").insert(movements);
+  const { error } = await withDbCapture(
+    "stock_movements: create movements",
+    supabase.from("stock_movements").insert(movements),
+  );
 
   if (error) {
     return {

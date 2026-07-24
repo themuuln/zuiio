@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import {
   Field,
   FieldContent,
@@ -58,7 +57,7 @@ interface SupplierDetailSheetProps {
   supplierId: string | null;
 }
 
-export function SupplierDetailSheet({
+export function SupplierDetailDrawer({
   open,
   onOpenChange,
   supplierId,
@@ -135,17 +134,17 @@ export function SupplierDetailSheet({
   return (
     <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DetailDrawer.Header>
-        <DetailSheetHeader
-          icon={Pencil}
-          title={
-            <>
-              <DetailDrawer.Title>{t("editSupplier")}</DetailDrawer.Title>
-              <DetailDrawer.Description>
-                {supplier?.name ?? "..."}
-              </DetailDrawer.Description>
-            </>
-          }
-        />
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
+            <Pencil className="size-5 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <DetailDrawer.Title>{t("editSupplier")}</DetailDrawer.Title>
+            <DetailDrawer.Description>
+              {supplier?.name ?? "..."}
+            </DetailDrawer.Description>
+          </div>
+        </div>
       </DetailDrawer.Header>
 
       <DetailDrawer.Body>

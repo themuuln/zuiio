@@ -171,7 +171,12 @@ void main() {
     });
 
     test('toJson uses camelCase keys', () {
-      final entry = RaceEntry(id: 'e1', raceId: 'r1', horseId: 'h1', ownerId: 'u1');
+      final entry = RaceEntry(
+        id: 'e1',
+        raceId: 'r1',
+        horseId: 'h1',
+        ownerId: 'u1',
+      );
       final json = entry.toJson();
       expect(json.containsKey('raceId'), isTrue);
       expect(json.containsKey('horseId'), isTrue);
@@ -188,18 +193,8 @@ void main() {
   // ══════════════════════════════════════════════════════════════
   group('RaceEntry equality and copyWith', () {
     test('two entries with same id are equal', () {
-      final a = RaceEntry(
-        id: 'e1',
-        raceId: 'r1',
-        horseId: 'h1',
-        ownerId: 'u1',
-      );
-      final b = RaceEntry(
-        id: 'e1',
-        raceId: 'r1',
-        horseId: 'h1',
-        ownerId: 'u1',
-      );
+      final a = RaceEntry(id: 'e1', raceId: 'r1', horseId: 'h1', ownerId: 'u1');
+      final b = RaceEntry(id: 'e1', raceId: 'r1', horseId: 'h1', ownerId: 'u1');
       expect(a, b);
     });
 

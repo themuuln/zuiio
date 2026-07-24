@@ -10,9 +10,9 @@ export const GET = createRouteHandler(
 );
 
 export const POST = createRouteHandler(
-  async ({ request, orgId, supabase }) => {
+  async ({ request, orgId, supabase, user }) => {
     const body = await request.json();
-    const branch = await createBranch(supabase, orgId, body);
+    const branch = await createBranch(supabase, orgId, body, user.id);
     return created(branch);
   },
   {

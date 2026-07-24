@@ -30,7 +30,10 @@ export function SettingsSubSidebar({
   sections,
   timezone,
 }: SettingsSubSidebarProps) {
-  const t = useTranslations("settings");
+  const t = useTranslations("settings") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   const orgInitials = organizationName
     .split(" ")

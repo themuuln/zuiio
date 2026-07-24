@@ -64,7 +64,12 @@
           "organization": "zuiio",
           "useNativeInit": true
         }
-      ]
+      ],
+      "expo-sharing",
+      "@sentry/react-native",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "scheme": "tamga",
     "experiments": {

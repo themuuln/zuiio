@@ -11,7 +11,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { z } from "zod";
 import { BarChart } from "@/components/charts";
@@ -19,8 +19,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { Typography } from "@/components/ui/typography";
+import { useIsFirstLoad } from "@/hooks/use-is-first-load";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useBranches } from "@/lib/queries/use-branches";
 import {
@@ -146,7 +146,10 @@ function KpiCard({
 }
 
 export default function MechanicPerformancePage() {
-  const t = useTranslations("mechanicPerformance");
+  const t = useTranslations("mechanicPerformance") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: branches } = useBranches(orgId);
@@ -222,14 +225,9 @@ export default function MechanicPerformancePage() {
 
   const loading = reportsLoading || hoursLoading || commissionsLoading;
 
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  useEffect(() => {
-    if (!loading && !hasLoadedOnce) {
-      setHasLoadedOnce(true);
-    }
-  }, [loading, hasLoadedOnce]);
+  const isFirstLoad = useIsFirstLoad(!loading);
 
-  const showSkeleton = orgLoading && !hasLoadedOnce;
+  const showSkeleton = orgLoading && isFirstLoad;
 
   // ── Sorting ────────────────────────────────────────
   type SortKey = keyof MechanicPerf;

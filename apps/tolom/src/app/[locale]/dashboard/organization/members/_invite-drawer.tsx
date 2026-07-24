@@ -1,7 +1,6 @@
 "use client";
 
 import { Loader2, MailPlus } from "lucide-react";
-import type { useTranslations } from "next-intl";
 import React from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -42,10 +41,10 @@ interface InviteSheetProps {
   onSubmit: (data: { email: string; roleId: string }) => void;
   roles: Role[];
   defaultRoleId: string;
-  t: ReturnType<typeof useTranslations<"organization.memberManagement">>;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
-export function InviteSheet({
+export function InviteDrawer({
   open,
   onOpenChange,
   sending,

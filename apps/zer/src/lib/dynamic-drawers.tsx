@@ -382,3 +382,21 @@ export const DynamicReceiptDrawer = dynamic(
   () => import("@/components/shop/receipt-drawer").then((m) => m.ReceiptDrawer),
   { ssr: false },
 );
+
+// ── ERP Quick-Create Wrappers ──
+
+export const DynamicSaleDrawer = dynamic(
+  () =>
+    import("@/components/erp/quick-create-sale-wrapper").then(
+      (m) => m.QuickCreateSaleWrapper,
+    ),
+  { ssr: false },
+);
+
+export const DynamicInvoiceDrawer = dynamic(
+  () =>
+    import("@/components/erp/quick-create-invoice-wrapper").then(
+      (m) => m.QuickCreateInvoiceWrapper,
+    ),
+  { ssr: false },
+);

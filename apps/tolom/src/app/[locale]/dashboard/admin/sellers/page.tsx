@@ -104,20 +104,7 @@ export default function SellersPage() {
   const organizations: Org[] = sellerData?.organizations ?? [];
   const assignments: Assignment[] = sellerData?.assignments ?? [];
 
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
-        <Skeleton className="h-8 w-48" />
-        <div className="grid gap-4 md:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={`skeleton-${i}`} className="h-32 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
+  if (!loading && !isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <ShieldAlert className="size-10 text-destructive" />
@@ -158,17 +145,25 @@ export default function SellersPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Assigned Organizations</CardDescription>
-            <CardTitle className="text-2xl">{organizations.length}</CardTitle>
+            <CardTitle className="text-2xl">
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                organizations.length
+              )}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Active Subscriptions</CardDescription>
             <CardTitle className="text-2xl">
-              {
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
                 organizations.filter((o) => o.subscription?.status === "active")
                   .length
-              }
+              )}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -176,7 +171,11 @@ export default function SellersPage() {
           <CardHeader className="pb-2">
             <CardDescription>Trial Organizations</CardDescription>
             <CardTitle className="text-2xl">
-              {organizations.filter((o) => o.subscription?.trial).length}
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                organizations.filter((o) => o.subscription?.trial).length
+              )}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -189,7 +188,22 @@ export default function SellersPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y">
-            {organizations.length === 0 ? (
+            {loading ? (
+              [1, 2, 3].map((i) => (
+                <div
+                  key={`org-skeleton-${i}`}
+                  className="flex items-center justify-between px-6 py-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <Building2 className="size-4 text-muted-foreground" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : organizations.length === 0 ? (
               <div className="px-6 py-12 text-center text-sm text-muted-foreground">
                 No organizations assigned yet.
               </div>

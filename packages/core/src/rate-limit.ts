@@ -17,9 +17,10 @@ export function rateLimit(
   const recent = timestamps.filter((t) => t > windowStart);
 
   if (recent.length >= limit) {
+    const first = recent[0];
     const retryAfterMs =
-      recent.length > 0
-        ? Math.ceil((recent[0] + windowMs - now) / 1000)
+      first !== undefined
+        ? Math.ceil((first + windowMs - now) / 1000)
         : Math.ceil(windowMs / 1000);
     return {
       error: `Хэт олон хүсэлт. ${limit} хүсэлт / ${windowMs / 1000}сек. ${retryAfterMs}сек дараа дахин оролдоно уу.`,

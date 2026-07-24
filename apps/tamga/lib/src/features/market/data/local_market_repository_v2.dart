@@ -31,10 +31,7 @@ import 'market_repository.dart';
 class LocalMarketRepositoryV2
     extends LocalRepository<MarketListing, IsarMarketListing>
     implements MarketRepository {
-  LocalMarketRepositoryV2({
-    required super.storage,
-    required super.syncQueue,
-  });
+  LocalMarketRepositoryV2({required super.storage, required super.syncQueue});
 
   @override
   IsarCollection<IsarMarketListing> get collection => storage.marketListings;
@@ -296,9 +293,7 @@ class LocalMarketRepositoryV2
           .filter()
           .isFavoriteEqualTo(true)
           .findAll();
-      return Result.ok(
-        favorites.map((e) => e.domainId).toList(),
-      );
+      return Result.ok(favorites.map((e) => e.domainId).toList());
     } catch (e, stack) {
       return Result.fail(
         AppException(
@@ -493,9 +488,7 @@ class LocalMarketRepositoryV2
   Future<Result<List<ListingReport>>> fetchAllReports() async {
     try {
       final stored = await storage.listingReports.where().findAll();
-      return Result.ok(
-        stored.map((e) => e.toDomain()).toList(),
-      );
+      return Result.ok(stored.map((e) => e.toDomain()).toList());
     } catch (e, stack) {
       return Result.fail(
         AppException(
@@ -644,9 +637,7 @@ class LocalMarketRepositoryV2
   }
 
   @override
-  Future<Result<List<SellerRating>>> fetchSellerRatings(
-    String sellerId,
-  ) async {
+  Future<Result<List<SellerRating>>> fetchSellerRatings(String sellerId) async {
     try {
       final stored = await storage.sellerRatings
           .filter()
@@ -776,9 +767,7 @@ class LocalMarketRepositoryV2
       ..bio = profile.bio
       ..averageRating = summary.averageRating
       ..ratingCount = summary.totalCount
-      ..reviews = stored
-          .map((e) => '[${e.rating}★] ${e.review}')
-          .toList();
+      ..reviews = stored.map((e) => '[${e.rating}★] ${e.review}').toList();
 
     await storage.sellerProfiles.isar.writeTxn(() async {
       await storage.sellerProfiles.put(updated);
@@ -1244,7 +1233,7 @@ class LocalMarketRepositoryV2
 
   @override
   Future<Result<SellerVerificationStatusSummary>>
-      fetchSellerVerificationSummary(String sellerId) async {
+  fetchSellerVerificationSummary(String sellerId) async {
     return Result.tryFuture(() async {
       final phoneVerification = await storage.sellerPhoneVerifications
           .filter()
@@ -1466,10 +1455,7 @@ class LocalMarketRepositoryV2
           .findFirst();
 
       if (existing == null) {
-        throw AppException(
-          message: 'Санал олдсонгүй',
-          code: 'OFFER_NOT_FOUND',
-        );
+        throw AppException(message: 'Санал олдсонгүй', code: 'OFFER_NOT_FOUND');
       }
 
       await storage.marketOffers.isar.writeTxn(() async {
@@ -1520,11 +1506,7 @@ class LocalMarketRepositoryV2
     return Result.tryFuture(() async {
       final stored = await storage.marketOffers
           .filter()
-          .group((q) => q
-            .buyerIdEqualTo(userId)
-            .or()
-            .sellerIdEqualTo(userId),
-          )
+          .group((q) => q.buyerIdEqualTo(userId).or().sellerIdEqualTo(userId))
           .findAll();
 
       stored.sort(
@@ -1784,9 +1766,7 @@ class LocalMarketRepositoryV2
   }
 
   @override
-  Future<Result<TrialBooking?>> fetchTrialBookingById(
-    String bookingId,
-  ) async {
+  Future<Result<TrialBooking?>> fetchTrialBookingById(String bookingId) async {
     return Result.tryFuture(() async {
       final stored = await storage.trialBookings
           .filter()

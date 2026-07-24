@@ -12,7 +12,7 @@ type NewVehicleSheetProps = {
   initialPlateNumber?: string;
 };
 
-export function NewVehicleSheet({
+export function NewVehicleDrawer({
   open,
   onOpenChange,
   onSuccess,

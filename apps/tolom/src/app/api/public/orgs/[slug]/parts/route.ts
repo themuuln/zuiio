@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { createSimpleRouteHandler } from "@/lib/api-handler";
+import { apiError, ok } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
+
 interface VehicleModelRow {
   id: string;
   make: string;
@@ -65,22 +67,20 @@ type CatalogResponse = {
   parts: PartInfo[];
 };
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ slug: string }> },
-) {
-  try {
-    const { slug } = await params;
+export const GET = createSimpleRouteHandler(
+  async ({ request }) => {
+    const slug = request.nextUrl.pathname.split("/").at(-2);
+
+    if (!slug) {
+      return apiError("NOT_FOUND", "Organization slug is required", 404);
+    }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
       reportServerError("[public/orgs/parts] Missing env vars");
-      return NextResponse.json(
-        { error: "Configuration error" },
-        { status: 500 },
-      );
+      return apiError("CONFIG_ERROR", "Configuration error", 500);
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -101,10 +101,7 @@ export async function GET(
       .single();
 
     if (orgError || !org) {
-      return NextResponse.json(
-        { error: "Organization not found" },
-        { status: 404 },
-      );
+      return apiError("NOT_FOUND", "Organization not found", 404);
     }
 
     const orgId = org.id;
@@ -113,16 +110,16 @@ export async function GET(
     const { data: vehicleModels, error: vmError } = await supabase
       .from("vehicle_model_parts")
       .select(`
-        vehicle_model_id,
-        vehicle_models!inner (
-          id, make, model, generation, year_start, year_end, is_active, deleted_at, organization_id
-        ),
-        part_id,
-        specific_price,
-        parts_catalog!inner (
-          id, name, name_mn, part_number, category, default_price, is_active, deleted_at, image_url
-        )
-      `)
+      vehicle_model_id,
+      vehicle_models!inner (
+        id, make, model, generation, year_start, year_end, is_active, deleted_at, organization_id
+      ),
+      part_id,
+      specific_price,
+      parts_catalog!inner (
+        id, name, name_mn, part_number, category, default_price, is_active, deleted_at, image_url
+      )
+    `)
       .eq("organization_id", orgId);
 
     if (vmError) {
@@ -130,10 +127,7 @@ export async function GET(
         "[public/orgs/parts] vehicle_model_parts query error:",
         vmError,
       );
-      return NextResponse.json(
-        { error: "Failed to fetch catalog" },
-        { status: 500 },
-      );
+      return apiError("CATALOG_ERROR", "Failed to fetch catalog", 500);
     }
 
     // 3. Fetch inventory balances for all parts in this org
@@ -173,12 +167,14 @@ export async function GET(
       if (!part?.is_active || part?.deleted_at) continue;
 
       // Brand aggregation
-      if (!makeSet.has(vm.make)) {
-        makeSet.set(vm.make, new Map());
+      let modelMap = makeSet.get(vm.make);
+      if (!modelMap) {
+        modelMap = new Map();
+        makeSet.set(vm.make, modelMap);
       }
-      const modelMap = makeSet.get(vm.make)!;
-      if (!modelMap.has(vm.id)) {
-        modelMap.set(vm.id, {
+      let entry = modelMap.get(vm.id);
+      if (!entry) {
+        entry = {
           id: vm.id,
           make: vm.make,
           model: vm.model,
@@ -186,14 +182,15 @@ export async function GET(
           year_start: vm.year_start,
           year_end: vm.year_end,
           part_count: 0,
-        });
+        };
+        modelMap.set(vm.id, entry);
       }
-      const entry = modelMap.get(vm.id)!;
       entry.part_count++;
 
       // Model aggregation (deduplicated)
-      if (!modelSet.has(vm.id)) {
-        modelSet.set(vm.id, {
+      let modelEntry = modelSet.get(vm.id);
+      if (!modelEntry) {
+        modelEntry = {
           id: vm.id,
           make: vm.make,
           model: vm.model,
@@ -201,9 +198,9 @@ export async function GET(
           year_start: vm.year_start,
           year_end: vm.year_end,
           part_count: 0,
-        });
+        };
+        modelSet.set(vm.id, modelEntry);
       }
-      const modelEntry = modelSet.get(vm.id)!;
       modelEntry.part_count++;
 
       // Parts with pricing logic
@@ -250,16 +247,11 @@ export async function GET(
       parts,
     };
 
-    return NextResponse.json(response, {
+    return ok(response, {
       headers: {
         "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
       },
     });
-  } catch (err) {
-    reportServerError("[public/orgs/parts] Failed:", err);
-    return NextResponse.json(
-      { error: "Failed to fetch parts catalog" },
-      { status: 500 },
-    );
-  }
-}
+  },
+  { requireAuth: false },
+);

@@ -2,47 +2,32 @@ import type { Page } from "@playwright/test";
 
 /**
  * Opens a drawer by clicking the trigger button that contains the given text.
- * Uses page.evaluate for reliable DOM click through Base UI + Radix Slot.
+ * Uses Playwright's click for reliable event handling through Base UI + Radix Slot.
+ * Waits for the dialog to appear instead of a hardcoded timeout.
  */
 export async function openDrawerByText(page: Page, text: string) {
-  // Wait for React hydration by polling for React-fiber attributes on buttons
-  await page.waitForFunction(
-    () => {
-      const buttons = document.querySelectorAll("button");
-      return Array.from(buttons).some((btn) => {
-        const keys = Object.getOwnPropertyNames(btn);
-        return keys.some((k) => k.startsWith("__reactFiber$"));
-      });
-    },
-    { timeout: 15000 },
-  );
+  // Wait for the target button to become visible (handles async data loading)
+  const btn = page.locator("button").filter({ hasText: text }).first();
+  await btn.waitFor({ state: "visible", timeout: 15000 });
 
-  const result = await page.evaluate((btnText) => {
-    const buttons = document.querySelectorAll("button");
-    for (const btn of buttons) {
-      if (btn.textContent?.trim().includes(btnText)) {
-        btn.click();
-        return `clicked: ${btn.textContent.trim()}`;
-      }
-    }
-    return "not found";
-  }, text);
-  if (result === "not found") {
-    console.log(`[openDrawerByText] Button "${text}" not found`);
-  }
-  // Wait for Base UI drawer animation (450ms) + React content render
-  await page.waitForTimeout(1200);
+  // Use Playwright's click for reliable event handling through Base UI + Radix Slot
+  await btn.click();
+
+  // Wait for Base UI drawer: data-drawer-popup appears in portal after animation
+  // Also support Radix UI dialogs with role="dialog" as fallback
+  await page.waitForSelector('[data-drawer-popup], [role="dialog"]', {
+    timeout: 5000,
+  });
 }
 
 /**
  * Submits a form inside a Base UI Drawer by dispatching a submit event.
  * Dispatches a native submit event on the form, which React/RHF intercepts
  * via handleSubmit. This avoids Base UI Portal + Playwright click conflicts.
- * @param page Playwright page
- * @param formId The `id` attribute of the form element to submit
  */
 export async function submitDrawerForm(page: Page, formId: string) {
-  await page.waitForTimeout(500); // Wait for drawer animation
+  // Wait for the form to exist in the DOM (drawer animation complete)
+  await page.waitForSelector(`#${formId}`, { timeout: 5000 });
   const result = await page.evaluate((fid) => {
     const form = document.getElementById(fid) as HTMLFormElement | null;
     if (!form) return { ok: false, error: `form #${fid} not found` };
@@ -50,8 +35,17 @@ export async function submitDrawerForm(page: Page, formId: string) {
     const prevented = !form.dispatchEvent(evt);
     return { ok: true, prevented };
   }, formId);
-  if (!result.ok) console.log(`[submitDrawerForm] ${result.error}`);
-  await page.waitForTimeout(1500);
+  if (!result.ok)
+    // Wait for dialog to close after form submit
+    // Support both Base UI (data-drawer-popup) and Radix UI (role="dialog")
+    await page
+      .waitForSelector('[data-drawer-popup], [role="dialog"]', {
+        state: "hidden",
+        timeout: 10000,
+      })
+      .catch(() => {
+        // Dialog may not close if there's a validation error — that's OK
+      });
 }
 
 /**
@@ -88,5 +82,5 @@ export async function clickInsideDrawer(page: Page, selector: string) {
     );
     return { ok: true };
   }, selector);
-  if (!result.ok) console.log(`[clickInsideDrawer] ${result.error}`);
+  if (!result.ok)
 }

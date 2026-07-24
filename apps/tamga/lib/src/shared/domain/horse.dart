@@ -1,5 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'horse_breed_lineage.dart';
+import 'horse_coat_color.dart';
+import 'horse_markings.dart';
+
 part 'horse.freezed.dart';
 
 // ── Enums ──
@@ -75,6 +79,17 @@ abstract class Horse with _$Horse {
     @Default(false) bool stateVerified,
     required DateTime createdAt,
     required DateTime updatedAt,
+    // ── Parent linkage ──
+    String? sireId,
+    String? damId,
+    // ── Mongolian-specific ──
+    MongolianCoatColor? coatColor,
+    MongolianBreedLineage? breedLineage,
+    String? region,
+    String? sum,
+    HorseMarkings? markings,
+    String? tamgaBrandClan,
+    int? tamgaBrandGeneration,
   }) = _Horse;
 
   // ── Computed getters ──
@@ -107,7 +122,8 @@ abstract class Horse with _$Horse {
       gender: HorseGender.fromString(json['gender'] as String? ?? 'gelding'),
       microchipId: json['microchipId'] as String?,
       registrationNo: json['registrationNo'] as String?,
-      photoUrls: (json['photoUrls'] as List<dynamic>?)
+      photoUrls:
+          (json['photoUrls'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
@@ -120,6 +136,21 @@ abstract class Horse with _$Horse {
       stateVerified: json['stateVerified'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      sireId: json['sireId'] as String?,
+      damId: json['damId'] as String?,
+      coatColor: json['coatColor'] != null
+          ? MongolianCoatColor.fromString(json['coatColor'] as String)
+          : null,
+      breedLineage: json['breedLineage'] != null
+          ? MongolianBreedLineage.fromString(json['breedLineage'] as String)
+          : null,
+      region: json['region'] as String?,
+      sum: json['sum'] as String?,
+      markings: json['markings'] != null
+          ? HorseMarkings.fromJson(json['markings'] as Map<String, dynamic>)
+          : null,
+      tamgaBrandClan: json['tamgaBrandClan'] as String?,
+      tamgaBrandGeneration: json['tamgaBrandGeneration'] as int?,
     );
   }
 
@@ -146,6 +177,15 @@ abstract class Horse with _$Horse {
       'stateVerified': stateVerified,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'sireId': sireId,
+      'damId': damId,
+      'coatColor': coatColor?.name,
+      'breedLineage': breedLineage?.name,
+      'region': region,
+      'sum': sum,
+      'markings': markings?.toJson(),
+      'tamgaBrandClan': tamgaBrandClan,
+      'tamgaBrandGeneration': tamgaBrandGeneration,
     };
   }
 
@@ -166,7 +206,8 @@ abstract class Horse with _$Horse {
       gender: HorseGender.fromString(json['gender'] as String? ?? 'gelding'),
       microchipId: json['microchip_id'] as String?,
       registrationNo: json['registration_no'] as String?,
-      photoUrls: (json['photo_urls'] as List<dynamic>?)
+      photoUrls:
+          (json['photo_urls'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
@@ -177,10 +218,27 @@ abstract class Horse with _$Horse {
           : null,
       tamgaVerified: json['tamga_verified'] as bool? ?? false,
       stateVerified: json['state_verified'] as bool? ?? false,
-      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['created_at'] as String? ?? '') ??
           DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ??
+      updatedAt:
+          DateTime.tryParse(json['updated_at'] as String? ?? '') ??
           DateTime.now(),
+      sireId: json['sire_id'] as String?,
+      damId: json['dam_id'] as String?,
+      coatColor: json['coat_color'] != null
+          ? MongolianCoatColor.fromString(json['coat_color'] as String)
+          : null,
+      breedLineage: json['breed_lineage'] != null
+          ? MongolianBreedLineage.fromString(json['breed_lineage'] as String)
+          : null,
+      region: json['region'] as String?,
+      sum: json['sum'] as String?,
+      markings: json['markings'] != null
+          ? HorseMarkings.fromJson(json['markings'] as Map<String, dynamic>)
+          : null,
+      tamgaBrandClan: json['tamga_brand_clan'] as String?,
+      tamgaBrandGeneration: json['tamga_brand_generation'] as int?,
     );
   }
 
@@ -207,6 +265,15 @@ abstract class Horse with _$Horse {
       'state_verified': stateVerified,
       'created_at': createdAt.toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
+      'sire_id': sireId,
+      'dam_id': damId,
+      'coat_color': coatColor?.name,
+      'breed_lineage': breedLineage?.name,
+      'region': region,
+      'sum': sum,
+      'markings': markings?.toJson(),
+      'tamga_brand_clan': tamgaBrandClan,
+      'tamga_brand_generation': tamgaBrandGeneration,
     };
   }
 }

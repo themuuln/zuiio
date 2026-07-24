@@ -8,7 +8,7 @@ CREATE TABLE public.brands (
 );
 
 -- Add brand_id to products
-ALTER TABLE public.products ADD COLUMN brand_id UUID REFERENCES public.brands(id) ON DELETE SET NULL;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS brand_id UUID REFERENCES public.brands(id) ON DELETE SET NULL;
 
 -- Enable RLS
 ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;

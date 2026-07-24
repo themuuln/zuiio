@@ -93,8 +93,9 @@ class _SendOfferSheetState extends ConsumerState<SendOfferSheet> {
                 height: 5,
                 margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                 decoration: BoxDecoration(
-                  color:
-                      theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.3,
+                  ),
                   borderRadius: BorderRadius.circular(
                     AppSpacing.cornerRadiusPill,
                   ),
@@ -244,13 +245,12 @@ class OfferHistoryCard extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.local_offer_outlined,
-                        color: theme.colorScheme.primary),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      'Үнийн саналууд',
-                      style: theme.textTheme.titleLarge,
+                    Icon(
+                      Icons.local_offer_outlined,
+                      color: theme.colorScheme.primary,
                     ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text('Үнийн саналууд', style: theme.textTheme.titleLarge),
                     const Spacer(),
                     Text(
                       '${offers.length}',
@@ -261,11 +261,13 @@ class OfferHistoryCard extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ...offers.map((offer) => _OfferHistoryItem(
-                      offer: offer,
-                      isSeller: isSeller,
-                      listingPrice: listingPrice,
-                    )),
+                ...offers.map(
+                  (offer) => _OfferHistoryItem(
+                    offer: offer,
+                    isSeller: isSeller,
+                    listingPrice: listingPrice,
+                  ),
+                ),
               ],
             ),
           ),
@@ -305,7 +307,9 @@ class _OfferHistoryItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusSmall),
-        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,9 +348,7 @@ class _OfferHistoryItem extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Хариу санал: ${_formatPrice(offer.counterAmount!)}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.orange,
-              ),
+              style: theme.textTheme.bodySmall?.copyWith(color: Colors.orange),
             ),
           ],
           if (offer.message != null && offer.message!.isNotEmpty) ...[
@@ -396,10 +398,8 @@ class OfferResponseDialog extends StatefulWidget {
   }) {
     return showDialog<(MarketOfferStatus, int?)>(
       context: context,
-      builder: (_) => OfferResponseDialog(
-        offer: offer,
-        listingPrice: listingPrice,
-      ),
+      builder: (_) =>
+          OfferResponseDialog(offer: offer, listingPrice: listingPrice),
     );
   }
 
@@ -428,10 +428,7 @@ class _OfferResponseDialogState extends State<OfferResponseDialog> {
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: Text(
-        'Саналд хариу өгөх',
-        style: theme.textTheme.titleLarge,
-      ),
+      title: Text('Саналд хариу өгөх', style: theme.textTheme.titleLarge),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,9 +458,8 @@ class _OfferResponseDialogState extends State<OfferResponseDialog> {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () => Navigator.of(context).pop(
-                (MarketOfferStatus.accepted, null),
-              ),
+              onPressed: () =>
+                  Navigator.of(context).pop((MarketOfferStatus.accepted, null)),
               icon: const Icon(Icons.check_circle_outline),
               label: const Text('Зөвшөөрөх'),
               style: FilledButton.styleFrom(
@@ -514,9 +510,8 @@ class _OfferResponseDialogState extends State<OfferResponseDialog> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => Navigator.of(context).pop(
-                (MarketOfferStatus.declined, null),
-              ),
+              onPressed: () =>
+                  Navigator.of(context).pop((MarketOfferStatus.declined, null)),
               icon: const Icon(Icons.cancel_outlined),
               label: const Text('Татгалзах'),
               style: OutlinedButton.styleFrom(

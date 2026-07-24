@@ -73,18 +73,19 @@ export function useMechanicKpis(
       branchFilter,
     ),
     queryFn: async () => {
-      const params: Record<string, string> = {
+      if (!orgId) throw new Error("orgId required");
+      const params: Record<string, string | undefined> = {
         type: "custom",
-        date_from: dateRange!.start,
-        date_to: dateRange!.end,
+        date_from: dateRange?.start,
+        date_to: dateRange?.end,
       };
       if (branchFilter) params.branch_id = branchFilter;
-      return fetchReports(orgId!, {
+      return fetchReports(orgId, {
         params,
         cacheKeyParams: {
           type: "custom",
-          date_from: dateRange!.start,
-          date_to: dateRange!.end,
+          date_from: dateRange?.start ?? "",
+          date_to: dateRange?.end ?? "",
         },
       });
     },
@@ -110,17 +111,19 @@ export function useMechanicHours(
       dateRange?.start ?? "",
       dateRange?.end ?? "",
     ),
-    queryFn: () =>
-      fetchMechanicHours(orgId!, {
+    queryFn: async () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchMechanicHours(orgId, {
         params: {
-          startDate: dateRange!.start,
-          endDate: dateRange!.end,
+          startDate: dateRange?.start ?? "",
+          endDate: dateRange?.end ?? "",
         },
         cacheKeyParams: {
-          startDate: dateRange!.start,
-          endDate: dateRange!.end,
+          startDate: dateRange?.start ?? "",
+          endDate: dateRange?.end ?? "",
         },
-      }) as Promise<MechanicHoursRow[]>,
+      }) as Promise<MechanicHoursRow[]>;
+    },
     enabled: !!orgId && !!dateRange,
     staleTime: 120_000,
     placeholderData: (prev) => prev,
@@ -143,17 +146,19 @@ export function useMechanicCommissions(
       dateRange?.start ?? "",
       dateRange?.end ?? "",
     ),
-    queryFn: () =>
-      fetchMechanicCommissions(orgId!, {
+    queryFn: async () => {
+      if (!orgId) throw new Error("orgId required");
+      return fetchMechanicCommissions(orgId, {
         params: {
-          startDate: dateRange!.start,
-          endDate: dateRange!.end,
+          startDate: dateRange?.start ?? "",
+          endDate: dateRange?.end ?? "",
         },
         cacheKeyParams: {
-          startDate: dateRange!.start,
-          endDate: dateRange!.end,
+          startDate: dateRange?.start ?? "",
+          endDate: dateRange?.end ?? "",
         },
-      }) as Promise<MechanicCommissionsRow[]>,
+      }) as Promise<MechanicCommissionsRow[]>;
+    },
     enabled: !!orgId && !!dateRange,
     staleTime: 120_000,
     placeholderData: (prev) => prev,

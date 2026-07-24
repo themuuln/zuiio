@@ -43,8 +43,11 @@ interface ConfigSheetProps {
   orgId: string | undefined;
 }
 
-export function ConfigSheet({ orgId }: ConfigSheetProps) {
-  const t = useTranslations();
+export function ConfigDrawer({ orgId }: ConfigSheetProps) {
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [open, setOpen] = useState(false);
   const { settings: orgSettings } = useOrgSettings(orgId);
   const updateOrgSettings = useUpdateOrgSettings(orgId);

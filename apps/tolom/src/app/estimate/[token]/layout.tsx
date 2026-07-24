@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
+import { Suspense } from "react";
 
 // Route renders user-specific content — legitimate cache opt-out.
 export const instant = false;
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   description: "View your estimate online.",
 };
 
-export default async function EstimateLayout({
+async function EstimateIntlProvider({
   children,
 }: {
   children: React.ReactNode;
@@ -24,5 +25,17 @@ export default async function EstimateLayout({
     <NextIntlClientProvider locale={locale} messages={messages}>
       {children}
     </NextIntlClientProvider>
+  );
+}
+
+export default function EstimateLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense>
+      <EstimateIntlProvider>{children}</EstimateIntlProvider>
+    </Suspense>
   );
 }

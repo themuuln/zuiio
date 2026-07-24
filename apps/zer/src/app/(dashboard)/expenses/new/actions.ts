@@ -8,6 +8,7 @@ import { parseAmount } from "@/lib/erp";
 import { formatRouteDate } from "@/lib/format";
 import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
+import { expenseSchema } from "@/lib/validation-schemas";
 
 export async function createExpense(
   _prevState: { error?: string } | undefined,
@@ -21,6 +22,19 @@ export async function createExpense(
   const amount = parseAmount(formData.get("amount"));
   const expenseDate = getString(formData, "expense_date") || formatRouteDate();
   const description = getString(formData, "description") || null;
+  const parsedExpense = expenseSchema.safeParse({
+    category,
+    amount: formData.get("amount"),
+    expense_date: expenseDate,
+    description,
+    payment_method: getString(formData, "payment_method") || "cash",
+  });
+  if (!parsedExpense.success) {
+    return {
+      error: parsedExpense.error.issues[0]?.message || "Мэдээлэл буруу байна.",
+    };
+  }
+
   const validationError = validateExpenseInput({ category, amount });
   if (validationError) {
     return { error: validationError };

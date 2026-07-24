@@ -14,12 +14,12 @@
 
 /* Sidebar active link */
 .VPSidebarItem.is-active > .item > .link > .text {
-  color: var(--vp-c-brand-1) !important;
+  color: var(--vp-c-brand-1);
 }
 
 /* Mermaid: fill container width */
 div.mermaid svg {
-  width: 100% !important;
-  max-width: 100% !important;
-  height: auto !important;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
 }

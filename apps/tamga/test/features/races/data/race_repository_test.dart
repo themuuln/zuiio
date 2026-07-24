@@ -65,11 +65,7 @@ void main() {
     });
 
     test('create generates UUID when id is empty', () async {
-      final race = Race(
-        id: '',
-        name: 'Auto ID Race',
-        type: RaceType.local,
-      );
+      final race = Race(id: '', name: 'Auto ID Race', type: RaceType.local);
 
       final result = await repository.create(race);
       expect(result.isSuccess, true);
@@ -182,38 +178,45 @@ void main() {
     // ════════════════════════════════════════════════════════════
     // VAL-RACE-012: LocalRaceRepository stores in Isar and enqueues to SyncQueue
     // ════════════════════════════════════════════════════════════
-    test('offline-first: data persists in Isar and SyncQueue has pending item',
-        () async {
-      final race = Race(
-        id: 'race-offline-1',
-        name: 'Офлайн тест',
-        type: RaceType.local,
-        date: DateTime(2026, 8, 1),
-        location: 'Тест',
-        maxEntries: 20,
-        entryFee: 5000,
-        description: 'Офлайн үед хадгалах тест',
-      );
+    test(
+      'offline-first: data persists in Isar and SyncQueue has pending item',
+      () async {
+        final race = Race(
+          id: 'race-offline-1',
+          name: 'Офлайн тест',
+          type: RaceType.local,
+          date: DateTime(2026, 8, 1),
+          location: 'Тест',
+          maxEntries: 20,
+          entryFee: 5000,
+          description: 'Офлайн үед хадгалах тест',
+        );
 
-      final result = await repository.create(race);
-      expect(result.isSuccess, true,
-          reason: 'Local create should succeed even when offline');
+        final result = await repository.create(race);
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'Local create should succeed even when offline',
+        );
 
-      final fetch = await repository.fetchAll();
-      expect(fetch.isSuccess, true);
-      final saved = fetch.value.where((r) => r.id == 'race-offline-1').toList();
-      expect(saved.length, 1);
-      expect(saved.first.name, 'Офлайн тест');
-      expect(saved.first.location, 'Тест');
-      expect(saved.first.maxEntries, 20);
-      expect(saved.first.entryFee, 5000);
+        final fetch = await repository.fetchAll();
+        expect(fetch.isSuccess, true);
+        final saved = fetch.value
+            .where((r) => r.id == 'race-offline-1')
+            .toList();
+        expect(saved.length, 1);
+        expect(saved.first.name, 'Офлайн тест');
+        expect(saved.first.location, 'Тест');
+        expect(saved.first.maxEntries, 20);
+        expect(saved.first.entryFee, 5000);
 
-      expect(syncQueue.pendingCount, greaterThanOrEqualTo(1));
-      final pendingItem = syncQueue.peek()!;
-      expect(pendingItem.entityType, 'race');
-      expect(pendingItem.entityId, 'race-offline-1');
-      expect(pendingItem.action, SyncAction.create);
-      expect(pendingItem.status, SyncItemStatus.pending);
-    });
+        expect(syncQueue.pendingCount, greaterThanOrEqualTo(1));
+        final pendingItem = syncQueue.peek()!;
+        expect(pendingItem.entityType, 'race');
+        expect(pendingItem.entityId, 'race-offline-1');
+        expect(pendingItem.action, SyncAction.create);
+        expect(pendingItem.status, SyncItemStatus.pending);
+      },
+    );
   });
 }

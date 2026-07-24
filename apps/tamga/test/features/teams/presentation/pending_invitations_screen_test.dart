@@ -43,7 +43,10 @@ class _MockTeamRepository implements TeamRepository {
 
   @override
   Future<Result<Team>> getTeam(String teamId) async {
-    if (team == null) return Result.fail(AppException(message: 'Not found', code: 'TEAM_NOT_FOUND'));
+    if (team == null)
+      return Result.fail(
+        AppException(message: 'Not found', code: 'TEAM_NOT_FOUND'),
+      );
     return Result.ok(team!);
   }
 
@@ -70,13 +73,15 @@ class _MockTeamRepository implements TeamRepository {
     TeamRole newRole, {
     List<TeamPermission>? permissions,
   }) async {
-    return Result.ok(TeamMember(
-      id: 'm1',
-      teamId: teamId,
-      userId: userId,
-      role: newRole,
-      joinedAt: DateTime.now(),
-    ));
+    return Result.ok(
+      TeamMember(
+        id: 'm1',
+        teamId: teamId,
+        userId: userId,
+        role: newRole,
+        joinedAt: DateTime.now(),
+      ),
+    );
   }
 
   @override
@@ -85,15 +90,22 @@ class _MockTeamRepository implements TeamRepository {
   }
 
   @override
-  Future<Result<TeamInvitation>> createInvitation(TeamInvitation invitation) async {
+  Future<Result<TeamInvitation>> createInvitation(
+    TeamInvitation invitation,
+  ) async {
     invitations.add(invitation);
     return Result.ok(invitation);
   }
 
   @override
-  Future<Result<List<TeamInvitation>>> getPendingInvitations(String userId) async {
+  Future<Result<List<TeamInvitation>>> getPendingInvitations(
+    String userId,
+  ) async {
     final pending = invitations
-        .where((i) => i.invitedUserId == userId && i.status == InvitationStatus.pending)
+        .where(
+          (i) =>
+              i.invitedUserId == userId && i.status == InvitationStatus.pending,
+        )
         .toList();
     return Result.ok(pending);
   }
@@ -101,11 +113,15 @@ class _MockTeamRepository implements TeamRepository {
   @override
   Future<Result<TeamMember>> acceptInvitation(String invitationId) async {
     if (failAccept) {
-      return Result.fail(AppException(message: 'Accept failed', code: 'ACCEPT_FAILED'));
+      return Result.fail(
+        AppException(message: 'Accept failed', code: 'ACCEPT_FAILED'),
+      );
     }
     final idx = invitations.indexWhere((i) => i.id == invitationId);
     if (idx < 0) {
-      return Result.fail(AppException(message: 'Not found', code: 'INVITATION_NOT_FOUND'));
+      return Result.fail(
+        AppException(message: 'Not found', code: 'INVITATION_NOT_FOUND'),
+      );
     }
     final inv = invitations[idx];
     invitations[idx] = inv.copyWith(status: InvitationStatus.accepted);
@@ -123,15 +139,34 @@ class _MockTeamRepository implements TeamRepository {
   @override
   Future<Result<void>> declineInvitation(String invitationId) async {
     if (failDecline) {
-      return Result.fail(AppException(message: 'Decline failed', code: 'DECLINE_FAILED'));
+      return Result.fail(
+        AppException(message: 'Decline failed', code: 'DECLINE_FAILED'),
+      );
     }
     final idx = invitations.indexWhere((i) => i.id == invitationId);
     if (idx < 0) {
-      return Result.fail(AppException(message: 'Not found', code: 'INVITATION_NOT_FOUND'));
+      return Result.fail(
+        AppException(message: 'Not found', code: 'INVITATION_NOT_FOUND'),
+      );
     }
-    invitations[idx] = invitations[idx].copyWith(status: InvitationStatus.declined);
+    invitations[idx] = invitations[idx].copyWith(
+      status: InvitationStatus.declined,
+    );
     return const Result.ok(null);
   }
+
+  @override
+  Future<Result<void>> addHorseToTeam(
+    String teamId,
+    String horseId, {
+    String? addedBy,
+  }) async => const Result.ok(null);
+
+  @override
+  Future<Result<void>> removeHorseFromTeam(
+    String teamId,
+    String horseId,
+  ) async => const Result.ok(null);
 }
 
 // ── Test Helpers ───────────────────────────────────────────────────
@@ -198,7 +233,9 @@ void main() {
       expect(find.text('Танд идэвхтэй урилга байхгүй байна'), findsOneWidget);
     });
 
-    testWidgets('shows invitation cards with team name and role', (tester) async {
+    testWidgets('shows invitation cards with team name and role', (
+      tester,
+    ) async {
       final invitations = [
         createMockInvitation(teamName: 'Монгол жүчээ', role: TeamRole.manager),
       ];
@@ -266,9 +303,7 @@ void main() {
     });
 
     testWidgets('shows decline confirmation dialog', (tester) async {
-      final invitations = [
-        createMockInvitation(teamName: 'Миний баг'),
-      ];
+      final invitations = [createMockInvitation(teamName: 'Миний баг')];
 
       await tester.pumpWidget(
         createPendingInvitationsScreen(invitations: invitations),

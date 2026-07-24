@@ -70,7 +70,9 @@ export function TargetCard({ targets, loading, onSetTarget }: TargetCardProps) {
         </div>
         <div>
           <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
-            <span>{t("achieved", { percent: target.progress_pct })}</span>
+            <span>
+              {t("achieved", { percent: String(target.progress_pct) })}
+            </span>
             {target.achieved && (
               <span className="font-medium text-green-600 dark:text-green-400">
                 {t("targetMet")}

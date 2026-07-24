@@ -1,27 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse, type NextRequest } from "next/server";
+import { createRouteHandlers } from "@/lib/supabase/admin-route";
 
-export async function GET(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+const teamSeasons = createRouteHandlers("team_seasons", {
+  select: "id, team_id, competition_id, teams(name, short_code)",
+});
 
-  const competitionId = request.nextUrl.searchParams.get("competition_id");
-
-  let query = supabase
-    .from("team_seasons")
-    .select("id, team_id, competition_id, teams(name, short_code)");
-
-  if (competitionId) {
-    query = query.eq("competition_id", competitionId);
-  }
-
-  const { data, error } = await query;
-
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
-}
+export const GET = teamSeasons.list((query, req) => {
+  const competitionId = req.nextUrl.searchParams.get("competition_id");
+  return competitionId ? query.eq("competition_id", competitionId) : query;
+});

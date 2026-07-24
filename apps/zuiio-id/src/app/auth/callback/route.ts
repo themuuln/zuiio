@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { verifyContinuation } from "@/lib/auth/continuation";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Identity auth callback.
@@ -13,6 +13,9 @@ import { verifyContinuation } from "@/lib/auth/continuation";
  * 2. We exchange the code for a session
  * 3. If a continuation token exists, verify it and redirect to the product
  * 4. Otherwise, redirect to /account
+ *
+ * Also sets a `linked_identities_count` cookie so the client can show
+ * a toast when the user has multiple sign-in methods.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -22,7 +25,7 @@ export async function GET(request: Request) {
 
   // If we have a continuation token from signup, verify and redirect
   if (continuation) {
-    const payload = verifyContinuation(continuation);
+    const payload = await verifyContinuation(continuation);
 
     if (!payload) {
       return NextResponse.redirect(
@@ -59,11 +62,59 @@ export async function GET(request: Request) {
       );
     }
 
-    // Redirect to the specified next URL or account
-    const redirectTo = next && next.startsWith("/") ? next : "/account";
-    return NextResponse.redirect(new URL(redirectTo, origin));
+    // Check if user has completed onboarding (has a username)
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", (await supabase.auth.getUser()).data.user?.id ?? "")
+      .single();
+
+    // Redirect to the specified next URL, or home/onboarding based on profile
+    const redirectTo = next?.startsWith("/")
+      ? next
+      : profile?.username
+        ? "/"
+        : "/account";
+
+    const response = NextResponse.redirect(new URL(redirectTo, origin));
+
+    // Set cookie with identity count for client notification (5 min TTL)
+    await setLinkedIdentitiesCookie(supabase, response);
+
+    return response;
   }
 
   // No code and no continuation — return to login
   return NextResponse.redirect(new URL("/login", origin));
+}
+
+/**
+ * Check if user has multiple linked identities and set a cookie
+ * so the client can show a notification toast.
+ */
+async function setLinkedIdentitiesCookie(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  response: NextResponse,
+) {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const identityCount = user.identities?.length ?? 0;
+
+    if (identityCount > 1) {
+      response.cookies.set("linked_identities_count", String(identityCount), {
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 5 * 60, // 5 minutes
+        path: "/",
+      });
+    }
+  } catch (err) {
+    // Non-fatal — don't block login
+    console.error("[callback] setLinkedIdentitiesCookie:", err);
+  }
 }

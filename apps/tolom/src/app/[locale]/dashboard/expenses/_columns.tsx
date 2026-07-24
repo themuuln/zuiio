@@ -16,7 +16,10 @@ function ExpenseDateHeader({
 }: {
   column: Column<ExpenseWithCategory>;
 }) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("expenses") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return <DataTableColumnHeader column={column} title={t("date")} />;
 }
 
@@ -25,7 +28,10 @@ function ExpenseDescriptionHeader({
 }: {
   column: Column<ExpenseWithCategory>;
 }) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("expenses") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return <DataTableColumnHeader column={column} title={t("description")} />;
 }
 
@@ -34,7 +40,10 @@ function ExpenseCategoryHeader({
 }: {
   column: Column<ExpenseWithCategory>;
 }) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("expenses") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return <DataTableColumnHeader column={column} title={t("category")} />;
 }
 
@@ -43,12 +52,18 @@ function ExpenseVendorHeader({
 }: {
   column: Column<ExpenseWithCategory>;
 }) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("expenses") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return <DataTableColumnHeader column={column} title={t("vendor")} />;
 }
 
 function ExpenseDueHeader({ column }: { column: Column<ExpenseWithCategory> }) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("expenses") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return <DataTableColumnHeader column={column} title={t("due")} />;
 }
 
@@ -57,7 +72,10 @@ function ExpenseAmountHeader({
 }: {
   column: Column<ExpenseWithCategory>;
 }) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("expenses") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return <DataTableColumnHeader column={column} title={t("amount")} />;
 }
 
@@ -66,14 +84,20 @@ function ExpenseStatusHeader({
 }: {
   column: Column<ExpenseWithCategory>;
 }) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("expenses") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return <DataTableColumnHeader column={column} title={t("status")} />;
 }
 
 // ── Cell Components ──
 
 function DescriptionCell({ expense }: { expense: ExpenseWithCategory }) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("expenses") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return (
     <div className="min-w-0 max-w-64">
       <Typography.Text className="truncate text-sm font-medium">
@@ -89,7 +113,10 @@ function DescriptionCell({ expense }: { expense: ExpenseWithCategory }) {
 }
 
 function StatusCell({ expense }: { expense: ExpenseWithCategory }) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("expenses") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   if (expense.paid_at) {
     return (
       <Badge

@@ -10,7 +10,9 @@ import '../domain/horse_transfer.dart';
 import 'horse_transfer_repository.dart';
 
 /// Морины эзэмшил шилжүүлэх cloud repository.
-class SupabaseHorseTransferRepository with SupabaseRepositoryMixin implements HorseTransferRepository {
+class SupabaseHorseTransferRepository
+    with SupabaseRepositoryMixin
+    implements HorseTransferRepository {
   const SupabaseHorseTransferRepository._(this._client);
   factory SupabaseHorseTransferRepository() =>
       SupabaseHorseTransferRepository._(Supabase.instance.client);

@@ -3,7 +3,11 @@ import { revalidateTag } from "next/cache";
 import { logAuditAfter } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { capture } from "@/lib/capture";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import {
+  NotFoundError,
+  UnauthorizedError,
+  ValidationError,
+} from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { getWorkOrderDetail as _getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
@@ -271,7 +275,7 @@ export async function getWorkOrdersFast(
 export async function getWorkOrder(
   db: SupabaseClient,
   id: string,
-  orgId?: string,
+  orgId: string,
 ): Promise<WorkOrderDetail> {
   return _getWorkOrderDetail(db, id, orgId);
 }
@@ -281,11 +285,12 @@ export async function createWorkOrder(
   db: SupabaseClient,
   orgId: string,
   params: CreateWorkOrderParams,
+  userId_?: string,
 ): Promise<WorkOrderDetail> {
   if (!params.vehicle_id) throw new ValidationError("Vehicle is required");
-
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  if (!userId) throw new UnauthorizedError();
 
   const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
     strict: false,
@@ -389,7 +394,7 @@ export async function createWorkOrder(
     new_data: { status: "New", vehicle_id: params.vehicle_id },
   });
 
-  return getWorkOrder(db, wo.id);
+  return getWorkOrder(db, wo.id, orgId);
 }
 
 // ── Recalculate Work Order Totals ──────────────────────────────
@@ -485,9 +490,10 @@ export async function recalculateWorkOrderTotals(
 // ── Get Work Order Totals ──────────────────────────────────────
 export async function getWorkOrderTotals(
   db: SupabaseClient,
+  orgId: string,
   workOrderId: string,
 ) {
-  const wo = await getWorkOrder(db, workOrderId);
+  const wo = await getWorkOrder(db, workOrderId, orgId);
   const servicesTotal = (wo.services ?? []).reduce(
     (sum: number, s) => sum + Number(s.unit_price) * s.quantity,
     0,
@@ -508,15 +514,16 @@ export async function getDailyWorkOrders(
   return getWorkOrders(db, orgId, { date }, 1, 200, 200);
 }
 
-// ── Cancel Work Order ──────────────────────────────────────────
 export async function cancelWorkOrder(
   db: SupabaseClient,
   id: string,
   orgId: string,
   reason?: string,
+  userId_?: string,
 ): Promise<void> {
   const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  if (!userId) throw new UnauthorizedError();
 
   const { data: existing, error: existingError } = await supabase
     .from("work_orders")

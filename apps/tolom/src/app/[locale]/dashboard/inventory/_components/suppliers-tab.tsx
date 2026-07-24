@@ -35,7 +35,10 @@ export function SuppliersTab({
   search,
   onSearchChange,
 }: SuppliersTabProps) {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const now = useClientNow();
   const { data: suppliers = [], isPending } = useSuppliers(orgId);
   const createSupplier = useCreateSupplier(orgId);
@@ -127,7 +130,7 @@ export function SuppliersTab({
           >
             <Button
               variant="ghost"
-              size="icon-xs"
+              size="icon"
               onClick={() => {
                 setEditingSupplier(row.original);
                 setShowAddSupplier(true);
@@ -138,7 +141,7 @@ export function SuppliersTab({
             </Button>
             <Button
               variant="ghost"
-              size="icon-xs"
+              size="icon"
               onClick={() => handleDeleteSupplier(row.original.id)}
               className="text-destructive/70 hover:text-destructive"
               title={t("delete")}

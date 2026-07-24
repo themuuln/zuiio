@@ -1,6 +1,6 @@
 "use server";
 
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
 
@@ -74,12 +74,15 @@ export async function createGiftOption(
     return { error: "Үнэ буруу байна." };
   }
 
-  const { error } = await supabase.from("gift_options").insert({
-    organization_id: organizationId,
-    name,
-    description,
-    price,
-  });
+  const { error } = await withDbCapture(
+    "gift_options: create",
+    supabase.from("gift_options").insert({
+      organization_id: organizationId,
+      name,
+      description,
+      price,
+    }),
+  );
 
   if (error) {
     capture(error, { context: "createGiftOption" });

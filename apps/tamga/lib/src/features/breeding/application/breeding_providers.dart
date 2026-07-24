@@ -18,6 +18,6 @@ final breedingRepositoryProvider = FutureProvider<BreedingRepository>((
 
 final breedingRecordsProvider =
     createListProvider<BreedingRecord, BreedingRepository>(
-  (ref) => ref.watch(breedingRepositoryProvider.future),
-  (repo) => repo.fetchBreedingRecords(),
-);
+      (ref) => ref.watch(breedingRepositoryProvider.future),
+      (repo) => repo.fetchBreedingRecords(),
+    );

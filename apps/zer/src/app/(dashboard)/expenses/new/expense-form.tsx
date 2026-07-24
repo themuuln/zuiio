@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -17,11 +16,11 @@ import {
 } from "@/components/ui/combobox";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatRouteDate } from "@/lib/format";
 import { expenseKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 import { createExpense } from "./actions";
 
 const initialPaymentMethods: string[] = ["cash", "bank_transfer", "card"];
@@ -63,8 +62,6 @@ export function ExpenseForm({
   onSuccess?: () => void;
   formId?: string;
 }) {
-  const queryClient = useQueryClient();
-
   const {
     register,
     handleSubmit,
@@ -81,64 +78,23 @@ export function ExpenseForm({
     },
   });
 
-  const expenseMutation = useMutation({
+  const expenseMutation = useOptimisticCreate({
     mutationFn: async (formData: FormData) => {
       const result = await createExpense(undefined, formData);
       if (result && "error" in result) throw new Error(result.error);
       return result;
     },
-    onMutate: async (formData) => {
-      await queryClient.cancelQueries({ queryKey: expenseKeys.all() });
-      const snapshot = queryClient.getQueriesData({
-        queryKey: expenseKeys.all(),
-      });
-
-      const category = formData.get("category")?.toString() ?? "";
-      const amount = Number(formData.get("amount") ?? 0);
-      const expenseDate =
-        formData.get("expense_date")?.toString() ?? formatRouteDate();
-      const description = formData.get("description")?.toString() ?? "";
-      const paymentMethod =
-        formData.get("payment_method")?.toString() ?? "cash";
-
-      const optimisticExpense = {
-        id: `opt-${Date.now()}`,
-        category,
-        amount,
-        expense_date: expenseDate,
-        description: description || null,
-        payment_method: paymentMethod,
-        created_at: new Date().toISOString(),
-      };
-
-      queryClient.setQueriesData(
-        { queryKey: expenseKeys.all(), type: "active" },
-        (oldData: unknown) => {
-          if (Array.isArray(oldData)) {
-            return [optimisticExpense, ...oldData];
-          }
-          return oldData;
-        },
-      );
-
-      return { snapshot };
-    },
-    onSuccess: () => {
-      if (onSuccess) {
-        onSuccess();
-      }
-    },
-    onError: (err, _vars, context) => {
-      if (context?.snapshot) {
-        for (const [key, data] of context.snapshot) {
-          queryClient.setQueryData(key, data);
-        }
-      }
-      toast.error(err.message || "Зарлага үүсгэхэд алдаа гарлаа.");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: expenseKeys.all() });
-    },
+    queryKey: expenseKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      category: formData.get("category")?.toString() ?? "",
+      amount: Number(formData.get("amount") ?? 0),
+      expense_date:
+        formData.get("expense_date")?.toString() ?? formatRouteDate(),
+      description: formData.get("description")?.toString() || null,
+      payment_method: formData.get("payment_method")?.toString() ?? "cash",
+      created_at: new Date().toISOString(),
+    }),
   });
 
   const onSubmit = (data: ExpenseValues) => {
@@ -149,7 +105,12 @@ export function ExpenseForm({
     formData.append("expense_date", data.expense_date);
     formData.append("payment_method", data.payment_method);
     formData.append("description", data.description ?? "");
-    expenseMutation.mutate(formData);
+    expenseMutation.mutate(formData, {
+      onSuccess: () => {
+        onSuccess?.();
+        toast.success("Зарлага амжилттай үүсгэгдсэн.");
+      },
+    });
   };
 
   const [categoryQuery, setCategoryQuery] = useState("");
@@ -342,9 +303,6 @@ export function ExpenseForm({
           />
         </Field>
       </FieldGroup>
-
-      <ErrorBanner error={expenseMutation.error} />
-
       {!formId && (
         <button
           type="submit"

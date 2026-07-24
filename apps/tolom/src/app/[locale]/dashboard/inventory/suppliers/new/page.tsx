@@ -16,7 +16,10 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { reportServerError } from "@/lib/sentry-report-server";
 
 export default function NewSupplierPage() {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { push, back } = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;

@@ -40,6 +40,7 @@ class _RegionSelectionPageState extends State<RegionSelectionPage> {
     'Архангай',
     'Өвөрхангай',
     'Баянхонгор',
+    'Баян-Өлгий',
     'Говь-Алтай',
     'Ховд',
     'Увс',
@@ -47,7 +48,7 @@ class _RegionSelectionPageState extends State<RegionSelectionPage> {
     'Дундговь',
     'Говьсүмбэр',
     'Дорнод',
-    'Хамын',
+    'Хөвсгөл',
     'Сүхбаатар',
     'Дорноговь',
     'Өмнөговь',
@@ -84,33 +85,18 @@ class _RegionSelectionPageState extends State<RegionSelectionPage> {
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.lg,
-            AppSpacing.section,
+            AppSpacing.page,
             AppSpacing.lg,
             0,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Center(
+            child: Column(
             children: [
-              // Back button
-              GestureDetector(
-                onTap: widget.onBack,
-                child: SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Icon(
-                    Icons.arrow_back_ios,
-                    size: 24,
-                    color: tc.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
               // Title
               Text(
                 'Аймаг сонгох',
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: 34,
                   fontWeight: FontWeight.w600,
                   color: tc.onSurface,
                   letterSpacing: 0.36,
@@ -126,6 +112,7 @@ class _RegionSelectionPageState extends State<RegionSelectionPage> {
                 ),
               ),
             ],
+            ),
           ),
         ),
 
@@ -226,28 +213,46 @@ class _RegionSelectionPageState extends State<RegionSelectionPage> {
             },
           ),
         ),
+        const SizedBox(height: AppSpacing.md),
 
-        // ── CTA button (bottom, above safe area) ──
+
+        // ── Bottom actions — back + continue ──
         SafeArea(
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
-              0,
+              AppSpacing.sm,
               AppSpacing.lg,
               AppSpacing.lg,
             ),
             child: SizedBox(
-              width: double.infinity,
               height: 48,
-              child: FilledButton(
-                onPressed: _canContinue
-                    ? () => widget.onContinue(_selectedRegion!)
-                    : null,
-                child: const Text(
-                  'Үргэлжлүүлэх',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                ),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: widget.onBack,
+                    icon: Icon(Icons.chevron_left, color: tc.primary),
+                    style: IconButton.styleFrom(
+                      backgroundColor: tc.surfaceContainerLow,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _canContinue
+                          ? () => widget.onContinue(_selectedRegion!)
+                          : null,
+                      child: const Text(
+                        'Үргэлжлүүлэх',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

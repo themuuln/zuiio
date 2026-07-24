@@ -1,0 +1,49 @@
+# Tab Navigation — navigate through all tabs
+
+appId: mn.tamga.app
+name: Tab Navigation
+
+onFlowStart:
+  - clearState
+
+---
+- launchApp
+
+- runFlow:
+    when:
+      visible: "Open"
+    file: ../subflows/dismiss-open-dialog.yaml
+
+# Navigate to horses tab
+- tapOn: "Морь, tab, 1 of 8"
+- extendedWaitUntil:
+    visible: "Миний морь"
+    timeout: 30000
+
+# Navigate tabs using exact accessibility text
+- tapOn: "Удам, tab, 2 of 8"
+- extendedWaitUntil:
+    visible: "Удам судлал"
+    timeout: 10000
+
+- tapOn: "Зах, tab, 3 of 8"
+- extendedWaitUntil:
+    visible: "Морины зах"
+    timeout: 10000
+
+- tapOn: "Эвент, tab, 4 of 8"
+- extendedWaitUntil:
+    visible: "Эвентүүд"
+    timeout: 10000
+
+- tapOn: "Профайл, tab, 8 of 8"
+- extendedWaitUntil:
+    visible: "Батбаяр"
+    timeout: 10000
+
+- tapOn: "Морь, tab, 1 of 8"
+- extendedWaitUntil:
+    visible: "Миний морь"
+    timeout: 10000
+
+- takeScreenshot: tab_navigation

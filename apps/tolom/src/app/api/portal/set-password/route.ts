@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
-import { ok } from "@/lib/api-response";
+import { apiError, ok } from "@/lib/api-response";
+
 import { ConflictError, ValidationError } from "@/lib/errors";
 import { authRateLimiter } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
@@ -21,15 +21,14 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await authRateLimiter.check(ip);
   if (!rateCheck.allowed) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later." },
+    return apiError(
+      "RATE_LIMITED",
+      "Too many requests. Please try again later.",
+      429,
       {
-        status: 429,
-        headers: {
-          "Retry-After": String(
-            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-          ),
-        },
+        "Retry-After": String(
+          Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+        ),
       },
     );
   }

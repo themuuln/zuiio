@@ -51,7 +51,10 @@ export function MovementsTab({
   onMovementFilterChange,
 }: MovementsTabProps) {
   // const locale = useLocale();
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const now = useClientNow();
   const movementLabels = useMemo(() => getMovementLabels(t), [t]);
   const movementFilters = useMemo(() => getMovementFilters(t), [t]);

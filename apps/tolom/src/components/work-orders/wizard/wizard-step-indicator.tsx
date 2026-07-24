@@ -15,7 +15,10 @@ const STEPS = [
 ] as const;
 
 export function WizardStepIndicator() {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {

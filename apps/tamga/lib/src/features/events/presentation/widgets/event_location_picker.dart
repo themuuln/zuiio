@@ -171,10 +171,7 @@ class _EventLocationPickerState extends State<EventLocationPicker> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Section header ──
-        Text(
-          'Байршил сонгох',
-          style: theme.textTheme.titleMedium,
-        ),
+        Text('Байршил сонгох', style: theme.textTheme.titleMedium),
         const SizedBox(height: AppSpacing.sm),
 
         // ── Map ──

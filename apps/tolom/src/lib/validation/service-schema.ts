@@ -11,6 +11,7 @@ export const serviceSchema = z.object({
       (v) => v.trim() !== "" && !Number.isNaN(Number(v)) && Number(v) >= 0,
       "Enter a valid price",
     ),
+  defaultCost: z.string().optional(),
   category: z.string().optional(),
   description: z.string().optional(),
 });

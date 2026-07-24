@@ -7,9 +7,10 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +18,7 @@ import {
   normalizeOrgTransferBankAccounts,
   resolveOrgTransferBanks,
 } from "@/lib/payments/org-bank-accounts";
+import { prefetchDrawerCatalogs } from "@/lib/queries/use-drawer-queries";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
@@ -36,12 +38,24 @@ import { BayViewViews } from "./_view-renderer";
 import { BayCardDragPreview } from "./bay-card";
 
 export function BayViewV2Client() {
-  const t = useTranslations("bayView");
+  const t = useTranslations("bayView") as (
+    key: string,
+    values?: Record<string, string | number | Date>,
+  ) => string;
   const selectedBranchId = useSelectedBranchId();
   const setSelectedBranchId = useSetSelectedBranchId();
   const branchFilter =
     selectedBranchId === "all" ? undefined : selectedBranchId;
   const { data: orgInfo } = useCurrentOrg();
+  const queryClient = useQueryClient();
+
+  // ── Preload drawer catalogs on mount (shared across all drawer opens) ──
+  useEffect(() => {
+    if (orgInfo?.orgId) {
+      prefetchDrawerCatalogs(queryClient, orgInfo.orgId);
+    }
+  }, [queryClient, orgInfo?.orgId]);
+
   const { settings: orgSettings } = useOrgSettings(orgInfo?.orgId);
   const paymentMethodFees = resolvePaymentMethodFees(
     orgSettings?.payment_method_fees,
@@ -49,7 +63,6 @@ export function BayViewV2Client() {
   const transferBanks = resolveOrgTransferBanks(
     normalizeOrgTransferBankAccounts(orgSettings?.transfer_bank_accounts),
   );
-
   // ── Extracted hooks (no data dependency) ──
   const dialogs = useBayViewDialogs();
   const pending = useBayViewPending();
@@ -325,8 +338,6 @@ export function BayViewV2Client() {
             handlePickupCompleteConfirm={mutations.handlePickupCompleteConfirm}
             handleBatchComplete={mutations.handleBatchComplete}
             handleAssignToBay={mutations.handleAssignToBay}
-            handleRegisterAndAssign={mutations.handleRegisterAndAssign}
-            handleEmptyBayQueueSelect={mutations.handleEmptyBayQueueSelect}
             onRefresh={bayViewData.fetchData}
             t={t}
             assignMechanicMutation={mutations.assignMechanicMutation}

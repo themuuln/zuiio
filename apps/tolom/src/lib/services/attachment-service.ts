@@ -67,8 +67,9 @@ export async function createAttachment(
   orgId: string,
   workOrderId: string,
   params: CreateAttachmentParams,
+  userId_?: string,
 ): Promise<WorkOrderAttachment> {
-  const userId = (await db.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
   const result = await crud.create(
     db,
     orgId,
@@ -84,8 +85,9 @@ export async function deleteAttachment(
   orgId: string,
   workOrderId: string,
   attachmentId: string,
+  userId_?: string,
 ): Promise<void> {
-  const userId = (await db.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
   await crud.softDelete(db, orgId, attachmentId, userId ?? "");
   revalidateTag(cacheTags.workOrderAttachments(workOrderId), "max");
 }

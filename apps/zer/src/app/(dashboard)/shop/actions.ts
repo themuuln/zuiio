@@ -5,7 +5,7 @@ import { capture, withDbCapture } from "@zuiio/capture";
 import { requireAppContext, requireWriteAction } from "@/lib/action-utils";
 import { findOrCreateContact } from "@/lib/contact-utils";
 import { createInvoiceFromSale } from "@/lib/invoicing";
-import { revalidateEntity } from "@/lib/revalidate";
+import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 import type { CartItemData } from "@/lib/types";
 import { getString } from "@/lib/validation";
 
@@ -57,6 +57,10 @@ export async function createShopSale(
         (sum, item) => sum + item.unitPrice * item.quantity,
         0,
       );
+
+      const currencyCode = getString(formData, "currency_code") || "MNT";
+      const currencySymbol = getString(formData, "currency_symbol") || "₮";
+      const exchangeRate = Number(formData.get("exchange_rate") ?? 1.0);
 
       const customerName = getString(formData, "customer_name");
       const customerPhone = customerName
@@ -125,7 +129,7 @@ export async function createShopSale(
           p_org_id: organizationId,
           p_branch_id: branchId,
           p_user_id: userId,
-          p_contact_id: contactId,
+          p_contact_id: contactId ?? "",
           p_total_amount: totalAmount,
           p_paid_amount: paidAmount,
           p_payment_method: paymentMethod,
@@ -145,6 +149,9 @@ export async function createShopSale(
             unit_cost: item.unitPrice,
             variant_id: item.variantId ?? "",
           })),
+          p_currency_code: currencyCode,
+          p_currency_symbol: currencySymbol,
+          p_exchange_rate: exchangeRate,
         },
       );
       timing("rpc", performance.now() - rpcStart);
@@ -189,6 +196,11 @@ export async function createShopSale(
       });
 
       revalidateEntity("shop");
+      revalidateEntityTag("sales", organizationId);
+      revalidateEntityTag("products", organizationId);
+      if (createdContact) {
+        revalidateEntityTag("customers", organizationId);
+      }
 
       timing("total", performance.now() - t0);
       span.setStatus({ code: 1 });

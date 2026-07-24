@@ -10,7 +10,9 @@ import 'event_repository.dart';
 ///
 /// Maps [Event] ↔ Supabase row via the domain model's built-in
 /// `fromSupabaseJson` / `toSupabaseJson`.
-class SupabaseEventRepository with SupabaseRepositoryMixin implements EventRepository {
+class SupabaseEventRepository
+    with SupabaseRepositoryMixin
+    implements EventRepository {
   SupabaseEventRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 
@@ -37,9 +39,7 @@ class SupabaseEventRepository with SupabaseRepositoryMixin implements EventRepos
           .order('date', ascending: false);
 
       final events = (response as List<dynamic>)
-          .map(
-            (row) => Event.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => Event.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(events);
@@ -61,9 +61,7 @@ class SupabaseEventRepository with SupabaseRepositoryMixin implements EventRepos
           .order('date', ascending: false);
 
       final events = (response as List<dynamic>)
-          .map(
-            (row) => Event.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => Event.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(events);
@@ -85,9 +83,7 @@ class SupabaseEventRepository with SupabaseRepositoryMixin implements EventRepos
           .order('date', ascending: false);
 
       final events = (response as List<dynamic>)
-          .map(
-            (row) => Event.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => Event.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(events);
@@ -109,9 +105,7 @@ class SupabaseEventRepository with SupabaseRepositoryMixin implements EventRepos
           .order('date', ascending: false);
 
       final events = (response as List<dynamic>)
-          .map(
-            (row) => Event.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => Event.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(events);
@@ -157,5 +151,4 @@ class SupabaseEventRepository with SupabaseRepositoryMixin implements EventRepos
       return Result.fail(wrapError(e));
     }
   }
-
 }

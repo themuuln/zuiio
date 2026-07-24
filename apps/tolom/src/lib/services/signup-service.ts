@@ -136,18 +136,22 @@ export async function finalizeSignup(
     .eq("user_id", user.id)
     .is("removed_at", null)
     .maybeSingle();
-
   if (existingMembership) {
-    // Already a member of an org — upsert profile and return
-    await adminClient.from("profiles").upsert(
-      {
-        id: user.id,
-        organization_id: existingMembership.organization_id,
-        is_active: true,
-        full_name: userFullName,
-      },
-      { onConflict: "id" },
-    );
+    // Already a member of an org — upsert profile and return.
+    // Only set full_name if the IdP provided one; never overwrite
+    // an existing name with null (SSO metadata may not include name).
+    const profileUpdate = {
+      id: user.id,
+      organization_id: existingMembership.organization_id,
+      is_active: true,
+      ...(userFullName ? { full_name: userFullName } : {}),
+    };
+    const { error: upsertError } = await adminClient
+      .from("profiles")
+      .upsert(profileUpdate, { onConflict: "id" });
+    if (upsertError) {
+      reportServerError("Failed to upsert profile:", upsertError.message);
+    }
     return { status: "already_setup" };
   }
 

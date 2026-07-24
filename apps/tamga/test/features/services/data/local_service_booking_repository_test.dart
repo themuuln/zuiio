@@ -19,7 +19,9 @@ void main() {
     Future<void> setupTestEnvironment() async {
       TestWidgetsFlutterBinding.ensureInitialized();
 
-      final tempDir = Directory.systemTemp.createTempSync('tamga_test_services_');
+      final tempDir = Directory.systemTemp.createTempSync(
+        'tamga_test_services_',
+      );
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
@@ -194,7 +196,9 @@ void main() {
         ),
       );
 
-      final result = await repository.cancelBooking('booking-already-cancelled');
+      final result = await repository.cancelBooking(
+        'booking-already-cancelled',
+      );
 
       expect(result.isFailure, true);
     });
@@ -218,11 +222,15 @@ void main() {
       expect(syncQueue.pendingCount, greaterThan(0));
 
       final synced = syncQueue.toList();
-      expect(synced.any((item) =>
-        item.entityType == 'service_booking' &&
-        item.entityId == 'booking-sync' &&
-        item.action.name == 'create'
-      ), true);
+      expect(
+        synced.any(
+          (item) =>
+              item.entityType == 'service_booking' &&
+              item.entityId == 'booking-sync' &&
+              item.action.name == 'create',
+        ),
+        true,
+      );
     });
 
     test('deleteBooking removes the booking', () async {

@@ -1,5 +1,6 @@
 import { capture, withDbCapture } from "@zuiio/capture";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -31,8 +32,19 @@ const STATUS_VARIANTS: Record<
   overdue: "destructive",
   cancelled: "outline",
 };
+export default function PublicInvoicePage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  return (
+    <Suspense fallback={<InvoiceSkeleton />}>
+      <InvoiceDataFetcher params={params} />
+    </Suspense>
+  );
+}
 
-export default async function PublicInvoicePage({
+async function InvoiceDataFetcher({
   params,
 }: {
   params: Promise<{ token: string }>;
@@ -41,56 +53,59 @@ export default async function PublicInvoicePage({
   const supabase = await createClient();
 
   try {
-    const { data: invoice, error: lookupError } = await withDbCapture(
-      "public invoice: lookup",
-      supabase
-        .from("invoices")
-        .select(
-          "id, invoice_number, issue_date, status, total_amount, paid_amount, notes, contacts(name, phone, email), organizations(name)",
-        )
-        .eq("token", token)
-        .single(),
+    const { data: invoiceData, error: rpcError } = await withDbCapture(
+      "public invoice: RPC lookup",
+      supabase.rpc("get_public_invoice", { p_token: token }),
     );
 
-    if (lookupError) {
-      capture(lookupError, { context: "public invoice: lookup" });
+    if (rpcError) {
+      capture(rpcError, { context: "public invoice: RPC lookup" });
       notFound();
     }
 
-    if (!invoice) {
+    if (!invoiceData) {
       notFound();
     }
 
-    const { data: items, error: itemsError } = await withDbCapture(
-      "public invoice: items",
-      supabase
-        .from("invoice_items")
-        .select(
-          "id, description, quantity, unit_price, total_price, products(name, unit)",
-        )
-        .eq("invoice_id", invoice.id),
-    );
-
-    if (itemsError) {
-      capture(itemsError, { context: "public invoice: items" });
-      notFound();
-    }
-
-    const contact = invoice.contacts as {
-      name: string;
-      phone: string | null;
-      email: string | null;
-    } | null;
-    const org = invoice.organizations as { name: string } | null;
+    const invoice = invoiceData as {
+      id: string;
+      invoice_number: string;
+      issue_date: string;
+      status: string;
+      total_amount: number;
+      paid_amount: number;
+      notes: string | null;
+      organization_name: string;
+      contact_name: string | null;
+      contact_phone: string | null;
+      items: Array<{
+        description: string;
+        quantity: number;
+        unit_price: number;
+        total_price: number;
+        product_name: string | null;
+        product_unit: string | null;
+      }> | null;
+    };
 
     return (
       <div className="mx-auto max-w-4xl space-y-6 p-6">
+        <style>{`
+          @media print {
+            body { font-size: 11pt; }
+            .no-print { display: none !important; }
+            table { page-break-inside: avoid; }
+            tr { page-break-inside: avoid; }
+            .print\\:hidden { display: none !important; }
+          }
+        `}</style>
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">
             Нэхэмжлэл #{invoice.invoice_number}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {org?.name ?? "Байгууллага"} — {formatDate(invoice.issue_date)}
+            {invoice.organization_name ?? "Байгууллага"} —{" "}
+            {formatDate(invoice.issue_date)}
           </p>
           <Badge variant={STATUS_VARIANTS[invoice.status ?? ""] ?? "outline"}>
             {STATUS_LABELS[invoice.status ?? ""] ?? invoice.status}
@@ -112,28 +127,24 @@ export default async function PublicInvoicePage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(items ?? []).map((item) => {
-                  const product = item.products as {
-                    name: string;
-                    unit: string | null;
-                  } | null;
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        {item.description || product?.name || "Бүтээгдэхүүн"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {item.quantity} {product?.unit ?? ""}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(item.unit_price)}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatCurrency(item.total_price)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                {(invoice.items ?? []).map((item) => (
+                  <TableRow
+                    key={`${item.description}-${item.unit_price}-${item.quantity}`}
+                  >
+                    <TableCell>
+                      {item.description || item.product_name || "Бүтээгдэхүүн"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {item.quantity} {item.product_unit ?? ""}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(item.unit_price)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(item.total_price)}
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </CardContent>
@@ -158,18 +169,17 @@ export default async function PublicInvoicePage({
           </div>
         </div>
 
-        {contact && (
+        {invoice.contact_name && (
           <Card>
             <CardHeader>
               <CardTitle>Харилцагчийн мэдээлэл</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="font-medium">{contact.name}</p>
-              {contact.phone && (
-                <p className="text-sm text-muted-foreground">{contact.phone}</p>
-              )}
-              {contact.email && (
-                <p className="text-sm text-muted-foreground">{contact.email}</p>
+              <p className="font-medium">{invoice.contact_name}</p>
+              {invoice.contact_phone && (
+                <p className="text-sm text-muted-foreground">
+                  {invoice.contact_phone}
+                </p>
               )}
             </CardContent>
           </Card>
@@ -191,4 +201,28 @@ export default async function PublicInvoicePage({
     capture(err, { context: "public invoice" });
     notFound();
   }
+}
+
+function InvoiceSkeleton() {
+  return (
+    <div className="mx-auto max-w-4xl space-y-6 p-6">
+      <div className="space-y-2">
+        <div className="h-8 w-48 animate-pulse rounded bg-muted" />
+        <div className="h-4 w-64 animate-pulse rounded bg-muted" />
+        <div className="h-5 w-24 animate-pulse rounded-full bg-muted" />
+      </div>
+      <div className="rounded-xl border border-border/80 bg-card p-5 shadow-sm">
+        <div className="h-5 w-32 animate-pulse rounded bg-muted mb-4" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className="flex gap-4">
+              <div className="h-4 flex-1 animate-pulse rounded bg-muted" />
+              <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+              <div className="h-4 w-20 animate-pulse rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

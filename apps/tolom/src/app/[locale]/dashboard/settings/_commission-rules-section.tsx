@@ -123,7 +123,10 @@ interface CommissionRulesSectionProps {
 }
 
 export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
-  const t = useTranslations("settings");
+  const t = useTranslations("settings") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: rules, isPending, error } = useCommissionRules(orgId);
   const createRule = useCreateCommissionRule(orgId);
   const updateRule = useUpdateCommissionRule(orgId);
@@ -312,14 +315,14 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"
-                          size="icon-sm"
+                          size="icon"
                           onClick={() => openEditDialog(rule)}
                         >
                           <Pencil className="size-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon-sm"
+                          size="icon"
                           onClick={() => handleDelete(rule.id)}
                         >
                           <Trash2 className="size-4 text-destructive" />

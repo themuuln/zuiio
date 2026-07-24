@@ -51,7 +51,7 @@ import { reportServerError } from "@/lib/sentry-report-server";
 import { useSelectedBranchId } from "@/lib/stores";
 import { ActionButtons } from "./_action-buttons";
 import { AddScheduleDialog } from "./_add-schedule-dialog";
-import { ConfigSheet } from "./_config-drawer";
+import { ConfigDrawer } from "./_config-drawer";
 import { DeleteConfirmDialog } from "./_delete-confirm-dialog";
 import { EditScheduleDialog } from "./_edit-schedule-dialog";
 import { ReminderLogsTab } from "./_reminder-logs-tab";
@@ -61,7 +61,10 @@ import { formatVehicleLabel, getScheduleDueStatus } from "./_utils";
 type DueStatus = "overdue" | "due-soon" | "scheduled" | "no-date";
 
 export default function ServiceRemindersPageClient() {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const selectedBranchId = useSelectedBranchId();
@@ -221,7 +224,7 @@ export default function ServiceRemindersPageClient() {
             onSyncComplete={() => refetch()}
             onSendComplete={() => refetch()}
           />
-          <ConfigSheet orgId={orgId} />
+          <ConfigDrawer orgId={orgId} />
           <AddScheduleDialog
             vehicles={vehicles}
             isPending={createSchedule.isPending}

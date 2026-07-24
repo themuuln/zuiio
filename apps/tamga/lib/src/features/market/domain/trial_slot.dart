@@ -152,8 +152,16 @@ class TrialSlot {
 
   @override
   int get hashCode => Object.hash(
-      id, listingId, sellerId, date, startTime, endTime,
-      status, buyerId, notes);
+    id,
+    listingId,
+    sellerId,
+    date,
+    startTime,
+    endTime,
+    status,
+    buyerId,
+    notes,
+  );
 
   @override
   String toString() =>

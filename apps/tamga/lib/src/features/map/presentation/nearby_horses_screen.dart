@@ -117,7 +117,8 @@ class _NearbyHorsesScreenState extends ConsumerState<NearbyHorsesScreen> {
               error: (e, _) => Center(
                 child: TamgaErrorWidget(
                   message: 'Ойролцоо морьд ачаалахад алдаа гарлаа',
-                  onRetry: () => ref.invalidate(nearbyHorsesProvider(_radiusKm)),
+                  onRetry: () =>
+                      ref.invalidate(nearbyHorsesProvider(_radiusKm)),
                 ),
               ),
             ),

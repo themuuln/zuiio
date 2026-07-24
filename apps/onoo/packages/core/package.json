@@ -1,26 +1,26 @@
 {
-	"name": "@onoo/core",
-	"version": "0.1.0",
-	"private": true,
-	"type": "module",
-	"exports": {
-		".": "./src/index.ts",
-		"./types": "./src/types/index.ts",
-		"./stats": "./src/stats/index.ts",
-		"./events": "./src/events/index.ts",
-		"./sync": "./src/sync/index.ts",
-		"./format": "./src/format/index.ts"
-	},
-	"scripts": {
-		"test": "vitest run",
-		"validate:types": "tsc --noEmit"
-	},
-	"dependencies": {
-		"zod": "^3"
-	},
-	"devDependencies": {
-		"@typescript/native": "npm:typescript@^7.0.2",
-		"typescript": "npm:@typescript/typescript6@^6.0.2",
-		"vitest": "^3"
-	}
+  "name": "@onoo/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./stats": "./src/stats/index.ts",
+    "./events": "./src/events/index.ts",
+    "./sync": "./src/sync/index.ts",
+    "./format": "./src/format/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "validate:types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "^7.0.2",
+    "vitest": "^3"
+  }
 }

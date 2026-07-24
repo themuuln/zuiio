@@ -36,11 +36,13 @@ export function CategoryEditDrawer({
   children,
   open: externalOpen,
   onOpenChange: externalOnOpenChange,
+  nested = false,
 }: {
   category: CategoryEditData;
   children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  nested?: boolean;
 }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
@@ -86,6 +88,7 @@ export function CategoryEditDrawer({
     <DrawerLayout
       open={open}
       onOpenChange={setOpen}
+      nested={nested}
       trigger={
         children ?? (
           <button

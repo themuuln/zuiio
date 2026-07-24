@@ -30,7 +30,11 @@ export default function RootErrorPage({
           An unexpected error occurred. Please try again.
         </p>
         <div className="ez-error-actions">
-          <button className="ez-btn ez-btn-primary" onClick={() => reset()}>
+          <button
+            type="button"
+            className="ez-btn ez-btn-primary"
+            onClick={() => reset()}
+          >
             Try again
           </button>
           <a href="/dashboard" className="ez-btn ez-btn-secondary">

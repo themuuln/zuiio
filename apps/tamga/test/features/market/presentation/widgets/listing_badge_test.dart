@@ -259,7 +259,9 @@ void main() {
       expect(find.text('Дэлгүүр'), findsOneWidget);
     });
 
-    testWidgets('shows verified badge overlay when seller verified', (tester) async {
+    testWidgets('shows verified badge overlay when seller verified', (
+      tester,
+    ) async {
       final listing = MarketListing(
         id: 'test-3',
         horseId: 'horse-1',

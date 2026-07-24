@@ -77,6 +77,20 @@ export default function RegisterPage() {
           <ArrowRight data-icon="inline-end" />
         </Button>
 
+        <div className="relative flex items-center gap-3 my-1">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground uppercase tracking-wider">
+            Эсвэл
+          </span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <Link href="/sso">
+          <Button type="button" variant="outline" className="w-full">
+            SSO-р бүртгүүлэх
+          </Button>
+        </Link>
+
         <p className="text-center text-sm text-muted-foreground">
           Бүртгэлтэй юу?{" "}
           <Link

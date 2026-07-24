@@ -2,10 +2,7 @@
 ///
 /// Аав (sire) болон ээж (dam) морины ID-г агуулна.
 class BreedingQuery {
-  const BreedingQuery({
-    required this.sireId,
-    required this.damId,
-  });
+  const BreedingQuery({required this.sireId, required this.damId});
 
   /// Аав морины ID.
   final String sireId;
@@ -15,10 +12,7 @@ class BreedingQuery {
 
   // ── Serialization ────────────────────────────────────────
 
-  Map<String, dynamic> toJson() => {
-    'sireId': sireId,
-    'damId': damId,
-  };
+  Map<String, dynamic> toJson() => {'sireId': sireId, 'damId': damId};
 
   factory BreedingQuery.fromJson(Map<String, dynamic> json) {
     return BreedingQuery(
@@ -41,6 +35,5 @@ class BreedingQuery {
   int get hashCode => Object.hash(sireId, damId);
 
   @override
-  String toString() =>
-      'BreedingQuery(sireId: $sireId, damId: $damId)';
+  String toString() => 'BreedingQuery(sireId: $sireId, damId: $damId)';
 }

@@ -1,8 +1,12 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useState } from "react";
-import { deleteCategory } from "@/app/(dashboard)/inventory/categories/actions";
+import {
+  createCategory,
+  deleteCategory,
+} from "@/app/(dashboard)/inventory/categories/actions";
 import type { CategoryRow } from "@/app/(dashboard)/inventory/categories/page";
 import {
   type CategoryDetailData,
@@ -17,20 +21,16 @@ import { TableActionsCell } from "@/components/ui/table-actions-cell";
 import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
 import { categoryKeys } from "@/lib/query/keys";
 
-function toDetailData(category: CategoryRow): CategoryDetailData {
-  return {
-    id: category.id,
-    name: category.name,
-    product_count: category.product_count,
-  };
-}
+const toDetailData = (c: CategoryRow): CategoryDetailData => ({
+  id: c.id,
+  name: c.name,
+  product_count: c.product_count,
+});
 
-function toEditData(category: CategoryRow): CategoryEditData {
-  return {
-    id: category.id,
-    name: category.name,
-  };
-}
+const toEditData = (c: CategoryRow): CategoryEditData => ({
+  id: c.id,
+  name: c.name,
+});
 
 const columns = (
   onEdit: (category: CategoryRow) => void,
@@ -40,9 +40,19 @@ const columns = (
   {
     accessorKey: "name",
     header: "Нэр",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.getValue("name")}</span>
-    ),
+    cell: ({ row }) => {
+      const cat = row.original;
+      return (
+        <span className="flex items-center gap-2 font-medium">
+          {cat.name}
+          {cat.isPreset && (
+            <span className="inline-flex items-center rounded-md bg-violet-50 px-1.5 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-inset ring-violet-700/10 dark:bg-violet-400/10 dark:text-violet-400 dark:ring-violet-400/30">
+              Бүрдэл
+            </span>
+          )}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "product_count",
@@ -77,6 +87,7 @@ export function CategoriesTable({
   data: CategoryRow[];
   loading?: boolean;
 }) {
+  const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<CategoryRow | null>(
     null,
   );
@@ -84,6 +95,15 @@ export function CategoriesTable({
 
   const { handleDelete, isPending: deletePending } = useDeleteWithConfirm({
     mutationFn: async (id: string) => {
+      // Preset categories don't exist in DB — just remove from visible list
+      if (id.startsWith("preset:")) {
+        queryClient.setQueryData(
+          categoryKeys.all(),
+          (old: CategoryRow[] | undefined) =>
+            old?.filter((c) => c.id !== id) ?? [],
+        );
+        return undefined;
+      }
       const formData = new FormData();
       formData.set("id", id);
       const result = await deleteCategory(undefined, formData);
@@ -94,10 +114,30 @@ export function CategoriesTable({
     entityName: "Ангилал",
   });
 
+  /** Create a preset category in the DB so it becomes a regular editable row */
+  const handleEdit = async (category: CategoryRow) => {
+    if (category.isPreset) {
+      const formData = new FormData();
+      formData.append("name", category.name);
+      const result = await createCategory(undefined, formData);
+      if (result && "error" in result) return;
+      await queryClient.invalidateQueries({ queryKey: categoryKeys.all() });
+      const cached = queryClient.getQueryData<CategoryRow[]>(
+        categoryKeys.all(),
+      );
+      const dbRow = cached?.find(
+        (c) => c.name === category.name && !c.id.startsWith("preset:"),
+      );
+      if (dbRow) setEditCategory(dbRow);
+    } else {
+      setEditCategory(category);
+    }
+  };
+
   return (
     <>
       <DataTable
-        columns={columns(setEditCategory, handleDelete, deletePending)}
+        columns={columns(handleEdit, handleDelete, deletePending)}
         data={data}
         searchColumn="name"
         searchPlaceholder="Ангиллаар хайх..."
@@ -118,17 +158,19 @@ export function CategoriesTable({
         onOpenChange={(open) => {
           if (!open) setSelectedCategory(null);
         }}
-        onEdit={() => selectedCategory && setEditCategory(selectedCategory)}
+        onEdit={() => selectedCategory && handleEdit(selectedCategory)}
         onDelete={() =>
           selectedCategory &&
           handleDelete(selectedCategory.id, selectedCategory.name)
         }
         isDeletePending={deletePending}
+        nestedDrawerOpen={!!editCategory}
       />
       {editCategory && (
         <CategoryEditDrawer
           category={toEditData(editCategory)}
           open={!!editCategory}
+          nested={!!selectedCategory}
           onOpenChange={(open) => {
             if (!open) setEditCategory(null);
           }}

@@ -126,3 +126,22 @@ export const roleKeys = {
 export const orderTemplateKeys = {
   all: () => ["order_templates"] as const,
 };
+export const bomKeys = {
+  all: () => ["boms"] as const,
+};
+export const productionKeys = {
+  all: () => ["production_orders"] as const,
+  detail: (id: string) => ["production_orders", "detail", id] as const,
+};
+export const qualityKeys = {
+  all: () => ["quality_checks"] as const,
+  detail: (id: string) => ["quality_checks", "detail", id] as const,
+  summary: (orderId: string) => ["quality_checks", "summary", orderId] as const,
+};
+export const laborKeys = {
+  all: () => ["production_stage_labor"] as const,
+  stage: (stageId: string) =>
+    ["production_stage_labor", "stage", stageId] as const,
+  costSummary: (orderId: string) =>
+    ["production_stage_labor", "cost", orderId] as const,
+};

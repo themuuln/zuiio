@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# ──────────────────────────────────────────────────
+# pre-push: verify pushes before they reach the remote
+# ──────────────────────────────────────────────────
+
+# Parse stdin for pushes targeting 'refs/heads/main' on any remote.
+# Stdin format: <local-ref> <local-commit> <remote-ref> <remote-commit>
+set -e
+
+PUSHING_TO_MAIN=false
+while read local_ref local_commit remote_ref remote_commit; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    PUSHING_TO_MAIN=true
+  fi
+done
+
+# ─── tolom validate on main-branch pushes ───
+if [ "$PUSHING_TO_MAIN" = "true" ]; then
+  echo "🔍 Push to main detected — running tolom validate..."
+  cd apps/tolom
+  pnpm validate
+  echo "✅ tolom validate passed."
+fi
+
+# ─── onoo-web tests on any branch (existing behaviour) ───
+pnpm --filter onoo-web test:all

@@ -11,7 +11,9 @@ import 'nutrition_repository.dart';
 ///
 /// Each method maps domain model ↔ Supabase row via the model's built-in
 /// `fromSupabaseJson` / `toSupabaseJson`.
-class SupabaseNutritionRepository with SupabaseRepositoryMixin implements NutritionRepository {
+class SupabaseNutritionRepository
+    with SupabaseRepositoryMixin
+    implements NutritionRepository {
   SupabaseNutritionRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 
@@ -36,8 +38,7 @@ class SupabaseNutritionRepository with SupabaseRepositoryMixin implements Nutrit
 
       final schedules = (response as List<dynamic>)
           .map(
-            (row) =>
-                FeedSchedule.fromSupabaseJson(row as Map<String, dynamic>),
+            (row) => FeedSchedule.fromSupabaseJson(row as Map<String, dynamic>),
           )
           .toList();
 
@@ -100,9 +101,7 @@ class SupabaseNutritionRepository with SupabaseRepositoryMixin implements Nutrit
           .order('date', ascending: false);
 
       final logs = (response as List<dynamic>)
-          .map(
-            (row) => FeedLog.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => FeedLog.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(logs);
@@ -130,9 +129,7 @@ class SupabaseNutritionRepository with SupabaseRepositoryMixin implements Nutrit
           .order('date', ascending: true);
 
       final logs = (response as List<dynamic>)
-          .map(
-            (row) => FeedLog.fromSupabaseJson(row as Map<String, dynamic>),
-          )
+          .map((row) => FeedLog.fromSupabaseJson(row as Map<String, dynamic>))
           .toList();
 
       return Result.ok(logs);
@@ -178,5 +175,4 @@ class SupabaseNutritionRepository with SupabaseRepositoryMixin implements Nutrit
       return Result.fail(wrapError(e));
     }
   }
-
 }

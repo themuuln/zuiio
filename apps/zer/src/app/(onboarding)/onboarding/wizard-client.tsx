@@ -57,12 +57,21 @@ function groupByBrand(presets: Preset[]): BrandGroup[] {
 
 type Step = "presets" | "features" | "complete";
 
+function getManufacturingDefaults(): Set<string> {
+  return new Set([
+    "boms",
+    "production_orders",
+    "job_costing",
+    "quality_control",
+    "material_tracking",
+  ]);
+}
+
 interface OnboardingWizardProps {
   presets: Preset[];
   importedBrandNames: string[];
   companyType: string;
 }
-
 export function OnboardingWizard({
   presets,
   importedBrandNames,
@@ -71,7 +80,7 @@ export function OnboardingWizard({
   const [step, setStep] = useState<Step>("presets");
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(
-    new Set(),
+    companyType === "manufacturing" ? getManufacturingDefaults() : new Set(),
   );
   const [skipPresets, setSkipPresets] = useState(false);
   const [hasSuppliers, setHasSuppliers] = useState(true);
@@ -213,12 +222,19 @@ export function OnboardingWizard({
                 {brands.map((brand) => {
                   const isSelected = selectedBrands.has(brand.brandName);
                   return (
-                    <button
-                      type="button"
+                    <div
+                      role="button"
+                      tabIndex={0}
                       key={brand.brandName}
                       onClick={() => toggleBrand(brand.brandName)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleBrand(brand.brandName);
+                        }
+                      }}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg border p-3 text-left transition-all",
+                        "flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-left transition-all",
                         isSelected &&
                           "border-primary/50 bg-primary/5 ring-1 ring-primary/20",
                         !isSelected && "hover:bg-accent/50",
@@ -251,7 +267,7 @@ export function OnboardingWizard({
                           </p>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>

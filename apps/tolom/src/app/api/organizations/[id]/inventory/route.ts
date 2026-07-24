@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { apiError } from "@/lib/api-response";
 import { requirePermission } from "@/lib/supabase/role-guard";
+
 /**
  * Backward-compat redirect for old `?type=` inventory API.
  * New paths:
@@ -55,9 +57,10 @@ const inventoryRedirect = createRouteHandler(async ({ request, orgId }) => {
 
   const methodMap = urlMap[method as keyof typeof urlMap];
   if (!methodMap?.[type]) {
-    return NextResponse.json(
-      { error: { message: `Unknown type "${type}" for method ${method}` } },
-      { status: 400 },
+    return apiError(
+      "VALIDATION",
+      `Unknown type "${type}" for method ${method}`,
+      400,
     );
   }
 
@@ -67,10 +70,7 @@ const inventoryRedirect = createRouteHandler(async ({ request, orgId }) => {
   if (method === "GET" && type === "purchase-order-items") {
     const poId = searchParams.get("po_id");
     if (!poId) {
-      return NextResponse.json(
-        { error: { message: "po_id required" } },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "po_id required", 400);
     }
     target = `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/items`;
   }
@@ -80,10 +80,7 @@ const inventoryRedirect = createRouteHandler(async ({ request, orgId }) => {
     const body = await request.clone().json();
     const poId = body?.po_id;
     if (!poId) {
-      return NextResponse.json(
-        { error: { message: "po_id required in body" } },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "po_id required in body", 400);
     }
     target = `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/receive`;
   }

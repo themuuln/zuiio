@@ -1,5 +1,9 @@
-import { z } from 'zod';
-import { isEventAllowedByRuleset, type EventTypeKey, type RulesetEventDictionary } from './dictionary';
+import { z } from "zod";
+import {
+  type EventTypeKey,
+  isEventAllowedByRuleset,
+  type RulesetEventDictionary,
+} from "./dictionary";
 
 // --- Per-event-type payload schemas ---
 
@@ -21,7 +25,7 @@ export const TurnoverPayload = z.object({
 
 export const FoulPersonalPayload = z.object({
   fouled_player: z.string().optional(),
-  foul_type: z.enum(['shooting', 'non_shooting', 'offensive']).optional(),
+  foul_type: z.enum(["shooting", "non_shooting", "offensive"]).optional(),
 });
 
 export const SubstitutionPayload = z.object({
@@ -42,7 +46,12 @@ export const ReplacementEventPayload = z.object({
 });
 
 export const SourceSubmissionPayload = z.object({
-  source_type: z.enum(['tracker_journal', 'official_score_sheet', 'manual_box_score', 'import']),
+  source_type: z.enum([
+    "tracker_journal",
+    "official_score_sheet",
+    "manual_box_score",
+    "import",
+  ]),
   evidence_url: z.string().url().optional(),
   rights_confirmed: z.boolean(),
   normalized_payload: z.record(z.string(), z.unknown()),
@@ -93,10 +102,15 @@ export function validateEvent(
   options?: ValidateEventOptions,
 ): { valid: boolean; errors?: string[] } {
   // 1. Ruleset vocabulary gate
-  if (options?.ruleset && !isEventAllowedByRuleset(e.event_type, options.ruleset)) {
+  if (
+    options?.ruleset &&
+    !isEventAllowedByRuleset(e.event_type, options.ruleset)
+  ) {
     return {
       valid: false,
-      errors: [`event_type "${e.event_type}" is not enabled in ruleset "${options.ruleset.version}"`],
+      errors: [
+        `event_type "${e.event_type}" is not enabled in ruleset "${options.ruleset.version}"`,
+      ],
     };
   }
 
@@ -108,8 +122,6 @@ export function validateEvent(
   }
   return {
     valid: false,
-    errors: result.error.issues.map(
-      (i) => `${i.path.join('.')}: ${i.message}`,
-    ),
+    errors: result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`),
   };
 }

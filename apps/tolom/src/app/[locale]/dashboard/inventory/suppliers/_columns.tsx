@@ -17,7 +17,10 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
     {
       accessorKey: "name",
       header: ({ column }) => {
-        const t = useTranslations("inventory");
+        const t = useTranslations("inventory") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return <DataTableColumnHeader column={column} title={t("name")} />;
       },
       cell: ({ row }) => (
@@ -39,7 +42,10 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
     {
       accessorKey: "contact_person",
       header: ({ column }) => {
-        const t = useTranslations("inventory");
+        const t = useTranslations("inventory") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return (
           <DataTableColumnHeader column={column} title={t("contactPerson")} />
         );
@@ -53,7 +59,10 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
     {
       accessorKey: "phone",
       header: ({ column }) => {
-        const t = useTranslations("inventory");
+        const t = useTranslations("inventory") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return <DataTableColumnHeader column={column} title={t("phone")} />;
       },
       cell: ({ row }) => row.original.phone ?? "—",
@@ -61,7 +70,10 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
     {
       accessorKey: "email",
       header: ({ column }) => {
-        const t = useTranslations("inventory");
+        const t = useTranslations("inventory") as (
+          key: string,
+          values?: Record<string, string | number>,
+        ) => string;
         return <DataTableColumnHeader column={column} title={t("email")} />;
       },
       cell: ({ row }) => (

@@ -1,6 +1,5 @@
 import { apiError, createRouteHandler, ok } from "@/lib/api-response";
 import {
-
   getRegisteredDevices,
   revokeDevice,
 } from "@/lib/services/qr-token-service";

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
 
 interface AssignedScorer {
   user_id: string;
@@ -60,7 +60,9 @@ export function HandoffDialog({
       try {
         const { data, error } = await supabase
           .from("game_assignments")
-          .select("user_id, role, profiles!game_assignments_user_id_fkey(full_name)")
+          .select(
+            "user_id, role, profiles!game_assignments_user_id_fkey(full_name)",
+          )
           .eq("game_id", gameId)
           .in("role", ["lead_scorer", "backup_scorer"]);
 
@@ -107,7 +109,7 @@ export function HandoffDialog({
     setLoading(true);
     try {
       const supabase = createClient();
-      const { data, error } = await supabase.rpc("cmd_handoff_session", {
+      const { data: _data, error } = await supabase.rpc("cmd_handoff_session", {
         p_session_id: sessionId,
         p_to_user_id: selectedUserId,
         p_reason: reason.trim() || null,

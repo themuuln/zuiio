@@ -1,26 +1,53 @@
 # @zuiio — Mongolian Software and Apps
 
-**Private monorepo** for Zuiio, a Mongolian software and app company building both organization tools and consumer products. The portfolio includes B2B systems such as ERP, POS, CRM, service management, gym/workout operations, and shop workflows, plus consumer apps such as **Tamga**, **Tumurch**, and future lifestyle products.
+**Private monorepo** for Zuiio, a Mongolian software company building organization tools and consumer products.
+
+## Products
+
+| Product | Audience | Description |
+|---------|----------|-------------|
+| **Zer** | Organizations | SMB ERP — inventory, sales, expenses, customer management |
+| **Tolom** | Organizations | Auto repair shop management — bay view, work orders, parts |
+| **Tumurch** | Organizations + Consumers | Gym platform — workout logging, coaching, operations, billing |
+| **Tamga** | Consumers | Horse management — bloodlines, health, training, performance |
+| **Zuiio ID** | Organizations | Central SSO — single sign-on, org management, SAML/OIDC federation |
+
+## Structure
 
 ```
 zuiio/
 ├── apps/
-│   └── website/       ← Company website (Next.js 16, Tailwind v4, shadcn/ui)
-├── packages/          ← 10 shared packages
-│   ├── branding/      ← Design tokens (OKLch colors, typography, spacing)
-│   ├── config/        ← Shared tsconfig
-│   ├── core/          ← Formatting, validation, timezone, domain rules
-│   ├── export/        ← CSV, XLSX, DOCX, PDF generation
-│   ├── hooks/         ← Generic React hooks
-│   ├── hr/            ← Mongolian payroll: tax, insurance, overtime
-│   ├── offline/       ← Mutation queue engine, IndexedDB persister
-│   ├── query/         ← React Query provider + optimistic CRUD hooks
-│   ├── realtime/      ← Supabase Realtime hooks
-│   └── ui/            ← Pure utility components (HighlightText, formatting)
-├── templates/         ← Project boilerplate (React Native starter)
-├── docs/              ← Design system, stacks, vision
+│   ├── zuiio-id/        ← Central identity SSO (Next.js 16, Supabase, id.zuiio.com)
+│   ├── website/         ← Company website (Next.js 16, Tailwind v4)
+│   ├── zer/             ← SMB ERP (Next.js 16, Supabase) [submodule]
+│   ├── tolom/           ← Auto repair management (Next.js 16, Supabase) [submodule]
+│   ├── agent-gateway/   ← Multi-tenant AI agent gateway (Telegram bots)
+│   ├── onoo/            ← Basketball stats tracker (Next.js 16, Supabase)
+│   ├── tamga/           ← Horse management (Flutter)
+│   ├── tumurch/         ← Tumurch gym platform (submodule)
+│   ├── zim/             ← App
+│   ├── zerbu/           ← App
+│   └── ...              ← Other apps and submodules
+├── packages/            ← 16 shared @zuiio/* packages
+│   ├── ai-agent/        ← LLM client, tool-calling loop, provider abstraction
+│   ├── auth/            ← SSO federation (startZuiioSso, exchangeCode)
+│   ├── branding/        ← Design tokens (OKLch colors, typography, spacing)
+│   ├── capture/         ← Sentry error capture wrapper
+│   ├── config/          ← Shared tsconfig
+│   ├── core/            ← Formatting, validation, timezone, domain rules, lookups
+│   ├── export/          ← CSV, XLSX, DOCX, PDF generation
+│   ├── hooks/           ← Generic React hooks (debounce, fuzzy search, lookups)
+│   ├── hr/              ← Mongolian payroll: tax, insurance, overtime
+│   ├── i18n/            ← Internationalization utilities
+│   ├── offline/         ← Mutation queue engine, IndexedDB persister
+│   ├── query/           ← React Query provider + optimistic CRUD hooks
+│   ├── realtime/        ← Supabase Realtime hooks
+│   ├── sdk/             ← SDK package
+│   ├── search/          ← Search utilities
+│   └── ui/              ← Pure utility components (HighlightText, formatting)
+├── docs/                ← Design system, stacks, vision, architecture
 ├── README.md
-└── AGENTS.md          ← Project instructions (used by pi)
+└── AGENTS.md            ← Project instructions (for AI agents)
 ```
 
 ## Quick start
@@ -31,29 +58,39 @@ pnpm exec tsc --noEmit   # Type-check all packages
 pnpm test                # Run tests (packages with vitest)
 ```
 
-### Website
+### Run an app
 
 ```bash
-cd apps/website
-pnpm dev                 # next dev --turbopack (http://localhost:3000)
-pnpm build               # next build
+pnpm dev:zuiio-id        # Central SSO (http://localhost:3000)
+pnpm dev:website         # Company site
+pnpm dev:zer             # SMB ERP
+pnpm dev:tolom           # Auto repair management
+pnpm dev:agent-gateway   # AI agent gateway
+```
+
+### Build an app
+
+```bash
+pnpm build:zuiio-id      # Central SSO
+pnpm build:website       # Company site
+pnpm build:zer           # SMB ERP
+pnpm build:tolom         # Auto repair management
 ```
 
 ## Design system
 
 [`docs/design.md`](docs/design.md) — full reference for OKLch colors, fluid typography, motion, spacing, and component conventions. All tokens are defined in [`packages/branding/globals.css`](packages/branding/globals.css).
 
-## Consumers
+## Architecture
 
-```
-zer/                     ← sibling repo, uses @zuiio/* packages
-tolom/                   ← sibling repo, uses @zuiio/* packages
-```
-
-Both consume via `file:` protocol:
+All apps live inside this monorepo and consume shared packages via `workspace:*`:
 
 ```json
-"@zuiio/core": "file:../zuiio/packages/core"
+"@zuiio/core": "workspace:*"
 ```
 
-Each consumer clones as a sibling directory of `zuiio/` and references shared packages without publishing to npm.
+**Zuiio ID** is the central SSO — all other apps authenticate through it via the `@zuiio/auth` package (OIDC federation).
+
+### Org catalog
+
+[`docs/org.yaml`](docs/org.yaml) — centralized source of truth for company info and every product's details (name, tagline, description, URL, features). The website and future apps reference this for canonical product data.

@@ -16,13 +16,13 @@ export const createClient = cache(async () => {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, options),
             );
           } catch {
             // Server Component — proxy handles refresh
           }
         },
       },
-    }
+    },
   );
 });

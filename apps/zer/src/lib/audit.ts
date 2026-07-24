@@ -1,6 +1,6 @@
 "use server";
 
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { requireAppContext } from "@/lib/erp";
 import type { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
@@ -30,7 +30,10 @@ export type EntityType =
   | "return"
   | "discount"
   | "journal_entry"
-  | "account";
+  | "account"
+  | "budget"
+  | "loyalty_setting"
+  | "loyalty_reward";
 
 type FieldChange = {
   old: unknown;
@@ -51,15 +54,18 @@ export async function logAuditEvent(
   try {
     const { supabase, organizationId, userId } = await requireAppContext();
 
-    await supabase.from("audit_log").insert({
-      organization_id: organizationId,
-      actor_id: userId,
-      action,
-      entity_type: entityType,
-      entity_id: entityId,
-      field_changes: (fieldChanges ?? null) as Json | null,
-      summary: summary ?? `${action} ${entityType}`,
-    });
+    await withDbCapture(
+      "audit_log: insert",
+      supabase.from("audit_log").insert({
+        organization_id: organizationId,
+        actor_id: userId,
+        action,
+        entity_type: entityType,
+        entity_id: entityId,
+        field_changes: (fieldChanges ?? null) as Json | null,
+        summary: summary ?? `${action} ${entityType}`,
+      }),
+    );
   } catch {
     // Audit logging should never break the calling operation
     capture({ action, entityType, entityId }, { context: "audit: log event" });
@@ -81,15 +87,18 @@ export async function logAuditEventWithClient(
   summary?: string,
 ) {
   try {
-    await supabase.from("audit_log").insert({
-      organization_id: organizationId,
-      actor_id: actorId,
-      action,
-      entity_type: entityType,
-      entity_id: entityId,
-      field_changes: (fieldChanges ?? null) as Json | null,
-      summary: summary ?? `${action} ${entityType}`,
-    });
+    await withDbCapture(
+      "audit_log: insert",
+      supabase.from("audit_log").insert({
+        organization_id: organizationId,
+        actor_id: actorId,
+        action,
+        entity_type: entityType,
+        entity_id: entityId,
+        field_changes: (fieldChanges ?? null) as Json | null,
+        summary: summary ?? `${action} ${entityType}`,
+      }),
+    );
   } catch {
     capture(
       { action, entityType, entityId },

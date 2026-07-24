@@ -1,0 +1,211 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://agent-gateway/read-engine/read-plan",
+	"title": "Read Engine Read Plan",
+	"description": "Structured query plan emitted by the LLM. Replaces individual hardcoded tools (getDailySummary, getWorkOrderDetails, etc.) with a single dynamic `readData` tool. The LLM emits this JSON as the tool call argument. The Read Engine validates it against the product catalog, injects tenant isolation, compiles to PostgREST, executes in parallel, and returns structured results.",
+	"type": "object",
+	"required": ["queries"],
+	"properties": {
+		"queries": {
+			"type": "array",
+			"description": "One or more independent queries to execute in parallel. Each query targets a single dataset. Cross-dataset joins happen via embedded relations within a single query, not across queries. Multiple queries are for when the answer requires data from unrelated datasets (e.g., 'today's revenue AND open work order count').",
+			"minItems": 1,
+			"maxItems": 5,
+			"items": {
+				"$ref": "#/$defs/query"
+			}
+		},
+		"derivation": {
+			"$ref": "#/$defs/derivation",
+			"description": "Optional instruction for combining results from multiple queries. Only meaningful when queries.length > 1. Examples: 'sum totals across queries', 'compare first vs second query', 'merge into single table'."
+		},
+		"responseFormat": {
+			"type": "string",
+			"enum": ["table", "summary", "comparison", "detail"],
+			"default": "table",
+			"description": "How the engine should format the final response for the user. \"table\" = rows/columns (default for queries with dimensions). \"summary\" = single-line key-value pairs (default for single-measure queries). \"comparison\" = side-by-side (for compare derivations). \"detail\" = rich card format (for single-row detail queries)."
+		}
+	},
+	"$defs": {
+		"query": {
+			"type": "object",
+			"description": "A single dataset query. The LLM specifies the target dataset, what to group by (dimensions), what to aggregate (measures), filters, sorting, and pagination. The Read Engine compiles this to a PostgREST GET request with tenant isolation injected automatically.",
+			"required": ["dataset"],
+			"properties": {
+				"alias": {
+					"type": "string",
+					"pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+					"description": "Optional label for referencing this query in derivations and result keys. If omitted, the dataset name is used. Example: \"revenue\" for a revenue query, \"active_orders\" for an order count."
+				},
+				"dataset": {
+					"type": "string",
+					"description": "Dataset ID to query. Must exist in the product catalog. Maps to PostgREST endpoint: GET /rest/v1/<dataset>. Example: \"work_orders\", \"invoices\", \"customers\"."
+				},
+				"dimensions": {
+					"type": "array",
+					"items": { "type": "string" },
+					"uniqueItems": true,
+					"description": "Fields to GROUP BY. Can be local fields (\"status\", \"make\") or relation-prefixed fields (\"customer.full_name\" → embeds through the customer relation). PostgREST auto-groups by all non-aggregated fields in the select. The catalog marks which fields have dimension=true. Example: [\"status\", \"customer.full_name\"] groups by status and customer name."
+				},
+				"measures": {
+					"type": "array",
+					"items": { "$ref": "#/$defs/measureExpr" },
+					"description": "Aggregations to compute. Each measure specifies a field, an operation, and an output alias. PostgREST compiles these to aggregate function calls in the select parameter. Example: [{\"field\": \"total_amount\", \"op\": \"sum\", \"alias\": \"revenue\"}]."
+				},
+				"embeds": {
+					"type": "array",
+					"items": { "type": "string" },
+					"uniqueItems": true,
+					"description": "Relation aliases to embed inline (PostgREST resource embedding). Only for detail queries (no measures). The alias must match a relation defined in the catalog. Example: [\"customer\", \"vehicle\"] embeds customer and vehicle data into each work order row. Compiles to: select=*,customer:customers(name,phone),vehicle:vehicles(plate_number,make)."
+				},
+				"filters": {
+					"type": "array",
+					"items": { "$ref": "#/$defs/filter" },
+					"description": "Filter conditions applied BEFORE aggregation (WHERE clause). Supports all PostgREST filter operators. The Read Engine ALWAYS adds the tenant isolation filter (organization_id = tenantId) in addition to these. Example: [{\"field\": \"created_at\", \"op\": \"gte\", \"value\": \"2026-07-01\"}, {\"field\": \"status\", \"op\": \"neq\", \"value\": \"cancelled\"}]."
+				},
+				"sort": {
+					"type": "array",
+					"items": { "$ref": "#/$defs/sort" },
+					"description": "ORDER BY columns. Can sort by any dimension field or measure alias. PostgREST limitation: cannot sort by aggregated columns in aggregate mode. For aggregate results, sort by dimension fields or post-filter in TypeScript. Example: [{\"field\": \"total\", \"order\": \"desc\"}]."
+				},
+				"limit": {
+					"type": "integer",
+					"minimum": 1,
+					"maximum": 100,
+					"default": 20,
+					"description": "Maximum rows to return. Default 20, max 100. Maps to PostgREST ?limit=N parameter."
+				},
+				"offset": {
+					"type": "integer",
+					"minimum": 0,
+					"default": 0,
+					"description": "Row offset for pagination. Maps to PostgREST ?offset=N parameter."
+				},
+				"includeCount": {
+					"type": "boolean",
+					"default": false,
+					"description": "When true, includes the total row count (before limit/offset) in the response. Maps to PostgREST Prefer: count=exact header. Useful for pagination UI."
+				}
+			},
+			"not": {
+				"anyOf": [
+					{
+						"required": ["measures", "embeds"],
+						"description": "Cannot use both measures (aggregate mode) and embeds (detail mode) in the same query. Pick one: either aggregate with dimensions+measures, or detail with embeds."
+					}
+				]
+			}
+		},
+		"measureExpr": {
+			"type": "object",
+			"description": "A single aggregation expression. Specifies what to aggregate, how, and what to call the result. Compiled to PostgREST select syntax: op(field).alias.",
+			"required": ["field", "op", "alias"],
+			"properties": {
+				"field": {
+					"type": "string",
+					"description": "Field name to aggregate. Must exist in the dataset and have the corresponding operation in its measures array. Use \"*\" for count(*) to count all rows. Example: \"total_amount\"."
+				},
+				"op": {
+					"type": "string",
+					"enum": ["sum", "avg", "count", "min", "max"],
+					"description": "Aggregate operation. Maps to PostgREST aggregate functions: sum→sum(), avg→avg(), count→count(), min→min(), max→max(). Requires pgrst.db_aggregates_enabled = true in Supabase."
+				},
+				"alias": {
+					"type": "string",
+					"pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+					"description": "Output column name for the aggregated value. This is what appears in the result JSON and what sort fields reference. Example: \"total\", \"revenue\", \"order_count\"."
+				},
+				"filter": {
+					"type": "array",
+					"items": { "$ref": "#/$defs/filter" },
+					"description": "Conditional aggregation (FILTER clause). Only aggregate rows matching these filters. Example: only sum amounts where status='completed'. Note: PostgREST does not support FILTER clause natively — the engine compiles this as a subquery or post-filters in TypeScript."
+				}
+			}
+		},
+		"filter": {
+			"type": "object",
+			"description": "A filter condition. Maps directly to PostgREST query string parameters. The engine always appends the tenant isolation filter separately — never include organization_id here.",
+			"required": ["field", "op"],
+			"properties": {
+				"field": {
+					"type": "string",
+					"description": "Column name to filter on. Must exist in the target dataset's fields. NEVER use \"organization_id\" — the engine injects it automatically."
+				},
+				"op": {
+					"type": "string",
+					"enum": [
+						"eq",
+						"neq",
+						"gt",
+						"gte",
+						"lt",
+						"lte",
+						"like",
+						"ilike",
+						"in",
+						"not_in",
+						"is",
+						"fts",
+						"plfts",
+						"match",
+						"imatch"
+					],
+					"description": "Filter operator. eq=equals, neq=not equals, gt/> , gte/>=, lt/<, lte/<=, like=pattern match, ilike=case-insensitive, in=IN list, not_in=NOT IN list, is=NULL/TRUE/FALSE check, fts=full text search, match=regex."
+				},
+				"value": {
+					"oneOf": [
+						{ "type": "string" },
+						{ "type": "number" },
+						{ "type": "boolean" },
+						{ "type": "null" }
+					],
+					"description": "Single filter value. For eq/gt/gte/lt/lte: the comparison value. For is: null (IS NULL), true (IS TRUE), or false (IS FALSE). For like/ilike/match/imatch: the pattern string."
+				},
+				"values": {
+					"type": "array",
+					"items": {
+						"oneOf": [{ "type": "string" }, { "type": "number" }]
+					},
+					"description": "Multiple filter values for in/not_in operators. Example: [\"completed\", \"delivered\"]. The engine compiles this to PostgREST: field=in.(val1,val2,val3)."
+				}
+			}
+		},
+		"sort": {
+			"type": "object",
+			"description": "Sort specification. For detail queries, can sort by any field. For aggregate queries, PostgREST limitation: can only sort by non-aggregated dimension fields. To sort by a measure alias, the engine post-sorts the result set in TypeScript.",
+			"required": ["field", "order"],
+			"properties": {
+				"field": {
+					"type": "string",
+					"description": "Field name or measure alias to sort by. For dimensions: the field name (\"status\", \"created_at\"). For measures: the alias defined in the measure expression (\"total\", \"revenue\"). The engine detects which mode and compiles accordingly."
+				},
+				"order": {
+					"type": "string",
+					"enum": ["asc", "desc"],
+					"default": "asc",
+					"description": "Sort direction. \"asc\" = ascending (A→Z, 0→9, old→new). \"desc\" = descending (Z→A, 9→0, new→old)."
+				}
+			}
+		},
+		"derivation": {
+			"type": "object",
+			"description": "Instruction for combining results from multiple queries. Only meaningful when the read plan has 2+ queries. The engine executes all queries in parallel, then applies the derivation to produce a single answer.",
+			"required": ["type"],
+			"properties": {
+				"type": {
+					"type": "string",
+					"enum": ["sum", "merge", "compare", "concat", "none"],
+					"description": "How to combine query results. \"sum\" = add up numeric values across query results (e.g., total revenue from two queries). \"merge\" = combine row sets, deduplicate by a key. \"compare\" = compute deltas between first and second query results (e.g., this month vs last month). \"concat\" = concatenate result sets sequentially. \"none\" = return each query result separately (default behavior)."
+				},
+				"targetField": {
+					"type": "string",
+					"description": "For 'sum' derivation: which measure alias to sum across queries. For 'compare' derivation: which field to diff. Example: \"total\" means sum the 'total' column from each query result."
+				},
+				"description": {
+					"type": "string",
+					"description": "Human-readable (Mongolian) description of what this derivation does. Helps debugging and LLM context. Example: \" Хоёр сарын орлогыг харьцуулах\" (Compare two months of revenue)."
+				}
+			}
+		}
+	}
+}

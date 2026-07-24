@@ -13,7 +13,9 @@ import 'team_repository.dart';
 ///
 /// Maps [Team] ↔ Supabase row via the domain model's built-in
 /// `fromSupabaseJson` / `toSupabaseJson`.
-class SupabaseTeamRepository with SupabaseRepositoryMixin implements TeamRepository {
+class SupabaseTeamRepository
+    with SupabaseRepositoryMixin
+    implements TeamRepository {
   SupabaseTeamRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 
@@ -149,12 +151,9 @@ class SupabaseTeamRepository with SupabaseRepositoryMixin implements TeamReposit
         return Result.fail(noClientError());
       }
 
-      final updateData = <String, dynamic>{
-        'role': newRole.name,
-      };
+      final updateData = <String, dynamic>{'role': newRole.name};
       if (permissions != null) {
-        updateData['permissions'] =
-            permissions.map((p) => p.name).toList();
+        updateData['permissions'] = permissions.map((p) => p.name).toList();
       }
 
       await client
@@ -191,20 +190,16 @@ class SupabaseTeamRepository with SupabaseRepositoryMixin implements TeamReposit
           .select('team_id')
           .eq('user_id', userId);
 
-      final teamIds =
-          (memberTeams as List<dynamic>)
-              .map((row) => row['team_id'] as String)
-              .toList();
+      final teamIds = (memberTeams as List<dynamic>)
+          .map((row) => row['team_id'] as String)
+          .toList();
 
       if (teamIds.isEmpty) {
         return const Result.ok([]);
       }
 
       final filterStr = teamIds.map((id) => 'id.eq.$id').join(',');
-      final response = await client
-          .from('teams')
-          .select()
-          .or(filterStr);
+      final response = await client.from('teams').select().or(filterStr);
 
       final teams = (response as List<dynamic>)
           .map((row) => Team.fromSupabaseJson(row as Map<String, dynamic>))
@@ -279,14 +274,15 @@ class SupabaseTeamRepository with SupabaseRepositoryMixin implements TeamReposit
           .eq('id', invitationId)
           .single();
 
-      final invitation =
-          TeamInvitation.fromSupabaseJson(invResponse);
+      final invitation = TeamInvitation.fromSupabaseJson(invResponse);
 
       if (invitation.status != InvitationStatus.pending) {
-        return Result.fail(AppException(
-          message: 'Урилга идэвхтэй биш байна',
-          code: 'INVITATION_NOT_PENDING',
-        ));
+        return Result.fail(
+          AppException(
+            message: 'Урилга идэвхтэй биш байна',
+            code: 'INVITATION_NOT_PENDING',
+          ),
+        );
       }
 
       // Create the team member (member count is computed via COUNT query in code)
@@ -336,5 +332,24 @@ class SupabaseTeamRepository with SupabaseRepositoryMixin implements TeamReposit
     } catch (e) {
       return Result.fail(wrapError(e));
     }
+  }
+
+  @override
+  Future<Result<void>> addHorseToTeam(
+    String teamId,
+    String horseId, {
+    String? addedBy,
+  }) async {
+    // TODO: Implement Supabase team horse management
+    return const Result.ok(null);
+  }
+
+  @override
+  Future<Result<void>> removeHorseFromTeam(
+    String teamId,
+    String horseId,
+  ) async {
+    // TODO: Implement Supabase team horse management
+    return const Result.ok(null);
   }
 }

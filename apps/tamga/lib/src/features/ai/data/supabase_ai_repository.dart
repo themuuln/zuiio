@@ -16,20 +16,16 @@ import 'ai_repository.dart';
 /// `supabase/functions/v1/ai-breeding` Edge Function-д
 /// HTTP POST хүсэлт илгээнэ.
 class SupabaseAiRepository implements AiRepository {
-  SupabaseAiRepository({
-    http.Client? httpClient,
-    String? baseUrl,
-  })  : _http = httpClient ?? http.Client(),
-        _baseUrl = baseUrl ?? '';
+  SupabaseAiRepository({http.Client? httpClient, String? baseUrl})
+    : _http = httpClient ?? http.Client(),
+      _baseUrl = baseUrl ?? '';
 
   final http.Client _http;
   final String _baseUrl;
 
   /// Edge Function-ийн бүтэн URL.
   String get _functionUrl {
-    final base = _baseUrl.isNotEmpty
-        ? _baseUrl
-        : AppConfig.supabaseUrl;
+    final base = _baseUrl.isNotEmpty ? _baseUrl : AppConfig.supabaseUrl;
     return '$base/functions/v1/ai-breeding';
   }
 
@@ -39,9 +35,7 @@ class SupabaseAiRepository implements AiRepository {
       final client = getConfiguredSupabaseClient();
       final accessToken = client?.auth.currentSession?.accessToken;
 
-      final headers = <String, String>{
-        'Content-Type': 'application/json',
-      };
+      final headers = <String, String>{'Content-Type': 'application/json'};
 
       // Add auth token if available
       if (accessToken != null) {
@@ -59,7 +53,8 @@ class SupabaseAiRepository implements AiRepository {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
         return Result.fail(
           AppException(
-            message: body['message'] as String? ??
+            message:
+                body['message'] as String? ??
                 'Сарын хязгаар дууссан. Багцаа шинэчилнэ үү.',
             code: 'RATE_LIMIT_EXCEEDED',
           ),
@@ -70,8 +65,8 @@ class SupabaseAiRepository implements AiRepository {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
         return Result.fail(
           AppException(
-            message: body['error'] as String? ??
-                'AI шинжилгээ авахад алдаа гарлаа',
+            message:
+                body['error'] as String? ?? 'AI шинжилгээ авахад алдаа гарлаа',
             code: 'AI_FUNCTION_ERROR',
           ),
         );

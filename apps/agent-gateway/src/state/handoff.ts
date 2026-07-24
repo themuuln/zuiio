@@ -1,0 +1,215 @@
+import "server-only";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { capture } from "@zuiio/capture";
+
+/**
+ * Human handoff state machine.
+ * Manages escalation from AI agent to human and back.
+ */
+
+export type HandoffStatus =
+	| "bot"
+	| "pending_human"
+	| "human_active"
+	| "human_resolved"
+	| "bot_resumed";
+
+export interface HandoffEvent {
+	id: string;
+	organizationId: string;
+	chatId: number;
+	userId: number;
+	status: HandoffStatus;
+	reason: string | null;
+	escalatedBy: string | null;
+	customerQuery: string | null;
+	adminUserId: number | null;
+	createdAt: string;
+}
+
+/**
+ * Escalate a conversation to a human admin.
+ */
+export async function triggerHandoff(
+	supabase: SupabaseClient,
+	params: {
+		orgId: string;
+		chatId: number;
+		userId: number;
+		reason: string;
+		escalatedBy: "keyword" | "intent" | "sentiment" | "agent";
+		customerQuery: string;
+		botResponse: string;
+		adminChatId?: number;
+	},
+): Promise<HandoffEvent> {
+	const { data, error } = await supabase
+		.from("agent_handoff_events")
+		.insert({
+			organization_id: params.orgId,
+			chat_id: params.chatId,
+			user_id: params.userId,
+			status: "pending_human",
+			reason: params.reason,
+			escalated_by: params.escalatedBy,
+			customer_query: params.customerQuery,
+			bot_response: params.botResponse,
+			admin_chat_id: params.adminChatId ?? null,
+		})
+		.select(
+			"id, organization_id, chat_id, user_id, status, reason, escalated_by, customer_query, admin_user_id, created_at",
+		)
+		.single();
+
+	if (error) {
+		capture(error, { context: "agent-gateway: handoff trigger" });
+		throw new Error("Хүнд шилжүүлэхэд алдаа гарлаа");
+	}
+
+	const row = data as Record<string, unknown>;
+	return {
+		id: row.id as string,
+		organizationId: row.organization_id as string,
+		chatId: row.chat_id as number,
+		userId: row.user_id as number,
+		status: row.status as HandoffStatus,
+		reason: row.reason as string | null,
+		escalatedBy: row.escalated_by as string | null,
+		customerQuery: row.customer_query as string | null,
+		adminUserId: row.admin_user_id as number | null,
+		createdAt: row.created_at as string,
+	};
+}
+
+/**
+ * Check if a conversation is currently in handoff.
+ */
+export async function getActiveHandoff(
+	supabase: SupabaseClient,
+	orgId: string,
+	chatId: number,
+): Promise<HandoffEvent | null> {
+	const { data, error } = await supabase.rpc("get_active_handoff", {
+		p_org_id: orgId,
+		p_chat_id: chatId,
+	});
+
+	if (error || !data || (data as unknown[]).length === 0) return null;
+
+	const row = (data as Record<string, unknown>[])[0]!;
+	return {
+		id: row.id as string,
+		organizationId: orgId,
+		chatId: chatId,
+		userId: 0, // not in function output
+		status: row.status as HandoffStatus,
+		reason: row.reason as string | null,
+		escalatedBy: row.escalated_by as string | null,
+		customerQuery: row.customer_query as string | null,
+		adminUserId: row.admin_user_id as number | null,
+		createdAt: row.created_at as string,
+	};
+}
+
+/**
+ * Resolve a handoff — mark as handled by human.
+ */
+export async function resolveHandoff(
+	supabase: SupabaseClient,
+	handoffId: string,
+): Promise<void> {
+	const { error } = await supabase
+		.from("agent_handoff_events")
+		.update({
+			status: "human_resolved",
+			resolved_at: new Date().toISOString(),
+			updated_at: new Date().toISOString(),
+		})
+		.eq("id", handoffId);
+
+	if (error) {
+		capture(error, { context: "agent-gateway: handoff resolve" });
+	}
+}
+
+/**
+ * Resume bot after human resolution.
+ */
+export async function resumeBotAfterHandoff(
+	supabase: SupabaseClient,
+	orgId: string,
+	chatId: number,
+): Promise<void> {
+	const { error } = await supabase
+		.from("agent_handoff_events")
+		.update({
+			status: "bot_resumed",
+			updated_at: new Date().toISOString(),
+		})
+		.eq("organization_id", orgId)
+		.eq("chat_id", chatId)
+		.eq("status", "human_resolved");
+
+	if (error) {
+		capture(error, { context: "agent-gateway: handoff resume" });
+	}
+}
+
+/**
+ * Check if any handoff triggers match this message.
+ * Returns trigger reason if matched, null otherwise.
+ */
+export function checkHandoffTriggers(
+	userMessage: string,
+	config: {
+		keywordTriggers?: string[];
+		sentimentEnabled?: boolean;
+	},
+): {
+	triggered: boolean;
+	reason?: string;
+	by?: "keyword" | "sentiment" | "agent";
+} {
+	const lowerMsg = userMessage.toLowerCase();
+
+	// Keyword triggers
+	if (config.keywordTriggers) {
+		for (const keyword of config.keywordTriggers) {
+			if (lowerMsg.includes(keyword.toLowerCase())) {
+				return {
+					triggered: true,
+					reason: `Түлхүүр үг илэрсэн: "${keyword}"`,
+					by: "keyword",
+				};
+			}
+		}
+	}
+
+	// Common Mongolian escalation keywords
+	const escalationKeywords = [
+		"хүн",
+		"оператор",
+		"ажилтан",
+		"дарга",
+		"менежер",
+		"холбог",
+		"дууд",
+		"утас",
+		"гомдол",
+		"буруу",
+		"алдаа",
+		"хэлэлц",
+	];
+	for (const kw of escalationKeywords) {
+		if (lowerMsg.includes(kw)) {
+			return {
+				triggered: true,
+				reason: `Хэрэглэгч хүнтэй ярихыг хүсч байна: "${kw}"`,
+				by: "keyword",
+			};
+		}
+	}
+
+	return { triggered: false };
+}

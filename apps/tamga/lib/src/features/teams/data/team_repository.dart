@@ -44,4 +44,16 @@ abstract class TeamRepository {
 
   /// Урилгаас татгалзах: урилгын төлөвийг declined болгох.
   Future<Result<void>> declineInvitation(String invitationId);
+
+  // ── Team Horses ──────────────────────────────────────────────
+
+  /// Багт морь нэмэх.
+  Future<Result<void>> addHorseToTeam(
+    String teamId,
+    String horseId, {
+    String? addedBy,
+  });
+
+  /// Багаас морь хасах.
+  Future<Result<void>> removeHorseFromTeam(String teamId, String horseId);
 }

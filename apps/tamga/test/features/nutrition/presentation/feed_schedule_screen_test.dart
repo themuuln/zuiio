@@ -58,9 +58,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            feedSchedulesProvider('horse-1').overrideWith(
-              (ref) => completer.future,
-            ),
+            feedSchedulesProvider(
+              'horse-1',
+            ).overrideWith((ref) => completer.future),
           ],
           child: MaterialApp(
             theme: AppTheme.light(),
@@ -79,10 +79,9 @@ void main() {
     // Error state
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows error widget on fetch failure', (tester) async {
-      await tester.pumpWidget(createFeedScheduleScreen(
-        horseId: 'horse-1',
-        simulateError: true,
-      ));
+      await tester.pumpWidget(
+        createFeedScheduleScreen(horseId: 'horse-1', simulateError: true),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(TamgaErrorWidget), findsOneWidget);
@@ -92,10 +91,9 @@ void main() {
     // Empty state
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows empty state when no schedules exist', (tester) async {
-      await tester.pumpWidget(createFeedScheduleScreen(
-        horseId: 'horse-1',
-        schedules: [],
-      ));
+      await tester.pumpWidget(
+        createFeedScheduleScreen(horseId: 'horse-1', schedules: []),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Тэжээлийн хуваарь байхгүй'), findsOneWidget);
@@ -104,9 +102,7 @@ void main() {
     // ════════════════════════════════════════════════════════════════
     // List display
     // ════════════════════════════════════════════════════════════════
-    testWidgets('shows feed schedule list with schedule tiles', (
-      tester,
-    ) async {
+    testWidgets('shows feed schedule list with schedule tiles', (tester) async {
       final schedules = [
         createMockFeedSchedule(
           id: 'fs-1',
@@ -126,10 +122,9 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createFeedScheduleScreen(
-        horseId: 'horse-1',
-        schedules: schedules,
-      ));
+      await tester.pumpWidget(
+        createFeedScheduleScreen(horseId: 'horse-1', schedules: schedules),
+      );
       await tester.pumpAndSettle();
 
       // Show feed type names
@@ -145,10 +140,9 @@ void main() {
     // FAB
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows FAB to add new feed schedule', (tester) async {
-      await tester.pumpWidget(createFeedScheduleScreen(
-        horseId: 'horse-1',
-        schedules: [],
-      ));
+      await tester.pumpWidget(
+        createFeedScheduleScreen(horseId: 'horse-1', schedules: []),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(FloatingActionButton), findsOneWidget);
@@ -169,10 +163,9 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createFeedScheduleScreen(
-        horseId: 'horse-1',
-        schedules: schedules,
-      ));
+      await tester.pumpWidget(
+        createFeedScheduleScreen(horseId: 'horse-1', schedules: schedules),
+      );
       await tester.pumpAndSettle();
 
       // Should show active status

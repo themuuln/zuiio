@@ -36,7 +36,7 @@ class LineageHomeScreen extends ConsumerWidget {
       slivers: [
         // ── Minimal header ──
         SliverAppBar(
-          title: const Text('Tamga'),
+          title: const Text('Угшил'),
           actions: [
             IconButton(
               onPressed: () => context.go('/lineage/coi'),
@@ -126,8 +126,7 @@ class LineageHomeScreen extends ConsumerWidget {
                       vertical: AppSpacing.xxl,
                     ),
                     child: TamgaErrorWidget(
-                      message:
-                          'Удам угсааны мэдээлэл ачаалахад алдаа гарлаа',
+                      message: 'Удам угсааны мэдээлэл ачаалахад алдаа гарлаа',
                       onRetry: () => ref.invalidate(lineageRootsProvider),
                     ),
                   ),
@@ -752,9 +751,8 @@ class _FeaturedEventsSection extends ConsumerWidget {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: events.length,
-                separatorBuilder: (_, _) => const SizedBox(
-                  width: AppSpacing.sm,
-                ),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(width: AppSpacing.sm),
                 itemBuilder: (ctx, index) {
                   final event = events[index];
                   return SizedBox(

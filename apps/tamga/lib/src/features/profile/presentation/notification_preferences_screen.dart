@@ -143,7 +143,8 @@ class _NotificationPreferencesScreenState
       body: _isLoading
           ? SkeletonLoader(
               items: 6,
-              itemBuilder: (ctx, i) => const SkeletonListTile(showTrailing: false),
+              itemBuilder: (ctx, i) =>
+                  const SkeletonListTile(showTrailing: false),
             )
           : _error != null
           ? TamgaErrorWidget(

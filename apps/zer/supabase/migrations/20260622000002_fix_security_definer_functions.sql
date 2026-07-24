@@ -42,7 +42,7 @@ $$;
 GRANT EXECUTE ON FUNCTION public.set_role_permissions(UUID, public.app_permission[]) TO authenticated;
 
 -- 3. Fix increment_smtp_count with search_path
-CREATE OR REPLACE FUNCTION public.increment_smtp_count(config_id UUID)
+CREATE OR REPLACE FUNCTION public.increment_smtp_count(p_config_id UUID)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -51,14 +51,14 @@ AS $$
 BEGIN
   UPDATE public.smtp_configs
   SET daily_count = daily_count + 1, updated_at = now()
-  WHERE id = config_id;
+  WHERE id = p_config_id;
 END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.increment_smtp_count(UUID) TO authenticated;
 
 -- 4. Fix schedule/unschedule cron with search_path
-CREATE OR REPLACE FUNCTION public.schedule_daily_report_cron(app_url TEXT)
+CREATE OR REPLACE FUNCTION public.schedule_daily_report_cron(p_app_url TEXT)
 RETURNS TEXT
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -78,7 +78,7 @@ BEGIN
         headers:=''{"Content-Type": "application/json"}''::jsonb,
         body:=''{}''::jsonb
       )',
-      app_url || '/api/cron/daily-report'
+      p_app_url || '/api/cron/daily-report'
     )
   ) INTO job_id;
 

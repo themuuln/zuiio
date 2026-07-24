@@ -75,6 +75,7 @@ async function DataFetcher() {
       categories={categoryList}
       selectionMode={config.selectionMode}
       initialHasMore={hasMore}
+      organizationId={organizationId}
     />
   );
 }

@@ -1,7 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, noContent, ok } from "@/lib/api-response";
 import {
-
   deleteEstimate,
   getEstimate,
   updateEstimate,
@@ -18,13 +17,14 @@ export const GET = createRouteHandler(
 );
 
 export const PATCH = createRouteHandler(
-  async ({ request, params, orgId, supabase }) => {
+  async ({ request, params, orgId, supabase, user }) => {
     const body = await request.json();
     const estimate = await updateEstimate(
       supabase,
       params.estimateId,
       orgId,
       body,
+      user.id,
     );
     return ok(estimate);
   },

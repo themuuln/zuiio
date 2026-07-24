@@ -25,31 +25,36 @@ final sellerRatingRepositoryProvider = FutureProvider<MarketRepository>((ref) {
 // ── Rating Providers ─────────────────────────────────────────────────
 
 /// Худалдагчийн бүх үнэлгээг авах.
-final sellerRatingsProvider =
-    FutureProvider.family<List<SellerRating>, String>((ref, sellerId) async {
-  final repository = await ref.watch(marketRepositoryProvider.future);
-  final result = await repository.fetchSellerRatings(sellerId);
-  return result.getOrThrow();
-});
+final sellerRatingsProvider = FutureProvider.family<List<SellerRating>, String>(
+  (ref, sellerId) async {
+    final repository = await ref.watch(marketRepositoryProvider.future);
+    final result = await repository.fetchSellerRatings(sellerId);
+    return result.getOrThrow();
+  },
+);
 
 /// Худалдагчийн үнэлгээний хураангуйг авах.
 final sellerRatingSummaryProvider =
     FutureProvider.family<SellerRatingSummary, String>((ref, sellerId) async {
-  final repository = await ref.watch(marketRepositoryProvider.future);
-  final result = await repository.fetchSellerRatingSummary(sellerId);
-  return result.getOrThrow();
-});
+      final repository = await ref.watch(marketRepositoryProvider.future);
+      final result = await repository.fetchSellerRatingSummary(sellerId);
+      return result.getOrThrow();
+    });
 
 /// Үнэлгээний дундажийн provider (зөвхөн double утга).
-final sellerAverageRatingProvider =
-    FutureProvider.family<double, String>((ref, sellerId) async {
+final sellerAverageRatingProvider = FutureProvider.family<double, String>((
+  ref,
+  sellerId,
+) async {
   final summary = await ref.watch(sellerRatingSummaryProvider(sellerId).future);
   return summary.averageRating;
 });
 
 /// Үнэлгээний тооны provider (зөвхөн int утга).
-final sellerRatingCountProvider =
-    FutureProvider.family<int, String>((ref, sellerId) async {
+final sellerRatingCountProvider = FutureProvider.family<int, String>((
+  ref,
+  sellerId,
+) async {
   final summary = await ref.watch(sellerRatingSummaryProvider(sellerId).future);
   return summary.totalCount;
 });

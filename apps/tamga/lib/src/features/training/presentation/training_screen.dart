@@ -113,7 +113,8 @@ class _TrainingLogListState extends ConsumerState<_TrainingLogList> {
               child: EmptyState(
                 icon: Icons.fitness_center_outlined,
                 title: 'Дасгалжуулалтын бүртгэл байхгүй',
-                description: 'Шинэ дасгалжуулалт нэмэхийн тулд + товчийг дарна уу.',
+                description:
+                    'Шинэ дасгалжуулалт нэмэхийн тулд + товчийг дарна уу.',
                 compact: true,
               ),
             ),
@@ -163,8 +164,7 @@ class _TrainingLogListState extends ConsumerState<_TrainingLogList> {
                         child: _FilterChip(
                           label: type.displayName,
                           selected: _selectedFilter == type,
-                          onTap: () =>
-                              setState(() => _selectedFilter = type),
+                          onTap: () => setState(() => _selectedFilter = type),
                         ),
                       ),
                   ],
@@ -187,25 +187,22 @@ class _TrainingLogListState extends ConsumerState<_TrainingLogList> {
             )
           else
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final log = _filteredLogs[index];
-                  return _TrainingLogTile(
-                    log: log,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => TrainingFormScreen(
-                            horseId: widget.horseId,
-                            existingLog: log,
-                          ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final log = _filteredLogs[index];
+                return _TrainingLogTile(
+                  log: log,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => TrainingFormScreen(
+                          horseId: widget.horseId,
+                          existingLog: log,
                         ),
-                      );
-                    },
-                  );
-                },
-                childCount: _filteredLogs.length,
-              ),
+                      ),
+                    );
+                  },
+                );
+              }, childCount: _filteredLogs.length),
             ),
         ],
       ),
@@ -216,10 +213,7 @@ class _TrainingLogListState extends ConsumerState<_TrainingLogList> {
 // ── Weekly Chart Section ──────────────────────────────────────────────
 
 class _WeeklyChartSection extends StatelessWidget {
-  const _WeeklyChartSection({
-    required this.weeklyData,
-    required this.colors,
-  });
+  const _WeeklyChartSection({required this.weeklyData, required this.colors});
 
   final Map<int, double> weeklyData;
   final TamgaColors colors;
@@ -255,10 +249,7 @@ class _WeeklyChartSection extends StatelessWidget {
             padding: const EdgeInsets.only(top: AppSpacing.xs),
             child: Text(
               'Энэ долоо хоногт дасгалжуулалт бүртгэгдээгүй',
-              style: TextStyle(
-                fontSize: 11,
-                color: colors.onSurfaceVariant,
-              ),
+              style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
             ),
           ),
       ],
@@ -318,7 +309,10 @@ class _TrainingLogTile extends StatelessWidget {
     final colors = TamgaColors.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: 4,
+      ),
       child: Card(
         child: InkWell(
           onTap: onTap,

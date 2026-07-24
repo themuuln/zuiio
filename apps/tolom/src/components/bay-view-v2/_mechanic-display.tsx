@@ -18,7 +18,7 @@ import {
 import type { MechanicRef } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
 import type { BayCardMechanic } from "./_bay-card-types";
-import { MechanicAssignSheet } from "./_mechanic-assign-drawer";
+import { MechanicAssignDrawer } from "./_mechanic-assign-drawer";
 
 interface MechanicDisplayProps {
   variant: "badge" | "row";
@@ -256,7 +256,7 @@ export function MechanicDisplay({
       {!isPreview &&
         (onAssignMechanic || onAddHelper) &&
         allMechanics.length > 0 && (
-          <MechanicAssignSheet
+          <MechanicAssignDrawer
             trigger={
               <span
                 className={cn(

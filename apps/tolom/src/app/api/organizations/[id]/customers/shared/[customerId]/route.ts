@@ -1,6 +1,5 @@
 import { createRouteHandler, ok } from "@/lib/api-response";
 import {
-
   getSharedCustomer,
   getSharedCustomerVehicles,
 } from "@/lib/services/customer-service";

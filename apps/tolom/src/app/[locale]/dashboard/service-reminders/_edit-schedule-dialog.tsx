@@ -40,7 +40,10 @@ export function EditScheduleDialog({
   onSave,
   isPending,
 }: EditScheduleDialogProps) {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [form, setForm] = useState({
     service_name: "",
     interval_months: 0,

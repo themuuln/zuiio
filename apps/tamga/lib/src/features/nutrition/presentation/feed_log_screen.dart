@@ -68,14 +68,18 @@ class _FeedLogBodyState extends ConsumerState<_FeedLogBody> {
       _selectedDate.month,
       _selectedDate.day,
     );
-    final dayEnd = dayStart.add(const Duration(hours: 23, minutes: 59, seconds: 59));
+    final dayEnd = dayStart.add(
+      const Duration(hours: 23, minutes: 59, seconds: 59),
+    );
 
     // Watch both schedules and logs simultaneously
     final schedulesAsync = ref.watch(feedSchedulesProvider(widget.horseId));
     final logsAsync = ref.watch(
-      feedLogsByDateRangeProvider(
-        (horseId: widget.horseId, startDate: dayStart, endDate: dayEnd),
-      ),
+      feedLogsByDateRangeProvider((
+        horseId: widget.horseId,
+        startDate: dayStart,
+        endDate: dayEnd,
+      )),
     );
 
     return Column(
@@ -122,9 +126,11 @@ class _FeedLogBodyState extends ConsumerState<_FeedLogBody> {
                   message: 'Тэжээлийн бүртгэл авахад алдаа гарлаа: $err',
                   onRetry: () {
                     ref.invalidate(
-                      feedLogsByDateRangeProvider(
-                        (horseId: widget.horseId, startDate: dayStart, endDate: dayEnd),
-                      ),
+                      feedLogsByDateRangeProvider((
+                        horseId: widget.horseId,
+                        startDate: dayStart,
+                        endDate: dayEnd,
+                      )),
                     );
                   },
                 ),
@@ -136,8 +142,7 @@ class _FeedLogBodyState extends ConsumerState<_FeedLogBody> {
                         child: EmptyState(
                           icon: Icons.event_busy_outlined,
                           title: 'Энэ өдөр тэжээлийн хуваарь байхгүй',
-                          description:
-                              'Эхлээд тэжээлийн хуваарь үүсгэнэ үү.',
+                          description: 'Эхлээд тэжээлийн хуваарь үүсгэнэ үү.',
                           compact: true,
                         ),
                       ),
@@ -151,9 +156,11 @@ class _FeedLogBodyState extends ConsumerState<_FeedLogBody> {
                     selectedDate: _selectedDate,
                     onLogChanged: () {
                       ref.invalidate(
-                        feedLogsByDateRangeProvider(
-                          (horseId: widget.horseId, startDate: dayStart, endDate: dayEnd),
-                        ),
+                        feedLogsByDateRangeProvider((
+                          horseId: widget.horseId,
+                          startDate: dayStart,
+                          endDate: dayEnd,
+                        )),
                       );
                       ref.invalidate(feedLogsProvider(widget.horseId));
                     },
@@ -191,9 +198,18 @@ class _DateSelector extends StatelessWidget {
 
     final dayNames = ['Дав', 'Мяг', 'Лха', 'Пүр', 'Баа', 'Бям', 'Ням'];
     final monthNames = [
-      '1-р сар', '2-р сар', '3-р сар', '4-р сар',
-      '5-р сар', '6-р сар', '7-р сар', '8-р сар',
-      '9-р сар', '10-р сар', '11-р сар', '12-р сар',
+      '1-р сар',
+      '2-р сар',
+      '3-р сар',
+      '4-р сар',
+      '5-р сар',
+      '6-р сар',
+      '7-р сар',
+      '8-р сар',
+      '9-р сар',
+      '10-р сар',
+      '11-р сар',
+      '12-р сар',
     ];
 
     return Container(
@@ -436,7 +452,10 @@ class _FeedLogChecklistState extends ConsumerState<_FeedLogChecklist> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: _statusColor(status, colors).withValues(alpha: 0.15),
+                            color: _statusColor(
+                              status,
+                              colors,
+                            ).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(
                               AppSpacing.cornerRadiusSmall,
                             ),
@@ -463,10 +482,9 @@ class _FeedLogChecklistState extends ConsumerState<_FeedLogChecklist> {
                             label: 'Тэжээсэн',
                             isActive: status == FeedStatus.fed,
                             activeColor: colors.tertiary,
-                            onPressed:
-                                _isProcessing
-                                    ? null
-                                    : () => _toggleFed(schedule),
+                            onPressed: _isProcessing
+                                ? null
+                                : () => _toggleFed(schedule),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -476,17 +494,17 @@ class _FeedLogChecklistState extends ConsumerState<_FeedLogChecklist> {
                             label: 'Алгассан',
                             isActive: status == FeedStatus.skipped,
                             activeColor: colors.error,
-                            onPressed:
-                                _isProcessing
-                                    ? null
-                                    : () => _toggleSkipped(schedule),
+                            onPressed: _isProcessing
+                                ? null
+                                : () => _toggleSkipped(schedule),
                           ),
                         ),
                       ],
                     ),
 
                     // ── Notes field (when fed/skipped) ──
-                    if (existingLog != null && existingLog.notes.isNotEmpty) ...[
+                    if (existingLog != null &&
+                        existingLog.notes.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         existingLog.notes,
@@ -574,9 +592,7 @@ class _ActionButton extends StatelessWidget {
         ),
         style: OutlinedButton.styleFrom(
           backgroundColor: isActive ? activeColor : null,
-          side: BorderSide(
-            color: isActive ? activeColor : colors.outline,
-          ),
+          side: BorderSide(color: isActive ? activeColor : colors.outline),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusSmall),
           ),

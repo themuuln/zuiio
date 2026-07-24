@@ -42,11 +42,7 @@ const IsarGeofenceAlertSchema = CollectionSchema(
       name: r'geofenceName',
       type: IsarType.string,
     ),
-    r'horseId': PropertySchema(
-      id: 5,
-      name: r'horseId',
-      type: IsarType.string,
-    ),
+    r'horseId': PropertySchema(id: 5, name: r'horseId', type: IsarType.string),
     r'horseLat': PropertySchema(
       id: 6,
       name: r'horseLat',
@@ -66,7 +62,7 @@ const IsarGeofenceAlertSchema = CollectionSchema(
       id: 9,
       name: r'triggeredAt',
       type: IsarType.dateTime,
-    )
+    ),
   },
   estimateSize: _isarGeofenceAlertEstimateSize,
   serialize: _isarGeofenceAlertSerialize,
@@ -84,7 +80,7 @@ const IsarGeofenceAlertSchema = CollectionSchema(
           name: r'domainId',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
     ),
     r'horseId': IndexSchema(
@@ -97,9 +93,9 @@ const IsarGeofenceAlertSchema = CollectionSchema(
           name: r'horseId',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
-    )
+    ),
   },
   links: {},
   embeddedSchemas: {},
@@ -200,12 +196,16 @@ Id _isarGeofenceAlertGetId(IsarGeofenceAlert object) {
 }
 
 List<IsarLinkBase<dynamic>> _isarGeofenceAlertGetLinks(
-    IsarGeofenceAlert object) {
+  IsarGeofenceAlert object,
+) {
   return [];
 }
 
 void _isarGeofenceAlertAttach(
-    IsarCollection<dynamic> col, Id id, IsarGeofenceAlert object) {
+  IsarCollection<dynamic> col,
+  Id id,
+  IsarGeofenceAlert object,
+) {
   object.id = id;
 }
 
@@ -227,7 +227,8 @@ extension IsarGeofenceAlertByIndex on IsarCollection<IsarGeofenceAlert> {
   }
 
   Future<List<IsarGeofenceAlert?>> getAllByDomainId(
-      List<String> domainIdValues) {
+    List<String> domainIdValues,
+  ) {
     final values = domainIdValues.map((e) => [e]).toList();
     return getAllByIndex(r'domainId', values);
   }
@@ -259,8 +260,10 @@ extension IsarGeofenceAlertByIndex on IsarCollection<IsarGeofenceAlert> {
     return putAllByIndex(r'domainId', objects);
   }
 
-  List<Id> putAllByDomainIdSync(List<IsarGeofenceAlert> objects,
-      {bool saveLinks = true}) {
+  List<Id> putAllByDomainIdSync(
+    List<IsarGeofenceAlert> objects, {
+    bool saveLinks = true,
+  }) {
     return putAllByIndexSync(r'domainId', objects, saveLinks: saveLinks);
   }
 }
@@ -277,17 +280,14 @@ extension IsarGeofenceAlertQueryWhereSort
 extension IsarGeofenceAlertQueryWhere
     on QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QWhereClause> {
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterWhereClause>
-      idEqualTo(Id id) {
+  idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterWhereClause>
-      idNotEqualTo(Id id) {
+  idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -310,7 +310,7 @@ extension IsarGeofenceAlertQueryWhere
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterWhereClause>
-      idGreaterThan(Id id, {bool include = false}) {
+  idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -319,7 +319,7 @@ extension IsarGeofenceAlertQueryWhere
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterWhereClause>
-      idLessThan(Id id, {bool include = false}) {
+  idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -328,108 +328,124 @@ extension IsarGeofenceAlertQueryWhere
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterWhereClause>
-      idBetween(
+  idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterWhereClause>
-      domainIdEqualTo(String domainId) {
+  domainIdEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'domainId',
-        value: [domainId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'domainId', value: [domainId]),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterWhereClause>
-      domainIdNotEqualTo(String domainId) {
+  domainIdNotEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [],
-              upper: [domainId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [domainId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [],
+                upper: [domainId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [domainId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [domainId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [],
-              upper: [domainId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [domainId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [],
+                upper: [domainId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterWhereClause>
-      horseIdEqualTo(String horseId) {
+  horseIdEqualTo(String horseId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'horseId',
-        value: [horseId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'horseId', value: [horseId]),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterWhereClause>
-      horseIdNotEqualTo(String horseId) {
+  horseIdNotEqualTo(String horseId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [],
-              upper: [horseId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [horseId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [],
+                upper: [horseId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [horseId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [horseId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'horseId',
-              lower: [],
-              upper: [horseId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [horseId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'horseId',
+                lower: [],
+                upper: [horseId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
@@ -438,63 +454,65 @@ extension IsarGeofenceAlertQueryWhere
 extension IsarGeofenceAlertQueryFilter
     on QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QFilterCondition> {
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      acknowledgedEqualTo(bool value) {
+  acknowledgedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'acknowledged',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'acknowledged', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      alertTypeEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  alertTypeEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'alertType',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'alertType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      alertTypeGreaterThan(
+  alertTypeGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'alertType',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'alertType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      alertTypeLessThan(
+  alertTypeLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'alertType',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'alertType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      alertTypeBetween(
+  alertTypeBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -502,135 +520,140 @@ extension IsarGeofenceAlertQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'alertType',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'alertType',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      alertTypeStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  alertTypeStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'alertType',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'alertType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      alertTypeEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  alertTypeEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'alertType',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'alertType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      alertTypeContains(String value, {bool caseSensitive = true}) {
+  alertTypeContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'alertType',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'alertType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      alertTypeMatches(String pattern, {bool caseSensitive = true}) {
+  alertTypeMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'alertType',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'alertType',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      alertTypeIsEmpty() {
+  alertTypeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'alertType',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'alertType', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      alertTypeIsNotEmpty() {
+  alertTypeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'alertType',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'alertType', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      domainIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  domainIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      domainIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      domainIdLessThan(
+  domainIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      domainIdBetween(
+  domainIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
+  domainIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -638,135 +661,140 @@ extension IsarGeofenceAlertQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'domainId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'domainId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      domainIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  domainIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      domainIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  domainIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      domainIdContains(String value, {bool caseSensitive = true}) {
+  domainIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      domainIdMatches(String pattern, {bool caseSensitive = true}) {
+  domainIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'domainId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'domainId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      domainIdIsEmpty() {
+  domainIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'domainId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'domainId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      domainIdIsNotEmpty() {
+  domainIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'domainId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'domainId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  geofenceIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'geofenceId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'geofenceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'geofenceId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceIdLessThan(
+  geofenceIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'geofenceId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'geofenceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceIdBetween(
+  geofenceIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'geofenceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
+  geofenceIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -774,135 +802,140 @@ extension IsarGeofenceAlertQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'geofenceId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'geofenceId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  geofenceIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'geofenceId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'geofenceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  geofenceIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'geofenceId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'geofenceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceIdContains(String value, {bool caseSensitive = true}) {
+  geofenceIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'geofenceId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'geofenceId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceIdMatches(String pattern, {bool caseSensitive = true}) {
+  geofenceIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'geofenceId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'geofenceId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceIdIsEmpty() {
+  geofenceIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'geofenceId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'geofenceId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceIdIsNotEmpty() {
+  geofenceIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'geofenceId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'geofenceId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceNameEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  geofenceNameEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'geofenceName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'geofenceName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceNameGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'geofenceName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceNameLessThan(
+  geofenceNameGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'geofenceName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'geofenceName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceNameBetween(
+  geofenceNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'geofenceName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
+  geofenceNameBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -910,135 +943,140 @@ extension IsarGeofenceAlertQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'geofenceName',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'geofenceName',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceNameStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  geofenceNameStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'geofenceName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'geofenceName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceNameEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  geofenceNameEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'geofenceName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'geofenceName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceNameContains(String value, {bool caseSensitive = true}) {
+  geofenceNameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'geofenceName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'geofenceName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceNameMatches(String pattern, {bool caseSensitive = true}) {
+  geofenceNameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'geofenceName',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'geofenceName',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceNameIsEmpty() {
+  geofenceNameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'geofenceName',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'geofenceName', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      geofenceNameIsNotEmpty() {
+  geofenceNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'geofenceName',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'geofenceName', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  horseIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseIdLessThan(
+  horseIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseIdBetween(
+  horseIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
+  horseIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1046,135 +1084,140 @@ extension IsarGeofenceAlertQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'horseId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'horseId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  horseIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  horseIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseIdContains(String value, {bool caseSensitive = true}) {
+  horseIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'horseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'horseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseIdMatches(String pattern, {bool caseSensitive = true}) {
+  horseIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'horseId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'horseId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseIdIsEmpty() {
+  horseIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'horseId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'horseId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseIdIsNotEmpty() {
+  horseIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'horseId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'horseId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseLatEqualTo(
+  horseLatEqualTo(double value, {double epsilon = Query.epsilon}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'horseLat',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
+  horseLatGreaterThan(
     double value, {
+    bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'horseLat',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'horseLat',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseLatGreaterThan(
+  horseLatLessThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'horseLat',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'horseLat',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseLatLessThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'horseLat',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseLatBetween(
+  horseLatBetween(
     double lower,
     double upper, {
     bool includeLower = true,
@@ -1182,65 +1225,70 @@ extension IsarGeofenceAlertQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'horseLat',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'horseLat',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseLngEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
+  horseLngEqualTo(double value, {double epsilon = Query.epsilon}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'horseLng',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'horseLng',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseLngGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'horseLng',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseLngLessThan(
+  horseLngGreaterThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'horseLng',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'horseLng',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseLngBetween(
+  horseLngLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'horseLng',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
+  horseLngBetween(
     double lower,
     double upper, {
     bool includeLower = true,
@@ -1248,65 +1296,70 @@ extension IsarGeofenceAlertQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'horseLng',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'horseLng',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseNameEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  horseNameEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'horseName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'horseName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseNameGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'horseName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseNameLessThan(
+  horseNameGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'horseName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'horseName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseNameBetween(
+  horseNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'horseName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
+  horseNameBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1314,196 +1367,196 @@ extension IsarGeofenceAlertQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'horseName',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'horseName',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseNameStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  horseNameStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'horseName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'horseName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseNameEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  horseNameEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'horseName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'horseName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseNameContains(String value, {bool caseSensitive = true}) {
+  horseNameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'horseName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'horseName',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseNameMatches(String pattern, {bool caseSensitive = true}) {
+  horseNameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'horseName',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'horseName',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseNameIsEmpty() {
+  horseNameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'horseName',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'horseName', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      horseNameIsNotEmpty() {
+  horseNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'horseName',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'horseName', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      idEqualTo(Id value) {
+  idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      idGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      idLessThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idLessThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      idBetween(
+  idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      triggeredAtEqualTo(DateTime value) {
+  triggeredAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'triggeredAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'triggeredAt', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      triggeredAtGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  triggeredAtGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'triggeredAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'triggeredAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      triggeredAtLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  triggeredAtLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'triggeredAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'triggeredAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterFilterCondition>
-      triggeredAtBetween(
+  triggeredAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'triggeredAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'triggeredAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -1517,140 +1570,140 @@ extension IsarGeofenceAlertQueryLinks
 extension IsarGeofenceAlertQuerySortBy
     on QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QSortBy> {
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByAcknowledged() {
+  sortByAcknowledged() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'acknowledged', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByAcknowledgedDesc() {
+  sortByAcknowledgedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'acknowledged', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByAlertType() {
+  sortByAlertType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'alertType', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByAlertTypeDesc() {
+  sortByAlertTypeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'alertType', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByDomainId() {
+  sortByDomainId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByDomainIdDesc() {
+  sortByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByGeofenceId() {
+  sortByGeofenceId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'geofenceId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByGeofenceIdDesc() {
+  sortByGeofenceIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'geofenceId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByGeofenceName() {
+  sortByGeofenceName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'geofenceName', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByGeofenceNameDesc() {
+  sortByGeofenceNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'geofenceName', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByHorseId() {
+  sortByHorseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByHorseIdDesc() {
+  sortByHorseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByHorseLat() {
+  sortByHorseLat() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseLat', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByHorseLatDesc() {
+  sortByHorseLatDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseLat', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByHorseLng() {
+  sortByHorseLng() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseLng', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByHorseLngDesc() {
+  sortByHorseLngDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseLng', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByHorseName() {
+  sortByHorseName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseName', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByHorseNameDesc() {
+  sortByHorseNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseName', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByTriggeredAt() {
+  sortByTriggeredAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'triggeredAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      sortByTriggeredAtDesc() {
+  sortByTriggeredAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'triggeredAt', Sort.desc);
     });
@@ -1660,126 +1713,126 @@ extension IsarGeofenceAlertQuerySortBy
 extension IsarGeofenceAlertQuerySortThenBy
     on QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QSortThenBy> {
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByAcknowledged() {
+  thenByAcknowledged() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'acknowledged', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByAcknowledgedDesc() {
+  thenByAcknowledgedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'acknowledged', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByAlertType() {
+  thenByAlertType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'alertType', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByAlertTypeDesc() {
+  thenByAlertTypeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'alertType', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByDomainId() {
+  thenByDomainId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByDomainIdDesc() {
+  thenByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByGeofenceId() {
+  thenByGeofenceId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'geofenceId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByGeofenceIdDesc() {
+  thenByGeofenceIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'geofenceId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByGeofenceName() {
+  thenByGeofenceName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'geofenceName', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByGeofenceNameDesc() {
+  thenByGeofenceNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'geofenceName', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByHorseId() {
+  thenByHorseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByHorseIdDesc() {
+  thenByHorseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByHorseLat() {
+  thenByHorseLat() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseLat', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByHorseLatDesc() {
+  thenByHorseLatDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseLat', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByHorseLng() {
+  thenByHorseLng() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseLng', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByHorseLngDesc() {
+  thenByHorseLngDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseLng', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByHorseName() {
+  thenByHorseName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseName', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByHorseNameDesc() {
+  thenByHorseNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'horseName', Sort.desc);
     });
@@ -1792,21 +1845,21 @@ extension IsarGeofenceAlertQuerySortThenBy
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByIdDesc() {
+  thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByTriggeredAt() {
+  thenByTriggeredAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'triggeredAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QAfterSortBy>
-      thenByTriggeredAtDesc() {
+  thenByTriggeredAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'triggeredAt', Sort.desc);
     });
@@ -1816,70 +1869,70 @@ extension IsarGeofenceAlertQuerySortThenBy
 extension IsarGeofenceAlertQueryWhereDistinct
     on QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct> {
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct>
-      distinctByAcknowledged() {
+  distinctByAcknowledged() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'acknowledged');
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct>
-      distinctByAlertType({bool caseSensitive = true}) {
+  distinctByAlertType({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'alertType', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct>
-      distinctByDomainId({bool caseSensitive = true}) {
+  distinctByDomainId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'domainId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct>
-      distinctByGeofenceId({bool caseSensitive = true}) {
+  distinctByGeofenceId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'geofenceId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct>
-      distinctByGeofenceName({bool caseSensitive = true}) {
+  distinctByGeofenceName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'geofenceName', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct>
-      distinctByHorseId({bool caseSensitive = true}) {
+  distinctByHorseId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'horseId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct>
-      distinctByHorseLat() {
+  distinctByHorseLat() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'horseLat');
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct>
-      distinctByHorseLng() {
+  distinctByHorseLng() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'horseLng');
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct>
-      distinctByHorseName({bool caseSensitive = true}) {
+  distinctByHorseName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'horseName', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, IsarGeofenceAlert, QDistinct>
-      distinctByTriggeredAt() {
+  distinctByTriggeredAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'triggeredAt');
     });
@@ -1895,14 +1948,14 @@ extension IsarGeofenceAlertQueryProperty
   }
 
   QueryBuilder<IsarGeofenceAlert, bool, QQueryOperations>
-      acknowledgedProperty() {
+  acknowledgedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'acknowledged');
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, String, QQueryOperations>
-      alertTypeProperty() {
+  alertTypeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'alertType');
     });
@@ -1915,14 +1968,14 @@ extension IsarGeofenceAlertQueryProperty
   }
 
   QueryBuilder<IsarGeofenceAlert, String, QQueryOperations>
-      geofenceIdProperty() {
+  geofenceIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'geofenceId');
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, String, QQueryOperations>
-      geofenceNameProperty() {
+  geofenceNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'geofenceName');
     });
@@ -1947,14 +2000,14 @@ extension IsarGeofenceAlertQueryProperty
   }
 
   QueryBuilder<IsarGeofenceAlert, String, QQueryOperations>
-      horseNameProperty() {
+  horseNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'horseName');
     });
   }
 
   QueryBuilder<IsarGeofenceAlert, DateTime, QQueryOperations>
-      triggeredAtProperty() {
+  triggeredAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'triggeredAt');
     });

@@ -1,5 +1,5 @@
 "use server";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 import { requireActionContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
@@ -34,33 +34,39 @@ export async function saveSmtpConfig(
   const configId = formData.get("config_id")?.toString();
 
   if (configId) {
-    const { error } = await supabase
-      .from("smtp_configs")
-      .update({
-        host,
-        port,
-        username,
-        password,
-        from_email,
-        from_name: from_name || null,
-      })
-      .eq("id", configId);
+    const { error } = await withDbCapture(
+      "smtp_configs: update",
+      supabase
+        .from("smtp_configs")
+        .update({
+          host,
+          port,
+          username,
+          password,
+          from_email,
+          from_name: from_name || null,
+        })
+        .eq("id", configId),
+    );
 
     if (error) {
       capture(error, { context: "smtp: upsertSmtpConfig" });
       return { error: `Хадгалахад алдаа гарлаа: ${error.message}` };
     }
   } else {
-    const { error } = await supabase.from("smtp_configs").insert({
-      host,
-      port,
-      username,
-      password,
-      from_email,
-      from_name: from_name || null,
-      is_active: true,
-      priority: 0,
-    });
+    const { error } = await withDbCapture(
+      "smtp_configs: create",
+      supabase.from("smtp_configs").insert({
+        host,
+        port,
+        username,
+        password,
+        from_email,
+        from_name: from_name || null,
+        is_active: true,
+        priority: 0,
+      }),
+    );
 
     if (error) {
       capture(error, { context: "smtp: upsertSmtpConfig" });

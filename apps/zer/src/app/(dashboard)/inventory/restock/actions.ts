@@ -1,6 +1,6 @@
 "use server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { postPurchaseToJournal } from "@/lib/accounting";
 import { requireWriteAction } from "@/lib/action-utils";
 import { revalidateEntities } from "@/lib/revalidate";
@@ -40,20 +40,23 @@ async function processSingleOrder(
   const orderNumber = orderNum as string;
 
   // Insert purchase order
-  const { data: purchaseOrder, error: poError } = await supabase
-    .from("purchase_orders")
-    .insert({
-      organization_id: organizationId,
-      branch_id: branchId,
-      supplier_id: order.supplier_id,
-      order_number: orderNumber,
-      order_date: new Date().toISOString().slice(0, 10),
-      status: "draft",
-      total_amount: totalAmount,
-      created_by: userId,
-    })
-    .select("id")
-    .single();
+  const { data: purchaseOrder, error: poError } = await withDbCapture(
+    "purchase_orders: create",
+    supabase
+      .from("purchase_orders")
+      .insert({
+        organization_id: organizationId,
+        branch_id: branchId,
+        supplier_id: order.supplier_id,
+        order_number: orderNumber,
+        order_date: new Date().toISOString().slice(0, 10),
+        status: "draft",
+        total_amount: totalAmount,
+        created_by: userId,
+      })
+      .select("id")
+      .single(),
+  );
 
   if (poError) {
     return {
@@ -71,13 +74,17 @@ async function processSingleOrder(
     variant_id: item.variant_id ?? null,
   }));
 
-  const { error: itemsError } = await supabase
-    .from("purchase_order_items")
-    .insert(orderItems);
+  const { error: itemsError } = await withDbCapture(
+    "purchase_order_items: create",
+    supabase.from("purchase_order_items").insert(orderItems),
+  );
 
   if (itemsError) {
     // Rollback: delete the purchase order
-    await supabase.from("purchase_orders").delete().eq("id", purchaseOrder.id);
+    await withDbCapture(
+      "purchase_orders: rollback delete",
+      supabase.from("purchase_orders").delete().eq("id", purchaseOrder.id),
+    );
     return {
       created: false,
       error: `Барааны мэдээлэл хадгалахад алдаа: ${itemsError.message}`,
@@ -117,7 +124,10 @@ async function processSingleOrder(
         : null) ??
       "Алдаа гарлаа";
     // Rollback: delete the purchase order and its items
-    await supabase.from("purchase_orders").delete().eq("id", purchaseOrder.id);
+    await withDbCapture(
+      "purchase_orders: rollback delete",
+      supabase.from("purchase_orders").delete().eq("id", purchaseOrder.id),
+    );
     return { created: false, error: `Бараа хүлээн авахад алдаа: ${errorMsg}` };
   }
 

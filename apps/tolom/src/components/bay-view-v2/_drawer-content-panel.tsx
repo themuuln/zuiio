@@ -60,6 +60,7 @@ export interface DrawerContentPanelProps {
   onNuatToggle: (checked: boolean) => Promise<void>;
   // Footer props
   saving: boolean;
+  pendingAction?: string | null;
   confirmStatus: string | null;
   statusNotes: string;
   creatingInvoice: boolean;
@@ -238,6 +239,7 @@ export function DrawerContentPanel({
   nuatEnabled,
   onNuatToggle,
   saving,
+  pendingAction,
   confirmStatus,
   statusNotes,
   creatingInvoice,
@@ -251,7 +253,10 @@ export function DrawerContentPanel({
   onComplete,
   onCreateInvoice,
 }: DrawerContentPanelProps) {
-  const t = useTranslations("bayView");
+  const t = useTranslations("bayView") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const locale = useLocale();
 
   // ── Decompose wo into field-level references ──
@@ -334,6 +339,37 @@ export function DrawerContentPanel({
                     </span>
                   </div>
                 )}
+                {/* Sticky price summary — floats at bottom of scroll */}
+                <div className="sticky bottom-0 bg-card/95 backdrop-blur-sm border-t border-border/40 -mx-3 px-3 py-2 z-10">
+                  <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">
+                    <div className="flex flex-col">
+                      <Label className="text-xs font-medium">
+                        {locale === "en" ? "VAT" : "НӨАТ"}
+                      </Label>
+                      <span className="text-[10px] text-muted-foreground">
+                        {locale === "en"
+                          ? "Value Added Tax"
+                          : "Нэмэгдсэн Өртөгт Татвар"}
+                      </span>
+                    </div>
+                    <Switch
+                      checked={nuatEnabled}
+                      onCheckedChange={onNuatToggle}
+                    />
+                  </div>
+                  <TotalsSummary
+                    servicesTotal={servicesTotal}
+                    partsTotal={partsTotal}
+                    grandTotal={grandTotal}
+                    serviceCount={services.length}
+                    partCount={parts.length}
+                    discountTotal={discountTotal}
+                    taxRate={taxRate}
+                    nuatEnabled={nuatEnabled}
+                    locale={locale}
+                    t={t}
+                  />
+                </div>
               </div>
             </div>
 
@@ -349,44 +385,12 @@ export function DrawerContentPanel({
         </div>
       </div>
 
-      {/* НӨАТ + Totals — floating above drawer footer */}
-      <div className="px-3 py-2">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          <div className="lg:col-span-2 flex flex-col gap-3 shrink-0">
-            <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">
-              <div className="flex flex-col">
-                <Label className="text-xs font-medium">
-                  {locale === "en" ? "VAT" : "НӨАТ"}
-                </Label>
-                <span className="text-[10px] text-muted-foreground">
-                  {locale === "en"
-                    ? "Value Added Tax"
-                    : "Нэмэгдсэн Өртөгт Татвар"}
-                </span>
-              </div>
-              <Switch checked={nuatEnabled} onCheckedChange={onNuatToggle} />
-            </div>
-            <TotalsSummary
-              servicesTotal={servicesTotal}
-              partsTotal={partsTotal}
-              grandTotal={grandTotal}
-              serviceCount={services.length}
-              partCount={parts.length}
-              discountTotal={discountTotal}
-              taxRate={taxRate}
-              nuatEnabled={nuatEnabled}
-              locale={locale}
-              t={t}
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Footer */}
       <DrawerFooter
         wo={wo}
         invoicePublicToken={invoicePublicToken}
         saving={saving}
+        pendingAction={pendingAction}
         confirmStatus={confirmStatus}
         statusNotes={statusNotes}
         creatingInvoice={creatingInvoice}

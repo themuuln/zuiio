@@ -1,44 +1,58 @@
 packages:
   - "packages/*"
   - "apps/*"
+  - "!apps/archive/*"
   - "apps/*/packages/*"
 
 catalog:
-  # Next.js — active apps use 16.3.0-preview.5
-  next: 16.3.0-preview.5
+  # Next.js — active apps use 16.3.0-preview.8
+  next: 16.3.0-preview.8
   # React — latest stable
   react: ^19.2.7
+  react-dom: ^19.2.7
   "@types/react": ^19.2.17
   # Biome — latest
-  "@biomejs/biome": 2.4.16
+  "@biomejs/biome": 2.5.4
   # Vitest — latest
   vitest: ^4.1.10
+  # LHCI
+  "@lhci/cli": ^0.15.1
   # TanStack Query
   "@tanstack/react-query": ^5.101.2
   # Supabase
-  "@supabase/supabase-js": ^2.110.1
+  "@supabase/supabase-js": ^2.110.7
   # TypeScript
-  typescript: npm:@typescript/typescript6@^6.0.2
+  typescript: ^7.0.2
   "@types/node": ^24.0.0
   "@types/react-dom": ^19.2.0
   # Tailwind CSS
   tailwindcss: ^4.1.0
   "@tailwindcss/postcss": ^4.1.0
   postcss: ^8.5.0
-  # Shared UI utilities — catalog-managed across apps
-  "@hookform/resolvers": "^5.4.0"
-  "class-variance-authority": "^0.7.1"
-  clsx: "^2.1.1"
-  cmdk: "^1.1.1"
-  date-fns: "^4.4.0"
-  lucide-react: "^1.24.0"
-  "next-themes": "^0.4.6"
-  "react-dom": "^19.2.7"
-  "react-hook-form": "^7.81.0"
-  recharts: "^3.9.2"
-  sonner: "^2.0.7"
-  "tailwind-merge": "^3.6.0"
-  zod: "^4.4.3"
+  # Playwright
+  "@playwright/test": ^1.61.1
+  # React Hook Form
+  "@hookform/resolvers": ^5.4.0
+  # Supabase SSR
+  "@supabase/ssr": ^0.12.3
+  # Testing
+  "@testing-library/jest-dom": ^6.9.1
+  "@testing-library/react": ^16.3.2
+  "@testing-library/user-event": ^14.6.1
+  # UI
+  class-variance-authority: ^0.7.1
+  clsx: ^2.1.1
+  cmdk: ^1.1.1
+  date-fns: ^4.4.0
+  jsdom: ^29.1.1
+  lucide-react: ^1.25.0
+  next-themes: ^0.4.6
+  react-hook-form: ^7.82.0
+  recharts: ^3.9.2
+  server-only: ^0.0.1
+  sonner: ^2.0.7
+  tailwind-merge: ^3.6.0
+  zod: ^4.4.3
 
 allowBuilds:
   '@google/genai': true
@@ -60,18 +74,42 @@ allowBuilds:
   unrs-resolver: true
   workerd: true
 minimumReleaseAgeExclude:
-  - '@expo/cli@57.0.6'
+  - '@expo/cli@57.0.6 || 57.0.9'
   - '@expo/config-plugins@57.0.3'
   - '@expo/config@57.0.3'
   - '@expo/fingerprint@0.20.3'
   - '@expo/inline-modules@0.1.2'
-  - '@expo/prebuild-config@57.0.5'
+  - '@expo/prebuild-config@57.0.5 || 57.0.8'
   - '@expo/router-server@57.0.2'
   - babel-preset-expo@57.0.2
-  - expo-modules-autolinking@57.0.5
-  - expo-modules-core@57.0.3
+  - expo-modules-autolinking@57.0.5 || 57.0.8
+  - expo-modules-core@57.0.3 || 57.0.6
   - expo-modules-jsi@0.1.2
-  - expo@57.0.4
-  - '@expo/ui@57.0.4'
-  - expo-router@57.0.4
+  - expo@57.0.4 || 57.0.7
+  - '@expo/ui@57.0.4 || 57.0.7'
+  - expo-router@57.0.4 || 57.0.7
   - '@zuiio/*'
+  - '@expo/metro-config@57.0.6'
+  - expo-asset@57.0.6
+  - expo-constants@57.0.6
+  - expo-application@57.0.2
+  - expo-auth-session@57.0.4
+  - expo-image-picker@57.0.5
+  - expo-location@57.0.5
+  - expo-notifications@57.0.6
+  - expo-sharing@57.0.6
+  - expo-updates@57.0.8
+
+licenses:
+  allowed:
+    - MIT
+    - Apache-2.0
+    - BSD-2-Clause
+    - BSD-3-Clause
+    - ISC
+    - 0BSD
+    - CC0-1.0
+    - MPL-2.0
+  mode: loose
+  environment: prod
+  depth: shallow

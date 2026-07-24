@@ -1,6 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
-import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
+import { type NextRequest, NextResponse } from "next/server";
 
 function deriveReporterHash(ip: string): string {
   const utcDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD

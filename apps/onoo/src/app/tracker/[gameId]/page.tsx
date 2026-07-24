@@ -13,6 +13,8 @@ import type {
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { HandoffDialog } from "./components/handoff-dialog";
+import { TrackerCourt } from "./components/tracker-court";
 
 // Types
 interface GameState {
@@ -78,6 +80,8 @@ export default function TrackerPage() {
   const [trackerSession, setTrackerSession] =
     useState<TrackerSessionInfo | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
+  const [superseded, setSuperseded] = useState(false);
+  const [handoffOpen, setHandoffOpen] = useState(false);
   const localSeqRef = useRef(1);
 
   // Clock state
@@ -92,6 +96,11 @@ export default function TrackerPage() {
   const [pendingAssist, setPendingAssist] = useState<{
     eventId: string;
     assistedBy: string;
+  } | null>(null);
+  // Shot location capture
+  const [pendingShotLocation, setPendingShotLocation] = useState<{
+    eventType: string;
+    made: boolean;
   } | null>(null);
 
   // Queue
@@ -320,6 +329,9 @@ export default function TrackerPage() {
           setSessionError("Зөвшөөрөлгүй. Нэвтэрч орно уу.");
         } else if (error.message?.includes("ONOO_ROSTER_MISMATCH")) {
           setSessionError("Тоглогч багийн жагсаалтанд байхгүй.");
+        } else if (error.message?.includes("ONOO_SESSION_SUPERSEDED")) {
+          setSuperseded(true);
+          setSessionError("Session has been handed off.");
         }
         return null;
       }
@@ -344,13 +356,23 @@ export default function TrackerPage() {
     async (eventType: string) => {
       if (!selectedPlayer || !selectedTeam) return;
 
+      // Shot events that benefit from location capture
+      const isShot = eventType.startsWith("shot_");
+
+      if (isShot) {
+        // Show court picker — event is recorded after location is tapped
+        const made = eventType.includes("made");
+        setPendingShotLocation({ eventType, made });
+        return;
+      }
+
       const newEvent = await createEvent(
         eventType,
         selectedTeam,
         selectedPlayer,
       );
 
-      // Check if this is a made shot that needs assist follow-up
+      // Check if this is a made free throw that needs assist follow-up
       if (newEvent && eventType.includes("made") && !eventType.includes("ft")) {
         setPendingAssist({
           eventId: newEvent.id,
@@ -362,6 +384,44 @@ export default function TrackerPage() {
     },
     [selectedPlayer, selectedTeam, createEvent],
   );
+
+  // Record shot with location from court tap
+  const handleShotLocationConfirm = useCallback(
+    async (x: number, y: number) => {
+      if (!pendingShotLocation || !selectedPlayer || !selectedTeam) return;
+
+      const { eventType } = pendingShotLocation;
+      const made = eventType.includes("made");
+
+      const newEvent = await createEvent(
+        eventType,
+        selectedTeam,
+        selectedPlayer,
+        {
+          x,
+          y,
+          made,
+        },
+      );
+
+      setPendingShotLocation(null);
+      setSelectedPlayer(null);
+
+      // Shot assist follow-up
+      if (newEvent && made) {
+        setPendingAssist({
+          eventId: newEvent.id,
+          assistedBy: "",
+        });
+      }
+    },
+    [pendingShotLocation, selectedPlayer, selectedTeam, createEvent],
+  );
+
+  // Cancel shot location placement
+  const handleShotLocationCancel = useCallback(() => {
+    setPendingShotLocation(null);
+  }, []);
 
   // Handle assist
   const handleAssist = useCallback(
@@ -592,6 +652,7 @@ export default function TrackerPage() {
       <div className="flex items-center justify-center gap-4 bg-gray-800 p-2">
         {isSetup && (
           <button
+            type="button"
             onClick={handleGameStart}
             className="rounded bg-green-600 px-4 py-2 font-bold hover:bg-green-700"
           >
@@ -602,6 +663,7 @@ export default function TrackerPage() {
         {isLive && (
           <>
             <button
+              type="button"
               onClick={() => setClockRunning(!clockRunning)}
               className={`rounded px-4 py-2 font-bold ${
                 clockRunning
@@ -613,25 +675,62 @@ export default function TrackerPage() {
             </button>
 
             <button
+              type="button"
               onClick={handlePeriodEnd}
               className="rounded bg-yellow-600 px-4 py-2 font-bold hover:bg-yellow-700"
             >
               Үе дуусгах
             </button>
-
             <button
+              type="button"
               onClick={handleGameEnd}
               className="rounded bg-red-600 px-4 py-2 font-bold hover:bg-red-700"
             >
               Тоглолт дуусгах
             </button>
+
+            <button
+              type="button"
+              onClick={() => setHandoffOpen(true)}
+              className="rounded bg-blue-600 px-4 py-2 font-bold hover:bg-blue-700"
+            >
+              Гар шилжүүлэх
+            </button>
           </>
         )}
+
+        {superseded && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-900/95">
+            <div className="text-center">
+              <p className="mb-4 text-2xl font-bold">
+                Session has been handed off
+              </p>
+              <p className="text-gray-400">
+                This tracker is now read-only. The new scorer has taken over.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {trackerSession && (
+          <HandoffDialog
+            open={handoffOpen}
+            onOpenChange={setHandoffOpen}
+            gameId={gameId}
+            sessionId={trackerSession.id}
+            onHandoffComplete={() => {
+              setHandoffOpen(false);
+              setSuperseded(true);
+            }}
+          />
+        )}
+
         {/* Session error banner */}
         {sessionError && (
           <div className="bg-red-900/50 px-4 py-2 text-sm text-red-200">
             {sessionError}
             <button
+              type="button"
               onClick={() => setSessionError(null)}
               className="ml-2 underline"
             >
@@ -654,6 +753,7 @@ export default function TrackerPage() {
               const line = derived.players.find((p) => p.playerId === playerId);
               return (
                 <button
+                  type="button"
                   key={playerId}
                   onClick={() => {
                     setSelectedPlayer(playerId);
@@ -666,7 +766,9 @@ export default function TrackerPage() {
                   }`}
                 >
                   <div className="font-bold">
-                    #{(roster as any).jersey_number ?? "?"}{" "}
+                    #
+                    {(roster as unknown as Record<string, number>)
+                      .jersey_number ?? "?"}{" "}
                     {line?.playerId.slice(0, 8)}
                   </div>
                   <div className="text-sm text-gray-400">
@@ -677,6 +779,7 @@ export default function TrackerPage() {
             })}
           </div>
           <button
+            type="button"
             onClick={() => setShowBench(game.home_team_season_id)}
             className="bg-gray-800 p-2 text-sm hover:bg-gray-700"
           >
@@ -686,7 +789,19 @@ export default function TrackerPage() {
 
         {/* Action Grid */}
         <div className="flex w-1/3 flex-col">
-          {pendingAssist ? (
+          {pendingShotLocation ? (
+            <div className="flex-1 p-4">
+              <TrackerCourt
+                onShotLocation={handleShotLocationConfirm}
+                onCancel={handleShotLocationCancel}
+                label={
+                  pendingShotLocation.made
+                    ? "Шидэлтийн байршилыг сонгоно уу (Оновчтой)"
+                    : "Шидэлтийн байршилыг сонгоно уу (Алдсан)"
+                }
+              />
+            </div>
+          ) : pendingAssist ? (
             <div className="flex-1 p-4">
               <h3 className="mb-4 text-lg font-bold">Олгосон хүн?</h3>
               <div className="grid grid-cols-2 gap-2">
@@ -698,15 +813,17 @@ export default function TrackerPage() {
                   )
                   .map((r) => (
                     <button
+                      type="button"
                       key={r.player_id}
                       onClick={() => handleAssist(r.player_id)}
                       className="rounded bg-gray-700 p-2 hover:bg-gray-600"
                     >
-                      #{(r as any).jersey_number}
+                      #{(r as unknown as Record<string, number>).jersey_number}
                     </button>
                   ))}
               </div>
               <button
+                type="button"
                 onClick={() => setPendingAssist(null)}
                 className="mt-4 w-full rounded bg-gray-600 p-2 hover:bg-gray-500"
               >
@@ -722,6 +839,7 @@ export default function TrackerPage() {
                   : awayBench
                 ).map((r) => (
                   <button
+                    type="button"
                     key={r.player_id}
                     onClick={() => {
                       if (selectedPlayer) {
@@ -734,11 +852,12 @@ export default function TrackerPage() {
                     }}
                     className="rounded bg-gray-700 p-2 hover:bg-gray-600"
                   >
-                    #{(r as any).jersey_number}
+                    #{(r as unknown as Record<string, number>).jersey_number}
                   </button>
                 ))}
               </div>
               <button
+                type="button"
                 onClick={() => setShowBench(null)}
                 className="mt-4 w-full rounded bg-gray-600 p-2 hover:bg-gray-500"
               >
@@ -750,6 +869,7 @@ export default function TrackerPage() {
               <h3 className="mb-4 text-lg font-bold">Үйлдэл</h3>
               <div className="grid grid-cols-3 gap-2">
                 <button
+                  type="button"
                   onClick={() => handleStat("shot_2pt_made")}
                   disabled={!selectedPlayer}
                   className="rounded bg-green-600 p-3 font-bold hover:bg-green-700 disabled:opacity-50"
@@ -757,6 +877,7 @@ export default function TrackerPage() {
                   2PT ✓
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("shot_2pt_missed")}
                   disabled={!selectedPlayer}
                   className="rounded bg-red-600 p-3 font-bold hover:bg-red-700 disabled:opacity-50"
@@ -764,6 +885,7 @@ export default function TrackerPage() {
                   2PT ✗
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("shot_3pt_made")}
                   disabled={!selectedPlayer}
                   className="rounded bg-green-600 p-3 font-bold hover:bg-green-700 disabled:opacity-50"
@@ -771,6 +893,7 @@ export default function TrackerPage() {
                   3PT ✓
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("shot_3pt_missed")}
                   disabled={!selectedPlayer}
                   className="rounded bg-red-600 p-3 font-bold hover:bg-red-700 disabled:opacity-50"
@@ -778,6 +901,7 @@ export default function TrackerPage() {
                   3PT ✗
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("ft_made")}
                   disabled={!selectedPlayer}
                   className="rounded bg-green-600 p-3 font-bold hover:bg-green-700 disabled:opacity-50"
@@ -785,6 +909,7 @@ export default function TrackerPage() {
                   FT ✓
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("ft_missed")}
                   disabled={!selectedPlayer}
                   className="rounded bg-red-600 p-3 font-bold hover:bg-red-700 disabled:opacity-50"
@@ -792,6 +917,7 @@ export default function TrackerPage() {
                   FT ✗
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("rebound_off")}
                   disabled={!selectedPlayer}
                   className="rounded bg-blue-600 p-3 font-bold hover:bg-blue-700 disabled:opacity-50"
@@ -799,6 +925,7 @@ export default function TrackerPage() {
                   OREB
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("rebound_def")}
                   disabled={!selectedPlayer}
                   className="rounded bg-blue-600 p-3 font-bold hover:bg-blue-700 disabled:opacity-50"
@@ -806,6 +933,7 @@ export default function TrackerPage() {
                   DREB
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("steal")}
                   disabled={!selectedPlayer}
                   className="rounded bg-purple-600 p-3 font-bold hover:bg-purple-700 disabled:opacity-50"
@@ -813,6 +941,7 @@ export default function TrackerPage() {
                   STL
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("block")}
                   disabled={!selectedPlayer}
                   className="rounded bg-purple-600 p-3 font-bold hover:bg-purple-700 disabled:opacity-50"
@@ -820,6 +949,7 @@ export default function TrackerPage() {
                   BLK
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("turnover")}
                   disabled={!selectedPlayer}
                   className="rounded bg-orange-600 p-3 font-bold hover:bg-orange-700 disabled:opacity-50"
@@ -827,6 +957,7 @@ export default function TrackerPage() {
                   TOV
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleStat("foul_personal")}
                   disabled={!selectedPlayer}
                   className="rounded bg-yellow-600 p-3 font-bold hover:bg-yellow-700 disabled:opacity-50"
@@ -838,6 +969,7 @@ export default function TrackerPage() {
               {/* Team actions */}
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <button
+                  type="button"
                   onClick={() =>
                     createEvent(
                       "rebound_team",
@@ -850,6 +982,7 @@ export default function TrackerPage() {
                   TEAM REB
                 </button>
                 <button
+                  type="button"
                   onClick={() =>
                     createEvent(
                       "timeout",
@@ -862,6 +995,7 @@ export default function TrackerPage() {
                   TIMEOUT
                 </button>
                 <button
+                  type="button"
                   onClick={() =>
                     setShowBench(selectedTeam ?? game.home_team_season_id)
                   }
@@ -884,8 +1018,7 @@ export default function TrackerPage() {
                 .reverse()
                 .map((e) => (
                   <div key={e.id} className="text-xs text-gray-500">
-                    {formatClock(e.clock_seconds)} -{" "}
-                    {describeEvent(e as any, "mn")}
+                    {formatClock(e.clock_seconds)} - {describeEvent(e, "mn")}
                   </div>
                 ))}
             </div>
@@ -894,6 +1027,7 @@ export default function TrackerPage() {
 
         {/* Away Team */}
         <button
+          type="button"
           onClick={handleUndo}
           disabled={events.length === 0}
           className="mt-2 w-full rounded bg-red-600 p-2 text-sm hover:bg-red-700 disabled:opacity-50"
@@ -910,6 +1044,7 @@ export default function TrackerPage() {
               const line = derived.players.find((p) => p.playerId === playerId);
               return (
                 <button
+                  type="button"
                   key={playerId}
                   onClick={() => {
                     setSelectedPlayer(playerId);
@@ -922,7 +1057,9 @@ export default function TrackerPage() {
                   }`}
                 >
                   <div className="font-bold">
-                    #{(roster as any).jersey_number ?? "?"}{" "}
+                    #
+                    {(roster as unknown as Record<string, number>)
+                      .jersey_number ?? "?"}{" "}
                     {line?.playerId.slice(0, 8)}
                   </div>
                   <div className="text-sm text-gray-400">
@@ -933,6 +1070,7 @@ export default function TrackerPage() {
             })}
           </div>
           <button
+            type="button"
             onClick={() => setShowBench(game.away_team_season_id)}
             className="bg-gray-800 p-2 text-sm hover:bg-gray-700"
           >

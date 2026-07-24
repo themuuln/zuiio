@@ -13,7 +13,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { MechanicSelect } from "@/components/mechanic-select";
-import { NewMechanicSheet } from "@/components/new-mechanic-drawer";
+import { NewMechanicDrawer } from "@/components/new-mechanic-drawer";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -37,7 +37,10 @@ import { useMechanicsList } from "@/lib/queries/use-mechanic-dashboard";
 import { MechanicDashboard } from "./_mechanic-dashboard";
 
 export default function MechanicPage() {
-  const t = useTranslations();
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const now = useClientNow();
   const {
     profile,
@@ -227,7 +230,7 @@ export default function MechanicPage() {
             />
           </div>
         ) : null}
-        <NewMechanicSheet
+        <NewMechanicDrawer
           open={showAddMechanic}
           onOpenChange={(open) => {
             setShowAddMechanic(open);
@@ -247,7 +250,7 @@ export default function MechanicPage() {
         avatarUrl={profile?.avatarUrl}
         isAdminView={false}
       />
-      <NewMechanicSheet
+      <NewMechanicDrawer
         open={showAddMechanic}
         onOpenChange={(open) => {
           setShowAddMechanic(open);

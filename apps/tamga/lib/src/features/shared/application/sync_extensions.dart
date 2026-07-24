@@ -10,7 +10,9 @@ import 'sync_providers.dart';
 ///
 /// CloudSyncCoordinator-ын төлөвөөс хамааралгүйгээр шууд өгөгдлийн сангаас
 /// уншина. SyncQueueScreen дээр pending жагсаалтыг харуулахад ашиглана.
-final pendingSyncItemsProvider = FutureProvider<List<SyncQueueItem>>((ref) async {
+final pendingSyncItemsProvider = FutureProvider<List<SyncQueueItem>>((
+  ref,
+) async {
   final storage = ref.watch(isarSyncStorageProvider);
   final queue = await storage.loadQueue();
   return queue.toList();
@@ -24,8 +26,9 @@ final pendingSyncItemsProvider = FutureProvider<List<SyncQueueItem>>((ref) async
 /// CloudSyncCoordinator-ын in-memory төлөвөөс хамаарахгүйгээр
 /// хадгалагдсан өгөгдлийг шууд уншина. Dead letter item-ийг
 /// retry/clear хийх үед шинэчлэлтийг зөв тусгахад ашиглана.
-final persistentDeadLetterItemsProvider =
-    FutureProvider<List<SyncQueueItem>>((ref) async {
+final persistentDeadLetterItemsProvider = FutureProvider<List<SyncQueueItem>>((
+  ref,
+) async {
   final storage = ref.watch(isarSyncStorageProvider);
   return storage.loadDeadLetterQueue();
 });
@@ -70,9 +73,7 @@ Future<void> _removeFromDeadLetterStorage(
   SyncQueueItem itemToRemove,
 ) async {
   final deadLetterItems = await storage.loadDeadLetterQueue();
-  deadLetterItems.removeWhere(
-    (item) => item.entityId == itemToRemove.entityId,
-  );
+  deadLetterItems.removeWhere((item) => item.entityId == itemToRemove.entityId);
   await storage.clearDeadLetter();
   for (final item in deadLetterItems) {
     await storage.addToDeadLetter(item);

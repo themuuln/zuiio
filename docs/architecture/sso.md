@@ -1,93 +1,353 @@
-# Zuiio SSO Architecture
+# Zuiio SSO — Integration Guide
 
 ## Overview
 
-One hosted identity experience at `id.zuiio.com` for every Zuiio product. Users authenticate centrally; products keep local sessions, RLS, organizations, and authorization.
+Zuiio ID (`id.zuiiotech.com`) is the central identity provider for the Zuiio ecosystem. There are **two integration paths** depending on your stack:
 
-## Environments
+| Path | Best for | Package |
+|------|----------|---------|
+| **Supabase Federation** | Internal Zuiio products using Supabase Auth | `@zuiio/auth` |
+| **Direct OIDC** | External apps, non-Supabase stacks, any language | `@zuiio/oidc` or raw OIDC |
 
-Each environment is fully isolated:
+Both paths use Authorization Code flow with PKCE (S256).
+
+---
+
+## Path A: Supabase Federation (internal products)
+
+For apps inside the Zuiio monorepo that already use Supabase Auth.
+
+### What happens
 
 ```
-zuiio-identity-{development|staging|production}
-├── zuiio-zer-{environment}
-├── zuiio-tolom-{environment}
-├── zuiio-tamga-{environment}
-├── zuiio-onoo-{environment}
-├── zuiio-tumurch-{environment}
-├── zuiio-zraf-{environment}
-├── zuiio-zoa-{environment}
-├── zuiio-zatly-{environment}
-├── zuiio-khosuud-{environment}
-├── zuiio-zerbu-{environment}
-└── zuiio-zunch-{environment}
+Product App → Product's Supabase (custom:zuiio provider) → Zuiio ID (identity server)
+                                                                     ↓
+Product App ← Product's Supabase (PKCE code exchange) ← Consent/Login
 ```
 
-## Provisioning
+### Setup
+
+**1. Provision the product** (one-time, from monorepo root):
 
 ```bash
-# Dry run — see what would be created
-pnpm sso:plan --environment development
+# Health check first
+pnpm sso:doctor --product=<id>
 
-# Apply — create OAuth clients, providers, catalog rows
-pnpm sso:apply --environment development
+# Dry-run to see what will change
+pnpm sso:plan --product=<id>
 
-# Rotate a specific product's credentials
-pnpm sso:apply --environment development --rotate zer
+# Apply — creates OAuth client on identity server + configures custom:zuiio provider
+pnpm sso:apply --product=<id>
 ```
 
-Environment variables needed (in `.env.sso.<environment>`):
-- `IDENTITY_SUPABASE_URL` — identity project URL
-- `IDENTITY_SERVICE_ROLE_KEY` — identity project service role key
-- `<PRODUCT>_SUPABASE_URL` — per product project URL
-- `<PRODUCT>_SERVICE_ROLE_KEY` — per product project service role key
+**2. Add `@zuiio/auth` dependency:**
 
-## Auth Flow
+```json
+"dependencies": {
+  "@zuiio/auth": "workspace:*"
+}
+```
 
-1. User opens product app → redirected to `/auth/sso` → starts `custom:zuiio` OAuth
-2. Identity project receives `/oauth/authorize?authorization_id=...`
-3. If unauthenticated → central login/signup at `id.zuiio.com`
-4. If authenticated → auto-approves first-party client, redirects back
-5. Product receives PKCE code → exchanges for local session
-6. Product-local `auth.uid()` is created/linked, existing RLS continues
+**3. Create `/auth/sso` route** — initiates SSO login:
 
-## Rollout Order
+```ts
+// app/(auth)/sso/route.ts
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
-1. Development identity project
-2. Development Zer (web) — representative web product
-3. Development Tolom Mobile — representative mobile product
-4. All remaining development products
-5. Staging provider verification (Google, Apple, SMTP)
-6. Production identity project
-7. Production products one family at a time
+export async function GET(request: Request) {
+  const supabase = await createClient();
+  const { searchParams, origin } = new URL(request.url);
+  const next = searchParams.get("next")?.startsWith("/") ? searchParams.get("next") : "/";
 
-At each gate: verify callback, local session, entitlement/onboarding, logout.
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "custom:zuiio",
+    options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
+  });
 
-## Rollback
+  if (error || !data.url) {
+    return NextResponse.redirect(new URL("/login?error=auth_start_failed", origin));
+  }
+  return NextResponse.redirect(data.url);
+}
+```
 
-Per-product rollback is configuration-only:
-1. Disable `custom:zuiio` provider on the product project
-2. Re-enable the previous auth method
-3. Restore the previous deployment
+**4. Create `/auth/callback` route** — handles the PKCE code exchange:
 
-## Logout Behavior
+```ts
+// app/auth/callback/route.ts
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { exchangeZuiioSsoCode } from "@zuiio/auth";
 
-- Product logout: local session cleared + central identity logout redirect
-- NOT global: other products' sessions remain until their own logout/expiry
-- This is by design — Supabase OAuth federation does not provide back-channel single logout
+export async function GET(request: Request) {
+  const supabase = await createClient();
+  const error = await exchangeZuiioSsoCode(supabase, request.url);
+  if (error) {
+    return NextResponse.redirect(new URL("/login?error=" + encodeURIComponent(error)));
+  }
+  return NextResponse.redirect(new URL("/dashboard", request.url));
+}
+```
 
-## Account Recovery
+**5. Protect pages with `useRequireAuth`:**
 
-- Forgot password → redirect to `id.zuiio.com/forgot-password`
-- Reset password → redirect to `id.zuiio.com/reset-password`
-- No product handles password recovery directly
+```tsx
+"use client";
+import { useRequireAuth } from "@zuiio/auth";
 
-## Adding a New Product
+export default function DashboardPage() {
+  const { status, session } = useRequireAuth({ redirectTo: "/login" });
+  if (status !== "authenticated") return <Loading />;
+  return <div>Welcome, {session.user.email}</div>;
+}
+```
 
-1. Add to `config/sso-products.ts` with `authMode: "sso"`
-2. Run `pnpm sso:apply --environment development`
-3. Add `.env.sso.development` entries for the new product
-4. Configure the product's `/auth/sso` and `/auth/callback` routes
-5. Add `@zuiio/auth: "workspace:*"` dependency
-6. Use `startZuiioSso()` / `exchangeZuiioSsoCode()` in your auth flow
-7. Verify end-to-end: login → callback → session → logout
+### Mobile (React Native)
+
+Use `skipBrowserRedirect: true` to get the URL for an in-app browser:
+
+```ts
+import { startZuiioSso } from "@zuiio/auth";
+
+const { url, error } = await startZuiioSso(supabase, {
+  redirectTo: "zuiio-{product}://auth/callback",
+  skipBrowserRedirect: true,
+});
+// Open url in expo-web-browser or similar
+```
+
+---
+
+## Path B: Direct OIDC (external apps)
+
+For non-Supabase applications — Django, Go, PHP, plain JavaScript, Flutter, etc.
+
+Zuiio ID is a standards-compliant OIDC Provider. You can use any OIDC library or raw HTTP.
+
+### Discovery
+
+All metadata is available at:
+
+```
+https://id.zuiiotech.com/.well-known/openid-configuration
+```
+
+This returns the authorization endpoint, token endpoint, JWKS URI, supported scopes, response types, and more.
+
+### Supported features
+
+- Authorization Code flow with PKCE (S256)
+- Token refresh
+- Userinfo endpoint
+- JWKS (RS256 + HS256)
+- RP-initiated logout
+- Scope: `openid`, `profile`, `email`, `offline_access`
+- Claims: `sub`, `email`, `email_verified`, `name`, `full_name`, `username`, `picture`, `updated_at`
+
+### Node.js / Next.js (using `@zuiio/oidc`)
+
+```bash
+npm install @zuiio/oidc openid-client
+```
+
+```ts
+import { createZuiioOidcClient } from "@zuiio/oidc";
+
+// 1. Create client (auto-discovers OIDC metadata)
+const client = await createZuiioOidcClient({
+  issuer: "https://id.zuiiotech.com",
+  clientId: process.env.ZUIIO_OIDC_CLIENT_ID!,
+  clientSecret: process.env.ZUIIO_OIDC_CLIENT_SECRET!,
+  redirectUri: "https://yourapp.com/auth/callback",
+});
+
+// 2. Start login
+const auth = await client.beginAuthorization();
+// Store auth.state, auth.nonce, auth.codeVerifier in encrypted server session
+session.set("oidc_tx", auth);
+redirect(auth.url);
+
+// 3. Handle callback
+const tx = session.get("oidc_tx");
+const tokens = await client.handleCallback(request.url, tx);
+session.delete("oidc_tx");
+session.set("tokens", tokens);
+
+// 4. Fetch user info
+const user = await client.userinfo(tokens.accessToken);
+// { sub, email, name, full_name, username, ... }
+
+// 5. Refresh when expired
+const refreshed = await client.refresh(tokens.refreshToken);
+
+// 6. Logout
+const logoutUrl = client.endSessionUrl(tokens.idToken, "https://yourapp.com");
+redirect(logoutUrl);
+```
+
+### Python (using `requests` + `authlib`)
+
+```python
+from authlib.integrations.requests_client import OAuth2Session
+import secrets, hashlib, base64
+
+# PKCE code verifier + challenge
+code_verifier = secrets.token_urlsafe(64)
+code_challenge = base64.urlsafe_b64encode(
+    hashlib.sha256(code_verifier.encode()).digest()
+).rstrip(b"=").decode()
+
+# Discovery
+import requests
+discovery = requests.get("https://id.zuiiotech.com/.well-known/openid-configuration").json()
+
+# Authorization URL
+params = {
+    "response_type": "code",
+    "client_id": "your-client-id",
+    "redirect_uri": "https://yourapp.com/auth/callback",
+    "scope": "openid profile email",
+    "code_challenge": code_challenge,
+    "code_challenge_method": "S256",
+    "state": secrets.token_urlsafe(32),
+}
+auth_url = f"{discovery['authorization_endpoint']}?{'&'.join(f'{k}={v}' for k, v in params.items())}"
+# Redirect user to auth_url
+
+# Token exchange (on callback)
+token_response = requests.post(discovery["token_endpoint"], data={
+    "grant_type": "authorization_code",
+    "code": received_code,
+    "redirect_uri": "https://yourapp.com/auth/callback",
+    "client_id": "your-client-id",
+    "client_secret": "your-client-secret",
+    "code_verifier": code_verifier,
+}).json()
+
+# Userinfo
+userinfo = requests.get(discovery["userinfo_endpoint"],
+    headers={"Authorization": f"Bearer {token_response['access_token']}"}
+).json()
+```
+
+### Go (using `coreos/go-oidc`)
+
+```go
+import "github.com/coreos/go-oidc/v3/oidc"
+
+provider, err := oidc.NewProvider(ctx, "https://id.zuiiotech.com")
+// Use provider.Endpoint() for AuthURL, TokenURL
+// Generate PKCE with crypto/rand, use oauth2 package for token exchange
+```
+
+### PHP (using `league/oauth2-client`)
+
+```php
+$provider = new \League\OAuth2\Client\Provider\GenericProvider([
+    'clientId' => 'your-client-id',
+    'clientSecret' => 'your-client-secret',
+    'redirectUri' => 'https://yourapp.com/auth/callback',
+    'urlAuthorize' => 'https://id.zuiiotech.com/api/oauth/authorize',
+    'urlAccessToken' => 'https://id.zuiiotech.com/api/oauth/token',
+    'urlResourceOwnerDetails' => 'https://id.zuiiotech.com/api/oauth/userinfo',
+]);
+
+// Generate PKCE
+$codeVerifier = bin2hex(random_bytes(32));
+$codeChallenge = rtrim(strtr(base64_encode(hash('sha256', $codeVerifier, true)), '+/', '-_'), '=');
+
+// Authorization URL
+$authUrl = $provider->getAuthorizationUrl([
+    'code_challenge' => $codeChallenge,
+    'code_challenge_method' => 'S256',
+]);
+// Store $provider->getState() in session, redirect to $authUrl
+```
+
+---
+
+## Getting a client_id
+
+### Internal (monorepo) products
+
+Run `pnpm sso:plan --product=<id>` then `pnpm sso:apply --product=<id>`. The provisioning script creates the OAuth client on the identity server and configures the `custom:zuiio` provider on the product's Supabase project.
+
+### External apps
+
+Contact the Zuiio team to register your application. You'll receive:
+- `client_id`
+- `client_secret` (for confidential clients)
+- A redirect URI to register
+
+You can also register a public client (no secret) for mobile apps or SPAs, but PKCE is required.
+
+---
+
+## Token verification
+
+Zuiio ID JWKS endpoint:
+
+```
+GET https://id.zuiiotech.com/api/oauth/jwks
+```
+
+Returns public keys for RS256-signed ID tokens. Use these to verify token signatures locally.
+
+For Supabase Federation products, token verification happens automatically through Supabase Auth.
+
+---
+
+## MFA
+
+Zuiio ID supports multi-factor authentication via:
+- **TOTP** — authenticator app (Google Authenticator, etc.)
+- **Passkeys** — WebAuthn platform authenticators
+
+When a user has MFA enabled, they will be prompted during SSO login before the consent screen.
+
+---
+
+## Architecture
+
+```
+┌─────────────────────┐         ┌──────────────────────────┐
+│   Your App          │         │   Zuiio ID               │
+│                     │         │   (id.zuiiotech.com)     │
+│  /auth/sso ─────────┼────────→│  OIDC endpoints           │
+│                     │         │  Login / Signup           │
+│  /auth/callback ←───┼─────────│  Consent / MFA           │
+│                     │         │  SAML federation          │
+│  Local session      │         │  SCIM provisioning        │
+│  RLS policies       │         │                          │
+└─────────────────────┘         └──────────────────────────┘
+         │                                │
+         │         ┌──────────────────────┘
+         │         │
+         ▼         ▼
+  ┌──────────────────────────┐
+  │  Product's Supabase       │
+  │  (for Supabase Federation)│
+  │                           │
+  │  custom:zuiio provider    │
+  │  → delegates to Zuiio ID  │
+  └──────────────────────────┘
+```
+
+For **Direct OIDC** consumers, the Product Supabase layer is absent — your app talks directly to Zuiio ID.
+
+---
+
+## Comparison
+
+| Feature | Supabase Federation | Direct OIDC |
+|---------|-------------------|-------------|
+| Setup complexity | ~30 lines of boilerplate | ~100 lines (or `@zuiio/oidc`) |
+| Token handling | Automatic via Supabase SDK | Manual (store/refresh) |
+| RLS integration | Built-in (auth.uid()) | Manual (pass user context) |
+| Session management | Supabase SSR cookies | Your own session store |
+| Mobile support | `skipBrowserRedirect` | PKCE + custom scheme |
+| MFA | Through Zuiio ID | Through Zuiio ID |
+| Offline access | Automatic | Request `offline_access` scope |
+| Userinfo | Supabase `auth.getUser()` | `GET /userinfo` endpoint |
+| Logout | Supabase `auth.signOut()` | RP-initiated logout URL |

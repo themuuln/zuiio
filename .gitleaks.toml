@@ -1,0 +1,42 @@
+# Gitleaks config for zuiio monorepo
+# https://github.com/gitleaks/gitleaks
+
+[allowlist]
+  description = "Known safe patterns"
+
+  # Test files with inline passwords/secrets
+  paths = [
+    "(?i).*test.*",
+    "(?i).*spec.*",
+    "(?i).*__tests__.*",
+    "apps/zer/src/test/",
+    "apps/tolom/src/test/",
+  ]
+
+  # Example values in documentation
+  regexes = [
+    "(?i)example",
+    "(?i)test",
+    "placeholder",
+    "your-password",
+    "your-secret",
+    "changeme",
+    "xxxxx",
+  ]
+
+[allowlist.gitHubToken]
+  description = "GitHub Personal Access Tokens for CI"
+  regexes = ["ghp_[A-Za-z0-9]{36}"]
+
+# Custom rules for project-specific patterns
+[[rules]]
+  id = "zuiio-supabase-key"
+  description = "Supabase service role key"
+  regex = '''(?i)(supabase_service_role_key|service_role_key).*['"][A-Za-z0-9_\-]+['"]'''
+  tags = ["zuiio", "supabase"]
+
+[[rules]]
+  id = "zuiio-jwt-secret"
+  description = "JWT signing secret"
+  regex = '''(?i)(jwt_secret|token_signing_secret).*['"][A-Za-z0-9_\-]+['"]'''
+  tags = ["zuiio", "jwt"]

@@ -78,7 +78,6 @@ export function InvoiceQrPopover({ url, children }: InvoiceQrPopoverProps) {
             if (e.key === "Escape") setOpen(false);
           }}
         >
-          {/* biome-ignore lint/performance/noImgElement: QR code is a dynamic data URL, not optimizable by next/image */}
           <img
             src={qrDataUrl}
             alt={t("invoiceQrCode")}

@@ -1,8 +1,8 @@
 "use client";
 
 import { parseCurrencyInput } from "@zuiio/core";
-import { useCallback, useState } from "react";
 import { InlineEditableField } from "@zuiio/ui";
+import { useCallback, useState } from "react";
 import { Typography } from "@/components/ui/typography";
 import { cn, formatCurrency } from "@/lib/utils";
 

@@ -1,7 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { noContent, ok } from "@/lib/api-response";
 import {
-
   deletePartsCar,
   getPartsCar,
   updatePartsCar,
@@ -12,17 +11,23 @@ export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
 });
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, params, supabase }) => {
+  async ({ request, orgId, params, supabase, user }) => {
     const body = await request.json();
-    const car = await updatePartsCar(supabase, orgId, params.carId, body);
+    const car = await updatePartsCar(
+      supabase,
+      orgId,
+      params.carId,
+      body,
+      user.id,
+    );
     return ok(car);
   },
   { rateLimit: true, subscription: true },
 );
 
 export const DELETE = createRouteHandler(
-  async ({ orgId, params, supabase }) => {
-    await deletePartsCar(supabase, orgId, params.carId);
+  async ({ orgId, params, supabase, user }) => {
+    await deletePartsCar(supabase, orgId, params.carId, user.id);
     return noContent();
   },
   { rateLimit: true, subscription: true },

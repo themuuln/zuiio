@@ -810,6 +810,14 @@ CREATE POLICY "uom_conversions_delete" ON public.uom_conversions
     AND public.has_permission('uom_conversions.delete')
   );
 
+DROP POLICY IF EXISTS "commission_payouts_select" ON public.commission_payouts;
+DROP POLICY IF EXISTS "commission_payouts_insert" ON public.commission_payouts;
+DROP POLICY IF EXISTS "commission_payouts_update" ON public.commission_payouts;
+DROP POLICY IF EXISTS "commission_payouts_delete" ON public.commission_payouts;
+DROP POLICY IF EXISTS "commission_payout_items_select" ON public.commission_payout_items;
+DROP POLICY IF EXISTS "commission_payout_items_insert" ON public.commission_payout_items;
+DROP POLICY IF EXISTS "commission_payout_items_update" ON public.commission_payout_items;
+DROP POLICY IF EXISTS "commission_payout_items_delete" ON public.commission_payout_items;
 -- --- Commission Payouts ---
 CREATE POLICY "commission_payouts_select" ON public.commission_payouts
   FOR SELECT USING (
@@ -955,5 +963,6 @@ CREATE POLICY "profiles_update_role" ON public.profiles
   );
 
 CREATE POLICY "profiles_update_own" ON public.profiles
-  FOR UPDATE USING (id = auth.uid())
-  WITH CHECK (id = auth.uid() AND role_id IS NOT DISTINCT FROM OLD.role_id);
+  FOR UPDATE USING (
+    id = auth.uid()
+  );

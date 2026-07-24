@@ -1,0 +1,205 @@
+{
+	"id": "tolom",
+	"name": "Тоолуур (авто засвар)",
+	"tenant": { "column": "organization_id", "source": "jwt" },
+	"datasets": {
+		"vehicles": {
+			"source": "vehicles",
+			"displayName": "Тээврийн хэрэгсэл",
+			"insertable": true,
+			"updatable": true,
+			"deletable": true,
+			"pk": "id",
+			"fields": {
+				"id": { "type": "uuid", "writable": false },
+				"organization_id": { "type": "uuid", "writable": false },
+				"customer_id": { "type": "uuid", "required": true },
+				"plate_number": { "type": "string", "required": true },
+				"make": { "type": "string" },
+				"model": { "type": "string" },
+				"year": { "type": "number" },
+				"created_at": { "type": "timestamp", "writable": false },
+				"deleted_at": { "type": "timestamp", "writable": false }
+			}
+		},
+		"customers": {
+			"source": "customers",
+			"displayName": "Үйлчлүүлэгч",
+			"insertable": true,
+			"updatable": true,
+			"deletable": true,
+			"pk": "id",
+			"fields": {
+				"id": { "type": "uuid", "writable": false },
+				"organization_id": { "type": "uuid", "writable": false },
+				"full_name": { "type": "string", "required": true },
+				"first_name": { "type": "string" },
+				"last_name": { "type": "string" },
+				"phone": { "type": "string" },
+				"email": { "type": "string" },
+				"total_visits": { "type": "number", "writable": false },
+				"created_at": { "type": "timestamp", "writable": false },
+				"deleted_at": { "type": "timestamp", "writable": false }
+			}
+		},
+		"work_orders": {
+			"source": "work_orders",
+			"displayName": "Ажлын захиалга",
+			"insertable": true,
+			"updatable": true,
+			"deletable": true,
+			"pk": "id",
+			"fields": {
+				"id": { "type": "uuid", "writable": false },
+				"organization_id": { "type": "uuid", "writable": false },
+				"customer_id": { "type": "uuid", "required": true },
+				"vehicle_id": { "type": "uuid" },
+				"plate_number": { "type": "string" },
+				"status": {
+					"type": "string",
+					"allowedValues": ["pending", "in_progress", "completed", "cancelled"]
+				},
+				"description": { "type": "text" },
+				"notes": { "type": "text" },
+				"total_amount": { "type": "number" },
+				"created_at": { "type": "timestamp", "writable": false },
+				"deleted_at": { "type": "timestamp", "writable": false }
+			}
+		},
+		"appointments": {
+			"source": "appointments",
+			"displayName": "Цаг захиалга",
+			"insertable": true,
+			"updatable": true,
+			"deletable": true,
+			"pk": "id",
+			"fields": {
+				"id": { "type": "uuid", "writable": false },
+				"organization_id": { "type": "uuid", "writable": false },
+				"customer_id": { "type": "uuid", "required": true },
+				"scheduled_at": { "type": "timestamp", "required": true },
+				"description": { "type": "text" },
+				"status": {
+					"type": "string",
+					"allowedValues": ["scheduled", "completed", "cancelled", "no_show"]
+				},
+				"created_at": { "type": "timestamp", "writable": false }
+			}
+		},
+		"expenses": {
+			"source": "expenses",
+			"displayName": "Зардал",
+			"insertable": true,
+			"updatable": true,
+			"deletable": true,
+			"pk": "id",
+			"fields": {
+				"id": { "type": "uuid", "writable": false },
+				"organization_id": { "type": "uuid", "writable": false },
+				"expense_category_id": { "type": "uuid", "required": true },
+				"amount": { "type": "number", "required": true },
+				"description": { "type": "text" },
+				"expense_date": { "type": "timestamp" },
+				"created_at": { "type": "timestamp", "writable": false },
+				"deleted_at": { "type": "timestamp", "writable": false }
+			}
+		},
+		"suppliers": {
+			"source": "suppliers",
+			"displayName": "Нийлүүлэгч",
+			"insertable": true,
+			"updatable": true,
+			"deletable": true,
+			"pk": "id",
+			"fields": {
+				"id": { "type": "uuid", "writable": false },
+				"organization_id": { "type": "uuid", "writable": false },
+				"name": { "type": "string", "required": true },
+				"contact_person": { "type": "string" },
+				"phone": { "type": "string" },
+				"email": { "type": "string" },
+				"created_at": { "type": "timestamp", "writable": false },
+				"deleted_at": { "type": "timestamp", "writable": false }
+			}
+		},
+		"parts_catalog": {
+			"source": "parts_catalog",
+			"displayName": "Сэлбэгийн каталог",
+			"insertable": true,
+			"updatable": true,
+			"deletable": true,
+			"pk": "id",
+			"fields": {
+				"id": { "type": "uuid", "writable": false },
+				"organization_id": { "type": "uuid", "writable": false },
+				"name": { "type": "string", "required": true },
+				"part_number": { "type": "string" },
+				"unit_price": { "type": "number" },
+				"category": { "type": "string" },
+				"created_at": { "type": "timestamp", "writable": false },
+				"deleted_at": { "type": "timestamp", "writable": false }
+			}
+		},
+		"service_catalog": {
+			"source": "service_catalog",
+			"displayName": "Үйлчилгээний каталог",
+			"insertable": true,
+			"updatable": true,
+			"deletable": true,
+			"pk": "id",
+			"fields": {
+				"id": { "type": "uuid", "writable": false },
+				"organization_id": { "type": "uuid", "writable": false },
+				"name": { "type": "string", "required": true },
+				"price": { "type": "number" },
+				"category": { "type": "string" },
+				"created_at": { "type": "timestamp", "writable": false },
+				"deleted_at": { "type": "timestamp", "writable": false }
+			}
+		},
+		"sales": {
+			"source": "sales",
+			"displayName": "Борлуулалт",
+			"insertable": true,
+			"updatable": true,
+			"deletable": true,
+			"pk": "id",
+			"fields": {
+				"id": { "type": "uuid", "writable": false },
+				"organization_id": { "type": "uuid", "writable": false },
+				"total_amount": { "type": "number", "required": true },
+				"paid_amount": { "type": "number" },
+				"sale_date": { "type": "timestamp" },
+				"customer_name": { "type": "string" },
+				"created_at": { "type": "timestamp", "writable": false }
+			}
+		},
+		"invoices": {
+			"source": "invoices",
+			"displayName": "Нэхэмжлэх",
+			"insertable": true,
+			"updatable": true,
+			"deletable": true,
+			"pk": "id",
+			"fields": {
+				"id": { "type": "uuid", "writable": false },
+				"organization_id": { "type": "uuid", "writable": false },
+				"customer_id": { "type": "uuid", "required": true },
+				"invoice_number": { "type": "string" },
+				"status": {
+					"type": "string",
+					"allowedValues": ["draft", "sent", "paid", "cancelled", "overdue"]
+				},
+				"total": { "type": "number" },
+				"amount_paid": { "type": "number" },
+				"balance_due": { "type": "number" },
+				"description": { "type": "text" },
+				"customer_name": { "type": "string" },
+				"issued_at": { "type": "timestamp" },
+				"paid_at": { "type": "timestamp" },
+				"created_at": { "type": "timestamp", "writable": false },
+				"deleted_at": { "type": "timestamp", "writable": false }
+			}
+		}
+	}
+}

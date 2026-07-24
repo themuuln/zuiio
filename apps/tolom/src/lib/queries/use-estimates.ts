@@ -106,7 +106,7 @@ export function useEstimates(
     },
     enabled: !!orgId,
     placeholderData: (previousData) => previousData,
-    staleTime: 15_000,
+    staleTime: 30_000,
   });
 }
 
@@ -127,7 +127,7 @@ export function useEstimateDetail(
       return json.data as EstimateDetail;
     },
     enabled: !!orgId && !!estimateId,
-    staleTime: 15_000,
+    staleTime: 30_000,
   });
 }
 

@@ -72,5 +72,3 @@ class HorseMarker extends StatelessWidget {
     );
   }
 }
-
-

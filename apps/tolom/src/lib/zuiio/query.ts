@@ -1,6 +1,10 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  type QueryClient,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import * as React from "react";
 import { toast } from "sonner";
 import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
@@ -48,6 +52,15 @@ export interface OrgMutationConfig<TResponse, TVariables, TCache = TResponse> {
     variables: TVariables,
     context: OptimisticContext,
   ) => TCache[];
+  /**
+   * Manual optimistic cache update for non-list data (single entities, objects).
+   * Called in `onMutate` before the mutation fires. Receives queryClient for
+   * direct cache manipulation via `getQueryData`/`setQueryData`.
+   */
+  onOptimisticUpdate?: (
+    queryClient: QueryClient,
+    variables: TVariables,
+  ) => unknown;
   optimisticMode?: "exact" | "prefix";
   successMessage?: string | ((variables: TVariables) => string);
   errorMessage?: string;
@@ -72,8 +85,9 @@ interface MutationContext<TCache> {
   previous: TCache[] | undefined;
   snapshots: CacheSnapshot<TCache>[];
   wasOffline: boolean;
+  /** Snapshot from onOptimisticUpdate for rollback. */
+  optimisticSnapshot: unknown;
 }
-
 export function useOrgMutation<
   TResponse,
   TVariables = void,
@@ -87,6 +101,7 @@ export function useOrgMutation<
     mutationKey,
     optimisticMode,
     optimisticUpdate,
+    onOptimisticUpdate,
     idempotencyKey,
     successMessage,
     errorMessage,
@@ -198,9 +213,9 @@ export function useOrgMutation<
             data: data ?? undefined,
           })),
           wasOffline: !isOnline,
+          optimisticSnapshot: undefined,
         };
       }
-
       const previous = queryClient.getQueryData<TCache[]>(exactKey);
       if (previous && optimisticUpdate) {
         const next = optimisticUpdate(previous, variables, optContext);
@@ -209,23 +224,36 @@ export function useOrgMutation<
         }
       }
 
+      // Manual optimistic update for non-list data (single entities)
+      if (onOptimisticUpdate) {
+        const snapshot = onOptimisticUpdate(queryClient, variables);
+        return {
+          previous: snapshot as TCache[] | undefined,
+          snapshots: [],
+          wasOffline: !isOnline,
+          optimisticSnapshot: snapshot,
+        };
+      }
       return {
         previous: previous ?? undefined,
         snapshots: [],
         wasOffline: !isOnline,
+        optimisticSnapshot: undefined,
       };
     },
     onError: (error, variables, context) => {
-      if (context?.snapshots && context.snapshots.length > 0) {
-        for (const snap of context.snapshots) {
-          if (snap.data !== undefined) {
-            queryClient.setQueryData<TCache[]>(snap.key, snap.data);
+      // Rollback on error — skip if onOptimisticUpdate handles its own rollback
+      if (!onOptimisticUpdate) {
+        if (context?.snapshots && context.snapshots.length > 0) {
+          for (const snap of context.snapshots) {
+            if (snap.data !== undefined) {
+              queryClient.setQueryData<TCache[]>(snap.key, snap.data);
+            }
           }
+        } else if (context?.previous) {
+          queryClient.setQueryData<TCache[]>(exactKey, context.previous);
         }
-      } else if (context?.previous) {
-        queryClient.setQueryData<TCache[]>(exactKey, context.previous);
       }
-
       void onErrorCb?.(error, variables);
 
       if (onErrorToast) {

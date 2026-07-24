@@ -36,7 +36,6 @@ async function getProductWithStock(page: any): Promise<string> {
       const name = (await nameCell.textContent())?.trim() ?? "";
       if (name) {
         cachedProductWithStock = name;
-        console.log(`Found product with stock: "${name}" (stock: ${stock})`);
         return name;
       }
     }
@@ -45,9 +44,6 @@ async function getProductWithStock(page: any): Promise<string> {
   // Fallback: try first row regardless of stock
   const fallbackName =
     (await rows.first().locator("td").nth(1).textContent())?.trim() ?? "";
-  console.log(
-    `No product with stock found, falling back to: "${fallbackName}"`,
-  );
   cachedProductWithStock = fallbackName;
   return fallbackName;
 }
@@ -86,7 +82,7 @@ async function selectProductByName(
 /**
  * Helper: select the first available product with stock.
  */
-async function selectProductWithStock(page: any, rowIndex = 0) {
+async function _selectProductWithStock(page: any, rowIndex = 0) {
   const productName = await getProductWithStock(page);
   // Now navigate back to sales and open the form
   // (caller should have already navigated to /sales and opened the drawer)
@@ -128,16 +124,13 @@ async function waitForSuccessToast(page: any): Promise<string | null> {
   try {
     await expect(toast).toBeVisible({ timeout: 12000 });
     const toastText = await toast.textContent();
-    console.log("Toast text:", toastText);
 
     // Check if it's a success or error toast
     if (toastText?.includes("амжилттай")) {
       return toastText;
     }
-    console.log("Toast does not contain success message");
     return null;
   } catch {
-    console.log("No toast appeared");
     return null;
   }
 }
@@ -191,7 +184,6 @@ async function getProductStock(
 
   const stockCell = row.locator("td").nth(6);
   const stockText = await stockCell.textContent();
-  console.log(`Stock cell for "${productName}":`, stockText);
   return Number.parseFloat(stockText?.trim() ?? "0");
 }
 
@@ -246,7 +238,6 @@ test.describe("Cross-Area Flows", () => {
 
     // Get initial stock
     const initialStock = await getProductStock(page, productName);
-    console.log(`Initial stock for "${productName}": ${initialStock}`);
     expect(initialStock).toBeGreaterThan(0);
 
     // Create first sale
@@ -261,7 +252,6 @@ test.describe("Cross-Area Flows", () => {
 
     // Check stock after first sale
     const stockAfterFirst = await getProductStock(page, productName);
-    console.log(`Stock after first sale: ${stockAfterFirst}`);
     expect(stockAfterFirst).toBeLessThan(initialStock);
 
     // Create second sale for the same product
@@ -276,7 +266,6 @@ test.describe("Cross-Area Flows", () => {
 
     // Check stock after second sale — should be lower than after first
     const stockAfterSecond = await getProductStock(page, productName);
-    console.log(`Stock after second sale: ${stockAfterSecond}`);
     expect(stockAfterSecond).toBeLessThan(stockAfterFirst);
   });
 
@@ -343,8 +332,7 @@ test.describe("Cross-Area Flows", () => {
     // 4. Verify the chip is still highlighted/active
     const chipButton = page.getByRole("button", { name: "Бүрэн төлөгдсөн" });
     const classAttr = await chipButton.getAttribute("class");
-    const isActive = classAttr?.includes("border-primary") ?? false;
-    console.log("Filter chip active:", isActive);
+    const _isActive = classAttr?.includes("border-primary") ?? false;
 
     // 5. Clear search
     await searchInput.clear();
@@ -362,13 +350,11 @@ test.describe("Cross-Area Flows", () => {
     const hasData = await table.isVisible().catch(() => false);
 
     if (hasData) {
-      console.log("Sales data exists, table is visible");
       await expect(table).toBeVisible({ timeout: 3000 });
     } else {
       // Empty state should be shown
       const emptyState = page.getByText("Борлуулалт бүртгэгдээгүй").first();
       await expect(emptyState).toBeVisible({ timeout: 5000 });
-      console.log("Empty state is visible");
 
       // Create first sale using the CTA
       const productName = await getProductWithStock(page);
@@ -386,7 +372,6 @@ test.describe("Cross-Area Flows", () => {
       await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
       await expect(page.locator("table")).toBeVisible({ timeout: 5000 });
-      console.log("Table appeared after first sale");
     }
   });
 
@@ -419,7 +404,6 @@ test.describe("Cross-Area Flows", () => {
     // Verify URL was cleaned
     const currentUrl = page.url();
     expect(currentUrl).not.toContain("create=true");
-    console.log("URL after auto-open:", currentUrl);
   });
 
   test("VAL-CROSS-007: Sale detail accessible from both row click and post-save toast Дэлгэрэнгүй", async ({

@@ -11,7 +11,11 @@ export const GET = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const { searchParams } = new URL(request.url);
     const status = (searchParams.get("status") as InvoiceStatus) ?? undefined;
-    const invoices = await getInvoices(supabase, orgId, { status });
+    const branchId = searchParams.get("branch_id") ?? undefined;
+    const invoices = await getInvoices(supabase, orgId, {
+      status,
+      branchId,
+    });
     return ok(invoices);
   },
   { requiredPermission: { resource: "invoices", action: "read" } },

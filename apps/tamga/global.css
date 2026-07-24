@@ -5,60 +5,60 @@
 @layer base {
   :root {
     /* Brand Primitives — Tamga */
-    --tamga-purple: oklch(0.50 0.26 275);
-    --tamga-purple-light: oklch(0.65 0.22 275);
-    --tamga-gold: oklch(0.78 0.16 85);
-    --tamga-gold-light: oklch(0.88 0.12 85);
+    --tamga-purple: rgb(71 56 242);
+    --tamga-purple-light: rgb(109 122 255);
+    --tamga-gold: rgb(230 173 0);
+    --tamga-gold-light: rgb(252 209 118);
 
     /* Semantic Tokens (Light) */
-    --background: oklch(0.99 0.003 275);
-    --foreground: oklch(0.12 0.018 275);
-    --card: oklch(1.00 0 0);
-    --card-foreground: oklch(0.12 0.018 275);
-    --popover: oklch(1.00 0 0);
-    --popover-foreground: oklch(0.12 0.018 275);
-    --primary: oklch(0.50 0.26 275);
-    --primary-foreground: oklch(0.98 0.005 275);
-    --secondary: oklch(0.96 0.005 275);
-    --secondary-foreground: oklch(0.12 0.018 275);
-    --muted: oklch(0.96 0.005 275);
-    --muted-foreground: oklch(0.45 0.018 275);
-    --accent: oklch(0.96 0.005 275);
-    --accent-foreground: oklch(0.12 0.018 275);
-    --destructive: oklch(0.55 0.22 20);
-    --destructive-foreground: oklch(0.98 0.005 275);
-    --border: oklch(0.90 0.010 275);
-    --input: oklch(0.90 0.010 275);
-    --ring: oklch(0.50 0.26 275);
+    --background: rgb(251 252 254);
+    --foreground: rgb(4 5 12);
+    --card: rgb(255 255 255);
+    --card-foreground: rgb(4 5 12);
+    --popover: rgb(255 255 255);
+    --popover-foreground: rgb(4 5 12);
+    --primary: rgb(71 56 242);
+    --primary-foreground: rgb(247 248 252);
+    --secondary: rgb(241 242 245);
+    --secondary-foreground: rgb(4 5 12);
+    --muted: rgb(241 242 245);
+    --muted-foreground: rgb(82 85 96);
+    --accent: rgb(241 242 245);
+    --accent-foreground: rgb(4 5 12);
+    --destructive: rgb(212 2 55);
+    --destructive-foreground: rgb(247 248 252);
+    --border: rgb(220 222 229);
+    --input: rgb(220 222 229);
+    --ring: rgb(71 56 242);
     --radius: 0.75rem;
   }
 
   .dark {
     /* Semantic Tokens (Dark) */
-    --background: oklch(0.10 0.018 275);
-    --foreground: oklch(0.96 0.005 275);
-    --card: oklch(0.12 0.018 275);
-    --card-foreground: oklch(0.96 0.005 275);
-    --popover: oklch(0.12 0.018 275);
-    --popover-foreground: oklch(0.96 0.005 275);
-    --primary: oklch(0.65 0.22 275);
-    --primary-foreground: oklch(0.12 0.018 275);
-    --secondary: oklch(0.22 0.022 275);
-    --secondary-foreground: oklch(0.96 0.005 275);
-    --muted: oklch(0.22 0.022 275);
-    --muted-foreground: oklch(0.65 0.018 275);
-    --accent: oklch(0.22 0.022 275);
-    --accent-foreground: oklch(0.96 0.005 275);
-    --destructive: oklch(0.60 0.20 20);
-    --destructive-foreground: oklch(0.96 0.005 275);
-    --border: oklch(0.22 0.022 275);
-    --input: oklch(0.22 0.022 275);
-    --ring: oklch(0.65 0.22 275);
+    --background: rgb(2 3 8);
+    --foreground: rgb(241 242 245);
+    --card: rgb(4 5 12);
+    --card-foreground: rgb(241 242 245);
+    --popover: rgb(4 5 12);
+    --popover-foreground: rgb(241 242 245);
+    --primary: rgb(109 122 255);
+    --primary-foreground: rgb(4 5 12);
+    --secondary: rgb(23 26 37);
+    --secondary-foreground: rgb(241 242 245);
+    --muted: rgb(23 26 37);
+    --muted-foreground: rgb(140 143 154);
+    --accent: rgb(23 26 37);
+    --accent-foreground: rgb(241 242 245);
+    --destructive: rgb(222 57 75);
+    --destructive-foreground: rgb(241 242 245);
+    --border: rgb(23 26 37);
+    --input: rgb(23 26 37);
+    --ring: rgb(109 122 255);
 
     /* Tamga brand dark overrides */
-    --tamga-purple: oklch(0.65 0.22 275);
-    --tamga-purple-light: oklch(0.75 0.18 275);
-    --tamga-gold: oklch(0.82 0.14 85);
-    --tamga-gold-light: oklch(0.90 0.10 85);
+    --tamga-purple: rgb(109 122 255);
+    --tamga-purple-light: rgb(143 161 255);
+    --tamga-gold: rgb(238 188 74);
+    --tamga-gold-light: rgb(253 217 144);
   }
 }

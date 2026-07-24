@@ -3,9 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useState } from "react";
 
-import {
-  PurchaseDetailDrawer,
-} from "@/components/purchases/purchase-detail-drawer";
+import { PurchaseDetailDrawer } from "@/components/purchases/purchase-detail-drawer";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { currencyColumn, dateColumn } from "@/lib/table-columns";

@@ -174,12 +174,15 @@ function CollapsibleLineItems({
 
 // ─── Component ────────────────────────────────────────────────
 
-export function WorkOrderDetailSheet({
+export function WorkOrderDetailDrawer({
   open,
   onOpenChange,
   workOrderId,
 }: WorkOrderDetailSheetProps) {
-  const t = useTranslations("workOrderDetail");
+  const t = useTranslations("workOrderDetail") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const queryClient = useQueryClient();
   const { data: orgData } = useCurrentOrg();
   const orgId = orgData?.orgId;

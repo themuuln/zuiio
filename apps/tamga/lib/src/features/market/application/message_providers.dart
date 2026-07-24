@@ -25,43 +25,44 @@ final messageRepositoryProvider = Provider<MessageRepository>((ref) {
 /// Хэрэглэгчийн бүх conversation-ууд.
 final conversationsProvider =
     FutureProvider.family<List<MarketConversation>, String>((
-  ref,
-  userId,
-) async {
-  final repository = ref.watch(messageRepositoryProvider);
-  final result = await repository.fetchConversations(userId);
-  return result.getOrThrow();
-});
+      ref,
+      userId,
+    ) async {
+      final repository = ref.watch(messageRepositoryProvider);
+      final result = await repository.fetchConversations(userId);
+      return result.getOrThrow();
+    });
 
 /// Нэг conversation-ийг авах.
-final conversationProvider =
-    FutureProvider.family<MarketConversation?, String>((
-  ref,
-  conversationId,
-) async {
-  final repository = ref.watch(messageRepositoryProvider);
-  final result = await repository.fetchConversation(conversationId);
-  return result.getOrThrow();
-});
+final conversationProvider = FutureProvider.family<MarketConversation?, String>(
+  (ref, conversationId) async {
+    final repository = ref.watch(messageRepositoryProvider);
+    final result = await repository.fetchConversation(conversationId);
+    return result.getOrThrow();
+  },
+);
 
 /// Тухайн зарын эсвэл хаяж морины мэдээний conversation-ийг олох.
 final findConversationProvider =
     FutureProvider.family<MarketConversation?, _ConversationLookup>((
-  ref,
-  lookup,
-) async {
-  final repository = ref.watch(messageRepositoryProvider);
-  final result = await repository.findConversation(
-    listingId: lookup.listingId,
-    reportId: lookup.reportId,
-    buyerId: lookup.buyerId,
-    sellerId: lookup.sellerId,
-  );
-  return result.getOrThrow();
-});
+      ref,
+      lookup,
+    ) async {
+      final repository = ref.watch(messageRepositoryProvider);
+      final result = await repository.findConversation(
+        listingId: lookup.listingId,
+        reportId: lookup.reportId,
+        buyerId: lookup.buyerId,
+        sellerId: lookup.sellerId,
+      );
+      return result.getOrThrow();
+    });
 
 /// Уншаагүй зурвасын тоо.
-final unreadCountProvider = FutureProvider.family<int, String>((ref, userId) async {
+final unreadCountProvider = FutureProvider.family<int, String>((
+  ref,
+  userId,
+) async {
   final repository = ref.watch(messageRepositoryProvider);
   final result = await repository.getUnreadCount(userId);
   return result.getOrThrow();
@@ -92,26 +93,27 @@ final messagesProvider = FutureProvider.family<List<MarketMessage>, String>((
 /// бүрт шинэчлэн харуулна.
 final messageStreamProvider =
     StreamProvider.family<List<MarketMessage>, String>((
-  ref,
-  conversationId,
-) async* {
-  final repository = ref.watch(messageRepositoryProvider);
+      ref,
+      conversationId,
+    ) async* {
+      final repository = ref.watch(messageRepositoryProvider);
 
-  // Эхний ачаалал
-  final initialResult = await repository.fetchMessages(conversationId);
-  yield initialResult.getOrThrow();
+      // Эхний ачаалал
+      final initialResult = await repository.fetchMessages(conversationId);
+      yield initialResult.getOrThrow();
 
-  // Isar stream-ээр дамжуулан шинэ зурвасуудыг сонсож, бүрт шинэчлэнэ
-  await for (final _ in repository.messageStream(conversationId)) {
-    final result = await repository.fetchMessages(conversationId);
-    yield result.getOrThrow();
-  }
-});
+      // Isar stream-ээр дамжуулан шинэ зурвасуудыг сонсож, бүрт шинэчлэнэ
+      await for (final _ in repository.messageStream(conversationId)) {
+        final result = await repository.fetchMessages(conversationId);
+        yield result.getOrThrow();
+      }
+    });
 
 // ── Notifiers ────────────────────────────────────────────────────
 
 /// Шинэ conversation үүсгэх, эсвэл байгаа бол буцаах.
-class ConversationNotifier extends StateNotifier<AsyncValue<MarketConversation?>> {
+class ConversationNotifier
+    extends StateNotifier<AsyncValue<MarketConversation?>> {
   ConversationNotifier(this._ref) : super(const AsyncValue.data(null));
 
   final Ref _ref;
@@ -151,19 +153,19 @@ class ConversationNotifier extends StateNotifier<AsyncValue<MarketConversation?>
 }
 
 final conversationNotifierProvider =
-    StateNotifierProvider<ConversationNotifier, AsyncValue<MarketConversation?>>((
-  ref,
-) {
-  return ConversationNotifier(ref);
-});
+    StateNotifierProvider<
+      ConversationNotifier,
+      AsyncValue<MarketConversation?>
+    >((ref) {
+      return ConversationNotifier(ref);
+    });
 
 // ── Helper types ─────────────────────────────────────────────────
 
 class _ConversationLookup {
-  const _ConversationLookup({
-    required this.buyerId,
-    required this.sellerId,
-  }) : reportId = null, listingId = null;
+  const _ConversationLookup({required this.buyerId, required this.sellerId})
+    : reportId = null,
+      listingId = null;
 
   final String? listingId;
   final String? reportId;

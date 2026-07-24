@@ -92,9 +92,7 @@ void main() {
     testWidgets('shows user\'s events in dashboard', (tester) async {
       await tester.pumpWidget(
         buildTestApp([
-          partnerEventsProvider.overrideWith(
-            (ref) async => [_event1],
-          ),
+          partnerEventsProvider.overrideWith((ref) async => [_event1]),
         ]),
       );
       await tester.pumpAndSettle();
@@ -106,9 +104,7 @@ void main() {
     testWidgets('shows empty state when no events', (tester) async {
       await tester.pumpWidget(
         buildTestApp([
-          partnerEventsProvider.overrideWith(
-            (ref) async => <Event>[],
-          ),
+          partnerEventsProvider.overrideWith((ref) async => <Event>[]),
         ]),
       );
       await tester.pumpAndSettle();
@@ -119,9 +115,7 @@ void main() {
     testWidgets('shows date for each event', (tester) async {
       await tester.pumpWidget(
         buildTestApp([
-          partnerEventsProvider.overrideWith(
-            (ref) async => [_event1],
-          ),
+          partnerEventsProvider.overrideWith((ref) async => [_event1]),
         ]),
       );
       await tester.pumpAndSettle();
@@ -134,9 +128,7 @@ void main() {
     testWidgets('shows Арга хэмжээ нэмэх button', (tester) async {
       await tester.pumpWidget(
         buildTestApp([
-          partnerEventsProvider.overrideWith(
-            (ref) async => [_event1],
-          ),
+          partnerEventsProvider.overrideWith((ref) async => [_event1]),
         ]),
       );
       await tester.pumpAndSettle();
@@ -152,8 +144,9 @@ void main() {
       mockRepo = MockEventRepository();
     });
 
-    testWidgets('toggling isFeatured star icon calls saveEvent',
-        (tester) async {
+    testWidgets('toggling isFeatured star icon calls saveEvent', (
+      tester,
+    ) async {
       final event = Event(
         id: 'evt-1',
         horseId: 'h1',
@@ -168,12 +161,8 @@ void main() {
 
       await tester.pumpWidget(
         buildTestApp([
-          localEventRepositoryProvider.overrideWith(
-            (ref) => mockRepo,
-          ),
-          partnerEventsProvider.overrideWith(
-            (ref) async => [event],
-          ),
+          localEventRepositoryProvider.overrideWith((ref) => mockRepo),
+          partnerEventsProvider.overrideWith((ref) async => [event]),
         ]),
       );
       await tester.pumpAndSettle();
@@ -196,12 +185,8 @@ void main() {
     testWidgets('shows registration count per event', (tester) async {
       await tester.pumpWidget(
         buildTestApp([
-          partnerEventsProvider.overrideWith(
-            (ref) async => [_event1],
-          ),
-          registrationCountProvider(_event1.id).overrideWith(
-            (ref) async => 5,
-          ),
+          partnerEventsProvider.overrideWith((ref) async => [_event1]),
+          registrationCountProvider(_event1.id).overrideWith((ref) async => 5),
         ]),
       );
       await tester.pumpAndSettle();

@@ -1,15 +1,11 @@
 "use client";
 
+import { parseCurrencyInput } from "@zuiio/core";
+import { InlineEditableField } from "@zuiio/ui";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { formatMNT } from "@/lib/utils";
-import { InlineEditableField } from "@zuiio/ui";
-
-/** Strip ₮ prefix and non-digit characters for price parsing */
-function parseMNT(raw: string): number {
-  return Number(raw.replace(/[^\d.-]/g, ""));
-}
 
 interface WorkOrderListHeaderProps {
   name: string;
@@ -89,7 +85,7 @@ export function WorkOrderRow({
         <InlineEditableField
           value={price}
           formatDisplay={(v) => formatMNT(v)}
-          parseInput={parseMNT}
+          parseInput={parseCurrencyInput}
           onSave={onPriceSave}
           className="font-semibold text-right"
         />

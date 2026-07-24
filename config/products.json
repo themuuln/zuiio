@@ -1,0 +1,539 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"products": {
+		"zer": {
+			"name": {
+				"en": "Zer",
+				"mn": "Зэр"
+			},
+			"tagline": {
+				"en": "Business management for Mongolian SMEs: inventory, sales, expenses, customers, and reporting in one system.",
+				"mn": "Монголын ЖДҮ-д зориулсан бизнесийн удирдлага — бараа материал, борлуулалт, зарлага, харилцагч, тайланг нэг системд."
+			},
+			"description": {
+				"en": "Mini ERP for Mongolian SMEs — inventory, sales, expenses, customers, and reports.",
+				"mn": "Монголын ЖДҮ-д зориулсан бизнесийн удирдлага — бараа материал, борлуулалт, зарлага, харилцагч, тайлан."
+			},
+			"domain": "zer.zuiiotech.com",
+			"features": [
+				{
+					"key": "1",
+					"title": {
+						"en": "Inventory & Stock Management",
+						"mn": "Бараа материал ба үлдэгдэл"
+					},
+					"description": {
+						"en": "Track products, categories, units, and stock levels in real time. Automatic stock counts, product codes, price history, and low-stock alerts.",
+						"mn": "Бүтээгдэхүүн, ангилал, нэгж, үлдэгдлээ бодит цагт хянаарай. Автомат тооллого, барааны код, үнийн түүх, нөөц багасах үеийн сануулгатай."
+					}
+				},
+				{
+					"key": "2",
+					"title": {
+						"en": "Sales & POS",
+						"mn": "Борлуулалт ба POS"
+					},
+					"description": {
+						"en": "Create sales with multi-line entry, customer selection, and payment tracking. Shop POS module with product catalog, cart, checkout, and receipt printing for retail.",
+						"mn": "Олон мөрт борлуулалт үүсгэж, харилцагч болон төлбөрөө бүртгэнэ. Дэлгүүрийн модульд барааны каталог, сагс, тооцоо, баримт хэвлэх боломж бий."
+					}
+				},
+				{
+					"key": "3",
+					"title": {
+						"en": "Expense Tracking",
+						"mn": "Зарлагын бүртгэл"
+					},
+					"description": {
+						"en": "Log expenses by category, amount, date, and payment method. Monthly expense reports with comparisons and CSV export.",
+						"mn": "Зарлагыг төрөл, дүн, огноо, төлбөрийн хэлбэрээр бүртгэнэ. Сарын тайлан, харьцуулалт, CSV экспорттой."
+					}
+				},
+				{
+					"key": "4",
+					"title": {
+						"en": "Customer & Supplier Management",
+						"mn": "Харилцагч ба нийлүүлэгч"
+					},
+					"description": {
+						"en": "Detailed profiles with contact info, balance tracking, and full transaction history for both customers and suppliers.",
+						"mn": "Харилцагч, нийлүүлэгч бүрийн холбоо барих мэдээлэл, үлдэгдэл, гүйлгээний бүрэн түүхийг нэг дор хадгална."
+					}
+				},
+				{
+					"key": "5",
+					"title": {
+						"en": "Reports & Analytics",
+						"mn": "Тайлан ба аналитик"
+					},
+					"description": {
+						"en": "Sales, expense, and profit reports with charts and graphs. Date range filtering, CSV export, and public share links.",
+						"mn": "Борлуулалт, зарлага, ашгийн тайланг график, диаграммаар харна. Огноогоор шүүж, CSV экспортлон, нийтийн холбоосоор хуваалцаж болно."
+					}
+				},
+				{
+					"key": "6",
+					"title": {
+						"en": "Multi-Branch Support",
+						"mn": "Олон салбарын дэмжлэг"
+					},
+					"description": {
+						"en": "Manage multiple physical locations with isolated transactions per branch. Consolidated accounting view across all branches.",
+						"mn": "Салбар бүрийн гүйлгээг тусад нь удирдаж, бүх салбарын нэгдсэн дүр зургийг харна."
+					}
+				},
+				{
+					"key": "7",
+					"title": {
+						"en": "Telegram AI Agent",
+						"mn": "Хиймэл оюун ухааны агент"
+					},
+					"description": {
+						"en": "Ask business questions in Mongolian via Telegram — the AI agent answers from your real data. 'What's today's sales?', 'Low stock items', 'Pending payments' — all answered in real time.",
+						"mn": "Телеграмаар асуултаа бичээрэй — АИ агент таны бараа, борлуулалт, зарлага, харилцагчийн өгөгдлөөс хариулна. 'Өнөөдрийн борлуулалт хэд вэ?', 'Нөөц багассан бараа' гэх мэт асуултуудад бодит цагт хариулна."
+					}
+				}
+			],
+			"agent": {
+				"enabled": true,
+				"readTools": [
+					"getSalesSummary",
+					"getPendingSales",
+					"getTodaySales",
+					"getSalesByCategory"
+				],
+				"writeTools": [
+					"createSale",
+					"recordPayment"
+				],
+				"systemPromptCapabilities": [
+					"Sales queries",
+					"Expense tracking",
+					"Customer lookup"
+				]
+			}
+		},
+		"tolom": {
+			"name": {
+				"en": "Tolom",
+				"mn": "Толом"
+			},
+			"tagline": {
+				"en": "Auto repair shop management for Mongolia. Repair-bay scheduling, work orders, parts, estimates, and mechanic tracking in one tool.",
+				"mn": "Авто засварын газрын удирдлага — засварын зогсоолын хуваарь, ажлын захиалга, сэлбэг, үнийн тооцоо, механикийн хяналтыг нэг дор."
+			},
+			"description": {
+				"en": "Auto repair shop management — bay view, work orders, parts, estimates, and mechanic tracking.",
+				"mn": "Авто засварын газрын удирдлага — засварын зогсоолын хуваарь, ажлын захиалга, сэлбэг, үнийн тооцоо, механикийн хяналт."
+			},
+			"domain": "tolom.zuiiotech.com",
+			"features": [
+				{
+					"key": "1",
+					"title": {
+						"en": "Bay View Workshop",
+						"mn": "Засварын зогсоолын харагдац"
+					},
+					"description": {
+						"en": "Visual bay management with Grid, Kanban, and List views. Drag-and-drop vehicle and mechanic assignment, queue management, and post-service workflows.",
+						"mn": "Grid, Kanban, List гэсэн гурван харагдацтай. Тээврийн хэрэгсэл, механикийг чирж байрлуулж, дараалал болон засварын дараах ажлыг удирдана."
+					}
+				},
+				{
+					"key": "2",
+					"title": {
+						"en": "Work Orders",
+						"mn": "Ажлын захиалга"
+					},
+					"description": {
+						"en": "Full lifecycle management — create, assign, track status transitions, log services and parts used. Complete repair history for every vehicle.",
+						"mn": "Захиалга үүсгэж, хуваарилж, төлөвийн өөрчлөлт, үйлчилгээ, ашигласан сэлбэгийг бүртгэнэ. Тээврийн хэрэгсэл бүрийн засварын түүх хадгалагдана."
+					}
+				},
+				{
+					"key": "3",
+					"title": {
+						"en": "Parts & Inventory",
+						"mn": "Сэлбэг ба агуулах"
+					},
+					"description": {
+						"en": "Parts catalog with stock management, purchase orders, reorder alerts, and supplier management. Never run out of common parts.",
+						"mn": "Сэлбэгийн каталог, үлдэгдэл, худалдан авалтын захиалга, дахин захиалах сануулга, ханган нийлүүлэгчээ удирдана."
+					}
+				},
+				{
+					"key": "4",
+					"title": {
+						"en": "Estimates & Invoicing",
+						"mn": "Үнийн тооцоо ба нэхэмжлэл"
+					},
+					"description": {
+						"en": "Create quotes, turn them into work orders, issue invoices, and track payments — all connected to your accounting.",
+						"mn": "Үнийн санал гаргаж, ажлын захиалга болгон хөрвүүлж, нэхэмжлэл үүсгэн төлбөрөө хянана. Нягтлан бодох бүртгэлтэй уялдана."
+					}
+				},
+				{
+					"key": "5",
+					"title": {
+						"en": "Customer & Vehicle Management",
+						"mn": "Харилцагч ба тээврийн хэрэгсэл"
+					},
+					"description": {
+						"en": "Store vehicle info, full service history, and customer contact details. Plate search, service reminders, and history tracking.",
+						"mn": "Тээврийн хэрэгслийн мэдээлэл, үйлчилгээний түүх, харилцагчийн холбоо барих мэдээллийг хадгална. Улсын дугаараар хайж, сануулга тохируулж болно."
+					}
+				},
+				{
+					"key": "6",
+					"title": {
+						"en": "Mechanic Management",
+						"mn": "Механикийн удирдлага"
+					},
+					"description": {
+						"en": "Daily reports, clock in/out, work queue, and performance tracking. Assign mechanics to bays and track labor efficiency.",
+						"mn": "Өдрийн тайлан, ирэх/явах цаг, ажлын дараалал, гүйцэтгэлийг хянаарай. Механикийг засварын зогсоолд хуваарилж, хөдөлмөрийн үр ашгийг харна."
+					}
+				},
+				{
+					"key": "7",
+					"title": {
+						"en": "Telegram AI Agent",
+						"mn": "Хиймэл оюун ухааны агент"
+					},
+					"description": {
+						"en": "Ask business questions in Mongolian via Telegram — the AI agent answers from your real data. 'What's the top-selling part?', 'Today's summary', 'Customer details for Bat' — all answered in real time.",
+						"mn": "Телеграмаар бизнес асуултаа бичээрэй — АИ агент таны өгөгдлөөс хариулна. 'Хамгийн их орлого өгдөг сэлбэг юу вэ?', 'Өнөөдрийн хураангуй', 'Бат харилцагчийн мэдээлэл' гэх мэт асуултуудад бодит цагт хариулна."
+					}
+				}
+			],
+			"agent": {
+				"enabled": true,
+				"readTools": [
+					"getDailySummary",
+					"getActiveWorkOrders",
+					"getCustomerHistory",
+					"getInvoiceStatus",
+					"getExpensesSummary",
+					"getAppointments",
+					"getMechanics",
+					"getWorkOrderDetails",
+					"getSuppliers",
+					"queryData",
+					"getVehicleAnalytics",
+					"getFinancialSummary",
+					"exportData",
+					"partsLookup",
+					"getSparePartsSales"
+				],
+				"writeTools": [
+					"createWorkOrder",
+					"updateWorkOrderStatus",
+					"createInvoice",
+					"updateWorkOrderDetails",
+					"recordPayment",
+					"createAppointment",
+					"sendInvoicePdf",
+					"createReminder",
+					"bulkUpdateWorkOrderStatus"
+				],
+				"systemPromptCapabilities": [
+					"Work order management",
+					"Appointment scheduling",
+					"Invoice creation",
+					"Customer lookup",
+					"Parts inventory",
+					"Financial summaries"
+				]
+			}
+		},
+		"tumurch": {
+			"name": {
+				"en": "Tumurch",
+				"mn": "Түмүрч"
+			},
+			"tagline": {
+				"en": "All-in-one gym platform: workout logging and coaching for members, plus gym operations — reception, memberships, billing, shop/POS, and access control.",
+				"mn": "Гишүүдийн дасгал, дасгалжуулалт болон фитнесийн өдөр тутмын ажлыг нэгтгэсэн платформ — хүлээн авалт, гишүүнчлэл, төлбөр, дэлгүүр/POS, нэвтрэх эрх."
+			},
+			"description": {
+				"en": "All-in-one gym platform — workout logging, coaching, memberships, billing, and access control.",
+				"mn": "Дасгалын бүртгэл, дасгалжуулалт, гишүүнчлэл, төлбөр, нэвтрэх хяналтыг нэгтгэсэн фитнесийн платформ."
+			},
+			"domain": "tumurch.zuiiotech.com",
+			"features": [
+				{
+					"key": "1",
+					"title": {
+						"en": "Workout Logging",
+						"mn": "Дасгалын бүртгэл"
+					},
+					"description": {
+						"en": "Workout logging with an exercise library, set tracking, progress photos, and personal records. Members can track every rep.",
+						"mn": "Дасгалын сан, сетийн бүртгэл, ахицын зураг, хувийн рекордтой. Гишүүд дасгал бүрээ хянах боломжтой."
+					}
+				},
+				{
+					"key": "2",
+					"title": {
+						"en": "Coaching & Programming",
+						"mn": "Дасгалжуулалт ба хөтөлбөр"
+					},
+					"description": {
+						"en": "Trainers create programs, assign workouts, and track member progress. Real-time feedback and communication built in.",
+						"mn": "Дасгалжуулагч хөтөлбөр зохиож, гишүүдэд хуваарилан, ахицыг нь хянадаг. Санал хүсэлт, харилцаа ч нэг дор."
+					}
+				},
+				{
+					"key": "3",
+					"title": {
+						"en": "Membership & Billing",
+						"mn": "Гишүүнчлэл ба төлбөр"
+					},
+					"description": {
+						"en": "Flexible memberships, automated billing, payment tracking, and dunning for sign-ups, renewals, and cancellations.",
+						"mn": "Уян хатан гишүүнчлэлийн багц, автомат төлбөр тооцоо, төлбөрийн хяналттай. Бүртгэл, сунгалт, цуцлалтыг хялбар удирдана."
+					}
+				},
+				{
+					"key": "4",
+					"title": {
+						"en": "Reception & Check-in",
+						"mn": "Хүлээн авалт ба бүртгэл"
+					},
+					"description": {
+						"en": "Front desk management with QR code check-in, guest passes, day passes, and visitor logging.",
+						"mn": "QR кодоор бүртгэх, зочны болон өдрийн эрх олгох, зочдын бүртгэл хөтлөх хүлээн авалтын удирдлага."
+					}
+				},
+				{
+					"key": "5",
+					"title": {
+						"en": "Shop / POS / Inventory",
+						"mn": "Дэлгүүр / POS / Бараа материал"
+					},
+					"description": {
+						"en": "Sell supplements, merch, and services. Integrated POS with inventory tracking, supplier management, and sales reports.",
+						"mn": "Нэмэлт бүтээгдэхүүн, хувцас, үйлчилгээг зарна. POS нь бараа материалын хяналт, ханган нийлүүлэгч, борлуулалтын тайлантай уялдана."
+					}
+				},
+				{
+					"key": "6",
+					"title": {
+						"en": "Access Control",
+						"mn": "Нэвтрэх хяналт"
+					},
+					"description": {
+						"en": "Integrate with door systems and turnstiles. Grant or revoke access based on membership status and payment.",
+						"mn": "Хаалга, турникетийн системтэй холбож, гишүүнчлэл болон төлбөрийн төлөвөөс нь шалтгаалан нэвтрэх эрх олгох эсвэл цуцална."
+					}
+				}
+			],
+			"agent": {
+				"enabled": false,
+				"readTools": [],
+				"writeTools": [],
+				"systemPromptCapabilities": []
+			}
+		},
+		"tamga": {
+			"name": {
+				"en": "Tamga",
+				"mn": "Тамга"
+			},
+			"tagline": {
+				"en": "Horse management for herders: bloodlines, health records, training, and performance. Part of the Zuiio family.",
+				"mn": "Малчдад зориулсан морьны удирдлагын систем — угсаа гарвал, эрүүл мэнд, сургалт, амжилтаа хянаарай. Zuiio-ийн нэг хэсэг."
+			},
+			"description": {
+				"en": "Horse management system for herders — bloodlines, health, training, performance.",
+				"mn": "Малчдад зориулсан морьны удирдлагын систем — угсаа гарвал, эрүүл мэнд, сургалт, амжилт."
+			},
+			"domain": "tamga.zuiiotech.com",
+			"features": [
+				{
+					"key": "1",
+					"title": {
+						"en": "Horse Registry",
+						"mn": "Морийн бүртгэл"
+					},
+					"description": {
+						"en": "Register horses with full profiles — breed, color, age, markings, ownership history, and photo gallery.",
+						"mn": "Үүлдэр, өнгө, нас, онцлог шинж, эзэмшлийн түүх, зургийг багтаасан дэлгэрэнгүй профайл үүсгэнэ."
+					}
+				},
+				{
+					"key": "2",
+					"title": {
+						"en": "Bloodline Tracking",
+						"mn": "Угсаа гарвалын бүртгэл"
+					},
+					"description": {
+						"en": "Family trees, pedigree tracking, and breeding records. Visualize lineage across generations.",
+						"mn": "Ургийн мод, угсаа гарвал, үржлийн бүртгэлээ хөтөлж, удамшлыг үе дамнуулан харна."
+					}
+				},
+				{
+					"key": "3",
+					"title": {
+						"en": "Health Records",
+						"mn": "Эрүүл мэндийн бүртгэл"
+					},
+					"description": {
+						"en": "Vaccination schedules, vet visits, treatments, and medication logs. Never miss a health milestone.",
+						"mn": "Вакцины хуваарь, малын эмчийн үзлэг, эмчилгээ, эмийн бүртгэлийг хөтөлнө. Чухал товыг бүү алдаарай."
+					}
+				},
+				{
+					"key": "4",
+					"title": {
+						"en": "Training Logs",
+						"mn": "Дасгалын тэмдэглэл"
+					},
+					"description": {
+						"en": "Track training sessions, exercises, intensity, and rest days. Monitor performance trends over time.",
+						"mn": "Дасгалын үе, ачаалал, амралтын өдрийг бүртгэж, гүйцэтгэлийн чиг хандлагыг цаг хугацааны явцад хянана."
+					}
+				},
+				{
+					"key": "5",
+					"title": {
+						"en": "Performance Stats",
+						"mn": "Амжилтын үзүүлэлт"
+					},
+					"description": {
+						"en": "Race results, competition records, and performance metrics. Compare across horses and time periods.",
+						"mn": "Уралдааны дүн, тэмцээний бүртгэл, гүйцэтгэлийн үзүүлэлтийг морь болон хугацаагаар харьцуулна."
+					}
+				},
+				{
+					"key": "6",
+					"title": {
+						"en": "Offline-First Mobile",
+						"mn": "Офлайн гар утасны апп"
+					},
+					"description": {
+						"en": "Works in remote pastures with no internet. Data syncs automatically when you reconnect.",
+						"mn": "Алслагдсан бэлчээрт интернэтгүй ажиллана. Холболт сэргэсэн үед өгөгдөл автоматаар синк хийнэ."
+					}
+				}
+			],
+			"agent": {
+				"enabled": false,
+				"readTools": [],
+				"writeTools": [],
+				"systemPromptCapabilities": []
+			}
+		},
+		"zuiio-id": {
+			"name": {
+				"en": "Zuiio ID",
+				"mn": "Зуиио ID"
+			},
+			"tagline": {
+				"en": "One account for all Zuiio products. Email, Google, Apple, Passkeys — sign in your way. Built for Mongolian businesses.",
+				"mn": "Бүх Zuiio бүтээгдэхүүнд нэг данс. Имэйл, Google, Apple, Passkey — хэрхэн нэвтрэхээ сонгоорой. Монгол бизнесийн тусгайлан бүтээсэн."
+			},
+			"description": {
+				"en": "Central identity platform — SSO, organization management, passkeys, MFA.",
+				"mn": "Нэгдсэн таних платформ — нэвтрэх, байгууллагын удирдлага, passkey, MFA."
+			},
+			"domain": "id.zuiiotech.com",
+			"features": [
+				{
+					"key": "1",
+					"title": {
+						"en": "5 Ways to Sign In",
+						"mn": "5 нэвтрэх арга"
+					},
+					"description": {
+						"en": "Email & password, Google, Apple, Passkeys (biometric), or magic links. Users choose what's easiest.",
+						"mn": "Имэйл + нууц үг, Google, Apple, Passkey (биометр), эсвэл magic link. Хэрэглэгч хялбарыг нь сонгоно."
+					}
+				},
+				{
+					"key": "2",
+					"title": {
+						"en": "One Account, All Products",
+						"mn": "Нэг данс, бүх бүтээгдэхүүн"
+					},
+					"description": {
+						"en": "Sign in once to Zer, Tolom, Tumurch, Tamga — any Zuiio product. No more password fatigue.",
+						"mn": "Зер, Толом, Тумурч, Тамга — бүх Zuiio бүтээгдэхүүнд нэг удаа нэвтэрнэ. Нууц үгийн ядаргаа байхгүй."
+					}
+				},
+				{
+					"key": "3",
+					"title": {
+						"en": "Team Management",
+						"mn": "Багийн удирдлага"
+					},
+					"description": {
+						"en": "Create organizations, invite members by email, assign roles (owner, admin, member). Control who accesses what.",
+						"mn": "Байгууллага үүсгэж, гишүүдээ имэйлээр урьж, үүрэг оноох (эзэн, админ, гишүүн). Хэнд юу хандалттайгаа хянаарай."
+					}
+				},
+				{
+					"key": "4",
+					"title": {
+						"en": "Multi-Factor Authentication",
+						"mn": "Олон хүчин зүйлийн баталгаажуулалт"
+					},
+					"description": {
+						"en": "TOTP-based 2FA with authenticator apps. Backup codes for recovery. Optional but recommended.",
+						"mn": "TOTP-д суурилсан 2FA, нөөц код. Сонголттой боловч зөвлөж байна."
+					}
+				},
+				{
+					"key": "5",
+					"title": {
+						"en": "Passkey Support",
+						"mn": "Passkey дэмжлэг"
+					},
+					"description": {
+						"en": "Passwordless login with Face ID, Touch ID, or security keys. Faster than passwords, safer than SMS.",
+						"mn": "Нүүр таних, хурууны хээ, эсвэл security key-гаар нууц үггүй нэвтрэх. Нууц үгнээс хурдан, SMS-ээс аюулгүй."
+					}
+				},
+				{
+					"key": "6",
+					"title": {
+						"en": "Audit Trail",
+						"mn": "Аудитын мөр"
+					},
+					"description": {
+						"en": "Every login, every permission change, every API call — logged with IP and timestamp. Compliance ready.",
+						"mn": "Бүх нэвтрэлт, бүх зөвшөөрлийн өөрчлөлт, бүх API дуудлага — IP цагийн хамт бүртгэгдэнэ. Compliance-д бэлэн."
+					}
+				}
+			],
+			"agent": {
+				"enabled": false,
+				"readTools": [],
+				"writeTools": [],
+				"systemPromptCapabilities": []
+			}
+		},
+		"onoo": {
+			"name": {
+				"en": "Onöö",
+				"mn": "Онөө"
+			},
+			"tagline": {
+				"en": "",
+				"mn": ""
+			},
+			"description": {
+				"en": "",
+				"mn": ""
+			},
+			"domain": "onoo.zuiiotech.com",
+			"features": [],
+			"agent": {
+				"enabled": false,
+				"readTools": [],
+				"writeTools": [],
+				"systemPromptCapabilities": []
+			}
+		}
+	}
+}

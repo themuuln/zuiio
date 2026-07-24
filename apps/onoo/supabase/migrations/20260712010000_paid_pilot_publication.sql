@@ -2,6 +2,13 @@
 -- Adds v_public_player_profiles and v_public_play_by_play.
 -- Both use security_invoker and expose only league_verified|official approved revisions.
 
+-- Ensure season_player_stats has ftp column (may be missing on clean schema)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema='public' AND table_name='season_player_stats' AND column_name='ftp') THEN
+    ALTER TABLE public.season_player_stats ADD COLUMN ftp real;
+  END IF;
+END $$;
+
 -- v_public_player_profiles: aggregate player profile across published games
 create or replace view public.v_public_player_profiles
 with (security_invoker = true) as

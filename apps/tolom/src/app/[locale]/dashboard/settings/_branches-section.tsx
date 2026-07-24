@@ -4,7 +4,7 @@ import { GitBranch, Loader2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
-import { QuickCreateBranchSheet } from "@/components/branches/quick-create-branch-drawer";
+import { QuickCreateBranchDrawer } from "@/components/branches/quick-create-branch-drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,7 +45,10 @@ interface BranchesSectionProps {
 }
 
 export function BranchesSection({ orgId }: BranchesSectionProps) {
-  const t = useTranslations("settings");
+  const t = useTranslations("settings") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { data: branches, isLoading, error } = useBranches(orgId);
   const { settings: orgSettings, isLoading: settingsLoading } =
     useOrgSettings(orgId);
@@ -179,7 +182,7 @@ export function BranchesSection({ orgId }: BranchesSectionProps) {
       )}
 
       {/* Add Branch Dialog */}
-      <QuickCreateBranchSheet
+      <QuickCreateBranchDrawer
         open={addBranchOpen}
         onOpenChange={setAddBranchOpen}
         orgId={orgId}

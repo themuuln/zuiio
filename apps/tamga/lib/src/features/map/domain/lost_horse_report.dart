@@ -277,11 +277,14 @@ class LostHorseReport {
         (e) => e.name == (json['animal_type'] as String? ?? 'horse'),
         orElse: () => AnimalType.horse,
       ),
-      ages: (json['animal_ages'] as List<dynamic>?)
-              ?.map((e) => AnimalAge.values.firstWhere(
-                    (a) => a.name == e as String,
-                    orElse: () => AnimalAge.unaga,
-                  ))
+      ages:
+          (json['animal_ages'] as List<dynamic>?)
+              ?.map(
+                (e) => AnimalAge.values.firstWhere(
+                  (a) => a.name == e as String,
+                  orElse: () => AnimalAge.unaga,
+                ),
+              )
               .toList() ??
           [],
       gender: json['gender'] != null
@@ -299,12 +302,8 @@ class LostHorseReport {
       coatColor: json['coat_color'] as String?,
       lostCount: (json['lost_count'] as num?)?.toInt() ?? 1,
       // ── Media ──
-      photoUrls: (json['photo_urls'] as List<dynamic>?)
-              ?.cast<String>() ??
-          [],
-      videoUrls: (json['video_urls'] as List<dynamic>?)
-              ?.cast<String>() ??
-          [],
+      photoUrls: (json['photo_urls'] as List<dynamic>?)?.cast<String>() ?? [],
+      videoUrls: (json['video_urls'] as List<dynamic>?)?.cast<String>() ?? [],
       // ── Tamga / Identification ──
       tamgaImageUrl: json['tamga_image_url'] as String?,
       earMarkDescription: json['ear_mark_description'] as String?,

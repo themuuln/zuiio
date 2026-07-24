@@ -163,8 +163,9 @@ export async function updatePurchaseOrder(
   id: string,
   orgId: string,
   params: UpdatePurchaseOrderParams,
+  userId_?: string,
 ): Promise<PurchaseOrder> {
-  const userId = (await db.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
   if (!userId) throw new NotFoundError("Not authenticated");
   return updateCrud.update(db, orgId, id, params, userId);
 }
@@ -177,8 +178,9 @@ export async function receivePurchaseOrder(
   db: SupabaseClient,
   id: string,
   orgId: string,
+  userId_?: string,
 ): Promise<PurchaseOrder> {
-  const userId = (await db.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
 
   // Get PO items
   const { data: items } = await db
@@ -276,4 +278,112 @@ export async function receivePurchaseOrder(
   revalidateTag(cacheTags.purchaseOrders(orgId), "max");
   revalidateTag(cacheTags.inventoryBalances(orgId), "max");
   return data as unknown as PurchaseOrder;
+}
+/**
+ * Receive a single PO item by scanning its barcode.
+ * Matches the barcode against parts_catalog, finds the open PO line item,
+ * and increments quantity_received by 1 (or until quantity_ordered reached).
+ */
+export async function receiveByBarcode(
+  db: SupabaseClient,
+  poId: string,
+  orgId: string,
+  barcode: string,
+  userId_?: string,
+): Promise<PurchaseOrderItem> {
+  const userId = userId_ ?? (await db.auth.getUser()).data.user?.id;
+
+  // Find part by barcode
+  const { data: part, error: partError } = await db
+    .from("parts_catalog")
+    .select("id, name")
+    .eq("organization_id", orgId)
+    .eq("barcode", barcode.trim())
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (partError || !part) {
+    throw new ValidationError(`No part found with barcode: ${barcode}`);
+  }
+
+  // Find open PO line item for this part
+  const { data: poItem, error: itemError } = await db
+    .from("purchase_order_items")
+    .select("id, part_id, quantity_ordered, quantity_received, unit_cost")
+    .eq("purchase_order_id", poId)
+    .eq("part_id", part.id)
+    .single();
+
+  if (itemError || !poItem) {
+    throw new ValidationError(`This PO does not contain part: ${part.name}`);
+  }
+
+  const remaining = poItem.quantity_ordered - poItem.quantity_received;
+  if (remaining <= 0) {
+    throw new ValidationError(`Already fully received: ${part.name}`);
+  }
+
+  const newReceived = poItem.quantity_received + 1;
+
+  // Create inventory movement
+  const { error: mvError } = await db.from("inventory_movements").insert({
+    organization_id: orgId,
+    part_id: part.id,
+    movement_type: "purchase",
+    quantity: 1,
+    unit_cost: poItem.unit_cost,
+    reference_type: "purchase_order",
+    reference_id: poId,
+    created_by: userId,
+  });
+  if (mvError) throw new Error(mvError.message);
+
+  // Update received quantity
+  const { data: updated, error: updError } = await db
+    .from("purchase_order_items")
+    .update({ quantity_received: newReceived, updated_by: userId })
+    .eq("id", poItem.id)
+    .select("id, part_id, quantity_ordered, quantity_received, unit_cost")
+    .single();
+
+  if (updError || !updated)
+    throw new Error(updError?.message ?? "Update failed");
+
+  // Update part last purchase price
+  await db
+    .from("parts_catalog")
+    .update({ last_purchase_price: poItem.unit_cost, updated_by: userId })
+    .eq("id", part.id);
+
+  // Check if all items received → update PO status
+  const { data: allItems } = await db
+    .from("purchase_order_items")
+    .select("quantity_ordered, quantity_received")
+    .eq("purchase_order_id", poId);
+
+  const allReceived =
+    allItems?.every((i) => i.quantity_received >= i.quantity_ordered) ?? false;
+
+  if (allReceived) {
+    await db
+      .from("purchase_orders")
+      .update({
+        status: "received",
+        received_at: new Date().toISOString(),
+        updated_by: userId,
+      })
+      .eq("id", poId)
+      .eq("organization_id", orgId);
+  } else {
+    await db
+      .from("purchase_orders")
+      .update({ status: "partial", updated_by: userId })
+      .eq("id", poId)
+      .eq("organization_id", orgId);
+  }
+
+  revalidateTag(cacheTags.purchaseOrders(orgId), "max");
+  revalidateTag(cacheTags.inventoryBalances(orgId), "max");
+
+  return updated as unknown as PurchaseOrderItem;
 }
