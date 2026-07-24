@@ -174,7 +174,7 @@ function CollapsibleLineItems({
 
 // ─── Component ────────────────────────────────────────────────
 
-export function WorkOrderDetailSheet({
+export function WorkOrderDetailDrawer({
   open,
   onOpenChange,
   workOrderId,

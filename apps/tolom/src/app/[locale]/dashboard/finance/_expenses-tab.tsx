@@ -1,8 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useExpenses, useExpenseStats } from "@/lib/queries/use-expenses";
-import { formatMNT } from "@/lib/utils";
 import {
   ArrowRight,
   Clock,
@@ -10,8 +7,17 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -21,17 +27,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
-  Empty,
-  EmptyContent,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { Typography } from "@/components/ui/typography";
-import { KpiCard } from "./_kpi-card";
 import { Link } from "@/lib/i18n/navigation";
+import { useExpenseStats, useExpenses } from "@/lib/queries/use-expenses";
+import { formatMNT } from "@/lib/utils";
+import { KpiCard } from "./_kpi-card";
 
 function ExpensesTab({ orgId }: { orgId: string | null }) {
   const t = useTranslations() as (

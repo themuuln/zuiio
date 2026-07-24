@@ -10,6 +10,7 @@ import {
   notifyPaymentReceived,
 } from "@/lib/services/push-triggers";
 import { calculateTax, getOrgTaxSettings } from "@/lib/services/tax-service";
+import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   Invoice,
   InvoiceItem,
@@ -86,27 +87,37 @@ export async function generateInvoiceNumber(
 ): Promise<string> {
   const supabase = db;
 
-  // Get org settings for prefix
-  const { data: settings } = await supabase
-    .from("organization_settings")
-    .select("invoice_prefix")
-    .eq("organization_id", orgId)
-    .maybeSingle();
+  const [settingsResult, lastInvoiceResult] = await Promise.all([
+    supabase
+      .from("organization_settings")
+      .select("invoice_prefix")
+      .eq("organization_id", orgId)
+      .maybeSingle(),
+    supabase
+      .from("invoices")
+      .select("invoice_number")
+      .eq("organization_id", orgId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single(),
+  ]);
 
-  const prefix = (settings?.invoice_prefix ?? "INV").trim();
+  if (settingsResult.error) {
+    reportServerError(
+      "Failed to fetch org settings for invoice number:",
+      settingsResult.error,
+    );
+    throw new Error(
+      `Failed to fetch org settings: ${settingsResult.error.message}`,
+    );
+  }
 
-  // Get the highest number for this org
-  const { data: lastInvoice } = await supabase
-    .from("invoices")
-    .select("invoice_number")
-    .eq("organization_id", orgId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+  const prefix = (settingsResult.data?.invoice_prefix ?? "INV").trim();
 
   let nextNum = 1;
-  if (lastInvoice?.invoice_number) {
-    const match = lastInvoice.invoice_number.match(/(\d+)$/);
+  // single() errors when no invoices exist yet (PGRST116) — that's fine
+  if (!lastInvoiceResult.error && lastInvoiceResult.data?.invoice_number) {
+    const match = lastInvoiceResult.data.invoice_number.match(/(\d+)$/);
     if (match) {
       nextNum = parseInt(match[1], 10) + 1;
     }
@@ -125,6 +136,7 @@ export async function getInvoices(
     status?: string;
     limit?: number;
     offset?: number;
+    branchId?: string;
   },
 ): Promise<InvoiceWithItems[]> {
   const supabase = db;
@@ -149,6 +161,10 @@ export async function getInvoices(
       options.offset,
       options.offset + (options.limit ?? 20) - 1,
     );
+  }
+
+  if (options?.branchId) {
+    query = withBranchFilter(query, options.branchId);
   }
 
   const { data, error } = await query;
@@ -280,31 +296,32 @@ export async function createInvoiceFromWorkOrder(
   userId_?: string,
 ): Promise<InvoiceWithItems> {
   const supabase = db;
-  const userId =
-    options?.userId ?? userId_ ?? (await supabase.auth.getUser()).data.user?.id;
-  // Fetch work order with all dependencies
-  const { data: wo } = await supabase
-    .from("work_orders")
-    .select(
-      "id, organization_id, status, customer_id, vehicle_id, discount_amount, nuat_enabled",
-    )
-    .eq("id", workOrderId)
-    .is("deleted_at", null)
-    .single()
+  const userId = userId_ ?? options?.userId;
+
+  const [woResult, existingResult] = await Promise.all([
+    supabase
+      .from("work_orders")
+      .select(
+        "id, organization_id, status, branch_id, customer_id, vehicle_id, discount_amount, nuat_enabled",
+      )
+      .eq("id", workOrderId)
+      .is("deleted_at", null)
+      .single(),
+    supabase
+      .from("invoices")
+      .select("id, invoice_number")
+      .eq("work_order_id", workOrderId)
+      .is("deleted_at", null)
+      .maybeSingle(),
+  ]);
+  const { data: wo } = woResult;
   if (!wo) throw new NotFoundError("Work order not found");
   if (wo.status !== "Completed" && wo.status !== "Ready for Pickup") {
     throw new ValidationError(
       "Work order must be Completed or Ready for Pickup to invoice",
     );
   }
-
-  // Check if invoice already exists for this work order
-  const { data: existing } = await supabase
-    .from("invoices")
-    .select("id, invoice_number")
-    .eq("work_order_id", workOrderId)
-    .is("deleted_at", null)
-    .maybeSingle();
+  const { data: existing } = existingResult;
 
   if (existing) {
     return getInvoice(db, existing.id);
@@ -349,21 +366,32 @@ export async function createInvoiceFromWorkOrder(
 
   // Calculate totals
   const svcTotal = (services ?? []).reduce(
-    (sum, s) => sum + Number(s.final_price),
+    (sum: number, s: { final_price: number | string }) =>
+      sum + Number(s.final_price),
     0,
   );
   const partsTotal = (parts ?? []).reduce(
-    (sum, p) => sum + Number(p.final_price),
+    (sum: number, p: { final_price: number | string }) =>
+      sum + Number(p.final_price),
     0,
   );
   const subtotal = svcTotal + partsTotal;
   const discountTotal =
     Number(wo.discount_amount ?? 0) +
     (services ?? []).reduce(
-      (sum, s) => sum + Number(s.discount_amount ?? 0),
+      (
+        sum: number,
+        s: { final_price?: number | string; discount_amount?: number | string },
+      ) => sum + Number(s.discount_amount ?? 0),
       0,
     ) +
-    (parts ?? []).reduce((sum, p) => sum + Number(p.discount_amount ?? 0), 0);
+    (parts ?? []).reduce(
+      (
+        sum: number,
+        p: { final_price?: number | string; discount_amount?: number | string },
+      ) => sum + Number(p.discount_amount ?? 0),
+      0,
+    );
 
   // Calculate НӨАТ (VAT) based on work order and org settings
   const orgSettings = await getOrgTaxSettings(supabase, orgId);
@@ -406,6 +434,7 @@ export async function createInvoiceFromWorkOrder(
         .insert({
           organization_id: orgId,
           work_order_id: workOrderId,
+          branch_id: wo.branch_id,
           customer_id: wo.customer_id,
           vehicle_id: wo.vehicle_id,
           invoice_number: invoiceNumber,
@@ -489,7 +518,7 @@ export async function createInvoiceFromWorkOrder(
   return {
     id: invoice.id,
     organization_id: orgId,
-    branch_id: null,
+    branch_id: wo.branch_id,
     invoice_number: usedInvoiceNumber,
     status: "draft",
     subtotal,
@@ -552,6 +581,7 @@ interface CreateStandaloneInvoiceParams {
   notes?: string | null;
   terms?: string;
   dueDays?: number;
+  branch_id?: string | null;
   tax_rate?: number;
   tax_total?: number;
 }
@@ -966,12 +996,15 @@ export async function recordPayment(
   }
 
   // Update invoice totals
-  const { data: allPayments } = await supabase
+  const { data: allPaymentsData } = await supabase
     .from("invoice_payments")
-    .select("amount")
-    .eq("invoice_id", invoiceId);
+    .select(
+      "id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by",
+    )
+    .eq("invoice_id", invoiceId)
+    .order("paid_at", { ascending: false });
 
-  const totalPaid = (allPayments ?? []).reduce(
+  const totalPaid = (allPaymentsData ?? []).reduce(
     (sum, p) => sum + Number(p.amount),
     0,
   );
@@ -1006,16 +1039,7 @@ export async function recordPayment(
   revalidateTag(cacheTags.invoice(invoiceId), "max");
   revalidateTag(cacheTags.invoices(orgId), "max");
 
-  // Return updated payments
-  const { data: updatedPayments } = await supabase
-    .from("invoice_payments")
-    .select(
-      "id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by",
-    )
-    .eq("invoice_id", invoiceId)
-    .order("paid_at", { ascending: false });
-
-  return (updatedPayments ?? []) as unknown as unknown as InvoicePayment[];
+  return (allPaymentsData ?? []) as unknown as unknown as InvoicePayment[];
 }
 
 // ── Get invoice count by status ───────────────────
@@ -1221,10 +1245,37 @@ async function recalculateInvoiceTotals(
 ): Promise<void> {
   const supabase = db;
 
-  const { data: items } = await supabase
-    .from("invoice_items")
-    .select("total_price, discount_amount")
-    .eq("invoice_id", invoiceId);
+  const [itemsResult, invoiceResult] = await Promise.all([
+    supabase
+      .from("invoice_items")
+      .select("total_price, discount_amount")
+      .eq("invoice_id", invoiceId),
+    supabase
+      .from("invoices")
+      .select("discount_total, tax_total")
+      .eq("id", invoiceId)
+      .single(),
+  ]);
+
+  if (itemsResult.error) {
+    reportServerError(
+      "Failed to fetch invoice items for recalculation:",
+      itemsResult.error,
+    );
+    throw new Error(
+      `Failed to fetch invoice items: ${itemsResult.error.message}`,
+    );
+  }
+  if (invoiceResult.error) {
+    reportServerError(
+      "Failed to fetch invoice for recalculation:",
+      invoiceResult.error,
+    );
+    throw new Error(`Failed to fetch invoice: ${invoiceResult.error.message}`);
+  }
+
+  const items = itemsResult.data;
+  const invoice = invoiceResult.data;
 
   const subtotal = (items ?? []).reduce(
     (sum, item) => sum + item.total_price,
@@ -1235,13 +1286,6 @@ async function recalculateInvoiceTotals(
     (sum, item) => sum + (item.discount_amount ?? 0),
     0,
   );
-
-  // Read current invoice for existing tax/discount values
-  const { data: invoice } = await supabase
-    .from("invoices")
-    .select("discount_total, tax_total")
-    .eq("id", invoiceId)
-    .single();
 
   const taxTotal = invoice?.tax_total ?? 0;
   const total = subtotal + taxTotal;

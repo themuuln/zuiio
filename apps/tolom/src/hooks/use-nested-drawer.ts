@@ -16,7 +16,7 @@ import { useCallback, useEffect, useState } from "react";
  * @example
  * ```tsx
  * function MyDetailDrawer({ open, onOpenChange }) {
- *   const { childOpen, openChild, closeChild } = useNestedSheet(open);
+ *   const { childOpen, openChild, closeChild } = useNestedDrawer(open);
  *
  *   return (
  *     <DetailDrawer open={open} onOpenChange={onOpenChange}>
@@ -37,7 +37,7 @@ import { useCallback, useEffect, useState } from "react";
  * }
  * ```
  */
-export function useNestedSheet(parentOpen: boolean) {
+export function useNestedDrawer(parentOpen: boolean) {
   const [childOpen, setChildOpen] = useState(false);
 
   // When parent closes, also close child

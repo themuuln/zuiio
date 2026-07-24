@@ -211,7 +211,7 @@ export function PageHeader({
               <Breadcrumb className="hidden md:flex">
                 <BreadcrumbList>
                   {breadcrumbItems.map((item, i) => (
-                    <BreadcrumbItem key={i}>
+                    <BreadcrumbItem key={item.href}>
                       {i < breadcrumbItems.length - 1 ? (
                         <>
                           <BreadcrumbLink render={<Link href={item.href} />}>
@@ -267,7 +267,7 @@ export function PageHeader({
             <Breadcrumb>
               <BreadcrumbList>
                 {breadcrumbItems.map((item, i) => (
-                  <BreadcrumbItem key={i}>
+                  <BreadcrumbItem key={item.href}>
                     {i < breadcrumbItems.length - 1 ? (
                       <>
                         <BreadcrumbLink render={<Link href={item.href} />}>
@@ -375,10 +375,10 @@ export function PageHeader({
                     setNewPartsCarSheetOpen(true);
                   },
                 },
-              ].map((item, i) => {
+              ].map((item, _i) => {
                 const Icon = item.icon;
                 return (
-                  <CommandItem key={`create-${i}`} onSelect={item.onSelect}>
+                  <CommandItem key={item.label} onSelect={item.onSelect}>
                     <Icon className="size-4" />
                     <span>{item.label}</span>
                   </CommandItem>

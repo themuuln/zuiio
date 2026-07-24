@@ -288,17 +288,22 @@ describe("upsertPayRate", () => {
 describe("listPayRates", () => {
   it("returns all current pay rates with mechanic names", async () => {
     const rates = [
-      makePayRate({ id: "rate-1", mechanic_id: "mech-1" }),
-      makePayRate({ id: "rate-2", mechanic_id: "mech-2", hourly_rate: 16000 }),
-    ];
-    const profiles = [
-      { id: "mech-1", full_name: "Alice" },
-      { id: "mech-2", full_name: "Bob" },
+      {
+        ...makePayRate({ id: "rate-1", mechanic_id: "mech-1" }),
+        profiles: { full_name: "Alice" },
+      },
+      {
+        ...makePayRate({
+          id: "rate-2",
+          mechanic_id: "mech-2",
+          hourly_rate: 16000,
+        }),
+        profiles: { full_name: "Bob" },
+      },
     ];
 
-    // Two awaits: the rates query, then the profiles query
+    // One join query: rates with profiles(full_name)
     db.__qb.resolveOnce({ data: rates, error: null });
-    db.__qb.resolveOnce({ data: profiles, error: null });
 
     const r = await listPayRates(db as never, ORG_ID);
 
@@ -310,16 +315,13 @@ describe("listPayRates", () => {
   });
 
   it("filters by branch when branchId provided", async () => {
-    const branchMechanics = [{ id: "mech-1" }];
+    const branchMechanics = [{ id: "mech-1", full_name: "Alice" }];
     const rates = [makePayRate({ id: "rate-1", mechanic_id: "mech-1" })];
-    const profiles = [{ id: "mech-1", full_name: "Alice" }];
 
-    // Query 1: branch mechanics from profiles
+    // Query 1: branch profiles with names (profiles table)
     // Query 2: rates filtered by mechanic_ids
-    // Query 3: profiles for names
     db.__qb.resolveOnce({ data: branchMechanics, error: null });
     db.__qb.resolveOnce({ data: rates, error: null });
-    db.__qb.resolveOnce({ data: profiles, error: null });
 
     const r = await listPayRates(db as never, ORG_ID, BRANCH_ID);
 
@@ -715,20 +717,21 @@ describe("getPayrollRecords", () => {
 
   it("returns payroll records for the period", async () => {
     const records = [
-      makePayrollRecord({ id: "pr-1", mechanic_id: "mech-1" }),
-      makePayrollRecord({
-        id: "pr-2",
-        mechanic_id: "mech-2",
-        hourly_rate: 12000,
-      }),
+      {
+        ...makePayrollRecord({ id: "pr-1", mechanic_id: "mech-1" }),
+        profiles: { full_name: "Alice" },
+      },
+      {
+        ...makePayrollRecord({
+          id: "pr-2",
+          mechanic_id: "mech-2",
+          hourly_rate: 12000,
+        }),
+        profiles: { full_name: "Bob" },
+      },
     ];
-    const profiles = [
-      { id: "mech-1", full_name: "Alice" },
-      { id: "mech-2", full_name: "Bob" },
-    ];
-
+    // One join query: records with profiles(full_name)
     db.__qb.resolveOnce({ data: records, error: null });
-    db.__qb.resolveOnce({ data: profiles, error: null });
 
     const r = await getPayrollRecords(db as never, ORG_ID, YEAR, MONTH);
 
@@ -738,13 +741,10 @@ describe("getPayrollRecords", () => {
   });
 
   it("filters by branch when branchId provided", async () => {
-    const branchMechanics = [{ id: "mech-1" }];
+    const branchMechanics = [{ id: "mech-1", full_name: "Alice" }];
     const records = [makePayrollRecord({ id: "pr-1", mechanic_id: "mech-1" })];
-    const profiles = [{ id: "mech-1", full_name: "Alice" }];
-
     db.__qb.resolveOnce({ data: branchMechanics, error: null });
     db.__qb.resolveOnce({ data: records, error: null });
-    db.__qb.resolveOnce({ data: profiles, error: null });
 
     const r = await getPayrollRecords(
       db as never,

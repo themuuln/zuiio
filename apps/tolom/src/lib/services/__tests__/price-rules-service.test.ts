@@ -503,6 +503,7 @@ describe("resolvePrice", () => {
         data: { id: "cat-1", default_price: 10000 },
         error: null,
       });
+      // Consumed by Step 3 (part_price_history) — was orphaned from removed vehicle_models sequential query
       db.__qb.resolveOnce({ data: [{ id: "vm-1" }], error: null });
       qb().maybeSingle.mockResolvedValueOnce({
         data: { specific_price: 12000 },
@@ -520,6 +521,7 @@ describe("resolvePrice", () => {
 
     it("falls through to default when catalog part is not found", async () => {
       qb().maybeSingle.mockResolvedValueOnce({ data: null, error: null });
+      // Consumed by Step 3 (part_price_history) — was orphaned from removed vehicle_models sequential query
       db.__qb.resolveOnce({ data: [], error: null });
 
       const result = await resolvePrice(db, ORG_ID, partInput);
@@ -890,9 +892,8 @@ describe("resolvePrice", () => {
         data: { id: "cat-1", default_price: 10000 },
         error: null,
       });
-      db.__qb.resolveOnce({ data: [], error: null }); // no vehicle_models
+      db.__qb.resolveOnce({ data: [{ unit_price: 9000 }], error: null }); // part_price_history (Step 3)
       db.__qb.resolveOnce({ data: [], error: null }); // getActivePriceRules returns empty
-      db.__qb.resolveOnce({ data: [{ unit_price: 9000 }], error: null }); // part_price_history
 
       const result = await resolvePrice(db, ORG_ID, input);
 
@@ -911,9 +912,8 @@ describe("resolvePrice", () => {
         vehicle: { make: "Toyota", model: "Camry" },
       };
 
+      db.__qb.resolveOnce({ data: [{ unit_price: 18000 }], error: null }); // service_price_history (Step 3)
       db.__qb.resolveOnce({ data: [], error: null }); // getActivePriceRules
-      db.__qb.resolveOnce({ data: [{ unit_price: 18000 }], error: null }); // service_price_history
-
       const result = await resolvePrice(db, ORG_ID, input);
 
       expect(result).toEqual({

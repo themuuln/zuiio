@@ -1,6 +1,10 @@
 "use client";
 
-import { type UseQueryResult, useQuery, keepPreviousData } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type { AppointmentDetail } from "@/lib/types";
 import { createOrgQuery } from "./factory";

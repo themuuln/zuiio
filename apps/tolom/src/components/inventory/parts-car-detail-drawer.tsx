@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/combobox";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -58,7 +57,7 @@ const LOCATION_GROUPS: PartsCarLocationGroup[] = [
   "other",
 ];
 
-export function PartsCarDetailSheet({
+export function PartsCarDetailDrawer({
   open,
   onOpenChange,
   carId,
@@ -217,10 +216,15 @@ export function PartsCarDetailSheet({
   return (
     <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header>
-        <DetailSheetHeader
-          icon={Car}
-          iconLoading={isLoadingData}
-          title={
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
+            {isLoadingData ? (
+              <Loader2 className="size-5 animate-spin text-primary" />
+            ) : (
+              <Car className="size-5 text-primary" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
             <DetailDrawer.Title className="text-base truncate">
               {isLoadingData
                 ? "Loading…"
@@ -228,10 +232,8 @@ export function PartsCarDetailSheet({
                   ? `${car.make} ${car.model}`
                   : t("notFound")}
             </DetailDrawer.Title>
-          }
-          subtitle={
-            car ? (
-              <>
+            {car && (
+              <div className="mt-0.5 flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">
                   {t(`status.${car.status}`)}
                 </Badge>
@@ -239,49 +241,47 @@ export function PartsCarDetailSheet({
                   {car.year && `${car.year} · `}
                   {formatMNT(car.purchase_cost)}
                 </span>
-              </>
-            ) : undefined
-          }
-          actions={
-            car ? (
-              <>
-                {car.status === "arrived" && (
-                  <Button
-                    size="sm"
-                    onClick={handleStart}
-                    disabled={startDisassembly.isPending}
-                  >
-                    {startDisassembly.isPending
-                      ? t("actions.starting")
-                      : t("actions.startDisassembly")}
-                  </Button>
-                )}
-                {car.status === "disassembling" && (
-                  <Button
-                    size="sm"
-                    onClick={handleComplete}
-                    disabled={completeDisassembly.isPending || partsCount === 0}
-                  >
-                    {completeDisassembly.isPending
-                      ? t("actions.completing")
-                      : t("actions.completeDisassembly")}
-                  </Button>
-                )}
-                {car.status === "completed" && unpublishedPartsCount > 0 && (
-                  <Button
-                    size="sm"
-                    onClick={handlePublish}
-                    disabled={publishToCatalog.isPending}
-                  >
-                    {publishToCatalog.isPending
-                      ? t("actions.publishing")
-                      : t("actions.publishToCatalog")}
-                  </Button>
-                )}
-              </>
-            ) : undefined
-          }
-        />
+              </div>
+            )}
+          </div>
+          {car && (
+            <div className="flex shrink-0 items-center gap-1">
+              {car.status === "arrived" && (
+                <Button
+                  size="sm"
+                  onClick={handleStart}
+                  disabled={startDisassembly.isPending}
+                >
+                  {startDisassembly.isPending
+                    ? t("actions.starting")
+                    : t("actions.startDisassembly")}
+                </Button>
+              )}
+              {car.status === "disassembling" && (
+                <Button
+                  size="sm"
+                  onClick={handleComplete}
+                  disabled={completeDisassembly.isPending || partsCount === 0}
+                >
+                  {completeDisassembly.isPending
+                    ? t("actions.completing")
+                    : t("actions.completeDisassembly")}
+                </Button>
+              )}
+              {car.status === "completed" && unpublishedPartsCount > 0 && (
+                <Button
+                  size="sm"
+                  onClick={handlePublish}
+                  disabled={publishToCatalog.isPending}
+                >
+                  {publishToCatalog.isPending
+                    ? t("actions.publishing")
+                    : t("actions.publishToCatalog")}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </DetailDrawer.Header>
 
       {isLoadingData && (

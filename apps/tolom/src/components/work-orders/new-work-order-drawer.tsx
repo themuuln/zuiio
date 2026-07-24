@@ -114,7 +114,7 @@ type NewWorkOrderSheetProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export function NewWorkOrderSheet({
+export function NewWorkOrderDrawer({
   open,
   onOpenChange,
 }: NewWorkOrderSheetProps) {

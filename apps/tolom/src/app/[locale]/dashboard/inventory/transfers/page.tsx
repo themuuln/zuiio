@@ -32,8 +32,8 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useTransfers } from "@/lib/queries/use-transfers";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { StockTransferRow, StockTransferStatus } from "@/lib/types";
-import { CreateTransferSheet } from "./_create-transfer-drawer";
-import { TransferDetailSheet } from "./_transfer-detail-drawer";
+import { CreateTransferDrawer } from "./_create-transfer-drawer";
+import { TransferDetailDrawer } from "./_transfer-detail-drawer";
 
 const STATUS_CONFIG: Record<
   string,
@@ -271,7 +271,7 @@ export default function TransfersPage() {
 
       {/* Create Transfer Dialog */}
       {orgId && (
-        <CreateTransferSheet
+        <CreateTransferDrawer
           open={createOpen}
           onOpenChange={setCreateOpen}
           orgId={orgId}
@@ -282,7 +282,7 @@ export default function TransfersPage() {
 
       {/* Transfer Detail Sheet */}
       {orgId && detailId && (
-        <TransferDetailSheet
+        <TransferDetailDrawer
           open={!!detailId}
           onOpenChange={(open) => {
             if (!open) setDetailId(null);

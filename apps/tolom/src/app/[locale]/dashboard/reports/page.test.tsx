@@ -1,8 +1,8 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "@/test/test-utils";
-import ReportsPage from "./page";
+import ReportsPage from "./_reports-client";
 
 // ── Mock data hooks ──────────────────────────────────────────
 vi.mock("@/lib/queries/use-organization", () => ({
@@ -76,6 +76,7 @@ vi.mock("./_reports-tab-bar", () => ({
     <div data-testid="reports-tab-bar">
       {tabs.map((t: { label: string; value: string }) => (
         <button
+          type="button"
           key={t.value}
           data-testid={`tab-${t.value}`}
           onClick={() => onTabChange?.(t.value)}

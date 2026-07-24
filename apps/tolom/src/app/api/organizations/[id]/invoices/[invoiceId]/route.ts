@@ -91,7 +91,12 @@ export const PATCH = createRouteHandler(
     }
 
     if (body.action === "mark_emailed") {
-      const invoice = await markInvoiceEmailed(supabase, invoiceId, orgId, user.id);
+      const invoice = await markInvoiceEmailed(
+        supabase,
+        invoiceId,
+        orgId,
+        user.id,
+      );
       return ok(invoice);
     }
 
@@ -110,12 +115,18 @@ export const PATCH = createRouteHandler(
 
     if (body.action === "record_payment") {
       const parsed = validate(recordPaymentSchema, body);
-      const payments = await recordPayment(supabase, invoiceId, orgId, {
-        amount: parsed.amount,
-        method: parsed.method,
-        reference: parsed.reference,
-        notes: parsed.notes,
-      }, user.id);
+      const payments = await recordPayment(
+        supabase,
+        invoiceId,
+        orgId,
+        {
+          amount: parsed.amount,
+          method: parsed.method,
+          reference: parsed.reference,
+          notes: parsed.notes,
+        },
+        user.id,
+      );
       return ok(payments);
     }
 

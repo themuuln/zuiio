@@ -10,7 +10,7 @@ type NewCustomerSheetProps = {
   onSuccess?: (customerId: string) => void;
 };
 
-export function NewCustomerSheet({
+export function NewCustomerDrawer({
   open,
   onOpenChange,
   onSuccess,

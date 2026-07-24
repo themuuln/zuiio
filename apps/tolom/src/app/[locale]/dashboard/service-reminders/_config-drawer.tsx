@@ -43,7 +43,7 @@ interface ConfigSheetProps {
   orgId: string | undefined;
 }
 
-export function ConfigSheet({ orgId }: ConfigSheetProps) {
+export function ConfigDrawer({ orgId }: ConfigSheetProps) {
   const t = useTranslations() as (
     key: string,
     values?: Record<string, string | number>,

@@ -71,7 +71,12 @@ export const POST = createRouteHandler(
     const body = await request.json();
 
     if (body.action === "receive") {
-      const po = await receivePurchaseOrder(supabase, purchaseOrderId, orgId, user.id);
+      const po = await receivePurchaseOrder(
+        supabase,
+        purchaseOrderId,
+        orgId,
+        user.id,
+      );
       return ok(po);
     }
 

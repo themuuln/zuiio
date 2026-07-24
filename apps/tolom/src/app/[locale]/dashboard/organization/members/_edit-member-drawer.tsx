@@ -74,7 +74,7 @@ interface EditMemberSheetProps {
   t: (key: string, values?: Record<string, string | number>) => string;
 }
 
-export function EditMemberSheet({
+export function EditMemberDrawer({
   open,
   onOpenChange,
   member,

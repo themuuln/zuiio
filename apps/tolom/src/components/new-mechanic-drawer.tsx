@@ -180,7 +180,7 @@ function MechanicCredentialsView({
   );
 }
 
-export function NewMechanicSheet({
+export function NewMechanicDrawer({
   open,
   onOpenChange,
 }: NewMechanicSheetProps) {

@@ -24,7 +24,7 @@ describe("KpiCard", () => {
   it("does not render subtitle when not provided", () => {
     const { container } = render(<KpiCard {...defaultProps} />);
     // Only one text-muted-foreground exists from the label
-    const mutedElements = container.querySelectorAll(".text-muted-foreground");
+    const _mutedElements = container.querySelectorAll(".text-muted-foreground");
     // Label is text-muted-foreground, subtitle would also be
     // Check that no subtitle text appears
     expect(screen.queryByText(/completed/i)).toBeNull();

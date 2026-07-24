@@ -1,4 +1,8 @@
-import { keepPreviousData, type UseQueryResult, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type { CreateCustomerParams, Customer } from "@/lib/types";
 import { createOrgQuery } from "./factory";

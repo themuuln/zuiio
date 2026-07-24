@@ -33,12 +33,6 @@ export async function getInventoryTurnover(
     .gte("created_at", since.toISOString());
   if (branchId) purchasesQuery = withBranchFilter(purchasesQuery, branchId);
 
-  const { data: purchases } = await purchasesQuery;
-
-  const cogs =
-    purchases?.reduce((sum, m) => sum + m.quantity * (m.unit_cost ?? 0), 0) ??
-    0;
-
   // Current stock value
   let balancesQuery = supabase
     .from("inventory_balances")
@@ -46,7 +40,17 @@ export async function getInventoryTurnover(
     .eq("organization_id", orgId);
   if (branchId) balancesQuery = withBranchFilter(balancesQuery, branchId);
 
-  const { data: balances } = await balancesQuery;
+  const [purchasesResult, balancesResult] = await Promise.all([
+    purchasesQuery,
+    balancesQuery,
+  ]);
+
+  const purchases = purchasesResult.data;
+  const balances = balancesResult.data;
+
+  const cogs =
+    purchases?.reduce((sum, m) => sum + m.quantity * (m.unit_cost ?? 0), 0) ??
+    0;
 
   const averageInventoryValue =
     balances?.reduce(

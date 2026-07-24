@@ -11,12 +11,18 @@ export const POST = createRouteHandler(
       throw new ValidationError("A valid positive amount is required");
     }
 
-    const payments = await recordPayment(supabase, invoiceId, orgId, {
-      amount: Number(body.amount),
-      method: body.method ?? "cash",
-      reference: body.reference ?? undefined,
-      notes: body.notes ?? undefined,
-    }, user.id);
+    const payments = await recordPayment(
+      supabase,
+      invoiceId,
+      orgId,
+      {
+        amount: Number(body.amount),
+        method: body.method ?? "cash",
+        reference: body.reference ?? undefined,
+        notes: body.notes ?? undefined,
+      },
+      user.id,
+    );
 
     return created(payments);
   },

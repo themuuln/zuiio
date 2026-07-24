@@ -60,7 +60,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     key: string,
     values?: Record<string, string | number>,
   ) => string;
-  const { push, prefetch } = useRouter();
+  const { push } = useRouter();
   const {
     isActive,
     groups,

@@ -54,6 +54,8 @@ export interface BayViewData {
     vehicle: Vehicle | null;
   })[];
   mechanics: (Profile & { current_jobs: number })[];
+  /** Shift report computed inline from bay view data (no separate query needed). */
+  shiftReport: ShiftReport;
 }
 
 export interface WorkOrderWithDetails extends WorkOrder {

@@ -10,7 +10,11 @@ import { cn } from "@/lib/utils";
 // Route renders user-specific content — legitimate cache opt-out.
 export const instant = false;
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
 

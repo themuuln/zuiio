@@ -73,8 +73,6 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
     setDrawerInitialAction: _setDrawerInitialAction,
     openDetail,
     closeDetail,
-    setEmptyBayBayNumber,
-    emptyBayBayNumber,
     setDirectAssignBayNumber,
   } = params.dialogs;
 
@@ -296,27 +294,9 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
     [openDetail],
   );
 
-  // ── Empty bay ────────────────────────────────────────────────
+  // ── Empty bay → open vehicle registration with bay number ─────
   const handleEmptyBayClick = useCallback(
     (bayNumber: number) => {
-      setEmptyBayBayNumber(bayNumber);
-    },
-    [setEmptyBayBayNumber],
-  );
-
-  const handleEmptyBayQueueSelect = useCallback(
-    (workOrderId: string) => {
-      if (emptyBayBayNumber === null) return;
-      const bayNumber = emptyBayBayNumber;
-      setEmptyBayBayNumber(null);
-      assignMutation.mutate({ workOrderId, bayNumber });
-    },
-    [emptyBayBayNumber, assignMutation, setEmptyBayBayNumber],
-  );
-
-  const handleRegisterAndAssign = useCallback(
-    (bayNumber: number) => {
-      // Don't close EmptyBayActionDrawer — nesting keeps it visible behind VehicleRegistrationDrawer
       setDirectAssignBayNumber(bayNumber);
       dialogs.set("vehicleReg", true);
     },
@@ -526,8 +506,6 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
     handleRemoveFromBay,
     handleQueueItemClick,
     handleEmptyBayClick,
-    handleEmptyBayQueueSelect,
-    handleRegisterAndAssign,
     handleAssignToBay,
     handleBatchComplete,
     handleRemoveHelper,

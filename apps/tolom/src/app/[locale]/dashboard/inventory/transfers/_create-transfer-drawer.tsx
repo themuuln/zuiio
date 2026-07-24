@@ -51,7 +51,7 @@ interface CreateTransferSheetProps {
   currentBranchId: string | null;
 }
 
-export function CreateTransferSheet({
+export function CreateTransferDrawer({
   open,
   onOpenChange,
   orgId,

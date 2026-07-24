@@ -58,13 +58,19 @@ export const POST = createRouteHandler(
     const body = await request.json();
     const params = validate(recordRefundSchema, body);
 
-    const refunds = await recordRefund(supabase, params.invoice_id, orgId, {
-      amount: params.amount,
-      method: params.method,
-      reason: params.reason,
-      reference: params.reference,
-      notes: params.notes,
-    }, user.id);
+    const refunds = await recordRefund(
+      supabase,
+      params.invoice_id,
+      orgId,
+      {
+        amount: params.amount,
+        method: params.method,
+        reason: params.reason,
+        reference: params.reference,
+        notes: params.notes,
+      },
+      user.id,
+    );
 
     return created(refunds);
   },

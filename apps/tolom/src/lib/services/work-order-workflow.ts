@@ -39,8 +39,7 @@ export async function updateWorkOrderStatus(
   userId_?: string,
 ): Promise<WorkOrder> {
   const supabase = db;
-  const { data: { user: authUser } } = await supabase.auth.getUser();
-  const userId = userId_ ?? authUser?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
   const { data: currentWorkOrder, error: currentWorkOrderError } =
     await supabase
       .from("work_orders")
@@ -211,8 +210,7 @@ export async function assignMechanic(
   userId_?: string,
 ): Promise<MechanicAssignment> {
   const supabase = db;
-  const { data: { user: authUser } } = await supabase.auth.getUser();
-  const userId = userId_ ?? authUser?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
 
   await supabase
     .from("mechanic_assignments")

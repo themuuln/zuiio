@@ -49,8 +49,12 @@ describe("generateInsights", () => {
     const insights = generateInsights(baseSummary, basePrevSummary, []);
     expect(insights.length).toBeGreaterThanOrEqual(1);
     // Should mention revenue increase (1M - 800K = 200K, 25% increase)
-    const revenueInsight = insights.find(
-      (i) => i.includes("25") || i.includes("орлого") || i.includes("revenue") || i.includes("өссөн"),
+    const _revenueInsight = insights.find(
+      (i) =>
+        i.includes("25") ||
+        i.includes("орлого") ||
+        i.includes("revenue") ||
+        i.includes("өссөн"),
     );
     // At minimum, some insight should exist
     expect(insights.length).toBeGreaterThan(0);
@@ -116,7 +120,10 @@ describe("generateInsights", () => {
   });
 
   it("does not generate revenue insight when revenue stayed the same", () => {
-    const sameSummary = { ...baseSummary, totalRevenue: basePrevSummary.totalRevenue };
+    const sameSummary = {
+      ...baseSummary,
+      totalRevenue: basePrevSummary.totalRevenue,
+    };
     const insights = generateInsights(sameSummary, basePrevSummary, []);
     // No revenue delta, but may still have other insights
     expect(Array.isArray(insights)).toBe(true);
@@ -168,7 +175,11 @@ describe("generateReportInsights", () => {
     // Current period WOs
     const woBuilder = makeBuilder([{ id: "wo-1" }, { id: "wo-2" }]);
     // Previous period WOs
-    const prevWoBuilder = makeBuilder([{ id: "wo-p1" }, { id: "wo-p2" }, { id: "wo-p3" }]);
+    const prevWoBuilder = makeBuilder([
+      { id: "wo-p1" },
+      { id: "wo-p2" },
+      { id: "wo-p3" },
+    ]);
 
     let callCount = 0;
     mockClient.from = vi.fn((table: string) => {
@@ -228,7 +239,13 @@ describe("generateReportInsights", () => {
   });
 
   it("returns insights with action items when data suggests them", async () => {
-    const woBuilder = makeBuilder([{ id: "wo-1" }, { id: "wo-2" }, { id: "wo-3" }, { id: "wo-4" }, { id: "wo-5" }]);
+    const woBuilder = makeBuilder([
+      { id: "wo-1" },
+      { id: "wo-2" },
+      { id: "wo-3" },
+      { id: "wo-4" },
+      { id: "wo-5" },
+    ]);
     const prevWoBuilder = makeBuilder([]);
 
     let callIdx = 0;

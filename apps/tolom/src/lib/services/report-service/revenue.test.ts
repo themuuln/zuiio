@@ -33,8 +33,12 @@ function makeBuilder<TData = unknown>(data?: TData) {
     lte: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
-    single: vi.fn(() => new Promise((resolve) => resolved && resolve(resolved))),
-    maybeSingle: vi.fn(() => new Promise((resolve) => resolved && resolve(resolved))),
+    single: vi.fn(
+      () => new Promise((resolve) => resolved && resolve(resolved)),
+    ),
+    maybeSingle: vi.fn(
+      () => new Promise((resolve) => resolved && resolve(resolved)),
+    ),
     then: vi.fn((resolve: (v: typeof resolved) => void) => resolve(resolved)),
   };
 }
@@ -59,9 +63,9 @@ describe("getRevenueForecast", () => {
     const svcBuilder = makeBuilder([{ final_price: 300000 }]);
     const partsBuilder = makeBuilder([{ final_price: 200000 }]);
 
-    let callCount = 0;
+    let _callCount = 0;
     mockClient.from = vi.fn((table: string) => {
-      callCount++;
+      _callCount++;
       if (table === "work_orders") return woBuilder;
       if (table === "work_order_services") return svcBuilder;
       if (table === "work_order_parts") return partsBuilder;
@@ -177,9 +181,7 @@ describe("getRevenueForecast", () => {
 
 describe("getRevenueTargets", () => {
   it("returns empty array when no targets exist", async () => {
-    mockClient.from = vi.fn(() =>
-      makeBuilder({ settings: {} }),
-    );
+    mockClient.from = vi.fn(() => makeBuilder({ settings: {} }));
 
     const result = await getRevenueTargets(
       makeSupabase(),
@@ -252,7 +254,8 @@ describe("getRevenueTargets", () => {
     mockClient.from = vi.fn((table: string) => {
       if (table === "organizations") return orgBuilder;
       if (table === "work_orders") return makeBuilder([{ id: "wo-1" }]);
-      if (table === "work_order_services") return makeBuilder([{ final_price: 3000000 }]);
+      if (table === "work_order_services")
+        return makeBuilder([{ final_price: 3000000 }]);
       if (table === "work_order_parts") return makeBuilder([]);
       return makeBuilder([]);
     });
@@ -306,7 +309,7 @@ describe("setRevenueTarget", () => {
     const orgBuilder = makeBuilder({
       settings: {},
     });
-    const updateBuilder = makeBuilder(null);
+    const _updateBuilder = makeBuilder(null);
 
     mockClient.from = vi.fn((table: string) => {
       if (table === "organizations") return orgBuilder;
@@ -359,8 +362,8 @@ describe("setRevenueTarget", () => {
     mockClient.from = vi.fn((table: string) => {
       if (table === "organizations") {
         orgCallCount++;
-        if (orgCallCount === 1) return orgBuilder;  // SELECT
-        return updateBuilder;                        // UPDATE
+        if (orgCallCount === 1) return orgBuilder; // SELECT
+        return updateBuilder; // UPDATE
       }
       return makeBuilder([]);
     });

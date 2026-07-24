@@ -1,7 +1,11 @@
-import { keepPreviousData, type UseQueryResult, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
+import type { DashboardData } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { dashboardKeys } from "./keys";
-import type { DashboardData } from "@/lib/types";
 
 /**
  * Fetches dashboard data for the given organization and date range.

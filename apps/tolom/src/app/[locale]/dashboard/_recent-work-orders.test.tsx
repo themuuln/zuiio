@@ -1,9 +1,9 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { render } from "@/test/test-utils";
 import type { ExportColumn } from "@/lib/export";
 import type { WorkOrderDetail } from "@/lib/types";
+import { render } from "@/test/test-utils";
 import { RecentWorkOrdersTable } from "./_recent-work-orders";
 
 vi.mock("@/components/export-button", () => ({
@@ -30,7 +30,7 @@ vi.mock("@/hooks/use-client-now", () => ({
 
 const t = (key: string) =>
   (
-    {
+    ({
       "workOrders.id": "ID",
       "workOrders.customer": "Customer",
       "workOrders.vehicle": "Vehicle",
@@ -40,12 +40,10 @@ const t = (key: string) =>
       "dashboard.noWorkOrders": "No work orders yet",
       "dashboard.recentWorkOrders": "Recent Work Orders",
       "common.export": "Export",
-    } as Record<string, string>
+    }) as Record<string, string>
   )[key] ?? key;
 
-function makeWorkOrder(
-  overrides?: Partial<WorkOrderDetail>,
-): WorkOrderDetail {
+function makeWorkOrder(overrides?: Partial<WorkOrderDetail>): WorkOrderDetail {
   return {
     id: "wo-abc12345",
     organization_id: "org-1",

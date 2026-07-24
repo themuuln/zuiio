@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import {
   Table,
@@ -43,7 +42,7 @@ const PO_STATUS_KEYS: Record<string, string> = {
   cancelled: "poStatusCancelled",
 };
 
-export function PurchaseOrderDetailSheet({
+export function PurchaseOrderDetailDrawer({
   open,
   onOpenChange,
   poId,
@@ -135,17 +134,20 @@ export function PurchaseOrderDetailSheet({
   return (
     <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
-        <DetailSheetHeader
-          icon={Truck}
-          iconLoading={isLoading}
-          title={
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
+            {isLoading ? (
+              <Loader2 className="size-5 animate-spin text-primary" />
+            ) : (
+              <Truck className="size-5 text-primary" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
             <DrawerTitle className="text-base">
               {isLoading ? "Loading…" : po ? po.order_number : t("poNotFound")}
             </DrawerTitle>
-          }
-          subtitle={
-            po ? (
-              <>
+            {po ? (
+              <div className="mt-0.5 flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">
                   {t(PO_STATUS_KEYS[po.status] as string) ?? po.status}
                 </Badge>
@@ -153,10 +155,10 @@ export function PurchaseOrderDetailSheet({
                   {new Date(po.order_date).toLocaleDateString("mn-MN")}
                   {po.supplier?.name ? ` · ${po.supplier.name}` : ""}
                 </span>
-              </>
-            ) : undefined
-          }
-        />
+              </div>
+            ) : undefined}
+          </div>
+        </div>
       </DrawerHeader>
 
       {/* Loading */}

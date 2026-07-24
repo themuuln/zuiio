@@ -44,7 +44,7 @@ interface InviteSheetProps {
   t: (key: string, values?: Record<string, string | number>) => string;
 }
 
-export function InviteSheet({
+export function InviteDrawer({
   open,
   onOpenChange,
   sending,

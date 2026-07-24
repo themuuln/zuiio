@@ -197,6 +197,14 @@ export async function savePostServiceData(
   }
 
   // 5. Upsert vehicle_service_schedules with mechanic-approved intervals
+  // Fetch work_order customer_id once (avoids N+1 query inside the per-recommendation map)
+  const { data: wo } = await supabase
+    .from("work_orders")
+    .select("customer_id")
+    .eq("id", workOrderId)
+    .maybeSingle();
+  const workOrderCustomerId = wo?.customer_id ?? null;
+
   await Promise.all(
     recommendations.map(async (rec) => {
       if (!rec.intervalMonths && !rec.intervalKm) return;
@@ -261,16 +269,10 @@ export async function savePostServiceData(
         const reminderDate = new Date(nextDueDate);
         reminderDate.setDate(reminderDate.getDate() - 14); // 2 weeks before
 
-        const { data: wo } = await supabase
-          .from("work_orders")
-          .select("customer_id")
-          .eq("id", workOrderId)
-          .maybeSingle();
-
         await supabase.from("reminder_logs").insert({
           organization_id: orgId,
           vehicle_id: vehicleId,
-          customer_id: wo?.customer_id ?? null,
+          customer_id: workOrderCustomerId,
           service_catalog_id: rec.serviceCatalogId ?? null,
           service_name: rec.serviceName,
           reminder_type: "service_due",
@@ -311,13 +313,21 @@ export async function saveCompletionData(
     nextAppointmentDate,
   } = input;
 
-  // 1. Check if completion data already exists for this work order to make the operation idempotent
-  const { data: existing } = await supabase
-    .from("service_completion_data")
-    .select("id")
-    .eq("work_order_id", workOrderId)
-    .eq("organization_id", orgId)
-    .maybeSingle();
+  // 1. Fetch work_order customer_id and check for existing completion data in parallel
+  const [{ data: existing }, { data: wo }] = await Promise.all([
+    supabase
+      .from("service_completion_data")
+      .select("id")
+      .eq("work_order_id", workOrderId)
+      .eq("organization_id", orgId)
+      .maybeSingle(),
+    supabase
+      .from("work_orders")
+      .select("customer_id")
+      .eq("id", workOrderId)
+      .maybeSingle(),
+  ]);
+  const customerId = wo?.customer_id;
 
   const row: TablesInsert<"service_completion_data"> = {
     organization_id: orgId,
@@ -366,19 +376,13 @@ export async function saveCompletionData(
     .eq("id", vehicleId);
 
   // 3. Update customer last_visit_at + increment total_visits
-  const { data: wo } = await supabase
-    .from("work_orders")
-    .select("customer_id")
-    .eq("id", workOrderId)
-    .maybeSingle();
-
-  if (wo?.customer_id) {
+  if (customerId) {
     if (!existing) {
       // Only increment visits count on the initial completion
       const { data: customer } = await supabase
         .from("customers")
         .select("total_visits")
-        .eq("id", wo.customer_id)
+        .eq("id", customerId)
         .maybeSingle();
 
       await supabase
@@ -387,7 +391,7 @@ export async function saveCompletionData(
           last_visit_at: new Date().toISOString(),
           total_visits: (customer?.total_visits ?? 0) + 1,
         })
-        .eq("id", wo.customer_id);
+        .eq("id", customerId);
     } else {
       // Just update last_visit_at without double-counting visits
       await supabase
@@ -395,16 +399,16 @@ export async function saveCompletionData(
         .update({
           last_visit_at: new Date().toISOString(),
         })
-        .eq("id", wo.customer_id);
+        .eq("id", customerId);
     }
   }
 
   // 4. Create customer communication record
-  if (wo?.customer_id && !existing) {
+  if (customerId && !existing) {
     // Only log the communication record on initial completion
     await supabase.from("customer_communications").insert({
       organization_id: orgId,
-      customer_id: wo.customer_id,
+      customer_id: customerId,
       type: "in_person",
       direction: "outbound",
       subject: "Service Completed",

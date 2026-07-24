@@ -6,26 +6,36 @@ import ChartsSection, { MechanicTrendChart } from "./_charts-content";
 // Mock all chart rendering to avoid recharts/jsdom SVG issues
 vi.mock("@/components/ui/chart", () => ({
   ChartContainer: ({ children, config, className }: any) => (
-    <div data-testid="chart-container" data-config-keys={Object.keys(config ?? {}).join(",")} className={className}>
+    <div
+      data-testid="chart-container"
+      data-config-keys={Object.keys(config ?? {}).join(",")}
+      className={className}
+    >
       {children}
     </div>
   ),
-  ChartTooltip: ({ children, cursor, content }: any) => (
+  ChartTooltip: ({ children, content }: any) => (
     <div data-testid="chart-tooltip">{children ?? content}</div>
   ),
   ChartTooltipContent: () => <div data-testid="chart-tooltip-content" />,
-  ChartLegend: ({ children }: any) => <div data-testid="chart-legend">{children}</div>,
+  ChartLegend: ({ children }: any) => (
+    <div data-testid="chart-legend">{children}</div>
+  ),
   ChartLegendContent: () => <div data-testid="chart-legend-content" />,
 }));
 
 vi.mock("recharts", () => ({
   Area: () => <div data-testid="recharts-area" />,
-  AreaChart: ({ children }: any) => <div data-testid="recharts-area-chart">{children}</div>,
+  AreaChart: ({ children }: any) => (
+    <div data-testid="recharts-area-chart">{children}</div>
+  ),
   Bar: () => <div data-testid="recharts-bar" />,
-  BarChart: ({ children }: any) => <div data-testid="recharts-bar-chart">{children}</div>,
+  BarChart: ({ children }: any) => (
+    <div data-testid="recharts-bar-chart">{children}</div>
+  ),
   CartesianGrid: () => <div data-testid="recharts-cartesian-grid" />,
   Cell: () => <div data-testid="recharts-cell" />,
-  Label: ({ content, value, children, ...rest }: any) => {
+  Label: ({ content, value, children }: any) => {
     if (typeof content === "function") {
       // Render the content function with a mock viewBox
       return content({ viewBox: { cx: 100, cy: 100 } });
@@ -33,14 +43,29 @@ vi.mock("recharts", () => ({
     return <div data-testid="recharts-label">{value ?? children}</div>;
   },
   Pie: ({ children }: any) => <div data-testid="recharts-pie">{children}</div>,
-  PieChart: ({ children }: any) => <div data-testid="recharts-pie-chart">{children}</div>,
+  PieChart: ({ children }: any) => (
+    <div data-testid="recharts-pie-chart">{children}</div>
+  ),
   XAxis: () => <div data-testid="recharts-xaxis" />,
   YAxis: () => <div data-testid="recharts-yaxis" />,
-  ResponsiveContainer: ({ children }: any) => <div data-testid="recharts-responsive">{children}</div>,
+  ResponsiveContainer: ({ children }: any) => (
+    <div data-testid="recharts-responsive">{children}</div>
+  ),
 }));
 
 vi.mock("@/components/charts/chart-colors", () => ({
-  CHART_COLORS: ["#3b82f6", "#22c55e", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4", "#ec4899", "#14b8a6", "#f97316", "#6366f1"],
+  CHART_COLORS: [
+    "#3b82f6",
+    "#22c55e",
+    "#f59e0b",
+    "#8b5cf6",
+    "#ef4444",
+    "#06b6d4",
+    "#ec4899",
+    "#14b8a6",
+    "#f97316",
+    "#6366f1",
+  ],
   STATUS_COLORS: {
     New: "#3b82f6",
     Diagnosing: "#f59e0b",
@@ -161,8 +186,8 @@ describe("ChartsSection", () => {
     render(<ChartsSection data={defaultData} />, { messages });
 
     const totalRevenue = 500000 + 750000 + 600000; // 1,850,000
-    const avgRevenue = Math.round(totalRevenue / 3); // 616,667
-    const totalWorkOrders = 3 + 5 + 4; // 12
+    const _avgRevenue = Math.round(totalRevenue / 3); // 616,667
+    const _totalWorkOrders = 3 + 5 + 4; // 12
 
     expect(screen.getAllByText("Total").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Average")).toBeInTheDocument();
@@ -179,7 +204,7 @@ describe("ChartsSection", () => {
   it("renders work order status donut chart with total count", () => {
     render(<ChartsSection data={defaultData} />, { messages });
     expect(screen.getByText("Work Order Status")).toBeInTheDocument();
-    const totalStatus = 45 + 12 + 8; // 65
+    const _totalStatus = 45 + 12 + 8; // 65
     expect(screen.getByText("65")).toBeInTheDocument(); // center label count
   });
   it("renders Top Services card with top 5 services", () => {
@@ -218,7 +243,7 @@ describe("ChartsSection", () => {
     render(<ChartsSection data={defaultData} />, { messages });
     expect(screen.getByText("Revenue by Category")).toBeInTheDocument();
 
-    const totalCategoryRevenue = 650000 + 450000 + 280000; // 1,380,000
+    const _totalCategoryRevenue = 650000 + 450000 + 280000; // 1,380,000
     expect(screen.getByText("₮ 1,380,000")).toBeInTheDocument();
   });
 

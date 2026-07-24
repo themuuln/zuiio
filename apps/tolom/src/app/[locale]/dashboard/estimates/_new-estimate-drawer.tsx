@@ -97,7 +97,7 @@ type NewEstimateSheetProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export function NewEstimateSheet({
+export function NewEstimateDrawer({
   open,
   onOpenChange,
 }: NewEstimateSheetProps) {

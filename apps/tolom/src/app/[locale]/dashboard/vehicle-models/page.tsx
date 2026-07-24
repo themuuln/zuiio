@@ -57,7 +57,7 @@ import { vehicleModelKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { cn } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
-import { VehicleModelFormSheet } from "./_vehicle-model-form-drawer";
+import { VehicleModelFormDrawer } from "./_vehicle-model-form-drawer";
 
 const fetchVehicleModels =
   createOrgQuery<VehicleModelItem[]>("/vehicle-models");
@@ -643,7 +643,7 @@ export default function VehicleModelsPage() {
       </Card>
 
       {/* ── Vehicle Model Form Sheet ─────────────────────── */}
-      <VehicleModelFormSheet
+      <VehicleModelFormDrawer
         mode={formMode}
         item={formItem}
         open={formOpen}

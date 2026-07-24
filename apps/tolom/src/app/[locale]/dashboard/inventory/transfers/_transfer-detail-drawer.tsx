@@ -76,7 +76,7 @@ interface TransferDetailSheetProps {
   transferId: string;
 }
 
-export function TransferDetailSheet({
+export function TransferDetailDrawer({
   open,
   onOpenChange,
   orgId,

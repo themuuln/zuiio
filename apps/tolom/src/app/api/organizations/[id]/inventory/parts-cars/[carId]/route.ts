@@ -13,7 +13,13 @@ export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
 export const PATCH = createRouteHandler(
   async ({ request, orgId, params, supabase, user }) => {
     const body = await request.json();
-    const car = await updatePartsCar(supabase, orgId, params.carId, body, user.id);
+    const car = await updatePartsCar(
+      supabase,
+      orgId,
+      params.carId,
+      body,
+      user.id,
+    );
     return ok(car);
   },
   { rateLimit: true, subscription: true },

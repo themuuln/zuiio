@@ -1,16 +1,20 @@
-// Brand theme + client shell persist across navigations — no server re-render needed.
+// Dashboard shell is cached for instant navigation — data fetching is handled
+// client-side by React Query hooks (useProfile, useDashboardBundle, etc.)
+// with appropriate staleTime (5 min profile, 5 min dashboard, 2 min subscription).
+// The BrandThemeLoader is wrapped in Suspense so org branding streams in.
 export const instant = true;
+export const prefetch = "allow-runtime";
 
 import { generateBrandCSS } from "@zuiio/branding";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { readOrganizationBrandConfig } from "@/lib/organization-branding";
+import { getCachedProfile } from "@/lib/queries/prefetch-dashboard";
 import { createClient } from "@/lib/supabase/server";
-import { getCachedProfile, PrefetchDashboard } from "@/lib/queries/prefetch-dashboard";
 import DashboardClientShell from "./_dashboard-client-shell";
 
 /** Fetches org branding and emits a <style> tag. Profile fetch is
- * deduplicated with PrefetchDashboard via React.cache(). */
+ * cached via React.cache() for deduplication within the same request. */
 async function BrandThemeLoader() {
   const profile = await getCachedProfile();
 
@@ -38,11 +42,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <Suspense fallback={null}>
         <BrandThemeLoader />
       </Suspense>
-      <PrefetchDashboard>
-        <Suspense fallback={null}>
-          <DashboardClientShell>{children}</DashboardClientShell>
-        </Suspense>
-      </PrefetchDashboard>
+      <DashboardClientShell>{children}</DashboardClientShell>
     </>
   );
 }

@@ -1,20 +1,17 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useClientNow } from "@/hooks/use-client-now";
-import { useTableFilters } from "@/lib/hooks/use-table-filters";
 import { useFuzzySearch } from "@zuiio/hooks";
-import { useCallback } from "react";
 import {
-  useInvoiceStats,
-  useInvoices,
-  useSendInvoiceEmail,
-} from "@/lib/queries/use-invoices";
-import { reportServerError } from "@/lib/sentry-report-server";
+  ArrowUpRight,
+  Clock,
+  DollarSign,
+  Loader2,
+  Mail,
+  TrendingUp,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useCallback } from "react";
 import { toast } from "sonner";
-import { formatCurrency } from "@/lib/utils";
-import { HighlightText } from "@/lib/utils/search-utils";
-import { KpiCard } from "./_kpi-card";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Badge } from "@/components/ui/badge";
@@ -29,15 +26,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  ArrowUpRight,
-  Clock,
-  DollarSign,
-  Loader2,
-  Mail,
-  TrendingUp,
-} from "lucide-react";
+import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
+import { useTableFilters } from "@/lib/hooks/use-table-filters";
+import {
+  useInvoiceStats,
+  useInvoices,
+  useSendInvoiceEmail,
+} from "@/lib/queries/use-invoices";
+import { reportServerError } from "@/lib/sentry-report-server";
+import { formatCurrency } from "@/lib/utils";
+import { HighlightText } from "@/lib/utils/search-utils";
+import { KpiCard } from "./_kpi-card";
 
 // ── Shared helpers (module scope to avoid per-render rebuild) ──
 

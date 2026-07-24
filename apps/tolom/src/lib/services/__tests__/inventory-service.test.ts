@@ -88,14 +88,12 @@ beforeEach(() => {
 });
 
 describe("getPartsCatalog", () => {
-  it("returns paginated result with popularity sorting", async () => {
-    db.__qb.resolveOnce({
-      data: [makePart({ id: "p1" }), makePart({ id: "p2" })],
-      error: null,
-      count: 2,
-    });
-    db.__qb.resolveOnce({
-      data: [{ part_id: "p2" }, { part_id: "p2" }],
+  it("returns paginated result", async () => {
+    vi.mocked(db.rpc).mockResolvedValueOnce({
+      data: {
+        data: [makePart({ id: "p1" }), makePart({ id: "p2" })],
+        total: 2,
+      },
       error: null,
     });
     const r = (await getPartsCatalog(db as never, ORG_ID, 1, 10)) as any;
@@ -104,22 +102,31 @@ describe("getPartsCatalog", () => {
   });
 
   it("returns flat array without pagination", async () => {
-    db.__qb.resolveOnce({ data: [makePart()], error: null });
-    db.__qb.resolveOnce({ data: [], error: null });
+    vi.mocked(db.rpc).mockResolvedValueOnce({
+      data: { data: [makePart()], total: 1 },
+      error: null,
+    });
     const r = await getPartsCatalog(db as never, ORG_ID);
     expect(Array.isArray(r)).toBe(true);
+    expect(r).toHaveLength(1);
   });
 
   it("throws on DB error", async () => {
-    db.__qb.resolveOnce({ data: null, error: new Error("fail") });
+    vi.mocked(db.rpc).mockResolvedValueOnce({
+      data: null,
+      error: new Error("fail"),
+    });
     await expect(getPartsCatalog(db as never, ORG_ID)).rejects.toThrow("fail");
   });
 
-  it("handles null popularity assignments", async () => {
-    db.__qb.resolveOnce({ data: [makePart()], error: null, count: 1 });
-    db.__qb.resolveOnce({ data: null, error: null });
+  it("handles null data gracefully", async () => {
+    vi.mocked(db.rpc).mockResolvedValueOnce({
+      data: null,
+      error: null,
+    });
     const r = (await getPartsCatalog(db as never, ORG_ID, 1, 10)) as any;
-    expect(r.data[0].popularity_score).toBe(0);
+    expect(r.data).toEqual([]);
+    expect(r.total).toBe(0);
   });
 });
 

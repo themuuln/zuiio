@@ -94,14 +94,26 @@ export async function closeSession(
     throw new ValidationError("Closing balance cannot be negative");
   }
 
-  // Fetch current session
-  const { data: session } = await db
-    .from("cash_register_sessions")
-    .select(SESSION_COLUMNS)
-    .eq("id", sessionId)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .single();
+  // Fetch current session and entries in parallel
+  const [sessionResult, entriesResult] = await Promise.all([
+    db
+      .from("cash_register_sessions")
+      .select(SESSION_COLUMNS)
+      .eq("id", sessionId)
+      .eq("organization_id", orgId)
+      .is("deleted_at", null)
+      .single(),
+    db
+      .from("cash_register_entries")
+      .select("entry_type, amount")
+      .eq("session_id", sessionId),
+  ]);
+
+  // Throw on entries query errors; session errors are handled by the !session check below
+  if (entriesResult.error) throw entriesResult.error;
+
+  const session = sessionResult.data;
+  const entries = entriesResult.data;
 
   if (!session) {
     throw new NotFoundError("Session not found");
@@ -110,12 +122,6 @@ export async function closeSession(
   if (session.status === "closed") {
     throw new ConflictError("Session is already closed");
   }
-
-  // Compute expected balance from entries
-  const { data: entries } = await db
-    .from("cash_register_entries")
-    .select("entry_type, amount")
-    .eq("session_id", sessionId);
 
   let cashIn = 0;
   let cashOut = 0;

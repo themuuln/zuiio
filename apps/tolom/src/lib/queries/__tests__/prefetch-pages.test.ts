@@ -1,16 +1,18 @@
-import { QueryClient } from "@tanstack/react-query";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { QueryClient } from "@tanstack/react-query";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { inventoryKeys, workOrderKeys } from "../keys";
 
 vi.mock("@/lib/services/work-order-service", () => ({
   getWorkOrders: vi.fn(),
 }));
+
 import { getWorkOrders } from "@/lib/services/work-order-service";
 
 vi.mock("@/lib/services/inventory-service", () => ({
   getPartsCatalog: vi.fn(),
 }));
+
 import { getPartsCatalog } from "@/lib/services/inventory-service";
 
 const mockSupabase = {} as unknown as SupabaseClient;
@@ -114,7 +116,9 @@ describe("prefetchInventory", () => {
       prefetchInventory(mockSupabase, queryClient, "org-1"),
     ).resolves.toBeUndefined();
 
-    expect(queryClient.getQueryData(inventoryKeys.parts("org-1"))).toBeUndefined();
+    expect(
+      queryClient.getQueryData(inventoryKeys.parts("org-1")),
+    ).toBeUndefined();
   });
 });
 

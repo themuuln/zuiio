@@ -408,13 +408,6 @@ describe("getWorkOrder", () => {
     expect(result).toBe(detail);
     expect(mockGetWorkOrderDetail).toHaveBeenCalledWith(db, WO_ID, ORG_ID);
   });
-
-  it("passes undefined orgId when omitted", async () => {
-    mockGetWorkOrderDetail.mockResolvedValue(makeDetail() as never);
-
-    await getWorkOrder(db as never, WO_ID);
-    expect(mockGetWorkOrderDetail).toHaveBeenCalledWith(db, WO_ID, undefined);
-  });
 });
 
 // ── createWorkOrder ───────────────────────────────────────────────
@@ -623,7 +616,7 @@ describe("getWorkOrderTotals", () => {
   it("computes totals from work order detail", async () => {
     mockGetWorkOrderDetail.mockResolvedValue(makeDetail() as never);
 
-    const result = await getWorkOrderTotals(db as never, WO_ID);
+    const result = await getWorkOrderTotals(db as never, "org-1", WO_ID);
     // services: 100*1 + 50*2 = 200, parts: 80*1 + 20*3 = 140
     expect(result.servicesTotal).toBe(200);
     expect(result.partsTotal).toBe(140);
@@ -635,7 +628,7 @@ describe("getWorkOrderTotals", () => {
       makeDetail({ services: [], parts: [] }) as never,
     );
 
-    const result = await getWorkOrderTotals(db as never, WO_ID);
+    const result = await getWorkOrderTotals(db as never, "org-1", WO_ID);
     expect(result.servicesTotal).toBe(0);
     expect(result.partsTotal).toBe(0);
     expect(result.grandTotal).toBe(0);

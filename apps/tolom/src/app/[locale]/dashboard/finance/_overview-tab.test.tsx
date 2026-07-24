@@ -10,9 +10,7 @@ vi.mock("@/components/charts/area-chart", () => ({
 
 vi.mock("@/components/ui/data-table", () => ({
   DataTable: ({ columns }: { columns: unknown[] }) => (
-    <div data-testid="mock-data-table">
-      DataTable ({columns.length} cols)
-    </div>
+    <div data-testid="mock-data-table">DataTable ({columns.length} cols)</div>
   ),
   DataTableColumnHeader: () => <div>ColumnHeader</div>,
 }));
@@ -183,35 +181,19 @@ describe("OverviewTab", () => {
   });
 
   it("does not render top services when array is empty", () => {
-    render(
-      <OverviewTab
-        {...baseProps}
-        topServices={[]}
-      />,
-      { messages },
-    );
+    render(<OverviewTab {...baseProps} topServices={[]} />, { messages });
     expect(screen.queryByText("Top Services")).toBeNull();
   });
 
   it("does not render top services when undefined", () => {
-    render(
-      <OverviewTab
-        {...baseProps}
-        topServices={undefined}
-      />,
-      { messages },
-    );
+    render(<OverviewTab {...baseProps} topServices={undefined} />, {
+      messages,
+    });
     expect(screen.queryByText("Top Services")).toBeNull();
   });
 
   it("shows no revenue data message when trend is empty", () => {
-    render(
-      <OverviewTab
-        {...baseProps}
-        revenueTrend={[]}
-      />,
-      { messages },
-    );
+    render(<OverviewTab {...baseProps} revenueTrend={[]} />, { messages });
     expect(screen.getByText("No revenue data yet")).toBeDefined();
   });
 });

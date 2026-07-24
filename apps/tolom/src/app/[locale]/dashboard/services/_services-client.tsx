@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ExportButton } from "@/components/export-button";
-import { ServiceModelPricesSheet } from "@/components/services/service-model-prices-drawer";
+import { ServiceModelPricesDrawer } from "@/components/services/service-model-prices-drawer";
 
 import {
   AlertDialog,
@@ -41,7 +41,7 @@ import type { ServiceCatalog } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 
 import { createColumns } from "./_columns";
-import { EditServiceSheet } from "./_edit-service-drawer";
+import { EditServiceDrawer } from "./_edit-service-drawer";
 
 export default function ServicesPageClient() {
   const st = useTranslations("services") as (
@@ -311,7 +311,7 @@ export default function ServicesPageClient() {
         }}
       />
 
-      <EditServiceSheet
+      <EditServiceDrawer
         service={editingService}
         categories={categories}
         open={editingService !== null || creating}
@@ -323,7 +323,7 @@ export default function ServicesPageClient() {
         }}
       />
 
-      <ServiceModelPricesSheet
+      <ServiceModelPricesDrawer
         serviceId={modelPricesService?.id ?? null}
         serviceName={modelPricesService?.name ?? ""}
         defaultPrice={modelPricesService?.default_price ?? 0}

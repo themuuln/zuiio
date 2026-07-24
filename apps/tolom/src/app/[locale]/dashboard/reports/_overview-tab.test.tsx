@@ -12,7 +12,11 @@ vi.mock("@/components/reports", () => ({
   ),
   ForecastCard: () => <div data-testid="forecast-card">ForecastCard</div>,
   InsightAlerts: ({ insights, loading }: any) => (
-    <div data-testid="insight-alerts" data-loading={String(loading)} data-insights={insights?.length}>
+    <div
+      data-testid="insight-alerts"
+      data-loading={String(loading)}
+      data-insights={insights?.length}
+    >
       InsightAlerts
     </div>
   ),
@@ -28,13 +32,20 @@ vi.mock("@/components/reports", () => ({
   ),
   PnLCard: () => <div data-testid="pnl-card">PnLCard</div>,
   ReportKpiCard: ({ label, value, delta, subtitle }: any) => (
-    <div data-testid="report-kpi-card" data-label={label} data-value={value} data-delta={delta ?? "none"}>
+    <div
+      data-testid="report-kpi-card"
+      data-label={label}
+      data-value={value}
+      data-delta={delta ?? "none"}
+    >
       {label}: {value}
       {subtitle && <span data-testid="kpi-subtitle">{subtitle}</span>}
     </div>
   ),
   RetentionCard: () => <div data-testid="retention-card">RetentionCard</div>,
-  ServiceBreakdownChart: () => <div data-testid="service-breakdown-chart">ServiceBreakdownChart</div>,
+  ServiceBreakdownChart: () => (
+    <div data-testid="service-breakdown-chart">ServiceBreakdownChart</div>
+  ),
   TargetCard: () => <div data-testid="target-card">TargetCard</div>,
 }));
 
@@ -44,17 +55,25 @@ vi.mock("recharts", () => ({
   Pie: ({ children, data }: any) => (
     <div data-testid="recharts-pie">{children}</div>
   ),
-  PieChart: ({ children }: any) => <div data-testid="recharts-piechart">{children}</div>,
+  PieChart: ({ children }: any) => (
+    <div data-testid="recharts-piechart">{children}</div>
+  ),
 }));
 
 // Mock shadcn chart components
 vi.mock("@/components/ui/chart", () => ({
   ChartContainer: ({ children, config, className }: any) => (
-    <div data-testid="chart-container" data-config-keys={Object.keys(config ?? {}).join(",")} className={className}>
+    <div
+      data-testid="chart-container"
+      data-config-keys={Object.keys(config ?? {}).join(",")}
+      className={className}
+    >
       {children}
     </div>
   ),
-  ChartTooltip: ({ children }: any) => <div data-testid="chart-tooltip">{children}</div>,
+  ChartTooltip: ({ children }: any) => (
+    <div data-testid="chart-tooltip">{children}</div>
+  ),
   ChartTooltipContent: () => <div data-testid="chart-tooltip-content" />,
 }));
 
@@ -68,8 +87,18 @@ function makeReportData(overrides: Record<string, unknown> = {}) {
     comparison: null,
     profitability: null,
     mechanic_kpis: [
-      { mechanic_id: "m1", mechanic_name: "Bold", work_orders_completed: 10, total_revenue: 2000000 },
-      { mechanic_id: "m2", mechanic_name: "Saraa", work_orders_completed: 8, total_revenue: 1500000 },
+      {
+        mechanic_id: "m1",
+        mechanic_name: "Bold",
+        work_orders_completed: 10,
+        total_revenue: 2000000,
+      },
+      {
+        mechanic_id: "m2",
+        mechanic_name: "Saraa",
+        work_orders_completed: 8,
+        total_revenue: 1500000,
+      },
     ],
     ...overrides,
   };
@@ -132,7 +161,16 @@ describe("OverviewTab", () => {
     render(
       <OverviewTab
         {...baseProps}
-        insights={[{ id: "i1", severity: "warning", title: "Low margin", description: "", metric: "", value: 0 }]}
+        insights={[
+          {
+            id: "i1",
+            severity: "warning",
+            title: "Low margin",
+            description: "",
+            metric: "",
+            value: 0,
+          },
+        ]}
         loading
       />,
     );
@@ -174,7 +212,12 @@ describe("OverviewTab", () => {
       effective_labor_rate: 45000,
       parts_to_labor_ratio: 0.55,
     };
-    render(<OverviewTab {...baseProps} report={makeReportData({ profitability }) as any} />);
+    render(
+      <OverviewTab
+        {...baseProps}
+        report={makeReportData({ profitability }) as any}
+      />,
+    );
 
     // Profit KPI cards
     const cards = screen.getAllByTestId("report-kpi-card");
@@ -234,7 +277,9 @@ describe("OverviewTab", () => {
       <OverviewTab
         {...baseProps}
         reportType="monthly"
-        monthlyBreakdown={[{ date: "2026-07-01", revenue: 500000, label: "W1" }]}
+        monthlyBreakdown={[
+          { date: "2026-07-01", revenue: 500000, label: "W1" },
+        ]}
       />,
     );
     const chart = screen.getByTestId("daily-revenue-chart");
@@ -261,8 +306,14 @@ describe("OverviewTab", () => {
 
   it("passes mechanic_kpis to MechanicBarChart and MechanicTable", () => {
     render(<OverviewTab {...baseProps} />);
-    expect(screen.getByTestId("mechanic-bar-chart")).toHaveAttribute("data-kpis", "2");
-    expect(screen.getByTestId("mechanic-table")).toHaveAttribute("data-kpis", "2");
+    expect(screen.getByTestId("mechanic-bar-chart")).toHaveAttribute(
+      "data-kpis",
+      "2",
+    );
+    expect(screen.getByTestId("mechanic-table")).toHaveAttribute(
+      "data-kpis",
+      "2",
+    );
   });
 
   it("renders ServiceBreakdownChart, RetentionCard, and PnLCard", () => {

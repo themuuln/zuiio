@@ -82,7 +82,7 @@ type VehicleModelValues = z.infer<typeof vehicleModelSchema>;
 
 // ── Component ──────────────────────────────────────────────────
 
-export function VehicleModelFormSheet({
+export function VehicleModelFormDrawer({
   mode,
   item,
   open,

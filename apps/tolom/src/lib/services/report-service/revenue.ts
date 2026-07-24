@@ -54,43 +54,7 @@ export async function getRevenueForecast(
     daysElapsed = Math.min(totalDays, Math.max(1, now.getDate()));
   }
 
-  // Fetch revenue to date
-  const { data: wos } = await withBranchFilter(
-    supabase
-      .from("work_orders")
-      .select("id")
-      .eq("organization_id", orgId)
-      .eq("status", "Completed")
-      .gte("created_at", `${periodStart}T00:00:00`)
-      .lte("created_at", `${periodEnd}T23:59:59`)
-      .is("deleted_at", null),
-    branchId,
-  );
-
-  const woIds = (wos ?? []).map((w) => w.id);
-  let currentRevenue = 0;
-
-  if (woIds.length > 0) {
-    const [svcs, parts] = await Promise.all([
-      supabase
-        .from("work_order_services")
-        .select("final_price")
-        .in("work_order_id", woIds),
-      supabase
-        .from("work_order_parts")
-        .select("final_price")
-        .in("work_order_id", woIds),
-    ]);
-    currentRevenue =
-      (svcs.data ?? []).reduce((s, r) => s + Number(r.final_price), 0) +
-      (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
-  }
-
-  const dailyRunRate = daysElapsed > 0 ? currentRevenue / daysElapsed : 0;
-  const projectedRevenue =
-    totalDays > 0 ? dailyRunRate * totalDays : currentRevenue;
-
-  // Fetch previous period revenue for comparison
+  // Compute previous period boundaries (needed before parallel fetch)
   const prevDuration =
     new Date(periodEnd).getTime() - new Date(periodStart).getTime();
   const prevEndMs = new Date(periodStart).getTime() - 86400000;
@@ -98,35 +62,51 @@ export async function getRevenueForecast(
   const prevStart = new Date(prevStartMs).toISOString().split("T")[0];
   const prevEnd = new Date(prevEndMs).toISOString().split("T")[0];
 
-  const { data: prevWOs } = await withBranchFilter(
-    supabase
-      .from("work_orders")
-      .select("id")
-      .eq("organization_id", orgId)
-      .eq("status", "Completed")
-      .gte("created_at", `${prevStart}T00:00:00`)
-      .lte("created_at", `${prevEnd}T23:59:59`)
-      .is("deleted_at", null),
-    branchId,
-  );
+  // Fetch current and previous period revenue in parallel
+  async function fetchPeriodRevenue(
+    start: string,
+    end: string,
+  ): Promise<number> {
+    const { data: wos } = await withBranchFilter(
+      supabase
+        .from("work_orders")
+        .select("id")
+        .eq("organization_id", orgId)
+        .eq("status", "Completed")
+        .gte("created_at", `${start}T00:00:00`)
+        .lte("created_at", `${end}T23:59:59`)
+        .is("deleted_at", null),
+      branchId,
+    );
 
-  const prevWoIds = (prevWOs ?? []).map((w) => w.id);
-  let prevRevenue = 0;
-  if (prevWoIds.length > 0) {
+    const woIds = (wos ?? []).map((w) => w.id);
+    if (woIds.length === 0) return 0;
+
     const [svcs, parts] = await Promise.all([
       supabase
         .from("work_order_services")
         .select("final_price")
-        .in("work_order_id", prevWoIds),
+        .in("work_order_id", woIds),
       supabase
         .from("work_order_parts")
         .select("final_price")
-        .in("work_order_id", prevWoIds),
+        .in("work_order_id", woIds),
     ]);
-    prevRevenue =
+
+    return (
       (svcs.data ?? []).reduce((s, r) => s + Number(r.final_price), 0) +
-      (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
+      (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0)
+    );
   }
+
+  const [currentRevenue, prevRevenue] = await Promise.all([
+    fetchPeriodRevenue(periodStart, periodEnd),
+    fetchPeriodRevenue(prevStart, prevEnd),
+  ]);
+
+  const dailyRunRate = daysElapsed > 0 ? currentRevenue / daysElapsed : 0;
+  const projectedRevenue =
+    totalDays > 0 ? dailyRunRate * totalDays : currentRevenue;
 
   const projectedChangePct =
     prevRevenue > 0

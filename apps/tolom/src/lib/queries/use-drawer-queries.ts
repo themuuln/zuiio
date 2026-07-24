@@ -1,6 +1,10 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useCallback, useMemo, useRef } from "react";
 import type {
   CatalogPartItem,
@@ -17,8 +21,15 @@ import type {
 } from "@/lib/types";
 import { useCurrentOrg } from "./use-organization";
 
+// ── Per-work-order detail response ──────────────────────────────
+
 export interface DrawerDetailResponse {
   workOrder: WorkOrderDetail;
+}
+
+// ── Semi-static catalog response (shared across all drawer opens) ──
+
+export interface DrawerCatalogsResponse {
   servicesCatalog: ServiceCatalog[];
   partsCatalog: PartsCatalogItem[];
   globalServices: GlobalServiceCatalog[];
@@ -78,7 +89,6 @@ function mergeServices(
   const seen = new Set(orgServices.map((s) => s.name.toLowerCase()));
   return [
     ...orgServices.map((s) => {
-      // Primary: lookup by catalog ID; fallback: lookup by lowercased name
       const pm = priceMemory?.[s.id] ?? priceMemory?.[s.name.toLowerCase()];
       return {
         ...s,
@@ -96,7 +106,6 @@ function mergeServices(
     ...globalServices
       .filter((gs) => !seen.has(gs.name.toLowerCase()))
       .map((gs) => {
-        // Primary: lookup by catalog ID; fallback: lookup by lowercased name
         const pm = priceMemory?.[gs.id] ?? priceMemory?.[gs.name.toLowerCase()];
         return {
           id: gs.id,
@@ -195,17 +204,21 @@ function computeLowStock(
   return lowStock;
 }
 
-// ── Consolidated query key ─────────────────────────────────────
+// ── Query keys ─────────────────────────────────────────────────
 
 export const drawerDetailKeys = {
   all: (orgId: string, woId: string) => ["drawer-detail", orgId, woId] as const,
 };
 
-// ── Prefetch function (call on hover) ──────────────────────────
+export const drawerCatalogKeys = {
+  all: (orgId: string) => ["drawer-catalogs", orgId] as const,
+};
+
+// ── Prefetch: work order detail (call on hover) ────────────────
 
 /**
  * Warm the React Query cache before the drawer opens.
- * Prefetches the consolidated detail endpoint in a single request.
+ * Prefetches the per-work-order detail endpoint.
  */
 export async function prefetchDrawerData(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -228,22 +241,37 @@ export async function prefetchDrawerData(
   });
 }
 
-// ── Drawer data hook (React Query) ─────────────────────────────
+// ── Prefetch: catalogs (call once, or on first drawer open) ────
+
+/**
+ * Warm the catalog cache. Catalogs are semi-static — once fetched they
+ * stay cached for 5 minutes and are shared across all drawer opens.
+ */
+export async function prefetchDrawerCatalogs(
+  queryClient: ReturnType<typeof useQueryClient>,
+  orgId: string | null | undefined,
+): Promise<void> {
+  if (!orgId) return;
+
+  await queryClient.prefetchQuery({
+    queryKey: drawerCatalogKeys.all(orgId),
+    queryFn: async () => {
+      const res = await fetch(`/api/organizations/${orgId}/catalogs`);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as DrawerCatalogsResponse;
+    },
+    staleTime: 300_000, // 5 min — catalogs rarely change
+  });
+}
+
+// ── Drawer work order detail hook ──────────────────────────────
 
 interface UseDrawerQueriesResult {
   orgId: string | null;
   orgIdRef: React.MutableRefObject<string | null>;
   wo: WorkOrderDetail | null;
   setWo: React.Dispatch<React.SetStateAction<WorkOrderDetail | null>>;
-  catalog: CatalogServiceItem[];
-  partsCatalog: CatalogPartItem[];
-  lowStockMap: Record<string, { quantity: number; threshold: number }>;
-  mechanics: Array<{ id: string; full_name: string }>;
-  orgSettings: {
-    default_tax_rate: number | null;
-    payment_method_fees: Record<string, number> | null;
-    transfer_bank_accounts: unknown[] | null;
-  } | null;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -258,7 +286,7 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
   const orgIdRef = useRef<string | null>(null);
   orgIdRef.current = orgId;
 
-  // ── Consolidated query: single API call for all drawer data ──
+  // ── Per-work-order detail query ──
   const detailQuery = useQuery({
     queryKey: drawerDetailKeys.all(orgId ?? "", woId ?? ""),
     queryFn: async () => {
@@ -272,59 +300,13 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
     enabled: !!orgId && !!woId,
     staleTime: 30_000,
     retry: false,
+    // Keep previous work order data visible when switching between drawers
+    placeholderData: keepPreviousData,
   });
 
   const response = detailQuery.data;
 
-  // ── Vehicle context for match quality ──
-
-  const currentMake = response?.workOrder?.vehicle?.make;
-  const currentModel = response?.workOrder?.vehicle?.model;
-
-  // ── Derived data ──
-
-  const catalog = useMemo(
-    () =>
-      mergeServices(
-        response?.servicesCatalog ?? [],
-        response?.globalServices ?? [],
-        response?.priceMemory?.services,
-        currentMake,
-        currentModel,
-      ),
-    [
-      response?.servicesCatalog,
-      response?.globalServices,
-      response?.priceMemory?.services,
-      currentMake,
-      currentModel,
-    ],
-  );
-
-  const partsCatalog = useMemo(
-    () =>
-      mergeParts(
-        response?.partsCatalog ?? [],
-        response?.globalParts ?? [],
-        response?.priceMemory?.parts,
-        currentMake,
-        currentModel,
-      ),
-    [
-      response?.partsCatalog,
-      response?.globalParts,
-      response?.priceMemory?.parts,
-      currentMake,
-      currentModel,
-    ],
-  );
-
-  const lowStockMap = useMemo(
-    () => computeLowStock(response?.balances ?? [], response?.thresholds ?? []),
-    [response?.balances, response?.thresholds],
-  );
-
-  // ── setWo: update the work order inside the consolidated cache ──
+  // ── setWo: update the work order inside the detail cache ──
 
   const setWo = useCallback(
     (
@@ -350,7 +332,7 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
   // ── Loading state ──
 
   const isLoading =
-    orgQuery.isLoading || (detailQuery.isEnabled && detailQuery.isLoading);
+    orgQuery.isLoading || (detailQuery.isEnabled && detailQuery.isPending);
 
   const isError = orgQuery.isError || detailQuery.isError;
   const error = orgQuery.error || detailQuery.error;
@@ -360,13 +342,82 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
     orgIdRef,
     wo: response?.workOrder ?? null,
     setWo,
+    isLoading,
+    isError,
+    error,
+  };
+}
+
+// ── Drawer catalogs hook (semi-static, cached across drawer opens) ──
+
+interface UseDrawerCatalogsResult {
+  catalog: CatalogServiceItem[];
+  partsCatalog: CatalogPartItem[];
+  lowStockMap: Record<string, { quantity: number; threshold: number }>;
+  mechanics: Array<{ id: string; full_name: string }>;
+  orgSettings: DrawerCatalogsResponse["orgSettings"];
+  isPending: boolean;
+}
+
+export function useDrawerCatalogs(
+  orgId: string | null,
+  enabled: boolean,
+): UseDrawerCatalogsResult {
+  const catalogsQuery = useQuery({
+    queryKey: drawerCatalogKeys.all(orgId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(`/api/organizations/${orgId}/catalogs`);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as DrawerCatalogsResponse;
+    },
+    enabled: !!orgId && enabled,
+    staleTime: 300_000, // 5 min — catalogs rarely change
+    gcTime: 600_000, // 10 min before garbage collection
+    retry: false,
+    placeholderData: keepPreviousData,
+  });
+
+  const response = catalogsQuery.data;
+
+  // When no WO is selected yet, we don't have vehicle make/model for
+  // match quality — that's fine, catalogs just have default pricing.
+  const catalog = useMemo(
+    () =>
+      response
+        ? mergeServices(
+            response.servicesCatalog,
+            response.globalServices,
+            response.priceMemory?.services,
+          )
+        : [],
+    [response],
+  );
+
+  const partsCatalog = useMemo(
+    () =>
+      response
+        ? mergeParts(
+            response.partsCatalog,
+            response.globalParts,
+            response.priceMemory?.parts,
+          )
+        : [],
+    [response],
+  );
+
+  const lowStockMap = useMemo(
+    () =>
+      response ? computeLowStock(response.balances, response.thresholds) : {},
+    [response],
+  );
+
+  return {
     catalog,
     partsCatalog,
     lowStockMap,
     mechanics: response?.mechanics ?? [],
     orgSettings: response?.orgSettings ?? null,
-    isLoading,
-    isError,
-    error,
+    isPending: catalogsQuery.isPending,
   };
 }

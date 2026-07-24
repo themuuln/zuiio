@@ -31,7 +31,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { ChangeStatusSheet } from "@/components/work-orders/change-status-drawer";
+import { ChangeStatusDrawer } from "@/components/work-orders/change-status-drawer";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
@@ -565,7 +565,7 @@ export default function WorkOrdersPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <ChangeStatusSheet
+      <ChangeStatusDrawer
         open={changeStatusWoId !== null}
         onOpenChange={(open) => {
           if (!open) setChangeStatusWoId(null);

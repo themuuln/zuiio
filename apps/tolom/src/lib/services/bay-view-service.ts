@@ -91,11 +91,17 @@ async function fetchBayViewData(
   orgId: string,
   branchId?: string,
 ): Promise<BayViewData> {
+  // Today's start for shift report queries
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
   // ── Batch 1: Independent queries (run in parallel) ──
-  // branches, work_orders, and organization_users have no deps on each other
+  // branches, work_orders, completed_today, and organization_users
+  // have no deps on each other
   const [
     { data: allBranches, error: branchesErr },
     { data: activeWOs, error: activeWOsErr },
+    { data: completedToday, error: completedTodayErr },
     memberQueryResult,
   ] = await Promise.all([
     // 1a. Branches (for pills, bay count, branch sections)
@@ -117,7 +123,18 @@ async function fetchBayViewData(
       .is("deleted_at", null)
       .order("queue_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true }),
-    // 1c. Mechanic role members (for mechanic panel)
+    // 1c. Completed work orders today (for shift report)
+    withBranchFilter(
+      db
+        .from("work_orders")
+        .select("total, completed_at, started_at")
+        .eq("organization_id", orgId)
+        .eq("status", "Completed")
+        .gte("completed_at", todayStart.toISOString())
+        .is("deleted_at", null),
+      branchId,
+    ),
+    // 1d. Mechanic role members (for mechanic panel)
     (async () => {
       let q = db
         .from("organization_users")
@@ -135,18 +152,20 @@ async function fetchBayViewData(
     capture(branchesErr, { context: "[bay-view-service] fetchBayViewData" });
   if (activeWOsErr)
     capture(activeWOsErr, { context: "[bay-view-service] fetchBayViewData" });
+  if (completedTodayErr)
+    capture(completedTodayErr, {
+      context: "[bay-view-service] fetchBayViewData",
+    });
   // Library boundary cast: async IIFE wraps PostgrestFilterBuilder, TS can't narrow the resolved type
   const { error: memberQueryErr } = memberQueryResult as unknown as {
     error: unknown;
   };
   if (memberQueryErr)
     capture(memberQueryErr, { context: "[bay-view-service] fetchBayViewData" });
-
-  // Check for Postgres permission-denied errors (42501) — the user's DB role
-  // doesn't have access. Surface a clear ForbiddenError instead of silent empty data.
   if (
     isPermissionError(branchesErr) ||
     isPermissionError(activeWOsErr) ||
+    isPermissionError(completedTodayErr) ||
     isPermissionError(memberQueryErr)
   ) {
     throw new ForbiddenError(
@@ -329,11 +348,61 @@ async function fetchBayViewData(
       workOrders.filter((wo) => wo.mechanic_id === p.id).length +
       (helperJobCount.get(p.id) ?? 0),
   })) as unknown as (Profile & { current_jobs: number })[];
-
   // Build branch sections for "All" mode
   const branchSections = branchId
     ? undefined
     : buildBranchSections(woWithDetails, allBranches ?? []);
+
+  // ── Shift report (computed inline, no separate query needed) ──
+  const completedTodayCount = completedToday?.length ?? 0;
+  const revenueToday =
+    completedToday?.reduce((sum, wo) => sum + Number(wo.total), 0) ?? 0;
+
+  let completedLaborMinutes = 0;
+  let avgDurationMinutes = 0;
+  if (completedToday && completedTodayCount > 0) {
+    let totalDurationMinutes = 0;
+    for (const wo of completedToday) {
+      if (!wo.started_at || !wo.completed_at) continue;
+      const diffMs =
+        new Date(wo.completed_at).getTime() - new Date(wo.started_at).getTime();
+      const mins = Math.round(diffMs / 60000);
+      if (Number.isFinite(mins) && mins > 0) {
+        totalDurationMinutes += mins;
+        completedLaborMinutes += mins;
+      }
+    }
+    avgDurationMinutes = Math.round(totalDurationMinutes / completedTodayCount);
+  }
+
+  const activeJobs = workOrders.length;
+
+  // Elapsed time for active jobs (elapsed so far today)
+  let activeLaborMinutes = 0;
+  const now = Date.now();
+  for (const wo of workOrders) {
+    if (!wo.started_at) continue;
+    const mins = Math.round((now - new Date(wo.started_at).getTime()) / 60000);
+    if (Number.isFinite(mins) && mins > 0) activeLaborMinutes += mins;
+  }
+
+  const totalLaborHours = (completedLaborMinutes + activeLaborMinutes) / 60;
+  const revenuePerLaborHour =
+    totalLaborHours > 0 ? Math.round(revenueToday / totalLaborHours) : 0;
+
+  const inBayCount = workOrders.filter((wo) => wo.bay_number != null).length;
+  const bayUtilization =
+    bayCount > 0 ? Math.round((inBayCount / bayCount) * 100) : 0;
+
+  const shiftReport: ShiftReport = {
+    completedToday: completedTodayCount,
+    revenueToday,
+    avgDurationMinutes,
+    bayUtilization,
+    bayCount,
+    activeJobs,
+    revenuePerLaborHour,
+  };
 
   return {
     bayCount,
@@ -342,6 +411,7 @@ async function fetchBayViewData(
     branchSections,
     waitingQueue: waiting as unknown as BayViewData["waitingQueue"],
     mechanics: mechList,
+    shiftReport,
   };
 }
 

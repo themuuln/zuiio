@@ -57,67 +57,39 @@ export async function getPartsCatalog(
   pageSize?: number,
   limit = 50,
 ): Promise<PartsCatalogItem[] | PaginatedResponse<PartsCatalogItem>> {
-  const supabase = db;
   const usePagination = typeof page === "number" && page > 0;
   const effectivePage = usePagination ? page : 1;
   const effectivePageSize = usePagination ? (pageSize ?? 50) : limit;
 
-  let query = supabase
-    .from("parts_catalog")
-    .select(
-      "id, organization_id, name, name_mn, part_number, category, unit, default_price, is_active, purchase_price, image_url, location, created_at, deleted_at, global_part_id",
-      usePagination ? { count: "exact" } : undefined,
-    )
-    .eq("organization_id", orgId)
-    .is("deleted_at", null);
-
-  if (usePagination) {
-    const from = (effectivePage - 1) * effectivePageSize;
-    const to = from + effectivePageSize - 1;
-    query = query.range(from, to);
-  } else {
-    query = query.limit(limit + 1);
-  }
-
-  const { data: parts, error, count } = await query;
+  const { data, error } = await withDbCapture(
+    "getPartsCatalog",
+    db.rpc("get_parts_catalog_with_popularity", {
+      p_org_id: orgId,
+      p_page: effectivePage,
+      p_page_size: effectivePageSize,
+    }),
+  );
   if (error) throw new Error(error.message);
 
-  const { data: assignments } = await supabase
-    .from("vehicle_model_parts")
-    .select("part_id")
-    .eq("organization_id", orgId);
-
-  const popularityMap: Record<string, number> = {};
-  if (assignments) {
-    const countMap: Record<string, number> = {};
-    for (const a of assignments) {
-      const pid = a.part_id as string;
-      countMap[pid] = (countMap[pid] || 0) + 1;
-    }
-    const maxModels = 26;
-    for (const [pid, count] of Object.entries(countMap)) {
-      popularityMap[pid] = Math.round((count / maxModels) * 100);
-    }
-  }
-
-  const result = (parts ?? []).map((p) => ({
-    ...p,
-    popularity_score: popularityMap[p.id] ?? 0,
-  }));
-
-  result.sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0));
+  const result = (data as unknown as {
+    data: PartsCatalogItem[];
+    total: number;
+  }) ?? {
+    data: [],
+    total: 0,
+  };
 
   if (usePagination) {
     return {
-      data: result,
-      total: count ?? 0,
+      data: result.data,
+      total: result.total,
       page: effectivePage,
       pageSize: effectivePageSize,
-      totalPages: Math.ceil((count ?? 0) / effectivePageSize),
+      totalPages: Math.ceil(result.total / effectivePageSize),
     } as unknown as PaginatedResponse<PartsCatalogItem>;
   }
 
-  return result as unknown as PartsCatalogItem[];
+  return result.data as unknown as PartsCatalogItem[];
 }
 
 export async function getPart(

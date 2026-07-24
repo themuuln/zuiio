@@ -11,7 +11,7 @@ interface Props {
   onCreated?: () => void;
 }
 
-export function AppointmentCreateSheet({
+export function AppointmentCreateDrawer({
   open,
   onOpenChange,
   orgId,

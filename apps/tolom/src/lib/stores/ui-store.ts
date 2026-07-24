@@ -5,6 +5,7 @@ import { immer } from "zustand/middleware/immer";
 interface UiState {
   sidebarCollapsed: boolean;
   selectedBranchId: string;
+  lastOrgId: string | null;
   activeFilters: Record<string, string>;
 }
 
@@ -12,6 +13,7 @@ interface UiActions {
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setSelectedBranchId: (id: string) => void;
+  setOrgId: (orgId: string) => void;
   setFilter: (key: string, value: string) => void;
   clearFilters: () => void;
 }
@@ -25,6 +27,7 @@ export const useUiStore = create<UiStore>()(
         // State
         sidebarCollapsed: false,
         selectedBranchId: "all",
+        lastOrgId: null,
         activeFilters: {},
 
         // Actions
@@ -40,6 +43,14 @@ export const useUiStore = create<UiStore>()(
           set((s) => {
             s.selectedBranchId = id;
           }),
+        setOrgId: (orgId) =>
+          set((s) => {
+            // If the org changed, reset branch selection to "all"
+            if (s.lastOrgId !== null && s.lastOrgId !== orgId) {
+              s.selectedBranchId = "all";
+            }
+            s.lastOrgId = orgId;
+          }),
         setFilter: (key, value) =>
           set((s) => {
             s.activeFilters[key] = value;
@@ -54,6 +65,7 @@ export const useUiStore = create<UiStore>()(
         partialize: (state) => ({
           sidebarCollapsed: state.sidebarCollapsed,
           selectedBranchId: state.selectedBranchId,
+          lastOrgId: state.lastOrgId,
         }),
       },
     ),
@@ -69,3 +81,4 @@ export const useSetSelectedBranchId = () =>
 export const useActiveFilters = () => useUiStore((s) => s.activeFilters);
 export const useFilter = (key: string) =>
   useUiStore((s) => s.activeFilters[key]);
+export const useSetOrgId = () => useUiStore((s) => s.setOrgId);

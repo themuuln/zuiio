@@ -67,7 +67,7 @@ const messages = {
     noWorkOrdersInPeriod: "No work orders in this period",
     workOrdersCount: "{count} work order(s)",
     resultsCount: "{count} results",
-    noMatches: "No matches for \"{query}\"",
+    noMatches: 'No matches for "{query}"',
     transactionsSheet: "Transactions",
     noFinancialData: "No financial data yet",
     noFinancialDataDesc:
@@ -128,9 +128,7 @@ describe("TransactionsTab", () => {
 
   it("renders export button with dated filename", () => {
     render(<TransactionsTab {...baseProps} />, { messages });
-    expect(
-      screen.getByText("transactions-2026-07-22.xlsx"),
-    ).toBeDefined();
+    expect(screen.getByText("transactions-2026-07-22.xlsx")).toBeDefined();
   });
 
   it("shows empty state message when filtered list is empty and search is active", () => {
@@ -144,9 +142,7 @@ describe("TransactionsTab", () => {
       />,
       { messages },
     );
-    expect(
-      screen.getByText("No work orders match your search"),
-    ).toBeDefined();
+    expect(screen.getByText("No work orders match your search")).toBeDefined();
   });
 
   it("shows no work orders in period when data is empty", () => {
@@ -160,9 +156,7 @@ describe("TransactionsTab", () => {
       />,
       { messages },
     );
-    expect(
-      screen.getByText("No work orders in this period"),
-    ).toBeDefined();
+    expect(screen.getByText("No work orders in this period")).toBeDefined();
   });
 
   it("renders without customer data gracefully", () => {

@@ -45,7 +45,7 @@ interface ServiceModelPricesSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function ServiceModelPricesSheet({
+export function ServiceModelPricesDrawer({
   serviceId,
   serviceName,
   defaultPrice,

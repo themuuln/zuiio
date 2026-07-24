@@ -15,7 +15,6 @@ import {
   getDashboardProfitSummary,
   getPnLSummary,
   getPreviousPeriodSummary,
-  getWorkOrderProfit,
 } from "./profitability";
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -60,10 +59,7 @@ beforeEach(() => {
 
 describe("calculateProfitability", () => {
   it("returns null for empty work order array", async () => {
-    const result = await calculateProfitability(
-      mockClient as any,
-      [],
-    );
+    const result = await calculateProfitability(mockClient as any, []);
     expect(result).toBeNull();
   });
 
@@ -82,21 +78,23 @@ describe("calculateProfitability", () => {
       work_order_services: svcBuilder,
       work_order_parts: partsBuilder,
     };
-    mockClient.from = vi.fn((table: string) => fromCalls[table] ?? makeEmptyBuilder());
-
-    const result = await calculateProfitability(
-      mockClient as any,
-      ["wo-1", "wo-2"],
+    mockClient.from = vi.fn(
+      (table: string) => fromCalls[table] ?? makeEmptyBuilder(),
     );
 
+    const result = await calculateProfitability(mockClient as any, [
+      "wo-1",
+      "wo-2",
+    ]);
+
     expect(result).not.toBeNull();
-    expect(result!.service_revenue).toBe(300000); // 100000 + 200000
-    expect(result!.service_cost).toBe(200000); // 40000*1 + 80000*2
-    expect(result!.parts_revenue).toBe(50000);
-    expect(result!.parts_cost).toBe(30000); // 30000*1
-    expect(result!.total_cost).toBe(230000);
-    expect(result!.gross_profit).toBe(120000); // 350000 - 230000
-    expect(result!.margin_percent).toBe(34.3); // (120000/350000)*100 ≈ 34.285 -> 34.3
+    expect(result?.service_revenue).toBe(300000); // 100000 + 200000
+    expect(result?.service_cost).toBe(200000); // 40000*1 + 80000*2
+    expect(result?.parts_revenue).toBe(50000);
+    expect(result?.parts_cost).toBe(30000); // 30000*1
+    expect(result?.total_cost).toBe(230000);
+    expect(result?.gross_profit).toBe(120000); // 350000 - 230000
+    expect(result?.margin_percent).toBe(34.3); // (120000/350000)*100 ≈ 34.285 -> 34.3
   });
 
   it("handles null unit_cost gracefully", async () => {
@@ -113,72 +111,21 @@ describe("calculateProfitability", () => {
       return makeEmptyBuilder();
     });
 
-    const result = await calculateProfitability(
-      mockClient as any,
-      ["wo-1"],
-    );
+    const result = await calculateProfitability(mockClient as any, ["wo-1"]);
 
-    expect(result!.service_cost).toBe(0);
-    expect(result!.parts_cost).toBe(0);
-    expect(result!.gross_profit).toBe(150000); // 100000 + 50000
+    expect(result?.service_cost).toBe(0);
+    expect(result?.parts_cost).toBe(0);
+    expect(result?.gross_profit).toBe(150000); // 100000 + 50000
   });
 
   it("handles empty services/parts gracefully", async () => {
     mockClient.from = vi.fn(() => makeServicesBuilder([]));
 
-    const result = await calculateProfitability(
-      mockClient as any,
-      ["wo-1"],
-    );
+    const result = await calculateProfitability(mockClient as any, ["wo-1"]);
 
-    expect(result!.total_cost).toBe(0);
-    expect(result!.gross_profit).toBe(0);
-    expect(result!.margin_percent).toBe(0);
-  });
-});
-
-// ── getWorkOrderProfit ─────────────────────────────────────
-
-describe("getWorkOrderProfit", () => {
-  it("computes profit for a single work order", async () => {
-    const svcBuilder = makeServicesBuilder([
-      { final_price: 150000, unit_cost: 60000, quantity: 1 },
-    ]);
-    const partsBuilder = makeServicesBuilder([
-      { final_price: 30000, unit_cost: 15000, quantity: 2 },
-    ]);
-
-    mockClient.from = vi.fn((table: string) => {
-      if (table === "work_order_services") return svcBuilder;
-      if (table === "work_order_parts") return partsBuilder;
-      return makeEmptyBuilder();
-    });
-
-    const result = await getWorkOrderProfit(
-      mockClient as any,
-      "wo-1",
-      "org-1",
-    );
-
-    expect(result.totalRevenue).toBe(180000);
-    expect(result.totalCost).toBe(90000); // 60000 + 15000*2
-    expect(result.grossProfit).toBe(90000);
-    expect(result.marginPercent).toBe(50); // (90000/180000)*100
-  });
-
-  it("handles empty services and parts", async () => {
-    mockClient.from = vi.fn(() => makeServicesBuilder([]));
-
-    const result = await getWorkOrderProfit(
-      mockClient as any,
-      "wo-1",
-      "org-1",
-    );
-
-    expect(result.totalRevenue).toBe(0);
-    expect(result.totalCost).toBe(0);
-    expect(result.grossProfit).toBe(0);
-    expect(result.marginPercent).toBe(0);
+    expect(result?.total_cost).toBe(0);
+    expect(result?.gross_profit).toBe(0);
+    expect(result?.margin_percent).toBe(0);
   });
 });
 
@@ -206,29 +153,24 @@ describe("getPreviousPeriodSummary", () => {
     );
 
     expect(result).not.toBeNull();
-    expect(result!.totalRevenue).toBe(0);
-    expect(result!.completedToday).toBe(0);
+    expect(result?.totalRevenue).toBe(0);
+    expect(result?.completedToday).toBe(0);
   });
 
   it("computes revenue from previous period WOs", async () => {
     // First call (work_orders) returns WO IDs
-    const woBuilder = makeServicesBuilder([
-      { id: "wo-1" },
-      { id: "wo-2" },
-    ]);
+    const woBuilder = makeServicesBuilder([{ id: "wo-1" }, { id: "wo-2" }]);
 
     // Second calls (services + parts) return data
     const svcBuilder = makeServicesBuilder([
       { final_price: 200000 },
       { final_price: 300000 },
     ]);
-    const partsBuilder = makeServicesBuilder([
-      { final_price: 100000 },
-    ]);
+    const partsBuilder = makeServicesBuilder([{ final_price: 100000 }]);
 
-    let callCount = 0;
+    let _callCount = 0;
     mockClient.from = vi.fn((table: string) => {
-      callCount++;
+      _callCount++;
       if (table === "work_orders") return woBuilder;
       if (table === "work_order_services") return svcBuilder;
       if (table === "work_order_parts") return partsBuilder;
@@ -241,10 +183,10 @@ describe("getPreviousPeriodSummary", () => {
       "today",
     );
 
-    expect(result!.totalRevenue).toBe(600000); // 200000 + 300000 + 100000
-    expect(result!.completedToday).toBe(2);
-    expect(result!.serviceRevenue).toBe(500000);
-    expect(result!.partsRevenue).toBe(100000);
+    expect(result?.totalRevenue).toBe(600000); // 200000 + 300000 + 100000
+    expect(result?.completedToday).toBe(2);
+    expect(result?.serviceRevenue).toBe(500000);
+    expect(result?.partsRevenue).toBe(100000);
   });
 });
 
@@ -254,10 +196,7 @@ describe("getDashboardProfitSummary", () => {
   it("returns zero profits when no WOs exist", async () => {
     mockClient.from = vi.fn(() => makeServicesBuilder([]));
 
-    const result = await getDashboardProfitSummary(
-      mockClient as any,
-      "org-1",
-    );
+    const result = await getDashboardProfitSummary(mockClient as any, "org-1");
 
     expect(result.todayProfit.totalRevenue).toBe(0);
     expect(result.todayProfit.grossProfit).toBe(0);
@@ -284,10 +223,7 @@ describe("getDashboardProfitSummary", () => {
       return makeServicesBuilder([]);
     });
 
-    const result = await getDashboardProfitSummary(
-      mockClient as any,
-      "org-1",
-    );
+    const result = await getDashboardProfitSummary(mockClient as any, "org-1");
 
     // Each period computed 100K revenue - 40K cost = 60K profit
     expect(result.todayProfit.totalRevenue).toBe(100000);
@@ -301,14 +237,11 @@ describe("getDashboardProfitSummary", () => {
 
 describe("getPnLSummary", () => {
   it("returns full P&L summary with revenue, costs, and expenses", async () => {
-    let fromCallCount = 0;
+    let _fromCallCount = 0;
     mockClient.from = vi.fn((table: string) => {
-      fromCallCount++;
+      _fromCallCount++;
       if (table === "work_orders") {
-        return makeServicesBuilder([
-          { id: "wo-1" },
-          { id: "wo-2" },
-        ]);
+        return makeServicesBuilder([{ id: "wo-1" }, { id: "wo-2" }]);
       }
       if (table === "work_order_services") {
         return makeServicesBuilder([
@@ -352,9 +285,7 @@ describe("getPnLSummary", () => {
   it("handles empty work order period", async () => {
     mockClient.from = vi.fn((table: string) => {
       if (table === "expenses") {
-        return makeServicesBuilder([
-          { amount: 20000, category: "Other" },
-        ]);
+        return makeServicesBuilder([{ amount: 20000, category: "Other" }]);
       }
       return makeServicesBuilder([]);
     });
@@ -392,21 +323,16 @@ describe("getComparisonData", () => {
   });
 
   it("computes previous period comparison data", async () => {
-    const woBuilder = makeServicesBuilder([
-      { id: "prev-1" },
-      { id: "prev-2" },
-    ]);
+    const woBuilder = makeServicesBuilder([{ id: "prev-1" }, { id: "prev-2" }]);
     const svcBuilder = makeServicesBuilder([
       { final_price: 200000 },
       { final_price: 300000 },
     ]);
-    const partsBuilder = makeServicesBuilder([
-      { final_price: 150000 },
-    ]);
+    const partsBuilder = makeServicesBuilder([{ final_price: 150000 }]);
 
-    let callCount = 0;
+    let _callCount = 0;
     mockClient.from = vi.fn((table: string) => {
-      callCount++;
+      _callCount++;
       if (table === "work_orders") return woBuilder;
       if (table === "work_order_services") return svcBuilder;
       if (table === "work_order_parts") return partsBuilder;
@@ -423,9 +349,9 @@ describe("getComparisonData", () => {
     );
 
     expect(result).not.toBeNull();
-    expect(result!.work_orders_completed).toBe(2);
-    expect(result!.total_revenue).toBe(650000); // 200000 + 300000 + 150000
-    expect(result!.services_count).toBe(2);
-    expect(result!.parts_count).toBe(1);
+    expect(result?.work_orders_completed).toBe(2);
+    expect(result?.total_revenue).toBe(650000); // 200000 + 300000 + 150000
+    expect(result?.services_count).toBe(2);
+    expect(result?.parts_count).toBe(1);
   });
 });

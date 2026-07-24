@@ -1,7 +1,6 @@
 // ─── Card Status Styles ────────────────────────────────────
 // Shared tinted background recipe for status-driven cards.
-// Derived from bay-view-v3 BAY_STATUS_META — same color tokens,
-// same structure. Every status gets: bg (tinted card), ring (border accent),
+// Every status gets: bg (tinted card), ring (border accent),
 // text (label/icon color). Dark mode via opacity modifiers.
 
 export interface CardStatusStyle {

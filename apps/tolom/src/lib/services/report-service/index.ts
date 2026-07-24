@@ -10,7 +10,6 @@ export {
   getCustomerRetention,
   getDailyTimeline,
   getDashboardData,
-  getDashboardMetricsFast,
 } from "./dashboard";
 // ── End of Day ──
 export { getEndOfDaySummary } from "./eod";
@@ -29,7 +28,6 @@ export {
   getDashboardProfitSummary,
   getPnLSummary,
   getPreviousPeriodSummary,
-  getWorkOrderProfit,
 } from "./profitability";
 // ── Batched query helpers ──
 export {

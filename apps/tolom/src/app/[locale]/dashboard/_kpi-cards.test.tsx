@@ -1,13 +1,13 @@
 import { render, screen } from "@testing-library/react";
-import { DollarSign, Users } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { describe, expect, it } from "vitest";
 import { KpiCard } from "./_kpi-cards";
 
 vi.mock("./_kpi-sparkline", () => ({
   KpiSparkline: (props: { data?: { value: number }[] }) =>
-    props.data && props.data.length >= 2
-      ? <div data-testid="mock-sparkline">Sparkline</div>
-      : null,
+    props.data && props.data.length >= 2 ? (
+      <div data-testid="mock-sparkline">Sparkline</div>
+    ) : null,
 }));
 describe("KpiCard", () => {
   const defaultProps = {
@@ -29,9 +29,7 @@ describe("KpiCard", () => {
   });
 
   it("shows skeleton when loading", () => {
-    const { container } = render(
-      <KpiCard {...defaultProps} loading />,
-    );
+    const { container } = render(<KpiCard {...defaultProps} loading />);
     expect(screen.queryByText("₮ 12,430,000")).toBeNull();
     const skeleton = container.querySelector('[data-slot="skeleton"]');
     expect(skeleton).toBeInTheDocument();
@@ -39,7 +37,11 @@ describe("KpiCard", () => {
 
   it("hides sparkline when loading", () => {
     render(
-      <KpiCard {...defaultProps} loading sparklineData={[{ value: 1 }, { value: 5 }]} />,
+      <KpiCard
+        {...defaultProps}
+        loading
+        sparklineData={[{ value: 1 }, { value: 5 }]}
+      />,
     );
     expect(screen.queryByTestId("mock-sparkline")).toBeNull();
   });
@@ -54,10 +56,7 @@ describe("KpiCard", () => {
     expect(screen.getByText("12.5%")).toBeInTheDocument();
     expect(screen.getByText("(₮ 1.2M)")).toBeInTheDocument();
     const { container } = render(
-      <KpiCard
-        {...defaultProps}
-        trend={{ direction: "up", value: "12.5%" }}
-      />,
+      <KpiCard {...defaultProps} trend={{ direction: "up", value: "12.5%" }} />,
     );
     // ArrowUp renders as an SVG
     expect(container.querySelector(".lucide-arrow-up")).toBeInTheDocument();
@@ -94,12 +93,7 @@ describe("KpiCard", () => {
   });
 
   it("shows comparisonLabel when no trend is provided", () => {
-    render(
-      <KpiCard
-        {...defaultProps}
-        comparisonLabel="vs last period"
-      />,
-    );
+    render(<KpiCard {...defaultProps} comparisonLabel="vs last period" />);
     expect(screen.getByText("vs last period")).toBeInTheDocument();
   });
 
@@ -127,12 +121,7 @@ describe("KpiCard", () => {
   });
 
   it("does not render sparkline with less than 2 data points", () => {
-    render(
-      <KpiCard
-        {...defaultProps}
-        sparklineData={[{ value: 10 }]}
-      />,
-    );
+    render(<KpiCard {...defaultProps} sparklineData={[{ value: 10 }]} />);
     expect(screen.queryByTestId("mock-sparkline")).toBeNull();
   });
 

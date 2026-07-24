@@ -1,4 +1,4 @@
-import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { render } from "@/test/test-utils";
 import { DashboardPage } from "./_dashboard-client";
@@ -17,10 +17,7 @@ vi.mock("next/dynamic", () => ({
 }));
 
 // next-intl — preserve NextIntlClientProvider (used by test-utils), mock useTranslations
-const translator = (
-  key: string,
-  values?: Record<string, string | number>,
-) => {
+const translator = (key: string, values?: Record<string, string | number>) => {
   const labels: Record<string, string> = {
     "dashboard.welcome": "Welcome",
     "dashboard.subtitle": "Your shop at a glance",
@@ -67,9 +64,7 @@ const translator = (
 };
 
 vi.mock("next-intl", async () => {
-  const actual = await vi.importActual<typeof import("next-intl")>(
-    "next-intl",
-  );
+  const actual = await vi.importActual<typeof import("next-intl")>("next-intl");
   return {
     ...actual,
     useTranslations: () => translator,
@@ -91,9 +86,9 @@ vi.mock("@/lib/i18n/navigation", () => ({
 }));
 
 // Page header
-const mockOpenSheet = vi.fn();
+const mockOpenDrawer = vi.fn();
 vi.mock("@/hooks/use-page-header", () => ({
-  usePageHeader: () => ({ openSheet: mockOpenSheet }),
+  usePageHeader: () => ({ openDrawer: mockOpenDrawer }),
 }));
 
 // Current user role — dynamic mocks
@@ -174,11 +169,7 @@ vi.mock("./_low-stock-card", () => ({
 }));
 
 vi.mock("./_recent-work-orders", () => ({
-  RecentWorkOrdersTable: ({
-    workOrders,
-  }: {
-    workOrders: unknown[];
-  }) => (
+  RecentWorkOrdersTable: ({ workOrders }: { workOrders: unknown[] }) => (
     <div data-testid="recent-wo-table" data-count={workOrders?.length}>
       RecentWorkOrdersTable
     </div>
@@ -246,7 +237,7 @@ describe("DashboardPage", () => {
     mockRoleLoading = false;
     mockRouterReplace.mockReset();
     mockRouterPush.mockReset();
-    mockOpenSheet.mockReset();
+    mockOpenDrawer.mockReset();
     mockRefetch.mockReset();
   });
 
@@ -296,7 +287,9 @@ describe("DashboardPage", () => {
     // Inline chart skeleton cards are rendered instead (Cards with Skeletons)
     // We verify that the chart section placeholder exists by observing
     // Skeletons in the grid container (two card-skeleton groups)
-    const skeletonElements = document.querySelectorAll('[data-slot="skeleton"]');
+    const skeletonElements = document.querySelectorAll(
+      '[data-slot="skeleton"]',
+    );
     expect(skeletonElements.length).toBeGreaterThan(0);
   });
 
@@ -308,12 +301,12 @@ describe("DashboardPage", () => {
     expect(screen.getByTestId("section-header")).toBeInTheDocument();
 
     // RecentWorkOrdersTable must NOT be rendered
-    expect(
-      screen.queryByTestId("recent-wo-table"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("recent-wo-table")).not.toBeInTheDocument();
 
     // There should be skeleton elements in the DOM (the 5 WO row skeletons)
-    const skeletonElements = document.querySelectorAll('[data-slot="skeleton"]');
+    const skeletonElements = document.querySelectorAll(
+      '[data-slot="skeleton"]',
+    );
     expect(skeletonElements.length).toBeGreaterThan(0);
   });
 
@@ -371,9 +364,7 @@ describe("DashboardPage", () => {
     render(<DashboardPage />);
 
     expect(screen.getByText("Insights")).toBeInTheDocument();
-    expect(
-      screen.getByText("Revenue up 15% this month"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Revenue up 15% this month")).toBeInTheDocument();
     expect(
       screen.getByText("Customer retention improving"),
     ).toBeInTheDocument();
@@ -386,9 +377,7 @@ describe("DashboardPage", () => {
     render(<DashboardPage />);
 
     await waitFor(() => {
-      expect(mockRouterReplace).toHaveBeenCalledWith(
-        "/dashboard/bay-view",
-      );
+      expect(mockRouterReplace).toHaveBeenCalledWith("/dashboard/bay-view");
     });
   });
 
@@ -410,16 +399,16 @@ describe("DashboardPage", () => {
   });
 
   // ── 11. New Customer / New Work Order buttons ──
-  it("opens New Customer and New Work Order sheets via openSheet", () => {
+  it("opens New Customer and New Work Order drawers via openDrawer", () => {
     render(<DashboardPage />);
 
     const newCustomerBtn = screen.getByText("New Customer");
     fireEvent.click(newCustomerBtn);
-    expect(mockOpenSheet).toHaveBeenCalledWith("newCustomer");
+    expect(mockOpenDrawer).toHaveBeenCalledWith("newCustomer");
 
     const newWorkOrderBtn = screen.getByText("New Work Order");
     fireEvent.click(newWorkOrderBtn);
-    expect(mockOpenSheet).toHaveBeenCalledWith("newWorkOrder");
+    expect(mockOpenDrawer).toHaveBeenCalledWith("newWorkOrder");
   });
 
   // ── 12. Period toggle buttons ──

@@ -49,19 +49,17 @@ describe("RevenueSplitBar", () => {
   });
 
   it("handles 100% service, 0% parts", () => {
-    render(
-      <RevenueSplitBar total={500000} service={500000} parts={0} />,
-      { messages },
-    );
+    render(<RevenueSplitBar total={500000} service={500000} parts={0} />, {
+      messages,
+    });
     expect(screen.getByText("(100%)")).toBeDefined();
     expect(screen.getByText("(0%)")).toBeDefined();
   });
 
   it("handles 0% service, 100% parts", () => {
-    render(
-      <RevenueSplitBar total={500000} service={0} parts={500000} />,
-      { messages },
-    );
+    render(<RevenueSplitBar total={500000} service={0} parts={500000} />, {
+      messages,
+    });
     expect(screen.getByText("(0%)")).toBeDefined();
     expect(screen.getByText("(100%)")).toBeDefined();
   });

@@ -1,4 +1,8 @@
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type {
   GlobalPartCatalog,
@@ -73,7 +77,7 @@ const fetchPurchaseOrders = createOrgQuery<PurchaseOrderWithSupplier[]>(
 
 export function usePartsCatalog(
   orgId: string | undefined,
-  branchId?: string | null,
+  _branchId?: string | null,
 ) {
   return useQuery({
     queryKey: inventoryKeys.parts(orgId ?? ""),

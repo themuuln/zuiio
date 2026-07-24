@@ -48,7 +48,7 @@ interface VariantEditorSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function VariantEditorSheet({
+export function VariantEditorDrawer({
   entityType,
   entityId,
   entityName,

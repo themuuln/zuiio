@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { VariantEditorSheet } from "@/components/services/variant-editor-drawer";
+import { VariantEditorDrawer } from "@/components/services/variant-editor-drawer";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -57,7 +57,7 @@ interface EditServiceSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditServiceSheet({
+export function EditServiceDrawer({
   service,
   categories,
   open,
@@ -173,7 +173,7 @@ export function EditServiceSheet({
       size="lg"
       modal={false}
       nestedContent={
-        <VariantEditorSheet
+        <VariantEditorDrawer
           entityType="service"
           entityId={service?.id ?? null}
           entityName={service?.name ?? ""}

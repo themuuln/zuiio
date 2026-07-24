@@ -8,7 +8,11 @@
  * - Retry on failure
  * - Shared cache between tabs
  */
-import { keepPreviousData, type UseQueryResult, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
 import type {
   CustomerRetentionData,
   PnLSummary,

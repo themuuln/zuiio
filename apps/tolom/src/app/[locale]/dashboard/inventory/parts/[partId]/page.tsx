@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import { PartForm } from "@/components/inventory/part-form";
 import { QuickStockInDialog } from "@/components/inventory/quick-stock-in-dialog";
 import { ReturnToSupplierDialog } from "@/components/inventory/return-to-supplier-dialog";
-import { VariantEditorSheet } from "@/components/services/variant-editor-drawer";
+import { VariantEditorDrawer } from "@/components/services/variant-editor-drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -238,7 +238,7 @@ export default function PartDetailPage() {
       </div>
 
       {/* Variant Editor */}
-      <VariantEditorSheet
+      <VariantEditorDrawer
         entityType="part"
         entityId={part?.id ?? null}
         entityName={part?.name ?? ""}

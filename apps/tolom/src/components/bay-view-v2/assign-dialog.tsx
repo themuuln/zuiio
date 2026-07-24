@@ -18,7 +18,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { NewCustomerSheet } from "@/components/customers/new-customer-drawer";
+import { NewCustomerDrawer } from "@/components/customers/new-customer-drawer";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
 import {
   type SortableItem,
@@ -36,7 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
-import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-drawer";
+import { NewVehicleDrawer } from "@/components/vehicles/new-vehicle-drawer";
 import {
   useVehicleSearch,
   type VehicleSearchResult,
@@ -669,7 +669,7 @@ export function AssignDialog({
         </DragOverlay>
       </DndContext>
 
-      <NewVehicleSheet
+      <NewVehicleDrawer
         open={showNewVehicle}
         onOpenChange={setShowNewVehicle}
         initialPlateNumber={search.trim() || undefined}
@@ -679,7 +679,7 @@ export function AssignDialog({
           setTimeout(() => searchRef.current?.focus(), 100);
         }}
       />
-      <NewCustomerSheet
+      <NewCustomerDrawer
         open={showNewCustomer}
         onOpenChange={setShowNewCustomer}
         onSuccess={() => {

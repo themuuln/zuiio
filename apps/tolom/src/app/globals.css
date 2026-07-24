@@ -53,6 +53,8 @@
   --ease-in-expo: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --animate-marquee: marquee 30s linear infinite;
+  --animate-drawer-slide-in-right: drawer-slide-in-right 300ms ease-out;
+  --animate-drawer-slide-in-bottom: drawer-slide-in-bottom 300ms ease-out;
   --animate-pulse-border: pulse-border 1.5s ease-in-out infinite;
   --animate-bay-assigned: bay-assigned 500ms ease-out-quart forwards;
   --radius-sm: calc(var(--radius) * 0.6);
@@ -363,6 +365,26 @@ html {
     opacity: 0.7;
   }
 }
+
+/* Drawer animations */
+@keyframes drawer-slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawer-slide-in-bottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 
 /* Reduced motion: disable decorative animations, keep informational ones */
 @media (prefers-reduced-motion: reduce) {

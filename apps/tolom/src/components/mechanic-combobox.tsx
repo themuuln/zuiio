@@ -3,7 +3,7 @@
 import { Crown, Plus, Search, Users } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
-import { NewMechanicSheet } from "@/components/new-mechanic-drawer";
+import { NewMechanicDrawer } from "@/components/new-mechanic-drawer";
 import { Input } from "@/components/ui/input";
 import type { MechanicPickerOption } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
@@ -272,7 +272,7 @@ export function MechanicCombobox({
       </div>
 
       {/* Add mechanic sheet */}
-      <NewMechanicSheet
+      <NewMechanicDrawer
         open={addOpen}
         onOpenChange={(open) => {
           setAddOpen(open);

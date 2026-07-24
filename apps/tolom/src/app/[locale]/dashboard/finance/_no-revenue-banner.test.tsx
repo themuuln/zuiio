@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { render as renderWithMessages } from "@/test/test-utils";
 import { NoRevenueBanner } from "./_no-revenue-banner";
@@ -26,9 +26,7 @@ describe("NoRevenueBanner", () => {
     renderWithMessages(<NoRevenueBanner activeWorkOrders={0} />, {
       messages: financeMessages,
     });
-    expect(
-      screen.getByText(/Complete these work orders/),
-    ).toBeDefined();
+    expect(screen.getByText(/Complete these work orders/)).toBeDefined();
     expect(screen.getByText("Completed")).toBeDefined();
   });
 

@@ -90,7 +90,7 @@ export default function DashboardPage() {
     values?: Record<string, string | number>,
   ) => string;
   const router = useRouter();
-  const { openSheet } = usePageHeader();
+  const { openDrawer } = usePageHeader();
   const { isMechanic, loading: roleLoading } = useCurrentUserRole();
 
   // Redirect mechanics to bay view
@@ -154,7 +154,6 @@ export default function DashboardPage() {
     data,
     isPending: dashboardLoading,
     isFetching: dashboardFetching,
-    isPlaceholderData,
     error: dashboardError,
     refetch: refetchDashboard,
   } = useDashboard(effectiveOrgId, {
@@ -313,214 +312,215 @@ export default function DashboardPage() {
         </div>
       )}
       <div className="flex flex-col gap-8 pb-8">
-      {/* Inline error banner */}
-      {hasError && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive flex items-center justify-between">
-          <span>{errorText ?? t("common.noData")}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={
-              dashboardError
-                ? () => refetchDashboard()
-                : () => window.location.reload()
-            }
-          >
-            {t("common.retry")}
-          </Button>
-        </div>
-      )}
-
-      {/* Header: greeting + period selector + quick actions */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <Typography.H2 className="m-0">
-            {t("dashboard.welcome")}
-          </Typography.H2>
-          <Typography.Muted className="mt-1">
-            {t("dashboard.subtitle")}
-          </Typography.Muted>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <ToggleGroup
-            variant="outline"
-            size="sm"
-            value={[period]}
-            onValueChange={(values) => {
-              const next = values[0] as DashboardPeriod | undefined;
-              if (next && next !== period) changePeriod(next);
-            }}
-            className="gap-1"
-          >
-            {PERIODS.map((p) => (
-              <ToggleGroupItem key={p} value={p}>
-                {t(PERIOD_LABEL_KEYS[p])}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <div className="flex items-center gap-2">
+        {/* Inline error banner */}
+        {hasError && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive flex items-center justify-between">
+            <span>{errorText ?? t("common.noData")}</span>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => openSheet("newCustomer")}
+              onClick={
+                dashboardError
+                  ? () => refetchDashboard()
+                  : () => window.location.reload()
+              }
             >
-              <UserPlus className="size-4" />
-              {t("dashboard.newCustomer")}
-            </Button>
-            <Button size="sm" onClick={() => openSheet("newWorkOrder")}>
-              <Plus className="size-4" />
-              {t("dashboard.newWorkOrder")}
+              {t("common.retry")}
             </Button>
           </div>
+        )}
+
+        {/* Header: greeting + period selector + quick actions */}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <Typography.H2 className="m-0">
+              {t("dashboard.welcome")}
+            </Typography.H2>
+            <Typography.Muted className="mt-1">
+              {t("dashboard.subtitle")}
+            </Typography.Muted>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <ToggleGroup
+              variant="outline"
+              size="sm"
+              value={[period]}
+              onValueChange={(values) => {
+                const next = values[0] as DashboardPeriod | undefined;
+                if (next && next !== period) changePeriod(next);
+              }}
+              className="gap-1"
+            >
+              {PERIODS.map((p) => (
+                <ToggleGroupItem key={p} value={p}>
+                  {t(PERIOD_LABEL_KEYS[p])}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openDrawer("newCustomer")}
+              >
+                <UserPlus className="size-4" />
+                {t("dashboard.newCustomer")}
+              </Button>
+              <Button size="sm" onClick={() => openDrawer("newWorkOrder")}>
+                <Plus className="size-4" />
+                {t("dashboard.newWorkOrder")}
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Inventory alert — renders only when parts are low/out of stock */}
-      {orgId && <LowStockCard orgId={orgId} />}
+        {/* Inventory alert — renders only when parts are low/out of stock */}
+        {orgId && <LowStockCard orgId={orgId} />}
 
-      {/* 4 KPI cards — always visible, skeleton shows for values while loading */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-        <KpiCard
-          label={t("dashboard.totalRevenue")}
-          value={formatCurrency(summary?.totalRevenue ?? 0)}
-          icon={DollarSign}
-          loading={showSkeletons}
-          accentKey="totalRevenue"
-          trend={revenueTrendKpi}
-          comparisonLabel={revenueTrendKpi ? vsPrevLabel : undefined}
-          sparklineData={
-            data?.revenueTrend?.map((p) => ({ value: p.revenue })) ?? undefined
-          }
-          sparklineColor="var(--chart-1)"
-        />
-        <KpiCard
-          label={t("dashboard.activeWorkOrders")}
-          value={String(summary?.activeWorkOrders ?? 0)}
-          icon={Clock}
-          loading={showSkeletons}
-          accentKey="activeWorkOrders"
-        />
-        <KpiCard
-          label={t("dashboard.totalCustomers")}
-          value={String(summary?.totalCustomers ?? 0)}
-          icon={Users}
-          loading={showSkeletons}
-          accentKey="totalCustomers"
-          sparklineData={
-            data?.customerAcquisitionTrend?.map((p) => ({
-              value: p.newCustomers,
-            })) ?? undefined
-          }
-          sparklineColor="var(--chart-2)"
-        />
-        <KpiCard
-          label={t("dashboard.avgRepairOrder")}
-          value={formatCurrency(summary?.avgRepairOrderValue ?? 0)}
-          icon={TrendingUp}
-          loading={showSkeletons}
-          accentKey="avgRepairOrder"
-          trend={aroTrendKpi}
-          comparisonLabel={aroTrendKpi ? vsPrevLabel : undefined}
-        />
-      </div>
+        {/* 4 KPI cards — always visible, skeleton shows for values while loading */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+          <KpiCard
+            label={t("dashboard.totalRevenue")}
+            value={formatCurrency(summary?.totalRevenue ?? 0)}
+            icon={DollarSign}
+            loading={showSkeletons}
+            accentKey="totalRevenue"
+            trend={revenueTrendKpi}
+            comparisonLabel={revenueTrendKpi ? vsPrevLabel : undefined}
+            sparklineData={
+              data?.revenueTrend?.map((p) => ({ value: p.revenue })) ??
+              undefined
+            }
+            sparklineColor="var(--chart-1)"
+          />
+          <KpiCard
+            label={t("dashboard.activeWorkOrders")}
+            value={String(summary?.activeWorkOrders ?? 0)}
+            icon={Clock}
+            loading={showSkeletons}
+            accentKey="activeWorkOrders"
+          />
+          <KpiCard
+            label={t("dashboard.totalCustomers")}
+            value={String(summary?.totalCustomers ?? 0)}
+            icon={Users}
+            loading={showSkeletons}
+            accentKey="totalCustomers"
+            sparklineData={
+              data?.customerAcquisitionTrend?.map((p) => ({
+                value: p.newCustomers,
+              })) ?? undefined
+            }
+            sparklineColor="var(--chart-2)"
+          />
+          <KpiCard
+            label={t("dashboard.avgRepairOrder")}
+            value={formatCurrency(summary?.avgRepairOrderValue ?? 0)}
+            icon={TrendingUp}
+            loading={showSkeletons}
+            accentKey="avgRepairOrder"
+            trend={aroTrendKpi}
+            comparisonLabel={aroTrendKpi ? vsPrevLabel : undefined}
+          />
+        </div>
 
-      {/* Secondary metrics strip: profit, revenue mix, fleet size */}
-      <Card className="overflow-hidden py-0">
-        <CardContent className="grid grid-cols-2 gap-px bg-border p-0 lg:grid-cols-4">
-          {secondaryStats.map((stat) => (
-            <div key={stat.key} className="flex flex-col gap-1 bg-card p-4">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <stat.icon className="size-3.5" aria-hidden="true" />
-                {stat.label}
-              </div>
-              {stat.loading ? (
-                <Skeleton className="h-6 w-24" />
-              ) : (
-                <div className="text-lg font-semibold tracking-tight tabular-nums">
-                  {stat.value}
+        {/* Secondary metrics strip: profit, revenue mix, fleet size */}
+        <Card className="overflow-hidden py-0">
+          <CardContent className="grid grid-cols-2 gap-px bg-border p-0 lg:grid-cols-4">
+            {secondaryStats.map((stat) => (
+              <div key={stat.key} className="flex flex-col gap-1 bg-card p-4">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <stat.icon className="size-3.5" aria-hidden="true" />
+                  {stat.label}
                 </div>
-              )}
-              {!stat.loading && stat.sub && (
-                <span className="text-xs text-muted-foreground">
-                  {stat.sub}
-                </span>
-              )}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Smart insights — only when the API produced comparisons */}
-      {insights.length > 0 && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="flex gap-3 p-4">
-            <Lightbulb
-              className="mt-0.5 size-5 shrink-0 text-amber-500"
-              aria-hidden="true"
-            />
-            <div className="flex flex-col gap-1.5">
-              <Typography.Text className="text-sm font-medium">
-                {t("dashboard.insights")}
-              </Typography.Text>
-              <ul className="flex list-none flex-col gap-1 text-sm text-muted-foreground">
-                {insights.map((insight) => (
-                  <li key={insight}>{insight}</li>
-                ))}
-              </ul>
-            </div>
+                {stat.loading ? (
+                  <Skeleton className="h-6 w-24" />
+                ) : (
+                  <div className="text-lg font-semibold tracking-tight tabular-nums">
+                    {stat.value}
+                  </div>
+                )}
+                {!stat.loading && stat.sub && (
+                  <span className="text-xs text-muted-foreground">
+                    {stat.sub}
+                  </span>
+                )}
+              </div>
+            ))}
           </CardContent>
         </Card>
-      )}
 
-      {/* Charts — use dynamic import's own loading skeleton */}
-      {data ? (
-        <ChartsSection data={data} />
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {[1, 2].map((n) => (
-            <Card key={n}>
-              <div className="p-6 pb-2">
-                <Skeleton className="h-5 w-44" />
+        {/* Smart insights — only when the API produced comparisons */}
+        {insights.length > 0 && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="flex gap-3 p-4">
+              <Lightbulb
+                className="mt-0.5 size-5 shrink-0 text-amber-500"
+                aria-hidden="true"
+              />
+              <div className="flex flex-col gap-1.5">
+                <Typography.Text className="text-sm font-medium">
+                  {t("dashboard.insights")}
+                </Typography.Text>
+                <ul className="flex list-none flex-col gap-1 text-sm text-muted-foreground">
+                  {insights.map((insight) => (
+                    <li key={insight}>{insight}</li>
+                  ))}
+                </ul>
               </div>
-              <div className="p-6 pt-2">
-                <Skeleton className="h-72 w-full rounded-lg" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Recent Work Orders */}
-      <div>
-        <SectionHeader
-          title={t("dashboard.recentWorkOrders")}
-          description={t("dashboard.recentWorkOrdersDesc")}
-        />
+        {/* Charts — use dynamic import's own loading skeleton */}
         {data ? (
-          <RecentWorkOrdersTable
-            workOrders={workOrders}
-            router={router}
-            t={t}
-            workOrdersForExport={dashboardExportColumns}
-          />
+          <ChartsSection data={data} />
         ) : (
-          <div className="flex flex-col gap-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 rounded-xl border border-border/60 bg-card/40 p-4"
-              >
-                <Skeleton className="size-10 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-3/5" />
-                  <Skeleton className="h-3 w-2/5" />
+          <div className="grid gap-6 lg:grid-cols-2">
+            {[1, 2].map((n) => (
+              <Card key={n}>
+                <div className="p-6 pb-2">
+                  <Skeleton className="h-5 w-44" />
                 </div>
-                <Skeleton className="h-6 w-20 rounded-lg" />
-              </div>
+                <div className="p-6 pt-2">
+                  <Skeleton className="h-72 w-full rounded-lg" />
+                </div>
+              </Card>
             ))}
           </div>
         )}
-      </div>
+
+        {/* Recent Work Orders */}
+        <div>
+          <SectionHeader
+            title={t("dashboard.recentWorkOrders")}
+            description={t("dashboard.recentWorkOrdersDesc")}
+          />
+          {data ? (
+            <RecentWorkOrdersTable
+              workOrders={workOrders}
+              router={router}
+              t={t}
+              workOrdersForExport={dashboardExportColumns}
+            />
+          ) : (
+            <div className="flex flex-col gap-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 rounded-xl border border-border/60 bg-card/40 p-4"
+                >
+                  <Skeleton className="size-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/5" />
+                    <Skeleton className="h-3 w-2/5" />
+                  </div>
+                  <Skeleton className="h-6 w-20 rounded-lg" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

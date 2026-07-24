@@ -51,25 +51,31 @@ async function recalculateEstimateTotals(
   estimateId: string,
   orgId: string,
 ): Promise<void> {
-  const { data: items, error: itemsError } = await db
-    .from("estimate_items")
-    .select(
-      "unit_price, quantity, discount_amount, discount_percentage, line_total",
-    )
-    .eq("estimate_id", estimateId)
-    .eq("organization_id", orgId);
+  const [itemsResult, estimateResult] = await Promise.all([
+    db
+      .from("estimate_items")
+      .select(
+        "unit_price, quantity, discount_amount, discount_percentage, line_total",
+      )
+      .eq("estimate_id", estimateId)
+      .eq("organization_id", orgId),
+    db
+      .from("estimates")
+      .select("discount_amount, discount_percentage, tax_total")
+      .eq("id", estimateId)
+      .eq("organization_id", orgId)
+      .single(),
+  ]);
+
+  const items = itemsResult.data;
+  const itemsError = itemsResult.error;
+  const estimate = estimateResult.data;
+  const estimateError = estimateResult.error;
 
   if (itemsError)
     capture(itemsError, {
       context: "[estimate-service] recalculateEstimateTotals",
     });
-
-  const { data: estimate, error: estimateError } = await db
-    .from("estimates")
-    .select("discount_amount, discount_percentage, tax_total")
-    .eq("id", estimateId)
-    .eq("organization_id", orgId)
-    .single();
 
   if (estimateError)
     capture(estimateError, {
@@ -645,5 +651,5 @@ export async function convertEstimateToWorkOrder(
 
   // Return the work order detail
   const { getWorkOrder } = await import("@/lib/services/work-order-service");
-  return getWorkOrder(db, wo.id);
+  return getWorkOrder(db, wo.id, orgId);
 }

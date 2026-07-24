@@ -5,7 +5,11 @@
  * background refetching, and mutation support.
  */
 
-import { keepPreviousData, type UseQueryResult, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import type { EndOfDaySummary } from "@/lib/types";
 import { createOrgQuery } from "./factory";

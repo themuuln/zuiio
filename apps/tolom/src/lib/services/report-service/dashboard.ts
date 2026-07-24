@@ -449,21 +449,3 @@ export async function getCustomerRetention(
     top_customers: topCustomers,
   };
 }
-
-/**
- * Fast dashboard metrics using the get_dashboard_metrics RPC.
- * Single DB call replaces the multi-query dashboard summary for the home page KPI view.
- */
-export async function getDashboardMetricsFast(
-  db: SupabaseClient,
-  orgId: string,
-): Promise<Record<string, unknown>> {
-  const { data, error } = await withDbCapture(
-    "getDashboardMetricsFast",
-    db.rpc("get_dashboard_metrics", {
-      p_org_id: orgId,
-    }),
-  );
-  if (error) throw new Error(error.message);
-  return (data as Record<string, unknown>) ?? {};
-}

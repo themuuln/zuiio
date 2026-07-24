@@ -22,6 +22,7 @@ import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import {
   type DrawerDetailResponse,
   drawerDetailKeys,
+  useDrawerCatalogs,
   useDrawerQueries,
 } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
@@ -68,19 +69,13 @@ export function WorkOrderDetailDrawer({
   const queryClient = useQueryClient();
 
   // ── Data layer ──
+  const { orgId, orgIdRef, wo, setWo, isLoading, error } =
+    useDrawerQueries(workOrderId);
 
-  const {
+  const { catalog, partsCatalog, mechanics, orgSettings } = useDrawerCatalogs(
     orgId,
-    orgIdRef,
-    wo,
-    setWo,
-    catalog,
-    partsCatalog,
-    mechanics,
-    orgSettings,
-    isLoading,
-    error,
-  } = useDrawerQueries(workOrderId);
+    open,
+  );
 
   const paymentMethodFees = useMemo(
     () => resolvePaymentMethodFees(orgSettings?.payment_method_fees),

@@ -12,7 +12,7 @@ type QuickCreateCustomerSheetProps = {
   orgId: string;
 };
 
-export function QuickCreateCustomerSheet({
+export function QuickCreateCustomerDrawer({
   open,
   onOpenChange,
   onCreated,

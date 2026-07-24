@@ -1,11 +1,14 @@
-import { QueryClient, dehydrate } from "@tanstack/react-query";
-import { HydrationBoundary } from "@tanstack/react-query";
-import { cache } from "react";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUserProfile } from "@/lib/services/user-service";
-import { getOrganizationSubscription } from "@/lib/services/subscription-service";
+import { cache } from "react";
 import { getDashboardData } from "@/lib/services/report-service";
+import { getOrganizationSubscription } from "@/lib/services/subscription-service";
+import { getCurrentUserProfile } from "@/lib/services/user-service";
+import { createClient } from "@/lib/supabase/server";
 import { dashboardKeys, profileKeys } from "./keys";
 
 /**
@@ -17,11 +20,7 @@ export const getCachedProfile = cache(async () => {
   return getCurrentUserProfile(supabase);
 });
 
-export async function PrefetchDashboard({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export async function PrefetchDashboard({ children }: { children: ReactNode }) {
   const queryClient = new QueryClient();
   const supabase = await createClient();
   const profile = await getCachedProfile();
@@ -35,8 +34,14 @@ export async function PrefetchDashboard({
       // Prefetch subscription and feature flags in parallel
       await Promise.all([
         (async () => {
-          const subscription = await getOrganizationSubscription(supabase, orgId);
-          queryClient.setQueryData(["org", orgId, "subscription"], subscription);
+          const subscription = await getOrganizationSubscription(
+            supabase,
+            orgId,
+          );
+          queryClient.setQueryData(
+            ["org", orgId, "subscription"],
+            subscription,
+          );
         })(),
         (async () => {
           const { data: features } = await supabase

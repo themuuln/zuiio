@@ -51,7 +51,7 @@ import { reportServerError } from "@/lib/sentry-report-server";
 import { useSelectedBranchId } from "@/lib/stores";
 import { ActionButtons } from "./_action-buttons";
 import { AddScheduleDialog } from "./_add-schedule-dialog";
-import { ConfigSheet } from "./_config-drawer";
+import { ConfigDrawer } from "./_config-drawer";
 import { DeleteConfirmDialog } from "./_delete-confirm-dialog";
 import { EditScheduleDialog } from "./_edit-schedule-dialog";
 import { ReminderLogsTab } from "./_reminder-logs-tab";
@@ -224,7 +224,7 @@ export default function ServiceRemindersPageClient() {
             onSyncComplete={() => refetch()}
             onSendComplete={() => refetch()}
           />
-          <ConfigSheet orgId={orgId} />
+          <ConfigDrawer orgId={orgId} />
           <AddScheduleDialog
             vehicles={vehicles}
             isPending={createSchedule.isPending}

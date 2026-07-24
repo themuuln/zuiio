@@ -21,8 +21,7 @@ import type {
 
 async function getOrgId(db: SupabaseClient, userId_?: string): Promise<string> {
   const supabase = db;
-  const userId =
-    userId_ ?? (await supabase.auth.getUser()).data.user?.id;
+  const userId = userId_ ?? (await supabase.auth.getUser()).data.user?.id;
   if (!userId) throw new UnauthorizedError();
   const { data, error: rpcError } = await supabase.rpc(
     "get_user_organization_id",

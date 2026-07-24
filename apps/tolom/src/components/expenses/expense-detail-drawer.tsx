@@ -18,7 +18,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import { Typography } from "@/components/ui/typography";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import {
@@ -47,7 +46,7 @@ interface ExpenseDetailSheetProps {
   expenseId: string | null;
 }
 
-export function ExpenseDetailSheet({
+export function ExpenseDetailDrawer({
   open,
   onOpenChange,
   expenseId,
@@ -158,10 +157,15 @@ export function ExpenseDetailSheet({
   return (
     <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DetailDrawer.Header>
-        <DetailSheetHeader
-          icon={Pencil}
-          iconLoading={isLoadingData}
-          title={
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
+            {isLoadingData ? (
+              <Loader2 className="size-5 animate-spin text-primary" />
+            ) : (
+              <Pencil className="size-5 text-primary" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
             <DetailDrawer.Title className="truncate">
               {isLoadingData
                 ? commonT("loading")
@@ -169,10 +173,8 @@ export function ExpenseDetailSheet({
                   ? expense.description
                   : t("details")}
             </DetailDrawer.Title>
-          }
-          subtitle={
-            expense ? (
-              <>
+            {expense && (
+              <div className="mt-0.5 flex items-center gap-2">
                 <Badge
                   variant={expense.paid_at ? "outline" : "secondary"}
                   className={cn(
@@ -194,53 +196,51 @@ export function ExpenseDetailSheet({
                     {new Date(expense.created_at).toLocaleDateString()}
                   </span>
                 )}
-              </>
-            ) : undefined
-          }
-          actions={
-            expense && !editing ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => {
-                    form.reset(syncForm(expense));
-                    setEditing(true);
-                  }}
+              </div>
+            )}
+          </div>
+          {expense && !editing && (
+            <div className="flex shrink-0 items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => {
+                  form.reset(syncForm(expense));
+                  setEditing(true);
+                }}
+              >
+                <Pencil className="size-4" />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      className="text-destructive"
+                    />
+                  }
                 >
-                  <Pencil className="size-4" />
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        className="text-destructive"
-                      />
-                    }
-                  >
-                    <Trash2 className="size-4" />
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {t("deleteConfirm")}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete}>
-                        {commonT("delete")}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </>
-            ) : undefined
-          }
-        />
+                  <Trash2 className="size-4" />
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t("deleteConfirm")}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete}>
+                      {commonT("delete")}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+        </div>
       </DetailDrawer.Header>
 
       <DetailDrawer.Body>

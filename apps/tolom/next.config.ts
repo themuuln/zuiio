@@ -21,9 +21,6 @@ const nextConfig: NextConfig = {
     "@zuiio/realtime",
     "@zuiio/ui",
     "@zuiio/capture",
-    "@zuiio/export",
-    "@zuiio/config",
-    "@zuiio/hr",
   ],
 
   // Allow Tailscale IP for phone testing from mobile devices
@@ -56,8 +53,6 @@ const nextConfig: NextConfig = {
     hourly: { revalidate: 3600, stale: 14400, expire: 86400 },
     daily: { revalidate: 86400, stale: 604800, expire: 2592000 },
   },
-
-  serverExternalPackages: ["@zuiio/ai-agent"],
 
   images: {
     remotePatterns: [
