@@ -509,6 +509,7 @@ export function WorkOrderDetailDrawer({
         open={open}
         onOpenChange={handleOpenChange}
         size="full"
+        className="!max-w-[100vw]"
         backdropClassName={
           isFullScreen ? "bg-black/80 !backdrop-blur-none" : undefined
         }
