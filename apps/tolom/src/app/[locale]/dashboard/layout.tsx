@@ -12,10 +12,15 @@ import { readOrganizationBrandConfig } from "@/lib/organization-branding";
 import { getCachedProfile } from "@/lib/queries/prefetch-dashboard";
 import { createClient } from "@/lib/supabase/server";
 import DashboardClientShell from "./_dashboard-client-shell";
+import { connection } from "next/server";
 
 /** Fetches org branding and emits a <style> tag. Profile fetch is
- * cached via React.cache() for deduplication within the same request. */
+ * cached via React.cache() for deduplication within the same request.
+ * `connection()` marks this as explicitly dynamic so Next.js doesn't
+ * attempt to statically prerender it (supabase-js internally uses Date.now()
+ * for token expiry checks). */
 async function BrandThemeLoader() {
+  await connection();
   const profile = await getCachedProfile();
 
   if (!profile?.organizationId) return null;

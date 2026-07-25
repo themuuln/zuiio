@@ -26,6 +26,7 @@ import {
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { productionKeys, qualityKeys } from "@/lib/query/keys";
+import { useOrgId } from "@/lib/hooks/use-org-id";
 import { createClient } from "@/lib/supabase/client";
 import { createQualityCheck, uploadDefectPhoto } from "./quality-actions";
 
@@ -57,35 +58,26 @@ interface StageOption {
 // ─── Hooks ─────────────────────────────────────────────────────────────────
 
 function useProductionOrders() {
+  const { organizationId } = useOrgId();
   const [orders, setOrders] = useState<OrderOption[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!organizationId) return;
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: userData }) => {
-      if (!userData?.user) return;
-      supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", userData.user.id)
-        .single()
-        .then(({ data: profile }) => {
-          if (!profile?.organization_id) return;
-          supabase
-            .from("production_orders")
-            .select("id, order_number")
-            .eq("organization_id", profile.organization_id)
-            .in("status", ["in_progress", "completed"])
-            .is("deleted_at", null)
-            .order("order_number", { ascending: false })
-            .then(({ data, error }) => {
-              if (error) capture(error);
-              if (data) setOrders(data);
-              setLoading(false);
-            });
-        });
-    });
-  }, []);
+    supabase
+      .from("production_orders")
+      .select("id, order_number")
+      .eq("organization_id", organizationId)
+      .in("status", ["in_progress", "completed"])
+      .is("deleted_at", null)
+      .order("order_number", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) capture(error);
+        if (data) setOrders(data);
+        setLoading(false);
+      });
+  }, [organizationId]);
 
   return { orders, loading };
 }

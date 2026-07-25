@@ -39,21 +39,15 @@ interface OrgReportEmailData {
   report_email_time: string;
 }
 
-async function fetchReportEmailSettings(): Promise<OrgReportEmailData | null> {
+interface ReportEmailSettingsProps {
+  organizationId: string;
+  userId: string;
+}
+
+async function fetchReportEmailConfig(
+  orgId: string,
+): Promise<OrgReportEmailData | null> {
   const supabase = createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-  const orgId = profile?.organization_id;
-  if (!orgId) return null;
 
   const { data: org } = await supabase
     .from("organizations")
@@ -65,21 +59,11 @@ async function fetchReportEmailSettings(): Promise<OrgReportEmailData | null> {
   return org as unknown as OrgReportEmailData;
 }
 
-async function saveReportEmailSettingsClient(values: ReportEmailValues) {
+async function saveReportEmailConfig(
+  values: ReportEmailValues,
+  orgId: string,
+) {
   const supabase = createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Нэвтрээгүй");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-  const orgId = profile?.organization_id;
-  if (!orgId) throw new Error("Байгууллага олдсонгүй");
 
   const { error } = await supabase
     .from("organizations")
@@ -93,13 +77,15 @@ async function saveReportEmailSettingsClient(values: ReportEmailValues) {
   if (error) throw new Error(error.message);
 }
 
-export function ReportEmailSettings() {
+export function ReportEmailSettings({
+  organizationId,
+}: ReportEmailSettingsProps) {
   const queryClient = useQueryClient();
   const { notify } = useSettings();
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["report_email_settings"],
-    queryFn: fetchReportEmailSettings,
+    queryFn: () => fetchReportEmailConfig(organizationId),
   });
 
   const reportEmailInitial = useRef(settings);
@@ -131,7 +117,8 @@ export function ReportEmailSettings() {
   const enabled = watch("enabled");
 
   const saveMutation = useMutation({
-    mutationFn: saveReportEmailSettingsClient,
+    mutationFn: (data: ReportEmailValues) =>
+      saveReportEmailConfig(data, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["report_email_settings"],

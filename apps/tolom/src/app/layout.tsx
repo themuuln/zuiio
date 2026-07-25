@@ -1,3 +1,10 @@
+// Dev-only: react-grab lets you copy UI element context for AI agents
+// by hovering any element and pressing ⌘C/Ctrl+C
+if (process.env.NODE_ENV === "development") {
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  import("react-grab");
+}
+
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";

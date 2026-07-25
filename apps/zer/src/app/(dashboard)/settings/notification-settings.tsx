@@ -52,20 +52,8 @@ const emailSchema = z.object({
 
 type EmailValues = z.infer<typeof emailSchema>;
 
-async function fetchTelegramConfig() {
+async function fetchTelegramConfig(orgId: string) {
   const supabase = createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-  const orgId = profile?.organization_id;
 
   // Bot token from app_config (system-wide)
   const { data: botTokenRow } = await supabase
@@ -109,20 +97,9 @@ async function fetchTelegramConfig() {
   };
 }
 
-async function saveTelegramConfig(values: TelegramValues) {
+async function saveTelegramConfig(values: TelegramValues, orgId: string) {
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Нэвтрээгүй");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-  const orgId = profile?.organization_id;
   if (!orgId) throw new Error("Байгууллага олдсонгүй");
 
   // Save bot token to app_config (system-wide)
@@ -168,22 +145,12 @@ async function saveTelegramConfig(values: TelegramValues) {
 
 interface Props {
   isSuperAdmin: boolean;
+  organizationId: string;
+  userId: string;
 }
 
-async function fetchEmailConfig() {
+async function fetchEmailConfig(orgId: string) {
   const supabase = createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-  const orgId = profile?.organization_id;
 
   let recipientEmail = "";
   let enabled = true;
@@ -218,20 +185,9 @@ async function fetchEmailConfig() {
   };
 }
 
-async function saveEmailConfig(values: EmailValues) {
+async function saveEmailConfig(values: EmailValues, orgId: string) {
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Нэвтрээгүй");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-  const orgId = profile?.organization_id;
   if (!orgId) throw new Error("Байгууллага олдсонгүй");
 
   const { data: existing } = await supabase
@@ -264,7 +220,7 @@ async function saveEmailConfig(values: EmailValues) {
   }
 }
 
-export function NotificationSettings({ isSuperAdmin: _isSuperAdmin }: Props) {
+export function NotificationSettings({ isSuperAdmin: _isSuperAdmin, organizationId }: Props) {
   const queryClient = useQueryClient();
   const { notify } = useSettings();
 
@@ -272,7 +228,7 @@ export function NotificationSettings({ isSuperAdmin: _isSuperAdmin }: Props) {
 
   const { data: config } = useQuery({
     queryKey: ["notification_config", "telegram"],
-    queryFn: fetchTelegramConfig,
+    queryFn: () => fetchTelegramConfig(organizationId),
   });
 
   const telegramInitial = useRef(config);
@@ -303,7 +259,7 @@ export function NotificationSettings({ isSuperAdmin: _isSuperAdmin }: Props) {
   }, []);
 
   const saveMutation = useMutation({
-    mutationFn: saveTelegramConfig,
+    mutationFn: (values: TelegramValues) => saveTelegramConfig(values, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["notification_config", "telegram"],
@@ -362,7 +318,7 @@ export function NotificationSettings({ isSuperAdmin: _isSuperAdmin }: Props) {
 
   const { data: emailConfig } = useQuery({
     queryKey: ["notification_config", "email"],
-    queryFn: fetchEmailConfig,
+    queryFn: () => fetchEmailConfig(organizationId),
   });
 
   const emailInitial = useRef(emailConfig);
@@ -392,7 +348,7 @@ export function NotificationSettings({ isSuperAdmin: _isSuperAdmin }: Props) {
   }, []);
 
   const emailSaveMutation = useMutation({
-    mutationFn: saveEmailConfig,
+    mutationFn: (values: EmailValues) => saveEmailConfig(values, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["notification_config", "email"],

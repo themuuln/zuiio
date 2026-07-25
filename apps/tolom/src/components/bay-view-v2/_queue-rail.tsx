@@ -87,9 +87,9 @@ export function QueueRail({
                     <ElapsedText startedAt={wo.created_at} />
                   </span>
                   <Button
-                    type="button"
                     size="icon-xs"
                     variant="ghost"
+                    render={<span />}
                     onClick={(e) => {
                       e.stopPropagation();
                       onAssignToBay(wo.id);

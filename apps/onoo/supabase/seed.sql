@@ -1296,7 +1296,7 @@ INSERT INTO public.tracker_sessions (id, game_id, scorer_id, role, device_info, 
 VALUES ('90000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000010', '397692e0-915f-4361-9f75-f84d0883ba80', 'lead_scorer', '{"device":"demo-seed"}', 'active', 31)
 ON CONFLICT (game_id) WHERE status = 'active' DO NOTHING;
 INSERT INTO public.stat_events (game_id, tracker_session_id, operation_id, client_id, local_seq, event_type, period, clock_seconds, team_season_id, player_id, payload, created_by)
-SELECT '70000000-0000-0000-0000-000000000010', '90000000-0000-0000-0000-000000000001', gen_random_uuid(), gen_random_uuid(), seq, 'shot_2pt_made', period, clock, ts_id, player_id, jsonb_build_object('points', CASE WHEN event = '3pt' THEN 3 ELSE 2 END, 'x', floor(random()*50)::int, 'y', floor(random()*50)::int), '397692e0-915f-4361-9f75-f84d0883ba80'
+SELECT '70000000-0000-0000-0000-000000000010'::uuid, '90000000-0000-0000-0000-000000000001'::uuid, gen_random_uuid(), gen_random_uuid(), seq, 'shot_2pt_made', period, clock, ts_id::uuid, player_id::uuid, jsonb_build_object('points', CASE WHEN event = '3pt' THEN 3 ELSE 2 END, 'x', floor(random()*50)::int, 'y', floor(random()*50)::int), '397692e0-915f-4361-9f75-f84d0883ba80'::uuid
 FROM (VALUES
   (1, 1,  590, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '2pt'),
   (1, 2,  560, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000003', '2pt'),

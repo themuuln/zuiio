@@ -376,6 +376,7 @@ export function SettingsContent() {
     org,
     profile,
     posSettings,
+    userId,
     userEmail,
     permissions,
     smtpCount,
@@ -581,17 +582,14 @@ export function SettingsContent() {
         </Card>
       )}
 
-      {/* Notifications (superadmin only) */}
-      {isSuperAdmin && <NotificationSettings isSuperAdmin />}
+      {isSuperAdmin && <NotificationSettings isSuperAdmin organizationId={organizationId} userId={userId} />}
 
-      {/* SMTP Settings (superadmin only — technical config) */}
       {isSuperAdmin && hasEmailReports && (
-        <SmtpSettings isSuperAdmin={isSuperAdmin} />
+        <SmtpSettings isSuperAdmin={isSuperAdmin} organizationId={organizationId} userId={userId} />
       )}
 
-      {/* Report Email Settings (org owners with emails.manage) */}
       {hasEmailReports && canManageEmail && smtpCount > 0 && (
-        <ReportEmailSettings />
+        <ReportEmailSettings organizationId={organizationId} userId={userId} />
       )}
 
       {/* Branding */}

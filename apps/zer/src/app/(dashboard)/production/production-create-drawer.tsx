@@ -35,6 +35,7 @@ import {
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { productionKeys } from "@/lib/query/keys";
+import { useOrgId } from "@/lib/hooks/use-org-id";
 import { createClient } from "@/lib/supabase/client";
 import { createProductionOrder } from "./production-actions";
 
@@ -68,115 +69,79 @@ interface BranchOption {
 }
 
 function useProducts() {
+  const { organizationId } = useOrgId();
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!organizationId) return;
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: userData }) => {
-      if (!userData?.user) return;
-      supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", userData.user.id)
-        .single()
-        .then(({ data: profile }) => {
-          if (!profile?.organization_id) return;
-          supabase
-            .from("products")
-            .select("id, name")
-            .eq("organization_id", profile.organization_id)
-            .is("deleted_at", null)
-            .order("name")
-            .then(({ data, error }) => {
-              if (error) capture(error);
-              if (data) setProducts(data);
-              setLoading(false);
-            });
-        });
-    });
-  }, []);
+    supabase
+      .from("products")
+      .select("id, name")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .order("name")
+      .then(({ data, error }) => {
+        if (error) capture(error);
+        if (data) setProducts(data);
+        setLoading(false);
+      });
+  }, [organizationId]);
 
   return { products, loading };
 }
 
 function useBoms(productId: string | null) {
+  const { organizationId } = useOrgId();
   const [boms, setBoms] = useState<BomOption[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!productId) {
+    if (!productId || !organizationId) {
       setBoms([]);
       return;
     }
     setLoading(true);
     const supabase = createClient();
-    // NOTE: product_boms table needs migration to be applied first.
-    // Once types are regenerated, use: .from("product_boms").select("id, version")
-    supabase.auth.getUser().then(({ data: userData }) => {
-      if (!userData?.user) {
+    supabase
+      .from("product_boms")
+      .select("id, version")
+      .eq("product_id", productId)
+      .eq("organization_id", organizationId)
+      .eq("status", "active")
+      .is("deleted_at", null)
+      .order("version", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) capture(error);
+        if (data) setBoms(data);
         setLoading(false);
-        return;
-      }
-      supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", userData.user.id)
-        .single()
-        .then(({ data: profile }) => {
-          if (!profile?.organization_id) {
-            setLoading(false);
-            return;
-          }
-          supabase
-            .from("product_boms")
-            .select("id, version")
-            .eq("product_id", productId)
-            .eq("organization_id", profile.organization_id)
-            .eq("status", "active")
-            .is("deleted_at", null)
-            .order("version", { ascending: false })
-            .then(({ data, error }) => {
-              if (error) capture(error);
-              if (data) setBoms(data);
-              setLoading(false);
-            });
-        });
-    });
-  }, [productId]);
+      });
+  }, [productId, organizationId]);
 
   return { boms, loading };
 }
 
 function useBranches() {
+  const { organizationId } = useOrgId();
   const [branches, setBranches] = useState<BranchOption[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!organizationId) return;
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: userData }) => {
-      if (!userData?.user) return;
-      supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", userData.user.id)
-        .single()
-        .then(({ data: profile }) => {
-          if (!profile?.organization_id) return;
-          supabase
-            .from("branches")
-            .select("id, name")
-            .eq("organization_id", profile.organization_id)
-            .is("deleted_at", null)
-            .order("name")
-            .then(({ data, error }) => {
-              if (error) capture(error);
-              if (data) setBranches(data);
-              setLoading(false);
-            });
-        });
-    });
-  }, []);
+    supabase
+      .from("branches")
+      .select("id, name")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .order("name")
+      .then(({ data, error }) => {
+        if (error) capture(error);
+        if (data) setBranches(data);
+        setLoading(false);
+      });
+  }, [organizationId]);
 
   return { branches, loading };
 }

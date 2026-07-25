@@ -179,25 +179,64 @@ export async function checkStockTargets(
 
   if (!targets || targets.length === 0) return { shortages: [] };
 
+  // 3. Check each target — batch queries instead of N+1 per target
   const shortages: StockShortage[] = [];
 
-  // 3. Check each target
+  const productTargets = targets.filter((t): t is StockTargetRow & { product_id: string } => !!t.product_id);
+  const categoryTargets = targets.filter((t): t is StockTargetRow & { category_id: string } => !!t.category_id);
+
+  // Batch-fetch all referenced products
+  const productMap: Record<string, { name: string | null; current_stock: number }> = {};
+  if (productTargets.length > 0) {
+    const { data: products } = await withDbCapture(
+      "business-events:fetch_product_stock_batch",
+      supabase
+        .from("products")
+        .select("id, name, current_stock")
+        .in("id", productTargets.map((t) => t.product_id))
+        .eq("organization_id", organizationId),
+    );
+    for (const p of products ?? []) {
+      productMap[p.id] = { name: p.name, current_stock: p.current_stock ?? 0 };
+    }
+  }
+
+  // Batch-fetch all referenced categories and their stock
+  const categoryNameMap: Record<string, string | null> = {};
+  const categoryStockMap: Record<string, number> = {};
+  if (categoryTargets.length > 0) {
+    const categoryIds = categoryTargets.map((t) => t.category_id);
+
+    const { data: categories } = await withDbCapture(
+      "business-events:fetch_category_names_batch",
+      supabase.from("categories").select("id, name").in("id", categoryIds),
+    );
+    for (const c of categories ?? []) {
+      categoryNameMap[c.id] = c.name;
+    }
+
+    const { data: categoryProducts } = await withDbCapture(
+      "business-events:fetch_category_stock_batch",
+      supabase
+        .from("products")
+        .select("category_id, current_stock")
+        .in("category_id", categoryIds)
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null),
+    );
+    for (const p of categoryProducts ?? []) {
+      const catId = p.category_id;
+      if (catId) categoryStockMap[catId] = (categoryStockMap[catId] ?? 0) + (p.current_stock ?? 0);
+    }
+  }
+
+  // Single pass — no per-target queries
   for (const target of targets) {
     const multiplier = target.demand_multiplier ?? 1;
     const adjustedTarget = target.target_quantity * multiplier;
 
     if (target.product_id) {
-      // Product-level target
-      const { data: product } = await withDbCapture(
-        "business-events:fetch_product_stock",
-        supabase
-          .from("products")
-          .select("name, current_stock")
-          .eq("id", target.product_id)
-          .eq("organization_id", organizationId)
-          .single(),
-      );
-
+      const product = productMap[target.product_id];
       const currentStock = product?.current_stock ?? 0;
       if (currentStock < adjustedTarget) {
         shortages.push({
@@ -211,37 +250,12 @@ export async function checkStockTargets(
         });
       }
     } else if (target.category_id) {
-      // Category-level target — sum stock across all non-deleted products
-      const { data: categoryProducts } = await withDbCapture(
-        "business-events:fetch_category_stock",
-        supabase
-          .from("products")
-          .select("name, current_stock")
-          .eq("category_id", target.category_id)
-          .eq("organization_id", organizationId)
-          .is("deleted_at", null),
-      );
-
-      let totalStock = 0;
-      for (const p of categoryProducts ?? []) {
-        totalStock += p.current_stock ?? 0;
-      }
-
-      // Fetch category name for display
-      const { data: category } = await withDbCapture(
-        "business-events:fetch_category_name",
-        supabase
-          .from("categories")
-          .select("name")
-          .eq("id", target.category_id)
-          .single(),
-      );
-
+      const totalStock = categoryStockMap[target.category_id] ?? 0;
       if (totalStock < adjustedTarget) {
         shortages.push({
           targetId: target.id,
           productName: null,
-          categoryName: category?.name ?? null,
+          categoryName: categoryNameMap[target.category_id] ?? null,
           targetQuantity: target.target_quantity,
           adjustedTarget,
           currentStock: totalStock,

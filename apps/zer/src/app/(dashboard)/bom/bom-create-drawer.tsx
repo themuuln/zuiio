@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { bomKeys } from "@/lib/query/keys";
+import { useOrgId } from "@/lib/hooks/use-org-id";
 import { createClient } from "@/lib/supabase/client";
 import { createBom } from "./bom-actions";
 
@@ -56,34 +57,25 @@ interface ProductOption {
 }
 
 function useProducts() {
+  const { organizationId } = useOrgId();
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!organizationId) return;
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: userData }) => {
-      if (!userData?.user) return;
-      supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", userData.user.id)
-        .single()
-        .then(({ data: profile }) => {
-          if (!profile?.organization_id) return;
-          supabase
-            .from("products")
-            .select("id, name")
-            .eq("organization_id", profile.organization_id)
-            .is("deleted_at", null)
-            .order("name")
-            .then(({ data, error }) => {
-              if (error) capture(error);
-              if (data) setProducts(data);
-              setLoading(false);
-            });
-        });
-    });
-  }, []);
+    supabase
+      .from("products")
+      .select("id, name")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .order("name")
+      .then(({ data, error }) => {
+        if (error) capture(error);
+        if (data) setProducts(data);
+        setLoading(false);
+      });
+  }, [organizationId]);
 
   return { products, loading };
 }

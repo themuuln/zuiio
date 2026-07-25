@@ -65,11 +65,6 @@ async function saveSmtpConfigClient(
 ) {
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Нэвтрээгүй");
-
   const payload = {
     host: values.host,
     port: values.port,
@@ -98,11 +93,6 @@ async function saveSmtpConfigClient(
 async function testSmtpConnection() {
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Нэвтрээгүй");
-
   const { data: config } = await supabase
     .from("smtp_configs")
     .select("id")
@@ -128,11 +118,14 @@ async function testSmtpConnection() {
   }
 }
 
+
 interface Props {
   isSuperAdmin: boolean;
+  organizationId: string;
+  userId: string;
 }
 
-export function SmtpSettings({ isSuperAdmin }: Props) {
+export function SmtpSettings({ isSuperAdmin: _isSuperAdmin, organizationId }: Props) {
   const queryClient = useQueryClient();
   const { notify } = useSettings();
 
@@ -183,7 +176,7 @@ export function SmtpSettings({ isSuperAdmin }: Props) {
   });
 
   const testMutation = useMutation({
-    mutationFn: testSmtpConnection,
+    mutationFn: () => testSmtpConnection(),
     onSuccess: () => {
       toast.success("Тест и-мэйл амжилттай илгээгдлээ.");
     },

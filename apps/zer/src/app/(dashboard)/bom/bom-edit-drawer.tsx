@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { bomKeys } from "@/lib/query/keys";
+import { useOrgId } from "@/lib/hooks/use-org-id";
 import { createClient } from "@/lib/supabase/client";
 import { getBom, updateBom } from "./bom-actions";
 
@@ -88,32 +89,22 @@ export function BomEditDrawer({
   });
 
   // Fetch products
+  const { organizationId: editOrgId } = useOrgId();
   useEffect(() => {
-    if (!open) return;
+    if (!open || !editOrgId) return;
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: userData }) => {
-      if (!userData?.user) return;
-      supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", userData.user.id)
-        .single()
-        .then(({ data: profile }) => {
-          if (!profile?.organization_id) return;
-          supabase
-            .from("products")
-            .select("id, name")
-            .eq("organization_id", profile.organization_id)
-            .is("deleted_at", null)
-            .order("name")
-            .then(({ data, error }) => {
-              if (error) capture(error);
-              if (data) setProducts(data);
-              setProductsLoading(false);
-            });
-        });
-    });
-  }, [open]);
+    supabase
+      .from("products")
+      .select("id, name")
+      .eq("organization_id", editOrgId)
+      .is("deleted_at", null)
+      .order("name")
+      .then(({ data, error }) => {
+        if (error) capture(error);
+        if (data) setProducts(data);
+        setProductsLoading(false);
+      });
+  }, [open, editOrgId]);
 
   const {
     register,
