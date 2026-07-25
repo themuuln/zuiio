@@ -206,6 +206,7 @@ function DrawerContent({
           data-slot="drawer-popup"
           data-closing={closing ? "" : undefined}
           className={cn(
+            "pointer-events-auto",
             direction === "bottom"
               ? [
                   // Bottom drawer: slide up/down + scale stack for nesting

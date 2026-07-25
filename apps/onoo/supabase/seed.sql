@@ -14,6 +14,36 @@ DO $$ BEGIN
     ALTER TABLE public.standings ADD COLUMN w smallint, ADD COLUMN IF NOT EXISTS l smallint;
   END IF;
 END $$;
+
+-- ============================================================================
+-- DEMO DATA — Auth users, profiles, memberships
+-- ============================================================================
+-- Auth users: admin@onoo.mn / Demo123! and demo@onoo.mn / Demo123!
+-- Passwords are pre-computed GoTrue-compatible bcrypt hashes.
+INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, aud, role, created_at, updated_at)
+VALUES
+  ('02346873-7047-4c27-b1d5-9461301c447f', '00000000-0000-0000-0000-000000000000', 'admin@onoo.mn', '$2a$10$KLf5r8g.vhOV2ygLsjGzj..X65kX8kbSTI6a.h6aPJzedQX.TSSvK', now(), '{"provider":"email","providers":["email"]}', '{"email_verified": true}', 'authenticated', 'authenticated', now(), now()),
+  ('92c1fccf-12ad-46b6-a27c-ebca30aced80', '00000000-0000-0000-0000-000000000000', 'demo@onoo.mn', '$2a$10$0zo52PrVHHUUXeX52LF9TenYeq9n80/VQcbNa2.L4pdEeNkwvI/1e', now(), '{"provider":"email","providers":["email"]}', '{"email_verified": true}', 'authenticated', 'authenticated', now(), now())
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+SELECT gen_random_uuid(), u.id, jsonb_build_object('sub', u.id::text, 'email', u.email), 'email', u.email, now(), now(), now()
+FROM auth.users u
+WHERE u.id IN ('02346873-7047-4c27-b1d5-9461301c447f', '92c1fccf-12ad-46b6-a27c-ebca30aced80')
+AND u.id NOT IN (SELECT user_id FROM auth.identities);
+INSERT INTO public.profiles (id, display_name)
+VALUES ('02346873-7047-4c27-b1d5-9461301c447f', 'Админ'), ('92c1fccf-12ad-46b6-a27c-ebca30aced80', 'Демо Хэрэглэгч')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.canonical_identities (id)
+VALUES ('60000000-0000-0000-0000-000000000001'), ('60000000-0000-0000-0000-000000000002')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.memberships (user_id, scope_type, scope_id, role)
+VALUES
+  ('02346873-7047-4c27-b1d5-9461301c447f', 'org', 'b0000000-0000-0000-0000-000000000002', 'owner'),
+  ('02346873-7047-4c27-b1d5-9461301c447f', 'league', 'c0000000-0000-0000-0000-000000000001', 'admin'),
+  ('02346873-7047-4c27-b1d5-9461301c447f', 'league', 'c0000000-0000-0000-0000-000000000002', 'admin'),
+  ('92c1fccf-12ad-46b6-a27c-ebca30aced80', 'org', 'b0000000-0000-0000-0000-000000000002', 'viewer')
+ON CONFLICT (user_id, scope_type, scope_id, role) DO NOTHING;
+
 -- ============================================================================
 -- SPORTS & EVENT TYPES
 -- ============================================================================
@@ -843,7 +873,7 @@ on conflict (game_id, player_id) do nothing;
 -- Generate game_revisions for games 001–005 so box scores can link to them
 DO $$ DECLARE
   gid uuid;
-  admin_id uuid := '397692e0-915f-4361-9f75-f84d0883ba80';
+  admin_id uuid := '02346873-7047-4c27-b1d5-9461301c447f';
   rev_id uuid;
   src_id uuid;
 BEGIN
@@ -933,7 +963,7 @@ ON CONFLICT (game_id, player_id) DO NOTHING;
 -- Game revisions for Space League games
 DO $$ DECLARE
   gid uuid;
-  admin_id uuid := '397692e0-915f-4361-9f75-f84d0883ba80';
+  admin_id uuid := '02346873-7047-4c27-b1d5-9461301c447f';
   rev_id uuid;
   src_id uuid;
 BEGIN
@@ -1007,7 +1037,7 @@ INSERT INTO public.games (id, competition_id, ruleset_id, home_team_season_id, a
 on conflict (id) do nothing;
 
 -- Approval chain for today's official games
-DO $$ DECLARE a uuid := '397692e0-915f-4361-9f75-f84d0883ba80'; s1 uuid := gen_random_uuid(); r1 uuid := gen_random_uuid(); s2 uuid := gen_random_uuid(); r2 uuid := gen_random_uuid(); BEGIN
+DO $$ DECLARE a uuid := '02346873-7047-4c27-b1d5-9461301c447f'; s1 uuid := gen_random_uuid(); r1 uuid := gen_random_uuid(); s2 uuid := gen_random_uuid(); r2 uuid := gen_random_uuid(); BEGIN
 INSERT INTO public.source_submissions (id, game_id, source_type, submitted_by, submitted_at, normalized_payload, status, reviewed_by, reviewed_at) VALUES
 (s1, '70000000-0000-0000-0000-000000000100', 'tracker_journal', a, NOW(), '{"periods":4}'::jsonb, 'approved', a, NOW()),
 (s2, '70000000-0000-0000-0000-000000000101', 'tracker_journal', a, NOW(), '{"periods":4}'::jsonb, 'approved', a, NOW()) ON CONFLICT DO NOTHING;
@@ -1042,7 +1072,7 @@ on conflict do nothing;
 -- Rosters + box scores for additional The League games (060–067)
 DO $$ DECLARE
   game_rec record;
-  admin_id uuid := '397692e0-915f-4361-9f75-f84d0883ba80';
+  admin_id uuid := '02346873-7047-4c27-b1d5-9461301c447f';
   rev_id uuid;
   src_id uuid;
   team_pair text[][] := ARRAY[
@@ -1127,35 +1157,6 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
  
 -- ============================================================================
--- DEMO DATA — full demonstration & E2E testing preparation
--- ============================================================================
--- Auth users: admin@onoo.mn / Demo123! and demo@onoo.mn / Demo123!
--- ============================================================================
-INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, aud, role, created_at, updated_at)
-VALUES
-  ('397692e0-915f-4361-9f75-f84d0883ba80', '00000000-0000-0000-0000-000000000000', 'admin@onoo.mn', crypt('Demo123!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"display_name":"Админ"}', 'authenticated', 'authenticated', now(), now()),
-  ('397692e0-915f-4361-9f75-f84d0883ba81', '00000000-0000-0000-0000-000000000000', 'demo@onoo.mn', crypt('Demo123!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"display_name":"Демо"}', 'authenticated', 'authenticated', now(), now())
-ON CONFLICT (id) DO NOTHING;
-INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
-SELECT gen_random_uuid(), u.id, jsonb_build_object('sub', u.id::text, 'email', u.email), 'email', u.email, now(), now(), now()
-FROM auth.users u
-WHERE u.id IN ('397692e0-915f-4361-9f75-f84d0883ba80', '397692e0-915f-4361-9f75-f84d0883ba81')
-AND u.id NOT IN (SELECT user_id FROM auth.identities);
-INSERT INTO public.profiles (id, display_name)
-VALUES ('397692e0-915f-4361-9f75-f84d0883ba80', 'Админ'), ('397692e0-915f-4361-9f75-f84d0883ba81', 'Демо Хэрэглэгч')
-ON CONFLICT (id) DO NOTHING;
-INSERT INTO public.canonical_identities (id)
-VALUES ('60000000-0000-0000-0000-000000000001'), ('60000000-0000-0000-0000-000000000002')
-ON CONFLICT (id) DO NOTHING;
-INSERT INTO public.memberships (user_id, scope_type, scope_id, role)
-VALUES
-  ('397692e0-915f-4361-9f75-f84d0883ba80', 'org', 'b0000000-0000-0000-0000-000000000002', 'owner'),
-  ('397692e0-915f-4361-9f75-f84d0883ba80', 'league', 'c0000000-0000-0000-0000-000000000001', 'admin'),
-  ('397692e0-915f-4361-9f75-f84d0883ba80', 'league', 'c0000000-0000-0000-0000-000000000002', 'admin'),
-  ('397692e0-915f-4361-9f75-f84d0883ba81', 'org', 'b0000000-0000-0000-0000-000000000002', 'viewer')
-ON CONFLICT (user_id, scope_type, scope_id, role) DO NOTHING;
- 
--- ============================================================================
 -- ACADEMY — Space League Basketball Academy
 -- ============================================================================
 INSERT INTO public.academy_profiles (id, organization_id, name, contact_phone, contact_email, timezone)
@@ -1220,34 +1221,34 @@ VALUES
 ON CONFLICT (student_id, guardian_id) DO NOTHING;
 INSERT INTO public.academy_enrollments (student_id, program_id, status, enrolled_at, start_date, end_date, created_by)
 VALUES
-  ('80000000-0000-0000-0000-000000000041', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000042', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000043', '80000000-0000-0000-0000-000000000023', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000044', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000045', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000046', '80000000-0000-0000-0000-000000000023', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000047', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000048', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000049', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000050', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000051', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80'),
-  ('80000000-0000-0000-0000-000000000052', '80000000-0000-0000-0000-000000000023', 'active', now(), '2026-01-15', '2026-06-30', '397692e0-915f-4361-9f75-f84d0883ba80')
+  ('80000000-0000-0000-0000-000000000041', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000042', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000043', '80000000-0000-0000-0000-000000000023', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000044', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000045', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000046', '80000000-0000-0000-0000-000000000023', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000047', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000048', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000049', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000050', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000051', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000052', '80000000-0000-0000-0000-000000000023', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f')
 ON CONFLICT (student_id, program_id) DO NOTHING;
  
 INSERT INTO public.student_payments (student_id, enrollment_id, amount_mnt, payment_method, paid_at, recorded_by)
-SELECT s.id, e.id, p.price_mnt, (ARRAY['qpay', 'cash', 'transfer'])[floor(random() * 3 + 1)::int], (now() - interval '2 months' + (floor(random() * 60)::int || ' days')::interval), '397692e0-915f-4361-9f75-f84d0883ba80'
+SELECT s.id, e.id, p.price_mnt, (ARRAY['qpay', 'cash', 'transfer'])[floor(random() * 3 + 1)::int], (now() - interval '2 months' + (floor(random() * 60)::int || ' days')::interval), '02346873-7047-4c27-b1d5-9461301c447f'
 FROM public.academy_students s JOIN public.academy_enrollments e ON e.student_id = s.id JOIN public.academy_programs p ON p.id = e.program_id LIMIT 15;
 -- ============================================================================
 -- AWARDS
 -- ============================================================================
 INSERT INTO public.awards (competition_id, award_type, period_start, period_end, player_id, granted_by, granted_at, note)
 VALUES
-  ('e0000000-0000-0000-0000-000000000001', 'mvp', '2025-10-01', '2025-12-31', '50000000-0000-0000-0000-000000000001', '397692e0-915f-4361-9f75-f84d0883ba80', now() - interval '30 days', '2025-2026 улирлын 1-р хагасын MVP.'),
-  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-10-13', '2025-10-19', '50000000-0000-0000-0000-000000000001', '397692e0-915f-4361-9f75-f84d0883ba80', '2025-10-20 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
-  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-10-20', '2025-10-26', '50000000-0000-0000-0000-000000000023', '397692e0-915f-4361-9f75-f84d0883ba80', '2025-10-27 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
-  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-10-27', '2025-11-02', '50000000-0000-0000-0000-000000000055', '397692e0-915f-4361-9f75-f84d0883ba80', '2025-11-03 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
-  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-11-03', '2025-11-09', '50000000-0000-0000-0000-000000000100', '397692e0-915f-4361-9f75-f84d0883ba80', '2025-11-10 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
-  ('e0000000-0000-0000-0000-000000000001', 'top_scorer', '2025-10-01', '2025-12-31', '50000000-0000-0000-0000-000000000055', '397692e0-915f-4361-9f75-f84d0883ba80', now() - interval '20 days', '2025-2026 улирлын 1-р хагасын шилдэг довтлогч.')
+  ('e0000000-0000-0000-0000-000000000001', 'mvp', '2025-10-01', '2025-12-31', '50000000-0000-0000-0000-000000000001', '02346873-7047-4c27-b1d5-9461301c447f', now() - interval '30 days', '2025-2026 улирлын 1-р хагасын MVP.'),
+  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-10-13', '2025-10-19', '50000000-0000-0000-0000-000000000001', '02346873-7047-4c27-b1d5-9461301c447f', '2025-10-20 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
+  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-10-20', '2025-10-26', '50000000-0000-0000-0000-000000000023', '02346873-7047-4c27-b1d5-9461301c447f', '2025-10-27 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
+  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-10-27', '2025-11-02', '50000000-0000-0000-0000-000000000055', '02346873-7047-4c27-b1d5-9461301c447f', '2025-11-03 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
+  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-11-03', '2025-11-09', '50000000-0000-0000-0000-000000000100', '02346873-7047-4c27-b1d5-9461301c447f', '2025-11-10 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
+  ('e0000000-0000-0000-0000-000000000001', 'top_scorer', '2025-10-01', '2025-12-31', '50000000-0000-0000-0000-000000000055', '02346873-7047-4c27-b1d5-9461301c447f', now() - interval '20 days', '2025-2026 улирлын 1-р хагасын шилдэг довтлогч.')
 ON CONFLICT DO NOTHING;
 -- ============================================================================
 -- SPONSORS
@@ -1273,30 +1274,30 @@ ON CONFLICT DO NOTHING;
 -- ============================================================================
 INSERT INTO public.announcements (academy_id, title, body, target_audience, created_by, published_at)
 VALUES
-  ('80000000-0000-0000-0000-000000000001', '2026 оны зуны эрчимжүүлсэн бэлтгэл эхэллээ', 'Зуны амралтаар 8 долоо хоногийн эрчимжүүлсэн бэлтгэлд хамрагдах хүсэлтэй сурагчид 2026 оны 6-р сарын 1-нээс эхлэн бүртгүүлэх боломжтой.', 'all', '397692e0-915f-4361-9f75-f84d0883ba80', now() - interval '10 days'),
-  ('80000000-0000-0000-0000-000000000001', 'Баянзүрх салбарын шинэ цагийн хуваарь', '2026 оны 1-р сараас эхлэн Баянзүрх салбар Даваа-Ням гарагт 10:00-20:00 цагийн хооронд үйлчилнэ.', 'guardians', '397692e0-915f-4361-9f75-f84d0883ba80', now() - interval '20 days'),
-  ('80000000-0000-0000-0000-000000000001', 'Дасгалжуулагчдын бүрэлдэхүүн шинэчлэгдлээ', 'Шинэ улиралд Пендарвис Вилльямс дасгалжуулагч манай хамт олонтой нэгдэж байна.', 'staff', '397692e0-915f-4361-9f75-f84d0883ba80', now() - interval '15 days')
+  ('80000000-0000-0000-0000-000000000001', '2026 оны зуны эрчимжүүлсэн бэлтгэл эхэллээ', 'Зуны амралтаар 8 долоо хоногийн эрчимжүүлсэн бэлтгэлд хамрагдах хүсэлтэй сурагчид 2026 оны 6-р сарын 1-нээс эхлэн бүртгүүлэх боломжтой.', 'all', '02346873-7047-4c27-b1d5-9461301c447f', now() - interval '10 days'),
+  ('80000000-0000-0000-0000-000000000001', 'Баянзүрх салбарын шинэ цагийн хуваарь', '2026 оны 1-р сараас эхлэн Баянзүрх салбар Даваа-Ням гарагт 10:00-20:00 цагийн хооронд үйлчилнэ.', 'guardians', '02346873-7047-4c27-b1d5-9461301c447f', now() - interval '20 days'),
+  ('80000000-0000-0000-0000-000000000001', 'Дасгалжуулагчдын бүрэлдэхүүн шинэчлэгдлээ', 'Шинэ улиралд Пендарвис Вилльямс дасгалжуулагч манай хамт олонтой нэгдэж байна.', 'staff', '02346873-7047-4c27-b1d5-9461301c447f', now() - interval '15 days')
 ON CONFLICT DO NOTHING;
 -- ============================================================================
 -- TEAM STAFF
 -- ============================================================================
 INSERT INTO public.team_staff (team_season_id, user_id, role)
 VALUES
-  ('30000000-0000-0000-0000-000000000001', '397692e0-915f-4361-9f75-f84d0883ba80', 'head_coach'),
-  ('30000000-0000-0000-0000-000000000001', '397692e0-915f-4361-9f75-f84d0883ba80', 'manager'),
-  ('30000000-0000-0000-0000-000000000002', '397692e0-915f-4361-9f75-f84d0883ba80', 'head_coach'),
-  ('30000000-0000-0000-0000-000000000003', '397692e0-915f-4361-9f75-f84d0883ba80', 'assistant_coach'),
-  ('30000000-0000-0000-0000-000000000004', '397692e0-915f-4361-9f75-f84d0883ba80', 'finance'),
-  ('30000000-0000-0000-0000-000000000010', '397692e0-915f-4361-9f75-f84d0883ba80', 'head_coach')
+  ('30000000-0000-0000-0000-000000000001', '02346873-7047-4c27-b1d5-9461301c447f', 'head_coach'),
+  ('30000000-0000-0000-0000-000000000001', '02346873-7047-4c27-b1d5-9461301c447f', 'manager'),
+  ('30000000-0000-0000-0000-000000000002', '02346873-7047-4c27-b1d5-9461301c447f', 'head_coach'),
+  ('30000000-0000-0000-0000-000000000003', '02346873-7047-4c27-b1d5-9461301c447f', 'assistant_coach'),
+  ('30000000-0000-0000-0000-000000000004', '02346873-7047-4c27-b1d5-9461301c447f', 'finance'),
+  ('30000000-0000-0000-0000-000000000010', '02346873-7047-4c27-b1d5-9461301c447f', 'head_coach')
 ON CONFLICT (team_season_id, user_id, role) DO NOTHING;
 -- ============================================================================
 -- STAT EVENTS — live game play-by-play (Khuleguud vs Metal, game 010)
 -- ============================================================================
 INSERT INTO public.tracker_sessions (id, game_id, scorer_id, role, device_info, status, last_acknowledged_sequence)
-VALUES ('90000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000010', '397692e0-915f-4361-9f75-f84d0883ba80', 'lead_scorer', '{"device":"demo-seed"}', 'active', 31)
+VALUES ('90000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000010', '02346873-7047-4c27-b1d5-9461301c447f', 'lead_scorer', '{"device":"demo-seed"}', 'active', 31)
 ON CONFLICT (game_id) WHERE status = 'active' DO NOTHING;
 INSERT INTO public.stat_events (game_id, tracker_session_id, operation_id, client_id, local_seq, event_type, period, clock_seconds, team_season_id, player_id, payload, created_by)
-SELECT '70000000-0000-0000-0000-000000000010'::uuid, '90000000-0000-0000-0000-000000000001'::uuid, gen_random_uuid(), gen_random_uuid(), seq, 'shot_2pt_made', period, clock, ts_id::uuid, player_id::uuid, jsonb_build_object('points', CASE WHEN event = '3pt' THEN 3 ELSE 2 END, 'x', floor(random()*50)::int, 'y', floor(random()*50)::int), '397692e0-915f-4361-9f75-f84d0883ba80'::uuid
+SELECT '70000000-0000-0000-0000-000000000010'::uuid, '90000000-0000-0000-0000-000000000001'::uuid, gen_random_uuid(), gen_random_uuid(), seq, 'shot_2pt_made', period, clock, ts_id::uuid, player_id::uuid, jsonb_build_object('points', CASE WHEN event = '3pt' THEN 3 ELSE 2 END, 'x', floor(random()*50)::int, 'y', floor(random()*50)::int), '02346873-7047-4c27-b1d5-9461301c447f'::uuid
 FROM (VALUES
   (1, 1,  590, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '2pt'),
   (1, 2,  560, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000003', '2pt'),

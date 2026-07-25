@@ -41,6 +41,3 @@ GRANT USAGE ON SCHEMA public, auth TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION auth.uid() TO anon, authenticated;
 
--- Seed auth user: seed.sql references this hardcoded UUID for source submissions
-INSERT INTO auth.users (id, email) VALUES ('397692e0-915f-4361-9f75-f84d0883ba80', 'seed-admin@onoo-test.mn')
-ON CONFLICT (id) DO NOTHING;

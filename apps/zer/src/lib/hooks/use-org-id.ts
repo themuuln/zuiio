@@ -46,7 +46,7 @@ export function useOrgId(): {
   });
 
   return {
-    organizationId: orgSettings.organizationId || fallbackOrgId ?? null,
+    organizationId: orgSettings.organizationId || (fallbackOrgId ?? null),
     isLoading: orgSettings.organizationId ? false : isLoading,
   };
 }

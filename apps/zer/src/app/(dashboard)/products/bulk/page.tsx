@@ -33,6 +33,7 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { productKeys } from "@/lib/query/keys";
+import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
 
 const bulkItemSchema = z.object({
@@ -50,25 +51,9 @@ const bulkSchema = z.object({
 
 type BulkValues = z.input<typeof bulkSchema>;
 
-async function bulkCreateProducts(items: BulkValues["items"]) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Нэвтрээгүй");
-
-  const { data: profile } = await withDbCapture(
-    "page:products_bulk",
-    supabase
-      .from("profiles")
-      .select("organization_id")
-      .eq("id", user.id)
-      .single(),
-  );
-
-  const orgId = profile?.organization_id;
+async function bulkCreateProducts(items: BulkValues["items"], orgId: string | null) {
   if (!orgId) throw new Error("Байгууллага олдсонгүй");
-
+  const supabase = createClient();
   const products = items.map((item) => ({
     organization_id: orgId,
     barcode: item.barcode,
@@ -78,7 +63,6 @@ async function bulkCreateProducts(items: BulkValues["items"]) {
     current_stock: item.current_stock,
     unit: item.unit,
   }));
-
   const { error } = await withDbCapture(
     "page:products_bulk",
     supabase.from("products").insert(products),
@@ -125,8 +109,9 @@ export default function BulkProductsPage() {
     return { found: true } as const;
   };
 
+  const { organizationId } = useOrgSettings();
   const submitMutation = useMutation({
-    mutationFn: (data: BulkValues) => bulkCreateProducts(data.items),
+    mutationFn: (data: BulkValues) => bulkCreateProducts(data.items, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all() });
       toast.success("Бүтээгдэхүүнүүд амжилттай нэмэгдлээ.");

@@ -225,17 +225,14 @@ function SidebarNav({
                       ),
                     );
                   })();
-
                   return (
                     <SidebarMenuItem key={item.href}>
                       <ViewTransition>
-                        <SidebarMenuButton
-                          isActive={isActive}
-                          tooltip={item.title}
-                          render={<Link href={item.href} />}
-                        >
-                          <Icon />
-                          <span>{item.title}</span>
+                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                          <Link href={item.href}>
+                            <Icon />
+                            <span>{item.title}</span>
+                          </Link>
                         </SidebarMenuButton>
                       </ViewTransition>
                     </SidebarMenuItem>
@@ -249,21 +246,23 @@ function SidebarNav({
 
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <ViewTransition>
-              <SidebarMenuButton render={<Link href="/settings" />}>
-                <Avatar className="size-6">
-                  <AvatarFallback className="text-xs">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate">
-                  {userFullName ||
-                    (userEmail ? userEmail.split("@")[0] : "Хэрэглэгч")}
-                </span>
-              </SidebarMenuButton>
-            </ViewTransition>
-          </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <ViewTransition>
+                      <SidebarMenuButton asChild>
+                        <Link href="/settings">
+                          <Avatar className="size-6">
+                            <AvatarFallback className="text-xs">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="truncate">
+                            {userFullName ||
+                              (userEmail ? userEmail.split("@")[0] : "Хэрэглэгч")}
+                          </span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </ViewTransition>
+                  </SidebarMenuItem>
           <SidebarMenuItem>
             <ViewTransition>
               <form action={logout}>

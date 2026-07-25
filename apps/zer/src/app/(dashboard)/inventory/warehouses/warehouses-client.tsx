@@ -37,6 +37,7 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/format";
+import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
 
 const warehouseSchema = z.object({
@@ -64,30 +65,14 @@ async function fetchWarehouses(): Promise<Warehouse[]> {
   return data ?? [];
 }
 
-async function createWarehouseAction(values: WarehouseValues) {
+async function createWarehouseAction(values: WarehouseValues, organizationId: string | null) {
+  if (!organizationId) throw new Error("Байгууллага олдсонгүй");
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Нэвтрээгүй");
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError) {
-    capture(profileError, { context: "warehouses: fetch profile" });
-  }
-  if (!profile?.organization_id) throw new Error("Байгууллага олдсонгүй");
-
   const { error } = await supabase.from("warehouses").insert({
-    organization_id: profile.organization_id,
+    organization_id: organizationId,
     name: values.name,
     location: values.location || null,
   });
-
   if (error) throw new Error(error.message);
 }
 
@@ -112,8 +97,9 @@ export default function WarehousesPage() {
     resolver: zodResolver(warehouseSchema),
   });
 
+  const { organizationId } = useOrgSettings();
   const createMutation = useMutation({
-    mutationFn: createWarehouseAction,
+    mutationFn: (data: WarehouseValues) => createWarehouseAction(data, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
       reset();
@@ -138,7 +124,6 @@ export default function WarehousesPage() {
       created_at: wh.created_at,
     };
   }
-
   function toEditData(wh: Warehouse): WarehouseEditData {
     return {
       id: wh.id,

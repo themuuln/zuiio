@@ -101,6 +101,7 @@ export async function DashboardFetcher({
       )}
       <BranchProvider branches={branches} userBranchId={profile.branch_id}>
         <DashboardShell
+          enabledFeatures={enabledFeatures}
           organizationId={organizationId}
           organizationName={org.name ?? null}
           logoUrl={brandConfig.logo_url ?? null}
