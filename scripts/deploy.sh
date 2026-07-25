@@ -69,10 +69,10 @@ APP_PROFILES=(
 APP_FILTERS=(
     zer
     tolom
-    onoo-web
-    "@zuiio/website"
+    onoo
+    website
     agent-gateway
-    "@zuiio/id"
+    zuiio-id
     zim
     zatly
     tamga-web

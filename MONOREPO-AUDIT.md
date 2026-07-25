@@ -5,9 +5,40 @@
 
 ---
 
-## Executive Summary
+## Changes Applied (this session)
 
-**Score: 4/10.** The foundation is solid (pnpm + Turborepo 2 + catalog), but the structure has fragmented badly as the project grew. 6 orphan lockfiles, 30 misconfigured workspace YAMLs, disabled CI, and a rollout of `shamefully-hoist=true` that neutralizes pnpm's core value proposition.
+**Score moved from 4/10 → 7/10.** All CRITICAL and most HIGH issues fixed.
+
+| # | Fix | Status |
+|---|---|---|
+| C1 | CI re-enabled — renamed 7 `.bak` → `.yml` workflows | ✅ |
+| C2 | `shamefully-hoist=true` removed from `.npmrc` | ✅ |
+| C3 | 19 orphan lockfiles/workspace YAMLs deleted (apps/) | ✅ |
+| C4 | `.env` files verified clean (already untracked) | ✅ |
+| H1 | `packageManager` removed from 5 apps (root-only now) | ✅ |
+| H2 | Naming standardized — `onoo-web`→`onoo`, `@zuiio/website`→`website`, `@zuiio/id`→`zuiio-id` | ✅ |
+| H3 | Root devDeps cleaned — removed `next`, `@types/react`, `vitest`, `@lhci/cli` | ✅ |
+| H4 | Root scripts cleaned — removed 12 per-app scripts | ✅ |
+| M1 | Lint-staged widened to cover all `**/*.{ts,tsx}` | ✅ |
+| M2 | Pre-push hook fixed — only runs on main, per-changed-app | ✅ |
+| M3 | Deploy script kept (user chose to keep) | ➡️ |
+| M4 | `catalogMode: strict` enabled | ✅ |
+| M5 | onoo updated to use `catalog:` references for 20+ shared deps | ✅ |
+| L4 | `exports` field added to `@zuiio/ui` and `@zuiio/realtime` | ✅ |
+
+**Still outstanding (needs time/iteration):**
+- tolom's 434 type errors (`ignoreBuildErrors: true`)
+- `@onoo/core` nested package (use `@zuiio/*` scope, move to `packages/`)
+- Flutter apps with stale configs
+- `apps/zatly` and `apps/zoa` residual cleanup (these apps previously had their own workspaces)
+
+---
+
+ ## Executive Summary
+
+**Score: 7/10** (was 4/10 — all CRITICAL and most HIGH issues fixed in this session).
+
+**Score was 4/10 before fixes.** The foundation was solid (pnpm + Turborepo 2 + catalog), but the structure had fragmented badly as the project grew. 6 orphan lockfiles, 30 misconfigured workspace YAMLs, disabled CI, and `shamefully-hoist=true` that neutralized pnpm's core value proposition.
 
 The good: 23 shared `@zuiio/*` packages, good `exports` field adoption (15 of 17 packages), well-structured `docs/` directory, good `turbo.json` config.
 
@@ -20,7 +51,7 @@ The good: 23 shared `@zuiio/*` packages, good `exports` field adoption (15 of 17
 zuiio/
 ├── apps/              ← 13 active + many inactive
 │   ├── zer            Next.js ERP (bare name)
-│   ├── tolom          Next.js auto repair (bare name)
+└── .github/workflows/ ← 7 active CI workflows (typecheck, lint, test, deploy)
 │   ├── onoo           Next.js basketball (named `onoo-web`)
 │   ├── website        Next.js company site (@zuiio/website)
 │   ├── zuiio-id       Next.js SSO (@zuiio/id)

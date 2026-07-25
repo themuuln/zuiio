@@ -57,4 +57,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run all tests
-        run: pnpm --filter onoo-web test:all
+        run: pnpm --filter onoo test:all

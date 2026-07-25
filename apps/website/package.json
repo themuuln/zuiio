@@ -1,5 +1,5 @@
 {
-  "name": "@zuiio/website",
+  "name": "website",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

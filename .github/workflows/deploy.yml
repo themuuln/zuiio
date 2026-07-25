@@ -132,11 +132,11 @@ jobs:
           # fi
           if [ "$ONOO" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking onoo..."
-            pnpm --filter onoo-web exec tsc --noEmit 2>&1 || FAILED="$FAILED onoo"
+            pnpm --filter onoo exec tsc --noEmit 2>&1 || FAILED="$FAILED onoo"
           fi
           if [ "$WEBSITE" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking website..."
-            pnpm --filter "@zuiio/website" exec tsc --noEmit 2>&1 || FAILED="$FAILED website"
+            pnpm --filter website exec tsc --noEmit 2>&1 || FAILED="$FAILED website"
           fi
           if [ "$AGENT_GW" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking agent-gateway..."
@@ -144,7 +144,7 @@ jobs:
           fi
           if [ "$ZUIIO_ID" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking zuiio-id..."
-            pnpm --filter "@zuiio/id" exec tsc --noEmit 2>&1 || FAILED="$FAILED zuiio-id"
+            pnpm --filter zuiio-id exec tsc --noEmit 2>&1 || FAILED="$FAILED zuiio-id"
           fi
           if [ -n "$FAILED" ]; then
             echo ""
@@ -196,7 +196,7 @@ jobs:
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: onoo
-      turbo-filter: onoo-web
+      turbo-filter: onoo
       author-email: "zerone.offical@gmail.com"
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_ONOO }}
@@ -212,7 +212,7 @@ jobs:
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: website
-      turbo-filter: "@zuiio/website"
+      turbo-filter: website
       author-email: "zerone.offical@gmail.com"
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_WEBSITE }}
@@ -244,7 +244,7 @@ jobs:
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: zuiio-id
-      turbo-filter: "@zuiio/id"
+      turbo-filter: zuiio-id
       author-email: "themuuln6@gmail.com"
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_ZUIIO_ID }}
