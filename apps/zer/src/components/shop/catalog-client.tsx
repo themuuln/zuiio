@@ -19,7 +19,6 @@ import {
   useLocalStorage,
   useLookup,
 } from "@zuiio/hooks";
-import { DynamicProductCreateDrawer } from "@/lib/dynamic-drawers";
 import dynamic from "next/dynamic";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { fetchProductsPage } from "@/app/(dashboard)/shop/actions";
@@ -43,6 +42,7 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DynamicProductCreateDrawer } from "@/lib/dynamic-drawers";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { useProductSearch } from "@/lib/query/hooks/use-product-search";
 import { cn } from "@/lib/utils";
@@ -80,7 +80,7 @@ const ProductGrid = memo(function ProductGrid({
   return (
     <div
       className={cn(
-        "gap-3",
+        "gap-5",
         viewMode === "list"
           ? "flex flex-col"
           : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5",
@@ -141,7 +141,7 @@ export function CatalogClient({
   initialHasMore = false,
   organizationId,
 }: CatalogClientProps) {
-  const { addItem } = useCart();
+  const { addItem, itemCount } = useCart();
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -323,8 +323,8 @@ export function CatalogClient({
   return (
     <div className="lg:flex lg:items-start lg:gap-5">
       {/* Desktop category sidebar */}
-      <aside className="hidden w-56 shrink-0 lg:block">
-        <div className="sticky top-[120px] flex flex-col gap-1">
+      <aside className="sticky top-0 hidden w-56 shrink-0 self-start lg:block">
+        <div className="flex flex-col gap-1">
           <p className="px-2 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Ангилал
           </p>
@@ -360,7 +360,7 @@ export function CatalogClient({
       {/* Left pane: search + categories + product grid */}
       <div className="flex min-w-0 flex-1 flex-col gap-4 pb-20 lg:pb-6">
         {/* Unified search + barcode input */}
-        <div className="sticky top-[52px] z-20 bg-background pb-2 pt-4">
+        <div className="sticky top-0 z-20 bg-background pb-2 pt-4">
           <div className="relative flex items-center gap-2">
             <div className="relative flex-1">
               <MagnifyingGlass className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -618,13 +618,15 @@ export function CatalogClient({
         )}
       </div>
 
-      {/* Right pane: persistent order panel (desktop POS) */}
-      <aside
-        aria-label="Захиалгын самбар"
-        className="sticky top-[68px] hidden h-[calc(100dvh-84px)] w-[340px] shrink-0 lg:block xl:w-[380px]"
-      >
-        <CartPanel />
-      </aside>
+      {/* Right pane: order panel (desktop POS) — slides in from right on mount */}
+      {itemCount > 0 && (
+        <aside
+          aria-label="Захиалгын самбар"
+          className="sticky top-[68px] hidden h-[calc(100dvh-84px)] w-[340px] shrink-0 animate-in slide-in-from-right duration-300 ease-in-out lg:block xl:w-[380px]"
+        >
+          <CartPanel />
+        </aside>
+      )}
 
       {/* Inline product create drawer */}
       <ProductCreateDrawer

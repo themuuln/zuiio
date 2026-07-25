@@ -32,8 +32,8 @@ import {
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { productKeys } from "@/lib/query/keys";
 import { useOrgSettings } from "@/lib/org-settings-context";
+import { productKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 
 const bulkItemSchema = z.object({
@@ -51,7 +51,10 @@ const bulkSchema = z.object({
 
 type BulkValues = z.input<typeof bulkSchema>;
 
-async function bulkCreateProducts(items: BulkValues["items"], orgId: string | null) {
+async function bulkCreateProducts(
+  items: BulkValues["items"],
+  orgId: string | null,
+) {
   if (!orgId) throw new Error("Байгууллага олдсонгүй");
   const supabase = createClient();
   const products = items.map((item) => ({
@@ -111,7 +114,8 @@ export default function BulkProductsPage() {
 
   const { organizationId } = useOrgSettings();
   const submitMutation = useMutation({
-    mutationFn: (data: BulkValues) => bulkCreateProducts(data.items, organizationId),
+    mutationFn: (data: BulkValues) =>
+      bulkCreateProducts(data.items, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all() });
       toast.success("Бүтээгдэхүүнүүд амжилттай нэмэгдлээ.");
@@ -395,21 +399,6 @@ export default function BulkProductsPage() {
                 <p className="text-xs text-muted-foreground">
                   CSV формат: barcode, name, sale_price, cost_price,
                   current_stock, unit
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Баркод уншигч</CardTitle>
-                <CardDescription>
-                  Баркод сканнер ашиглан хурдан бүртгэх
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Баркод сканнераар унших үед курсор автоматаар дараагийн мөрөнд
-                  шилжиж, хурдан бүртгэх боломжтой.
                 </p>
               </CardContent>
             </Card>

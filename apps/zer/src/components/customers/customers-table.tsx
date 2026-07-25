@@ -105,10 +105,12 @@ export function CustomersTable({
   data,
   showBalance = true,
   loading,
+  toolbar,
 }: {
   data: CustomerRow[];
   showBalance?: boolean;
   loading?: boolean;
+  toolbar?: React.ReactNode;
 }) {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerRow | null>(
     null,
@@ -122,6 +124,7 @@ export function CustomersTable({
         data={data}
         searchColumn="name"
         loading={loading}
+        toolbar={toolbar}
         searchPlaceholder="Харилцагчаар хайх..."
         pageSize={10}
         totalLabel="харилцагч"

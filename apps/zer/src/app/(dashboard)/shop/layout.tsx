@@ -26,7 +26,7 @@ function ShopShell({ children }: { children: React.ReactNode }) {
         <main
           id="main-content"
           aria-label="Дэлгүүрийн үндсэн агуулга"
-          className="mx-auto w-full max-w-3xl flex-1 px-4 py-4 lg:max-w-[1500px] lg:px-6"
+          className="w-full flex-1 px-4 py-4 lg:px-6"
         >
           {children}
         </main>

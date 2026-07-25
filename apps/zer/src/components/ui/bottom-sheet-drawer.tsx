@@ -1,8 +1,7 @@
 "use client";
 
 import { Drawer } from "@base-ui/react/drawer";
-import { Slot } from "radix-ui";
-import type * as React from "react";
+import * as React from "react";
 import { DrawerHeader } from "@/components/ui/drawer-header";
 import { cn } from "@/lib/utils";
 
@@ -68,7 +67,21 @@ export function BottomSheetDrawer({
           snapPoints={[0.9]}
         >
           {trigger && (
-            <Drawer.Trigger render={<Slot.Root />}>{trigger}</Drawer.Trigger>
+            <Drawer.Trigger
+              render={(props) => {
+                const { children: _, ...triggerProps } = props;
+                if (React.isValidElement(trigger)) {
+                  return React.cloneElement(trigger, triggerProps);
+                }
+                return (
+                  <button {...triggerProps} type="button">
+                    {trigger}
+                  </button>
+                );
+              }}
+            >
+              {trigger}
+            </Drawer.Trigger>
           )}
           <Drawer.Portal>
             <Drawer.Backdrop className="[--backdrop-opacity:0.1] z-40 fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] dark:[--backdrop-opacity:0.4]" />

@@ -13,6 +13,7 @@ const fontPreconnectHeader = {
 };
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["192.168.1.126", "m5.local"],
   reactCompiler: true,
   experimental: {
     useTypeScriptCli: true,

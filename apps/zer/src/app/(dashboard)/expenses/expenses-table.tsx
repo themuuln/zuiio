@@ -81,9 +81,11 @@ const columns: ColumnDef<ExpenseRow>[] = [
 export function ExpensesTable({
   data,
   loading,
+  toolbar,
 }: {
   data: ExpenseRow[];
   loading?: boolean;
+  toolbar?: React.ReactNode;
 }) {
   const [selectedExpense, setSelectedExpense] = useState<ExpenseRow | null>(
     null,
@@ -110,6 +112,7 @@ export function ExpensesTable({
         loading={loading}
         searchColumn="category"
         searchPlaceholder="Ангилал, тайлбараар хайх..."
+        toolbar={toolbar}
         pageSize={10}
         totalLabel="зарлага"
         enableSorting

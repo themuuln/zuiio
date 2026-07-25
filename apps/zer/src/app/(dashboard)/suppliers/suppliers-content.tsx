@@ -61,15 +61,6 @@ export function SuppliersContent() {
     <PageShell
       title="Нийлүүлэгчид"
       description="Импорт, ханган нийлүүлэлтийн эх үүсвэр, өглөгийн үлдэгдлээ хянах төв."
-      actions={
-        <>
-          <ExportButton
-            href="/api/export/suppliers"
-            filename={`suppliers-${new Date().toISOString().slice(0, 10)}.csv`}
-          />
-          <DynamicSupplierCreateDrawer />
-        </>
-      }
     >
       {!suppliers.length && !isLoading ? (
         <ErpEmptyState
@@ -79,7 +70,19 @@ export function SuppliersContent() {
           action={<DynamicSupplierCreateDrawer />}
         />
       ) : (
-        <SuppliersTable data={suppliers} loading={isLoading} />
+        <SuppliersTable
+          data={suppliers}
+          loading={isLoading}
+          toolbar={
+            <>
+              <ExportButton
+                href="/api/export/suppliers"
+                filename={`suppliers-${new Date().toISOString().slice(0, 10)}.csv`}
+              />
+              <DynamicSupplierCreateDrawer />
+            </>
+          }
+        />
       )}
     </PageShell>
   );

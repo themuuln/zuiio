@@ -3,6 +3,8 @@
 import {
   ArrowLeft,
   ArrowRight,
+  Barcode,
+  Package as PackageIcon,
   StackSimple,
 } from "@phosphor-icons/react/dist/ssr";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -10,11 +12,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-
 import {
   deleteProduct,
   toggleProductPublication,
 } from "@/app/(dashboard)/products/actions";
+import { ExportButton } from "@/components/erp/export-button";
 import {
   type ProductDetailData,
   ProductDetailDrawer,
@@ -24,12 +26,13 @@ import {
   ProductEditDrawer,
 } from "@/components/products/product-edit-drawer";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { TableActionsCell } from "@/components/ui/table-actions-cell";
 import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
+import { DynamicProductCreateDrawer } from "@/lib/dynamic-drawers";
 import { formatCurrency } from "@/lib/format";
 import { useBrands } from "@/lib/query/hooks/use-brands";
 import { useProductVariants } from "@/lib/query/hooks/use-product-variants";
@@ -369,6 +372,30 @@ export function ProductsTable({
         totalLabel="бүтээгдэхүүн"
         enableSorting
         enableColumnVisibility
+        toolbar={
+          <div className="flex items-center gap-2">
+            <ExportButton
+              href="/api/export/products"
+              filename={`products-${new Date().toISOString().slice(0, 10)}.csv`}
+            />
+            <DynamicProductCreateDrawer
+              companyType=""
+              organizationId={organizationId}
+            />
+            <Button asChild variant="outline" size="sm">
+              <Link href="/products/bulk">
+                <Barcode className="mr-1.5 size-4" />
+                Баркод бөөнөөр
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/products/bundles">
+                <PackageIcon className="mr-1.5 size-4" />
+                Багц
+              </Link>
+            </Button>
+          </div>
+        }
         onRowClick={(row) => setSelectedProduct(row)}
         manualPagination
         currentPage={currentPage}

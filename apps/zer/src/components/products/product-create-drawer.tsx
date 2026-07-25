@@ -113,7 +113,6 @@ function ProductPreviewCard({
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-muted/30">
         {image_url ? (
-          // biome-ignore lint/performance/noImgElement: product image display
           <img
             src={image_url}
             alt={displayName}
@@ -341,6 +340,7 @@ export function ProductCreateDrawer({
                     id="name"
                     required
                     placeholder="Цай 500гр"
+                    autoFocus
                     {...register("name")}
                   />
                   {errors.name && (

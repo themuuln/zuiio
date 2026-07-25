@@ -1,8 +1,7 @@
 "use client";
 
 import { Drawer } from "@base-ui/react/drawer";
-import { Slot } from "radix-ui";
-import type * as React from "react";
+import * as React from "react";
 import { DrawerHeader } from "@/components/ui/drawer-header";
 import { cn } from "@/lib/utils";
 
@@ -140,7 +139,21 @@ export function BottomSheet({
       snapPoints={snapPoints as (number | string)[] | undefined}
     >
       {trigger && (
-        <Drawer.Trigger render={<Slot.Root />}>{trigger}</Drawer.Trigger>
+        <Drawer.Trigger
+          render={(props) => {
+            const { children: _, ...triggerProps } = props;
+            if (React.isValidElement(trigger)) {
+              return React.cloneElement(trigger, triggerProps);
+            }
+            return (
+              <button {...triggerProps} type="button">
+                {trigger}
+              </button>
+            );
+          }}
+        >
+          {trigger}
+        </Drawer.Trigger>
       )}
       <Drawer.Portal>{content}</Drawer.Portal>
     </Drawer.Root>

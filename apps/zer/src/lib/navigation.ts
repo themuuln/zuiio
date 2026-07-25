@@ -12,7 +12,6 @@ import {
   CurrencyDollar,
   FileText,
   Folder,
-  GearSix,
   House,
   IdentificationBadge,
   MapPin,
@@ -229,7 +228,6 @@ export const navGroups: NavGroup[] = [
         icon: Clock,
         featureKey: "_audit_log",
       },
-      { title: "Тохиргоо", href: "/settings", icon: GearSix },
     ],
   },
 ];

@@ -55,7 +55,7 @@ function StockChip({ stock, unit }: { stock: number; unit: string }) {
         )}
         aria-hidden="true"
       />
-      Үлдэгдэл {stock} {unit}
+      {stock} {unit}
     </span>
   );
 }
@@ -260,6 +260,13 @@ export const ProductCard = memo(function ProductCard({
             </Badge>
           )}
 
+          {/* Stock indicator */}
+          {trackStock && !isOutOfStock && (
+            <span className="absolute left-2 top-2 z-10">
+              <StockChip stock={stock} unit={unit} />
+            </span>
+          )}
+
           {/* Cart quantity badge */}
           {!isOutOfStock && cartQuantity > 0 && (
             <Badge className="absolute right-2 top-2 gap-1 bg-primary px-2 py-0.5 text-[11px] text-primary-foreground shadow-sm">
@@ -300,7 +307,6 @@ export const ProductCard = memo(function ProductCard({
               <p className="text-lg font-bold tabular-nums tracking-tight">
                 {price.toLocaleString()}₮
               </p>
-              {trackStock && <StockChip stock={stock} unit={unit} />}
             </>
           ) : (
             <>
@@ -324,7 +330,6 @@ export const ProductCard = memo(function ProductCard({
               <p className="text-base font-bold tabular-nums tracking-tight">
                 {price.toLocaleString()}₮
               </p>
-              {trackStock && <StockChip stock={stock} unit={unit} />}
             </>
           )}
 

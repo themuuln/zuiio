@@ -175,11 +175,7 @@ export function SalesContent({
   }, [sales, activeChips]);
 
   // ── Sale detail fetching — errors are shown inline via PageShell ──
-  const {
-    data: selectedSale,
-    error: detailError,
-    isFetching: detailFetching,
-  } = useQuery({
+  const { data: selectedSale } = useQuery({
     queryKey: ["sale-detail", selectedSaleId],
     queryFn: async () => {
       if (!selectedSaleId) return null;
@@ -204,23 +200,6 @@ export function SalesContent({
           setError(null);
           setSelectedSaleId(null);
         }}
-        actions={
-          <>
-            <ExportButton
-              href="/api/export/sales"
-              filename={`sales-${new Date().toISOString().slice(0, 10)}.csv`}
-            />
-            <SalesCreateDrawer
-              products={products}
-              open={createOpen}
-              onOpenChangeAction={setCreateOpen}
-              onOpenDetailAction={(saleId) => {
-                setCreateOpen(false);
-                setSelectedSaleId(saleId);
-              }}
-            />
-          </>
-        }
       >
         <div className="flex flex-col gap-4">
           {/* Quick filter chips — always render for PPR structure */}
@@ -248,6 +227,23 @@ export function SalesContent({
           <SalesTable
             data={filteredSales}
             onRowClick={(row) => setSelectedSaleId(row.id)}
+            toolbar={
+              <>
+                <ExportButton
+                  href="/api/export/sales"
+                  filename={`sales-${new Date().toISOString().slice(0, 10)}.csv`}
+                />
+                <SalesCreateDrawer
+                  products={products}
+                  open={createOpen}
+                  onOpenChangeAction={setCreateOpen}
+                  onOpenDetailAction={(saleId) => {
+                    setCreateOpen(false);
+                    setSelectedSaleId(saleId);
+                  }}
+                />
+              </>
+            }
           />
         </div>
       </PageShell>

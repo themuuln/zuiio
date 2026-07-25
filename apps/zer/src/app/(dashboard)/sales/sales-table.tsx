@@ -114,11 +114,15 @@ export function SalesTable({
   data,
   onRowClick,
   loading,
+  /** Extra toolbar content (export, create buttons) */
+  toolbar,
 }: {
   data: SaleRow[];
   onRowClick?: (row: SaleRow) => void;
   /** Inline skeleton rows while data is loading */
   loading?: boolean;
+  /** Extra toolbar content (export, create buttons) */
+  toolbar?: React.ReactNode;
 }) {
   return (
     <DataTable
@@ -131,6 +135,7 @@ export function SalesTable({
       totalLabel="борлуулалт"
       enableSorting
       enableColumnVisibility
+      toolbar={toolbar}
     />
   );
 }

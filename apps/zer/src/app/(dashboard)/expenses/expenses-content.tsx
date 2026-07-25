@@ -70,18 +70,24 @@ export function ExpensesContent() {
     <PageShell
       title="Зарлага"
       description="Байгууллагын зарлагын жагсаалт, ангилал, төлбөрийн мэдээлэл."
-      actions={
-        <>
-          <ExportButton
-            href="/api/export/expenses"
-            filename={`expenses-${new Date().toISOString().slice(0, 10)}.csv`}
-          />
-          <ExpenseCreateDrawer open={createOpen} onOpenChange={setCreateOpen} />
-        </>
-      }
     >
       {isLoading ? (
-        <ExpensesTable data={[]} loading={true} />
+        <ExpensesTable
+          data={[]}
+          loading={true}
+          toolbar={
+            <>
+              <ExportButton
+                href="/api/export/expenses"
+                filename={`expenses-${new Date().toISOString().slice(0, 10)}.csv`}
+              />
+              <ExpenseCreateDrawer
+                open={createOpen}
+                onOpenChange={setCreateOpen}
+              />
+            </>
+          }
+        />
       ) : !expenses.length ? (
         <ErpEmptyState
           icon={<Coins className="size-4" />}
@@ -99,7 +105,21 @@ export function ExpensesContent() {
           }
         />
       ) : (
-        <ExpensesTable data={expenses} />
+        <ExpensesTable
+          data={expenses}
+          toolbar={
+            <>
+              <ExportButton
+                href="/api/export/expenses"
+                filename={`expenses-${new Date().toISOString().slice(0, 10)}.csv`}
+              />
+              <ExpenseCreateDrawer
+                open={createOpen}
+                onOpenChange={setCreateOpen}
+              />
+            </>
+          }
+        />
       )}
     </PageShell>
   );

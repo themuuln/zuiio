@@ -98,9 +98,11 @@ function buildColumns(
 export function SuppliersTable({
   data,
   loading,
+  toolbar,
 }: {
   data: SupplierRow[];
   loading?: boolean;
+  toolbar?: React.ReactNode;
 }) {
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierRow | null>(
     null,
@@ -120,6 +122,7 @@ export function SuppliersTable({
         enableColumnVisibility
         onRowClick={(row) => setSelectedSupplier(row)}
         loading={loading}
+        toolbar={toolbar}
       />
       <SupplierDetailDrawer
         supplier={

@@ -13,7 +13,7 @@ export const DynamicProductCreateDrawer = dynamic(
     import("@/components/products/product-create-drawer").then(
       (m) => m.ProductCreateDrawer,
     ),
-  { loading: DrawerTriggerSkeleton },
+  { ssr: false, loading: DrawerTriggerSkeleton },
 );
 
 export const DynamicProductDetailDrawer = dynamic(

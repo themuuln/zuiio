@@ -118,9 +118,11 @@ const columns: ColumnDef<PurchaseRow>[] = [
 export function PurchasesTable({
   data,
   loading,
+  toolbar,
 }: {
   data: PurchaseRow[];
   loading?: boolean;
+  toolbar?: React.ReactNode;
 }) {
   const [selectedPurchaseId, setSelectedPurchaseId] = useState<string | null>(
     null,
@@ -132,6 +134,7 @@ export function PurchasesTable({
         columns={columns}
         loading={loading}
         data={data}
+        toolbar={toolbar}
         searchColumn="order_number"
         searchPlaceholder="Захиалгын дугаар, нийлүүлэгч, дүнгээр хайх..."
         pageSize={10}

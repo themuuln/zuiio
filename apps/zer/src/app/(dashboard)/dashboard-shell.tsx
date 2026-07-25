@@ -1,20 +1,14 @@
 "use client";
 
 import { Drawer } from "@base-ui/react/drawer";
-import {
-  MapPin,
-  Plus,
-  SignOut,
-  Storefront,
-} from "@phosphor-icons/react/dist/ssr";
+import { MapPin, Plus, Storefront } from "@phosphor-icons/react/dist/ssr";
 import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { useMemo, ViewTransition } from "react";
-import { logout } from "@/app/(dashboard)/actions";
 import { QuickCreateDropdown } from "@/components/erp/quick-create-dropdown";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { NavUser } from "@/components/nav-user";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   Select,
@@ -228,7 +222,11 @@ function SidebarNav({
                   return (
                     <SidebarMenuItem key={item.href}>
                       <ViewTransition>
-                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          tooltip={item.title}
+                        >
                           <Link href={item.href}>
                             <Icon />
                             <span>{item.title}</span>
@@ -245,35 +243,15 @@ function SidebarNav({
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu>
-                  <SidebarMenuItem>
-                    <ViewTransition>
-                      <SidebarMenuButton asChild>
-                        <Link href="/settings">
-                          <Avatar className="size-6">
-                            <AvatarFallback className="text-xs">
-                              {initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="truncate">
-                            {userFullName ||
-                              (userEmail ? userEmail.split("@")[0] : "Хэрэглэгч")}
-                          </span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </ViewTransition>
-                  </SidebarMenuItem>
-          <SidebarMenuItem>
-            <ViewTransition>
-              <form action={logout}>
-                <SidebarMenuButton type="submit">
-                  <SignOut />
-                  <span>Гарах</span>
-                </SidebarMenuButton>
-              </form>
-            </ViewTransition>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <NavUser
+          user={{
+            name:
+              userFullName ||
+              (userEmail ? userEmail.split("@")[0] : "Хэрэглэгч"),
+            email: userEmail,
+            initials,
+          }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </>
@@ -434,7 +412,7 @@ export function DashboardShell({
               </Sidebar>
 
               <SidebarInset>
-                <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+                <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur-sm px-4">
                   <SidebarTrigger className="-ml-1" />
                   <Separator orientation="vertical" className="mr-2 h-4" />
                   <div className="ml-auto">
@@ -443,7 +421,7 @@ export function DashboardShell({
                     )}
                   </div>
                 </header>
-                <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
+                <div className="flex flex-1 flex-col gap-4 overflow-auto p-4 md:p-6">
                   <OrgSettingsProvider value={orgSettingsValue}>
                     {children}
                   </OrgSettingsProvider>

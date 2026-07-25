@@ -297,7 +297,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="flex flex-col gap-3">
       {/* ── Toolbar ── */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+      <div className="sticky top-0 z-20 flex flex-col gap-2 bg-background/95 backdrop-blur-sm py-2 sm:flex-row sm:items-center sm:gap-3">
         {searchColumn && (
           <Input
             placeholder={searchPlaceholder}
@@ -376,9 +376,8 @@ export function DataTable<TData, TValue>({
                       )}
                     >
                       {header.isPlaceholder ? null : (
-                        <div
-                          role="button"
-                          tabIndex={0}
+                        <button
+                          type="button"
                           className={cn(
                             "flex items-center gap-1",
                             canSort && "cursor-pointer hover:text-foreground",
@@ -414,7 +413,7 @@ export function DataTable<TData, TValue>({
                               )}
                             </span>
                           )}
-                        </div>
+                        </button>
                       )}
                     </TableHead>
                   );

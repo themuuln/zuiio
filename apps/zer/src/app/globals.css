@@ -187,3 +187,7 @@
     min-height: 44px;
   }
 }
+
+body {
+  position: relative;
+}

@@ -56,21 +56,6 @@ export function PurchasesContent({
     <PageShell
       title="Худалдан авалт"
       description="Нийлүүлэгчээс бараа материалын худалдан авалтын захиалга"
-      actions={
-        <>
-          <ExportButton
-            href="/api/export/purchases"
-            filename={`purchases-${new Date().toISOString().slice(0, 10)}.csv`}
-          />
-          <PurchaseCreateDrawer
-            suppliers={suppliers}
-            products={products}
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-            onSuccess={handleCreateSuccess}
-          />
-        </>
-      }
     >
       {!purchaseOrders.length ? (
         <ErpEmptyState
@@ -89,7 +74,24 @@ export function PurchasesContent({
           }
         />
       ) : (
-        <PurchasesTable data={purchaseOrders} />
+        <PurchasesTable
+          data={purchaseOrders}
+          toolbar={
+            <>
+              <ExportButton
+                href="/api/export/purchases"
+                filename={`purchases-${new Date().toISOString().slice(0, 10)}.csv`}
+              />
+              <PurchaseCreateDrawer
+                suppliers={suppliers}
+                products={products}
+                open={createOpen}
+                onOpenChange={setCreateOpen}
+                onSuccess={handleCreateSuccess}
+              />
+            </>
+          }
+        />
       )}
     </PageShell>
   );

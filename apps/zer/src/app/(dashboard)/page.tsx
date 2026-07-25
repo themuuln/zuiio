@@ -4,7 +4,6 @@ import { HeroActionCard } from "@/components/dashboard/dashboard-cards";
 import { getDashboardContext } from "@/lib/dashboard-context";
 import { LowStockWrapper } from "./_sections/low-stock-wrapper";
 import { MonthlyTrendSection } from "./_sections/monthly-trend-section";
-import { OnboardingChecklist } from "./_sections/onboarding-checklist";
 import { QuickShortcuts } from "./_sections/quick-shortcuts";
 import { RecentSales } from "./_sections/recent-sales";
 import { TodayPulse } from "./_sections/today-pulse";
@@ -27,20 +26,18 @@ export default async function DashboardPage() {
                 <div className="h-[104px] animate-pulse rounded-xl bg-muted" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-[72px] animate-pulse rounded-xl bg-muted"
-                  />
-                ))}
+                <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-[72px] animate-pulse rounded-xl bg-muted"
-                  />
-                ))}
+                <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
               </div>
               <div className="h-48 animate-pulse rounded-xl bg-muted" />
               <div className="h-80 animate-pulse rounded-xl bg-muted" />
@@ -143,11 +140,6 @@ async function DashboardContent() {
             </Suspense>
           </div>
         </div>
-
-        {/* Onboarding Checklist sidebar */}
-        <Suspense fallback={null}>
-          <OnboardingChecklist orgId={organizationId} totalProducts={0} />
-        </Suspense>
       </div>
     </>
   );

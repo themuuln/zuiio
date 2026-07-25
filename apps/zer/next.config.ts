@@ -2,7 +2,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.1.126"],
+  allowedDevOrigins: ["192.168.1.126", "m5.local"],
   cacheComponents: true,
   images: {
     remotePatterns: [

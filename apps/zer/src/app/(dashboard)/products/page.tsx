@@ -1,18 +1,12 @@
-import {
-  Barcode,
-  Package as PackageIcon,
-} from "@phosphor-icons/react/dist/ssr";
+import { Package as PackageIcon } from "@phosphor-icons/react/dist/ssr";
 import { withDbCapture } from "@zuiio/capture";
-import Link from "next/link";
 import { Suspense } from "react";
 import { ErpEmptyState } from "@/components/erp/empty-state";
-import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import {
   type ProductRow,
   ProductsTable,
 } from "@/components/products/products-table";
-import { Button } from "@/components/ui/button";
 import { DynamicProductCreateDrawer } from "@/lib/dynamic-drawers";
 import { requireAppContext } from "@/lib/erp";
 
@@ -87,18 +81,6 @@ async function DataFetcher({
     <PageShell
       title="Бүтээгдэхүүн"
       description="Бүтээгдэхүүний каталог, үлдэгдэл, үнийн мэдээллийг нэг дороос удирдана."
-      actions={
-        <>
-          <ExportButton
-            href="/api/export/products"
-            filename={`products-${new Date().toISOString().slice(0, 10)}.csv`}
-          />
-          <DynamicProductCreateDrawer
-            companyType=""
-            organizationId={organizationId}
-          />
-        </>
-      }
     >
       {!products?.length ? (
         <ErpEmptyState
@@ -113,29 +95,13 @@ async function DataFetcher({
           }
         />
       ) : (
-        <div className="flex flex-col gap-4">
-          <ProductsTable
-            data={tableData}
-            organizationId={organizationId}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalCount={totalCount}
-          />
-          <div className="flex flex-wrap items-center gap-3">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/products/bulk">
-                <Barcode className="mr-2 size-4" />
-                Баркод бөөнөөр
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/products/bundles">
-                <PackageIcon className="mr-2 size-4" />
-                Багц
-              </Link>
-            </Button>
-          </div>
-        </div>
+        <ProductsTable
+          data={tableData}
+          organizationId={organizationId}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+        />
       )}
     </PageShell>
   );

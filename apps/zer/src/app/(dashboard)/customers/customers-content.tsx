@@ -48,21 +48,21 @@ export function CustomersContent() {
     <PageShell
       title="Харилцагчид"
       description="Авлага, холбоо барих мэдээлэл, худалдан авагчийн баазаа удирдана."
-      actions={
-        <>
-          <ExportButton
-            href="/api/export/customers"
-            filename={`customers-${new Date().toISOString().slice(0, 10)}.csv`}
-          />
-          <DynamicCustomerCreateDrawer />
-        </>
-      }
     >
       {(customers && customers.length > 0) || isLoading ? (
         <CustomersTable
           data={customers ?? []}
           showBalance={showBalance}
           loading={isLoading}
+          toolbar={
+            <>
+              <ExportButton
+                href="/api/export/customers"
+                filename={`customers-${new Date().toISOString().slice(0, 10)}.csv`}
+              />
+              <DynamicCustomerCreateDrawer />
+            </>
+          }
         />
       ) : (
         <ErpEmptyState

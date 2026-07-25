@@ -1,8 +1,7 @@
 "use client";
 
 import { Drawer } from "@base-ui/react/drawer";
-import { Slot } from "radix-ui";
-import type * as React from "react";
+import * as React from "react";
 import { DrawerHeader } from "@/components/ui/drawer-header";
 import { cn } from "@/lib/utils";
 
@@ -56,10 +55,10 @@ export function SlideInDrawer({
   panelWidth = "28rem",
   trigger,
   footer,
+  direction = "right",
   handle,
   modal = true,
   disablePointerDismissal = false,
-  direction = "right",
 }: SlideInDrawerProps) {
   const bleedPadding =
     "pr-[calc(1.5rem+3rem)] supports-[-webkit-touch-callout:none]:pr-6";
@@ -67,6 +66,22 @@ export function SlideInDrawer({
   const content = (
     <>
       <Drawer.Backdrop className="[--backdrop-opacity:0.1] z-40 [--bleed:3rem] dark:[--backdrop-opacity:0.4] fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute" />
+      {/* Stack effect styles for nested drawers */}
+      <style
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: `
+            [data-drawer-popup][data-nested-drawer-open]::after {
+              content: '';
+              position: absolute;
+              inset: 0;
+              background: rgb(0 0 0 / 0.05);
+              pointer-events: none;
+              transition: background-color 450ms cubic-bezier(0.32, 0.72, 0, 1);
+            }
+          `,
+        }}
+      />
       <Drawer.Viewport
         className={cn(
           "[--viewport-padding:0px] z-50 supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex p-(--viewport-padding)",
@@ -76,6 +91,7 @@ export function SlideInDrawer({
         )}
       >
         <Drawer.Popup
+          data-drawer-popup=""
           className={cn(
             direction === "bottom"
               ? `[--bleed:0px] w-full h-[90dvh] border-t border-border bg-white text-foreground outline-none shadow-lg overscroll-contain touch-auto [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateY(100%)] data-starting-style:[transform:translateY(100%)] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] rounded-t-2xl dark:bg-popover dark:text-popover-foreground dark:shadow-none overflow-hidden`
@@ -143,7 +159,21 @@ export function SlideInDrawer({
       {...(direction === "bottom" ? { snapPoints: [0.9] } : {})}
     >
       {trigger && (
-        <Drawer.Trigger render={<Slot.Root />}>{trigger}</Drawer.Trigger>
+        <Drawer.Trigger
+          render={(props) => {
+            const { children: _, ...triggerProps } = props;
+            if (React.isValidElement(trigger)) {
+              return React.cloneElement(trigger, triggerProps);
+            }
+            return (
+              <button {...triggerProps} type="button">
+                {trigger}
+              </button>
+            );
+          }}
+        >
+          {trigger}
+        </Drawer.Trigger>
       )}
       <Drawer.Portal>{content}</Drawer.Portal>
     </Drawer.Root>
