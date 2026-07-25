@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ArrowRight,
   BarChart3,
@@ -10,10 +8,10 @@ import {
   Package,
   Users,
 } from "lucide-react";
+import { cacheLife } from "next/cache";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { getTranslations } from "next-intl/server";
 import { AnimatedCounter } from "@/components/animated-counter";
 import { LandingNav } from "@/components/landing-nav";
 import { PartnersSlider } from "@/components/partners-slider";
@@ -26,9 +24,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { prefetchCriticalRoutes } from "@/lib/prefetch";
 import { cn } from "@/lib/utils";
-import { AuthGate } from "./_landing-auth-gate";
+import { HomeClientContent } from "./_home-client";
 
 // Lazy-load below-the-fold sections — they only load when scrolled into view
 const HowItWorksSection = dynamic(() =>
@@ -110,222 +107,220 @@ const FEATURES = [
   },
 ];
 
-export default function HomePage() {
-  const t = useTranslations("home") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const appT = useTranslations("app") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  return <HomeContent locale={locale} />;
+}
 
-  // Prefetch critical routes for instant navigation
-  useEffect(() => {
-    prefetchCriticalRoutes();
-  }, []);
+async function HomeContent({ locale }: { locale: string }) {
+  "use cache";
+  cacheLife("daily");
+
+  const t = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "home",
+  })) as (key: string, values?: Record<string, string | number>) => string;
+  const appT = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "app",
+  })) as (key: string, values?: Record<string, string | number>) => string;
 
   return (
-    <AuthGate>
-      {(stats) => (
-        <div className="flex min-h-dvh flex-col">
-          <LandingNav />
+    <div className="flex min-h-dvh flex-col">
+      <HomeClientContent />
+      <LandingNav />
 
-          <main>
-            {/* ═══ Hero ═══════════════════════════════════════════ */}
-            <section className="relative overflow-hidden border-b px-4 pt-20 pb-16 sm:px-6 sm:pt-28 sm:pb-20">
-              <div className="pointer-events-none absolute inset-0 -z-10">
-                <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-background" />
-                <div className="absolute top-[-20%] left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
-              </div>
+      <main>
+        {/* ═══ Hero ═══════════════════════════════════════════ */}
+        <section className="relative overflow-hidden border-b px-4 pt-20 pb-16 sm:px-6 sm:pt-28 sm:pb-20">
+          <div className="pointer-events-none absolute inset-0 -z-10">
+            <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-background" />
+            <div className="absolute top-[-20%] left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
+          </div>
 
-              <div className="mx-auto max-w-4xl text-center">
-                <Badge variant="outline" className="mb-6 text-xs font-medium">
-                  {appT("tagline")}
-                </Badge>
-                <Typography.H1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                  {t("heroTitle")}
-                </Typography.H1>
-                <Typography.Muted className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
-                  {t("heroSubtitle")}
-                </Typography.Muted>
-                <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                  <Button
-                    size="lg"
-                    render={<Link href="/auth/signup" />}
-                    nativeButton={false}
-                    className="w-full sm:w-auto"
-                  >
-                    {t("heroCtaPrimary")}
-                    <ArrowRight className="ml-2 size-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    render={<Link href="#features" />}
-                    nativeButton={false}
-                    className="w-full sm:w-auto"
-                  >
-                    {t("heroCtaSecondary")}
-                  </Button>
+          <div className="mx-auto max-w-4xl text-center">
+            <Badge variant="outline" className="mb-6 text-xs font-medium">
+              {appT("tagline")}
+            </Badge>
+            <Typography.H1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              {t("heroTitle")}
+            </Typography.H1>
+            <Typography.Muted className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
+              {t("heroSubtitle")}
+            </Typography.Muted>
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Button
+                size="lg"
+                render={<Link href="/auth/signup" />}
+                nativeButton={false}
+                className="w-full sm:w-auto"
+              >
+                {t("heroCtaPrimary")}
+                <ArrowRight className="ml-2 size-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                render={<Link href="#features" />}
+                nativeButton={false}
+                className="w-full sm:w-auto"
+              >
+                {t("heroCtaSecondary")}
+              </Button>
+            </div>
+
+            {/* Social proof */}
+            <div className="mt-12 grid grid-cols-3 gap-6 border-t pt-8 sm:mt-16 sm:pt-10">
+              <div className="text-center">
+                <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+                  <AnimatedCounter end={12} suffix="+" />
                 </div>
-
-                {/* Social proof */}
-                <div className="mt-12 grid grid-cols-3 gap-6 border-t pt-8 sm:mt-16 sm:pt-10">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                      <AnimatedCounter end={stats?.shops ?? 12} suffix="+" />
-                    </div>
-                    <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                      {t("heroSocialShops")}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                      <AnimatedCounter
-                        end={stats?.vehiclesServiced ?? 130}
-                        suffix="+"
-                      />
-                    </div>
-                    <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                      {t("heroSocialVehicles")}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                      <AnimatedCounter
-                        end={stats?.satisfaction ?? 98}
-                        suffix="%"
-                      />
-                    </div>
-                    <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                      {t("heroSocialSatisfaction")}
-                    </div>
-                  </div>
+                <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  {t("heroSocialShops")}
                 </div>
               </div>
-            </section>
-
-            <PartnersSlider />
-
-            {/* ═══ Features ═══════════════════════════════════════ */}
-            <section
-              id="features"
-              className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24"
-            >
-              <div className="mx-auto max-w-6xl">
-                <div className="mx-auto max-w-2xl text-center">
-                  <Typography.H2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                    {t("featuresTitle")}
-                  </Typography.H2>
-                  <Typography.Muted className="mt-4 text-muted-foreground">
-                    {t("featuresSubtitle")}
-                  </Typography.Muted>
+              <div className="text-center">
+                <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+                  <AnimatedCounter end={130} suffix="+" />
                 </div>
-                <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {FEATURES.map((feature) => {
-                    const Icon = feature.icon;
-                    return (
-                      <Card
-                        key={feature.key}
-                        className="group relative overflow-hidden border transition-shadow hover:shadow-md"
-                      >
+                <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  {t("heroSocialVehicles")}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+                  <AnimatedCounter end={98} suffix="%" />
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  {t("heroSocialSatisfaction")}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <PartnersSlider />
+
+        {/* ═══ Features ═══════════════════════════════════════ */}
+        <section
+          id="features"
+          className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24"
+        >
+          <div className="mx-auto max-w-6xl">
+            <div className="mx-auto max-w-2xl text-center">
+              <Typography.H2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                {t("featuresTitle")}
+              </Typography.H2>
+              <Typography.Muted className="mt-4 text-muted-foreground">
+                {t("featuresSubtitle")}
+              </Typography.Muted>
+            </div>
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {FEATURES.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <Card
+                    key={feature.key}
+                    className="group relative overflow-hidden border transition-shadow hover:shadow-md"
+                  >
+                    <div
+                      className={cn(
+                        "absolute inset-0 -z-10 opacity-0 transition-opacity group-hover:opacity-100",
+                        "bg-gradient-to-br",
+                        feature.gradient,
+                      )}
+                    />
+                    <CardHeader>
+                      <div className="flex size-10 items-center justify-center rounded-lg border bg-background shadow-xs">
+                        <Icon className="size-5 text-primary" />
+                      </div>
+                      <CardTitle className="mt-3 text-base">
+                        {t(`${feature.key}`)}
+                      </CardTitle>
+                      <CardDescription>
+                        {t(`${feature.key}Desc`)}
+                      </CardDescription>
+                      <div className="mt-4 rounded-lg overflow-hidden border">
                         <div
                           className={cn(
-                            "absolute inset-0 -z-10 opacity-0 transition-opacity group-hover:opacity-100",
-                            "bg-gradient-to-br",
+                            "flex h-28 items-center justify-center bg-gradient-to-br p-4",
                             feature.gradient,
                           )}
-                        />
-                        <CardHeader>
-                          <div className="flex size-10 items-center justify-center rounded-lg border bg-background shadow-xs">
-                            <Icon className="size-5 text-primary" />
-                          </div>
-                          <CardTitle className="mt-3 text-base">
-                            {t(`${feature.key}`)}
-                          </CardTitle>
-                          <CardDescription>
-                            {t(`${feature.key}Desc`)}
-                          </CardDescription>
-                          <div className="mt-4 rounded-lg overflow-hidden border">
-                            <div
-                              className={cn(
-                                "flex h-28 items-center justify-center bg-gradient-to-br p-4",
-                                feature.gradient,
-                              )}
-                            >
-                              <span className="text-sm font-semibold text-foreground/80">
-                                {feature.previewLabel}
-                              </span>
-                            </div>
-                          </div>
-                        </CardHeader>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            </section>
+                        >
+                          <span className="text-sm font-semibold text-foreground/80">
+                            {feature.previewLabel}
+                          </span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
 
-            {/* ═══ Mongolian trust badges ════════════════════════ */}
-            <section className="border-t bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
-              <div className="mx-auto max-w-4xl text-center">
-                <Typography.Muted className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                  Built for Mongolian auto shops
-                </Typography.Muted>
-                <div className="mt-5 flex flex-wrap justify-center gap-3">
-                  <Badge
-                    variant="outline"
-                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-                  >
-                    🛡️ Хуульд нийцсэн
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-                  >
-                    💳 Төлбөрийн систем
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-                  >
-                    🔢 Монгол дугаар
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-                  >
-                    💬 Telegram мэдэгдэл
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-                  >
-                    🇲🇳 Монгол хэл
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-                  >
-                    📱 Таблет тохиромжтой
-                  </Badge>
-                </div>
-              </div>
-            </section>
+        {/* ═══ Mongolian trust badges ════════════════════════ */}
+        <section className="border-t bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-4xl text-center">
+            <Typography.Muted className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+              Built for Mongolian auto shops
+            </Typography.Muted>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Badge
+                variant="outline"
+                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+              >
+                🛡️ Хуульд нийцсэн
+              </Badge>
+              <Badge
+                variant="outline"
+                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+              >
+                💳 Төлбөрийн систем
+              </Badge>
+              <Badge
+                variant="outline"
+                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+              >
+                🔢 Монгол дугаар
+              </Badge>
+              <Badge
+                variant="outline"
+                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+              >
+                💬 Telegram мэдэгдэл
+              </Badge>
+              <Badge
+                variant="outline"
+                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+              >
+                🇲🇳 Монгол хэл
+              </Badge>
+              <Badge
+                variant="outline"
+                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+              >
+                📱 Таблет тохиромжтой
+              </Badge>
+            </div>
+          </div>
+        </section>
 
-            {/* ═══ Below-the-fold: lazy-loaded ═══════════════════ */}
-            <HowItWorksSection />
-            <WorkflowSection />
-            <DifferentiatorsSection />
-            <TestimonialsSection />
-            <PricingSection />
-            <CtaSection />
-          </main>
+        {/* ═══ Below-the-fold: lazy-loaded ═══════════════════ */}
+        <HowItWorksSection />
+        <WorkflowSection />
+        <DifferentiatorsSection />
+        <TestimonialsSection />
+        <PricingSection />
+        <CtaSection />
+      </main>
 
-          <LandingFooter />
-        </div>
-      )}
-    </AuthGate>
+      <LandingFooter />
+    </div>
   );
 }

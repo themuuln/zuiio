@@ -121,19 +121,17 @@ export const BayCard = React.memo(function BayCard({
     prevWoRef.current = bay.workOrder;
   }, [bay.workOrder]);
 
-  const prefetchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const handleMouseEnter = useCallback(() => {
     if (wo?.id && orgId) {
-      clearTimeout(prefetchTimerRef.current);
-      prefetchTimerRef.current = setTimeout(() => {
-        prefetchDrawerData(queryClient, orgId, wo.id);
-      }, 200);
+      prefetchDrawerData(queryClient, orgId, wo.id);
     }
   }, [wo?.id, orgId, queryClient]);
 
-  useEffect(() => {
-    return () => clearTimeout(prefetchTimerRef.current);
-  }, []);
+  const handlePointerDown = useCallback(() => {
+    if (wo?.id && orgId) {
+      prefetchDrawerData(queryClient, orgId, wo.id);
+    }
+  }, [wo?.id, orgId, queryClient]);
 
   const isCardDraggable = isKanbanMode && !!wo && !isPending;
   const {
@@ -231,6 +229,7 @@ export const BayCard = React.memo(function BayCard({
         )}
         onClick={handleCardClick}
         onMouseEnter={handleMouseEnter}
+        onPointerDown={handlePointerDown}
       >
         {wo && (
           <div

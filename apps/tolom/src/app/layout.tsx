@@ -1,9 +1,9 @@
-import { ReactGrab } from "@/components/react-grab";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import type { ReactNode } from "react";
+import { ReactGrab } from "@/components/react-grab";
 import ThemeProvider from "@/components/theme-provider";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";

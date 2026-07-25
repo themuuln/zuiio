@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ArrowRight,
   Cable,
@@ -8,8 +6,9 @@ import {
   Construction,
   Wrench,
 } from "lucide-react";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 import { LandingNav } from "@/components/landing-nav";
 import { Badge } from "@/components/ui/badge";
@@ -60,15 +59,21 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export default function IntegrationsPage() {
-  const t = useTranslations("integrations") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const appT = useTranslations("app") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+export default async function IntegrationsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  return <IntegrationsContent locale={locale} />;
+}
+
+async function IntegrationsContent({ locale }: { locale: string }) {
+  "use cache";
+  cacheLife("daily");
+
+  const t = await getTranslations({ locale: locale as "mn" | "en", namespace: "integrations" });
+  const appT = await getTranslations({ locale: locale as "mn" | "en", namespace: "app" });
 
   return (
     <div className="flex min-h-dvh flex-col">

@@ -22,6 +22,7 @@ import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import {
   type DrawerDetailResponse,
   drawerDetailKeys,
+  useDrawerCatalogs,
   useDrawerQueries,
 } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
@@ -29,7 +30,6 @@ import { savePostServiceData } from "@/lib/services/post-service-service";
 import type { WorkOrderDetail } from "@/lib/types/composite";
 import type { MechanicRef } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
-import type { CatalogPartItem, CatalogServiceItem } from "./_drawer-types";
 import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
 import { CustomerPickerModal } from "./_customer-picker-modal";
 import { DrawerCelebration } from "./_drawer-celebration";
@@ -38,7 +38,11 @@ import { DrawerHeaderSection } from "./_drawer-header";
 import { DrawerSkeleton } from "./_drawer-loading";
 import { DrawerNestedForms } from "./_drawer-nested-forms";
 import { DrawerSkeletonLayout } from "./_drawer-skeleton-layout";
-import type { WorkOrderDetailDrawerProps } from "./_drawer-types";
+import type {
+  CatalogPartItem,
+  CatalogServiceItem,
+  WorkOrderDetailDrawerProps,
+} from "./_drawer-types";
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
 import { resolvePaymentMethodFees } from "./_payment-fees";
 import { createInvoiceAndRecordPayment } from "./_payment-helpers";
@@ -63,18 +67,13 @@ export function WorkOrderDetailDrawer({
 
   // ── Data layer ──
 
-  const {
+  const { orgId, orgIdRef, wo, setWo, isLoading, error } =
+    useDrawerQueries(workOrderId);
+
+  const { catalog, partsCatalog, mechanics, orgSettings } = useDrawerCatalogs(
     orgId,
-    orgIdRef,
-    wo,
-    setWo,
-    catalog,
-    partsCatalog,
-    mechanics,
-    orgSettings,
-    isLoading,
-    error,
-  } = useDrawerQueries(workOrderId);
+    !!workOrderId && !!orgId,
+  );
 
   const paymentMethodFees = useMemo(
     () => resolvePaymentMethodFees(orgSettings?.payment_method_fees),
@@ -653,9 +652,7 @@ export function WorkOrderDetailDrawer({
             } as CatalogPartItem)
           }
           isAdded={(item) =>
-            wo?.parts?.some(
-              (p) => p.part_id === item.id,
-            ) ??
+            wo?.parts?.some((p) => p.part_id === item.id) ??
             wo?.parts?.some(
               (p) =>
                 p.part_id === null &&

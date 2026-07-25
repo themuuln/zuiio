@@ -1,8 +1,7 @@
-"use client";
-
 import { ArrowRight, Check, Wrench } from "lucide-react";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 import { LandingNav } from "@/components/landing-nav";
 import { Badge } from "@/components/ui/badge";
@@ -23,10 +22,31 @@ const VALUES = [
   { key: "value4", icon: "📈" },
 ] as const;
 
-export default function AboutPage() {
-  const t = useTranslations("about");
-  const appT = useTranslations("app");
-  const _authT = useTranslations("auth");
+export default async function AboutPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  return <AboutContent locale={locale} />;
+}
+
+async function AboutContent({ locale }: { locale: string }) {
+  "use cache";
+  cacheLife("daily");
+
+  const t = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "about",
+  })) as (key: string, values?: Record<string, string | number>) => string;
+  const appT = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "app",
+  })) as (key: string, values?: Record<string, string | number>) => string;
+  const _authT = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "auth",
+  })) as (key: string, values?: Record<string, string | number>) => string;
 
   return (
     <div className="flex min-h-dvh flex-col">

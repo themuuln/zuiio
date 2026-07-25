@@ -1,106 +1,109 @@
-"use client";
-
-import { ArrowRight, HelpCircle, Search, Wrench } from "lucide-react";
+import { ArrowRight, HelpCircle, Wrench } from "lucide-react";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { getTranslations } from "next-intl/server";
 
 import { LandingNav } from "@/components/landing-nav";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
+
+import { FaqContent } from "./_faq-content";
 
 const CATEGORIES: {
   key: string;
   questions: { q: string; a: string }[];
 }[] = [
   {
-    key: "General",
+    key: "general",
     questions: [
-      { q: "q1", a: "a1" },
-      { q: "q2", a: "a2" },
-      { q: "q3", a: "a3" },
-      { q: "q4", a: "a4" },
-      { q: "q5", a: "a5" },
+      { q: "whatIsTolom", a: "whatIsTolomAnswer" },
+      { q: "whoIsFor", a: "whoIsForAnswer" },
+      { q: "industries", a: "industriesAnswer" },
     ],
   },
   {
-    key: "WorkOrders",
+    key: "features",
     questions: [
-      { q: "q6", a: "a6" },
-      { q: "q7", a: "a7" },
-      { q: "q8", a: "a8" },
+      { q: "mainFeatures", a: "mainFeaturesAnswer" },
+      { q: "inventory", a: "inventoryAnswer" },
+      { q: "production", a: "productionAnswer" },
+      { q: "pos", a: "posAnswer" },
+      { q: "reports", a: "reportsAnswer" },
     ],
   },
   {
-    key: "Customers",
+    key: "pricing",
     questions: [
-      { q: "q9", a: "a9" },
-      { q: "q10", a: "a10" },
-      { q: "q11", a: "a11" },
-      { q: "q12", a: "a12" },
+      { q: "pricingModel", a: "pricingModelAnswer" },
+      { q: "freeTrial", a: "freeTrialAnswer" },
+      { q: "cancel", a: "cancelAnswer" },
+      { q: "hiddenFees", a: "hiddenFeesAnswer" },
     ],
   },
   {
-    key: "Inventory",
+    key: "data",
     questions: [
-      { q: "q13", a: "a13" },
-      { q: "q14", a: "a14" },
-      { q: "q15", a: "a15" },
+      { q: "dataSecurity", a: "dataSecurityAnswer" },
+      { q: "dataExport", a: "dataExportAnswer" },
+      { q: "offline", a: "offlineAnswer" },
     ],
   },
   {
-    key: "Finance",
+    key: "support",
     questions: [
-      { q: "q16", a: "a16" },
-      { q: "q17", a: "a17" },
-      { q: "q18", a: "a18" },
-      { q: "q19", a: "a19" },
+      { q: "supportChannels", a: "supportChannelsAnswer" },
+      { q: "responseTime", a: "responseTimeAnswer" },
+      { q: "training", a: "trainingAnswer" },
     ],
   },
   {
-    key: "Reminders",
+    key: "integration",
     questions: [
-      { q: "q20", a: "a20" },
-      { q: "q21", a: "a21" },
+      { q: "existingSystem", a: "existingSystemAnswer" },
+      { q: "import", a: "importAnswer" },
+      { q: "api", a: "apiAnswer" },
     ],
   },
   {
-    key: "Settings",
+    key: "account",
     questions: [
-      { q: "q22", a: "a22" },
-      { q: "q23", a: "a23" },
-      { q: "q24", a: "a24" },
-      { q: "q25", a: "a25" },
+      { q: "multipleBranches", a: "multipleBranchesAnswer" },
+      { q: "userPermissions", a: "userPermissionsAnswer" },
+      { q: "changePlan", a: "changePlanAnswer" },
     ],
   },
   {
-    key: "Account",
+    key: "legal",
     questions: [
-      { q: "q26", a: "a26" },
-      { q: "q27", a: "a27" },
-      { q: "q28", a: "a28" },
+      { q: "terms", a: "termsAnswer" },
+      { q: "privacy", a: "privacyAnswer" },
+      { q: "sla", a: "slaAnswer" },
     ],
   },
 ];
 
-export default function FaqPage() {
-  const t = useTranslations("faq") as (
+export default async function FaqPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  return <FaqPageContent locale={locale} />;
+}
+
+async function FaqPageContent({ locale }: { locale: string }) {
+  "use cache";
+  cacheLife("daily");
+
+  const t = (await getTranslations({ locale: locale as "mn" | "en", namespace: "faq" })) as (
     key: string,
     values?: Record<string, string | number>,
   ) => string;
-  const appT = useTranslations("app") as (
+  const appT = (await getTranslations({ locale: locale as "mn" | "en", namespace: "app" })) as (
     key: string,
     values?: Record<string, string | number>,
   ) => string;
-  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -119,75 +122,10 @@ export default function FaqPage() {
             <Typography.Muted className="mt-3 text-base text-muted-foreground sm:text-lg">
               {t("pageDescription")}
             </Typography.Muted>
-            <div className="relative mx-auto mt-8 max-w-md">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={searchQuery ? "" : "Асуултаа бичнэ үү..."}
-                className="pl-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
           </div>
         </section>
 
-        <section className="px-4 py-12 sm:px-6 sm:py-16">
-          <div className="mx-auto max-w-3xl">
-            {CATEGORIES.map((category) => {
-              const filtered = category.questions.filter((item) => {
-                if (!searchQuery) return true;
-                const qText = t(item.q).toLowerCase();
-                const aText = t(item.a).toLowerCase();
-                const q = searchQuery.toLowerCase();
-                return qText.includes(q) || aText.includes(q);
-              });
-
-              if (filtered.length === 0) return null;
-
-              return (
-                <div key={category.key} className="mb-10">
-                  <div className="mb-4">
-                    <Typography.H2 className="text-lg font-semibold">
-                      {t(`cat${category.key}`)}
-                    </Typography.H2>
-                    <Typography.Muted className="text-sm text-muted-foreground">
-                      {t(`cat${category.key}Desc`)}
-                    </Typography.Muted>
-                  </div>
-
-                  <Accordion className="w-full">
-                    {filtered.map((item) => (
-                      <AccordionItem
-                        key={item.q}
-                        value={`${category.key}-${item.q}`}
-                      >
-                        <AccordionTrigger className="text-left text-sm font-medium">
-                          <span className="flex items-start gap-2">
-                            <HelpCircle className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                            {t(item.q)}
-                          </span>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <Typography.Muted className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                            {t(item.a)}
-                          </Typography.Muted>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
-              );
-            })}
-
-            {searchQuery && (
-              <div className="py-12 text-center">
-                <Typography.Muted className="text-muted-foreground">
-                  Хайлтын үр дүн олдсонгүй. Өөр түлхүүр үгээр дахин хайна уу.
-                </Typography.Muted>
-              </div>
-            )}
-          </div>
-        </section>
+        <FaqContent categories={CATEGORIES} />
 
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl">

@@ -1,10 +1,7 @@
-"use client";
-
 import { ArrowRight, Check, HelpCircle, Star, Wrench, X } from "lucide-react";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-
+import { getTranslations } from "next-intl/server";
 import { LandingNav } from "@/components/landing-nav";
 import {
   Accordion,
@@ -24,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
+import { BillingToggle } from "./_billing-toggle";
 
 type FeatureStatus = boolean | "addon";
 
@@ -188,17 +186,37 @@ function FeatureIcon({ status }: { status: FeatureStatus }) {
   return <X className="mt-0.5 size-4 shrink-0 text-muted-foreground/30" />;
 }
 
-export default function PricingPage() {
-  const t = useTranslations("pricing") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const appT = useTranslations("app") as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+export default async function PricingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ billing?: string }>;
+}) {
+  const { locale } = await params;
+  const { billing } = await searchParams;
+  const annual = billing === "annual";
+  return <PricingContent locale={locale} annual={annual} />;
+}
 
-  const [annual, setAnnual] = useState(false);
+async function PricingContent({
+  locale,
+  annual,
+}: {
+  locale: string;
+  annual: boolean;
+}) {
+  "use cache";
+  cacheLife("daily");
+
+  const t = (await getTranslations({ locale: locale as "mn" | "en", namespace: "pricing" })) as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const appT = (await getTranslations({ locale: locale as "mn" | "en", namespace: "app" })) as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -215,24 +233,11 @@ export default function PricingPage() {
               {t("heroSubtitle")}
             </Typography.Muted>
 
-            {/* Billing toggle */}
-            <div className="mt-8 flex items-center justify-center gap-2">
-              <Button
-                variant={!annual ? "default" : "outline"}
-                onClick={() => setAnnual(false)}
-              >
-                {t("monthly")}
-              </Button>
-              <Button
-                variant={annual ? "default" : "outline"}
-                onClick={() => setAnnual(true)}
-              >
-                {t("annual")}
-              </Button>
-              <Badge variant="outline" className="text-xs">
-                {t("savePercent")}
-              </Badge>
-            </div>
+            <BillingToggle
+              monthly={t("monthly")}
+              yearly={t("annual")}
+              savePercent={t("savePercent")}
+            />
           </div>
         </section>
 
@@ -447,7 +452,7 @@ export default function PricingPage() {
             <div className="mt-8">
               <Button size="lg" render={<Link href="/auth/signup" />}>
                 {t("ctaButton")}
-                <ArrowRight className="ml-2 size-4" />
+                <ArrowRight className="ml-1 size-4" />
               </Button>
             </div>
           </div>

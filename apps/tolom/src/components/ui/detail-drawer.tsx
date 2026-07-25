@@ -72,17 +72,20 @@ interface DetailDrawerRootProps {
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "full";
 }
 
-/** Static map — Tailwind v4 scanner needs full class strings at build time. */
-const SIZE_VAR: Record<string, string> = {
-  sm: "[--drawer-max-w:24rem]",
-  md: "[--drawer-max-w:28rem]",
-  lg: "[--drawer-max-w:32rem]",
-  xl: "[--drawer-max-w:36rem]",
-  "2xl": "[--drawer-max-w:42rem]",
-  "3xl": "[--drawer-max-w:48rem]",
-  "4xl": "[--drawer-max-w:56rem]",
+/** Raw CSS values for the drawer max-width — used via inline style
+ *  instead of Tailwind arbitrary properties, which Turbopack doesn't
+ *  always emit as CSS rules in dev mode. */
+const SIZE_VALUE: Record<string, string> = {
+  sm: "24rem",
+  md: "28rem",
+  lg: "32rem",
+  xl: "36rem",
+  "2xl": "42rem",
+  "3xl": "48rem",
+  "4xl": "56rem",
+  "5xl": "64rem",
+  full: "100vw",
 };
-
 export function DetailDrawer({
   open,
   onOpenChange,
@@ -99,12 +102,8 @@ export function DetailDrawer({
   backdropClassName,
   size,
 }: DetailDrawerRootProps) {
-  const sizeVar =
-    size === "full"
-      ? "[--drawer-max-w:100vw]"
-      : size
-        ? SIZE_VAR[size]
-        : undefined;
+  const drawerMaxWidth = size ? SIZE_VALUE[size] : undefined;
+
   return (
     <Drawer
       open={open}
@@ -116,8 +115,9 @@ export function DetailDrawer({
     >
       <DrawerVirtualKeyboardProvider>
         <DrawerContent
+          drawerMaxWidth={drawerMaxWidth}
           showCloseButton={false}
-          className={cn(sizeVar, className)}
+          className={cn(className)}
           contentClassName={cn(
             "flex flex-col p-0 gap-0 overflow-hidden",
             contentClassName,
@@ -137,8 +137,6 @@ export function DetailDrawer({
     </Drawer>
   );
 }
-
-// ── Header ────────────────────────────────────────────────────
 
 interface DetailDrawerHeaderProps {
   children: React.ReactNode;

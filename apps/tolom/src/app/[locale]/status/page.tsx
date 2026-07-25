@@ -1,17 +1,16 @@
-"use client";
-
 import { ArrowRight, CheckCircle, Wrench } from "lucide-react";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { getTranslations } from "next-intl/server";
 
 import { LandingNav } from "@/components/landing-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Typography } from "@/components/ui/typography";
+
+import { StatusSubscribeForm } from "./_status-subscribe-form";
 
 const SERVICES = [
   { key: "Platform", icon: "🖥️" },
@@ -24,21 +23,32 @@ const SERVICES = [
   { key: "Edge", icon: "⚡" },
 ];
 
-export default function StatusPage() {
-  const t = useTranslations("status") as (
+export default async function StatusPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  return <StatusContent locale={locale} />;
+}
+
+async function StatusContent({ locale }: { locale: string }) {
+  "use cache";
+  cacheLife("hourly");
+
+  const t = (await getTranslations({ locale: locale as "mn" | "en", namespace: "status" })) as (
     key: string,
     values?: Record<string, string | number>,
   ) => string;
-  const appT = useTranslations("app") as (
+  const appT = (await getTranslations({ locale: locale as "mn" | "en", namespace: "app" })) as (
     key: string,
     values?: Record<string, string | number>,
   ) => string;
-  const _authT = useTranslations("auth") as (
+  const _authT = (await getTranslations({ locale: locale as "mn" | "en", namespace: "auth" })) as (
     key: string,
     values?: Record<string, string | number>,
   ) => string;
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -138,32 +148,7 @@ export default function StatusPage() {
             <Typography.Muted className="mt-2 text-sm text-muted-foreground">
               {t("subscribeDesc")}
             </Typography.Muted>
-            {subscribed ? (
-              <div className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-emerald-600">
-                <CheckCircle className="size-4" />
-                {t("subscribed")}
-              </div>
-            ) : (
-              <form
-                className="mt-6 flex gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (email) setSubscribed(true);
-                }}
-              >
-                <Input
-                  type="email"
-                  placeholder={t("subscribePlaceholder")}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="flex-1"
-                />
-                <Button type="submit" size="sm">
-                  {t("subscribeButton")}
-                </Button>
-              </form>
-            )}
+            <StatusSubscribeForm />
           </div>
         </section>
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">

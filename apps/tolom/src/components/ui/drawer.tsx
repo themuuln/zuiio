@@ -2,8 +2,7 @@
 
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 import { XIcon } from "lucide-react";
-import * as React from "react";
-
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +37,6 @@ function Drawer({
     event,
   ) => {
     if (!nextOpen && externalOpen && !closing) {
-      // Start exit animation — keep mounted, let CSS transition play
       setClosing(true);
       timerRef.current = setTimeout(() => {
         setClosing(false);
@@ -91,22 +89,13 @@ function DrawerBackdrop({
   className,
   ...props
 }: DrawerPrimitive.Backdrop.Props) {
-  const { closing } = useDrawerContext();
   return (
     <DrawerPrimitive.Backdrop
       data-slot="drawer-backdrop"
-      data-closing={closing ? "" : undefined}
       className={cn(
-        "fixed inset-0 z-50 bg-black/20 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-300 ease-out",
-        "data-starting-style:opacity-0 data-ending-style:opacity-0 data-closing:opacity-0",
-        "data-swiping:transition-none",
-        "supports-backdrop-filter:backdrop-blur-xs",
+        "fixed inset-0 z-50 bg-black/40 data-closing:opacity-0 transition-opacity duration-300 ease-out data-ending-style:opacity-0",
         className,
       )}
-      // Let Base UI manage its own gesture/close events
-      onClick={(e) => {
-        e.stopPropagation();
-      }}
       {...props}
     />
   );
@@ -141,13 +130,10 @@ function DrawerIndentBackground({
   return (
     <DrawerPrimitive.IndentBackground
       data-slot="drawer-indent-bg"
-      className={(state) =>
-        cn(
-          "fixed inset-0 z-0 bg-black transition-opacity duration-300 pointer-events-none",
-          "data-starting-style:opacity-0",
-          typeof className === "function" ? className(state) : className,
-        )
-      }
+      className={cn(
+        "absolute inset-0 rounded-[var(--drawer-radius,inherit)] bg-[var(--drawer-indent-bg,var(--color-bg))] transition-[background-color,transform,opacity] duration-300 data-nested-drawer-open:bg-[var(--drawer-indent-bg)] data-nested-drawer-open:scale-[calc(1-0.05*var(--nested-drawers))] data-nested-drawer-open:opacity-90",
+        className,
+      )}
       {...props}
     />
   );
@@ -158,13 +144,10 @@ function DrawerIndent({ className, ...props }: DrawerPrimitive.Indent.Props) {
   return (
     <DrawerPrimitive.Indent
       data-slot="drawer-indent"
-      className={(state) =>
-        cn(
-          "relative z-1 flex min-h-dvh flex-col antialiased transition-all duration-300 origin-center overflow-hidden",
-          "data-starting-style:rounded-2xl data-starting-style:scale-[0.96] overflow-hidden",
-          typeof className === "function" ? className(state) : className,
-        )
-      }
+      className={cn(
+        "pointer-events-auto relative flex h-full min-w-[20rem] flex-col bg-popover shadow-2xl",
+        className,
+      )}
       {...props}
     />
   );
@@ -181,6 +164,7 @@ function DrawerContent({
   children,
   showCloseButton = true,
   direction = "right",
+  drawerMaxWidth,
   ...props
 }: DrawerPrimitive.Popup.Props & {
   showCloseButton?: boolean;
@@ -190,11 +174,23 @@ function DrawerContent({
   hideBackdrop?: boolean;
   viewportClassName?: string;
   direction?: "right" | "bottom";
+  /** Raw CSS value for max-width, applied via <style> tag + data attribute */
+  drawerMaxWidth?: string;
 }) {
   const { closing, showSwipeHandle } = useDrawerContext();
+  const popupSizeId = React.useId().replace(/:/g, "_");
+  const sizeStyleTag = drawerMaxWidth
+    ? `[data-dw="${popupSizeId}"]{max-width:${drawerMaxWidth}!important;--drawer-max-w:${drawerMaxWidth}}`
+    : undefined;
 
   return (
     <DrawerPortal>
+      {drawerMaxWidth && (
+        <style
+          data-dw-style={popupSizeId}
+          dangerouslySetInnerHTML={{ __html: sizeStyleTag ?? "" }}
+        />
+      )}
       {!hideBackdrop && (
         <DrawerBackdrop
           className={backdropClassName}
@@ -205,11 +201,11 @@ function DrawerContent({
         <DrawerPrimitive.Popup
           data-slot="drawer-popup"
           data-closing={closing ? "" : undefined}
+          data-dw={drawerMaxWidth ? popupSizeId : undefined}
           className={cn(
             "pointer-events-auto",
             direction === "bottom"
               ? [
-                  // Bottom drawer: slide up/down + scale stack for nesting
                   "[--bleed:3rem] [--peek:1rem]",
                   "[--stack-progress:clamp(0,var(--drawer-swipe-progress),1)]",
                   "[--stack-step:0.05]",
@@ -224,28 +220,23 @@ function DrawerContent({
                   "[transform:translateY(calc(var(--drawer-swipe-movement-y)-var(--stack-peek-offset)))_scale(var(--stack-scale))]",
                   "transition-transform duration-300 ease-out",
                   "data-swiping:transition-none",
-                  // Enter animation via keyframe
                   "[animation:drawer-slide-in-bottom_300ms_ease-out]",
-                  // Exit via data-closing
                   "data-closing:translate-y-full data-closing:[animation:none]",
                   "data-ending-style:translate-y-full data-ending-style:[animation:none]",
                   "data-ending-style:duration-[calc(var(--drawer-swipe-strength,1)*300ms)]",
                 ].join(" ")
               : [
-                  // Right drawer: slide in/out + scale stack for nesting
                   "[--bleed:3rem] [--peek:3rem]",
                   "[--stack-step:0.05]",
                   "[--stack-peek-offset:max(0px,calc((var(--nested-drawers))*var(--peek)))]",
                   "[--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))]",
                   "[--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--drawer-swipe-progress))),1)]",
-                  "relative flex h-full w-fit min-w-[20rem] max-w-[90vw]",
+                  "relative flex h-full w-[var(--drawer-max-w,fit-content)] min-w-[20rem] max-w-[var(--drawer-max-w,90vw)]",
                   "[transform-origin:calc(100%-var(--bleed))_50%]",
                   "[transform:translateX(calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)))_scale(var(--stack-scale))]",
                   "transition-transform duration-300 ease-out",
                   "data-swiping:transition-none",
-                  // Enter animation via keyframe
                   "[animation:drawer-slide-in-right_300ms_ease-out]",
-                  // Exit via data-closing
                   "data-closing:translate-x-full data-closing:[animation:none]",
                   "data-ending-style:translate-x-full data-ending-style:[animation:none]",
                   "data-ending-style:duration-[calc(var(--drawer-swipe-strength,1)*300ms)]",
@@ -263,7 +254,6 @@ function DrawerContent({
               contentClassName,
             )}
           >
-            {/* Swipe handle bar for bottom drawers */}
             {direction === "bottom" && showSwipeHandle && (
               <span className="mx-auto mt-2 block h-1.5 w-10 rounded-full bg-muted-foreground/30" />
             )}
@@ -318,10 +308,7 @@ function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn(
-        "text-lg font-semibold leading-none tracking-tight",
-        className,
-      )}
+      className={cn("font-semibold text-sm", className)}
       {...props}
     />
   );
@@ -340,12 +327,10 @@ function DrawerDescription({
   );
 }
 
-// ── Provider ─────────────────────────────────────────────────
 function DrawerProvider(props: DrawerPrimitive.Provider.Props) {
   return <DrawerPrimitive.Provider data-slot="drawer-provider" {...props} />;
 }
 
-// ── Additional exports ───────────────────────────────────────
 function DrawerSwipeArea({
   className,
   ...props
@@ -353,7 +338,7 @@ function DrawerSwipeArea({
   return (
     <DrawerPrimitive.SwipeArea
       data-slot="drawer-swipe-area"
-      className={cn("fixed inset-y-0 left-0 z-50 w-4", className)}
+      className={cn("fixed inset-y-0 z-50 w-4 touch-none", className)}
       {...props}
     />
   );
@@ -370,7 +355,6 @@ function DrawerVirtualKeyboardProvider(
   );
 }
 
-// ── Exports ──────────────────────────────────────────────────
 export {
   Drawer,
   DrawerBackdrop,

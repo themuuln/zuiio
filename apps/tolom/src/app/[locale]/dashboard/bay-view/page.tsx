@@ -1,14 +1,22 @@
 export const instant = true;
 
-import { Suspense } from "react";
-import { BayViewV2Client } from "@/components/bay-view-v2/bay-view-v2-client";
+import dynamic from "next/dynamic";
+import { BayViewPageSkeleton } from "@/components/bay-view-v2/_page-skeleton";
+
+const BayViewV2Client = dynamic(
+  () =>
+    import("@/components/bay-view-v2/bay-view-v2-client").then(
+      (m) => m.BayViewV2Client,
+    ),
+  {
+    loading: () => <BayViewPageSkeleton />,
+  },
+);
 
 export default function Page() {
   return (
     <div className="flex h-full flex-col">
-      <Suspense fallback={<div className="h-full" />}>
-        <BayViewV2Client />
-      </Suspense>
+      <BayViewV2Client />
     </div>
   );
 }

@@ -6,13 +6,14 @@ export const instant = true;
 export const prefetch = "allow-runtime";
 
 import { generateBrandCSS } from "@zuiio/branding";
+import { connection } from "next/server";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { readOrganizationBrandConfig } from "@/lib/organization-branding";
 import { getCachedProfile } from "@/lib/queries/prefetch-dashboard";
 import { createClient } from "@/lib/supabase/server";
 import DashboardClientShell from "./_dashboard-client-shell";
-import { connection } from "next/server";
+import { DashboardProviders } from "./_dashboard-providers";
 
 /** Fetches org branding and emits a <style> tag. Profile fetch is
  * cached via React.cache() for deduplication within the same request.
@@ -47,7 +48,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <Suspense fallback={null}>
         <BrandThemeLoader />
       </Suspense>
-      <DashboardClientShell>{children}</DashboardClientShell>
+      <DashboardProviders>
+        <DashboardClientShell>{children}</DashboardClientShell>
+      </DashboardProviders>
     </>
   );
 }

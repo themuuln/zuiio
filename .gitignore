@@ -94,3 +94,4 @@ Thumbs.db
 # AI skills lock files
 skills-lock.json
 /apps/zer/.turbo/turbo-build.log
+apps/tolom-worktree-fix/

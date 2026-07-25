@@ -234,6 +234,13 @@ export function VehicleRegistrationDrawer({
       return;
     }
 
+    // Plate is full (7 chars = 4 digits + 3 letters) — no point searching suggestions
+    if (term.length >= 7) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
     searchTimerRef.current = setTimeout(async () => {
       setSearchLoading(true);
       try {
@@ -369,105 +376,110 @@ export function VehicleRegistrationDrawer({
   );
 
   // ── Queue handler ─────────────────────────────────────────
-  const handleAddToQueue = useCallback(async () => {
-    const formData = form.getValues();
-    const { vehicleId, customerId } = resolveQueueIds(
+  const handleAddToQueue = useCallback(
+    async (skipAssign?: boolean) => {
+      const formData = form.getValues();
+      const { vehicleId, customerId } = resolveQueueIds(
+        savedVehicleId,
+        savedCustomerId,
+        lookupResult,
+      );
+
+      let workOrderId: string | undefined;
+
+      if (!vehicleId) {
+        if (!plate.trim() || !formData.make.trim() || !formData.model.trim()) {
+          setQueueError(t("saveVehicleFirst"));
+          return;
+        }
+        try {
+          const { quickRegisterVehicle } = await import(
+            "@/lib/services/bay-view-actions"
+          );
+          const saveResult = await quickRegisterVehicle(
+            getSavePayload(formData),
+          );
+          setSavedVehicleId(saveResult.vehicle.id);
+          setSavedCustomerId(saveResult.customerId);
+
+          const { addVehicleToQueue } = await import(
+            "@/lib/services/bay-view-actions"
+          );
+          ({ workOrderId } = await addVehicleToQueue({
+            vehicleId: saveResult.vehicle.id,
+            customerId: saveResult.customerId ?? undefined,
+            complaint: formData.complaint?.trim() || undefined,
+            branchId,
+          }));
+        } catch (err) {
+          reportServerError("Unexpected error", err);
+          setQueueError(
+            err instanceof Error ? err.message : t("common.somethingWentWrong"),
+          );
+          return;
+        }
+      } else {
+        setQueueSaving(true);
+        setQueueError(null);
+        try {
+          const { addVehicleToQueue } = await import(
+            "@/lib/services/bay-view-actions"
+          );
+          ({ workOrderId } = await addVehicleToQueue({
+            vehicleId,
+            customerId: customerId ?? undefined,
+            complaint: formData.complaint?.trim() || undefined,
+            branchId,
+          }));
+        } catch (err) {
+          reportServerError("Unexpected error", err);
+          setQueueError(
+            err instanceof Error ? err.message : t("common.somethingWentWrong"),
+          );
+          setQueueSaving(false);
+          return;
+        }
+      }
+
+      if (!skipAssign && assignBayNumber && workOrderId) {
+        try {
+          const { assignVehicleToBay } = await import(
+            "@/lib/services/bay-view-service.actions"
+          );
+          await assignVehicleToBay(workOrderId, assignBayNumber);
+        } catch (err) {
+          reportServerError("Unexpected error", err);
+          setQueueError(
+            err instanceof Error ? err.message : t("common.somethingWentWrong"),
+          );
+          setQueueSaving(false);
+          return;
+        }
+      }
+
+      setQueueSaving(false);
+      if (!skipAssign && assignBayNumber && workOrderId) {
+        onAssigned?.();
+      } else {
+        onQueued?.();
+      }
+      onRefresh?.();
+    },
+    [
+      plate,
       savedVehicleId,
       savedCustomerId,
       lookupResult,
-    );
-
-    let workOrderId: string | undefined;
-
-    if (!vehicleId) {
-      if (!plate.trim() || !formData.make.trim() || !formData.model.trim()) {
-        setQueueError(t("saveVehicleFirst"));
-        return;
-      }
-      try {
-        const { quickRegisterVehicle } = await import(
-          "@/lib/services/bay-view-actions"
-        );
-        const saveResult = await quickRegisterVehicle(getSavePayload(formData));
-        setSavedVehicleId(saveResult.vehicle.id);
-        setSavedCustomerId(saveResult.customerId);
-
-        const { addVehicleToQueue } = await import(
-          "@/lib/services/bay-view-actions"
-        );
-        ({ workOrderId } = await addVehicleToQueue({
-          vehicleId: saveResult.vehicle.id,
-          customerId: saveResult.customerId ?? undefined,
-          complaint: formData.complaint?.trim() || undefined,
-          branchId,
-        }));
-      } catch (err) {
-        reportServerError("Unexpected error", err);
-        setQueueError(
-          err instanceof Error ? err.message : t("common.somethingWentWrong"),
-        );
-        return;
-      }
-    } else {
-      setQueueSaving(true);
-      setQueueError(null);
-      try {
-        const { addVehicleToQueue } = await import(
-          "@/lib/services/bay-view-actions"
-        );
-        ({ workOrderId } = await addVehicleToQueue({
-          vehicleId,
-          customerId: customerId ?? undefined,
-          complaint: formData.complaint?.trim() || undefined,
-          branchId,
-        }));
-      } catch (err) {
-        reportServerError("Unexpected error", err);
-        setQueueError(
-          err instanceof Error ? err.message : t("common.somethingWentWrong"),
-        );
-        setQueueSaving(false);
-        return;
-      }
-    }
-
-    if (assignBayNumber && workOrderId) {
-      try {
-        const { assignVehicleToBay } = await import(
-          "@/lib/services/bay-view-service.actions"
-        );
-        await assignVehicleToBay(workOrderId, assignBayNumber);
-      } catch (err) {
-        reportServerError("Unexpected error", err);
-        setQueueError(
-          err instanceof Error ? err.message : t("common.somethingWentWrong"),
-        );
-        setQueueSaving(false);
-        return;
-      }
-    }
-
-    setQueueSaving(false);
-    if (assignBayNumber && workOrderId) {
-      onAssigned?.();
-    } else {
-      onQueued?.();
-    }
-    onRefresh?.();
-  }, [
-    plate,
-    savedVehicleId,
-    savedCustomerId,
-    lookupResult,
-    onQueued,
-    onAssigned,
-    assignBayNumber,
-    form,
-    onRefresh,
-    getSavePayload,
-    branchId,
-    t,
-  ]);
+      onQueued,
+      onAssigned,
+      assignBayNumber,
+      form,
+      onRefresh,
+      getSavePayload,
+      branchId,
+      t,
+    ],
+  );
 
   // ── Derived state ─────────────────────────────────────────
   const formValues = form.watch();
@@ -484,7 +496,7 @@ export function VehicleRegistrationDrawer({
     <DetailDrawer
       open={open}
       onOpenChange={onOpenChange}
-      size="3xl"
+      size="5xl"
       modal={false}
     >
       {/* ── Header ──────────────────────────────────────────── */}
@@ -521,11 +533,9 @@ export function VehicleRegistrationDrawer({
                   }}
                   onFocus={() => {
                     setPlateFocused(true);
-                    if (searchResults.length > 0) setShowDropdown(true);
-                  }}
-                  onBlur={() => {
-                    setPlateFocused(false);
-                    setTimeout(() => setShowDropdown(false), 200);
+                    // Don't show suggestions when plate is already full
+                    if (searchResults.length > 0 && plate.length < 7)
+                      setShowDropdown(true);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -539,45 +549,49 @@ export function VehicleRegistrationDrawer({
                 {searchLoading && (
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground animate-spin" />
                 )}
-                {plateFocused && !showDropdown && (
+                {plateFocused && !showDropdown && plate.length < 7 && (
                   <div className="absolute left-0 top-full z-50 mt-1 rounded-lg border border-border bg-popover p-3 shadow-md transition-opacity duration-150">
                     <BuuzHint />
                   </div>
                 )}
-                {showDropdown && searchResults.length > 0 && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-auto">
-                    {searchResults.map((v) => (
-                      <button
-                        key={v.id}
-                        type="button"
-                        className="w-full flex items-center gap-3 px-3 py-2 hover:bg-accent text-left transition-colors first:rounded-t-lg last:rounded-b-lg"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          handleSelectVehicle(v);
-                        }}
-                      >
-                        <div className="size-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                          <Car className="size-4 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm">
-                              {v.plate_number}
-                            </span>
-                            {v.year && (
-                              <span className="text-xs text-muted-foreground">
-                                {v.year}
+                {showDropdown &&
+                  searchResults.length > 0 &&
+                  plate.length < 7 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-auto">
+                      {searchResults.map((v) => (
+                        <button
+                          key={v.id}
+                          type="button"
+                          className="w-full flex items-center gap-3 px-3 py-2 hover:bg-accent text-left transition-colors first:rounded-t-lg last:rounded-b-lg"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSelectVehicle(v);
+                          }}
+                        >
+                          <div className="size-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                            <Car className="size-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">
+                                {v.plate_number}
                               </span>
+                              {v.year && (
+                                <span className="text-xs text-muted-foreground">
+                                  {v.year}
+                                </span>
+                              )}
+                            </div>
+                            {v.make && v.model && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {v.make} {v.model}
+                              </p>
                             )}
                           </div>
-                          <div className="text-xs text-muted-foreground truncate">
-                            {v.make} {v.model}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
               </div>
               <Button
                 type="button"
@@ -619,52 +633,6 @@ export function VehicleRegistrationDrawer({
             {lookupDone && !lookupResult.exists && (
               <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
                 {t("vehicleNotFound")}
-              </div>
-            )}
-
-            {/* ── Existing Vehicle: Queue Section ────────────── */}
-            {isExistingVehicle && (
-              <div className="flex flex-col gap-3 bg-muted/30 border border-border/60 rounded-lg p-4">
-                <Label className="flex items-center gap-2 text-sm font-semibold">
-                  {assignBayNumber ? (
-                    <Zap className="size-4 text-emerald-500" />
-                  ) : (
-                    <MessageSquarePlus className="size-4 text-primary" />
-                  )}
-                  {assignBayNumber
-                    ? t("assignToBayNumber", {
-                        bayNumber: String(assignBayNumber),
-                      })
-                    : t("addToWaitingQueue")}
-                </Label>
-
-                {queueError && (
-                  <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
-                    {queueError}
-                  </div>
-                )}
-
-                <Button
-                  type="button"
-                  variant="default"
-                  size="default"
-                  disabled={queueSaving}
-                  onClick={handleAddToQueue}
-                  className="w-full"
-                >
-                  {queueSaving ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Zap className="size-4" />
-                  )}
-                  {queueSaving
-                    ? t("addingToQueue")
-                    : assignBayNumber
-                      ? t("assignToBayNumber", {
-                          bayNumber: String(assignBayNumber),
-                        })
-                      : t("addQueueButton")}
-                </Button>
               </div>
             )}
 
@@ -1033,48 +1001,78 @@ export function VehicleRegistrationDrawer({
       </DetailDrawer.Body>
 
       <DetailDrawer.Footer>
+        {queueError && (
+          <div className="mx-4 mb-2 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
+            {queueError}
+          </div>
+        )}
         <DetailDrawer.FooterActions>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("common.cancel") ?? "Cancel"}
           </Button>
-          <Button
-            type={isExistingVehicle ? "button" : "submit"}
-            form={isExistingVehicle ? undefined : "vehicle-registration-form"}
-            disabled={
-              !!activeWorkOrder || (isExistingVehicle ? queueSaving : saving)
-            }
-            onClick={
-              isExistingVehicle && !activeWorkOrder
-                ? handleAddToQueue
-                : undefined
-            }
-            size="lg"
-          >
-            {isExistingVehicle ? (
-              queueSaving
-            ) : saving ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Zap className="size-4" />
+
+          <div className="flex items-center gap-2 ml-auto">
+            {/* "Add to queue" secondary — separate from bay/assign action */}
+            {isExistingVehicle && !activeWorkOrder && assignBayNumber && (
+              <Button
+                variant="outline"
+                disabled={queueSaving}
+                onClick={() => handleAddToQueue(true)}
+              >
+                {queueSaving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <MessageSquarePlus className="size-4" />
+                )}
+                {queueSaving ? t("addingToQueue") : t("addToWaitingQueue")}
+              </Button>
             )}
-            {activeWorkOrder
-              ? activeWorkOrder.bay_number
-                ? t("vehicleAlreadyInBay", {
-                    bayNumber: String(activeWorkOrder.bay_number),
-                  })
-                : t("vehicleAlreadyInQueue")
-              : (isExistingVehicle ? queueSaving : saving)
-                ? t("saving")
-                : assignBayNumber
-                  ? isExistingVehicle
-                    ? t("assignToBayNumber", {
-                        bayNumber: String(assignBayNumber),
-                      })
-                    : t("saveAndAssignToBay", {
-                        bayNumber: String(assignBayNumber),
-                      })
-                  : t("saveAndAddToQueue")}
-          </Button>
+
+            <Button
+              type={isExistingVehicle ? "button" : "submit"}
+              form={isExistingVehicle ? undefined : "vehicle-registration-form"}
+              disabled={
+                !!activeWorkOrder || (isExistingVehicle ? queueSaving : saving)
+              }
+              onClick={
+                isExistingVehicle && !activeWorkOrder
+                  ? () => handleAddToQueue(false)
+                  : undefined
+              }
+              size="lg"
+            >
+              {isExistingVehicle ? (
+                queueSaving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Zap className="size-4" />
+                )
+              ) : saving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Zap className="size-4" />
+              )}
+              {activeWorkOrder
+                ? activeWorkOrder.bay_number
+                  ? t("vehicleAlreadyInBay", {
+                      bayNumber: String(activeWorkOrder.bay_number),
+                    })
+                  : t("vehicleAlreadyInQueue")
+                : (isExistingVehicle ? queueSaving : saving)
+                  ? t("saving")
+                  : assignBayNumber
+                    ? isExistingVehicle
+                      ? t("assignToBayNumber", {
+                          bayNumber: String(assignBayNumber),
+                        })
+                      : t("saveAndAssignToBay", {
+                          bayNumber: String(assignBayNumber),
+                        })
+                    : isExistingVehicle
+                      ? t("addToWaitingQueue")
+                      : t("saveAndAddToQueue")}
+            </Button>
+          </div>
         </DetailDrawer.FooterActions>
       </DetailDrawer.Footer>
     </DetailDrawer>

@@ -1,23 +1,14 @@
-"use client";
-
 import { ArrowRight, BookOpen, Calendar, Clock, Wrench } from "lucide-react";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { getTranslations } from "next-intl/server";
 
 import { LandingNav } from "@/components/landing-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardDescription, CardFooter, CardTitle } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
+import { CategoryFilter } from "./_category-filter";
 
 const ARTICLES = [1, 2, 3, 4, 5, 6].map((n) => ({
   id: n,
@@ -26,11 +17,41 @@ const ARTICLES = [1, 2, 3, 4, 5, 6].map((n) => ({
 
 const CATEGORIES = ["all", "updates", "guides", "tips", "industry"] as const;
 
-export default function BlogPage() {
-  const t = useTranslations("blog") as (key: string) => string;
-  const appT = useTranslations("app") as (key: string) => string;
-  const _authT = useTranslations("auth") as (key: string) => string;
-  const [activeCategory, setActiveCategory] = useState("all");
+export default async function BlogPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  return <BlogContent locale={locale} />;
+}
+
+async function BlogContent({ locale }: { locale: string }) {
+  "use cache";
+  cacheLife("daily");
+
+  const t = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "blog",
+  })) as (key: string, values?: Record<string, string | number>) => string;
+  const appT = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "app",
+  })) as (key: string, values?: Record<string, string | number>) => string;
+
+  const categories = CATEGORIES.map((cat) => ({
+    id: cat,
+    label: t(`category${cat.charAt(0).toUpperCase()}${cat.slice(1)}`),
+  }));
+
+  const articles = ARTICLES.map((a) => ({
+    id: a.id,
+    category: t(a.categoryKey),
+    title: t(`article${a.id}Title`),
+    desc: t(`article${a.id}Desc`),
+    date: t(`article${a.id}Date`),
+    minRead: t(`article${a.id}MinRead`),
+  }));
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -85,94 +106,15 @@ export default function BlogPage() {
             </Card>
           </div>
         </section>
-        <section className="px-4 pt-10 sm:px-6">
-          <div className="mx-auto max-w-5xl">
-            <Typography.Muted className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("categories")}
-            </Typography.Muted>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((cat) => (
-                <Button
-                  key={cat}
-                  variant={activeCategory === cat ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setActiveCategory(cat)}
-                >
-                  {t(`category${cat.charAt(0).toUpperCase()}${cat.slice(1)}`)}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </section>
 
-        <Separator className="mx-auto mt-8 max-w-5xl" />
-
-        {/* ═══ Article Grid ────────────────────────────────── */}
-        <section className="px-4 py-10 sm:px-6 sm:py-14">
-          <div className="mx-auto max-w-5xl">
-            <Typography.H2 className="mb-8 text-lg font-semibold">
-              {t("latestTitle")}
-            </Typography.H2>
-
-            {ARTICLES.filter((a) => {
-              if (activeCategory === "all") return true;
-              const catKey = t(a.categoryKey).toLowerCase();
-              const filterKey = t(
-                `category${activeCategory.charAt(0).toUpperCase()}${activeCategory.slice(1)}`,
-              ).toLowerCase();
-              return catKey === filterKey;
-            }).length === 0 && (
-              <div className="rounded-lg border bg-muted/20 px-6 py-12 text-center">
-                <Typography.Muted className="text-sm text-muted-foreground">
-                  {t("noArticles")}
-                </Typography.Muted>
-              </div>
-            )}
-
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {ARTICLES.filter((a) => {
-                if (activeCategory === "all") return true;
-                const catKey = t(a.categoryKey).toLowerCase();
-                const filterKey = t(
-                  `category${activeCategory.charAt(0).toUpperCase()}${activeCategory.slice(1)}`,
-                ).toLowerCase();
-                return catKey === filterKey;
-              }).map((article) => (
-                <Card key={article.id} className="flex flex-col">
-                  <CardHeader>
-                    <Badge variant="secondary" className="mb-2 w-fit">
-                      {t(`article${article.id}Category`)}
-                    </Badge>
-                    <CardTitle className="text-sm leading-snug">
-                      {t(`article${article.id}Title`)}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <CardDescription className="text-xs leading-relaxed">
-                      {t(`article${article.id}Desc`)}
-                    </CardDescription>
-                  </CardContent>
-                  <CardFooter className="flex-col items-start gap-3 border-t pt-4">
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="size-3" />
-                        {t(`article${article.id}Date`)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="size-3" />
-                        {t(`article${article.id}MinRead`)}
-                      </span>
-                    </div>
-                    <Button variant="link" className="h-auto p-0 text-xs">
-                      {t("readMore")}
-                      <ArrowRight className="ml-1 size-3" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
+        <CategoryFilter
+          categories={categories}
+          articles={articles}
+          categoriesLabel={t("categories")}
+          latestTitle={t("latestTitle")}
+          noArticlesLabel={t("noArticles")}
+          readMoreLabel={t("readMore")}
+        />
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl">
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">

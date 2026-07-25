@@ -1,6 +1,7 @@
 "use client";
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback } from "react";
 import { toast } from "sonner";
@@ -18,12 +19,13 @@ import {
   useUpdateBayCount,
   useUpdateBayViewStatus,
 } from "@/lib/queries/use-bay-view";
+import { drawerDetailKeys } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
 import type {
   BayViewData,
   BayViewWorkOrder,
 } from "@/lib/services/bay-view-service";
-import type { Vehicle } from "@/lib/types";
+import type { Vehicle, WorkOrderDetail } from "@/lib/types";
 import { formatPlateNumber } from "@/lib/utils";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
 import { STATUS_TRANSLATION_KEYS } from "./_constants";
@@ -75,6 +77,8 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
     closeDetail,
     setDirectAssignBayNumber,
   } = params.dialogs;
+
+  const queryClient = useQueryClient();
 
   // ── Mutation hooks ────────────────────────────────────────────
   const updateStatusMutation = useUpdateBayViewStatus(branchFilter);
@@ -268,12 +272,24 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
   // ── Detail drawer ────────────────────────────────────────────
   const handleOpenDetail = useCallback(
     (woId: string, initialAction?: "add-service" | "add-part") => {
+      // Seed the drawer detail cache with partial work order data
+      // from the bay card so the drawer shows real content immediately.
+      const bay = data?.bays.find((b) => b.workOrder?.id === woId);
+      if (bay?.workOrder && orgId) {
+        const key = drawerDetailKeys.all(orgId, woId);
+        queryClient.setQueryData(key, {
+          workOrder: bay.workOrder as unknown as WorkOrderDetail,
+        });
+        // Mark as stale so the drawer refetches full detail in background
+        queryClient.invalidateQueries({ queryKey: key, refetchType: "active" });
+      }
+
       openDetail(woId, initialAction);
       const params = new URLSearchParams(window.location.search);
       params.set("woId", woId);
       window.history.replaceState(null, "", `?${params.toString()}`);
     },
-    [openDetail],
+    [openDetail, data, orgId, queryClient],
   );
 
   const handleRemoveFromBay = useCallback(

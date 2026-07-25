@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ArrowRight,
   CheckCircle2,
@@ -8,8 +6,9 @@ import {
   Tag,
   Wrench,
 } from "lucide-react";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 import { LandingNav } from "@/components/landing-nav";
 import { Badge } from "@/components/ui/badge";
@@ -34,12 +33,25 @@ const SAMPLE_SERVICES = [1, 2, 3, 4, 5, 6];
 
 const DEFAULT_INTERVALS = [1, 2, 3, 4, 5, 6];
 
-export default function ServicesPage() {
-  const t = useTranslations("services") as (
+export default async function ServicesPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  return <ServicesContent locale={locale} />;
+}
+
+async function ServicesContent({ locale }: { locale: string }) {
+  "use cache";
+  cacheLife("daily");
+
+  const t = (await getTranslations({ locale: locale as "mn" | "en", namespace: "services" })) as (
     key: string,
     values?: Record<string, string | number>,
   ) => string;
-  const appT = useTranslations("app") as (
+  const appT = (await getTranslations({ locale: locale as "mn" | "en", namespace: "app" })) as (
     key: string,
     values?: Record<string, string | number>,
   ) => string;

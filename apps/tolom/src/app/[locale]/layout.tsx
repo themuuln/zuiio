@@ -9,13 +9,8 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import { DrawerProvider } from "@/components/drawer-provider";
 import { HtmlLang } from "@/components/html-lang";
-import NuqsProvider from "@/components/nuqs-provider";
-import { OfflineBanner } from "@/components/offline-banner";
-import { OfflineQueueIndicator } from "@/components/offline-queue-indicator";
-import QueryProvider from "@/components/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/lib/i18n/routing";
-import { MutationQueueProvider } from "@/lib/offline/mutation-queue-provider";
 import "../globals.css";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
@@ -70,24 +65,16 @@ async function LocaleLayoutInner({
       <TooltipProvider>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <HtmlLang />
-          <NuqsProvider>
-            <QueryProvider>
-              <MutationQueueProvider>
-                <OfflineBanner />
-                {children}
-                <OfflineQueueIndicator />
-              </MutationQueueProvider>
-              <Toaster
-                position="bottom-right"
-                richColors
-                closeButton
-                toastOptions={{
-                  duration: 3000,
-                }}
-                style={{ zIndex: 9999 }}
-              />
-            </QueryProvider>
-          </NuqsProvider>
+          {children}
+          <Toaster
+            position="bottom-right"
+            richColors
+            closeButton
+            toastOptions={{
+              duration: 3000,
+            }}
+            style={{ zIndex: 9999 }}
+          />
         </NextIntlClientProvider>
       </TooltipProvider>
     </DrawerProvider>
