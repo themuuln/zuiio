@@ -11,11 +11,13 @@ import {
 import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { z } from "zod";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -46,6 +48,12 @@ interface Props {
   orgId: string;
 }
 
+const deviceRegistrationSchema = z.object({
+  selectedMechanicId: z.string().min(1, "Please select a mechanic"),
+  deviceName: z.string().optional(),
+});
+type DeviceRegistrationValues = z.infer<typeof deviceRegistrationSchema>;
+
 type DialogState =
   | "form"
   | "generating"
@@ -65,11 +73,19 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
   const [state, setState] = useState<DialogState>("form");
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [mechanicLoading, setMechanicLoading] = useState(true);
-  const [selectedMechanicId, setSelectedMechanicId] = useState("");
-  const [deviceName, setDeviceName] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [countdown, setCountdown] = useState(300);
   const [errorMessage, setErrorMessage] = useState("");
+  
+  const form = useForm<DeviceRegistrationValues>({
+    resolver: zodResolver(deviceRegistrationSchema),
+    defaultValues: {
+      selectedMechanicId: "",
+      deviceName: "",
+    },
+  });
+  const selectedMechanicId = form.watch("selectedMechanicId");
+  const deviceName = form.watch("deviceName");
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -106,8 +122,10 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
   useEffect(() => {
     if (open) {
       setState("form");
-      setSelectedMechanicId("");
-      setDeviceName("");
+      form.reset({
+        selectedMechanicId: "",
+        deviceName: "",
+      });
       setQrDataUrl("");
       setErrorMessage("");
       setCountdown(300);
@@ -117,8 +135,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
 
   const selectedMechanic = mechanics.find((m) => m.id === selectedMechanicId);
 
-  const handleGenerateQr = async () => {
-    if (!selectedMechanicId) return;
+  const handleGenerateQr = form.handleSubmit(async () => {
     setState("generating");
     setErrorMessage("");
 
@@ -172,7 +189,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
       );
       setState("error");
     }
-  };
+  });
 
   const startPolling = () => {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -259,16 +276,16 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
 
         {/* ── Form ────────────────────────────────────── */}
         {state === "form" && (
-          <div className="flex flex-col gap-4">
+          <form onSubmit={handleGenerateQr} className="flex flex-col gap-4">
             {/* Mechanic select */}
-            <Field>
+            <Field data-invalid={!!form.formState.errors.selectedMechanicId}>
               <FieldLabel className="text-xs font-medium text-muted-foreground">
                 {t("deviceRegistration.selectMechanic")}
               </FieldLabel>
               <FieldContent>
                 <Select
                   value={selectedMechanicId || null}
-                  onValueChange={(val) => setSelectedMechanicId(val ?? "")}
+                  onValueChange={(val) => form.setValue("selectedMechanicId", val ?? "")}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue
@@ -293,6 +310,11 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
+                {form.formState.errors.selectedMechanicId && (
+                  <FieldError>
+                    {form.formState.errors.selectedMechanicId.message}
+                  </FieldError>
+                )}
               </FieldContent>
             </Field>
 
@@ -307,8 +329,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
               <FieldContent>
                 <Input
                   placeholder={t("deviceRegistration.deviceName")}
-                  value={deviceName}
-                  onChange={(e) => setDeviceName(e.target.value)}
+                  {...form.register("deviceName")}
                 />
               </FieldContent>
             </Field>
@@ -317,12 +338,12 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
             <Button
               className="w-full"
               disabled={!selectedMechanicId}
-              onClick={handleGenerateQr}
+              type="submit"
             >
               <QrCode className="size-4" />
               {t("deviceRegistration.generateQr")}
             </Button>
-          </div>
+          </form>
         )}
 
         {/* ── Generating ──────────────────────────────── */}

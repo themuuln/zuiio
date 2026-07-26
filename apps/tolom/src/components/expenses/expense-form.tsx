@@ -71,7 +71,7 @@ export type ExpenseFormProps = {
 // ── Component ────────────────────────────────────────────────
 
 export function ExpenseForm({ onSuccess, onCancel }: ExpenseFormProps) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("expenses") as (key: string, values?: Record<string, string | number>) => string;
   const commonT = useTranslations("common");
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? null;

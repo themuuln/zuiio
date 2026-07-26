@@ -200,3 +200,67 @@ See `.cli-profiles.json` for the full mapping of each app to its Vercel account 
 - Vercel tokens are stored in pass (`personal/vercel/<name>`) and loaded at shell start via `.zshrc`
 - Supabase profiles are stored in native keychain, managed via `supabase login --name <profile>`
 - If a profile is missing: run `source ~/.zshrc` then check with `v-<name> whoami` or `supabase --profile <name> projects list`
+## Log-Based Debugging
+
+Use production logs to debug issues before diving into code. Two sources available:
+
+### Vercel error logs
+
+Filter by error level, status code, time range, environment, or deployment. Always use the correct profile alias.
+
+```bash
+# Last 2 hours of errors for a project
+v logs --project onoo --level error --since 2h
+
+# 500 errors as JSON (pipe to jq for analysis)
+v logs --project onoo --status-code 500 --json
+
+# Production errors with full messages
+v logs --project onoo --environment production --level error --expand
+
+# Specific deployment
+v logs dpl_xxxxx --level error
+
+# Live follow (stream as requests come in)
+v logs --project onoo --level error --follow
+
+# Edge function errors
+v logs --project onoo --source edge-function --level error --since 1h
+
+# Tolom (different Vercel account)
+v-tolom logs --project tolom --level error --since 2h
+```
+
+**When to use:** 500 errors, function crashes, timeouts, build failures, unexpected API behavior in production.
+
+### Supabase logs (via MCP)
+
+Use the Supabase MCP `get_logs` tool to fetch logs by service type. Returns last 24 hours.
+
+| Service | What it shows |
+|---------|---------------|
+| `api` | PostgREST API request logs |
+| `postgres` | Database query errors, slow queries |
+| `auth` | Login failures, rate limits, JWT errors |
+| `storage` | File upload/download errors |
+| `edge-function` | Edge Function execution logs |
+| `realtime` | Realtime subscription errors |
+
+Usage from the agent:
+```json
+// Fetch auth errors (rate limits, login failures)
+write xd://mcp__supabase_onoo_get_logs { "service": "auth" }
+
+// Fetch database errors
+write xd://mcp__supabase_onoo_get_logs { "service": "postgres" }
+```
+
+**When to use:** Auth 429 rate limits, database query failures, RLS policy violations, storage access errors.
+
+### Debugging workflow
+
+1. **Identify the symptom** — user reports an error, you see a toast/console error
+2. **Check Vercel logs** — `v logs --project <app> --level error --since 2h`
+3. **Check Supabase logs** — corresponding service (auth/postgres/api)
+4. **Correlate** — match request IDs or timestamps across both to find root cause
+5. **Fix** — apply the fix, verify with a second log check

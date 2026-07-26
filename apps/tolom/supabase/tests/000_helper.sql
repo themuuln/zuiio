@@ -1,3 +1,7 @@
+create schema if not exists tests;
+grant usage on schema tests to public;
+
+
 -- RLS Test Helper
 -- Provides reusable functions for testing RLS policies with pgTAP.
 -- These helpers set up auth context and clean up after each test.
@@ -40,11 +44,11 @@ create or replace function tests.assert_can_select(
   query text,
   description text default ''
 ) returns text as $$
+declare
+  result boolean;
 begin
-  return ok(
-    (select exists(execute query)),
-    description
-  );
+  execute query into result;
+  return ok(result, description);
 exception when others then
   return ok(false, description || ' — raised ' || sqlerrm);
 end;
@@ -55,13 +59,12 @@ create or replace function tests.assert_cannot_select(
   query text,
   description text default ''
 ) returns text as $$
+declare
+  result boolean;
 begin
-  return ok(
-    not (select exists(execute query)),
-    description
-  );
+  execute query into result;
+  return ok(not result, description);
 exception when others then
-  -- An RLS block may raise a permission error or silently return no rows
   return ok(true, description || ' — blocked: ' || sqlerrm);
 end;
 $$ language plpgsql;

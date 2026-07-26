@@ -128,7 +128,7 @@ export function CustomerDetailDrawer({
   onOpenChange,
   customerId,
 }: CustomerDetailSheetProps) {
-  const t = useTranslations("customers");
+  const t = useTranslations("customers") as (key: string) => string;
   const commonT = useTranslations("common");
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;

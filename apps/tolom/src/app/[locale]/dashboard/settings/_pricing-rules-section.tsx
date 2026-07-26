@@ -4,17 +4,29 @@ import { useQuery } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
 import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { Controller, type Resolver } from "react-hook-form";
+import { z } from "zod";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NumericInput } from "@/components/ui/numeric-input";
@@ -31,6 +43,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import { createOrgQuery } from "@/lib/queries/factory";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { priceRuleKeys } from "@/lib/queries/keys";
 import { SettingsBlock, SettingsListItem } from "./_settings-layout";
 
@@ -97,6 +110,61 @@ const DEFAULT_FORM: RuleForm = {
   part_name_pattern: "",
   service_name_pattern: "",
 };
+
+const priceRuleSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string(),
+  apply_to: z.enum(["part", "service", "both"]),
+  conditions_type: z.enum([
+    "class",
+    "make",
+    "make_model",
+    "fuel",
+    "body_type",
+    "all",
+  ]),
+  conditions_makes: z.string(),
+  conditions_models: z.string(),
+  conditions_classes: z.string(),
+  conditions_fuel_types: z.string(),
+  conditions_body_types: z.string(),
+  conditions_description: z.string(),
+  operator: z.enum([
+    "multiply",
+    "add_fixed",
+    "set_fixed",
+    "percentage_add",
+    "percentage_sub",
+  ]),
+  value: z.string().min(1, "Value is required"),
+  priority: z.string().min(1, "Priority is required"),
+  part_category: z.string(),
+  service_category: z.string(),
+  part_name_pattern: z.string(),
+  service_name_pattern: z.string(),
+}).superRefine((data, ctx) => {
+  // At least one brand condition required for non-"all" types
+  if (data.conditions_type !== "all") {
+    const relevantField =
+      data.conditions_type === "class"
+        ? "conditions_classes"
+        : data.conditions_type === "make" ||
+            data.conditions_type === "make_model"
+          ? "conditions_makes"
+          : data.conditions_type === "fuel"
+            ? "conditions_fuel_types"
+            : data.conditions_type === "body_type"
+              ? "conditions_body_types"
+              : null;
+    if (relevantField && !data[relevantField as keyof typeof data]?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `At least one condition value is required for this type`,
+        path: [relevantField],
+      });
+    }
+  }
+});
 
 function getOperatorLabels(t: (key: string) => string): Record<string, string> {
   return {
@@ -244,8 +312,51 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
   ) => string;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<PriceRule | null>(null);
-  const [form, setForm] = useState<RuleForm>(DEFAULT_FORM);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  const formId = useId();
+  const form = useForm<RuleForm>({
+    resolver: zodResolver(priceRuleSchema) as unknown as Resolver<RuleForm>,
+    defaultValues: DEFAULT_FORM,
+    mode: "onSubmit",
+  });
+
+  const formDefaults = useMemo(() => {
+    if (!editingRule) return DEFAULT_FORM;
+    const cond = (editingRule.conditions ?? {}) as Record<string, unknown>;
+    let conditionsType = "all";
+    if (cond.classes) conditionsType = "class";
+    else if (cond.makes && cond.models) conditionsType = "make_model";
+    else if (cond.makes) conditionsType = "make";
+    else if (cond.fuel_types) conditionsType = "fuel";
+    else if (cond.body_types) conditionsType = "body_type";
+    return {
+      name: editingRule.name,
+      description: editingRule.description ?? "",
+      apply_to: editingRule.apply_to as "part" | "service" | "both",
+      conditions_type: conditionsType as RuleForm["conditions_type"],
+      conditions_makes: ((cond.makes as string[]) ?? []).join(", "),
+      conditions_models: ((cond.models as string[]) ?? []).join(", "),
+      conditions_classes: ((cond.classes as string[]) ?? []).join(", "),
+      conditions_fuel_types: ((cond.fuel_types as string[]) ?? []).join(", "),
+      conditions_body_types: ((cond.body_types as string[]) ?? []).join(", "),
+      conditions_description: editingRule.conditions_description ?? "",
+      operator: editingRule.operator,
+      value: String(editingRule.value),
+      priority: String(editingRule.priority),
+      part_category: editingRule.part_category ?? "",
+      service_category: editingRule.service_category ?? "",
+      part_name_pattern: editingRule.part_name_pattern ?? "",
+      service_name_pattern: editingRule.service_name_pattern ?? "",
+    };
+  }, [editingRule]);
+
+  // Reset form when drawer opens
+  useEffect(() => {
+    if (dialogOpen) {
+      form.reset(formDefaults);
+    }
+  }, [dialogOpen, formDefaults, form]);
 
   const { data: rules, isPending } = useQuery({
     queryKey: priceRuleKeys.all(orgId),
@@ -262,7 +373,6 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
     onSuccess: () => {
       setDialogOpen(false);
       setEditingRule(null);
-      setForm(DEFAULT_FORM);
     },
   });
 
@@ -278,7 +388,6 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
     onSuccess: () => {
       setDialogOpen(false);
       setEditingRule(null);
-      setForm(DEFAULT_FORM);
     },
   });
 
@@ -304,39 +413,11 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
 
   const openNew = useCallback(() => {
     setEditingRule(null);
-    setForm(DEFAULT_FORM);
     setDialogOpen(true);
   }, []);
 
   const openEdit = useCallback((rule: PriceRule) => {
     setEditingRule(rule);
-    const cond = (rule.conditions ?? {}) as Record<string, unknown>;
-    let conditionsType = "all";
-    if (cond.classes) conditionsType = "class";
-    else if (cond.makes && cond.models) conditionsType = "make_model";
-    else if (cond.makes) conditionsType = "make";
-    else if (cond.fuel_types) conditionsType = "fuel";
-    else if (cond.body_types) conditionsType = "body_type";
-
-    setForm({
-      name: rule.name,
-      description: rule.description ?? "",
-      apply_to: rule.apply_to as "part" | "service" | "both",
-      conditions_type: conditionsType as RuleForm["conditions_type"],
-      conditions_makes: ((cond.makes as string[]) ?? []).join(", "),
-      conditions_models: ((cond.models as string[]) ?? []).join(", "),
-      conditions_classes: ((cond.classes as string[]) ?? []).join(", "),
-      conditions_fuel_types: ((cond.fuel_types as string[]) ?? []).join(", "),
-      conditions_body_types: ((cond.body_types as string[]) ?? []).join(", "),
-      conditions_description: rule.conditions_description ?? "",
-      operator: rule.operator,
-      value: String(rule.value),
-      priority: String(rule.priority),
-      part_category: rule.part_category ?? "",
-      service_category: rule.service_category ?? "",
-      part_name_pattern: rule.part_name_pattern ?? "",
-      service_name_pattern: rule.service_name_pattern ?? "",
-    });
     setDialogOpen(true);
   }, []);
 
@@ -467,215 +548,308 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
         </DetailDrawer.Header>
 
         <DetailDrawer.Body>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label>{t("ruleName")}</Label>
-              <Input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder={t("ruleNamePlaceholder")}
-              />
-            </div>
+          <form
+            id={formId}
+            onSubmit={form.handleSubmit((data) => {
+              if (editingRule) {
+                updatePriceRule.mutate({ id: editingRule.id, form: data });
+              } else {
+                createPriceRule.mutate(data);
+              }
+            })}
+            className="flex flex-col gap-4"
+          >
+            <Field data-invalid={!!form.formState.errors.name}>
+              <FieldLabel>{t("ruleName")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  {...form.register("name")}
+                  placeholder={t("ruleNamePlaceholder")}
+                />
+                {form.formState.errors.name && (
+                  <FieldError>
+                    {form.formState.errors.name.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-            <div className="flex flex-col gap-2">
-              <Label>{t("description")}</Label>
-              <Textarea
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-                placeholder={t("descriptionPlaceholder")}
-                rows={2}
-              />
-            </div>
+            <Field>
+              <FieldLabel>{t("description")}</FieldLabel>
+              <FieldContent>
+                <Textarea
+                  {...form.register("description")}
+                  placeholder={t("descriptionPlaceholder")}
+                  rows={2}
+                />
+              </FieldContent>
+            </Field>
 
             <Separator />
 
-            <div className="flex flex-col gap-2">
-              <Label>{t("appliesTo")}</Label>
-              <Select
-                value={form.apply_to || null}
-                onValueChange={(v) =>
-                  setForm({
-                    ...form,
-                    apply_to: (v ?? "both") as "part" | "service" | "both",
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="both">{t("appliesBoth")}</SelectItem>
-                  <SelectItem value="part">{t("appliesParts")}</SelectItem>
-                  <SelectItem value="service">
-                    {t("appliesServices")}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Controller
+              control={form.control}
+              name="apply_to"
+              render={({ field }) => (
+                <Field data-invalid={!!form.formState.errors.apply_to}>
+                  <FieldLabel>{t("appliesTo")}</FieldLabel>
+                  <FieldContent>
+                    <Select
+                      value={field.value || null}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="both">
+                          {t("appliesBoth")}
+                        </SelectItem>
+                        <SelectItem value="part">
+                          {t("appliesParts")}
+                        </SelectItem>
+                        <SelectItem value="service">
+                          {t("appliesServices")}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FieldContent>
+                </Field>
+              )}
+            />
 
             <Separator />
 
-            <div className="flex flex-col gap-2">
-              <Label>{t("vehicleCondition")}</Label>
-              <Select
-                value={form.conditions_type || null}
-                onValueChange={(v) =>
-                  setForm({
-                    ...form,
-                    conditions_type: (v ??
-                      "class") as RuleForm["conditions_type"],
-                  })
-                }
+            <Controller
+              control={form.control}
+              name="conditions_type"
+              render={({ field }) => (
+                <Field data-invalid={!!form.formState.errors.conditions_type}>
+                  <FieldLabel>{t("vehicleCondition")}</FieldLabel>
+                  <FieldContent>
+                    <Select
+                      value={field.value || null}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(getConditionLabels(t)).map(
+                          ([key, label]) => (
+                            <SelectItem key={key} value={key}>
+                              {label}
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {form.formState.errors.conditions_type && (
+                      <FieldError>
+                        {form.formState.errors.conditions_type.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                </Field>
+              )}
+            />
+
+            {form.watch("conditions_type") === "class" && (
+              <Field data-invalid={!!form.formState.errors.conditions_classes}>
+                <FieldLabel>{t("vehicleClasses")}</FieldLabel>
+                <FieldContent>
+                  <Input
+                    {...form.register("conditions_classes")}
+                    placeholder={t("vehicleClassesPlaceholder")}
+                  />
+                  {form.formState.errors.conditions_classes && (
+                    <FieldError>
+                      {form.formState.errors.conditions_classes.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+            )}
+
+            {(form.watch("conditions_type") === "make" ||
+              form.watch("conditions_type") === "make_model") && (
+              <Field data-invalid={!!form.formState.errors.conditions_makes}>
+                <FieldLabel>{t("makesLabel")}</FieldLabel>
+                <FieldContent>
+                  <Input
+                    {...form.register("conditions_makes")}
+                    placeholder={t("makesPlaceholder")}
+                  />
+                  {form.formState.errors.conditions_makes && (
+                    <FieldError>
+                      {form.formState.errors.conditions_makes.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+            )}
+
+            {form.watch("conditions_type") === "make_model" && (
+              <Field data-invalid={!!form.formState.errors.conditions_models}>
+                <FieldLabel>{t("modelsLabel")}</FieldLabel>
+                <FieldContent>
+                  <Input
+                    {...form.register("conditions_models")}
+                    placeholder={t("modelsPlaceholder")}
+                  />
+                  {form.formState.errors.conditions_models && (
+                    <FieldError>
+                      {form.formState.errors.conditions_models.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+            )}
+
+            {form.watch("conditions_type") === "fuel" && (
+              <Field
+                data-invalid={!!form.formState.errors.conditions_fuel_types}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(getConditionLabels(t)).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {form.conditions_type === "class" && (
-              <div className="flex flex-col gap-2">
-                <Label>{t("vehicleClasses")}</Label>
-                <Input
-                  value={form.conditions_classes}
-                  onChange={(e) =>
-                    setForm({ ...form, conditions_classes: e.target.value })
-                  }
-                  placeholder={t("vehicleClassesPlaceholder")}
-                />
-              </div>
+                <FieldLabel>{t("fuelTypes")}</FieldLabel>
+                <FieldContent>
+                  <Input
+                    {...form.register("conditions_fuel_types")}
+                    placeholder={t("fuelTypesPlaceholder")}
+                  />
+                  {form.formState.errors.conditions_fuel_types && (
+                    <FieldError>
+                      {form.formState.errors.conditions_fuel_types.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
             )}
 
-            {(form.conditions_type === "make" ||
-              form.conditions_type === "make_model") && (
-              <div className="flex flex-col gap-2">
-                <Label>{t("makesLabel")}</Label>
-                <Input
-                  value={form.conditions_makes}
-                  onChange={(e) =>
-                    setForm({ ...form, conditions_makes: e.target.value })
-                  }
-                  placeholder={t("makesPlaceholder")}
-                />
-              </div>
+            {form.watch("conditions_type") === "body_type" && (
+              <Field
+                data-invalid={!!form.formState.errors.conditions_body_types}
+              >
+                <FieldLabel>{t("bodyTypesLabel")}</FieldLabel>
+                <FieldContent>
+                  <Input
+                    {...form.register("conditions_body_types")}
+                    placeholder={t("bodyTypesPlaceholder")}
+                  />
+                  {form.formState.errors.conditions_body_types && (
+                    <FieldError>
+                      {form.formState.errors.conditions_body_types.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
             )}
 
-            {form.conditions_type === "make_model" && (
-              <div className="flex flex-col gap-2">
-                <Label>{t("modelsLabel")}</Label>
+            <Field>
+              <FieldLabel>{t("conditionDisplay")}</FieldLabel>
+              <FieldContent>
                 <Input
-                  value={form.conditions_models}
-                  onChange={(e) =>
-                    setForm({ ...form, conditions_models: e.target.value })
-                  }
-                  placeholder={t("modelsPlaceholder")}
+                  {...form.register("conditions_description")}
+                  placeholder={t("conditionDisplayPlaceholder")}
                 />
-              </div>
-            )}
-
-            {form.conditions_type === "fuel" && (
-              <div className="flex flex-col gap-2">
-                <Label>{t("fuelTypes")}</Label>
-                <Input
-                  value={form.conditions_fuel_types}
-                  onChange={(e) =>
-                    setForm({ ...form, conditions_fuel_types: e.target.value })
-                  }
-                  placeholder={t("fuelTypesPlaceholder")}
-                />
-              </div>
-            )}
-
-            {form.conditions_type === "body_type" && (
-              <div className="flex flex-col gap-2">
-                <Label>{t("bodyTypesLabel")}</Label>
-                <Input
-                  value={form.conditions_body_types}
-                  onChange={(e) =>
-                    setForm({ ...form, conditions_body_types: e.target.value })
-                  }
-                  placeholder={t("bodyTypesPlaceholder")}
-                />
-              </div>
-            )}
-
-            <div className="flex flex-col gap-2">
-              <Label>{t("conditionDisplay")}</Label>
-              <Input
-                value={form.conditions_description}
-                onChange={(e) =>
-                  setForm({ ...form, conditions_description: e.target.value })
-                }
-                placeholder={t("conditionDisplayPlaceholder")}
-              />
-            </div>
+              </FieldContent>
+            </Field>
 
             <Separator />
 
-            <div className="flex flex-col gap-2">
-              <Label>{t("operator")}</Label>
-              <Select
-                value={form.operator || null}
-                onValueChange={(v) =>
-                  setForm({ ...form, operator: v ?? "multiply" })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(getOperatorLabels(t)).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Controller
+              control={form.control}
+              name="operator"
+              render={({ field }) => (
+                <Field data-invalid={!!form.formState.errors.operator}>
+                  <FieldLabel>{t("operator")}</FieldLabel>
+                  <FieldContent>
+                    <Select
+                      value={field.value || null}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(getOperatorLabels(t)).map(
+                          ([key, label]) => (
+                            <SelectItem key={key} value={key}>
+                              {label}
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </FieldContent>
+                </Field>
+              )}
+            />
 
-            <div className="flex flex-col gap-2">
-              <Label>{t("value")}</Label>
-              <NumericInput
-                step={0.01}
-                value={Number(form.value) || 0}
-                onChange={(v) => setForm({ ...form, value: v.toString() })}
-                placeholder={
-                  form.operator === "multiply"
-                    ? "1.25"
-                    : form.operator === "add_fixed"
-                      ? "20000"
-                      : "100"
-                }
-              />
-              <Typography.Muted className="text-[11px] text-muted-foreground">
-                {form.operator === "multiply" && t("valueMultiplyHint")}
-                {form.operator === "add_fixed" && t("valueAddFixedHint")}
-                {form.operator === "set_fixed" && t("valueSetFixedHint")}
-                {form.operator === "percentage_add" && t("valuePercentAddHint")}
-                {form.operator === "percentage_sub" && t("valuePercentSubHint")}
-              </Typography.Muted>
-            </div>
+            <Controller
+              control={form.control}
+              name="value"
+              render={({ field }) => (
+                <Field data-invalid={!!form.formState.errors.value}>
+                  <FieldLabel>{t("value")}</FieldLabel>
+                  <FieldContent>
+                    <NumericInput
+                      step={0.01}
+                      value={Number(field.value) || 0}
+                      onChange={(v) => field.onChange(String(v))}
+                      placeholder={
+                        form.watch("operator") === "multiply"
+                          ? "1.25"
+                          : form.watch("operator") === "add_fixed"
+                            ? "20000"
+                            : "100"
+                      }
+                    />
+                    {form.formState.errors.value && (
+                      <FieldError>
+                        {form.formState.errors.value.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                  <Typography.Muted className="text-[11px] text-muted-foreground">
+                    {form.watch("operator") === "multiply" &&
+                      t("valueMultiplyHint")}
+                    {form.watch("operator") === "add_fixed" &&
+                      t("valueAddFixedHint")}
+                    {form.watch("operator") === "set_fixed" &&
+                      t("valueSetFixedHint")}
+                    {form.watch("operator") === "percentage_add" &&
+                      t("valuePercentAddHint")}
+                    {form.watch("operator") === "percentage_sub" &&
+                      t("valuePercentSubHint")}
+                  </Typography.Muted>
+                </Field>
+              )}
+            />
 
-            <div className="flex flex-col gap-2">
-              <Label>{t("priorityLabel")}</Label>
-              <NumericInput
-                value={Number(form.priority) || 0}
-                onChange={(v) => setForm({ ...form, priority: v.toString() })}
-                placeholder="100"
-              />
-              <Typography.Muted className="text-[11px] text-muted-foreground">
-                {t("priorityHint")}
-              </Typography.Muted>
-            </div>
+            <Controller
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <Field data-invalid={!!form.formState.errors.priority}>
+                  <FieldLabel>{t("priorityLabel")}</FieldLabel>
+                  <FieldContent>
+                    <NumericInput
+                      value={Number(field.value) || 0}
+                      onChange={(v) => field.onChange(String(v))}
+                      placeholder="100"
+                    />
+                    {form.formState.errors.priority && (
+                      <FieldError>
+                        {form.formState.errors.priority.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                  <Typography.Muted className="text-[11px] text-muted-foreground">
+                    {t("priorityHint")}
+                  </Typography.Muted>
+                </Field>
+              )}
+            />
 
             <Separator />
 
@@ -687,10 +861,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                     {t("partCategory")}
                   </Label>
                   <Input
-                    value={form.part_category}
-                    onChange={(e) =>
-                      setForm({ ...form, part_category: e.target.value })
-                    }
+                    {...form.register("part_category")}
                     placeholder={t("partCategoryPlaceholder")}
                   />
                 </div>
@@ -699,16 +870,13 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                     {t("serviceCategory")}
                   </Label>
                   <Input
-                    value={form.service_category}
-                    onChange={(e) =>
-                      setForm({ ...form, service_category: e.target.value })
-                    }
+                    {...form.register("service_category")}
                     placeholder={t("serviceCategoryPlaceholder")}
                   />
                 </div>
               </div>
             </div>
-          </div>
+          </form>
         </DetailDrawer.Body>
 
         <DetailDrawer.Footer>
@@ -717,18 +885,11 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
               {t("cancel")}
             </Button>
             <Button
+              type="submit"
+              form={formId}
               size="lg"
-              onClick={() => {
-                if (editingRule) {
-                  updatePriceRule.mutate({ id: editingRule.id, form });
-                } else {
-                  createPriceRule.mutate(form);
-                }
-              }}
               disabled={
-                !form.name ||
-                createPriceRule.isPending ||
-                updatePriceRule.isPending
+                createPriceRule.isPending || updatePriceRule.isPending
               }
             >
               {createPriceRule.isPending || updatePriceRule.isPending
@@ -742,33 +903,38 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       </DetailDrawer>
 
       {/* Delete confirmation */}
-      <Dialog
+      <AlertDialog
         open={!!deleteConfirm}
         onOpenChange={() => setDeleteConfirm(null)}
       >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t("deletePriceRuleTitle")}</DialogTitle>
-          </DialogHeader>
-          <Typography.Muted className="text-sm text-muted-foreground">
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("deletePriceRuleTitle")}
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
             {t("deletePriceRuleDesc")}
-          </Typography.Muted>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => setDeleteConfirm(null)}
+            >
               {t("cancel")}
-            </Button>
-            <Button
+            </AlertDialogCancel>
+            <AlertDialogAction
               variant="destructive"
               onClick={() => {
-                if (deleteConfirm) deletePriceRule.mutate(deleteConfirm);
+                if (deleteConfirm)
+                  deletePriceRule.mutate(deleteConfirm);
               }}
               disabled={deletePriceRule.isPending}
             >
               {deletePriceRule.isPending ? t("saving") : t("delete")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

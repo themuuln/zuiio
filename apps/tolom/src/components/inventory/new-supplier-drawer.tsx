@@ -13,7 +13,7 @@ export function NewSupplierDrawer({
   open,
   onOpenChange,
 }: NewSupplierSheetProps) {
-  const t = useTranslations("inventory");
+  const t = useTranslations("inventory") as (key: string, values?: Record<string, string | number>) => string;
 
   return (
     <ResponsiveFormModal

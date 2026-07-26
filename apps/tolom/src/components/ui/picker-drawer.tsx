@@ -50,7 +50,7 @@ export function PickerDrawer({
       modal={false}
       className={widthClass}
     >
-      <DetailDrawer.Header closeButton>
+      <DetailDrawer.Header>
         <DetailDrawer.Title>{title}</DetailDrawer.Title>
         {description && (
           <DetailDrawer.Description>{description}</DetailDrawer.Description>

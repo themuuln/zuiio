@@ -10,7 +10,7 @@ import {
   Smartphone,
   Trash2,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useAdminMe } from "@/lib/queries/use-admin";
+import { z } from "zod";
+import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 
 interface Campaign {
   id: string;
@@ -67,11 +70,16 @@ const TYPE_ICONS: Record<string, typeof Mail> = {
 export default function MarketingPage() {
   const queryClient = useQueryClient();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newCampaign, setNewCampaign] = useState({
-    name: "",
-    type: "email",
-  });
   const { data: adminMe, isLoading: adminMeLoading } = useAdminMe();
+  const campaignSchema = z.object({
+    name: z.string().min(1, "Campaign name is required"),
+    type: z.string().min(1),
+  });
+
+  const form = useForm({
+    resolver: zodResolver(campaignSchema),
+    defaultValues: { name: "", type: "email" },
+  });
 
   const { data: campaigns = [], isLoading: campaignsLoading } = useQuery<
     Campaign[]
@@ -100,7 +108,7 @@ export default function MarketingPage() {
       toast.success("Campaign created");
       queryClient.invalidateQueries({ queryKey: ["admin", "campaigns"] });
       setShowCreateDialog(false);
-      setNewCampaign({ name: "", type: "email" });
+      form.reset();
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Failed to create");
@@ -128,10 +136,9 @@ export default function MarketingPage() {
   const loading = adminMeLoading || campaignsLoading;
   const isAdmin = adminMe?.isAdmin === true;
 
-  const handleCreate = useCallback(() => {
-    if (!newCampaign.name) return;
-    createMutation.mutate(newCampaign);
-  }, [newCampaign, createMutation]);
+  const handleCreate = form.handleSubmit((data) => {
+    createMutation.mutate(data);
+  });
 
   const handleDelete = useCallback(
     (campaignId: string) => {
@@ -139,6 +146,11 @@ export default function MarketingPage() {
     },
     [deleteMutation],
   );
+  useEffect(() => {
+    if (showCreateDialog) {
+      form.reset();
+    }
+  }, [showCreateDialog, form]);
 
   if (!loading && !isAdmin) {
     return (
@@ -317,31 +329,41 @@ export default function MarketingPage() {
           </DetailDrawer.Description>
         </DetailDrawer.Header>
         <DetailDrawer.Body>
-          <div className="flex flex-col gap-4">
-            <Input
-              placeholder="Campaign name"
-              value={newCampaign.name}
-              onChange={(e) =>
-                setNewCampaign((prev) => ({ ...prev, name: e.target.value }))
-              }
-            />
-            <Select
-              value={newCampaign.type}
-              onValueChange={(value) =>
-                setNewCampaign((prev) => ({ ...prev, type: value ?? "email" }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="sms">SMS</SelectItem>
-                <SelectItem value="push">Push Notification</SelectItem>
-                <SelectItem value="all">All Channels</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <FieldGroup>
+              <Field data-invalid={!!form.formState.errors.name}>
+                <FieldLabel>
+                  Campaign Name <span className="text-destructive">*</span>
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    placeholder="Campaign name"
+                    {...form.register("name")}
+                  />
+                  {form.formState.errors.name && (
+                    <FieldError>{form.formState.errors.name.message}</FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>Type</FieldLabel>
+                <FieldContent>
+                  <Select
+                    value={form.watch("type")}
+                    onValueChange={(v) => form.setValue("type", v ?? "email")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="sms">SMS</SelectItem>
+                      <SelectItem value="push">Push Notification</SelectItem>
+                      <SelectItem value="all">All Channels</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FieldContent>
+              </Field>
+            </FieldGroup>
         </DetailDrawer.Body>
         <DetailDrawer.Footer>
           <DetailDrawer.FooterActions>

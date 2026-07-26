@@ -9,7 +9,7 @@ import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
-import { useForm } from "@/lib/hooks/use-form";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
 import { reportServerError } from "@/lib/sentry-report-server";
@@ -27,6 +27,7 @@ import { type BayPaymentMethod, PAYMENT_METHODS } from "./_schema";
 const readyForPickupSchema = z.object({
   odometer: z.string().optional(),
   mechanicNotes: z.string().optional(),
+  paymentMethod: z.enum(PAYMENT_METHODS),
   transferBankId: z.string().optional(),
 });
 
@@ -73,40 +74,38 @@ export function ReadyForPickupForm({
     key: string,
     values?: Record<string, string | number>,
   ) => string;
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const defaultTransferBank = getDefaultTransferBank(transferBanks);
-
-  const [paymentMethod, setPaymentMethod] =
-    useState<BayPaymentMethod>("bank_transfer");
-
+  const [saving, setSaving] = useState(false);
   const form = useForm<ReadyForPickupFormValues>({
+    resolver: zodResolver(readyForPickupSchema),
     defaultValues: {
       odometer: currentOdometer?.toString() ?? "",
       mechanicNotes: "",
-      transferBankId: defaultTransferBank?.id ?? "",
+      paymentMethod: "bank_transfer",
+      transferBankId: getDefaultTransferBank(transferBanks)?.id ?? "",
     },
   });
+  const watchedPaymentMethod = form.watch("paymentMethod");
   const transferBankId = form.watch("transferBankId");
   const odometerValue = Number(form.watch("odometer")) || 0;
-  const feePercent = paymentMethodFees[paymentMethod] ?? 0;
+  const feePercent = paymentMethodFees[watchedPaymentMethod] ?? 0;
   const feeAmount = useMemo(
-    () => computePaymentFeeAmount(grandTotal, paymentMethod, paymentMethodFees),
-    [grandTotal, paymentMethod, paymentMethodFees],
+    () => computePaymentFeeAmount(grandTotal, watchedPaymentMethod, paymentMethodFees),
+    [grandTotal, watchedPaymentMethod, paymentMethodFees],
   );
   const totalDue = useMemo(
-    () => computePaymentTotal(grandTotal, paymentMethod, paymentMethodFees),
-    [grandTotal, paymentMethod, paymentMethodFees],
+    () => computePaymentTotal(grandTotal, watchedPaymentMethod, paymentMethodFees),
+    [grandTotal, watchedPaymentMethod, paymentMethodFees],
   );
 
   const defaultBank = getDefaultTransferBank(transferBanks);
 
   // Auto-select default bank when switching to bank_transfer
   useEffect(() => {
-    if (paymentMethod === "bank_transfer" && !transferBankId && defaultBank) {
+    if (watchedPaymentMethod === "bank_transfer" && !transferBankId && defaultBank) {
       form.setValue("transferBankId", defaultBank.id);
     }
-  }, [paymentMethod, transferBankId, defaultBank, form.setValue]);
+  }, [watchedPaymentMethod, transferBankId, defaultBank, form.setValue]);
 
   const onSubmit = form.handleSubmit(async (data) => {
     const odometerReading = data.odometer?.trim()
@@ -127,7 +126,7 @@ export function ReadyForPickupForm({
     }
 
     if (
-      paymentMethod === "bank_transfer" &&
+      data.paymentMethod === "bank_transfer" &&
       transferBanks.length > 0 &&
       !data.transferBankId
     ) {
@@ -141,7 +140,7 @@ export function ReadyForPickupForm({
       await onConfirm({
         odometerReading,
         mechanicNotes: data.mechanicNotes?.trim() ?? "",
-        paymentMethod,
+        paymentMethod: data.paymentMethod,
         transferBankId: data.transferBankId || null,
       });
     } catch (err) {
@@ -221,12 +220,12 @@ export function ReadyForPickupForm({
                 <div className="flex items-center gap-px rounded-lg border border-border/50 bg-muted/40 p-0.5">
                   {PAYMENT_METHODS.map((method) => {
                     const methodFee = paymentMethodFees[method] ?? 0;
-                    const isActive = paymentMethod === method;
+                    const isActive = watchedPaymentMethod === method;
                     return (
                       <button
                         key={method}
                         type="button"
-                        onClick={() => setPaymentMethod(method)}
+                        onClick={() => form.setValue("paymentMethod", method)}
                         className={cn(
                           "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-[color,background-color] duration-200 cursor-pointer",
                           isActive
@@ -282,7 +281,7 @@ export function ReadyForPickupForm({
               </FieldContent>
             </Field>
 
-            {paymentMethod === "bank_transfer" && (
+            {watchedPaymentMethod === "bank_transfer" && (
               <TransferBankPicker
                 banks={transferBanks}
                 value={transferBankId ?? null}

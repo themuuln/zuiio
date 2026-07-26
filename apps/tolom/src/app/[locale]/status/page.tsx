@@ -37,18 +37,18 @@ async function StatusContent({ locale }: { locale: string }) {
   "use cache";
   cacheLife("hourly");
 
-  const t = (await getTranslations({ locale: locale as "mn" | "en", namespace: "status" })) as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const appT = (await getTranslations({ locale: locale as "mn" | "en", namespace: "app" })) as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const _authT = (await getTranslations({ locale: locale as "mn" | "en", namespace: "auth" })) as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "status",
+  })) as (key: string, values?: Record<string, string | number>) => string;
+  const appT = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "app",
+  })) as (key: string, values?: Record<string, string | number>) => string;
+  const _authT = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "auth",
+  })) as (key: string, values?: Record<string, string | number>) => string;
 
   return (
     <div className="flex min-h-dvh flex-col">

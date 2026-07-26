@@ -21,7 +21,7 @@ test.describe("Authentication Flows", () => {
     test("renders the login form with email and password", async ({ page }) => {
       await expect(page.getByRole("textbox", { name: /email/i })).toBeVisible();
       await expect(
-        page.getByRole("textbox", { name: "Password *" }),
+        page.getByRole("textbox", { name: "Password *", exact: true }),
       ).toBeVisible();
       await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
     });

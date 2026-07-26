@@ -33,6 +33,7 @@ export default defineConfig({
           globals: true,
           css: false,
           setupFiles: ["./src/test/setup-node.ts"],
+          unstubEnvs: true,
         },
       },
       {

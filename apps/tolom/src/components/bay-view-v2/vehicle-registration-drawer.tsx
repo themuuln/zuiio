@@ -496,7 +496,7 @@ export function VehicleRegistrationDrawer({
     <DetailDrawer
       open={open}
       onOpenChange={onOpenChange}
-      size="5xl"
+      size="full"
       modal={false}
     >
       {/* ── Header ──────────────────────────────────────────── */}

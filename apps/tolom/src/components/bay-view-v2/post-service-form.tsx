@@ -15,11 +15,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  DetailDrawer,
+} from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
@@ -525,29 +522,24 @@ export function PostServiceForm({
   const isComplete = newStatus === "Completed";
 
   return (
-    <Dialog
+    <DetailDrawer
       open
       onOpenChange={(next) => {
         if (!next) onCancel();
       }}
     >
-      <DialogContent
-        className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
-        showCloseButton={false}
-      >
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="flex items-center gap-2">
-            <Car className="size-4 text-muted-foreground" />
-            {isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
-          </DialogTitle>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1">
-              {vehiclePlate}
-            </span>
-          </div>
-        </DialogHeader>
+      <DetailDrawer.Header>
+        <DetailDrawer.Title className="flex items-center gap-2">
+          <Car className="size-4 text-muted-foreground" />
+          {isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
+          <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1 ml-1">
+            {vehiclePlate}
+          </span>
+        </DetailDrawer.Title>
+      </DetailDrawer.Header>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <DetailDrawer.Body>
+        <form id="post-service-form" onSubmit={onSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Left column */}
             <div className="flex flex-col gap-4">
@@ -727,35 +719,37 @@ export function PostServiceForm({
               </Typography.Text>
             </div>
           )}
-
-          {/* Actions */}
-          <div className="flex gap-3 justify-end pt-3 border-t">
-            <Button
-              variant="outline"
-              onClick={onCancel}
-              type="button"
-              size="default"
-              disabled={saving}
-              className="h-10 min-w-[100px]"
-            >
-              {t("cancel")}
-            </Button>
-            <Button
-              type="submit"
-              size="default"
-              disabled={saving}
-              className="h-10 min-w-[140px]"
-            >
-              {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
-              {saving
-                ? t("postServiceSaving")
-                : isComplete
-                  ? t("complete")
-                  : t("markReady")}
-            </Button>
-          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+
+      <DetailDrawer.Footer>
+        <DetailDrawer.FooterActions justify="end">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            type="button"
+            size="default"
+            disabled={saving}
+            className="h-10 min-w-[100px]"
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            type="submit"
+            form="post-service-form"
+            size="default"
+            disabled={saving}
+            className="h-10 min-w-[140px]"
+          >
+            {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
+            {saving
+              ? t("postServiceSaving")
+              : isComplete
+                ? t("complete")
+                : t("markReady")}
+          </Button>
+        </DetailDrawer.FooterActions>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

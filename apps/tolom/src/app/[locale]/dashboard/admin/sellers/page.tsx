@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Loader2, Plus, ShieldAlert, Users, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useAdminMe } from "@/lib/queries/use-admin";
+import { z } from "zod";
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 
 interface Org {
   id: string;
@@ -44,9 +47,16 @@ interface Assignment {
 export default function SellersPage() {
   const queryClient = useQueryClient();
   const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
 
   const { data: meData, isLoading: meLoading } = useAdminMe();
+  const assignSchema = z.object({
+    organization_id: z.string().min(1, "Please select an organization"),
+  });
+
+  const form = useForm({
+    resolver: zodResolver(assignSchema),
+    defaultValues: { organization_id: "" },
+  });
 
   const { data: sellerData, isLoading: sellersLoading } = useQuery({
     queryKey: ["admin", "sellers"],
@@ -71,8 +81,8 @@ export default function SellersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "sellers"] });
+      form.reset();
       setShowAssignDialog(false);
-      setSelectedOrgId("");
       toast.success("Organization assigned");
     },
     onError: (err) => {
@@ -97,6 +107,11 @@ export default function SellersPage() {
       toast.error(err instanceof Error ? err.message : "Failed to remove");
     },
   });
+  useEffect(() => {
+    if (showAssignDialog) {
+      form.reset();
+    }
+  }, [showAssignDialog, form]);
 
   const loading = meLoading || sellersLoading;
   const isAdmin = meData?.isAdmin === true;
@@ -266,21 +281,31 @@ export default function SellersPage() {
           </DetailDrawer.Description>
         </DetailDrawer.Header>
         <DetailDrawer.Body>
-          <Select
-            value={selectedOrgId}
-            onValueChange={(v) => setSelectedOrgId(v ?? "")}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select organization" />
-            </SelectTrigger>
-            <SelectContent>
-              {organizations.map((org) => (
-                <SelectItem key={org.id} value={org.id}>
-                  {org.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Field data-invalid={!!form.formState.errors.organization_id}>
+            <FieldLabel>
+              Organization <span className="text-destructive">*</span>
+            </FieldLabel>
+            <FieldContent>
+              <Select
+                value={form.watch("organization_id")}
+                onValueChange={(v) => form.setValue("organization_id", v ?? "", { shouldValidate: true })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select organization" />
+                </SelectTrigger>
+                <SelectContent>
+                  {organizations.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.organization_id && (
+                <FieldError>{form.formState.errors.organization_id.message}</FieldError>
+              )}
+            </FieldContent>
+          </Field>
         </DetailDrawer.Body>
         <DetailDrawer.Footer>
           <DetailDrawer.FooterActions>
@@ -291,9 +316,9 @@ export default function SellersPage() {
               Cancel
             </Button>
             <Button
-              onClick={() => assignMutation.mutate(selectedOrgId)}
+              onClick={form.handleSubmit((data) => assignMutation.mutate(data.organization_id))}
               size="lg"
-              disabled={!selectedOrgId || assignMutation.isPending}
+              disabled={!form.watch("organization_id") || assignMutation.isPending}
             >
               {assignMutation.isPending && (
                 <Loader2 className="size-4 mr-1 animate-spin" />

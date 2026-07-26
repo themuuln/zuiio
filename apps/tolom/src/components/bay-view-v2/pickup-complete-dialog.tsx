@@ -1,28 +1,31 @@
 "use client";
 
-import {
-  CalendarIcon,
-  CheckCircle2,
-  Loader2,
-  MessageSquare,
-  Star,
-} from "lucide-react";
+import { AlertTriangle, CalendarIcon, CheckCircle2, Loader2, MessageSquare, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { z } from "zod";
 import { AppointmentDatePicker } from "@/components/ui/appointment-date-picker";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
+import { useForm } from "@/lib/hooks/use-form";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { cn } from "@/lib/utils";
+
+// ── Schema ───────────────────────────────────────────────────
+
+const pickupCompleteSchema = z.object({
+  satisfaction: z.number().nullable(),
+  feedback: z.string().optional(),
+  appointmentDate: z.string().optional(),
+});
+
+type PickupCompleteFormValues = z.infer<typeof pickupCompleteSchema>;
+
+// ── Types ──────────────────────────────────────────────────
 
 export interface PickupCompleteData {
   customerSatisfaction: number | null;
@@ -38,6 +41,8 @@ interface Props {
   totalCost: number;
   onConfirm: (data: PickupCompleteData) => Promise<void>;
 }
+
+// ── Star Rating Component ────────────────────────────────
 
 function StarRating({
   value,
@@ -74,6 +79,8 @@ function StarRating({
   );
 }
 
+// ── Component ──────────────────────────────────────────────
+
 export function PickupCompleteDialog({
   open,
   onOpenChange,
@@ -83,32 +90,29 @@ export function PickupCompleteDialog({
   onConfirm,
 }: Props) {
   const t = useTranslations("bayView");
-  const [satisfaction, setSatisfaction] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState("");
-  const [appointmentDate, setAppointmentDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const now = useClientNow();
 
-  // Reset state on open
-  useEffect(() => {
-    if (open) {
-      setSatisfaction(null);
-      setFeedback("");
-      setAppointmentDate("");
-      setSaving(false);
-      setError(null);
-    }
-  }, [open]);
+  const form = useForm<PickupCompleteFormValues>({
+    defaultValues: {
+      satisfaction: null,
+      feedback: "",
+      appointmentDate: "",
+    },
+  });
 
-  async function handleSubmit() {
+  const satisfaction = form.watch("satisfaction");
+  const appointmentDate = form.watch("appointmentDate");
+
+  const submitHandler = async (data: PickupCompleteFormValues) => {
     setSaving(true);
     setError(null);
     try {
       await onConfirm({
-        customerSatisfaction: satisfaction,
-        customerFeedback: feedback.trim(),
-        nextAppointmentDate: appointmentDate || null,
+        customerSatisfaction: data.satisfaction,
+        customerFeedback: data.feedback?.trim() ?? "",
+        nextAppointmentDate: data.appointmentDate || null,
       });
     } catch (err) {
       reportServerError("Unexpected error", err);
@@ -117,119 +121,154 @@ export function PickupCompleteDialog({
       );
       setSaving(false);
     }
-  }
+  };
+
+  const onSubmit = form.handleSubmit(submitHandler);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <CheckCircle2 className="size-4 text-emerald-500" />
-            {t("pickupCompleteTitle")}
-            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 px-2 py-1 ml-1">
-              {vehiclePlate}
-            </span>
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            {t("pickupCompleteTitle")} — {vehiclePlate}
-          </DialogDescription>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="sm">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title className="flex items-center gap-2 text-base">
+          <CheckCircle2 className="size-4 text-emerald-500" />
+          {t("pickupCompleteTitle")}
+          <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 px-2 py-1 ml-1">
+            {vehiclePlate}
+          </span>
+        </DetailDrawer.Title>
+      </DetailDrawer.Header>
 
-        <div className="flex flex-col gap-5">
+      <DetailDrawer.Body>
+        <form id="pickup-complete-form" onSubmit={onSubmit} className="flex flex-col gap-5">
           {/* Satisfaction */}
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+          <Field>
+            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <Star className="size-4" />
               {t("pickupSummarySatisfaction")}
               <span className="text-[10px] font-normal text-muted-foreground/60">
                 ({t("optional")})
               </span>
-            </Label>
-            <div className="flex items-center gap-3">
-              <StarRating value={satisfaction} onChange={setSatisfaction} />
-              {satisfaction != null && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs text-muted-foreground"
-                  onClick={() => setSatisfaction(null)}
-                >
-                  {t("clearDate")}
-                </Button>
-              )}
-            </div>
-          </div>
+            </FieldLabel>
+            <FieldContent>
+              <div className="flex items-center gap-3">
+                <StarRating
+                  value={satisfaction}
+                  onChange={(v) => form.setValue("satisfaction", v)}
+                />
+                {satisfaction != null && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-muted-foreground"
+                    onClick={() => form.setValue("satisfaction", null)}
+                  >
+                    {t("clearDate")}
+                  </Button>
+                )}
+              </div>
+            </FieldContent>
+          </Field>
 
           {/* Feedback */}
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+          <Field data-invalid={!!form.formState.errors.feedback}>
+            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <MessageSquare className="size-4" />
               {t("pickupSummaryFeedback")}
               <span className="text-[10px] font-normal text-muted-foreground/60">
                 ({t("optional")})
               </span>
-            </Label>
-            <Input
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder={`${t("pickupSummaryFeedback")}...`}
-            />
-          </div>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder={`${t("pickupSummaryFeedback")}...`}
+                className="h-10"
+                aria-invalid={!!form.formState.errors.feedback}
+                {...form.register("feedback")}
+              />
+              {form.formState.errors.feedback && (
+                <FieldError>
+                  {form.formState.errors.feedback.message}
+                </FieldError>
+              )}
+            </FieldContent>
+          </Field>
 
           {/* Next appointment */}
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+          <Field data-invalid={!!form.formState.errors.appointmentDate}>
+            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <CalendarIcon className="size-4" />
               {t("pickupSummaryAppointmentDate")}
               <span className="text-[10px] font-normal text-muted-foreground/60">
                 ({t("optional")})
               </span>
-            </Label>
-            <AppointmentDatePicker
-              value={appointmentDate ? new Date(appointmentDate) : undefined}
-              onChange={(d) =>
-                setAppointmentDate(d ? d.toISOString().split("T")[0] : "")
-              }
-              minDate={now}
-              className="w-full"
-            />
-          </div>
+            </FieldLabel>
+            <FieldContent>
+              <AppointmentDatePicker
+                value={appointmentDate ? new Date(appointmentDate) : undefined}
+                onChange={(d) =>
+                  form.setValue(
+                    "appointmentDate",
+                    d ? d.toISOString().split("T")[0] : "",
+                  )
+                }
+                minDate={now}
+                className="w-full h-10"
+              />
+              {form.formState.errors.appointmentDate && (
+                <FieldError>
+                  {form.formState.errors.appointmentDate.message}
+                </FieldError>
+              )}
+            </FieldContent>
+          </Field>
 
           {/* Error */}
           {error && (
-            <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3 text-xs text-red-700 dark:text-red-400">
-              {error}
+            <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
+              <AlertTriangle className="mt-1 size-4 shrink-0 text-red-500" />
+              <Typography.Text className="text-xs text-red-700 dark:text-red-400">
+                {error}
+              </Typography.Text>
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex gap-2 justify-between pt-2 border-t">
+          {/* Skip review — submit with current values (optional fields stay empty) */}
+          <div className="flex justify-center">
             <Button
+              type="button"
               variant="ghost"
-              onClick={handleSubmit}
+              onClick={() => form.handleSubmit(submitHandler)()}
               size="sm"
               disabled={saving}
-              className="text-muted-foreground text-xs"
+              className="text-muted-foreground/60 hover:text-muted-foreground text-xs"
             >
               {t("skipReview")}
             </Button>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                size="default"
-                disabled={saving}
-              >
-                {t("cancel")}
-              </Button>
-              <Button onClick={handleSubmit} size="default" disabled={saving}>
-                {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
-                {saving ? t("saving") : t("complete")}
-              </Button>
-            </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </form>
+      </DetailDrawer.Body>
+
+      <DetailDrawer.Footer>
+        <DetailDrawer.FooterActions justify="end">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            size="default"
+            disabled={saving}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            type="submit"
+            form="pickup-complete-form"
+            size="default"
+            disabled={saving}
+          >
+            {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
+            {saving ? t("saving") : t("complete")}
+          </Button>
+        </DetailDrawer.FooterActions>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

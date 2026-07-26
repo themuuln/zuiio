@@ -81,7 +81,7 @@ test.describe("Inventory Purchase Orders (Mocked)", () => {
   });
 
   test("loads the purchase orders page without crashing", async ({ page }) => {
-    await expect(page.locator("body")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: /purchase order/i })).toBeVisible({ timeout: 10_000 });
     expect(page.url()).toContain("/purchase-orders");
   });
 });
@@ -97,7 +97,7 @@ test.describe("Inventory Suppliers (Mocked)", () => {
   });
 
   test("loads the suppliers page without crashing", async ({ page }) => {
-    await expect(page.locator("body")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: /supplier/i })).toBeVisible({ timeout: 10_000 });
     expect(page.url()).toContain("/suppliers");
   });
 });
@@ -113,7 +113,7 @@ test.describe("Inventory Alerts (Mocked)", () => {
   });
 
   test("loads the alerts page without crashing", async ({ page }) => {
-    await expect(page.locator("body")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: /alert/i })).toBeVisible({ timeout: 10_000 });
     expect(page.url()).toContain("/alerts");
   });
 });

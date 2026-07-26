@@ -210,6 +210,26 @@ export async function createTestWorkOrder(
 }
 
 /**
+ * Create a test part (parts_catalog entry) for an organization.
+ */
+export async function createTestPart(admin: SupabaseClient, orgId: string) {
+  const { data, error } = await admin
+    .from("parts_catalog")
+    .insert({
+      organization_id: orgId,
+      name: `Test Part ${Date.now()}`,
+      part_number: `TP-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      unit: "piece",
+      default_price: Math.floor(Math.random() * 100000) + 1000,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to create part: ${error.message}`);
+  return { partId: data.id };
+}
+
+/**
  * Clean up a created record by id (admin/service-role client bypasses RLS).
  */
 export async function deleteRecord(

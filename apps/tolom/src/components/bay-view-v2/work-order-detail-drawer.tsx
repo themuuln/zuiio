@@ -61,7 +61,7 @@ export function WorkOrderDetailDrawer({
   assignMechanicMutation: drawerAssignMechanicMutation,
   assignCustomerMutation: drawerAssignCustomerMutation,
 }: WorkOrderDetailDrawerProps) {
-  const t = useTranslations("bayView");
+  const t = useTranslations("bayView") as (key: string, params?: Record<string, string | number | Date>) => string;
 
   const queryClient = useQueryClient();
 
@@ -613,6 +613,7 @@ export function WorkOrderDetailDrawer({
         <CatalogPickerDrawer
           open={showAddService}
           onOpenChange={handleServiceDrawerOpenChange}
+          title={t("services")}
           items={catalog}
           search={serviceSearch}
           onSearchChange={setServiceSearch}
@@ -638,6 +639,7 @@ export function WorkOrderDetailDrawer({
         <CatalogPickerDrawer
           open={showAddPart}
           onOpenChange={handlePartDrawerOpenChange}
+          title={t("parts")}
           items={partsCatalog}
           search={partSearch}
           onSearchChange={setPartSearch}

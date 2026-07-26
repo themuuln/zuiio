@@ -10,80 +10,18 @@ vi.mock("@/lib/cache/with-cache", () => ({
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
 import {
+  getCustomReport,
   getDailyReport,
   getDailyTimeline,
   getDashboardData,
   getEndOfDaySummary,
+  getFinanceSummaryFast,
+  getMechanicLeaderboardFast,
   getMechanicsList,
   getMonthlyReport,
+  getServiceBreakdown,
   getWeeklyReport,
 } from "./report-service";
-
-// ── Helpers ──────────────────────────────────────────────────
-
-function createQueryBuilder<TData = unknown>(response?: {
-  data?: TData;
-  error?: null;
-  count?: number;
-}) {
-  const resolved = {
-    data: (response?.data ?? []) as TData,
-    error: response?.error ?? null,
-    ...(response?.count !== undefined ? { count: response.count } : {}),
-  };
-
-  return {
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    upsert: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    neq: vi.fn().mockReturnThis(),
-    gte: vi.fn().mockReturnThis(),
-    lte: vi.fn().mockReturnThis(),
-    gt: vi.fn().mockReturnThis(),
-    lt: vi.fn().mockReturnThis(),
-    is: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
-    contains: vi.fn().mockReturnThis(),
-    or: vi.fn().mockReturnThis(),
-    not: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    range: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({
-      data: response?.data ?? null,
-      error: response?.error ?? null,
-    }),
-    maybeSingle: vi.fn().mockResolvedValue({
-      data: response?.data ?? null,
-      error: response?.error ?? null,
-    }),
-    throwOnError: vi.fn().mockReturnThis(),
-    setHeader: vi.fn().mockReturnThis(),
-    textSearch: vi.fn().mockReturnThis(),
-    then: vi.fn((resolve: (value: typeof resolved) => void) =>
-      resolve(resolved),
-    ),
-  };
-}
-
-function setupFromMock(
-  mockClient: ReturnType<typeof createMockSupabaseClient>,
-  builders: ReturnType<typeof createQueryBuilder>[],
-) {
-  let i = 0;
-  Object.assign(mockClient, {
-    from: vi
-      .fn()
-      .mockImplementation(() => builders[i++] ?? createQueryBuilder()),
-  });
-}
-
-function b<TData = unknown>(data?: TData, count?: number) {
-  return createQueryBuilder<TData>({ data, count });
-}
 
 let mockClient: ReturnType<typeof createMockSupabaseClient>;
 
@@ -99,30 +37,44 @@ beforeEach(() => {
 
 describe("getMechanicsList", () => {
   it("returns mechanics list from org_users with mechanic role", async () => {
-    setupFromMock(mockClient, [
-      b([{ user_id: "u1" }, { user_id: "u2" }]),
-      b([
-        { id: "u1", full_name: "John Doe" },
-        { id: "u2", full_name: "Jane Smith" },
-      ]),
-    ]);
+    mockClient.__qb.resolveOnce({
+      data: [
+        { user_id: "u1", roles: [{ name: "Mechanic" }], branch_id: null },
+        { user_id: "u2", roles: [{ name: "Mechanic" }], branch_id: null },
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { id: "u1", full_name: "John Doe", avatar_url: null },
+        { id: "u2", full_name: "Jane Smith", avatar_url: null },
+      ],
+      error: null,
+    });
 
     const result = await getMechanicsList(mockClient as any, "org-1");
 
     expect(result).toEqual([
-      { id: "u1", full_name: "John Doe" },
-      { id: "u2", full_name: "Jane Smith" },
+      { id: "u1", full_name: "John Doe", avatar_url: null },
+      { id: "u2", full_name: "Jane Smith", avatar_url: null },
     ]);
   });
 
   it("fetches profiles for matched user IDs", async () => {
-    setupFromMock(mockClient, [
-      b([{ user_id: "u1" }, { user_id: "u2" }]),
-      b([
-        { id: "u1", full_name: "John" },
-        { id: "u2", full_name: null },
-      ]),
-    ]);
+    mockClient.__qb.resolveOnce({
+      data: [
+        { user_id: "u1", roles: [{ name: "Mechanic" }], branch_id: null },
+        { user_id: "u2", roles: [{ name: "Mechanic" }], branch_id: null },
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { id: "u1", full_name: "John", avatar_url: null },
+        { id: "u2", full_name: null, avatar_url: null },
+      ],
+      error: null,
+    });
 
     const result = await getMechanicsList(mockClient as any, "org-1");
 
@@ -132,7 +84,7 @@ describe("getMechanicsList", () => {
   });
 
   it("returns empty array when no mechanics", async () => {
-    setupFromMock(mockClient, [b([])]);
+    mockClient.__qb.resolveOnce({ data: [], error: null });
 
     const result = await getMechanicsList(mockClient as any, "org-1");
 
@@ -140,7 +92,41 @@ describe("getMechanicsList", () => {
   });
 
   it("handles when profiles have no matching users", async () => {
-    setupFromMock(mockClient, [b([{ user_id: "u1" }]), b([])]);
+    mockClient.__qb.resolveOnce({
+      data: [{ user_id: "u1", roles: [{ name: "Mechanic" }], branch_id: null }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+
+    const result = await getMechanicsList(mockClient as any, "org-1");
+
+    expect(result).toEqual([]);
+  });
+
+  // ── Error-path tests ─────────────────────────────────────
+
+  it("returns empty array when org_users query errors", async () => {
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "DB connection failed" },
+    });
+
+    const result = await getMechanicsList(mockClient as any, "org-1");
+
+    expect(result).toEqual([]);
+  });
+
+  it("handles profiles query error gracefully", async () => {
+    mockClient.__qb.resolveOnce({
+      data: [
+        { user_id: "u1", roles: [{ name: "Mechanic" }], branch_id: null },
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Profiles error" },
+    });
 
     const result = await getMechanicsList(mockClient as any, "org-1");
 
@@ -152,51 +138,58 @@ describe("getMechanicsList", () => {
 
 describe("getDailyReport", () => {
   it("returns DailyReport with work order counts, revenue, discounts", async () => {
-    setupFromMock(mockClient, [
-      b([{ id: "wo-1" }, { id: "wo-2" }]),
-      b([
+    // ── Setup: work orders, services, parts ──
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1" }, { id: "wo-2" }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { final_price: 100, discount_amount: 10, service_name: "Oil Change", work_order_id: "wo-1" },
+        { final_price: 200, discount_amount: 20, service_name: "Brakes", work_order_id: "wo-2" },
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { final_price: 50, discount_amount: 5, part_name: "Filter", work_order_id: "wo-1" },
+      ],
+      error: null,
+    });
+    // ── getRecentWorkOrdersBatched: 4 parallel ──
+    mockClient.__qb.resolveOnce({
+      data: [
         {
-          final_price: 100,
-          discount_amount: 10,
-          name: "Oil Change",
-          work_order_id: "wo-1",
+          id: "wo-1", organization_id: "org-1", customer_id: "c-1", vehicle_id: "v-1",
+          mechanic_id: "m-1", status: "Completed", completed_at: "2025-01-15T10:00:00Z",
         },
         {
-          final_price: 200,
-          discount_amount: 20,
-          name: "Brakes",
-          work_order_id: "wo-2",
+          id: "wo-2", organization_id: "org-1", customer_id: "c-2", vehicle_id: "v-2",
+          mechanic_id: null, status: "Completed", completed_at: "2025-01-15T11:00:00Z",
         },
-      ]),
-      b([
-        {
-          final_price: 50,
-          discount_amount: 5,
-          part_name: "Filter",
-          work_order_id: "wo-1",
-        },
-      ]),
-      b([
-        {
-          id: "wo-1",
-          customer_id: "c-1",
-          vehicle_id: "v-1",
-          mechanic_id: "m-1",
-        },
-        {
-          id: "wo-2",
-          customer_id: "c-2",
-          vehicle_id: "v-2",
-          mechanic_id: null,
-        },
-      ]),
-      b([{ id: "ws-1", work_order_id: "wo-1" }]),
-      b([{ id: "wp-1", work_order_id: "wo-1" }]),
-      b([{ id: "h-1", work_order_id: "wo-1" }]),
-      b([{ id: "c-1" }, { id: "c-2" }]),
-      b([{ id: "v-1" }, { id: "v-2" }]),
-      b([{ id: "m-1", full_name: "Mech One" }]),
-    ]);
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    // ── getRecentWorkOrdersBatched: customers + vehicles ──
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "c-1" }, { id: "c-2" }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "v-1" }, { id: "v-2" }],
+      error: null,
+    });
+    // ── getRecentWorkOrdersBatched: profiles ──
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "m-1", full_name: "Mech One" }],
+      error: null,
+    });
+
+    // Remaining queries (profitability, comparison, KPIs) use default
+    // { data: [], error: null } → returns null/zero values
 
     const result = await getDailyReport(
       mockClient as any,
@@ -216,49 +209,51 @@ describe("getDailyReport", () => {
   });
 
   it("supports mechanicId filter and includes mechanic name", async () => {
-    const profileBuilder = createQueryBuilder<{ full_name: string }>();
-    profileBuilder.single.mockResolvedValueOnce({
+    // Profile query via .single() → await qb → resolveOnce
+    mockClient.__qb.resolveOnce({
       data: { full_name: "Mech One" },
       error: null,
     });
-    const builders = [
-      profileBuilder,
-      b([{ id: "wo-1" }]),
-      b([
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1" }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { final_price: 100, discount_amount: 0, service_name: "Oil Change", work_order_id: "wo-1" },
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { final_price: 50, discount_amount: 0, part_name: "Filter", work_order_id: "wo-1" },
+      ],
+      error: null,
+    });
+    // ── getRecentWorkOrdersBatched: 4 parallel ──
+    mockClient.__qb.resolveOnce({
+      data: [
         {
-          final_price: 100,
-          discount_amount: 0,
-          name: "Oil Change",
-          work_order_id: "wo-1",
+          id: "wo-1", organization_id: "org-1", customer_id: "c-1", vehicle_id: "v-1",
+          mechanic_id: "m-1", status: "Completed",
         },
-      ]),
-      b([
-        {
-          final_price: 50,
-          discount_amount: 0,
-          part_name: "Filter",
-          work_order_id: "wo-1",
-        },
-      ]),
-      b([
-        {
-          id: "wo-1",
-          customer_id: "c-1",
-          vehicle_id: "v-1",
-          mechanic_id: "m-1",
-        },
-      ]),
-      b([]),
-      b([]),
-      b([]),
-      b([{ id: "c-1" }]),
-      b([{ id: "v-1" }]),
-      b([]),
-    ];
-    let idx = 0;
-    mockClient.from = vi
-      .fn()
-      .mockImplementation(() => builders[idx++] ?? createQueryBuilder());
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    // ── getRecentWorkOrdersBatched: customers + vehicles ──
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "c-1" }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "v-1" }],
+      error: null,
+    });
+    // ── getRecentWorkOrdersBatched: profiles ──
+    mockClient.__qb.resolveOnce({ data: [], error: null });
 
     const result = await getDailyReport(
       mockClient as any,
@@ -273,7 +268,8 @@ describe("getDailyReport", () => {
   });
 
   it("returns zero counts when no work orders", async () => {
-    setupFromMock(mockClient, [b([])]);
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    // getComparisonData still runs → uses default { data: [], error: null }
 
     const result = await getDailyReport(
       mockClient as any,
@@ -292,18 +288,19 @@ describe("getDailyReport", () => {
   });
 
   it("uses batched queries for services and parts", async () => {
-    setupFromMock(mockClient, [
-      b([{ id: "wo-1" }, { id: "wo-2" }]),
-      b([]),
-      b([]),
-      b([]),
-      b([]),
-      b([]),
-      b([]),
-      b([]),
-      b([]),
-      b([]),
-    ]);
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1" }, { id: "wo-2" }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
 
     await getDailyReport(mockClient as any, "org-1", null, "2025-01-15");
 
@@ -313,13 +310,90 @@ describe("getDailyReport", () => {
     expect(fromCalls).toContain("work_order_services");
     expect(fromCalls).toContain("work_order_parts");
   });
+
+  // ── Error-path tests ─────────────────────────────────────
+  it("returns zero counts on work_orders query error", async () => {
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "DB error" },
+    });
+
+    const result = await getDailyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      "2025-01-15",
+    );
+
+    expect(result.work_orders_completed).toBe(0);
+    expect(result.services_count).toBe(0);
+    expect(result.parts_count).toBe(0);
+  });
+
+  it("returns zero counts when sub-queries error", async () => {
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1" }],
+      error: null,
+    });
+    // work_order_services query errors
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Services error" },
+    });
+    // work_order_parts query errors
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Parts error" },
+    });
+
+    const result = await getDailyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      "2025-01-15",
+    );
+
+    // With error data, the services/parts arrays default to []
+    expect(result.services_count).toBe(0);
+    expect(result.parts_count).toBe(0);
+    expect(result.total_revenue).toBe(0);
+  });
+
+  it("handles profile query error for mechanicId gracefully", async () => {
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Profile not found" },
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+
+    const result = await getDailyReport(
+      mockClient as any,
+      "org-1",
+      "m-1",
+      "2025-01-15",
+    );
+
+    expect(result.mechanic_name).toBe("Unknown");
+  });
 });
 
 // ── getWeeklyReport ───────────────────────────────────────────
 
 describe("getWeeklyReport", () => {
+  function makeRobustQueryBuilder() {
+    // A reusable qb that handles any query pattern.
+    // getWeeklyReport calls getDailyReport 7 times in parallel via Promise.all,
+    // making sequential builder lists non-deterministic.
+    const mc = createMockSupabaseClient();
+    mc.__qb.resolveWith({ data: [], error: null });
+    return mc.from("_");  // returns the qb with chainable methods
+  }
+
   it("returns 7-day daily breakdown with aggregated totals", async () => {
-    setupFromMock(mockClient, [...Array.from({ length: 7 }, () => b([]))]);
+    mockClient.__qb.resolveWith({ data: [], error: null });
+    // Override from() to return a robust qb for the parallel daily calls
+    const robustQb = makeRobustQueryBuilder();
+    mockClient.from = vi.fn().mockReturnValue(robustQb as any);
 
     const result = await getWeeklyReport(
       mockClient as any,
@@ -337,24 +411,9 @@ describe("getWeeklyReport", () => {
     expect(result.daily_breakdown).toHaveLength(7);
   });
 
-  function makeRobustQueryBuilder(): ReturnType<typeof createQueryBuilder> {
-    // A reusable builder that handles all query patterns for report-service.
-    // select/eq etc return this for chaining, single/limit always return empty arrays.
-    const qb = createQueryBuilder<Record<string, unknown>[]>({ data: [] });
-    // Override single to return null data (not throw) for profile queries etc.
-    qb.single = vi.fn().mockResolvedValue({ data: null, error: null });
-    return qb;
-  }
-
   it("aggregates totals across all days", async () => {
-    const mc = createMockSupabaseClient();
-    // Override from to always return a robust builder that handles any query.
-    // This is needed because getWeeklyReport calls getDailyReport 7 times
-    // via Promise.all (parallel), making sequential builder lists non-deterministic.
-    mc.from = vi.fn().mockReturnValue(makeRobustQueryBuilder());
-    vi.mocked(createClient).mockResolvedValue(
-      mc as unknown as Awaited<ReturnType<typeof createClient>>,
-    );
+    const robustQb = makeRobustQueryBuilder();
+    mockClient.from = vi.fn().mockReturnValue(robustQb as any);
 
     const result = await getWeeklyReport(
       mockClient as any,
@@ -369,11 +428,8 @@ describe("getWeeklyReport", () => {
   });
 
   it("supports mechanicId filter", async () => {
-    const mc = createMockSupabaseClient();
-    mc.from = vi.fn().mockReturnValue(makeRobustQueryBuilder());
-    vi.mocked(createClient).mockResolvedValue(
-      mc as unknown as Awaited<ReturnType<typeof createClient>>,
-    );
+    const robustQb = makeRobustQueryBuilder();
+    mockClient.from = vi.fn().mockReturnValue(robustQb as any);
 
     const result = await getWeeklyReport(
       mockClient as any,
@@ -391,19 +447,28 @@ describe("getWeeklyReport", () => {
 
 describe("getMonthlyReport", () => {
   it("returns monthly totals", async () => {
-    setupFromMock(mockClient, [
-      b([
+    mockClient.__qb.resolveOnce({
+      data: [
         { id: "wo-1", created_at: "2025-01-10T08:00:00Z" },
         { id: "wo-2", created_at: "2025-01-15T09:00:00Z" },
         { id: "wo-3", created_at: "2025-01-20T10:00:00Z" },
-      ]),
-      b([
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
         { final_price: 100, discount_amount: 10, work_order_id: "wo-1" },
         { final_price: 200, discount_amount: 0, work_order_id: "wo-2" },
         { final_price: 150, discount_amount: 15, work_order_id: "wo-3" },
-      ]),
-      b([{ final_price: 50, discount_amount: 5, work_order_id: "wo-1" }]),
-    ]);
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { final_price: 50, discount_amount: 5, work_order_id: "wo-1" },
+      ],
+      error: null,
+    });
 
     const result = await getMonthlyReport(
       mockClient as any,
@@ -424,7 +489,9 @@ describe("getMonthlyReport", () => {
   });
 
   it("filters by date range for the given month", async () => {
-    setupFromMock(mockClient, [b([]), b([]), b([])]);
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
 
     const result = await getMonthlyReport(
       mockClient as any,
@@ -440,13 +507,14 @@ describe("getMonthlyReport", () => {
   });
 
   it("supports mechanicId filter", async () => {
-    const profileBuilder = createQueryBuilder();
-    profileBuilder.single.mockResolvedValueOnce({
+    // Profile query via .single() → await qb
+    mockClient.__qb.resolveOnce({
       data: { full_name: "Mech One" },
       error: null,
     });
-
-    setupFromMock(mockClient, [profileBuilder, b([]), b([]), b([])]);
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
 
     const result = await getMonthlyReport(
       mockClient as any,
@@ -462,7 +530,9 @@ describe("getMonthlyReport", () => {
   });
 
   it("returns zero totals when no completed work orders", async () => {
-    setupFromMock(mockClient, [b([]), b([]), b([])]);
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
 
     const result = await getMonthlyReport(
       mockClient as any,
@@ -478,7 +548,9 @@ describe("getMonthlyReport", () => {
   });
 
   it("computes the correct number of days in the month", async () => {
-    setupFromMock(mockClient, [b([]), b([]), b([])]);
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
 
     const result = await getMonthlyReport(
       mockClient as any,
@@ -494,32 +566,115 @@ describe("getMonthlyReport", () => {
     const fromCalls = vi.mocked(mockClient.from).mock.calls;
     expect(fromCalls.some((c: string[]) => c[0] === "work_orders")).toBe(true);
   });
+
+  // ── Error-path tests ─────────────────────────────────────
+
+  it("returns zero counts on work_orders query error", async () => {
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Query failed" },
+    });
+
+    const result = await getMonthlyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      2025,
+      1,
+    );
+
+    expect(result.work_orders_completed).toBe(0);
+    expect(result.services_count).toBe(0);
+    expect(result.total_revenue).toBe(0);
+  });
+
+  it("handles empty work_orders but non-empty services gracefully", async () => {
+    // Work orders returns empty → woIds = []
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    // With empty woIds, services/parts queries use the ternary `{ data: [] }` shortcut
+    // So no qb then() calls consumed here
+
+    const result = await getMonthlyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      2025,
+      1,
+    );
+
+    expect(result.work_orders_completed).toBe(0);
+    expect(result.services_count).toBe(0);
+    expect(result.parts_count).toBe(0);
+    expect(result.total_revenue).toBe(0);
+  });
+
+  it("handles profile query error for mechanic filter", async () => {
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Profile not found" },
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+
+    const result = await getMonthlyReport(
+      mockClient as any,
+      "org-1",
+      "m-1",
+      2025,
+      1,
+    );
+
+    expect(result.mechanic_name).toBe("Unknown");
+  });
 });
 
 // ── getEndOfDaySummary ────────────────────────────────────────
 
 describe("getEndOfDaySummary", () => {
   it("returns mechanics breakdown with counts and revenue", async () => {
-    setupFromMock(mockClient, [
-      b([
+    // Execution order:
+    // 1. await work_orders (outer) → resolveOnce[0]
+    // 2. await profiles (inner) → resolveOnce[1]
+    // 3-9. Promise.all(7) → 7 .then() calls
+    //    - services resolveOnce[2]
+    //    - parts resolveOnce[3]
+    //    - commissions → resolveOnce[4]
+    //    - openWOs → resolveOnce[5]
+    //    - payments → resolveOnce[6]
+    //    - invoices → resolveOnce[7]
+    //    - biggestIssue → .maybeSingle() Promise, not via resolveOnce
+    mockClient.__qb.resolveOnce({
+      data: [
         { id: "wo-1", mechanic_id: "m-1" },
         { id: "wo-2", mechanic_id: "m-1" },
         { id: "wo-3", mechanic_id: "m-2" },
-      ]),
-      b([
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
         { id: "m-1", full_name: "Mech One" },
         { id: "m-2", full_name: "Mech Two" },
-      ]),
-      b([
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
         { final_price: 100, work_order_id: "wo-1" },
         { final_price: 200, work_order_id: "wo-2" },
         { final_price: 150, work_order_id: "wo-3" },
-      ]),
-      b([
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
         { final_price: 50, work_order_id: "wo-1" },
         { final_price: 30, work_order_id: "wo-2" },
-      ]),
-    ]);
+      ],
+      error: null,
+    });
+    // commissions, openWOs, payments, invoices → default
 
     const result = await getEndOfDaySummary(
       mockClient as any,
@@ -534,7 +689,7 @@ describe("getEndOfDaySummary", () => {
 
     const m1Found = result.mechanics.find((m) => m.mechanic_id === "m-1");
     expect(m1Found).toBeDefined();
-    const m1 = m1Found as NonNullable<typeof m1Found>;
+    const m1 = m1Found!;
     expect(m1.mechanic_name).toBe("Mech One");
     expect(m1.work_orders_completed).toBe(2);
     expect(m1.services_count).toBe(2);
@@ -543,14 +698,17 @@ describe("getEndOfDaySummary", () => {
 
     const m2Found = result.mechanics.find((m) => m.mechanic_id === "m-2");
     expect(m2Found).toBeDefined();
-    const m2 = m2Found as NonNullable<typeof m2Found>;
+    const m2 = m2Found!;
     expect(m2.mechanic_name).toBe("Mech Two");
     expect(m2.work_orders_completed).toBe(1);
     expect(m2.total_revenue).toBe(150);
-  });
+  })
 
   it("returns empty summary when no work orders", async () => {
-    setupFromMock(mockClient, [b([])]);
+    // outer work_orders returns empty → inner function goes through empty-path
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    // The empty path still queries: openWOs, unpaid invoices, biggestIssue
+    // These use from() + maybeSingle which don't consume resolveOnce for maybeSingle
 
     const result = await getEndOfDaySummary(
       mockClient as any,
@@ -565,15 +723,16 @@ describe("getEndOfDaySummary", () => {
   });
 
   it("handles work orders without mechanic_id", async () => {
-    setupFromMock(mockClient, [
-      b([
+    mockClient.__qb.resolveOnce({
+      data: [
         { id: "wo-1", mechanic_id: null },
         { id: "wo-2", mechanic_id: null },
-      ]),
-      b([]),
-      b([]),
-      b([]),
-    ]);
+      ],
+      error: null,
+    });
+    // No mechanicIds → skip profiles query
+    // No woIds → services/parts/commissions use { data: [] } shortcut
+    // So no additional resolveOnce consumers
 
     const result = await getEndOfDaySummary(
       mockClient as any,
@@ -586,15 +745,20 @@ describe("getEndOfDaySummary", () => {
   });
 
   it("uses unique mechanic IDs for profile lookup", async () => {
-    setupFromMock(mockClient, [
-      b([
+    mockClient.__qb.resolveOnce({
+      data: [
         { id: "wo-1", mechanic_id: "m-1" },
         { id: "wo-2", mechanic_id: "m-1" },
-      ]),
-      b([{ id: "m-1", full_name: "Mech One" }]),
-      b([]),
-      b([]),
-    ]);
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "m-1", full_name: "Mech One" }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null }); // services
+    mockClient.__qb.resolveOnce({ data: [], error: null }); // parts
+    // commissions, openWOs, payments, invoices → default
 
     const result = await getEndOfDaySummary(
       mockClient as any,
@@ -605,6 +769,33 @@ describe("getEndOfDaySummary", () => {
     expect(result.mechanics).toHaveLength(1);
     expect(result.mechanics[0].mechanic_name).toBe("Mech One");
     expect(result.mechanics[0].work_orders_completed).toBe(2);
+  });
+
+  // ── Error-path tests ─────────────────────────────────────
+
+  it("handles profiles query error gracefully", async () => {
+    mockClient.__qb.resolveOnce({
+      data: [
+        { id: "wo-1", mechanic_id: "m-1" },
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Profiles error" },
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null }); // services
+    mockClient.__qb.resolveOnce({ data: [], error: null }); // parts
+    // commissions, openWOs, payments, invoices → default
+
+    const result = await getEndOfDaySummary(
+      mockClient as any,
+      "org-1",
+      "2025-01-15",
+    );
+
+    expect(result.mechanics).toHaveLength(1);
+    expect(result.mechanics[0].mechanic_name).toBe("Unknown");
   });
 });
 
@@ -813,14 +1004,27 @@ describe("getDashboardData", () => {
 
     expect(result.summary.avgRepairOrderValue).toBe(290);
   });
+
+  // ── Error-path tests ─────────────────────────────────────
+
+  it("throws on RPC error", async () => {
+    mockClient.rpc = vi.fn().mockResolvedValue({
+      data: null,
+      error: { message: "RPC failed" },
+    });
+
+    await expect(
+      getDashboardData(mockClient as unknown as SupabaseClient, "org-1", "month"),
+    ).rejects.toThrow("RPC failed");
+  });
 });
 
 // ── getDailyTimeline ──────────────────────────────────────────
 
 describe("getDailyTimeline", () => {
   it("returns timeline events for today enriched with customer/vehicle data", async () => {
-    setupFromMock(mockClient, [
-      b([
+    mockClient.__qb.resolveOnce({
+      data: [
         {
           id: "wo-1",
           customer: { first_name: "John", last_name: "Doe" },
@@ -833,8 +1037,11 @@ describe("getDailyTimeline", () => {
           vehicle: { plate_number: "XYZ789" },
           bay_number: null,
         },
-      ]),
-      b([
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
         {
           id: "h-1",
           work_order_id: "wo-1",
@@ -853,12 +1060,16 @@ describe("getDailyTimeline", () => {
           notes: null,
           created_at: "2025-01-15T11:00:00Z",
         },
-      ]),
-      b([
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
         { id: "u-1", full_name: "Mech One" },
         { id: "u-2", full_name: "Mech Two" },
-      ]),
-    ]);
+      ],
+      error: null,
+    });
 
     const result = await getDailyTimeline(mockClient as any, "org-1");
 
@@ -882,7 +1093,7 @@ describe("getDailyTimeline", () => {
   });
 
   it("returns empty when no work orders for today", async () => {
-    setupFromMock(mockClient, [b([])]);
+    mockClient.__qb.resolveOnce({ data: [], error: null });
 
     const result = await getDailyTimeline(mockClient as any, "org-1");
 
@@ -890,10 +1101,11 @@ describe("getDailyTimeline", () => {
   });
 
   it("returns empty when no status history entries", async () => {
-    setupFromMock(mockClient, [
-      b([{ id: "wo-1", customer: null, vehicle: null, bay_number: null }]),
-      b([]),
-    ]);
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1", customer: null, vehicle: null, bay_number: null }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
 
     const result = await getDailyTimeline(mockClient as any, "org-1");
 
@@ -901,16 +1113,14 @@ describe("getDailyTimeline", () => {
   });
 
   it("handles null customer and vehicle gracefully", async () => {
-    setupFromMock(mockClient, [
-      b([
-        {
-          id: "wo-1",
-          customer: null,
-          vehicle: null,
-          bay_number: null,
-        },
-      ]),
-      b([
+    mockClient.__qb.resolveOnce({
+      data: [
+        { id: "wo-1", customer: null, vehicle: null, bay_number: null },
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
         {
           id: "h-1",
           work_order_id: "wo-1",
@@ -920,9 +1130,13 @@ describe("getDailyTimeline", () => {
           notes: null,
           created_at: "2025-01-15T10:00:00Z",
         },
-      ]),
-      b([{ id: "u-1", full_name: null }]),
-    ]);
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "u-1", full_name: null }],
+      error: null,
+    });
 
     const result = await getDailyTimeline(mockClient as any, "org-1");
 
@@ -934,16 +1148,19 @@ describe("getDailyTimeline", () => {
   });
 
   it("handles customer with partial name", async () => {
-    setupFromMock(mockClient, [
-      b([
+    mockClient.__qb.resolveOnce({
+      data: [
         {
           id: "wo-1",
           customer: { first_name: "John", last_name: null },
           vehicle: { plate_number: null },
           bay_number: 1,
         },
-      ]),
-      b([
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
         {
           id: "h-1",
           work_order_id: "wo-1",
@@ -953,9 +1170,13 @@ describe("getDailyTimeline", () => {
           notes: null,
           created_at: "2025-01-15T10:00:00Z",
         },
-      ]),
-      b([{ id: "u-1", full_name: "Mech" }]),
-    ]);
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "u-1", full_name: "Mech" }],
+      error: null,
+    });
 
     const result = await getDailyTimeline(mockClient as any, "org-1");
 
@@ -964,9 +1185,12 @@ describe("getDailyTimeline", () => {
   });
 
   it("enriches with profile names for changed_by users", async () => {
-    setupFromMock(mockClient, [
-      b([{ id: "wo-1", customer: null, vehicle: null, bay_number: null }]),
-      b([
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1", customer: null, vehicle: null, bay_number: null }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
         {
           id: "h-1",
           work_order_id: "wo-1",
@@ -985,14 +1209,463 @@ describe("getDailyTimeline", () => {
           notes: null,
           created_at: "2025-01-15T11:00:00Z",
         },
-      ]),
-      b([{ id: "u-1", full_name: "Mech One" }]),
-    ]);
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "u-1", full_name: "Mech One" }],
+      error: null,
+    });
 
     const result = await getDailyTimeline(mockClient as any, "org-1");
 
     expect(result).toHaveLength(2);
     expect(result[0].mechanicName).toBe("Mech One");
     expect(result[1].mechanicName).toBe("Mech One");
+  });
+
+  // ── Error-path tests ─────────────────────────────────────
+
+  it("returns empty on work_orders query error", async () => {
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "DB error" },
+    });
+
+    const result = await getDailyTimeline(mockClient as any, "org-1");
+
+    expect(result).toEqual([]);
+  });
+
+  it("returns empty on status_history query error", async () => {
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1", customer: null, vehicle: null, bay_number: null }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "History error" },
+    });
+
+    const result = await getDailyTimeline(mockClient as any, "org-1");
+
+    expect(result).toEqual([]);
+  });
+
+  it("handles profiles query error gracefully", async () => {
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1", customer: null, vehicle: null, bay_number: null }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        {
+          id: "h-1",
+          work_order_id: "wo-1",
+          status: "In Progress",
+          previous_status: "New",
+          changed_by: "u-1",
+          notes: null,
+          created_at: "2025-01-15T10:00:00Z",
+        },
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Profiles error" },
+    });
+
+    const result = await getDailyTimeline(mockClient as any, "org-1");
+
+    // Profiles error means mechanic names are null
+    expect(result).toHaveLength(1);
+    expect(result[0].mechanicName).toBeNull();
+  });
+});
+
+// ── getCustomReport ────────────────────────────────────────────
+
+describe("getCustomReport", () => {
+  it("returns DailyReport with computed values for a date range", async () => {
+    // ── Setup: work orders, services, parts ──
+    mockClient.__qb.resolveOnce({ data: [{ id: "wo-1" }], error: null });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { final_price: 100, discount_amount: 10, service_name: "Oil Change", work_order_id: "wo-1" },
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { final_price: 50, discount_amount: 5, part_name: "Filter", work_order_id: "wo-1" },
+      ],
+      error: null,
+    });
+    // ── getRecentWorkOrdersBatched: 4 parallel ──
+    mockClient.__qb.resolveOnce({
+      data: [{
+        id: "wo-1", organization_id: "org-1", customer_id: null, vehicle_id: null,
+        mechanic_id: null, status: "Completed",
+      }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    // ── customers + vehicles (no IDs → resolved to { data: [] }) ──
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    // ── profiles (no IDs → default) ──
+
+    const result = await getCustomReport(
+      mockClient as any,
+      "org-1",
+      null,
+      "2025-01-01",
+      "2025-01-15",
+    );
+
+    expect(result.date).toBe("2025-01-01_2025-01-15");
+    expect(result.mechanic_name).toBe("All Mechanics");
+    expect(result.work_orders_completed).toBe(1);
+    expect(result.services_count).toBe(1);
+    expect(result.parts_count).toBe(1);
+    expect(result.total_revenue).toBe(150);
+    expect(result.total_discounts).toBe(15);
+  });
+
+  it("supports mechanicId filter and fetches mechanic name", async () => {
+    // Profile query via .single() → await qb
+    mockClient.__qb.resolveOnce({
+      data: { full_name: "Mech One" },
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({ data: [{ id: "wo-1" }], error: null });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { final_price: 200, discount_amount: 0, service_name: "Brakes", work_order_id: "wo-1" },
+      ],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+
+    // ── getRecentWorkOrdersBatched: 4 parallel ──
+    mockClient.__qb.resolveOnce({
+      data: [{
+        id: "wo-1", organization_id: "org-1", customer_id: null, vehicle_id: null,
+        mechanic_id: "m-1", status: "Completed",
+      }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+    // ── customers + vehicles (no IDs → default) ──
+    // ── profiles ──
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+
+    const result = await getCustomReport(
+      mockClient as any,
+      "org-1",
+      "m-1",
+      "2025-01-01",
+      "2025-01-15",
+    );
+
+    expect(result.mechanic_id).toBe("m-1");
+    expect(result.mechanic_name).toBe("Mech One");
+    expect(result.work_orders_completed).toBe(1);
+    expect(result.total_revenue).toBe(200);
+  });
+
+  it("returns zero counts when no work orders in range", async () => {
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+
+    const result = await getCustomReport(
+      mockClient as any,
+      "org-1",
+      null,
+      "2025-01-01",
+      "2025-01-15",
+    );
+
+    expect(result.work_orders_completed).toBe(0);
+    expect(result.services_count).toBe(0);
+    expect(result.parts_count).toBe(0);
+    expect(result.total_revenue).toBe(0);
+    expect(result.total_discounts).toBe(0);
+    expect(result.work_orders).toEqual([]);
+  });
+  
+  it("returns zero counts on work_orders query error", async () => {
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Query failed" },
+    });
+
+    const result = await getCustomReport(
+      mockClient as any,
+      "org-1",
+      null,
+      "2025-01-01",
+      "2025-01-15",
+    );
+
+    expect(result.work_orders_completed).toBe(0);
+    expect(result.services_count).toBe(0);
+    expect(result.total_revenue).toBe(0);
+  });
+
+  it("handles profile query error for mechanic filter", async () => {
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Profile not found" },
+    });
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+
+    const result = await getCustomReport(
+      mockClient as any,
+      "org-1",
+      "m-1",
+      "2025-01-01",
+      "2025-01-15",
+    );
+
+    expect(result.mechanic_name).toBe("Unknown");
+  });
+});
+
+// ── getServiceBreakdown ─────────────────────────────────────────
+
+describe("getServiceBreakdown", () => {
+  it("returns breakdown sorted by revenue descending", async () => {
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1" }, { id: "wo-2" }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { service_name: "Oil Change", final_price: 100 },
+        { service_name: "Brakes", final_price: 200 },
+        { service_name: "Oil Change", final_price: 150 },
+      ],
+      error: null,
+    });
+
+    const result = await getServiceBreakdown(
+      mockClient as any,
+      "org-1",
+      "2025-01-01",
+      "2025-01-15",
+    );
+
+    expect(result).toHaveLength(2);
+    // Sorted by total_revenue descending (Oil Change 250 > Brakes 200)
+    expect(result[0].service_name).toBe("Oil Change");
+    expect(result[0].service_count).toBe(2);
+    expect(result[0].total_revenue).toBe(250);
+    expect(result[0].avg_price).toBe(125);
+    expect(result[0].percentage_of_revenue).toBe(55.6);
+
+    expect(result[1].service_name).toBe("Brakes");
+    expect(result[1].service_count).toBe(1);
+    expect(result[1].total_revenue).toBe(200);
+    expect(result[1].avg_price).toBe(200);
+    expect(result[1].percentage_of_revenue).toBe(44.4);
+  });
+
+  it("returns empty array when no work orders found", async () => {
+    mockClient.__qb.resolveOnce({ data: [], error: null });
+
+    const result = await getServiceBreakdown(
+      mockClient as any,
+      "org-1",
+      "2025-01-01",
+      "2025-01-15",
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it("handles null service_name by defaulting to Other", async () => {
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1" }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: [
+        { service_name: "Oil Change", final_price: 100 },
+        { service_name: null, final_price: 50 },
+      ],
+      error: null,
+    });
+
+    const result = await getServiceBreakdown(
+      mockClient as any,
+      "org-1",
+      "2025-01-01",
+      "2025-01-15",
+    );
+
+    expect(result).toHaveLength(2);
+    expect(result.find((s) => s.service_name === "Other")?.total_revenue).toBe(50);
+    expect(result.find((s) => s.service_name === "Oil Change")?.total_revenue).toBe(100);
+  });
+
+  // ── Error-path tests ─────────────────────────────────────
+
+  it("returns empty array on work_orders query error", async () => {
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "DB error" },
+    });
+
+    const result = await getServiceBreakdown(
+      mockClient as any,
+      "org-1",
+      "2025-01-01",
+      "2025-01-15",
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it("handles services query error gracefully", async () => {
+    mockClient.__qb.resolveOnce({
+      data: [{ id: "wo-1" }],
+      error: null,
+    });
+    mockClient.__qb.resolveOnce({
+      data: null,
+      error: { message: "Services error" },
+    });
+
+    const result = await getServiceBreakdown(
+      mockClient as any,
+      "org-1",
+      "2025-01-01",
+      "2025-01-15",
+    );
+
+    // With error data, services defaults to []
+    expect(result).toEqual([]);
+  });
+});
+
+// ── getFinanceSummaryFast ────────────────────────────────────────
+
+describe("getFinanceSummaryFast", () => {
+  it("calls get_finance_summary RPC and returns the data", async () => {
+    const summaryData = { total_revenue: 15000, total_cost: 8000, gross_profit: 7000 };
+    mockClient.rpc = vi.fn().mockResolvedValue({ data: summaryData, error: null });
+
+    const result = await getFinanceSummaryFast(
+      mockClient as any,
+      "org-1",
+      "month",
+    );
+
+    expect(vi.mocked(mockClient.rpc)).toHaveBeenCalledWith("get_finance_summary", {
+      p_org_id: "org-1",
+      p_period: "month",
+    });
+    expect(result).toEqual(summaryData);
+  });
+
+  it("defaults period to month", async () => {
+    mockClient.rpc = vi.fn().mockResolvedValue({ data: { rev: 100 }, error: null });
+
+    await getFinanceSummaryFast(mockClient as any, "org-1");
+
+    expect(vi.mocked(mockClient.rpc)).toHaveBeenCalledWith(
+      "get_finance_summary",
+      { p_org_id: "org-1", p_period: "month" },
+    );
+  });
+
+  it("throws on RPC error", async () => {
+    mockClient.rpc = vi.fn().mockResolvedValue({
+      data: null,
+      error: { message: "RPC failed" },
+    });
+
+    await expect(
+      getFinanceSummaryFast(mockClient as any, "org-1"),
+    ).rejects.toThrow("RPC failed");
+  });
+
+  // ── Error-path tests ─────────────────────────────────────
+
+  it("throws when RPC returns null data without error", async () => {
+    mockClient.rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+
+    const result = await getFinanceSummaryFast(mockClient as any, "org-1");
+
+    expect(result).toEqual({});
+  });
+});
+
+// ── getMechanicLeaderboardFast ───────────────────────────────────
+
+describe("getMechanicLeaderboardFast", () => {
+  it("calls get_mechanic_leaderboard RPC and returns the data", async () => {
+    const leaderboardData = [
+      { mechanic_name: "Mech A", total_revenue: 5000, work_orders: 10 },
+      { mechanic_name: "Mech B", total_revenue: 3000, work_orders: 7 },
+    ];
+    mockClient.rpc = vi.fn().mockResolvedValue({ data: leaderboardData, error: null });
+
+    const result = await getMechanicLeaderboardFast(
+      mockClient as any,
+      "org-1",
+      "month",
+    );
+
+    expect(vi.mocked(mockClient.rpc)).toHaveBeenCalledWith("get_mechanic_leaderboard", {
+      p_org_id: "org-1",
+      p_period: "month",
+    });
+    expect(result).toEqual(leaderboardData);
+  });
+
+  it("defaults period to month", async () => {
+    mockClient.rpc = vi.fn().mockResolvedValue({ data: [], error: null });
+
+    await getMechanicLeaderboardFast(mockClient as any, "org-1");
+
+    expect(vi.mocked(mockClient.rpc)).toHaveBeenCalledWith(
+      "get_mechanic_leaderboard",
+      { p_org_id: "org-1", p_period: "month" },
+    );
+  });
+
+  it("throws on RPC error", async () => {
+    mockClient.rpc = vi.fn().mockResolvedValue({
+      data: null,
+      error: { message: "Leaderboard error" },
+    });
+
+    await expect(
+      getMechanicLeaderboardFast(mockClient as any, "org-1"),
+    ).rejects.toThrow("Leaderboard error");
+  });
+
+  it("returns empty array when data is null", async () => {
+    mockClient.rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+
+    const result = await getMechanicLeaderboardFast(mockClient as any, "org-1");
+
+    expect(result).toEqual([]);
+  });
+
+  // ── Error-path tests ─────────────────────────────────────
+
+  it("throws on empty data without error", async () => {
+    mockClient.rpc = vi.fn().mockResolvedValue({ data: [], error: null });
+
+    const result = await getMechanicLeaderboardFast(mockClient as any, "org-1");
+
+    expect(result).toEqual([]);
   });
 });

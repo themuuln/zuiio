@@ -33,7 +33,9 @@ Load skills BEFORE coding. Earlier skills set context for later ones.
 | UI (component/page/form/dialog) | `tolom-anti-slop` → `design-system` → `ux-laws` → `accessibility` → `code-standards` |
 | Service / API | `supabase-patterns` → `code-standards` → `testing-patterns` |
 | Mutation (create/update/delete) | `optimistic-ui` → `error-handling` → `supabase-patterns` |
-| Tests | `testing-patterns` |
+| Tests (unit/component) | `vitest` → `testing-patterns` → `code-standards` |
+| Tests (E2E) | `playwright` → `code-standards` |
+| Tests (Supabase integration) | `e2e-test-scenarios` → `supabase-patterns` → `testing-patterns` |
 | Responsive / layout | `tolom-anti-slop` → `ux-laws` → `responsive-design` → `design-system` |
 | Design cleanup / polish | `tolom-anti-slop` → `impeccable` → `design-system` |
 | Database queries | `supabase-patterns` |

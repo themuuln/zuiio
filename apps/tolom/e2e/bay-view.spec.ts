@@ -19,7 +19,7 @@ async function expandToolbar(page: Page) {
   });
   if (await expandBtn.isVisible().catch(() => false)) {
     await expandBtn.click();
-    await page.waitForTimeout(250);
+    await expect(expandBtn).not.toBeVisible({ timeout: 5_000 });
   }
 }
 
@@ -42,7 +42,7 @@ test.describe("Bay View", () => {
 
       // At least one view mode toggle is pressed (grid by default)
       await expect(
-        page.locator('button[aria-pressed="true"]').first(),
+        page.getByRole("button", { pressed: true }).first(),
       ).toBeVisible({ timeout: 5000 });
 
       // KPI utilization card renders as a button ending in a percentage
@@ -89,7 +89,7 @@ test.describe("Bay View", () => {
       await waitForBayViewReady(page);
 
       // The three view toggles (grid/kanban/list) are aria-pressed buttons
-      const toggles = page.locator("button[aria-pressed]");
+      const toggles = page.getByRole("button").filter({ has: page.locator("[aria-pressed]") });
       await expect(toggles.first()).toBeVisible({ timeout: 5000 });
       expect(await toggles.count()).toBeGreaterThanOrEqual(2);
 
@@ -106,7 +106,6 @@ test.describe("Bay View", () => {
       const target = others.filter({ hasNotText: initialPressed ?? "x" });
       if ((await target.count()) > 0) {
         await target.first().click();
-        await page.waitForTimeout(500);
       }
 
       // Bay content still renders after switching
@@ -138,7 +137,6 @@ test.describe("Bay View", () => {
       });
       await expect(newFilter).toBeVisible({ timeout: 5000 });
       await newFilter.click();
-      await page.waitForTimeout(500);
 
       // Page stays functional after filter click
       await expect(

@@ -18,58 +18,82 @@ begin;
 select plan(16);
 
 -- ── Setup: create users and org data ──────────────────────────────
--- We need real UUIDs that match the seed data or create our own.
 -- Using service role to bypass RLS during setup.
 
-select tests.set_auth('00000000-0000-0000-0000-000000000001', 'org-a', 'service_role');
+select tests.set_auth('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'service_role');
 
--- Create org A with customer and vehicle
-insert into organizations (id, name, slug) values ('org-a', 'Org A', 'org-a')
+-- Create org A with a role for membership
+insert into organizations (id, name, slug) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Org A', 'org-a')
 on conflict (id) do nothing;
 
-insert into customers (id, organization_id, name, phone)
-values ('cust-a1', 'org-a', 'Customer A1', '99990001')
+insert into roles (id, name, description, organization_id, is_system)
+values ('a0000002-0000-0000-0005-000000000001', 'staff', 'Staff role', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', true)
 on conflict (id) do nothing;
 
-insert into customers (id, organization_id, name, phone)
-values ('cust-a2', 'org-a', 'Customer A2', '99990002')
+insert into customers (id, organization_id, first_name, last_name, phone, created_by)
+values ('b0000000-0000-0000-0001-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Customer', 'A1', '99990001', '00000000-0000-0000-0000-000000000001')
 on conflict (id) do nothing;
 
-insert into vehicles (id, organization_id, plate, make, model)
-values ('veh-a1', 'org-a', 'УНН0001', 'Toyota', 'Camry')
+insert into customers (id, organization_id, first_name, last_name, phone, created_by)
+values ('b0000000-0000-0000-0001-000000000002', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Customer', 'A2', '99990002', '00000000-0000-0000-0000-000000000001')
 on conflict (id) do nothing;
 
--- Create org B with customer
-insert into organizations (id, name, slug) values ('org-b', 'Org B', 'org-b')
+insert into vehicles (id, organization_id, plate_number, make, model, year, vin, color, created_by)
+values ('a0000001-0000-0000-0001-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '0001УБА', 'Toyota', 'Camry', 2020, 'JTDBE32KX12345678', 'Silver', '00000000-0000-0000-0000-000000000001')
 on conflict (id) do nothing;
 
-insert into customers (id, organization_id, name, phone)
-values ('cust-b1', 'org-b', 'Customer B1', '99990003')
+-- Create org B
+insert into organizations (id, name, slug) values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Org B', 'org-b')
 on conflict (id) do nothing;
 
-insert into vehicles (id, organization_id, plate, make, model)
-values ('veh-b1', 'org-b', 'УНН0002', 'Honda', 'Accord')
+-- Create role for org B membership
+insert into roles (id, name, description, organization_id, is_system)
+values ('a0000002-0000-0000-0005-000000000002', 'staff', 'Staff role', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', true)
 on conflict (id) do nothing;
 
--- Create org membership so the test user belongs to org A
-insert into org_members (organization_id, user_id, role_id)
-values ('org-a', '00000000-0000-0000-0000-000000000001',
-  (select id from roles where name = 'admin' limit 1))
+-- Create work orders for org A
+insert into work_orders (id, organization_id, customer_id, vehicle_id, status, created_by)
+values ('d0000000-0000-0000-0001-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'b0000000-0000-0000-0001-000000000001', 'a0000001-0000-0000-0001-000000000001', 'New', '00000000-0000-0000-0000-000000000001')
+on conflict (id) do nothing;
+
+-- Create parts catalog entries for org A
+insert into parts_catalog (id, organization_id, name, part_number, category, default_price, created_by)
+values ('f0000000-0000-0000-0001-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'OrgA Part', 'OA-001', 'General', 10000, '00000000-0000-0000-0000-000000000001')
+on conflict (id) do nothing;
+
+
+-- Create parts catalog entries for org B
+insert into parts_catalog (id, organization_id, name, part_number, category, default_price, created_by)
+values ('f0000000-0000-0000-0002-000000000001', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'OrgB Part', 'OB-001', 'General', 15000, '00000000-0000-0000-0000-000000000001')
+on conflict (id) do nothing;
+
+insert into customers (id, organization_id, first_name, last_name, phone, created_by)
+values ('b0000000-0000-0000-0002-000000000001', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Customer', 'B1', '99990003', '00000000-0000-0000-0000-000000000001')
+on conflict (id) do nothing;
+
+insert into vehicles (id, organization_id, plate_number, make, model, year, vin, color, created_by)
+values ('a0000001-0000-0000-0002-000000000001', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '0002УБА', 'Honda', 'Accord', 2021, '1HGCG56661A1234567', 'Black', '00000000-0000-0000-0000-000000000001')
+on conflict (id) do nothing;
+
+-- Create org membership so user 1 belongs to org A
+insert into organization_users (organization_id, user_id, role_id)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '00000000-0000-0000-0000-000000000001', 'a0000002-0000-0000-0005-000000000001')
 on conflict (organization_id, user_id) do nothing;
+
 
 -- ── Test 1-4: Customer isolation ──────────────────────────────────
 -- Org A user should see org A customers only
 
-select tests.set_auth('00000000-0000-0000-0000-000000000001', 'org-a', 'authenticated');
+select tests.set_auth('00000000-0000-0000-0000-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'authenticated');
 
 select is(
-  (select count(*)::int from customers where organization_id = 'org-a'),
+  (select count(*)::int from customers where organization_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
   2,
   'OrgA user can see both OrgA customers'
 );
 
 select is(
-  (select count(*)::int from customers where organization_id = 'org-b'),
+  (select count(*)::int from customers where organization_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
   0,
   'OrgA user CANNOT see OrgB customers (RLS block)'
 );
@@ -82,7 +106,7 @@ select is(
 
 -- Attempt direct access to org B customer
 select throws_ok(
-  $$delete from customers where id = 'cust-b1'$$,
+  $$delete from customers where id = 'b0000000-0000-0000-0002-000000000001'$$,
   42501,
   null,
   'OrgA user cannot delete OrgB customer'
@@ -91,13 +115,13 @@ select throws_ok(
 -- ── Test 5-8: Vehicle isolation ───────────────────────────────────
 
 select is(
-  (select count(*)::int from vehicles where organization_id = 'org-a'),
+  (select count(*)::int from vehicles where organization_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
   1,
   'OrgA user can see their vehicles'
 );
 
 select is(
-  (select count(*)::int from vehicles where organization_id = 'org-b'),
+  (select count(*)::int from vehicles where organization_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
   0,
   'OrgA user CANNOT see OrgB vehicles'
 );
@@ -109,17 +133,32 @@ select is(
 );
 
 select throws_ok(
-  $$update vehicles set plate = 'XXXXXX' where id = 'veh-b1'$$,
+  $$update vehicles set plate_number = 'XXXXXX' where id = 'a0000001-0000-0000-0002-000000000001'$$,
   42501,
   null,
   'OrgA user cannot update OrgB vehicle'
 );
 
--- ── Test 9-12: Cross-org insert isolation ─────────────────────────
+-- ── Test 9-10: Work order & Parts catalog isolation ─────────────
+
+select is(
+  (select count(*)::int from work_orders where organization_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+  1,
+  'OrgA user can see their own work orders'
+);
+
+-- OrgA user can see their own parts catalog, not OrgB's
+select is(
+  (select count(*)::int from parts_catalog where organization_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+  1,
+  'OrgA user can see their own parts catalog'
+);
+
+-- ── Test 11-12: Cross-org insert isolation ────────────────────────
 
 -- Org A user cannot insert a customer into org B
 select throws_ok(
-  $$insert into customers (id, organization_id, name, phone) values ('cust-cross', 'org-b', 'Cross Org', '99999999')$$,
+  $$insert into customers (id, organization_id, first_name, last_name, phone, created_by) values ('b0000000-0000-0000-0002-0000000000ff', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Cross', 'Org', '99999999', '00000000-0000-0000-0000-000000000001')$$,
   42501,
   null,
   'OrgA user cannot insert customer into OrgB'
@@ -127,25 +166,24 @@ select throws_ok(
 
 -- Org A user CAN insert a customer into their own org
 select lives_ok(
-  $$insert into customers (id, organization_id, name, phone) values ('cust-new', 'org-a', 'New Customer', '99998888')$$,
+  $$insert into customers (id, organization_id, first_name, last_name, phone, created_by) values ('b0000000-0000-0000-0004-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'New', 'Customer', '99998888', '00000000-0000-0000-0000-000000000001')$$,
   'OrgA user can insert customer into their own org'
 );
-
 -- Clean up the test insert
-delete from customers where id = 'cust-new';
+delete from customers where id = 'b0000000-0000-0000-0004-000000000001';
 
 -- ── Test 13-16: Organization table access ─────────────────────────
 
 -- Org members can see their own organization
 select is(
-  (select count(*)::int from organizations where id = 'org-a'),
+  (select count(*)::int from organizations where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
   1,
   'OrgA user can see their own organization'
 );
 
 -- Org members cannot see other organizations
 select is(
-  (select count(*)::int from organizations where id = 'org-b'),
+  (select count(*)::int from organizations where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
   0,
   'OrgA user CANNOT see OrgB organization record'
 );
@@ -158,13 +196,12 @@ select is(
   'Anonymous user sees no organizations'
 );
 
--- Org B's data remains inaccessible to different user
-select tests.set_auth('00000000-0000-0000-0000-000000000002', 'org-b', 'authenticated');
--- This user has no membership in any org, so they should be blocked
+-- Org B user (different org) cannot see Org A customers
+select tests.set_auth('00000000-0000-0000-0000-000000000002', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'authenticated');
 select is(
-  (select count(*)::int from customers where organization_id = 'org-a'),
+  (select count(*)::int from customers where organization_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
   0,
-  'Different user (no membership) cannot see OrgA customers'
+  'OrgB user cannot see OrgA customers (cross-org isolation)'
 );
 
 select * from finish();
