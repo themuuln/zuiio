@@ -498,9 +498,7 @@ export function resolveBrandConfig(
     }
   }
   const font_body =
-    input.font_body && getFont(input.font_body)
-      ? input.font_body
-      : undefined;
+    input.font_body && getFont(input.font_body) ? input.font_body : undefined;
   const font_heading =
     input.font_heading && getFont(input.font_heading)
       ? input.font_heading
@@ -640,10 +638,28 @@ function customColorLines(
       if (fg) lines.push(`  ${key.fg}: ${fg};`);
     }
   }
+  // Sync sidebar CSS variables when brand colors are customized.
+  // Sidebar uses --sidebar-primary/--sidebar-accent which are separate
+  // from --primary/--accent in the theme. Apply the same custom value
+  // so org branding applies to sidebar elements (TeamSwitcher icon, etc.).
+  // Note: values are already validated by resolveBrandConfig at this point.
+  if (customColors.primary) {
+    lines.push(`  --sidebar-primary: ${customColors.primary};`);
+    lines.push(`  --sidebar-ring: ${customColors.primary};`);
+    const fg = contrastForeground(customColors.primary);
+    if (fg) lines.push(`  --sidebar-primary-foreground: ${fg};`);
+  }
+  if (customColors.accent) {
+    lines.push(`  --sidebar-accent: ${customColors.accent};`);
+    const fg = contrastForeground(customColors.accent);
+    if (fg) lines.push(`  --sidebar-accent-foreground: ${fg};`);
+  }
   return lines;
 }
 
-export function generateBrandCSS(config: BrandConfig | null | undefined): string {
+export function generateBrandCSS(
+  config: BrandConfig | null | undefined,
+): string {
   const resolved = resolveBrandConfig(config);
   const theme = getTheme(resolved.theme);
   if (!theme) return "";
