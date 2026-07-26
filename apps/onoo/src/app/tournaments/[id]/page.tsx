@@ -4,7 +4,16 @@ import Link from "next/link";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui";
 import { PublicEmptyState } from "../../components/public-empty-state";
-import { getCompetition, getLeaders, getStandings } from "../../lib/data";
+import {
+  getClassificationRounds,
+  getCompetition,
+  getLeaders,
+  getStandings,
+  getTournamentGroups,
+  getTournamentPhases,
+} from "../../lib/data";
+import { ClassificationBracket } from "./components/classification-bracket";
+import { GroupStandings } from "./components/group-standings";
 
 export async function generateMetadata({
   params,
@@ -27,10 +36,20 @@ export default async function TournamentPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [competition, allStandings, allLeaders] = await Promise.all([
+  const [
+    competition,
+    allStandings,
+    allLeaders,
+    phases,
+    groups,
+    classificationRounds,
+  ] = await Promise.all([
     getCompetition(id),
     getStandings(),
     getLeaders(true),
+    getTournamentPhases(id),
+    getTournamentGroups(id),
+    getClassificationRounds(id),
   ]);
 
   if (!competition) {
@@ -178,6 +197,25 @@ export default async function TournamentPage({
         </section>
       )}
 
+      {/* Group Standings */}
+      {phases.length > 0 && groups.length > 0 && (
+        <section aria-labelledby="tournament-groups">
+          <h2
+            id="tournament-groups"
+            className="mb-4 font-display text-2xl font-semibold"
+          >
+            Хэсгийн байрлал
+          </h2>
+          <GroupStandings groups={groups} />
+        </section>
+      )}
+
+      {/* Classification Bracket */}
+      {phases.length > 0 && classificationRounds.length > 0 && (
+        <section aria-labelledby="tournament-classification">
+          <ClassificationBracket rounds={classificationRounds} />
+        </section>
+      )}
       {/* Empty state */}
       {standings.length === 0 && leaders.length === 0 && (
         <PublicEmptyState

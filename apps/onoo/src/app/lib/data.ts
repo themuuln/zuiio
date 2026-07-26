@@ -20,8 +20,13 @@ import type {
   AthleteAffiliation,
   AthleteTimelineEvent,
   BoxScoreRow,
+  ClassificationRound,
+  CompetitionRow,
   GameWithTeams,
+  HeadToHeadGame,
+  HeadToHeadResult,
   LeaderRow,
+  LineupStats,
   MvpRaceRow,
   PlayByPlayRow,
   PlayerAwardRow,
@@ -32,6 +37,8 @@ import type {
   ShotZoneStat,
   StandingRow,
   TeamRosterRow,
+  TournamentGroup,
+  TournamentPhase,
 } from "./shared";
 
 import { orderScorebarGames, shiftDate } from "./shared";
@@ -51,8 +58,13 @@ export type {
   AthleteAffiliation,
   AthleteTimelineEvent,
   BoxScoreRow,
+  ClassificationRound,
+  CompetitionRow,
   GameWithTeams,
+  HeadToHeadGame,
+  HeadToHeadResult,
   LeaderRow,
+  LineupStats,
   MvpRaceRow,
   PlayByPlayRow,
   PlayerAwardRow,
@@ -63,6 +75,8 @@ export type {
   ShotZoneStat,
   StandingRow,
   TeamRosterRow,
+  TournamentGroup,
+  TournamentPhase,
 };
 
 /** Return recent finalized games (most recent first), limited to `limit`. */
@@ -1482,4 +1496,178 @@ export async function getPublicAcademyData(): Promise<PublicAcademyPageData> {
     trainers: (trainersResult.data ?? []) as PublicAcademyTrainer[],
     locations: (locationsResult.data ?? []) as PublicAcademyLocation[],
   };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 12 — Competition list, head-to-head, lineups
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch all competitions from v_public_standings with deduplication.
+ * Returns an empty array if the query fails or no data exists.
+ */
+export async function getCompetitions(): Promise<CompetitionRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_standings")
+    .select("competition_id, competition_name, season_name, league_id");
+
+  if (error || !data) {
+    captureError("getCompetitions", error);
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const rows: CompetitionRow[] = [];
+  for (const row of data) {
+    if (!seen.has(row.competition_id)) {
+      seen.add(row.competition_id);
+      rows.push({
+        id: row.competition_id,
+        name: row.competition_name,
+        season: row.season_name,
+        league: row.league_id,
+      });
+    }
+  }
+  return rows;
+}
+
+/**
+ * Head-to-head record between two teams.
+ * Returns null if either team cannot be resolved; otherwise returns the
+ * matchup history with win counts even when no games are found.
+ */
+export async function getHeadToHead(
+  teamAId: string,
+  teamBId: string,
+): Promise<HeadToHeadResult | null> {
+  const supabase = await createClient();
+
+  // Resolve team names in parallel
+  const [teamAResult, teamBResult] = await Promise.all([
+    supabase
+      .from("v_public_standings")
+      .select("team_name")
+      .eq("team_id", teamAId)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("v_public_standings")
+      .select("team_name")
+      .eq("team_id", teamBId)
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const teamAName = teamAResult.data?.team_name;
+  const teamBName = teamBResult.data?.team_name;
+  if (teamAResult.error || teamBResult.error || !teamAName || !teamBName) {
+    if (teamAResult.error)
+      captureError("getHeadToHead/teamA", teamAResult.error);
+    if (teamBResult.error)
+      captureError("getHeadToHead/teamB", teamBResult.error);
+    return null;
+  }
+
+  // Fetch head-to-head games
+  const { data: games, error } = await supabase
+    .from("v_public_games")
+    .select("*")
+    .or(
+      `and(home_team_id.eq.${teamAId},away_team_id.eq.${teamBId}),and(home_team_id.eq.${teamBId},away_team_id.eq.${teamAId})`,
+    )
+    .order("scheduled_at", { ascending: false });
+
+  if (error) {
+    captureError("getHeadToHead", error);
+    return null;
+  }
+
+  let teamAWins = 0;
+  let teamBWins = 0;
+  const gameRows: HeadToHeadGame[] = (games ?? []).map((g) => {
+    const row = g as Record<string, unknown>;
+    const isTeamAHome = row.home_team_id === teamAId;
+    const homeScore = row.home_score as number | null;
+    const awayScore = row.away_score as number | null;
+    const teamAScore = isTeamAHome ? homeScore : awayScore;
+    const teamBScore = isTeamAHome ? awayScore : homeScore;
+
+    if (teamAScore !== null && teamBScore !== null) {
+      if (teamAScore > teamBScore) teamAWins++;
+      else if (teamBScore > teamAScore) teamBWins++;
+    }
+
+    const winnerId =
+      homeScore !== null && awayScore !== null
+        ? isTeamAHome
+          ? homeScore > awayScore
+            ? teamAId
+            : teamBId
+          : awayScore > homeScore
+            ? teamAId
+            : teamBId
+        : null;
+
+    return {
+      game_id: row.id as string,
+      date: ((row.scheduled_at as string) ?? "").slice(0, 10),
+      home_team_name: row.home_team_name as string,
+      away_team_name: row.away_team_name as string,
+      home_score: row.home_score as number | null,
+      away_score: row.away_score as number | null,
+      winner_id: winnerId,
+    };
+  });
+
+  return {
+    teamA_id: teamAId,
+    teamA_name: teamAName,
+    teamB_id: teamBId,
+    teamB_name: teamBName,
+    teamA_wins: teamAWins,
+    teamB_wins: teamBWins,
+    games: gameRows,
+  };
+}
+
+/**
+ * Fetch tournament phases for a competition.
+ * Returns an empty array — stub awaiting DB schema for tournament tables.
+ */
+export async function getTournamentPhases(
+  _competitionId: string,
+): Promise<TournamentPhase[]> {
+  return [];
+}
+
+/**
+ * Fetch tournament groups for a competition.
+ * Returns an empty array — stub awaiting DB schema for tournament tables.
+ */
+export async function getTournamentGroups(
+  _competitionId: string,
+): Promise<TournamentGroup[]> {
+  return [];
+}
+
+/**
+ * Fetch classification bracket rounds for a competition.
+ * Returns an empty array — stub awaiting DB schema for classification tables.
+ */
+export async function getClassificationRounds(
+  _competitionId: string,
+): Promise<ClassificationRound[]> {
+  return [];
+}
+
+/**
+ * Fetch lineup statistics for a team season.
+ * Returns an empty array — stub awaiting substitution event parsing.
+ */
+export async function getLineupsByTeam(
+  _teamSeasonId: string,
+): Promise<LineupStats[]> {
+  return [];
 }

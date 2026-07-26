@@ -7,6 +7,8 @@ export * from "./i18n/stats";
 export * from "./imports/fiba-official-stats";
 export * from "./stats/advanced";
 export * from "./stats/derive";
+export * from "./stats/game-score";
+export * from "./stats/lineup-analysis";
 export * from "./stats/milestones";
 export {
   calculateDRtg,

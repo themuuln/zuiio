@@ -71,6 +71,7 @@ export type GameWithTeams = Game & {
   away_team_slug: string;
   home_team_id: string;
   home_score: number | null;
+  stream_url: string | null;
   away_score: number | null;
 };
 
@@ -482,4 +483,78 @@ export interface AthleteTimelineEvent {
   total_rebounds: number | null;
   program_name: string | null;
   event_label: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Phase 12 types
+// ---------------------------------------------------------------------------
+
+export interface CompetitionRow {
+  id: string;
+  name: string;
+  season?: string;
+  league?: string;
+}
+
+export interface HeadToHeadGame {
+  game_id: string;
+  date: string;
+  home_team_name: string;
+  away_team_name: string;
+  home_score: number | null;
+  away_score: number | null;
+  winner_id: string | null;
+}
+
+export interface HeadToHeadResult {
+  teamA_id: string;
+  teamA_name: string;
+  teamB_id: string;
+  teamB_name: string;
+  teamA_wins: number;
+  teamB_wins: number;
+  games: HeadToHeadGame[];
+}
+
+export interface TournamentPhase {
+  id: string;
+  name: string;
+  type: "group" | "knockout" | "classification";
+  order: number;
+}
+
+export interface TournamentGroupTeam {
+  team_id: string;
+  team_name: string;
+  wins: number;
+  losses: number;
+  points_for: number;
+  points_against: number;
+}
+
+export interface TournamentGroup {
+  id: string;
+  name: string;
+  teams: TournamentGroupTeam[];
+}
+
+export interface ClassificationGame {
+  home_team_name: string;
+  home_score: number | null;
+  away_team_name: string;
+  away_score: number | null;
+}
+
+export interface ClassificationRound {
+  round: string;
+  games: ClassificationGame[];
+}
+
+export interface LineupStats {
+  player_ids: string[];
+  player_names: string[];
+  games_count: number;
+  minutes_total: number;
+  net_rating: number;
+  plus_minus: number;
 }

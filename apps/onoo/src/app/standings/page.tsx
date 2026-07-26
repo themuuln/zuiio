@@ -1,4 +1,4 @@
-import { BarChart3, Trophy } from "lucide-react";
+import { BarChart3, FileDown, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TeamLogo } from "@/components/team-logo";
@@ -89,6 +89,18 @@ export default async function StandingsPage({
           </nav>
         )}
       </header>
+
+      {/* Download report link — only when a competition is selected */}
+      {competition != null && (
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/reports/season/${competition}`}>
+              <FileDown className="size-4" />
+              Тайлан татах
+            </Link>
+          </Button>
+        </div>
+      )}
 
       {standings.length === 0 ? (
         <PublicEmptyState

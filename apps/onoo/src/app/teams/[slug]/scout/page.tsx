@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+import { PrintButton } from "./print-button";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -86,7 +87,8 @@ export default async function ScoutPage({ params }: PageProps) {
     );
   }
 
-  const nextGame = upcomingGames[0]!;
+  const nextGame = upcomingGames[0];
+  if (!nextGame) return null;
   const isHome = nextGame.home_team_slug === slug;
   const opponentSlug = isHome
     ? nextGame.away_team_slug
@@ -197,9 +199,12 @@ export default async function ScoutPage({ params }: PageProps) {
 
       {/* Header: vs opponent */}
       <div className="mt-6 rounded-2xl border bg-gradient-to-br from-card to-muted/30 p-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Дараагийн тоглолт · {nextGame.competition_name}
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Дараагийн тоглолт · {nextGame.competition_name}
+          </p>
+          <PrintButton />
+        </div>
         <div className="mt-4 flex items-center justify-center gap-6">
           {/* My team */}
           <div className="flex flex-col items-center gap-2">

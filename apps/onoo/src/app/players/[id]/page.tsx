@@ -57,6 +57,7 @@ import { Milestones } from "./components/milestones";
 import { ScrollReveal } from "./components/motion-wrapper";
 import { RecentGames } from "./components/recent-games";
 import { SeasonSelector } from "./components/season-selector";
+import { ShareCard } from "./components/share-card";
 import { ShotChart } from "./components/shot-chart";
 import { StatCard } from "./components/stat-card";
 
@@ -296,6 +297,20 @@ export default async function PlayerPage({
               locale={locale}
             />
           </div>
+        )}
+
+        {/* ─── Compact share card with player stats ─── */}
+        {(activeProfile.points_per_game != null ||
+          activeProfile.oreb_per_game != null ||
+          careerTotals) && (
+          <ShareCard
+            playerName={
+              isEn
+                ? player.name_latin || player.canonical_name
+                : player.canonical_name
+            }
+            statLine={`${seasonLabel} · ${careerTotals ? `PTS ${careerTotals.pts} · REB ${careerTotals.reb} · AST ${careerTotals.ast} · ${careerTotals.gp} GP` : `PTS ${activeProfile.points_per_game?.toFixed(1) ?? "—"} · REB ${((activeProfile.oreb_per_game ?? 0) + (activeProfile.dreb_per_game ?? 0)).toFixed(1) || "—"} · AST ${activeProfile.ast_per_game?.toFixed(1) ?? "—"}`}`}
+          />
         )}
 
         {/* ─── Recent games strip ─── */}

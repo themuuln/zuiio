@@ -18,6 +18,8 @@ export const STAT_LABELS = {
     pf: "Зөрчил",
     gp: "Тоглолт",
     mpg: "Дундаж (мин)",
+    game_score: "Тоглолтын үнэлгээ",
+    per: "PER",
     team_reb: "Багийн давсан",
   },
   en: {
@@ -39,6 +41,8 @@ export const STAT_LABELS = {
     gp: "GP",
     mpg: "MPG",
     team_reb: "TEAM REB",
+    game_score: "Game Score",
+    per: "PER",
   },
 } as const;
 

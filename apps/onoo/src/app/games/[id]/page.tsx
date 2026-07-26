@@ -34,6 +34,7 @@ import {
   getPlayByPlay,
 } from "../../lib/data";
 import { LiveGameCenter } from "./components/live-game-center";
+import { LiveStream } from "./components/live-stream";
 import { RecapHeader } from "./components/recap-header";
 import { ScoreWorm } from "./components/score-worm";
 import { PlayerHighlights, TopPerformers } from "./components/top-performers";
@@ -275,6 +276,10 @@ export default async function GameDetailPage({ params }: GamePageProps) {
               <span>Баталгаажсан хувилбар #{game.revision_number}</span>
             ) : null}
           </div>
+
+          {game.stream_url ? (
+            <LiveStream streamUrl={game.stream_url} isLive={isLive} />
+          ) : null}
         </section>
 
         {isFinal ? (
