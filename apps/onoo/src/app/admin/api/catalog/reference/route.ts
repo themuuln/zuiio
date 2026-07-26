@@ -1,5 +1,5 @@
-import { withAuth } from "@/lib/supabase/admin-route";
 import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 interface CatalogReference {
   competitions: unknown[];
@@ -22,12 +22,18 @@ export const GET = () =>
           .from("seasons")
           .select("*, leagues(name)")
           .order("starts_on", { ascending: false }),
-        supabase.from("sports").select("id, key, name_mn, name_en").order("name_en"),
+        supabase
+          .from("sports")
+          .select("id, key, name_mn, name_en")
+          .order("name_en"),
         supabase
           .from("leagues")
           .select("*, sports(name_en, name_mn)")
           .order("name"),
-        supabase.from("venues").select("id, name, city, capacity").order("name"),
+        supabase
+          .from("venues")
+          .select("id, name, city, capacity")
+          .order("name"),
         supabase.from("players").select("*").order("canonical_name"),
       ]);
 

@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/supabase/admin-route";
 
-
 export async function GET(request: NextRequest) {
   return withAuth(async (supabase) => {
     const { searchParams } = new URL(request.url);

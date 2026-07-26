@@ -3,7 +3,6 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   SEED_ADMIN_ID,
   SEED_AWAY_TEAM_SEASON,
-  SEED_COMPETITION_ID,
   SEED_HOME_PLAYER,
   SEED_HOME_TEAM_SEASON,
   SEED_ORG_ID,

@@ -1,11 +1,9 @@
 /**
  * CRUD /admin/api/academy/payments — student payment records
  */
+
+import { type NextRequest, NextResponse } from "next/server";
 import { createRouteHandlers, withAuth } from "@/lib/supabase/admin-route";
-import {
-  type NextRequest,
-  NextResponse,
-} from "next/server";
 
 const payments = createRouteHandlers("student_payments", {
   select: "*, students:academy_students(canonical_name)",

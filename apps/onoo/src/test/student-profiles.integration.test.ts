@@ -1,7 +1,6 @@
 import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { SEED_ADMIN_ID, SEED_ORG_ID } from "./seed-constants";
-import { createTestUser, newPool } from "./setup-integration";
+import { newPool } from "./setup-integration";
 
 let pool: Pool;
 let client: PoolClient;
@@ -160,6 +159,6 @@ describe("student-guardian junction", () => {
       "SELECT count(*) as cnt FROM public.academy_student_guardians WHERE student_id = $1",
       [studentId],
     );
-    expect(parseInt(rows[0].cnt)).toBeGreaterThan(0);
+    expect(parseInt(rows[0].cnt, 10)).toBeGreaterThan(0);
   });
 });

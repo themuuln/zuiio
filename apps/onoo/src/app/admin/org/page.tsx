@@ -1,8 +1,12 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
-import { orgApi, orgRefApi, type OrganizationRow } from "@/app/admin/_lib/api";
+import { type OrganizationRow, orgApi, orgRefApi } from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,11 +33,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
 
 const orgSchema = z.object({
   name: z.string().min(1, "Нэр оруулна уу"),
@@ -46,9 +45,21 @@ const orgSchema = z.object({
 });
 
 const SOCIAL_PLATFORMS = [
-  { id: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
-  { id: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
-  { id: "twitter", label: "Twitter / X", placeholder: "https://twitter.com/..." },
+  {
+    id: "instagram",
+    label: "Instagram",
+    placeholder: "https://instagram.com/...",
+  },
+  {
+    id: "facebook",
+    label: "Facebook",
+    placeholder: "https://facebook.com/...",
+  },
+  {
+    id: "twitter",
+    label: "Twitter / X",
+    placeholder: "https://twitter.com/...",
+  },
   { id: "youtube", label: "YouTube", placeholder: "https://youtube.com/..." },
   { id: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/..." },
   { id: "website", label: "Вэб", placeholder: "https://..." },
@@ -62,7 +73,7 @@ export default function OrgPage() {
     queryFn: () => orgRefApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const orgs = (ref?.orgs ?? []) as OrganizationRow[]
+  const orgs = (ref?.orgs ?? []) as OrganizationRow[];
 
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -70,7 +81,15 @@ export default function OrgPage() {
 
   const form = useForm<OrgFormValues>({
     resolver: zodResolver(orgSchema),
-    defaultValues: { name: "", slug: "", logo_url: "", contact_phone: "", contact_email: "", website: "", social_links: {} },
+    defaultValues: {
+      name: "",
+      slug: "",
+      logo_url: "",
+      contact_phone: "",
+      contact_email: "",
+      website: "",
+      social_links: {},
+    },
   });
 
   const updateMutation = useMutation({
@@ -79,7 +98,9 @@ export default function OrgPage() {
       return orgApi.update(editingOrg.id, values);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "org", "reference"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "org", "reference"],
+      });
       toast.success("Байгууллага шинэчлэгдсэн");
       setDialogOpen(false);
       setEditingOrg(null);
@@ -110,7 +131,11 @@ export default function OrgPage() {
   return (
     <AdminPageLayout
       title="Байгууллага"
-      headerExtras={<p className="text-sm text-muted-foreground">Байгууллагын профайл, холбоо барих мэдээлэл, тохиргоо</p>}
+      headerExtras={
+        <p className="text-sm text-muted-foreground">
+          Байгууллагын профайл, холбоо барих мэдээлэл, тохиргоо
+        </p>
+      }
     >
       {isPending ? (
         <p className="text-sm text-muted-foreground">Уншиж байна...</p>
@@ -130,18 +155,31 @@ export default function OrgPage() {
             {orgs.map((org) => (
               <TableRow key={org.id}>
                 <TableCell className="font-medium">{org.name}</TableCell>
-                <TableCell className="text-muted-foreground">{org.slug}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {org.slug}
+                </TableCell>
                 <TableCell>{org.contact_phone ?? "—"}</TableCell>
                 <TableCell>{org.contact_email ?? "—"}</TableCell>
                 <TableCell>
                   {org.website ? (
-                    <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-warning hover:underline">
+                    <a
+                      href={org.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-warning hover:underline"
+                    >
                       {org.website}
                     </a>
-                  ) : "—"}
+                  ) : (
+                    "—"
+                  )}
                 </TableCell>
                 <TableCell>
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(org)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(org)}
+                  >
                     Засах
                   </Button>
                 </TableCell>
@@ -217,7 +255,11 @@ export default function OrgPage() {
                   <FormItem>
                     <FormLabel>Имэйл</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} value={field.value ?? ""} />
+                      <Input
+                        type="email"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -261,7 +303,11 @@ export default function OrgPage() {
                 ))}
               </div>
               <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                >
                   Болих
                 </Button>
                 <Button type="submit" disabled={updateMutation.isPending}>

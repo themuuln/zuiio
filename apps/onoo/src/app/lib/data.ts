@@ -1365,10 +1365,9 @@ export async function getAthleteAffiliations(
   canonicalIdentityId: string,
 ): Promise<AthleteAffiliation[]> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .rpc("cmd_get_athlete_affiliations", {
-      p_canonical_identity_id: canonicalIdentityId,
-    });
+  const { data } = await supabase.rpc("cmd_get_athlete_affiliations", {
+    p_canonical_identity_id: canonicalIdentityId,
+  });
   return (data as AthleteAffiliation[]) ?? [];
 }
 
@@ -1404,4 +1403,83 @@ export async function getAthleteTimeline(
     .order("event_date", { ascending: false })
     .limit(limit);
   return (data as AthleteTimelineEvent[]) ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Public Academy pages
+// ---------------------------------------------------------------------------
+
+export interface PublicAcademyProfile {
+  id: string;
+  organization_id: string;
+  name: string;
+  logo_url: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  timezone: string;
+  settings: Record<string, unknown> | null;
+}
+
+export interface PublicAcademyProgram {
+  id: string;
+  academy_id: string;
+  name: string;
+  description: string | null;
+  age_group: string | null;
+  price_mnt: number | null;
+  duration_weeks: number | null;
+  is_active: boolean;
+  location_id: string | null;
+}
+
+export interface PublicAcademyTrainer {
+  id: string;
+  name: string;
+  photo_url: string | null;
+  specialties: string[];
+  bio: string | null;
+}
+
+export interface PublicAcademyLocation {
+  id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  hours: string | null;
+}
+
+export interface PublicAcademyPageData {
+  profile: PublicAcademyProfile | null;
+  programs: PublicAcademyProgram[];
+  trainers: PublicAcademyTrainer[];
+  locations: PublicAcademyLocation[];
+}
+
+/**
+ * Fetch academy profile data for public pages.
+ * Uses server client with anon key — requires anon SELECT RLS policies.
+ * Returns null if no academy exists (not yet set up via admin).
+ */
+export async function getPublicAcademyData(): Promise<PublicAcademyPageData> {
+  const supabase = await createClient();
+
+  const [profileResult, programsResult, trainersResult, locationsResult] =
+    await Promise.all([
+      supabase.from("academy_profiles").select("*").limit(1).maybeSingle(),
+      supabase.from("academy_programs").select("*").eq("is_active", true),
+      supabase.from("academy_trainers").select("*"),
+      supabase.from("academy_locations").select("*"),
+    ]);
+
+  if (profileResult.error) {
+    console.error("Failed to fetch academy profile:", profileResult.error);
+  }
+  const profile = profileResult.data as PublicAcademyProfile | null;
+
+  return {
+    profile,
+    programs: (programsResult.data ?? []) as PublicAcademyProgram[],
+    trainers: (trainersResult.data ?? []) as PublicAcademyTrainer[],
+    locations: (locationsResult.data ?? []) as PublicAcademyLocation[],
+  };
 }

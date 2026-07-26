@@ -7,11 +7,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  consentApi,
-  type ConsentTemplateRow,
-} from "@/app/admin/_lib/api-academy-ext";
 import { academyRefApi } from "@/app/admin/_lib/api";
+import {
+  type ConsentTemplateRow,
+  consentApi,
+} from "@/app/admin/_lib/api-academy-ext";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,7 +67,8 @@ type TemplateFormValues = z.infer<typeof templateSchema>;
 export default function AcademyConsentPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<ConsentTemplateRow | null>(null);
+  const [editingTemplate, setEditingTemplate] =
+    useState<ConsentTemplateRow | null>(null);
 
   const { data: consentResponse, isPending } = useQuery({
     queryKey: ["admin", "academy", "consent"],
@@ -98,7 +99,9 @@ export default function AcademyConsentPage() {
         scope: data.scope,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "academy", "consent"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "academy", "consent"],
+      });
       toast.success("Зөвшөөрлийн загвар амжилттай нэмэгдлээ");
       setDialogOpen(false);
       form.reset();
@@ -117,7 +120,9 @@ export default function AcademyConsentPage() {
         scope: data.scope,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "academy", "consent"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "academy", "consent"],
+      });
       toast.success("Зөвшөөрлийн загвар амжилттай шинэчлэгдлээ");
       setDialogOpen(false);
       setEditingTemplate(null);
@@ -131,7 +136,9 @@ export default function AcademyConsentPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => consentApi.deleteTemplate(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "academy", "consent"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "academy", "consent"],
+      });
       toast.success("Зөвшөөрлийн загвар устгагдлаа");
     },
     onError: (err: Error) => {
@@ -189,11 +196,16 @@ export default function AcademyConsentPage() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {editingTemplate ? "Зөвшөөрлийн загвар засах" : "Шинэ зөвшөөрлийн загвар нэмэх"}
+                {editingTemplate
+                  ? "Зөвшөөрлийн загвар засах"
+                  : "Шинэ зөвшөөрлийн загвар нэмэх"}
               </DialogTitle>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="title"
@@ -213,18 +225,23 @@ export default function AcademyConsentPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Хамрах хүрээ</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(SCOPE_LABELS).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ))}
+                          {Object.entries(SCOPE_LABELS).map(
+                            ([value, label]) => (
+                              <SelectItem key={value} value={value}>
+                                {label}
+                              </SelectItem>
+                            ),
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -249,7 +266,11 @@ export default function AcademyConsentPage() {
                   )}
                 />
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => handleDialogOpenChange(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleDialogOpenChange(false)}
+                  >
                     Цуцлах
                   </Button>
                   <Button type="submit" disabled={isMutating}>
@@ -282,7 +303,9 @@ export default function AcademyConsentPage() {
             <TableBody>
               {templates.map((template) => (
                 <TableRow key={template.id}>
-                  <TableCell className="font-medium">{template.title}</TableCell>
+                  <TableCell className="font-medium">
+                    {template.title}
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline">
                       {SCOPE_LABELS[template.scope] ?? template.scope}
@@ -293,7 +316,10 @@ export default function AcademyConsentPage() {
                     {template.is_active ? (
                       <Badge variant="secondary">Идэвхтэй</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-muted-foreground">
+                      <Badge
+                        variant="outline"
+                        className="text-muted-foreground"
+                      >
                         Идэвхгүй
                       </Badge>
                     )}
@@ -312,7 +338,11 @@ export default function AcademyConsentPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          if (window.confirm(`"${template.title}" загварыг устгах уу?`)) {
+                          if (
+                            window.confirm(
+                              `"${template.title}" загварыг устгах уу?`,
+                            )
+                          ) {
                             deleteMutation.mutate(template.id);
                           }
                         }}

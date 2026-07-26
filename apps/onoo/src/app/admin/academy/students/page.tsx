@@ -50,7 +50,7 @@ const studentSchema = z.object({
 type StudentFormValues = z.infer<typeof studentSchema>;
 
 const STATUS_ACTIVE = "active";
-const STATUS_INACTIVE = "inactive";
+const _STATUS_INACTIVE = "inactive";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "Идэвхтэй",
@@ -215,13 +215,8 @@ export default function AcademyStudentsPage() {
                   >
                     Цуцлах
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={createMutation.isPending}
-                  >
-                    {createMutation.isPending
-                      ? "Хадгалж байна..."
-                      : "Хадгалах"}
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
                   </Button>
                 </div>
               </form>
@@ -249,9 +244,7 @@ export default function AcademyStudentsPage() {
               <TableCell className="text-muted-foreground">
                 {student.school_name ?? "—"}
               </TableCell>
-              <TableCell>
-                {student.emergency_contact_phone ?? "—"}
-              </TableCell>
+              <TableCell>{student.emergency_contact_phone ?? "—"}</TableCell>
               <TableCell>
                 {student.status === STATUS_ACTIVE ? (
                   <Badge variant="secondary">

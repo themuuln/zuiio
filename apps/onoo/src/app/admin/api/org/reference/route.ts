@@ -2,8 +2,9 @@
  * GET /admin/api/org/reference — returns organizations in one response
  * Consolidates shared org reference data for all org sub-pages.
  */
-import { withAuth } from "@/lib/supabase/admin-route";
+
 import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 interface OrgReference {
   orgs: unknown[];
@@ -16,7 +17,10 @@ export const GET = () =>
     ]);
 
     if (orgs.error) {
-      return NextResponse.json({ error: orgs.error.message }, { status: 500 }) as never;
+      return NextResponse.json(
+        { error: orgs.error.message },
+        { status: 500 },
+      ) as never;
     }
 
     return NextResponse.json({

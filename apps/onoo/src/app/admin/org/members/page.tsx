@@ -1,14 +1,30 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Shield, UserMinus, UserPlus } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import {
-  orgRefApi,
-  orgMembersApi,
   type MemberRow,
   type OrganizationRow,
+  orgMembersApi,
+  orgRefApi,
 } from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,23 +56,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { Loader2, Shield, UserMinus, UserPlus } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const ROLE_LABELS: Record<string, string> = {
   owner: "Эзэмшигч",
@@ -91,7 +90,7 @@ export default function OrgMembersPage() {
     queryFn: () => orgRefApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const orgs = (ref?.orgs ?? []) as OrganizationRow[]
+  const orgs = (ref?.orgs ?? []) as OrganizationRow[];
 
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -117,7 +116,9 @@ export default function OrgMembersPage() {
     mutationFn: (values: { user_id: string; role: string }) =>
       orgMembersApi.assign(values.user_id, "org", selectedOrgId!, values.role),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "org-members", selectedOrgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "org-members", selectedOrgId],
+      });
       toast.success("Гишүүн нэмэгдсэн");
       setDialogOpen(false);
       form.reset();
@@ -130,7 +131,9 @@ export default function OrgMembersPage() {
   const removeMutation = useMutation({
     mutationFn: (membershipId: string) => orgMembersApi.remove(membershipId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "org-members", selectedOrgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "org-members", selectedOrgId],
+      });
       toast.success("Гишүүн хасагдсан");
       setRemoveConfirm({ open: false, member: null });
     },
@@ -144,7 +147,10 @@ export default function OrgMembersPage() {
   );
 
   function roleBadge(role: string) {
-    const variants: Record<string, "default" | "destructive" | "secondary" | "outline"> = {
+    const variants: Record<
+      string,
+      "default" | "destructive" | "secondary" | "outline"
+    > = {
       owner: "destructive",
       admin: "default",
       coordinator: "secondary",
@@ -154,13 +160,15 @@ export default function OrgMembersPage() {
       scorekeeper: "outline",
       viewer: "outline",
     };
-    return <Badge variant={variants[role] ?? "outline"}>{ROLE_LABELS[role] ?? role}</Badge>;
+    return (
+      <Badge variant={variants[role] ?? "outline"}>
+        {ROLE_LABELS[role] ?? role}
+      </Badge>
+    );
   }
 
   return (
-    <AdminPageLayout
-      title="Байгууллагын гишүүд"
-    >
+    <AdminPageLayout title="Байгууллагын гишүүд">
       {/* Org selector */}
       <div className="mb-6 flex items-center gap-3">
         <label className="text-sm font-medium">Байгууллага:</label>
@@ -186,7 +194,9 @@ export default function OrgMembersPage() {
 
       {/* Members list */}
       {!selectedOrgId ? (
-        <p className="text-sm text-muted-foreground">Байгууллага сонгоод гишүүдийг харах</p>
+        <p className="text-sm text-muted-foreground">
+          Байгууллага сонгоод гишүүдийг харах
+        </p>
       ) : membersLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -223,9 +233,7 @@ export default function OrgMembersPage() {
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:text-destructive"
-                    onClick={() =>
-                      setRemoveConfirm({ open: true, member })
-                    }
+                    onClick={() => setRemoveConfirm({ open: true, member })}
                     disabled={removeMutation.isPending}
                   >
                     <UserMinus className="h-4 w-4" />
@@ -245,7 +253,9 @@ export default function OrgMembersPage() {
           </DialogHeader>
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit((values) => assignMutation.mutate(values))}
+              onSubmit={form.handleSubmit((values) =>
+                assignMutation.mutate(values),
+              )}
               className="space-y-4"
             >
               <FormField
@@ -267,7 +277,10 @@ export default function OrgMembersPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Үүрэг</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -312,8 +325,11 @@ export default function OrgMembersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Гишүүн хасах</AlertDialogTitle>
             <AlertDialogDescription>
-              {removeConfirm.member?.display_name ?? removeConfirm.member?.user_id.slice(0, 8)}-г{" "}
-              {ROLE_LABELS[removeConfirm.member?.role ?? ""] ?? removeConfirm.member?.role}{" "}
+              {removeConfirm.member?.display_name ??
+                removeConfirm.member?.user_id.slice(0, 8)}
+              -г{" "}
+              {ROLE_LABELS[removeConfirm.member?.role ?? ""] ??
+                removeConfirm.member?.role}{" "}
               үүргээс хасах уу?
             </AlertDialogDescription>
           </AlertDialogHeader>

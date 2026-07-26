@@ -7,12 +7,7 @@
  * v_public_team_game_stats when available.
  */
 
-import {
-  calculateDRtg,
-  calculateORtg,
-  calculatePIE,
-  calculatePossessions,
-} from "@onoo/core";
+import { calculateDRtg, calculatePossessions } from "@onoo/core";
 import { createClient } from "@/lib/supabase/server";
 
 // ---------------------------------------------------------------------------

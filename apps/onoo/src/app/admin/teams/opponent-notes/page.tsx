@@ -7,20 +7,15 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { type TeamSeasonRow, teamsContextApi } from "@/app/admin/_lib/api";
 import {
   type OpponentNoteRow,
   opponentNotesApi,
 } from "@/app/admin/_lib/api-team-ops";
-import { teamsContextApi, type TeamSeasonRow } from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -81,7 +76,7 @@ export default function OpponentNotesPage() {
     queryFn: () => teamsContextApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const teamSeasons = (ctx?.teamSeasons ?? []) as TeamSeasonRow[]
+  const teamSeasons = (ctx?.teamSeasons ?? []) as TeamSeasonRow[];
 
   const createForm = useForm<CreateNoteFormValues>({
     resolver: zodResolver(createNoteSchema),
@@ -108,10 +103,16 @@ export default function OpponentNotesPage() {
   const createMutation = useMutation({
     mutationFn: (data: CreateNoteFormValues) => {
       const strengths = data.strengths
-        ? data.strengths.split(",").map((s) => s.trim()).filter(Boolean)
+        ? data.strengths
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
         : [];
       const weaknesses = data.weaknesses
-        ? data.weaknesses.split(",").map((s) => s.trim()).filter(Boolean)
+        ? data.weaknesses
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
         : [];
       return opponentNotesApi.create({
         team_season_id: data.team_season_id,
@@ -132,18 +133,18 @@ export default function OpponentNotesPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: EditNoteFormValues;
-    }) => {
+    mutationFn: ({ id, data }: { id: string; data: EditNoteFormValues }) => {
       const strengths = data.strengths
-        ? data.strengths.split(",").map((s) => s.trim()).filter(Boolean)
+        ? data.strengths
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
         : undefined;
       const weaknesses = data.weaknesses
-        ? data.weaknesses.split(",").map((s) => s.trim()).filter(Boolean)
+        ? data.weaknesses
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
         : undefined;
       return opponentNotesApi.update(id, {
         notes: data.notes || undefined,
@@ -225,7 +226,9 @@ export default function OpponentNotesPage() {
                   {note.notes && (
                     <div>
                       <span className="font-medium">Тэмдэглэл:</span>{" "}
-                      <span className="text-muted-foreground">{note.notes}</span>
+                      <span className="text-muted-foreground">
+                        {note.notes}
+                      </span>
                     </div>
                   )}
                   {note.game_plan && (
@@ -332,10 +335,7 @@ export default function OpponentNotesPage() {
                   <FormItem>
                     <FormLabel>Тэмдэглэл</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Ерөнхий тэмдэглэл"
-                        {...field}
-                      />
+                      <Textarea placeholder="Ерөнхий тэмдэглэл" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -348,10 +348,7 @@ export default function OpponentNotesPage() {
                   <FormItem>
                     <FormLabel>Тоглолтын төлөвлөгөө</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Тоглолтын төлөвлөгөө"
-                        {...field}
-                      />
+                      <Textarea placeholder="Тоглолтын төлөвлөгөө" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -411,8 +408,7 @@ export default function OpponentNotesPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Тэмдэглэл засах —{" "}
-              {editingNote?.opponent_team?.teams?.name ?? "—"}
+              Тэмдэглэл засах — {editingNote?.opponent_team?.teams?.name ?? "—"}
             </DialogTitle>
           </DialogHeader>
           <Form {...editForm}>
@@ -453,10 +449,7 @@ export default function OpponentNotesPage() {
                   <FormItem>
                     <FormLabel>Давуу талууд</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Таслалаар тусгаарлана"
-                        {...field}
-                      />
+                      <Input placeholder="Таслалаар тусгаарлана" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -469,10 +462,7 @@ export default function OpponentNotesPage() {
                   <FormItem>
                     <FormLabel>Сул талууд</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Таслалаар тусгаарлана"
-                        {...field}
-                      />
+                      <Input placeholder="Таслалаар тусгаарлана" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

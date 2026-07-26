@@ -14,7 +14,6 @@ import {
   YAxis,
 } from "recharts";
 import type { AudienceResponse } from "@/app/admin/api/audience/route";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -26,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const TYPENAME_BY_TYPE: Record<string, string> = {
+const _TYPENAME_BY_TYPE: Record<string, string> = {
   player: "Тоглогч",
   game: "Тоглолт",
 };
@@ -197,14 +196,14 @@ export default function AudiencePage() {
                         dataKey="view_date"
                         tick={{ fontSize: 11 }}
                         tickFormatter={(v: unknown) => {
-                          const d = new Date(String(v) + "T00:00:00");
+                          const d = new Date(`${String(v)}T00:00:00`);
                           return format(d, "MM/dd");
                         }}
                       />
                       <YAxis tick={{ fontSize: 11 }} />
                       <Tooltip
                         labelFormatter={(v: unknown) => {
-                          const d = new Date(String(v) + "T00:00:00");
+                          const d = new Date(`${String(v)}T00:00:00`);
                           return format(d, "yyyy-MM-dd");
                         }}
                         formatter={(value: unknown) => [

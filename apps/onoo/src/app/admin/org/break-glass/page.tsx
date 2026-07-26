@@ -1,9 +1,30 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Plus, ShieldOff } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
-import { orgRefApi, breakGlassApi, type BreakGlassRow, type OrganizationRow } from "@/app/admin/_lib/api";
+import {
+  type BreakGlassRow,
+  breakGlassApi,
+  type OrganizationRow,
+  orgRefApi,
+} from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,7 +41,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -29,23 +49,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { Loader2, Plus, ShieldAlert, ShieldOff } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 const grantSchema = z.object({
   granted_to: z.string().min(1, "Хэрэглэгчийн ID оруулна уу"),
@@ -61,7 +65,7 @@ export default function BreakGlassPage() {
     queryFn: () => orgRefApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const orgs = (ref?.orgs ?? []) as OrganizationRow[]
+  const orgs = (ref?.orgs ?? []) as OrganizationRow[];
 
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -92,7 +96,9 @@ export default function BreakGlassPage() {
         expires_at: new Date(values.expires_at).toISOString(),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "break-glass", selectedOrgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "break-glass", selectedOrgId],
+      });
       toast.success("Яаралтай хандалт олгогдсон");
       setDialogOpen(false);
       form.reset();
@@ -105,7 +111,9 @@ export default function BreakGlassPage() {
   const expireMutation = useMutation({
     mutationFn: (id: string) => breakGlassApi.expire(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "break-glass", selectedOrgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "break-glass", selectedOrgId],
+      });
       toast.success("Хандалт дуусгавар болсон");
       setExpireConfirm({ open: false, entry: null });
     },
@@ -148,14 +156,18 @@ export default function BreakGlassPage() {
 
       {/* Entries list */}
       {!selectedOrgId ? (
-        <p className="text-sm text-muted-foreground">Байгууллага сонгоод хандалтуудыг харах</p>
+        <p className="text-sm text-muted-foreground">
+          Байгууллага сонгоод хандалтуудыг харах
+        </p>
       ) : entriesLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           Уншиж байна...
         </div>
       ) : entries.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Яаралтай хандалтын бүртгэл олдсонгүй</p>
+        <p className="text-sm text-muted-foreground">
+          Яаралтай хандалтын бүртгэл олдсонгүй
+        </p>
       ) : (
         <Table>
           <TableHeader>
@@ -176,7 +188,9 @@ export default function BreakGlassPage() {
                   <TableCell className="font-medium font-mono text-xs">
                     {entry.granted_to.slice(0, 12)}...
                   </TableCell>
-                  <TableCell className="max-w-[250px] truncate">{entry.reason}</TableCell>
+                  <TableCell className="max-w-[250px] truncate">
+                    {entry.reason}
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(entry.expires_at).toLocaleDateString("mn-MN")}
                   </TableCell>
@@ -194,9 +208,7 @@ export default function BreakGlassPage() {
                         variant="ghost"
                         size="sm"
                         className="text-destructive hover:text-destructive"
-                        onClick={() =>
-                          setExpireConfirm({ open: true, entry })
-                        }
+                        onClick={() => setExpireConfirm({ open: true, entry })}
                         disabled={expireMutation.isPending}
                       >
                         <ShieldOff className="h-4 w-4" />
@@ -221,7 +233,9 @@ export default function BreakGlassPage() {
           </DialogHeader>
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit((values) => grantMutation.mutate(values))}
+              onSubmit={form.handleSubmit((values) =>
+                grantMutation.mutate(values),
+              )}
               className="space-y-4"
             >
               <FormField
@@ -244,7 +258,10 @@ export default function BreakGlassPage() {
                   <FormItem>
                     <FormLabel>Шалтгаан</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Яагаад яаралтай хандалт хэрэгтэй вэ?" />
+                      <Textarea
+                        {...field}
+                        placeholder="Яагаад яаралтай хандалт хэрэгтэй вэ?"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

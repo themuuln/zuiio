@@ -8,13 +8,7 @@
 
 import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { SEED_ORG_ID } from "./seed-constants";
-import {
-  asUser,
-  clearUserContext,
-  createTestUser,
-  newPool,
-} from "./setup-integration";
+import { asUser, createTestUser, newPool } from "./setup-integration";
 
 // ── Connection ────────────────────────────────────────────────────────────
 

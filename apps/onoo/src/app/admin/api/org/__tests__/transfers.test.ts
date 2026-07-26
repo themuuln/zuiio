@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Shared mutable state for the withAuth mock
 const shared = vi.hoisted(() => ({
@@ -29,7 +29,7 @@ vi.mock("@/lib/supabase/admin-route", () => ({
             ),
           })),
         })),
-        rpc: vi.fn((fn: string, params: Record<string, unknown>) => {
+        rpc: vi.fn((_fn: string, params: Record<string, unknown>) => {
           shared.rpcParams = params;
           return Promise.resolve(shared.rpcResult);
         }),

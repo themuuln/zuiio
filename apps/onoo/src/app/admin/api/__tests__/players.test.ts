@@ -90,7 +90,8 @@ describe("Players API", () => {
       const noUserMock = createMockSupabase();
       noUserMock.auth = {
         getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        getSession: () =>
+          Promise.resolve({ data: { session: null }, error: null }),
       };
       mockCreateClient.mockResolvedValue(noUserMock as never);
       const req = createMockRequest(
@@ -190,7 +191,8 @@ describe("Players API", () => {
       const noUserMock = createMockSupabase();
       noUserMock.auth = {
         getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        getSession: () =>
+          Promise.resolve({ data: { session: null }, error: null }),
       };
       mockCreateClient.mockResolvedValue(noUserMock as never);
       const req = createMockRequest(
@@ -319,6 +321,8 @@ describe("Players API — social_links", () => {
     const body = await parseResponse(res);
 
     expect(res.status).toBe(201);
-    expect(body.social_links).toEqual({ instagram: "https://instagram.com/test" });
+    expect(body.social_links).toEqual({
+      instagram: "https://instagram.com/test",
+    });
   });
 });

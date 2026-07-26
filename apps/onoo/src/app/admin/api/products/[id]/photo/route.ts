@@ -68,7 +68,10 @@ export async function POST(
     .single();
 
   const existingImages = (product?.images as string[]) ?? [];
-  const updatedImages = [publicUrl, ...existingImages.filter((u) => u !== publicUrl)];
+  const updatedImages = [
+    publicUrl,
+    ...existingImages.filter((u) => u !== publicUrl),
+  ];
 
   const { error: updateError } = await supabase
     .from("products")

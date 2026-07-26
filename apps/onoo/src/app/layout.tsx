@@ -4,6 +4,7 @@ import { Inter, JetBrains_Mono, Oswald } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { OfflineIndicator } from "@/components/offline-indicator";
+import { ReactGrab } from "@/components/react-grab";
 import { SentryInit } from "@/components/sentry-init";
 import { Providers } from "@/lib/providers";
 import { SCOREBAR_MIN_HEIGHT, Scorebar } from "./components/scorebar";
@@ -99,6 +100,7 @@ export default function RootLayout({
             </div>
             <SiteFooter />
             <OfflineIndicator />
+            <ReactGrab />
           </Providers>
         </Suspense>
       </body>

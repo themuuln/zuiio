@@ -4,12 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { type AcademyProgramRow, academyRefApi } from "@/app/admin/_lib/api";
 import {
-  attendanceApi,
   type AttendanceRow,
+  attendanceApi,
   enrollmentsApi,
 } from "@/app/admin/_lib/api-academy-ext";
-import { academyRefApi, type AcademyProgramRow } from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,10 @@ const STATUS_OPTIONS: Record<string, string> = {
   excused: "Хүндэтгэлтэй",
 };
 
-const STATUS_COLORS: Record<string, "secondary" | "destructive" | "outline" | "default"> = {
+const STATUS_COLORS: Record<
+  string,
+  "secondary" | "destructive" | "outline" | "default"
+> = {
   present: "secondary",
   absent: "destructive",
   late: "outline",
@@ -82,14 +85,20 @@ export default function AcademyAttendancePage() {
       status: string;
     }) => attendanceApi.create(params),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "academy", "attendance"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "academy", "attendance"],
+      });
     },
     onError: (err: Error) => {
       toast.error(err.message);
     },
   });
 
-  function handleStatusChange(studentId: string, programId: string, status: string) {
+  function handleStatusChange(
+    studentId: string,
+    programId: string,
+    status: string,
+  ) {
     recordMutation.mutate({
       student_id: studentId,
       program_id: programId,
@@ -99,13 +108,13 @@ export default function AcademyAttendancePage() {
   }
 
   function prevDay() {
-    const d = new Date(selectedDate + "T00:00:00");
+    const d = new Date(`${selectedDate}T00:00:00`);
     d.setDate(d.getDate() - 1);
     setSelectedDate(formatDate(d));
   }
 
   function nextDay() {
-    const d = new Date(selectedDate + "T00:00:00");
+    const d = new Date(`${selectedDate}T00:00:00`);
     d.setDate(d.getDate() + 1);
     setSelectedDate(formatDate(d));
   }
@@ -143,7 +152,10 @@ export default function AcademyAttendancePage() {
             className="rounded-md border px-3 py-1 text-sm"
           />
           <div className="w-48">
-            <Select value={selectedProgram} onValueChange={(v) => setSelectedProgram(v)}>
+            <Select
+              value={selectedProgram}
+              onValueChange={(v) => setSelectedProgram(v)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Бүх хөтөлбөр" />
               </SelectTrigger>
@@ -157,7 +169,7 @@ export default function AcademyAttendancePage() {
             </Select>
           </div>
           <div className="text-sm text-muted-foreground">
-            {new Date(selectedDate + "T00:00:00").toLocaleDateString("mn-MN", {
+            {new Date(`${selectedDate}T00:00:00`).toLocaleDateString("mn-MN", {
               year: "numeric",
               month: "long",
               day: "numeric",
@@ -169,7 +181,8 @@ export default function AcademyAttendancePage() {
       {activeEnrollments.length === 0 && (
         <div className="py-12 text-center text-muted-foreground">
           Энэ хөтөлбөрт идэвхтэй элсэлт байхгүй байна.
-          {!selectedProgram && " Элсэлтүүдийг харахын тулд хөтөлбөр сонгоно уу."}
+          {!selectedProgram &&
+            " Элсэлтүүдийг харахын тулд хөтөлбөр сонгоно уу."}
         </div>
       )}
       {activeEnrollments.length > 0 && (
@@ -187,9 +200,12 @@ export default function AcademyAttendancePage() {
               const att = attendanceByStudent[enrollment.student_id];
               const currentStatus = att?.status ?? "";
               const programName =
-                programs.find((p) => p.id === enrollment.program_id)?.name ?? "—";
+                programs.find((p) => p.id === enrollment.program_id)?.name ??
+                "—";
               return (
-                <TableRow key={`${enrollment.student_id}-${enrollment.program_id}`}>
+                <TableRow
+                  key={`${enrollment.student_id}-${enrollment.program_id}`}
+                >
                   <TableCell className="font-medium">
                     {enrollment.academy_students?.canonical_name ?? "—"}
                   </TableCell>
@@ -198,24 +214,34 @@ export default function AcademyAttendancePage() {
                     <Select
                       value={currentStatus}
                       onValueChange={(v) =>
-                        handleStatusChange(enrollment.student_id, enrollment.program_id, v)
+                        handleStatusChange(
+                          enrollment.student_id,
+                          enrollment.program_id,
+                          v,
+                        )
                       }
                     >
                       <SelectTrigger className="w-[160px]">
                         {currentStatus ? (
-                          <Badge variant={STATUS_COLORS[currentStatus] ?? "outline"}>
+                          <Badge
+                            variant={STATUS_COLORS[currentStatus] ?? "outline"}
+                          >
                             {STATUS_OPTIONS[currentStatus] ?? currentStatus}
                           </Badge>
                         ) : (
-                          <span className="text-muted-foreground">Тэмдэглэх</span>
+                          <span className="text-muted-foreground">
+                            Тэмдэглэх
+                          </span>
                         )}
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(STATUS_OPTIONS).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
+                        {Object.entries(STATUS_OPTIONS).map(
+                          ([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
                   </TableCell>

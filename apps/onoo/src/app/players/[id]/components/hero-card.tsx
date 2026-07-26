@@ -1,5 +1,12 @@
 import { getStatLabel } from "@onoo/core";
-import { CalendarDays, ExternalLink, Globe, MapPin, Ruler, Weight } from "lucide-react";
+import {
+  CalendarDays,
+  ExternalLink,
+  Globe,
+  MapPin,
+  Ruler,
+  Weight,
+} from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { FlipStatCard } from "@/app/components/flip-stat-card";

@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMockSupabase,
   type MockFrom,
-  setQueryResult,
   MockQueryBuilder,
+  setQueryResult,
 } from "@/test/supabase-mock";
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -12,7 +12,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 import { createClient } from "@/lib/supabase/server";
-import { GET, POST, DELETE } from "../roster/route";
+import { DELETE, GET, POST } from "../roster/route";
 
 const mockCreateClient = vi.mocked(createClient);
 
@@ -82,12 +82,7 @@ describe("Teams Roster API", () => {
     });
 
     it("returns 500 on query error", async () => {
-      setQueryResult(
-        mock,
-        "roster_snapshots",
-        null,
-        new Error("DB error"),
-      );
+      setQueryResult(mock, "roster_snapshots", null, new Error("DB error"));
 
       const req = new NextRequest(
         "http://localhost:3000/admin/api/teams/roster?team_season_id=ts-1",

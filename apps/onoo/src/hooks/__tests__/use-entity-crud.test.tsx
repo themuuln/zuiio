@@ -1,17 +1,11 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, type RenderHookResult, renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import type React from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import {
-  type UseEntityCrudReturn,
-  useEntityCrud,
-} from "@/hooks/use-entity-crud";
+import { useEntityCrud } from "@/hooks/use-entity-crud";
 
 // ── Mock dependencies ────────────────────────────────────────────────
 

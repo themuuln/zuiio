@@ -4,10 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ListRestart, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { type RosterSnapshotRow, rosterApi } from "@/app/admin/_lib/api";
-import { teamSeasonsApi } from "@/app/admin/_lib/api";
-import { AdminPageLayout } from "@/components/admin/page-layout";
+import {
+  type RosterSnapshotRow,
+  rosterApi,
+  teamSeasonsApi,
+} from "@/app/admin/_lib/api";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,14 +92,14 @@ export default function RosterPage() {
   });
 
   function handleDelete(snapshot: RosterSnapshotRow) {
-    const playerName = snapshot.players?.canonical_name ?? snapshot.player_id.slice(0, 8);
+    const playerName =
+      snapshot.players?.canonical_name ?? snapshot.player_id.slice(0, 8);
     setDeleteConfirm({
       open: true,
       id: snapshot.id,
       label: playerName,
     });
   }
-
 
   return (
     <>
@@ -160,7 +163,7 @@ export default function RosterPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {snapshots.map((item, index) => (
+            {snapshots.map((item, _index) => (
               <TableRow key={item.id}>
                 <TableCell className="text-muted-foreground">
                   {item.jersey_number ?? "—"}
@@ -175,7 +178,8 @@ export default function RosterPage() {
                       />
                     )}
                     <span>
-                      {item.players?.canonical_name ?? item.player_id.slice(0, 8)}
+                      {item.players?.canonical_name ??
+                        item.player_id.slice(0, 8)}
                     </span>
                   </div>
                 </TableCell>
@@ -208,9 +212,7 @@ export default function RosterPage() {
 
       <ConfirmDialog
         open={deleteConfirm.open}
-        onOpenChange={(open) =>
-          setDeleteConfirm((prev) => ({ ...prev, open }))
-        }
+        onOpenChange={(open) => setDeleteConfirm((prev) => ({ ...prev, open }))}
         onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
         title="Бүртгэл устгах"
         description={`"${deleteConfirm.label}" бүртгэлийг устгах уу?`}

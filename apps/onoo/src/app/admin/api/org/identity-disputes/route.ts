@@ -1,6 +1,5 @@
-import { withAuth } from "@/lib/supabase/admin-route";
 import { type NextRequest, NextResponse } from "next/server";
-
+import { withAuth } from "@/lib/supabase/admin-route";
 
 /**
  * GET /admin/api/org/identity-disputes?status=open
@@ -22,7 +21,10 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query;
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 }) as never;
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 },
+      ) as never;
     }
     return NextResponse.json(data) as never;
   });
@@ -39,7 +41,9 @@ export async function POST(request: NextRequest) {
 
     // ── Resolve an existing dispute ──
     if (body.id && body.status) {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const userId = session?.user?.id;
 
       const { data, error } = await supabase
@@ -59,13 +63,22 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 }) as never;
+        return NextResponse.json(
+          { error: error.message },
+          { status: 500 },
+        ) as never;
       }
       return NextResponse.json(data) as never;
     }
 
     // ── Create a new dispute ──
-    const { player_id, competition_id, dispute_reason, description, evidence_notes } = body;
+    const {
+      player_id,
+      competition_id,
+      dispute_reason,
+      description,
+      evidence_notes,
+    } = body;
 
     if (!player_id || !dispute_reason || !description) {
       return NextResponse.json(
@@ -73,7 +86,9 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       ) as never;
     }
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const userId = session?.user?.id;
 
     const { data, error } = await supabase
@@ -91,7 +106,10 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 }) as never;
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 },
+      ) as never;
     }
     return NextResponse.json(data) as never;
   });

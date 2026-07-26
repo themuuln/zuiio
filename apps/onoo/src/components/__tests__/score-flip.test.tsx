@@ -131,9 +131,9 @@ describe("ScoreFlip value change", () => {
   it("updates displayed value after the animation timeout", () => {
     vi.useFakeTimers();
     const { container, rerender } = render(<ScoreFlip value={5} />);
-    expect(container.querySelectorAll(".score-flip-digit")[1]?.textContent).toBe(
-      "5",
-    );
+    expect(
+      container.querySelectorAll(".score-flip-digit")[1]?.textContent,
+    ).toBe("5");
 
     // Trigger a value change — the effect sets up a 450 ms animation timer.
     rerender(<ScoreFlip value={8} />);
@@ -144,9 +144,9 @@ describe("ScoreFlip value change", () => {
     });
 
     // After the animation completes the display chars reflect the new value.
-    expect(container.querySelectorAll(".score-flip-digit")[1]?.textContent).toBe(
-      "8",
-    );
+    expect(
+      container.querySelectorAll(".score-flip-digit")[1]?.textContent,
+    ).toBe("8");
     vi.useRealTimers();
   });
 });

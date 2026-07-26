@@ -3,7 +3,7 @@
  *
  * Tests are run sequentially (not parallel) within each describe block.
  */
-import type { Pool, PoolClient } from "pg";
+import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { SEED_ADMIN_ID, SEED_ORG_ID } from "./seed-constants";
 import { asUser, clearUserContext, newPool } from "./setup-integration";

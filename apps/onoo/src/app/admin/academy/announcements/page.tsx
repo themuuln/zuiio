@@ -11,7 +11,6 @@ import {
   type AnnouncementRow,
   announcementsApi,
 } from "@/app/admin/_lib/api-advanced";
-import { academyRefApi } from "../../_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +46,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { academyRefApi } from "../../_lib/api";
 
 const announcementSchema = z.object({
   title: z.string().min(1, "Гарчиг заавал байх ёстой"),
@@ -193,11 +193,10 @@ export default function AcademyAnnouncementsPage() {
                         </FormControl>
                         <SelectContent>
                           {programs.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.name}
-                              </SelectItem>
-                            ),
-                          )}
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -212,13 +211,8 @@ export default function AcademyAnnouncementsPage() {
                   >
                     Цуцлах
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={createMutation.isPending}
-                  >
-                    {createMutation.isPending
-                      ? "Хадгалж байна..."
-                      : "Хадгалах"}
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
                   </Button>
                 </div>
               </form>
@@ -242,9 +236,7 @@ export default function AcademyAnnouncementsPage() {
             const program = ann.academy_programs;
             return (
               <TableRow key={ann.id}>
-                <TableCell className="font-medium">
-                  {ann.title}
-                </TableCell>
+                <TableCell className="font-medium">{ann.title}</TableCell>
                 <TableCell className="text-muted-foreground max-w-[300px] truncate">
                   {ann.body}
                 </TableCell>
@@ -264,9 +256,7 @@ export default function AcademyAnnouncementsPage() {
                     size="icon"
                     onClick={() => {
                       if (
-                        window.confirm(
-                          `"${ann.title}" зарлалыг устгах уу?`,
-                        )
+                        window.confirm(`"${ann.title}" зарлалыг устгах уу?`)
                       ) {
                         deleteMutation.mutate(ann.id);
                       }

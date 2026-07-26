@@ -29,7 +29,9 @@ vi.mock("@/lib/supabase/server", () => ({
           error: null,
         }),
         getSession: vi.fn().mockResolvedValue({
-          data: { session: user ? { user: { id: user.id, email: user.email } } : null },
+          data: {
+            session: user ? { user: { id: user.id, email: user.email } } : null,
+          },
           error: null,
         }),
       },

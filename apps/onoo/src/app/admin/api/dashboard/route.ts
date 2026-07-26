@@ -2,8 +2,9 @@
  * GET /admin/api/dashboard — returns games, leagues, and teams in one response
  * with a single auth check, instead of 3 separate API calls.
  */
-import { withAuth } from "@/lib/supabase/admin-route";
+
 import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 interface DashboardGame {
   id: string;
@@ -25,7 +26,10 @@ interface DashboardData {
 export const GET = () =>
   withAuth<DashboardData>(async (supabase) => {
     const [games, leagueCount, teamCount] = await Promise.all([
-      supabase.from("games").select(GAME_SELECT).order("scheduled_at", { ascending: false }),
+      supabase
+        .from("games")
+        .select(GAME_SELECT)
+        .order("scheduled_at", { ascending: false }),
       supabase.from("leagues").select("*", { count: "exact", head: true }),
       supabase.from("teams").select("*", { count: "exact", head: true }),
     ]);

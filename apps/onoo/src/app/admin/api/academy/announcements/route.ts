@@ -3,23 +3,21 @@
  * POST /admin/api/academy/announcements — create announcement (cmd_create_announcement)
  * DELETE /admin/api/academy/announcements — remove announcement
  */
-import { withAuth } from "@/lib/supabase/admin-route";
-import { NextResponse } from "next/server";
+
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 export async function GET() {
   return withAuth(async (supabase) => {
     const { data, error } = await supabase
       .from("academy_announcements")
-      .select(
-        "*, users!created_by(email), academy_programs(name)",
-      )
+      .select("*, users!created_by(email), academy_programs(name)")
       .order("created_at", { ascending: false });
 
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -37,7 +35,6 @@ export async function POST(request: NextRequest) {
     if (error)
       return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -53,6 +50,5 @@ export async function DELETE(request: NextRequest) {
     if (error)
       return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ success: true }) as never;
-    
   });
 }

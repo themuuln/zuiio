@@ -7,11 +7,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  type TeamTransactionRow,
-  transactionsApi,
-} from "@/app/admin/_lib/api-team-ops";
-import { teamsContextApi, type TeamSeasonRow } from "@/app/admin/_lib/api";
+import { type TeamSeasonRow, teamsContextApi } from "@/app/admin/_lib/api";
+import { transactionsApi } from "@/app/admin/_lib/api-team-ops";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,7 +52,10 @@ const transactionSchema = z.object({
   team_season_id: z.string().min(1, "Баг сонгоно уу"),
   type: z.string().min(1, "Төрөл сонгоно уу"),
   description: z.string().min(1, "Тайлбар заавал байх ёстой"),
-  amount_mnt: z.preprocess((v) => Number(v), z.number().positive("Дүн эерэг тоо байх ёстой")),
+  amount_mnt: z.preprocess(
+    (v) => Number(v),
+    z.number().positive("Дүн эерэг тоо байх ёстой"),
+  ),
   due_date: z.string().optional(),
 });
 
@@ -67,7 +67,10 @@ const TYPE_LABELS: Record<string, string> = {
   sponsorship: "Ивээн тэтгэлэг",
 };
 
-const TYPE_COLORS: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+const TYPE_COLORS: Record<
+  string,
+  "default" | "secondary" | "outline" | "destructive"
+> = {
   due: "default",
   expense: "destructive",
   sponsorship: "secondary",
@@ -89,7 +92,7 @@ export default function TransactionsPage() {
     queryFn: () => teamsContextApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const teamSeasons = (ctx?.teamSeasons ?? []) as TeamSeasonRow[]
+  const teamSeasons = (ctx?.teamSeasons ?? []) as TeamSeasonRow[];
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema) as never,
@@ -105,7 +108,9 @@ export default function TransactionsPage() {
   const createMutation = useMutation({
     mutationFn: (data: TransactionFormValues) => transactionsApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "team-transactions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "team-transactions"],
+      });
       toast.success("Гүйлгээ амжилттай нэмэгдлээ");
       setDialogOpen(false);
       form.reset();
@@ -116,7 +121,9 @@ export default function TransactionsPage() {
   const markPaidMutation = useMutation({
     mutationFn: (id: string) => transactionsApi.markPaid(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "team-transactions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "team-transactions"],
+      });
       toast.success("Төлөв амжилттай тэмдэглэгдлээ");
     },
     onError: (err: Error) => toast.error(err.message),
@@ -158,13 +165,13 @@ export default function TransactionsPage() {
           <TableBody>
             {transactions.map((tx, index) => (
               <TableRow key={tx.id}>
-                <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {index + 1}
+                </TableCell>
                 <TableCell className="font-medium max-w-[200px] truncate">
                   {tx.description}
                 </TableCell>
-                <TableCell>
-                  {tx.team_seasons?.teams?.name ?? "—"}
-                </TableCell>
+                <TableCell>{tx.team_seasons?.teams?.name ?? "—"}</TableCell>
                 <TableCell>
                   <Badge variant={TYPE_COLORS[tx.type] ?? "outline"}>
                     {TYPE_LABELS[tx.type] ?? tx.type}
@@ -268,10 +275,7 @@ export default function TransactionsPage() {
                   <FormItem>
                     <FormLabel>Тайлбар</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Гүйлгээний тайлбар"
-                        {...field}
-                      />
+                      <Textarea placeholder="Гүйлгээний тайлбар" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

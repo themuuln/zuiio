@@ -1,24 +1,23 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import Image from "next/image";
 import { z } from "zod";
 
 import {
-  competitionsApi,
-  identityDisputesApi,
-  playersApi,
   type CompetitionRow,
+  competitionsApi,
   type IdentityDisputeRow,
+  identityDisputesApi,
   type PlayerRow,
+  playersApi,
 } from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +34,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -51,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Бүгд" },
@@ -71,7 +71,9 @@ const DISPUTE_REASONS = [
   { value: "other", label: "Бусад" },
 ] as const;
 
-function statusBadgeVariant(status: string): "default" | "destructive" | "secondary" | "outline" {
+function statusBadgeVariant(
+  status: string,
+): "default" | "destructive" | "secondary" | "outline" {
   switch (status) {
     case "open":
       return "destructive";
@@ -118,8 +120,7 @@ export default function IdentityDisputesPage() {
 
   const { data: disputes = [], isPending: disputesPending } = useQuery({
     queryKey: ["admin", "identity-disputes", statusFilter],
-    queryFn: () =>
-      identityDisputesApi.list(statusFilter || undefined),
+    queryFn: () => identityDisputesApi.list(statusFilter || undefined),
   });
 
   const { data: players = [] } = useQuery({
@@ -511,12 +512,16 @@ export default function IdentityDisputesPage() {
                       <SelectContent>
                         <SelectItem value="resolved">Шийдвэрлэсэн</SelectItem>
                         <SelectItem value="dismissed">Төгсгөсөн</SelectItem>
-                        <SelectItem value="under_review">Хянаж байгаа</SelectItem>
+                        <SelectItem value="under_review">
+                          Хянаж байгаа
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="resolve-notes">Шийдвэрлэсэн тэмдэглэл</Label>
+                    <Label htmlFor="resolve-notes">
+                      Шийдвэрлэсэн тэмдэглэл
+                    </Label>
                     <Textarea
                       id="resolve-notes"
                       value={resolveNotes}
@@ -542,7 +547,9 @@ export default function IdentityDisputesPage() {
                       }
                       disabled={resolveMutation.isPending}
                     >
-                      {resolveMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
+                      {resolveMutation.isPending
+                        ? "Хадгалж байна..."
+                        : "Хадгалах"}
                     </Button>
                   </div>
                 </div>

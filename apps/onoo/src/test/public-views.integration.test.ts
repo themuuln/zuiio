@@ -1,13 +1,10 @@
 import assert from "node:assert";
 import crypto from "node:crypto";
 import type { Pool, PoolClient } from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import {
-  SEED_AWAY_PLAYER,
-  SEED_AWAY_TEAM_SEASON,
   SEED_COMPETITION_ID,
   SEED_HOME_PLAYER,
-  SEED_HOME_TEAM_SEASON,
   SEED_RULESET_ID,
 } from "./seed-constants";
 import {
@@ -15,7 +12,6 @@ import {
   closePool,
   createTestUser,
   getPool,
-  newPool,
 } from "./setup-integration";
 
 /**

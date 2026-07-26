@@ -7,14 +7,14 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { academyRefApi } from "@/app/admin/_lib/api";
 import {
-  enrollmentsApi,
   createEnrollment,
-  updateEnrollment,
   deleteEnrollment,
   type EnrollmentRow,
+  enrollmentsApi,
+  updateEnrollment,
 } from "@/app/admin/_lib/api-academy-ext";
-import { academyRefApi } from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,7 +75,10 @@ const STATUS_LABELS: Record<string, string> = {
   waitlisted: "Хүлээлгийн",
 };
 
-const STATUS_COLORS: Record<string, "secondary" | "outline" | "default" | "destructive"> = {
+const STATUS_COLORS: Record<
+  string,
+  "secondary" | "outline" | "default" | "destructive"
+> = {
   active: "secondary",
   completed: "default",
   cancelled: "destructive",
@@ -87,7 +90,8 @@ export default function AcademyEnrollmentsPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingEnrollment, setEditingEnrollment] = useState<EnrollmentRow | null>(null);
+  const [editingEnrollment, setEditingEnrollment] =
+    useState<EnrollmentRow | null>(null);
 
   const { data: enrollments = [], isPending } = useQuery({
     queryKey: ["admin", "academy", "enrollments"],
@@ -100,7 +104,10 @@ export default function AcademyEnrollmentsPage() {
     staleTime: 3 * 60 * 1000,
   });
 
-  const students = (ref?.students ?? []) as { id: string; canonical_name: string }[];
+  const students = (ref?.students ?? []) as {
+    id: string;
+    canonical_name: string;
+  }[];
   const programs = (ref?.programs ?? []) as { id: string; name: string }[];
 
   const form = useForm<EnrollmentFormValues>({
@@ -132,7 +139,9 @@ export default function AcademyEnrollmentsPage() {
         notes: data.notes || null,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "academy", "enrollments"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "academy", "enrollments"],
+      });
       toast.success("Элсэлт амжилттай нэмэгдлээ");
       setDialogOpen(false);
       form.reset();
@@ -150,7 +159,9 @@ export default function AcademyEnrollmentsPage() {
         notes: data.notes || null,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "academy", "enrollments"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "academy", "enrollments"],
+      });
       toast.success("Элсэлт амжилттай шинэчлэгдлээ");
       setEditDialogOpen(false);
       setEditingEnrollment(null);
@@ -164,7 +175,9 @@ export default function AcademyEnrollmentsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteEnrollment(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "academy", "enrollments"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "academy", "enrollments"],
+      });
       toast.success("Элсэлт устгагдлаа");
     },
     onError: (err: Error) => {
@@ -200,10 +213,15 @@ export default function AcademyEnrollmentsPage() {
       emptyTitle="Элсэлт бүртгэгдээгүй байна"
       emptyDescription="Одоогоор сурагчдын элсэлт бүртгэгдээгүй байна."
       actions={
-        <Dialog open={dialogOpen} onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) { form.reset(); }
-        }}>
+        <Dialog
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+              form.reset();
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -215,14 +233,20 @@ export default function AcademyEnrollmentsPage() {
               <DialogTitle>Шинэ элсэлт нэмэх</DialogTitle>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleCreateSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(handleCreateSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="student_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Сурагч</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Сурагч сонгох" />
@@ -246,7 +270,10 @@ export default function AcademyEnrollmentsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Хөтөлбөр</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Хөтөлбөр сонгох" />
@@ -304,7 +331,11 @@ export default function AcademyEnrollmentsPage() {
                   )}
                 />
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setDialogOpen(false)}
+                  >
                     Цуцлах
                   </Button>
                   <Button type="submit" disabled={isMutating}>
@@ -335,9 +366,7 @@ export default function AcademyEnrollmentsPage() {
               <TableCell className="font-medium">
                 {enrollment.academy_students?.canonical_name ?? "—"}
               </TableCell>
-              <TableCell>
-                {enrollment.academy_programs?.name ?? "—"}
-              </TableCell>
+              <TableCell>{enrollment.academy_programs?.name ?? "—"}</TableCell>
               <TableCell>
                 <Badge variant={STATUS_COLORS[enrollment.status] ?? "outline"}>
                   {STATUS_LABELS[enrollment.status] ?? enrollment.status}
@@ -385,16 +414,25 @@ export default function AcademyEnrollmentsPage() {
       </Table>
 
       {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={(open) => {
-        setEditDialogOpen(open);
-        if (!open) { setEditingEnrollment(null); editForm.reset(); }
-      }}>
+      <Dialog
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) {
+            setEditingEnrollment(null);
+            editForm.reset();
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Элсэлт засах</DialogTitle>
           </DialogHeader>
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
+            <form
+              onSubmit={editForm.handleSubmit(handleEditSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={editForm.control}
                 name="status"
@@ -433,7 +471,11 @@ export default function AcademyEnrollmentsPage() {
                 )}
               />
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditDialogOpen(false)}
+                >
                   Цуцлах
                 </Button>
                 <Button type="submit" disabled={isMutating}>

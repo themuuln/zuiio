@@ -1,6 +1,5 @@
-import { withAuth } from "@/lib/supabase/admin-route";
 import { type NextRequest, NextResponse } from "next/server";
-
+import { withAuth } from "@/lib/supabase/admin-route";
 
 export async function GET(request: NextRequest) {
   return withAuth(async (supabase) => {
@@ -17,9 +16,9 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query;
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -30,7 +29,10 @@ export async function POST(request: NextRequest) {
 
     if (!team_season_id || !player_id || !game_date || !status) {
       return NextResponse.json(
-        { error: "team_season_id, player_id, game_date, and status are required" },
+        {
+          error:
+            "team_season_id, player_id, game_date, and status are required",
+        },
         { status: 400 },
       );
     }
@@ -53,9 +55,9 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -68,9 +70,13 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
 
-    const { error } = await supabase.from("roster_availability").delete().eq("id", id);
+    const { error } = await supabase
+      .from("roster_availability")
+      .delete()
+      .eq("id", id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return new NextResponse(null, { status: 204 });
   });
 }

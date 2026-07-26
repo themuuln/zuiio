@@ -8,10 +8,12 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
-  type RosterAvailabilityRow,
-  availabilityApi,
-} from "@/app/admin/_lib/api-team-ops";
-import { teamsContextApi, type TeamSeasonRow, type PlayerRow } from "@/app/admin/_lib/api";
+  type PlayerRow,
+  type TeamSeasonRow,
+  teamsContextApi,
+} from "@/app/admin/_lib/api";
+import { availabilityApi } from "@/app/admin/_lib/api-team-ops";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +47,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 const availabilitySchema = z.object({
   team_season_id: z.string().min(1, "Баг сонгоно уу"),
@@ -64,7 +65,10 @@ const STATUS_LABELS: Record<string, string> = {
   injured: "Гэмтэлтэй",
 };
 
-const STATUS_COLORS: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+const STATUS_COLORS: Record<
+  string,
+  "default" | "secondary" | "outline" | "destructive"
+> = {
   available: "default",
   unavailable: "destructive",
   maybe: "secondary",
@@ -91,8 +95,8 @@ export default function AvailabilityPage() {
     queryFn: () => teamsContextApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const teamSeasons = (ctx?.teamSeasons ?? []) as TeamSeasonRow[]
-  const players = (ctx?.players ?? []) as PlayerRow[]
+  const teamSeasons = (ctx?.teamSeasons ?? []) as TeamSeasonRow[];
+  const players = (ctx?.players ?? []) as PlayerRow[];
 
   const form = useForm<AvailabilityFormValues>({
     resolver: zodResolver(availabilitySchema),
@@ -108,7 +112,9 @@ export default function AvailabilityPage() {
   const createMutation = useMutation({
     mutationFn: (data: AvailabilityFormValues) => availabilityApi.upsert(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "roster-availability"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "roster-availability"],
+      });
       toast.success("Бэлэн байдал амжилттай бүртгэгдлээ");
       setDialogOpen(false);
       form.reset();
@@ -119,7 +125,9 @@ export default function AvailabilityPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => availabilityApi.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "roster-availability"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "roster-availability"],
+      });
       toast.success("Бүртгэл устгагдлаа");
       setDeleteConfirm({ open: false, id: "" });
     },
@@ -160,7 +168,9 @@ export default function AvailabilityPage() {
           <TableBody>
             {availability.map((item, index) => (
               <TableRow key={item.id}>
-                <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {index + 1}
+                </TableCell>
                 <TableCell className="font-medium">
                   {item.players?.canonical_name ?? item.player_id.slice(0, 8)}
                 </TableCell>
@@ -321,9 +331,7 @@ export default function AvailabilityPage() {
 
       <ConfirmDialog
         open={deleteConfirm.open}
-        onOpenChange={(open) =>
-          setDeleteConfirm((prev) => ({ ...prev, open }))
-        }
+        onOpenChange={(open) => setDeleteConfirm((prev) => ({ ...prev, open }))}
         onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
         title="Бүртгэл устгах"
         description="Энэ бэлэн байдлын бүртгэлийг устгах уу?"

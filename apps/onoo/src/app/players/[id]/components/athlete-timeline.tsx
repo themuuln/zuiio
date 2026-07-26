@@ -33,7 +33,7 @@ export async function AthleteTimeline({
             aria-hidden="true"
           />
 
-          {events.map((event, i) => (
+          {events.map((event, _i) => (
             <div
               key={`${event.event_type}-${event.event_id}`}
               className="relative flex gap-4"

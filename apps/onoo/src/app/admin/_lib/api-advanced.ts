@@ -51,6 +51,24 @@ export interface AnnouncementRow {
   academy_programs?: { name: string } | null;
 }
 
+export interface RegistrationIntentRow {
+  id: string;
+  academy_id: string;
+  program_id: string;
+  student_name: string;
+  date_of_birth: string | null;
+  guardian_name: string | null;
+  guardian_phone: string | null;
+  notes: string | null;
+  status: "pending" | "approved" | "declined" | "cancelled" | "expired";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  expires_at: string;
+  created_at: string;
+  /** Joined program name */
+  academy_programs?: { name: string } | null;
+}
+
 export interface CreatePaymentPayload {
   student_id: string;
   amount_mnt: number;
@@ -126,5 +144,19 @@ export const announcementsApi = {
     request<void>(`${BASE}/announcements`, {
       method: "DELETE",
       body: JSON.stringify({ id }),
+    }),
+};
+
+export const registrationsApi = {
+  list: () => request<RegistrationIntentRow[]>(`${BASE}/registrations`),
+  approve: (intentId: string) =>
+    request<{ status: string }>(`${BASE}/registrations`, {
+      method: "POST",
+      body: JSON.stringify({ intent_id: intentId, action: "approve" }),
+    }),
+  decline: (intentId: string) =>
+    request<{ status: string }>(`${BASE}/registrations`, {
+      method: "POST",
+      body: JSON.stringify({ intent_id: intentId, action: "decline" }),
     }),
 };

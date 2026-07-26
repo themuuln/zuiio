@@ -2,7 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { catalogRefApi, leaguesApi, type LeagueRow, type SportRow } from "@/app/admin/_lib/api";
+import {
+  catalogRefApi,
+  type LeagueRow,
+  leaguesApi,
+  type SportRow,
+} from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Button } from "@/components/ui/button";
 import {

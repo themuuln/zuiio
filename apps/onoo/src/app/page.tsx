@@ -725,9 +725,8 @@ export default async function HomePage() {
             </div>
           </section>
         )}
-
       </div>
-        <Sponsors />
+      <Sponsors />
     </main>
   );
 }

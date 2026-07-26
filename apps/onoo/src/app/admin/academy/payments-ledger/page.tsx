@@ -7,11 +7,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  type PaymentRow,
-  paymentsApi,
-} from "@/app/admin/_lib/api-advanced";
 import { academyRefApi } from "@/app/admin/_lib/api";
+import { type PaymentRow, paymentsApi } from "@/app/admin/_lib/api-advanced";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -91,7 +88,10 @@ export default function AcademyPaymentsLedgerPage() {
     queryFn: () => academyRefApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const students = (ref?.students ?? []) as Array<{ id: string; canonical_name: string }>;
+  const students = (ref?.students ?? []) as Array<{
+    id: string;
+    canonical_name: string;
+  }>;
 
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
@@ -220,11 +220,7 @@ export default function AcademyPaymentsLedgerPage() {
                     <FormItem>
                       <FormLabel>Дүн (₮)</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="100000"
-                          {...field}
-                        />
+                        <Input type="number" placeholder="100000" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -246,13 +242,11 @@ export default function AcademyPaymentsLedgerPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(TYPE_LABELS).map(
-                            ([value, label]) => (
-                              <SelectItem key={value} value={value}>
-                                {label}
-                              </SelectItem>
-                            ),
-                          )}
+                          {Object.entries(TYPE_LABELS).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -309,13 +303,8 @@ export default function AcademyPaymentsLedgerPage() {
                   >
                     Цуцлах
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={createMutation.isPending}
-                  >
-                    {createMutation.isPending
-                      ? "Хадгалж байна..."
-                      : "Хадгалах"}
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
                   </Button>
                 </div>
               </form>
@@ -345,10 +334,14 @@ export default function AcademyPaymentsLedgerPage() {
                 <TableCell className="font-medium">
                   {student?.canonical_name ?? "—"}
                 </TableCell>
-                <TableCell>{TYPE_LABELS[payment.type] ?? payment.type}</TableCell>
+                <TableCell>
+                  {TYPE_LABELS[payment.type] ?? payment.type}
+                </TableCell>
                 <TableCell>{formatMnt(payment.amount_mnt)}</TableCell>
                 <TableCell>
-                  {payment.method ? METHOD_LABELS[payment.method] ?? payment.method : "—"}
+                  {payment.method
+                    ? (METHOD_LABELS[payment.method] ?? payment.method)
+                    : "—"}
                 </TableCell>
                 <TableCell>
                   <Badge
@@ -378,9 +371,7 @@ export default function AcademyPaymentsLedgerPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() =>
-                            confirmMutation.mutate(payment.id)
-                          }
+                          onClick={() => confirmMutation.mutate(payment.id)}
                           disabled={confirmMutation.isPending}
                           aria-label="Баталгаажуулах"
                         >
@@ -390,11 +381,7 @@ export default function AcademyPaymentsLedgerPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => {
-                            if (
-                              window.confirm(
-                                "Энэ төлберийг цуцлах уу?",
-                              )
-                            ) {
+                            if (window.confirm("Энэ төлберийг цуцлах уу?")) {
                               cancelMutation.mutate(payment.id);
                             }
                           }}

@@ -149,7 +149,7 @@ describe("identity disputes CRUD", () => {
       const { rows } = await client.query(
         "SELECT count(*) AS cnt FROM public.identity_disputes",
       );
-      expect(parseInt(rows[0].cnt)).toBeGreaterThanOrEqual(0);
+      expect(parseInt(rows[0].cnt, 10)).toBeGreaterThanOrEqual(0);
     });
   });
 

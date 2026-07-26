@@ -4,9 +4,10 @@
  * PUT  /admin/api/academy/enrollments — update via cmd_update_enrollment
  * DELETE /admin/api/academy/enrollments — delete enrollment
  */
-import { withAuth } from "@/lib/supabase/admin-route";
-import { NextResponse } from "next/server";
+
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 export async function GET() {
   return withAuth(async (supabase) => {
@@ -15,9 +16,9 @@ export async function GET() {
       .select("*, academy_students(canonical_name), academy_programs(name)")
       .order("created_at", { ascending: false });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -33,9 +34,9 @@ export async function POST(request: NextRequest) {
       p_notes: body.notes ?? null,
     });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -49,9 +50,9 @@ export async function PUT(request: NextRequest) {
       p_notes: body.notes ?? null,
     });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -64,7 +65,8 @@ export async function DELETE(request: NextRequest) {
       .delete()
       .eq("id", body.id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return new NextResponse(null, { status: 204 });
   });
 }

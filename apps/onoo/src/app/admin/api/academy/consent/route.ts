@@ -4,9 +4,10 @@
  * PUT    /admin/api/academy/consent — update consent template
  * DELETE /admin/api/academy/consent — delete consent template
  */
-import { withAuth } from "@/lib/supabase/admin-route";
-import { NextResponse } from "next/server";
+
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 export async function GET() {
   return withAuth(async (supabase) => {
@@ -17,20 +18,27 @@ export async function GET() {
         .order("created_at", { ascending: false }),
       supabase
         .from("academy_consent_records")
-        .select("*, academy_consent_templates(title), academy_students(canonical_name)")
+        .select(
+          "*, academy_consent_templates(title), academy_students(canonical_name)",
+        )
         .order("signed_at", { ascending: false }),
     ]);
 
     if (templatesResult.error)
-      return NextResponse.json({ error: templatesResult.error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: templatesResult.error.message },
+        { status: 500 },
+      );
     if (recordsResult.error)
-      return NextResponse.json({ error: recordsResult.error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: recordsResult.error.message },
+        { status: 500 },
+      );
 
     return NextResponse.json({
       templates: templatesResult.data,
       records: recordsResult.data,
     }) as never;
-    
   });
 }
 
@@ -49,9 +57,9 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -71,9 +79,9 @@ export async function PUT(request: NextRequest) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -86,7 +94,8 @@ export async function DELETE(request: NextRequest) {
       .delete()
       .eq("id", body.id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return new NextResponse(null, { status: 204 });
   });
 }

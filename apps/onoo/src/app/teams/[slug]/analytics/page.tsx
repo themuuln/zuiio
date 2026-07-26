@@ -19,7 +19,7 @@ export default async function TeamAnalyticsPage({ params }: PageProps) {
   const { slug } = await params;
   const teamData = await getTeamBySlug(slug);
 
-  if (!teamData || !teamData.team) {
+  if (!teamData?.team) {
     notFound();
   }
 

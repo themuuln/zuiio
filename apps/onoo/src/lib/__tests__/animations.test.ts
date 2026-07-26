@@ -14,7 +14,8 @@ const disconnect = vi.fn();
 
 /** Captured callback + observer from the latest constructed mock. */
 let captureCallback: IntersectionObserverCallback = () => {};
-let captureObserver: IntersectionObserver = null as unknown as IntersectionObserver;
+let captureObserver: IntersectionObserver =
+  null as unknown as IntersectionObserver;
 
 class MockIntersectionObserver {
   readonly root: Element | null = null;
@@ -46,12 +47,14 @@ class MockIntersectionObserver {
 vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
 
 /** Fire an intersection entry for the current observer. */
-function simulateIntersection(
-  isIntersecting: boolean,
-  el?: Element,
-): void {
+function simulateIntersection(isIntersecting: boolean, el?: Element): void {
   captureCallback(
-    [{ isIntersecting, target: el ?? document.createElement("div") } as IntersectionObserverEntry],
+    [
+      {
+        isIntersecting,
+        target: el ?? document.createElement("div"),
+      } as IntersectionObserverEntry,
+    ],
     captureObserver,
   );
 }
@@ -154,7 +157,7 @@ describe("useInView", () => {
     renderHook(() => useInView(ref, { margin: "100px" }));
 
     expect(capturedOptions).toBeDefined();
-    expect(capturedOptions!.rootMargin).toBe("100px");
+    expect(capturedOptions?.rootMargin).toBe("100px");
 
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
   });
@@ -180,7 +183,7 @@ describe("useInView", () => {
     renderHook(() => useInView(ref));
 
     expect(capturedOptions).toBeDefined();
-    expect(capturedOptions!.rootMargin).toBe("0px");
+    expect(capturedOptions?.rootMargin).toBe("0px");
 
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
   });

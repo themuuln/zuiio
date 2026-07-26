@@ -15,7 +15,7 @@ export default async function PlayerEmbedPage({ params }: Props) {
   const { id } = await params;
   const result = await getPlayerById(id);
 
-  if (!result || !result.player) notFound();
+  if (!result?.player) notFound();
 
   const p = result.player;
   const rpg = (p.oreb_per_game ?? 0) + (p.dreb_per_game ?? 0);

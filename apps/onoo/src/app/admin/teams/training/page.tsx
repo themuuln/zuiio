@@ -7,11 +7,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  type TrainingSessionRow,
-  trainingApi,
-} from "@/app/admin/_lib/api-team-ops";
-import { teamsContextApi, type TeamSeasonRow } from "@/app/admin/_lib/api";
+import { type TeamSeasonRow, teamsContextApi } from "@/app/admin/_lib/api";
+import { trainingApi } from "@/app/admin/_lib/api-team-ops";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,7 +44,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 const trainingSchema = z.object({
   team_season_id: z.string().min(1, "Баг заавал байх ёстой"),
@@ -54,10 +51,7 @@ const trainingSchema = z.object({
   description: z.string().optional(),
   location: z.string().optional(),
   scheduled_at: z.string().min(1, "Цаг заавал байх ёстой"),
-  duration_minutes: z.coerce
-    .number()
-    .int()
-    .min(1, "Хугацаа заавал байх ёстой"),
+  duration_minutes: z.coerce.number().int().min(1, "Хугацаа заавал байх ёстой"),
 });
 
 interface TrainingFormValues {
@@ -87,7 +81,7 @@ export default function TrainingPage() {
     queryFn: () => teamsContextApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const teamSeasons = (ctx?.teamSeasons ?? []) as TeamSeasonRow[]
+  const teamSeasons = (ctx?.teamSeasons ?? []) as TeamSeasonRow[];
 
   const form = useForm<TrainingFormValues>({
     resolver: zodResolver(trainingSchema) as never,
@@ -104,7 +98,9 @@ export default function TrainingPage() {
   const createMutation = useMutation({
     mutationFn: (data: TrainingFormValues) => trainingApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "training-sessions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "training-sessions"],
+      });
       toast.success("Сургуулилт амжилттай нэмэгдлээ");
       setDialogOpen(false);
       form.reset();
@@ -115,7 +111,9 @@ export default function TrainingPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => trainingApi.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "training-sessions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "training-sessions"],
+      });
       toast.success("Сургуулилт устгагдлаа");
       setDeleteConfirm({ open: false, id: "", title: "" });
     },
@@ -158,7 +156,9 @@ export default function TrainingPage() {
           <TableBody>
             {sessions.map((session, index) => (
               <TableRow key={session.id}>
-                <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {index + 1}
+                </TableCell>
                 <TableCell className="font-medium">{session.title}</TableCell>
                 <TableCell>
                   {session.team_seasons?.teams?.name ?? "—"}
@@ -171,7 +171,9 @@ export default function TrainingPage() {
                 </TableCell>
                 <TableCell>{session.duration_minutes} мин</TableCell>
                 <TableCell>
-                  <Badge variant={session.is_cancelled ? "destructive" : "default"}>
+                  <Badge
+                    variant={session.is_cancelled ? "destructive" : "default"}
+                  >
                     {session.is_cancelled ? "Цуцлагдсан" : "Төлөвлөгдсөн"}
                   </Badge>
                 </TableCell>
@@ -254,10 +256,7 @@ export default function TrainingPage() {
                   <FormItem>
                     <FormLabel>Тайлбар</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Сургуулилтын тайлбар"
-                        {...field}
-                      />
+                      <Textarea placeholder="Сургуулилтын тайлбар" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -326,9 +325,7 @@ export default function TrainingPage() {
 
       <ConfirmDialog
         open={deleteConfirm.open}
-        onOpenChange={(open) =>
-          setDeleteConfirm((prev) => ({ ...prev, open }))
-        }
+        onOpenChange={(open) => setDeleteConfirm((prev) => ({ ...prev, open }))}
         onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
         title="Сургуулилт устгах"
         description={`"${deleteConfirm.title}" сургуулилтыг устгах уу?`}

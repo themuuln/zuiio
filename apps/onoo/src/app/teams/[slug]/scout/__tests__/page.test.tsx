@@ -315,7 +315,7 @@ vi.mock("@/lib/supabase/server", () => ({
 
 // ── Test helpers ──
 function mockTeamData(
-  slug: string,
+  _slug: string,
   hasUpcoming = true,
   games = mockGames,
   isOpp = false,

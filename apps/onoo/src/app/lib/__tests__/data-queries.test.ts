@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getGamesByDate, getLeaders, getStandings } from "@/app/lib/data";
-import type { GameWithTeams, LeaderRow, StandingRow } from "@/app/lib/shared";
 import {
   createMockSupabase,
   type MockFrom,

@@ -57,9 +57,21 @@ const positionLabels: Record<string, string> = {
 };
 
 const SOCIAL_PLATFORMS = [
-  { id: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
-  { id: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
-  { id: "twitter", label: "Twitter / X", placeholder: "https://twitter.com/..." },
+  {
+    id: "instagram",
+    label: "Instagram",
+    placeholder: "https://instagram.com/...",
+  },
+  {
+    id: "facebook",
+    label: "Facebook",
+    placeholder: "https://facebook.com/...",
+  },
+  {
+    id: "twitter",
+    label: "Twitter / X",
+    placeholder: "https://twitter.com/...",
+  },
   { id: "youtube", label: "YouTube", placeholder: "https://youtube.com/..." },
   { id: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/..." },
   { id: "website", label: "Вэб сайт", placeholder: "https://..." },
@@ -420,9 +432,9 @@ export default function PlayersPage() {
                       {isMutating ? "Хадгалж байна..." : "Хадгалах"}
                     </Button>
                   </div>
-                  </form>
-                </Form>
-              </DialogContent>
+                </form>
+              </Form>
+            </DialogContent>
           </Dialog>
         </>
       }

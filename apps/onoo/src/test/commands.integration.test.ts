@@ -1,7 +1,6 @@
-import { randomUUID } from "node:crypto";
 import assert from "node:assert";
 import type { Pool, PoolClient } from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import {
   SEED_ADMIN_ID,
   SEED_AWAY_PLAYER,
@@ -19,7 +18,6 @@ import {
   closePool,
   createTestUser,
   getPool,
-  newPool,
 } from "./setup-integration";
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -1296,287 +1294,288 @@ describe("error handling", () => {
 });
 describe("cmd_submit_official_stats (PDF upload → instant publish)", () => {
   let pool: Pool;
-  let client: PoolClient;
-  let admin: { id: string; email: string };
-  let gameId: string;
-    pool = await getPool();
-    client = await pool.connect();
-    admin = await createTestUser(pool, {
+  let _client: PoolClient;
+  let _admin: { id: string; email: string };
+  let _gameId: string;
+  pool = await getPool();
+  _client = await pool.connect();
+  _admin = await createTestUser(pool, {
       email: `official-stats-admin-${crypto.randomUUID().slice(0, 8)}@onoo-test.mn`,
     });
-  });
+});
 
-  afterAll(async () => {
-    client.release();
-  });
+afterAll(async () => {
+  client.release();
+});
 
-  beforeEach(async () => {
-    const { rows: leagues } = await pool.query(
-      "SELECT id FROM public.leagues LIMIT 1",
-    );
-    if (leagues.length > 0) {
-      await pool.query(
-        `INSERT INTO public.memberships (user_id, scope_type, scope_id, role)
+beforeEach(async () => {
+  const { rows: leagues } = await pool.query(
+    "SELECT id FROM public.leagues LIMIT 1",
+  );
+  if (leagues.length > 0) {
+    await pool.query(
+      `INSERT INTO public.memberships (user_id, scope_type, scope_id, role)
          VALUES ($1, 'league', $2, 'admin') ON CONFLICT DO NOTHING`,
-        [admin.id, leagues[0].id],
-      );
-    }
+      [admin.id, leagues[0].id],
+    );
+  }
 
-    const { rows: g } = await pool.query(`
+  const { rows: g } = await pool.query(`
       INSERT INTO public.games (
         competition_id, ruleset_id, home_team_season_id, away_team_season_id,
         venue_id, scheduled_at, status
       ) VALUES ('\${SEED_COMPETITION_ID}', '\${SEED_RULESET_ID}', '\${SEED_HOME_TEAM_SEASON}', '\${SEED_AWAY_TEAM_SEASON}', '\${SEED_VENUE_ID}', NOW()+INTERVAL '1 day', 'scheduled')
       RETURNING id
     `);
-    gameId = g[0].id as string;
+  gameId = g[0].id as string;
 
-    await pool.query(`
+  await pool.query(`
       INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter) VALUES
         ('${gameId}', '\${SEED_HOME_TEAM_SEASON}', '\${SEED_HOME_PLAYER}', true),
         ('${gameId}', '\${SEED_HOME_TEAM_SEASON}', '\${SEED_HOME_PLAYER_2}', true),
         ('${gameId}', '\${SEED_AWAY_TEAM_SEASON}', '\${SEED_AWAY_PLAYER}', true)
     `);
 
-    await pool.query(`
+  await pool.query(`
       INSERT INTO public.roster_entries (team_season_id, player_id, jersey_number, position, joined_at) VALUES
         ('\${SEED_HOME_TEAM_SEASON}', '\${SEED_HOME_PLAYER}', 7, 'G', '2025-09-01'),
         ('\${SEED_HOME_TEAM_SEASON}', '\${SEED_HOME_PLAYER_2}', 11, 'F', '2025-09-01'),
         ('\${SEED_AWAY_TEAM_SEASON}', '\${SEED_AWAY_PLAYER}', 23, 'C', '2025-09-01')
       ON CONFLICT (team_season_id, player_id) DO UPDATE SET jersey_number = EXCLUDED.jersey_number
     `);
-  });
-
-  it("submits official stats and instantly publishes the game", async () => {
-    const pS = JSON.stringify([
-      {
-        player_id: SEED_HOME_PLAYER,
-        team_season_id: SEED_HOME_TEAM_SEASON,
-        seconds_played: 1440,
-        pts: 24,
-        fgm: 10,
-        fga: 18,
-        tpm: 2,
-        tpa: 5,
-        ftm: 2,
-        fta: 3,
-        oreb: 3,
-        dreb: 5,
-        ast: 7,
-        stl: 2,
-        blk: 1,
-        tov: 3,
-        pf: 2,
-      },
-      {
-        player_id: SEED_HOME_PLAYER_2,
-        team_season_id: SEED_HOME_TEAM_SEASON,
-        seconds_played: 1320,
-        pts: 14,
-        fgm: 5,
-        fga: 11,
-        tpm: 3,
-        tpa: 7,
-        ftm: 1,
-        fta: 1,
-        oreb: 1,
-        dreb: 3,
-        ast: 2,
-        stl: 0,
-        blk: 0,
-        tov: 1,
-        pf: 4,
-      },
-      {
-        player_id: SEED_AWAY_PLAYER,
-        team_season_id: SEED_AWAY_TEAM_SEASON,
-        seconds_played: 1500,
-        pts: 31,
-        fgm: 12,
-        fga: 22,
-        tpm: 4,
-        tpa: 9,
-        ftm: 3,
-        fta: 4,
-        oreb: 4,
-        dreb: 8,
-        ast: 1,
-        stl: 1,
-        blk: 2,
-        tov: 4,
-        pf: 3,
-      },
-    ]);
-    const tS = JSON.stringify([
-      {
-        team_season_id: SEED_HOME_TEAM_SEASON,
-        pts: 38,
-        fgm: 15,
-        fga: 29,
-        tpm: 5,
-        tpa: 12,
-        ftm: 3,
-        fta: 4,
-        oreb: 4,
-        dreb: 8,
-        team_reb: 1,
-        ast: 9,
-        stl: 2,
-        blk: 1,
-        tov: 4,
-        pf: 6,
-      },
-      {
-        team_season_id: SEED_AWAY_TEAM_SEASON,
-        pts: 31,
-        fgm: 12,
-        fga: 22,
-        tpm: 4,
-        tpa: 9,
-        ftm: 3,
-        fta: 4,
-        oreb: 4,
-        dreb: 8,
-        team_reb: 0,
-        ast: 1,
-        stl: 1,
-        blk: 2,
-        tov: 4,
-        pf: 3,
-      },
-    ]);
-
-    const { data: result } = await asUser(client, admin.id, async () => {
-      const { rows } = await client.query(
-        `SELECT * FROM public.cmd_submit_official_stats($1::uuid,$2::text,$3::jsonb,$4::jsonb,$5::jsonb,$6::smallint,$7::smallint)`,
-        [
-          gameId,
-          `${gameId}/t.pdf`,
-          JSON.stringify({
-            format: "fiba_official_statistics_v1",
-            score: { home: 38, away: 31 },
-            teams: [
-              { name: "Khuleguud", code: "KHL", players: [] },
-              { name: "SG Apes", code: "APE", players: [] },
-            ],
-            warnings: [],
-            confidence: 0.95,
-          }),
-          pS,
-          tS,
-          38,
-          31,
-        ],
-      );
-      return rows[0].cmd_submit_official_stats as Record<string, unknown>;
-    });
-
-    // Game state
-    const { rows: g } = await pool.query(
-      "SELECT status,home_score,away_score,current_revision_number,published_at FROM public.games WHERE id=$1",
-      [gameId],
-    );
-    expect(g[0].status).toBe("league_verified");
-    expect(g[0].home_score).toBe(38);
-    expect(g[0].away_score).toBe(31);
-    expect(g[0].current_revision_number).toBe(1);
-    expect(g[0].published_at).not.toBeNull();
-
-    // Submission
-    const { rows: s } = await pool.query(
-      "SELECT source_type,evidence_url,status,normalized_payload->>'format' AS fmt FROM public.source_submissions WHERE game_id=$1",
-      [gameId],
-    );
-    expect(s.length).toBe(1);
-    expect(s[0].source_type).toBe("official_score_sheet");
-    expect(s[0].status).toBe("approved");
-    expect(s[0].fmt).toBe("fiba_official_statistics_v1");
-
-    // Revision
-    const { rows: r } = await pool.query(
-      "SELECT revision_number,state FROM public.game_revisions WHERE game_id=$1",
-      [gameId],
-    );
-    expect(r.length).toBe(1);
-    expect(r[0].state).toBe("approved");
-
-    // Player stats
-    const { rows: ps } = await pool.query(
-      "SELECT player_id,pts,fgm FROM public.game_player_stats WHERE game_id=$1 ORDER BY pts DESC",
-      [gameId],
-    );
-    expect(ps.length).toBe(3);
-    expect(ps[0].pts).toBe(31);
-
-    // Team stats
-    const { rows: ts } = await pool.query(
-      "SELECT pts FROM public.game_team_stats WHERE game_id=$1 ORDER BY pts DESC",
-      [gameId],
-    );
-    expect(ts.length).toBe(2);
-    expect(ts[0].pts).toBe(38);
-
-    // Season stats
-    const { rows: ss } = await pool.query(
-      "SELECT count(*)::int AS cnt FROM public.season_player_stats WHERE competition_id=$1",
-      \[SEED_COMPETITION_ID\],
-    );
-    expect(ss[0].cnt).toBeGreaterThan(0);
-  });
-
-  it("rejects unauthorized user", async () => {
-    const unauth = await createTestUser(pool, {
-      email: `u-${crypto.randomUUID().slice(0, 8)}@t.mn`,
-    });
-    const ps = JSON.stringify([
-      {
-        player_id: SEED_HOME_PLAYER,
-        team_season_id: SEED_HOME_TEAM_SEASON,
-        seconds_played: 100,
-        pts: 2,
-        fgm: 1,
-        fga: 2,
-        tpm: 0,
-        tpa: 1,
-        ftm: 0,
-        fta: 0,
-        oreb: 0,
-        dreb: 1,
-        ast: 0,
-        stl: 0,
-        blk: 0,
-        tov: 1,
-        pf: 0,
-      },
-    ]);
-    const ts = JSON.stringify([
-      {
-        team_season_id: SEED_HOME_TEAM_SEASON,
-        pts: 2,
-        fgm: 1,
-        fga: 2,
-        tpm: 0,
-        tpa: 1,
-        ftm: 0,
-        fta: 0,
-        oreb: 0,
-        dreb: 1,
-        team_reb: 0,
-        ast: 0,
-        stl: 0,
-        blk: 0,
-        tov: 1,
-        pf: 0,
-      },
-    ]);
-
-    await expect(
-      asUser(client, unauth.id, async () => {
-        await client.query(
-          `SELECT * FROM public.cmd_submit_official_stats($1::uuid,$2::text,$3::jsonb,$4::jsonb,$5::jsonb,$6::smallint,$7::smallint)`,
-          [gameId, "t.pdf", "{}", ps, ts, 2, 0],
-        );
-      }),
-    ).rejects.toThrow(/ONOO_NOT_AUTHORIZED/i);
-  });
 });
+
+it("submits official stats and instantly publishes the game", async () => {
+  const pS = JSON.stringify([
+    {
+      player_id: SEED_HOME_PLAYER,
+      team_season_id: SEED_HOME_TEAM_SEASON,
+      seconds_played: 1440,
+      pts: 24,
+      fgm: 10,
+      fga: 18,
+      tpm: 2,
+      tpa: 5,
+      ftm: 2,
+      fta: 3,
+      oreb: 3,
+      dreb: 5,
+      ast: 7,
+      stl: 2,
+      blk: 1,
+      tov: 3,
+      pf: 2,
+    },
+    {
+      player_id: SEED_HOME_PLAYER_2,
+      team_season_id: SEED_HOME_TEAM_SEASON,
+      seconds_played: 1320,
+      pts: 14,
+      fgm: 5,
+      fga: 11,
+      tpm: 3,
+      tpa: 7,
+      ftm: 1,
+      fta: 1,
+      oreb: 1,
+      dreb: 3,
+      ast: 2,
+      stl: 0,
+      blk: 0,
+      tov: 1,
+      pf: 4,
+    },
+    {
+      player_id: SEED_AWAY_PLAYER,
+      team_season_id: SEED_AWAY_TEAM_SEASON,
+      seconds_played: 1500,
+      pts: 31,
+      fgm: 12,
+      fga: 22,
+      tpm: 4,
+      tpa: 9,
+      ftm: 3,
+      fta: 4,
+      oreb: 4,
+      dreb: 8,
+      ast: 1,
+      stl: 1,
+      blk: 2,
+      tov: 4,
+      pf: 3,
+    },
+  ]);
+  const tS = JSON.stringify([
+    {
+      team_season_id: SEED_HOME_TEAM_SEASON,
+      pts: 38,
+      fgm: 15,
+      fga: 29,
+      tpm: 5,
+      tpa: 12,
+      ftm: 3,
+      fta: 4,
+      oreb: 4,
+      dreb: 8,
+      team_reb: 1,
+      ast: 9,
+      stl: 2,
+      blk: 1,
+      tov: 4,
+      pf: 6,
+    },
+    {
+      team_season_id: SEED_AWAY_TEAM_SEASON,
+      pts: 31,
+      fgm: 12,
+      fga: 22,
+      tpm: 4,
+      tpa: 9,
+      ftm: 3,
+      fta: 4,
+      oreb: 4,
+      dreb: 8,
+      team_reb: 0,
+      ast: 1,
+      stl: 1,
+      blk: 2,
+      tov: 4,
+      pf: 3,
+    },
+  ]);
+
+  const { data: result } = await asUser(client, admin.id, async () => {
+    const { rows } = await client.query(
+      `SELECT * FROM public.cmd_submit_official_stats($1::uuid,$2::text,$3::jsonb,$4::jsonb,$5::jsonb,$6::smallint,$7::smallint)`,
+      [
+        gameId,
+        `${gameId}/t.pdf`,
+        JSON.stringify({
+          format: "fiba_official_statistics_v1",
+          score: { home: 38, away: 31 },
+          teams: [
+            { name: "Khuleguud", code: "KHL", players: [] },
+            { name: "SG Apes", code: "APE", players: [] },
+          ],
+          warnings: [],
+          confidence: 0.95,
+        }),
+        pS,
+        tS,
+        38,
+        31,
+      ],
+    );
+    return rows[0].cmd_submit_official_stats as Record<string, unknown>;
+  });
+
+  // Game state
+  const { rows: g } = await pool.query(
+    "SELECT status,home_score,away_score,current_revision_number,published_at FROM public.games WHERE id=$1",
+    [gameId],
+  );
+  expect(g[0].status).toBe("league_verified");
+  expect(g[0].home_score).toBe(38);
+  expect(g[0].away_score).toBe(31);
+  expect(g[0].current_revision_number).toBe(1);
+  expect(g[0].published_at).not.toBeNull();
+
+  // Submission
+  const { rows: s } = await pool.query(
+    "SELECT source_type,evidence_url,status,normalized_payload->>'format' AS fmt FROM public.source_submissions WHERE game_id=$1",
+    [gameId],
+  );
+  expect(s.length).toBe(1);
+  expect(s[0].source_type).toBe("official_score_sheet");
+  expect(s[0].status).toBe("approved");
+  expect(s[0].fmt).toBe("fiba_official_statistics_v1");
+
+  // Revision
+  const { rows: r } = await pool.query(
+    "SELECT revision_number,state FROM public.game_revisions WHERE game_id=$1",
+    [gameId],
+  );
+  expect(r.length).toBe(1);
+  expect(r[0].state).toBe("approved");
+
+  // Player stats
+  const { rows: ps } = await pool.query(
+    "SELECT player_id,pts,fgm FROM public.game_player_stats WHERE game_id=$1 ORDER BY pts DESC",
+    [gameId],
+  );
+  expect(ps.length).toBe(3);
+  expect(ps[0].pts).toBe(31);
+
+  // Team stats
+  const { rows: ts } = await pool.query(
+    "SELECT pts FROM public.game_team_stats WHERE game_id=$1 ORDER BY pts DESC",
+    [gameId],
+  );
+  expect(ts.length).toBe(2);
+  expect(ts[0].pts).toBe(38);
+
+  // Season stats
+  const { rows: ss } = await pool.query(
+      "SELECT count(*)::int AS cnt FROM public.season_player_stats WHERE competition_id=$1",
+      \[SEED_COMPETITION_ID\;
+  ],
+    )
+  expect(ss[0].cnt).toBeGreaterThan(0);
+});
+
+it("rejects unauthorized user", async () => {
+  const unauth = await createTestUser(pool, {
+    email: `u-${crypto.randomUUID().slice(0, 8)}@t.mn`,
+  });
+  const ps = JSON.stringify([
+    {
+      player_id: SEED_HOME_PLAYER,
+      team_season_id: SEED_HOME_TEAM_SEASON,
+      seconds_played: 100,
+      pts: 2,
+      fgm: 1,
+      fga: 2,
+      tpm: 0,
+      tpa: 1,
+      ftm: 0,
+      fta: 0,
+      oreb: 0,
+      dreb: 1,
+      ast: 0,
+      stl: 0,
+      blk: 0,
+      tov: 1,
+      pf: 0,
+    },
+  ]);
+  const ts = JSON.stringify([
+    {
+      team_season_id: SEED_HOME_TEAM_SEASON,
+      pts: 2,
+      fgm: 1,
+      fga: 2,
+      tpm: 0,
+      tpa: 1,
+      ftm: 0,
+      fta: 0,
+      oreb: 0,
+      dreb: 1,
+      team_reb: 0,
+      ast: 0,
+      stl: 0,
+      blk: 0,
+      tov: 1,
+      pf: 0,
+    },
+  ]);
+
+  await expect(
+    asUser(client, unauth.id, async () => {
+      await client.query(
+        `SELECT * FROM public.cmd_submit_official_stats($1::uuid,$2::text,$3::jsonb,$4::jsonb,$5::jsonb,$6::smallint,$7::smallint)`,
+        [gameId, "t.pdf", "{}", ps, ts, 2, 0],
+      );
+    }),
+  ).rejects.toThrow(/ONOO_NOT_AUTHORIZED/i);
+});
+})

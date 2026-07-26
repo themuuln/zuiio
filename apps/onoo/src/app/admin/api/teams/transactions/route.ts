@@ -1,6 +1,5 @@
-import { withAuth } from "@/lib/supabase/admin-route";
 import { type NextRequest, NextResponse } from "next/server";
-
+import { withAuth } from "@/lib/supabase/admin-route";
 
 export async function GET() {
   return withAuth(async (supabase) => {
@@ -9,9 +8,9 @@ export async function GET() {
       .select("*, team_seasons(id, teams(name))")
       .order("created_at", { ascending: false });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -22,7 +21,10 @@ export async function POST(request: NextRequest) {
 
     if (!team_season_id || !type || !description || amount_mnt == null) {
       return NextResponse.json(
-        { error: "team_season_id, type, description, and amount_mnt are required" },
+        {
+          error:
+            "team_season_id, type, description, and amount_mnt are required",
+        },
         { status: 400 },
       );
     }
@@ -46,9 +48,9 @@ export async function POST(request: NextRequest) {
       .select("*, team_seasons(id, teams(name))")
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -75,8 +77,8 @@ export async function PUT(request: NextRequest) {
       .select("*, team_seasons(id, teams(name))")
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }

@@ -6,7 +6,6 @@ import {
   formatGameTime,
   formatMinutes,
   getDateRange,
-  getUlaanbaatarDate,
   orderScorebarGames,
   shiftDate,
   statusLabel,

@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMockSupabase,
   type MockFrom,
@@ -11,7 +11,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 import { createClient } from "@/lib/supabase/server";
-import { GET, POST, PUT, DELETE } from "../consent/route";
+import { DELETE, GET, POST, PUT } from "../consent/route";
 
 const mockCreateClient = vi.mocked(createClient);
 
@@ -50,10 +50,7 @@ describe("Org Consent API", () => {
 
   describe("GET /api/admin/org/consent", () => {
     it("lists consent policies for an org", async () => {
-      setQueryResult(mock, "consent_policies", [
-        samplePolicy,
-        samplePolicy2,
-      ]);
+      setQueryResult(mock, "consent_policies", [samplePolicy, samplePolicy2]);
 
       const req = new NextRequest(
         "http://localhost:3000/admin/api/org/consent?org_id=org-1",
@@ -90,12 +87,7 @@ describe("Org Consent API", () => {
     });
 
     it("returns 400 on query error", async () => {
-      setQueryResult(
-        mock,
-        "consent_policies",
-        null,
-        new Error("Query failed"),
-      );
+      setQueryResult(mock, "consent_policies", null, new Error("Query failed"));
 
       const req = new NextRequest(
         "http://localhost:3000/admin/api/org/consent?org_id=org-1",

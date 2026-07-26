@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -41,7 +42,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
 import { useEntityCrud } from "@/hooks/use-entity-crud";
 
 const COMPETITION_TYPES = [
@@ -51,9 +51,21 @@ const COMPETITION_TYPES = [
   { value: "friendly", label: "Нөхөрсөг тоглолт" },
 ] as const;
 const SOCIAL_PLATFORMS = [
-  { id: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
-  { id: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
-  { id: "twitter", label: "Twitter / X", placeholder: "https://twitter.com/..." },
+  {
+    id: "instagram",
+    label: "Instagram",
+    placeholder: "https://instagram.com/...",
+  },
+  {
+    id: "facebook",
+    label: "Facebook",
+    placeholder: "https://facebook.com/...",
+  },
+  {
+    id: "twitter",
+    label: "Twitter / X",
+    placeholder: "https://twitter.com/...",
+  },
   { id: "youtube", label: "YouTube", placeholder: "https://youtube.com/..." },
   { id: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/..." },
   { id: "website", label: "Вэб", placeholder: "https://..." },

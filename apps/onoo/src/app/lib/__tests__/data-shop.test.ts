@@ -84,8 +84,8 @@ describe("getShopProductBySlug", () => {
     );
     const result = await getShopProductBySlug("mayk");
     expect(result).not.toBeNull();
-    expect(result!.name).toBe("Майк");
-    expect(result!.price_mnt).toBe(50000);
+    expect(result?.name).toBe("Майк");
+    expect(result?.price_mnt).toBe(50000);
   });
 
   it("returns null on error", async () => {

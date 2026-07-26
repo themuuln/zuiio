@@ -73,6 +73,7 @@ vi.mock("@/components/admin/photo-uploader", () => ({
       data-entity-type={entityType}
     >
       {currentUrl ? (
+        // biome-ignore lint/performance/noImgElement: test mock
         <img src={currentUrl} alt="" data-testid="uploaded-photo" />
       ) : (
         <span>Зураг оруулах</span>
@@ -453,6 +454,8 @@ vi.mock("@/hooks/use-entity-crud", () => ({
     confirmLoading: false,
     form: {
       control: {},
+      getValues: vi.fn(() => "[]"),
+      setValue: vi.fn(),
       handleSubmit: () => vi.fn(),
       formState: { errors: {} },
     },
@@ -771,7 +774,7 @@ describe("Products admin page", () => {
     expect(screen.getByText("Нэр")).toBeInTheDocument();
     expect(screen.getByText("Slug")).toBeInTheDocument();
     expect(screen.getByText("Үнэ")).toBeInTheDocument();
-    expect(screen.getByText("Хэмжээ")).toBeInTheDocument();
+    expect(screen.getByText("Хэмжээ / үлдэгдэл")).toBeInTheDocument();
     expect(screen.getByText("Статус")).toBeInTheDocument();
     expect(screen.getByText("Үүсгэсэн")).toBeInTheDocument();
     expect(screen.getByText("Үйлдэл")).toBeInTheDocument();

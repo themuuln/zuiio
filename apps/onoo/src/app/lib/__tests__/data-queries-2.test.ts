@@ -299,9 +299,9 @@ describe("getGameById", () => {
     setQueryResult(mock, "v_public_games", row);
     const result = await getGameById("g-1");
     expect(result).not.toBeNull();
-    expect(result!.id).toBe("g-1");
-    expect(result!.home_name).toBe("Баг А");
-    expect(result!.away_name).toBe("Баг Б");
+    expect(result?.id).toBe("g-1");
+    expect(result?.home_name).toBe("Баг А");
+    expect(result?.away_name).toBe("Баг Б");
   });
 
   it("falls back to v_public_live_games when main view returns no data", async () => {
@@ -315,9 +315,9 @@ describe("getGameById", () => {
     setQueryResult(mock, "v_public_live_games", liveRow);
     const result = await getGameById("g-live");
     expect(result).not.toBeNull();
-    expect(result!.id).toBe("g-live");
-    expect(result!.home_name).toBe("Live Баг А");
-    expect(result!.status).toBe("live_provisional");
+    expect(result?.id).toBe("g-live");
+    expect(result?.home_name).toBe("Live Баг А");
+    expect(result?.status).toBe("live_provisional");
   });
 });
 
@@ -544,10 +544,10 @@ describe("getCompetition", () => {
     setQueryResult(mock, "v_public_standings", row);
     const result = await getCompetition("comp-1");
     expect(result).not.toBeNull();
-    expect(result!.id).toBe("comp-1");
-    expect(result!.name).toBe("Монгол лиг");
-    expect(result!.season).toBe("2026");
-    expect(result!.league).toBe("league-1");
+    expect(result?.id).toBe("comp-1");
+    expect(result?.name).toBe("Монгол лиг");
+    expect(result?.season).toBe("2026");
+    expect(result?.league).toBe("league-1");
   });
 });
 
@@ -617,11 +617,11 @@ describe("getPlayerShootingProfile", () => {
     setQueryResult(mock, "v_public_leaders", row);
     const result = await getPlayerShootingProfile("player-1", "comp-1");
     expect(result).not.toBeNull();
-    expect(result!.fgm).toBe(5);
-    expect(result!.fga).toBe(10);
-    expect(result!.tpm).toBe(2);
-    expect(result!.tpa).toBe(5);
-    expect(result!.ftm).toBe(3);
-    expect(result!.fta).toBe(4);
+    expect(result?.fgm).toBe(5);
+    expect(result?.fga).toBe(10);
+    expect(result?.tpm).toBe(2);
+    expect(result?.tpa).toBe(5);
+    expect(result?.ftm).toBe(3);
+    expect(result?.fta).toBe(4);
   });
 });

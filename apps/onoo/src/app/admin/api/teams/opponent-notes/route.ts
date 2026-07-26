@@ -1,6 +1,5 @@
-import { withAuth } from "@/lib/supabase/admin-route";
 import { type NextRequest, NextResponse } from "next/server";
-
+import { withAuth } from "@/lib/supabase/admin-route";
 
 export async function GET(request: NextRequest) {
   return withAuth(async (supabase) => {
@@ -19,17 +18,23 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query;
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
 export async function POST(request: NextRequest) {
   return withAuth(async (supabase) => {
     const body = await request.json();
-    const { team_season_id, opponent_team_season_id, notes, game_plan, strengths, weaknesses } =
-      body;
+    const {
+      team_season_id,
+      opponent_team_season_id,
+      notes,
+      game_plan,
+      strengths,
+      weaknesses,
+    } = body;
 
     if (!team_season_id || !opponent_team_season_id) {
       return NextResponse.json(
@@ -61,9 +66,9 @@ export async function POST(request: NextRequest) {
       )
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -76,7 +81,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
 
-    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const updates: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
     if (notes !== undefined) updates.notes = notes;
     if (game_plan !== undefined) updates.game_plan = game_plan;
     if (strengths !== undefined) updates.strengths = strengths;
@@ -91,8 +98,8 @@ export async function PUT(request: NextRequest) {
       )
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }

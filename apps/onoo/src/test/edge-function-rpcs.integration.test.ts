@@ -2,7 +2,6 @@ import type { Pool, PoolClient } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   SEED_ADMIN_ID,
-  SEED_AWAY_PLAYER,
   SEED_AWAY_TEAM_SEASON,
   SEED_COMPETITION_ID,
   SEED_HOME_PLAYER,
@@ -217,12 +216,7 @@ describe("projection rebuild flow", () => {
     await expect(
       pool.query(
         "SET ROLE anon; INSERT INTO public.game_player_stats (game_id, player_id, team_season_id, revision_id, pts) VALUES ($1, $2, $3, $4, 10)",
-        [
-          gameId,
-          SEED_HOME_PLAYER,
-          SEED_HOME_TEAM_SEASON,
-          revisionId,
-        ],
+        [gameId, SEED_HOME_PLAYER, SEED_HOME_TEAM_SEASON, revisionId],
       ),
     ).rejects.toThrow();
   });
@@ -268,13 +262,7 @@ describe("derive-game RPC pattern", () => {
 
     await pool.query(
       "INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter) VALUES ($1, $2, $3, true), ($1, $4, $5, true)",
-      [
-        gameId,
-        homeTsId,
-        SEED_HOME_PLAYER,
-        awayTsId,
-        SEED_HOME_PLAYER_2,
-      ],
+      [gameId, homeTsId, SEED_HOME_PLAYER, awayTsId, SEED_HOME_PLAYER_2],
     );
 
     await asUser(client, adminUser.id, async () => {

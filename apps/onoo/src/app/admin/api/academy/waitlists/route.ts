@@ -4,9 +4,10 @@
  * PUT  /admin/api/academy/waitlists — promote waitlist entry
  * DELETE /admin/api/academy/waitlists — remove from waitlist
  */
-import { withAuth } from "@/lib/supabase/admin-route";
-import { NextResponse } from "next/server";
+
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 export async function GET() {
   return withAuth(async (supabase) => {
@@ -18,7 +19,6 @@ export async function GET() {
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
     if (error)
       return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -54,13 +53,9 @@ export async function PUT(request: NextRequest) {
       if (error)
         return NextResponse.json({ error: error.message }, { status: 400 });
       return NextResponse.json(data) as never;
-      
     }
 
-    return NextResponse.json(
-      { error: "Unknown action" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   });
 }
 
@@ -76,6 +71,5 @@ export async function DELETE(request: NextRequest) {
     if (error)
       return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ success: true }) as never;
-    
   });
 }

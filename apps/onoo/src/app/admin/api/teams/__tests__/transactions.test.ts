@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMockSupabase,
   type MockFrom,
@@ -57,7 +57,7 @@ describe("Teams Transactions API", () => {
         sampleTransaction2,
       ]);
 
-      const req = new NextRequest(
+      const _req = new NextRequest(
         "http://localhost:3000/admin/api/teams/transactions",
       );
       const res = await GET();
@@ -70,7 +70,7 @@ describe("Teams Transactions API", () => {
     it("returns empty array when no transactions exist", async () => {
       setQueryResult(mock, "team_transactions", []);
 
-      const req = new NextRequest(
+      const _req = new NextRequest(
         "http://localhost:3000/admin/api/teams/transactions",
       );
       const res = await GET();
@@ -88,7 +88,7 @@ describe("Teams Transactions API", () => {
         new Error("DB connection failed"),
       );
 
-      const req = new NextRequest(
+      const _req = new NextRequest(
         "http://localhost:3000/admin/api/teams/transactions",
       );
       const res = await GET();
@@ -102,7 +102,7 @@ describe("Teams Transactions API", () => {
       const noUserMock = createMockSupabase({ user: null });
       mockCreateClient.mockResolvedValue(noUserMock as never);
 
-      const req = new NextRequest(
+      const _req = new NextRequest(
         "http://localhost:3000/admin/api/teams/transactions",
       );
       const res = await GET();
@@ -151,8 +151,7 @@ describe("Teams Transactions API", () => {
 
       expect(res.status).toBe(400);
       expect(body).toEqual({
-        error:
-          "team_season_id, type, description, and amount_mnt are required",
+        error: "team_season_id, type, description, and amount_mnt are required",
       });
     });
 

@@ -24,9 +24,38 @@ afterEach(() => {
 });
 
 describe("OrderDialog", () => {
-  it("renders without crashing", () => {
-    const { container } = render(<OrderDialog slug="mayk" priceMnt={50000} />);
-    // Renders a native dialog element
-    expect(container.querySelector("dialog")).toBeInTheDocument();
+  it("renders without crashing when closed", () => {
+    const { container } = render(
+      <OrderDialog
+        open={false}
+        onOpenChange={vi.fn()}
+        productId="p1"
+        variantIndex={0}
+        priceMnt={50000}
+        productName="Test Product"
+        variantSize="M"
+      />,
+    );
+    // When closed, shadcn Dialog renders nothing visible
+    expect(container.textContent).toBe("");
+  });
+
+  it("renders product info and form when open", () => {
+    render(
+      <OrderDialog
+        open={true}
+        onOpenChange={vi.fn()}
+        productId="p1"
+        variantIndex={0}
+        priceMnt={50000}
+        productName="Test Product"
+        variantSize="M"
+      />,
+    );
+    // Shows product name and size in the order recap
+    expect(screen.getByText("Test Product")).toBeInTheDocument();
+    expect(screen.getByText(/Хэмжээ: M/)).toBeInTheDocument();
+    // Shows the form inputs
+    expect(screen.getByText("Захиалга баталгаажуулах")).toBeInTheDocument();
   });
 });

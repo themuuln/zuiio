@@ -126,7 +126,7 @@ export function TeamHeader({
               })}
             </div>
           )}
-          </div>
+        </div>
 
         <div className="grid grid-cols-3 gap-3 lg:col-span-5">
           <StatBlock

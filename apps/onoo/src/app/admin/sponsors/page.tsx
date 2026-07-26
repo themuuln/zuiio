@@ -122,8 +122,8 @@ export default function SponsorsPage() {
   const [formLinkUrl, setFormLinkUrl] = useState("");
 
   // Logo upload
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const _fileInputRef = useRef<HTMLInputElement>(null);
+  const [_uploadingLogo, setUploadingLogo] = useState(false);
 
   // Placement dialog
   const [placementOpen, setPlacementOpen] = useState(false);

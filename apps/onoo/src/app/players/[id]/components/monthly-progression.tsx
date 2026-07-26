@@ -183,7 +183,7 @@ export function MonthlyProgression({
                 content={
                   <ChartTooltipContent
                     formatter={(
-                      value: unknown,
+                      _value: unknown,
                       _name: unknown,
                       item: unknown,
                     ) => {
@@ -232,7 +232,7 @@ export function MonthlyProgression({
                 content={
                   <ChartTooltipContent
                     formatter={(
-                      value: unknown,
+                      _value: unknown,
                       _name: unknown,
                       item: unknown,
                     ) => {

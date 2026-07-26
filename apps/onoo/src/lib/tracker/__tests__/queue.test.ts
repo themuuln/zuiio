@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mock infrastructure ──────────────────────────────────────
 const { mockOpenDB, getDb, seedLegacyStore, clearStores, dbPutThrowOnce } =
@@ -42,12 +42,10 @@ const { mockOpenDB, getDb, seedLegacyStore, clearStores, dbPutThrowOnce } =
         objectStoreNames: {
           contains: vi.fn((name: string) => stores.has(name)),
         },
-        put: vi.fn(
-          async (storeName: string, value: Row) => {
-            const s = storeFor(storeName);
-            s.data.set(value[s.keyPath] as string, clone(value));
-          },
-        ),
+        put: vi.fn(async (storeName: string, value: Row) => {
+          const s = storeFor(storeName);
+          s.data.set(value[s.keyPath] as string, clone(value));
+        }),
         get: vi.fn(async (storeName: string, key: string) => {
           const s = stores.get(storeName);
           return s?.data.get(key) ? clone(s.data.get(key)) : undefined;
@@ -66,18 +64,16 @@ const { mockOpenDB, getDb, seedLegacyStore, clearStores, dbPutThrowOnce } =
               .map((v) => clone(v));
           },
         ),
-        count: vi.fn(async (storeName: string) =>
-          stores.get(storeName)?.data.size ?? 0,
+        count: vi.fn(
+          async (storeName: string) => stores.get(storeName)?.data.size ?? 0,
         ),
         delete: vi.fn(async (storeName: string, key: string) => {
           stores.get(storeName)?.data.delete(key);
         }),
-        createObjectStore: vi.fn(
-          (name: string, opts: { keyPath: string }) => {
-            storeFor(name);
-            return { createIndex: vi.fn() };
-          },
-        ),
+        createObjectStore: vi.fn((name: string, _opts: { keyPath: string }) => {
+          storeFor(name);
+          return { createIndex: vi.fn() };
+        }),
         transaction: vi.fn((storeName: string, _mode: string) => {
           const srcStore = stores.get(storeName);
           return {
@@ -150,9 +146,9 @@ vi.mock("idb", () => ({
   openDB: mockOpenDB,
 }));
 
+import type { StoredOperation } from "../queue";
 // ── Module under test ────────────────────────────────────────────────
 import { createPersistentQueue } from "../queue";
-import type { StoredOperation } from "../queue";
 
 // ── Factory helper ───────────────────────────────────────────────────
 
@@ -509,9 +505,9 @@ describe("tracker PersistentQueue", () => {
     it("rejects loadPending when the IndexedDB lookup fails", async () => {
       const queue = await createPersistentQueue();
       const db = getDb();
-      (
-        db!.getAllFromIndex as ReturnType<typeof vi.fn>
-      ).mockRejectedValueOnce(new Error("transaction aborted"));
+      (db?.getAllFromIndex as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+        new Error("transaction aborted"),
+      );
 
       await expect(queue.loadPending("game-1")).rejects.toThrow(
         "transaction aborted",
@@ -524,7 +520,7 @@ describe("tracker PersistentQueue", () => {
       await queue.persistOperation(op);
 
       const db = getDb();
-      (db!.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      (db?.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
         new Error("disk failure"),
       );
 

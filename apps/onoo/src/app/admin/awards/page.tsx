@@ -1,17 +1,15 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Award, Plus, Search, Trophy } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-  type AwardRow,
   awardsApi,
-  catalogRefApi,
   type CompetitionRow,
+  catalogRefApi,
   type PlayerRow,
 } from "@/app/admin/_lib/api";
-import { AdminTableSkeleton } from "@/components/admin/admin-skeleton";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -62,7 +60,7 @@ function awardTypeBadge(type: string) {
 
 function formatDate(d: string | null) {
   if (!d) return "—";
-  return new Date(d + "T12:00:00").toLocaleDateString("mn-MN");
+  return new Date(`${d}T12:00:00`).toLocaleDateString("mn-MN");
 }
 
 export default function AwardsPage() {

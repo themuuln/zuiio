@@ -95,8 +95,8 @@ describe("getPlayerNameMap", () => {
       { id: "p2", canonical_name: "Other" },
     ]);
     const result = await getPlayerNameMap(rosters);
-    expect(result["p1"]).toBe("Dupe");
-    expect(result["p2"]).toBe("Other");
+    expect(result.p1).toBe("Dupe");
+    expect(result.p2).toBe("Other");
   });
 });
 
@@ -293,7 +293,7 @@ describe("getLiveGameData", () => {
 
     // Sport config resolved
     expect(result.sportConfig).not.toBeNull();
-    expect(result.sportConfig!.periods).toBe(4);
+    expect(result.sportConfig?.periods).toBe(4);
 
     // Player name map built from rosters → players query
     expect(result.playerNameMap).toEqual({

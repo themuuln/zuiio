@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { Download, Upload } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { csvApi, type CsvImportResult } from "@/app/admin/_lib/api-academy-ext";
+import { type CsvImportResult, csvApi } from "@/app/admin/_lib/api-academy-ext";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,9 @@ import { Input } from "@/components/ui/input";
 export default function AcademyStudentsCsvPage() {
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [importResult, setImportResult] = useState<CsvImportResult | null>(null);
+  const [importResult, setImportResult] = useState<CsvImportResult | null>(
+    null,
+  );
   const [file, setFile] = useState<File | null>(null);
 
   async function handleExport() {
@@ -34,7 +36,9 @@ export default function AcademyStudentsCsvPage() {
       URL.revokeObjectURL(url);
       toast.success("CSV файл татагдлаа");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Экспорт амжилтгүй боллоо");
+      toast.error(
+        err instanceof Error ? err.message : "Экспорт амжилтгүй боллоо",
+      );
     } finally {
       setExporting(false);
     }
@@ -57,7 +61,9 @@ export default function AcademyStudentsCsvPage() {
         toast.error(`${result.errors.length} алдаа гарлаа`);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Импорт амжилтгүй боллоо");
+      toast.error(
+        err instanceof Error ? err.message : "Импорт амжилтгүй боллоо",
+      );
     } finally {
       setImporting(false);
     }
@@ -87,9 +93,10 @@ export default function AcademyStudentsCsvPage() {
           <CardHeader>
             <CardTitle>CSV импорт</CardTitle>
             <CardDescription>
-              CSV файлаас сурагчдын мэдээлэл импортлох.
-              Багана: canonical_name (заавал), name_latin, date_of_birth, school_name,
-              grade_level, medical_notes, allergies, emergency_contact_name, emergency_contact_phone, notes
+              CSV файлаас сурагчдын мэдээлэл импортлох. Багана: canonical_name
+              (заавал), name_latin, date_of_birth, school_name, grade_level,
+              medical_notes, allergies, emergency_contact_name,
+              emergency_contact_phone, notes
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

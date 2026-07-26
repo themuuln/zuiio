@@ -1,6 +1,5 @@
-import { withAuth } from "@/lib/supabase/admin-route";
 import { type NextRequest, NextResponse } from "next/server";
-
+import { withAuth } from "@/lib/supabase/admin-route";
 
 export async function GET() {
   return withAuth(async (supabase) => {
@@ -9,9 +8,9 @@ export async function GET() {
       .select("*, team_seasons(id, team_id, teams(name))")
       .order("created_at", { ascending: false });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -33,9 +32,9 @@ export async function POST(request: NextRequest) {
       p_role: role,
     });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -50,7 +49,8 @@ export async function DELETE(request: NextRequest) {
 
     const { error } = await supabase.from("team_staff").delete().eq("id", id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return new NextResponse(null, { status: 204 });
   });
 }

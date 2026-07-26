@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { ShoppingBag } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { QrDisplay } from "./qr-display";
@@ -23,6 +30,8 @@ interface OrderDialogProps {
   productId: string;
   variantIndex: number;
   priceMnt: number;
+  productName: string;
+  variantSize: string;
 }
 
 interface OrderResult {
@@ -40,28 +49,14 @@ export function OrderDialog({
   productId,
   variantIndex,
   priceMnt,
+  productName,
+  variantSize,
 }: OrderDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
-
-  useEffect(() => {
-    const el = dialogRef.current;
-    if (!el) return;
-    if (open && !el.open) el.showModal();
-    if (!open && el.open) el.close();
-  }, [open]);
-
-  useEffect(() => {
-    const el = dialogRef.current;
-    if (!el) return;
-    const handler = () => onOpenChange(false);
-    el.addEventListener("close", handler);
-    return () => el.removeEventListener("close", handler);
-  }, [onOpenChange]);
 
   async function handleSubmit() {
     const parsed = formSchema.safeParse({ customerName: name, phone });
@@ -108,52 +103,90 @@ export function OrderDialog({
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="fixed inset-0 z-50 m-auto w-full max-w-md rounded-lg border bg-background p-6 shadow-xl backdrop:bg-black/50 open:flex open:flex-col"
-    >
-      <h2 className="mb-4 text-lg font-semibold">Захиалга баталгаажуулах</h2>
-      {orderResult ? (
-        <QrDisplay
-          qrImage={orderResult.qrImage}
-          qrText={orderResult.qrText}
-          merchantInvoiceId={orderResult.merchantInvoiceId}
-          expiresIn={orderResult.expiresIn}
-          totalMnt={orderResult.totalMnt}
-          onClose={handleClose}
-        />
-      ) : (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Нэр</Label>
-            <Input
-              id="name"
-              placeholder="Таны нэр"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            {errors.customerName && (
-              <p className="text-sm text-destructive">{errors.customerName}</p>
-            )}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Захиалга баталгаажуулах</DialogTitle>
+        </DialogHeader>
+
+        {orderResult ? (
+          <QrDisplay
+            qrImage={orderResult.qrImage}
+            qrText={orderResult.qrText}
+            merchantInvoiceId={orderResult.merchantInvoiceId}
+            expiresIn={orderResult.expiresIn}
+            totalMnt={orderResult.totalMnt}
+            onClose={handleClose}
+          />
+        ) : (
+          <div className="space-y-4">
+            {/* Order recap */}
+            <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--brand-sports)]/10">
+                    <ShoppingBag className="h-5 w-5 text-[var(--brand-sports)]" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{productName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Хэмжээ: {variantSize}
+                    </p>
+                  </div>
+                </div>
+                <p className="shrink-0 font-display text-lg font-bold text-[var(--brand-sports)]">
+                  ₮{priceMnt.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Form */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="order-name">Нэр</Label>
+                <Input
+                  id="order-name"
+                  placeholder="Таны нэр"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                {errors.customerName && (
+                  <p className="text-sm text-destructive">
+                    {errors.customerName}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="order-phone">Утас</Label>
+                <Input
+                  id="order-phone"
+                  placeholder="9999-0000"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                {errors.phone && (
+                  <p className="text-sm text-destructive">{errors.phone}</p>
+                )}
+              </div>
+            </div>
+
+            <p className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
+              <span className="text-muted-foreground">Нийт дүн</span>
+              <span className="font-semibold">
+                ₮{priceMnt.toLocaleString()}
+              </span>
+            </p>
+
+            <Button
+              className="w-full"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? "Түр хүлээнэ үү..." : "QPay-гаар төлөх"}
+            </Button>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">Утас</Label>
-            <Input
-              id="phone"
-              placeholder="9999-0000"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone}</p>
-            )}
-          </div>
-          <p className="text-lg font-bold">Дүн: ₮{priceMnt.toLocaleString()}</p>
-          <Button className="w-full" onClick={handleSubmit} disabled={loading}>
-            {loading ? "Түр хүлээнэ үү..." : "QPay-гаар төлөх"}
-          </Button>
-        </div>
-      )}
-    </dialog>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

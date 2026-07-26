@@ -35,7 +35,6 @@ import {
   getPlayerShootingProfile,
   getPlayerShotScatter,
   getPlayerShotZones,
-  getPlayers,
 } from "../../lib/data";
 import {
   computeSeasonAdvancedStats,

@@ -1,6 +1,5 @@
-import { withAuth } from "@/lib/supabase/admin-route";
 import { type NextRequest, NextResponse } from "next/server";
-
+import { withAuth } from "@/lib/supabase/admin-route";
 
 export async function GET(request: NextRequest) {
   return withAuth(async (supabase) => {
@@ -20,7 +19,8 @@ export async function GET(request: NextRequest) {
       .eq("team_season_id", teamSeasonId)
       .order("jersey_number", { ascending: true });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
   });
 }
@@ -41,7 +41,8 @@ export async function POST(request: NextRequest) {
       p_team_season_id: team_season_id,
     });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
   });
 }
@@ -52,12 +53,19 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "id query parameter is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "id query parameter is required" },
+        { status: 400 },
+      );
     }
 
-    const { error } = await supabase.from("roster_snapshots").delete().eq("id", id);
+    const { error } = await supabase
+      .from("roster_snapshots")
+      .delete()
+      .eq("id", id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return new NextResponse(null, { status: 204 });
   });
 }

@@ -68,7 +68,7 @@ const {
       competitionId?: string | null,
     ) => Promise<Record<string, unknown>[]>
   >(() => Promise.resolve([])),
-  mockFormatMinutes: vi.fn((seconds: number | null) => "12:00"),
+  mockFormatMinutes: vi.fn((_seconds: number | null) => "12:00"),
   mockAggregateMonthlyStats: vi.fn(() => []),
   mockDetectMilestones: vi.fn(() => []),
   mockNotFound: vi.fn(),
@@ -258,19 +258,17 @@ vi.mock("lucide-react", () => ({
 }));
 
 vi.mock("@tanstack/react-query", async () => {
-  const actual = await vi.importActual<
-    typeof import("@tanstack/react-query")
-  >("@tanstack/react-query");
+  const actual = await vi.importActual<typeof import("@tanstack/react-query")>(
+    "@tanstack/react-query",
+  );
   return {
     ...actual,
     HydrationBoundary: ({ children }: { children: React.ReactNode }) => (
       <>{children}</>
     ),
-    QueryClientProvider: ({
-      children,
-    }: {
-      children: React.ReactNode;
-    }) => <>{children}</>,
+    QueryClientProvider: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
     useQuery: vi.fn(),
     useQueryClient: vi.fn(() => ({
       getQueryData: vi.fn(),

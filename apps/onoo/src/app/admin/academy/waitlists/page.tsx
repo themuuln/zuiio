@@ -7,11 +7,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  type WaitlistRow,
-  waitlistsApi,
-} from "@/app/admin/_lib/api-advanced";
 import { academyRefApi } from "@/app/admin/_lib/api";
+import { type WaitlistRow, waitlistsApi } from "@/app/admin/_lib/api-advanced";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,7 +72,10 @@ export default function AcademyWaitlistsPage() {
     staleTime: 3 * 60 * 1000,
   });
 
-  const students = (ref?.students ?? []) as { id: string; canonical_name: string }[];
+  const students = (ref?.students ?? []) as {
+    id: string;
+    canonical_name: string;
+  }[];
   const programs = (ref?.programs ?? []) as { id: string; name: string }[];
   const form = useForm<WaitlistFormValues>({
     resolver: zodResolver(waitlistSchema),
@@ -86,8 +86,7 @@ export default function AcademyWaitlistsPage() {
   });
 
   const joinMutation = useMutation({
-    mutationFn: (data: WaitlistFormValues) =>
-      waitlistsApi.join(data),
+    mutationFn: (data: WaitlistFormValues) => waitlistsApi.join(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["admin", "academy", "waitlists"],
@@ -200,13 +199,11 @@ export default function AcademyWaitlistsPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {programs.map(
-                            (p: { id: string; name: string }) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.name}
-                              </SelectItem>
-                            ),
-                          )}
+                          {programs.map((p: { id: string; name: string }) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -221,13 +218,8 @@ export default function AcademyWaitlistsPage() {
                   >
                     Цуцлах
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={joinMutation.isPending}
-                  >
-                    {joinMutation.isPending
-                      ? "Нэмж байна..."
-                      : "Нэмэх"}
+                  <Button type="submit" disabled={joinMutation.isPending}>
+                    {joinMutation.isPending ? "Нэмж байна..." : "Нэмэх"}
                   </Button>
                 </div>
               </form>
@@ -281,9 +273,7 @@ export default function AcademyWaitlistsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() =>
-                            promoteMutation.mutate(entry.id)
-                          }
+                          onClick={() => promoteMutation.mutate(entry.id)}
                           disabled={promoteMutation.isPending}
                           aria-label="Дэвшүүлэх"
                         >
@@ -294,9 +284,7 @@ export default function AcademyWaitlistsPage() {
                           size="icon"
                           onClick={() => {
                             if (
-                              window.confirm(
-                                "Хүлээлгийн жагсаалтаас хасах уу?",
-                              )
+                              window.confirm("Хүлээлгийн жагсаалтаас хасах уу?")
                             ) {
                               removeMutation.mutate(entry.id);
                             }

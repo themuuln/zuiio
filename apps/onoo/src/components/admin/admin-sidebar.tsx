@@ -60,8 +60,16 @@ const navGroups: NavGroup[] = [
       { href: "/admin/org/members", label: "Гишүүд", icon: Users },
       { href: "/admin/org/storage", label: "Хадгалах сан", icon: HardDrive },
       { href: "/admin/org/consent", label: "Зөвшөөрөл", icon: FileCheck },
-      { href: "/admin/org/break-glass", label: "Яаралтай хандалт", icon: ShieldAlert },
-      { href: "/admin/org/transfers", label: "Шилжүүлэг", icon: ArrowLeftRight },
+      {
+        href: "/admin/org/break-glass",
+        label: "Яаралтай хандалт",
+        icon: ShieldAlert,
+      },
+      {
+        href: "/admin/org/transfers",
+        label: "Шилжүүлэг",
+        icon: ArrowLeftRight,
+      },
       { href: "/admin/org/identity-disputes", label: "Маргаан", icon: Scale },
     ],
   },
@@ -79,11 +87,23 @@ const navGroups: NavGroup[] = [
       { href: "/admin/teams", label: "Баг", icon: Users },
       { href: "/admin/players", label: "Тоглогч", icon: UserCircle },
       { href: "/admin/teams/roster", label: "Бүртгэл", icon: ClipboardList },
-      { href: "/admin/teams/availability", label: "Бэлэн байдал", icon: Calendar },
-      { href: "/admin/teams/opponent-notes", label: "Өрсөлдөгчийн тэмдэглэл", icon: FileText },
+      {
+        href: "/admin/teams/availability",
+        label: "Бэлэн байдал",
+        icon: Calendar,
+      },
+      {
+        href: "/admin/teams/opponent-notes",
+        label: "Өрсөлдөгчийн тэмдэглэл",
+        icon: FileText,
+      },
       { href: "/admin/teams/staff", label: "Ажилтнууд", icon: BadgeCheck },
       { href: "/admin/teams/training", label: "Сургалт", icon: ClipboardList },
-      { href: "/admin/teams/transactions", label: "Гүйлгээ", icon: ArrowLeftRight },
+      {
+        href: "/admin/teams/transactions",
+        label: "Гүйлгээ",
+        icon: ArrowLeftRight,
+      },
     ],
   },
   {
@@ -116,9 +136,26 @@ const navGroups: NavGroup[] = [
       { href: "/admin/academy/attendance", label: "Ирц", icon: ClipboardCheck },
       { href: "/admin/academy/consent", label: "Зөвшөөрөл", icon: FileCheck },
       { href: "/admin/academy/enrollments", label: "Элсэлт", icon: UserPlus },
-      { href: "/admin/academy/students", label: "Сурагчид", icon: GraduationCap },
-      { href: "/admin/academy/waitlists", label: "Хүлээлгийн жагсаалт", icon: List },
-      { href: "/admin/academy/payments-ledger", label: "Төлбөрийн дэвтэр", icon: BookOpen },
+      {
+        href: "/admin/academy/registrations",
+        label: "Бүртгэл",
+        icon: ClipboardList,
+      },
+      {
+        href: "/admin/academy/students",
+        label: "Сурагчид",
+        icon: GraduationCap,
+      },
+      {
+        href: "/admin/academy/waitlists",
+        label: "Хүлээлгийн жагсаалт",
+        icon: List,
+      },
+      {
+        href: "/admin/academy/payments-ledger",
+        label: "Төлбөрийн дэвтэр",
+        icon: BookOpen,
+      },
     ],
   },
   {
@@ -130,7 +167,6 @@ const navGroups: NavGroup[] = [
     ],
   },
 ];
-
 
 function SidebarNavItem({
   item,

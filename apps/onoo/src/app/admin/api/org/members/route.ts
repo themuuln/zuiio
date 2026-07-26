@@ -3,9 +3,10 @@
  * POST /admin/api/org/members — assign a role to a user
  * DELETE /admin/api/org/members — remove a role
  */
-import { withAuth } from "@/lib/supabase/admin-route";
-import { NextResponse } from "next/server";
+
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 /** GET /admin/api/org/members?scope_type=org&scope_id=... */
 export async function GET(request: NextRequest) {
@@ -15,7 +16,10 @@ export async function GET(request: NextRequest) {
     const scopeId = searchParams.get("scope_id");
 
     if (!scopeId) {
-      return NextResponse.json({ error: "scope_id is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "scope_id is required" },
+        { status: 400 },
+      );
     }
 
     const { data, error } = await supabase.rpc("cmd_list_members", {

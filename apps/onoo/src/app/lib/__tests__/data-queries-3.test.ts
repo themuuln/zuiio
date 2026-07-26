@@ -208,15 +208,15 @@ describe("getTeamBySlug", () => {
     const result = await getTeamBySlug("test-team");
 
     expect(result).not.toBeNull();
-    expect(result!.team.name).toBe("Test Team");
-    expect(result!.team.slug).toBe("test-team");
-    expect(result!.team.social_links).toEqual({ instagram: "@test" });
-    expect(result!.players).toHaveLength(1);
-    expect(result!.players[0].player_name).toBe("Test Player");
-    expect(result!.standings).toBeDefined();
-    expect(result!.standings!.wins).toBe(5);
-    expect(result!.leaders).toHaveLength(1);
-    expect(result!.leaders[0].pts).toBe(20);
+    expect(result?.team.name).toBe("Test Team");
+    expect(result?.team.slug).toBe("test-team");
+    expect(result?.team.social_links).toEqual({ instagram: "@test" });
+    expect(result?.players).toHaveLength(1);
+    expect(result?.players[0].player_name).toBe("Test Player");
+    expect(result?.standings).toBeDefined();
+    expect(result?.standings?.wins).toBe(5);
+    expect(result?.leaders).toHaveLength(1);
+    expect(result?.leaders[0].pts).toBe(20);
   });
 
   it("handles null social_links gracefully", async () => {
@@ -249,11 +249,11 @@ describe("getTeamBySlug", () => {
     const result = await getTeamBySlug("test-team");
 
     expect(result).not.toBeNull();
-    expect(result!.team.social_links).toEqual({});
-    expect(result!.standings).toBeUndefined();
-    expect(result!.leaders).toEqual([]);
-    expect(result!.recentGames).toEqual([]);
-    expect(result!.upcomingGames).toEqual([]);
+    expect(result?.team.social_links).toEqual({});
+    expect(result?.standings).toBeUndefined();
+    expect(result?.leaders).toEqual([]);
+    expect(result?.recentGames).toEqual([]);
+    expect(result?.upcomingGames).toEqual([]);
   });
 });
 
@@ -328,11 +328,11 @@ describe("getPlayerById", () => {
     const result = await getPlayerById("player-1");
 
     expect(result).not.toBeNull();
-    expect(result!.player.canonical_name).toBe("Test Player");
-    expect(result!.profiles).toHaveLength(1);
-    expect(result!.profiles[0].player_position).toBe("Guard");
-    expect(result!.gameLog).toHaveLength(1);
-    expect(result!.gameLog[0].pts).toBe(20);
+    expect(result?.player.canonical_name).toBe("Test Player");
+    expect(result?.profiles).toHaveLength(1);
+    expect(result?.profiles[0].player_position).toBe("Guard");
+    expect(result?.gameLog).toHaveLength(1);
+    expect(result?.gameLog[0].pts).toBe(20);
   });
 
   it("returns empty gameLog when box score query returns null", async () => {
@@ -376,7 +376,7 @@ describe("getPlayerById", () => {
     const result = await getPlayerById("player-1");
 
     expect(result).not.toBeNull();
-    expect(result!.gameLog).toEqual([]);
+    expect(result?.gameLog).toEqual([]);
   });
 });
 
@@ -520,11 +520,11 @@ describe("getPlayerSeasonAverages", () => {
     const result = await getPlayerSeasonAverages("player-1", "comp-1");
 
     expect(result).not.toBeNull();
-    expect(result!.ppg).toBe(20);
-    expect(result!.rpg).toBe(6); // oreb 2 + dreb 4
-    expect(result!.apg).toBe(5);
-    expect(result!.spg).toBe(1);
-    expect(result!.bpg).toBe(0);
+    expect(result?.ppg).toBe(20);
+    expect(result?.rpg).toBe(6); // oreb 2 + dreb 4
+    expect(result?.apg).toBe(5);
+    expect(result?.spg).toBe(1);
+    expect(result?.bpg).toBe(0);
   });
 
   it("defaults null fields to 0", async () => {
@@ -539,9 +539,9 @@ describe("getPlayerSeasonAverages", () => {
 
     const result = await getPlayerSeasonAverages("player-1", "comp-1");
 
-    expect(result!.ppg).toBe(0);
-    expect(result!.rpg).toBe(0);
-    expect(result!.apg).toBe(0);
+    expect(result?.ppg).toBe(0);
+    expect(result?.rpg).toBe(0);
+    expect(result?.apg).toBe(0);
   });
 });
 
@@ -778,10 +778,10 @@ describe("getPlayerCareerTotals", () => {
     const result = await getPlayerCareerTotals("player-1");
 
     expect(result).not.toBeNull();
-    expect(result!.gp).toBe(7);
-    expect(result!.pts).toBe(20);
-    expect(result!.reb).toBe(6);
-    expect(result!.ast).toBe(5);
+    expect(result?.gp).toBe(7);
+    expect(result?.pts).toBe(20);
+    expect(result?.reb).toBe(6);
+    expect(result?.ast).toBe(5);
   });
 
   it("sums multiple rows correctly", async () => {
@@ -794,10 +794,10 @@ describe("getPlayerCareerTotals", () => {
     const result = await getPlayerCareerTotals("player-1");
 
     expect(result).not.toBeNull();
-    expect(result!.gp).toBe(21);
-    expect(result!.pts).toBe(400);
-    expect(result!.reb).toBe(74);
-    expect(result!.ast).toBe(111);
+    expect(result?.gp).toBe(21);
+    expect(result?.pts).toBe(400);
+    expect(result?.reb).toBe(74);
+    expect(result?.ast).toBe(111);
   });
 
   it("handles null stat fields gracefully", async () => {
@@ -809,10 +809,10 @@ describe("getPlayerCareerTotals", () => {
     const result = await getPlayerCareerTotals("player-1");
 
     expect(result).not.toBeNull();
-    expect(result!.gp).toBe(8);
-    expect(result!.pts).toBe(10);
-    expect(result!.reb).toBe(3);
-    expect(result!.ast).toBe(3);
+    expect(result?.gp).toBe(8);
+    expect(result?.pts).toBe(10);
+    expect(result?.reb).toBe(3);
+    expect(result?.ast).toBe(3);
   });
 });
 

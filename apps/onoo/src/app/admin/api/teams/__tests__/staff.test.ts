@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMockSupabase,
   type MockFrom,
-  setQueryResult,
   MockQueryBuilder,
+  setQueryResult,
 } from "@/test/supabase-mock";
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -12,7 +12,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 import { createClient } from "@/lib/supabase/server";
-import { GET, POST, DELETE } from "../staff/route";
+import { DELETE, GET, POST } from "../staff/route";
 
 const mockCreateClient = vi.mocked(createClient);
 
@@ -64,7 +64,7 @@ describe("Teams Staff API", () => {
     it("returns all staff", async () => {
       setQueryResult(mock, "team_staff", [sampleStaff, sampleStaff2]);
 
-      const req = new NextRequest(
+      const _req = new NextRequest(
         "http://localhost:3000/admin/api/teams/staff",
       );
       const res = await GET();
@@ -77,7 +77,7 @@ describe("Teams Staff API", () => {
     it("returns empty array when no staff exist", async () => {
       setQueryResult(mock, "team_staff", []);
 
-      const req = new NextRequest(
+      const _req = new NextRequest(
         "http://localhost:3000/admin/api/teams/staff",
       );
       const res = await GET();
@@ -95,7 +95,7 @@ describe("Teams Staff API", () => {
         new Error("DB connection failed"),
       );
 
-      const req = new NextRequest(
+      const _req = new NextRequest(
         "http://localhost:3000/admin/api/teams/staff",
       );
       const res = await GET();
@@ -110,7 +110,7 @@ describe("Teams Staff API", () => {
       noUserMock.rpc = vi.fn();
       mockCreateClient.mockResolvedValue(noUserMock as never);
 
-      const req = new NextRequest(
+      const _req = new NextRequest(
         "http://localhost:3000/admin/api/teams/staff",
       );
       const res = await GET();
@@ -219,12 +219,7 @@ describe("Teams Staff API", () => {
     });
 
     it("returns 500 on delete error", async () => {
-      setQueryResult(
-        mock,
-        "team_staff",
-        null,
-        new Error("Delete failed"),
-      );
+      setQueryResult(mock, "team_staff", null, new Error("Delete failed"));
 
       const req = new NextRequest(
         "http://localhost:3000/admin/api/teams/staff",

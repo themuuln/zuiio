@@ -1,11 +1,4 @@
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  type Mock,
-  vi,
-} from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { createMockRequest, parseResponse } from "@/test/mocks";
 
 // Mock server-only so we can import qpay module in vitest/jsdom
@@ -17,8 +10,8 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import { POST as OrdersPost } from "@/app/api/shop/orders/route";
 import { POST as ShopCallbackPost } from "@/app/api/shop/qpay/callback/route";
-import { createClient } from "@/lib/supabase/server";
 import { resetMockState } from "@/lib/shop/qpay";
+import { createClient } from "@/lib/supabase/server";
 
 interface MockSupabaseClient {
   rpc: Mock<
@@ -150,9 +143,7 @@ describe("QPay adapter (module-level)", () => {
   });
 
   it("createInvoice returns mock data with MOCK-INV- prefix", async () => {
-    const { createInvoice, getQPayConfig } = await import(
-      "@/lib/shop/qpay"
-    );
+    const { createInvoice, getQPayConfig } = await import("@/lib/shop/qpay");
     const config = getQPayConfig();
     const result = await createInvoice(config, {
       amount: 50000,
@@ -164,9 +155,7 @@ describe("QPay adapter (module-level)", () => {
   });
 
   it("checkPayment returns UNPAID for unknown invoice", async () => {
-    const { checkPayment, getQPayConfig } = await import(
-      "@/lib/shop/qpay"
-    );
+    const { checkPayment, getQPayConfig } = await import("@/lib/shop/qpay");
     const config = getQPayConfig();
     const result = await checkPayment(config, "non-existent");
     expect(result.status).toBe("UNPAID");

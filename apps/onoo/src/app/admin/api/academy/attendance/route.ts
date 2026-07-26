@@ -3,9 +3,10 @@
  * POST /admin/api/academy/attendance — create via cmd_record_attendance
  * PUT  /admin/api/academy/attendance — update attendance status
  */
-import { withAuth } from "@/lib/supabase/admin-route";
-import { NextResponse } from "next/server";
+
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 export async function GET(request: NextRequest) {
   return withAuth(async (supabase) => {
@@ -22,9 +23,9 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query;
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -40,9 +41,9 @@ export async function POST(request: NextRequest) {
       p_note: body.note ?? null,
     });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data) as never;
-    
   });
 }
 
@@ -57,8 +58,8 @@ export async function PUT(request: NextRequest) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data) as never;
-    
   });
 }

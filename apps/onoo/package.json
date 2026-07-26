@@ -76,6 +76,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "typescript": "catalog:",
+    "react-grab": "^0.1.50",
     "vitest": "catalog:"
   }
 }

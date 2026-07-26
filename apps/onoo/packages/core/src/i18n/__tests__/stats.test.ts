@@ -19,13 +19,13 @@ describe("STAT_LABELS", () => {
   });
 
   it("has non-empty Mongolian labels", () => {
-    for (const [key, val] of Object.entries(STAT_LABELS.mn)) {
+    for (const [_key, val] of Object.entries(STAT_LABELS.mn)) {
       expect(val).toBeTruthy();
     }
   });
 
   it("has non-empty English labels", () => {
-    for (const [key, val] of Object.entries(STAT_LABELS.en)) {
+    for (const [_key, val] of Object.entries(STAT_LABELS.en)) {
       expect(val).toBeTruthy();
     }
   });
@@ -58,21 +58,19 @@ describe("getStatLabel", () => {
 
 describe("MILESTONE_LABELS", () => {
   it("has Mongolian labels for all milestones", () => {
-    for (const [key, val] of Object.entries(MILESTONE_LABELS)) {
+    for (const [_key, val] of Object.entries(MILESTONE_LABELS)) {
       expect(val.mn).toBeTruthy();
     }
   });
 
   it("has English labels for all milestones", () => {
-    for (const [key, val] of Object.entries(MILESTONE_LABELS)) {
+    for (const [_key, val] of Object.entries(MILESTONE_LABELS)) {
       expect(val.en).toBeTruthy();
     }
   });
 
   it("includes career_high_pts", () => {
-    expect(MILESTONE_LABELS.career_high_pts.mn).toBe(
-      "Онооны карьерийн дээд",
-    );
+    expect(MILESTONE_LABELS.career_high_pts.mn).toBe("Онооны карьерийн дээд");
   });
 
   it("includes triple_double in both locales", () => {

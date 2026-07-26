@@ -7,11 +7,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  type TeamStaffRow,
-  staffApi,
-} from "@/app/admin/_lib/api-team-ops";
-import { teamsContextApi, type TeamSeasonRow } from "@/app/admin/_lib/api";
+import { type TeamSeasonRow, teamsContextApi } from "@/app/admin/_lib/api";
+import { staffApi, type TeamStaffRow } from "@/app/admin/_lib/api-team-ops";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +43,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 const staffSchema = z.object({
   team_season_id: z.string().min(1, "Баг сонгоно уу"),
@@ -64,7 +61,10 @@ const ROLE_LABELS: Record<string, string> = {
   media: "Медиа",
 };
 
-const ROLE_COLORS: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+const ROLE_COLORS: Record<
+  string,
+  "default" | "secondary" | "outline" | "destructive"
+> = {
   head_coach: "default",
   assistant_coach: "secondary",
   manager: "outline",
@@ -94,7 +94,7 @@ export default function TeamStaffPage() {
     queryFn: () => teamsContextApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const teamSeasons = (ctx?.teamSeasons ?? []) as TeamSeasonRow[]
+  const teamSeasons = (ctx?.teamSeasons ?? []) as TeamSeasonRow[];
 
   const form = useForm<StaffFormValues>({
     resolver: zodResolver(staffSchema),
@@ -166,7 +166,9 @@ export default function TeamStaffPage() {
           <TableBody>
             {staff.map((item, index) => (
               <TableRow key={item.id}>
-                <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {index + 1}
+                </TableCell>
                 <TableCell className="font-medium">
                   {item.team_seasons?.teams?.name ?? "—"}
                 </TableCell>
@@ -243,10 +245,7 @@ export default function TeamStaffPage() {
                   <FormItem>
                     <FormLabel>Хэрэглэгчийн ID</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="auth.users-ийн UUID"
-                        {...field}
-                      />
+                      <Input placeholder="auth.users-ийн UUID" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -295,9 +294,7 @@ export default function TeamStaffPage() {
 
       <ConfirmDialog
         open={deleteConfirm.open}
-        onOpenChange={(open) =>
-          setDeleteConfirm((prev) => ({ ...prev, open }))
-        }
+        onOpenChange={(open) => setDeleteConfirm((prev) => ({ ...prev, open }))}
         onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
         title="Ажилтан устгах"
         description={`"${deleteConfirm.label}"-ийг устгах уу?`}

@@ -2,9 +2,10 @@
  * GET  /admin/api/academy/students/csv — export students as CSV
  * POST /admin/api/academy/students/csv — import students from CSV
  */
-import { withAuth } from "@/lib/supabase/admin-route";
-import { NextResponse } from "next/server";
+
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 function escapeCsv(val: string | null | undefined): string {
   if (val == null) return "";
@@ -16,7 +17,7 @@ function escapeCsv(val: string | null | undefined): string {
 }
 
 function csvRow(values: (string | null | undefined)[]): string {
-  return values.map(escapeCsv).join(",") + "\n";
+  return `${values.map(escapeCsv).join(",")}\n`;
 }
 
 export async function GET() {
@@ -26,7 +27,8 @@ export async function GET() {
       .select("*, academy_profiles(name)")
       .order("canonical_name", { ascending: true });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
 
     let csv = csvRow([
       "id",
@@ -54,7 +56,11 @@ export async function GET() {
         s.school_name,
         s.grade_level,
         s.medical_notes,
-        s.allergies ? (Array.isArray(s.allergies) ? s.allergies.join("; ") : String(s.allergies)) : "",
+        s.allergies
+          ? Array.isArray(s.allergies)
+            ? s.allergies.join("; ")
+            : String(s.allergies)
+          : "",
         s.emergency_contact_name,
         s.emergency_contact_phone,
         s.status,
@@ -78,14 +84,20 @@ export async function POST(request: NextRequest) {
       const file = formData.get("file") as File | null;
 
       if (!file) {
-        return NextResponse.json({ error: "Файл оруулаагүй байна" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Файл оруулаагүй байна" },
+          { status: 400 },
+        );
       }
 
       const text = await file.text();
       const lines = text.split("\n").filter((l) => l.trim().length > 0);
 
       if (lines.length < 2) {
-        return NextResponse.json({ error: "CSV хоосон байна" }, { status: 400 });
+        return NextResponse.json(
+          { error: "CSV хоосон байна" },
+          { status: 400 },
+        );
       }
 
       // Parse header
@@ -117,7 +129,10 @@ export async function POST(request: NextRequest) {
       const academyId = profiles?.[0]?.id;
       if (!academyId) {
         return NextResponse.json(
-          { error: "Академийн профайл олдсонгүй. Эхлээд академийн профайл үүсгэнэ үү." },
+          {
+            error:
+              "Академийн профайл олдсонгүй. Эхлээд академийн профайл үүсгэнэ үү.",
+          },
           { status: 400 },
         );
       }
@@ -137,14 +152,16 @@ export async function POST(request: NextRequest) {
           p_academy_id: academyId,
           p_canonical_name: canonicalName,
           p_name_latin: latinIdx >= 0 ? (values[latinIdx] ?? null) : null,
-          p_date_of_birth: dobIdx >= 0 ? (values[dobIdx] || null) : null,
-          p_school_name: schoolIdx >= 0 ? (values[schoolIdx] || null) : null,
-          p_grade_level: gradeIdx >= 0 ? (values[gradeIdx] || null) : null,
-          p_medical_notes: medicalIdx >= 0 ? (values[medicalIdx] || null) : null,
-          p_allergies: allergyIdx >= 0 ? (values[allergyIdx] || null) : null,
-          p_emergency_contact_name: emergNameIdx >= 0 ? (values[emergNameIdx] || null) : null,
-          p_emergency_contact_phone: emergPhoneIdx >= 0 ? (values[emergPhoneIdx] || null) : null,
-          p_notes: notesIdx >= 0 ? (values[notesIdx] || null) : null,
+          p_date_of_birth: dobIdx >= 0 ? values[dobIdx] || null : null,
+          p_school_name: schoolIdx >= 0 ? values[schoolIdx] || null : null,
+          p_grade_level: gradeIdx >= 0 ? values[gradeIdx] || null : null,
+          p_medical_notes: medicalIdx >= 0 ? values[medicalIdx] || null : null,
+          p_allergies: allergyIdx >= 0 ? values[allergyIdx] || null : null,
+          p_emergency_contact_name:
+            emergNameIdx >= 0 ? values[emergNameIdx] || null : null,
+          p_emergency_contact_phone:
+            emergPhoneIdx >= 0 ? values[emergPhoneIdx] || null : null,
+          p_notes: notesIdx >= 0 ? values[notesIdx] || null : null,
         });
 
         if (rpcError) {
@@ -154,9 +171,13 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({ success_count: successCount, errors }) as never;
+      return NextResponse.json({
+        success_count: successCount,
+        errors,
+      }) as never;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "CSV боловсруулахад алдаа гарлаа";
+      const message =
+        err instanceof Error ? err.message : "CSV боловсруулахад алдаа гарлаа";
       return NextResponse.json({ error: message }, { status: 400 });
     }
   });

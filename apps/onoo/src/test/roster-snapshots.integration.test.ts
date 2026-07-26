@@ -84,8 +84,8 @@ describe("cmd_snapshot_roster", () => {
         [TEST_TS_ID],
       );
     });
-    expect(result!.rows.length).toBeGreaterThan(0);
-    expect(result!.rows[0].player_id).toBeTruthy();
+    expect(result?.rows.length).toBeGreaterThan(0);
+    expect(result?.rows[0].player_id).toBeTruthy();
   });
 
   it("re-creates snapshot on second call", async () => {
@@ -95,7 +95,7 @@ describe("cmd_snapshot_roster", () => {
         "SELECT count(*) AS cnt FROM public.cmd_snapshot_roster($1)",
         [TEST_TS_ID],
       );
-      count = parseInt(r.rows[0].cnt);
+      count = parseInt(r.rows[0].cnt, 10);
     });
     expect(count).toBeGreaterThan(0);
   });
@@ -152,9 +152,9 @@ describe("cmd_record_transfer", () => {
         [SEED_HOME_PLAYER, TEST_TS_ID, TEST_TS_ID_SG],
       );
     });
-    expect(result!.rows.length).toBe(1);
-    expect(result!.rows[0].player_id).toBe(SEED_HOME_PLAYER);
-    expect(result!.rows[0].transfer_type).toBe("permanent");
+    expect(result?.rows.length).toBe(1);
+    expect(result?.rows[0].player_id).toBe(SEED_HOME_PLAYER);
+    expect(result?.rows[0].transfer_type).toBe("permanent");
   });
 
   it("unauthorized user cannot record transfers", async () => {

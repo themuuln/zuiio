@@ -1,9 +1,29 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
-import { orgRefApi, orgStorageApi, type OrgStorageBucketRow, type OrganizationRow } from "@/app/admin/_lib/api";
+import {
+  type OrganizationRow,
+  type OrgStorageBucketRow,
+  orgRefApi,
+  orgStorageApi,
+} from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,22 +48,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { Loader2, Plus, Trash2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const bucketSchema = z.object({
   bucket_name: z.string().min(1, "Сав нэр оруулна уу"),
@@ -58,7 +62,7 @@ export default function OrgStoragePage() {
     queryFn: () => orgRefApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const orgs = (ref?.orgs ?? []) as OrganizationRow[]
+  const orgs = (ref?.orgs ?? []) as OrganizationRow[];
 
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -88,7 +92,9 @@ export default function OrgStoragePage() {
         bucket_id: values.bucket_id,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "org-storage", selectedOrgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "org-storage", selectedOrgId],
+      });
       toast.success("Сав нэмэгдсэн");
       setDialogOpen(false);
       form.reset();
@@ -101,7 +107,9 @@ export default function OrgStoragePage() {
   const removeMutation = useMutation({
     mutationFn: (id: string) => orgStorageApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "org-storage", selectedOrgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "org-storage", selectedOrgId],
+      });
       toast.success("Сав хасагдсан");
       setRemoveConfirm({ open: false, bucket: null });
     },
@@ -139,7 +147,9 @@ export default function OrgStoragePage() {
 
       {/* Buckets list */}
       {!selectedOrgId ? (
-        <p className="text-sm text-muted-foreground">Байгууллага сонгоод савнуудыг харах</p>
+        <p className="text-sm text-muted-foreground">
+          Байгууллага сонгоод савнуудыг харах
+        </p>
       ) : bucketsLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -161,8 +171,12 @@ export default function OrgStoragePage() {
           <TableBody>
             {buckets.map((bucket) => (
               <TableRow key={bucket.id}>
-                <TableCell className="font-medium">{bucket.bucket_name}</TableCell>
-                <TableCell className="text-muted-foreground">{bucket.bucket_id}</TableCell>
+                <TableCell className="font-medium">
+                  {bucket.bucket_name}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {bucket.bucket_id}
+                </TableCell>
                 <TableCell>
                   {bucket.is_tenant_isolation ? "Тийм" : "Үгүй"}
                 </TableCell>
@@ -174,9 +188,7 @@ export default function OrgStoragePage() {
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:text-destructive"
-                    onClick={() =>
-                      setRemoveConfirm({ open: true, bucket })
-                    }
+                    onClick={() => setRemoveConfirm({ open: true, bucket })}
                     disabled={removeMutation.isPending}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -192,11 +204,15 @@ export default function OrgStoragePage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Сав нэмэх{selectedOrg ? ` - ${selectedOrg.name}` : ""}</DialogTitle>
+            <DialogTitle>
+              Сав нэмэх{selectedOrg ? ` - ${selectedOrg.name}` : ""}
+            </DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit((values) => createMutation.mutate(values))}
+              onSubmit={form.handleSubmit((values) =>
+                createMutation.mutate(values),
+              )}
               className="space-y-4"
             >
               <FormField
@@ -251,7 +267,8 @@ export default function OrgStoragePage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Сав хасах</AlertDialogTitle>
             <AlertDialogDescription>
-              {removeConfirm.bucket?.bucket_name} ({removeConfirm.bucket?.bucket_id}) савыг хасах уу?
+              {removeConfirm.bucket?.bucket_name} (
+              {removeConfirm.bucket?.bucket_id}) савыг хасах уу?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMockSupabase,
   type MockFrom,
-  setQueryResult,
   MockQueryBuilder,
+  setQueryResult,
 } from "@/test/supabase-mock";
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -12,7 +12,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 import { createClient } from "@/lib/supabase/server";
-import { GET, POST, DELETE } from "../members/route";
+import { DELETE, GET, POST } from "../members/route";
 
 const mockCreateClient = vi.mocked(createClient);
 
@@ -78,7 +78,7 @@ describe("Org Members API", () => {
         "http://localhost:3000/admin/api/org/members?scope_type=team&scope_id=team-1",
       );
       const res = await GET(req);
-      const body = await res.json();
+      const _body = await res.json();
 
       expect(res.status).toBe(200);
       expect(mock.rpc).toHaveBeenCalledWith("cmd_list_members", {

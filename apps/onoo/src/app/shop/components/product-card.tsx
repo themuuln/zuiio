@@ -4,11 +4,10 @@
  */
 "use client";
 
-import { BadgeCheck, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { ShopProductRow } from "@/app/lib/data-shop";
-import { Badge } from "@/components/ui/badge";
 
 interface ProductCardProps {
   product: ShopProductRow;
@@ -31,6 +30,7 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Image container */}
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-[var(--surface-2)]">
         {(product.images?.length ?? 0) > 0 && !imgError ? (
+          // biome-ignore lint/performance/noImgElement: dynamic product image
           <img
             src={product.images?.[0]}
             alt={product.name}
@@ -46,24 +46,6 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Stock badge */}
-        {outOfStock ? (
-          <Badge
-            variant="destructive"
-            className="absolute right-2 top-2 pointer-events-none"
-          >
-            Дууссан
-          </Badge>
-        ) : (
-          <Badge
-            variant="secondary"
-            className="absolute right-2 top-2 gap-1 border-border/30 bg-[var(--surface-1)]/80 backdrop-blur-sm pointer-events-none"
-          >
-            <BadgeCheck className="size-3 text-[var(--success)]" aria-hidden="true" />
-            <span>Бэлэн</span>
-          </Badge>
-        )}
-      </div>
 
       {/* Content */}
       <div className="flex flex-col gap-1.5 p-4">

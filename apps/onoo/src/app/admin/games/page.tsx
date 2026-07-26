@@ -9,8 +9,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
-  catalogRefApi,
   type CompetitionRow,
+  catalogRefApi,
   type GameRow,
   gamesApi,
   teamSeasonsApi,
@@ -122,7 +122,6 @@ export default function AdminGamesPage() {
     queryKey: ["admin", "games"],
     queryFn: () => gamesApi.list(),
   });
-  
 
   const { data: ref } = useQuery({
     queryKey: ["admin", "catalog", "reference"],

@@ -4,9 +4,10 @@
  * PUT /admin/api/org/consent?id=... — update policy
  * DELETE /admin/api/org/consent — delete policy
  */
-import { withAuth } from "@/lib/supabase/admin-route";
-import { NextResponse } from "next/server";
+
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/supabase/admin-route";
 
 /** GET /admin/api/org/consent?org_id=... */
 export async function GET(request: NextRequest) {
@@ -15,7 +16,10 @@ export async function GET(request: NextRequest) {
     const orgId = searchParams.get("org_id");
 
     if (!orgId) {
-      return NextResponse.json({ error: "org_id parameter is required" }, { status: 400 }) as never;
+      return NextResponse.json(
+        { error: "org_id parameter is required" },
+        { status: 400 },
+      ) as never;
     }
 
     const { data, error } = await supabase
@@ -25,7 +29,10 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 }) as never;
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 },
+      ) as never;
     }
 
     return NextResponse.json(data);
@@ -36,7 +43,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return withAuth(async (supabase) => {
     const body = await request.json();
-    const { organization_id, title, description, retention_days, data_categories, is_active } = body;
+    const {
+      organization_id,
+      title,
+      description,
+      retention_days,
+      data_categories,
+      is_active,
+    } = body;
 
     if (!organization_id || !title) {
       return NextResponse.json(
@@ -59,7 +73,10 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 }) as never;
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 },
+      ) as never;
     }
 
     return NextResponse.json(data);
@@ -73,17 +90,22 @@ export async function PUT(request: NextRequest) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "id query parameter is required" }, { status: 400 }) as never;
+      return NextResponse.json(
+        { error: "id query parameter is required" },
+        { status: 400 },
+      ) as never;
     }
 
     const body = await request.json();
-    const { title, description, retention_days, data_categories, is_active } = body;
+    const { title, description, retention_days, data_categories, is_active } =
+      body;
 
     const updates: Record<string, unknown> = {};
     if (title !== undefined) updates.title = title;
     if (description !== undefined) updates.description = description;
     if (retention_days !== undefined) updates.retention_days = retention_days;
-    if (data_categories !== undefined) updates.data_categories = data_categories;
+    if (data_categories !== undefined)
+      updates.data_categories = data_categories;
     if (is_active !== undefined) updates.is_active = is_active;
     updates.updated_at = new Date().toISOString();
 
@@ -95,7 +117,10 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 }) as never;
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 },
+      ) as never;
     }
 
     return NextResponse.json(data);
@@ -109,7 +134,10 @@ export async function DELETE(request: NextRequest) {
     const { id } = body;
 
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 }) as never;
+      return NextResponse.json(
+        { error: "id is required" },
+        { status: 400 },
+      ) as never;
     }
 
     const { error } = await supabase
@@ -118,7 +146,10 @@ export async function DELETE(request: NextRequest) {
       .eq("id", id);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 }) as never;
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 },
+      ) as never;
     }
 
     return NextResponse.json({ success: true } as never);

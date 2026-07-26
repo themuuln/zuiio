@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMockRequest, parseResponse } from "@/test/mocks";
 import {
@@ -5,7 +6,6 @@ import {
   type MockFrom,
   setQueryResult,
 } from "@/test/supabase-mock";
-import type { NextRequest } from "next/server";
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
@@ -85,7 +85,10 @@ describe("identity disputes API", () => {
 
   describe("GET /api/admin/org/identity-disputes", () => {
     it("GET lists disputes", async () => {
-      setQueryResult(mock, "identity_disputes", [sampleDispute, sampleDispute2]);
+      setQueryResult(mock, "identity_disputes", [
+        sampleDispute,
+        sampleDispute2,
+      ]);
       const req = makeRequest(
         undefined,
         "http://localhost:3000/admin/api/org/identity-disputes",

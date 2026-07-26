@@ -36,7 +36,9 @@ describe("HomeDateNav", () => {
   });
 
   it("hides Өнөөдөр button when current date is today", () => {
-    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ulaanbaatar" });
+    const today = new Date().toLocaleDateString("en-CA", {
+      timeZone: "Asia/Ulaanbaatar",
+    });
     render(<HomeDateNav currentDate={today} />);
     expect(screen.queryByText("Өнөөдөр")).not.toBeInTheDocument();
   });

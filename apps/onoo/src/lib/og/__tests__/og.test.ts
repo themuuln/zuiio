@@ -83,10 +83,10 @@ describe("loadFonts", () => {
   it("loads Barlow Regular, Barlow Bold, and Inter Regular concurrently", async () => {
     const fontData = new Uint8Array([10, 20, 30]).buffer;
 
-    let callCount = 0;
+    let _callCount = 0;
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = typeof input === "string" ? input : "";
-      callCount++;
+      _callCount++;
 
       if (url.includes("fonts.googleapis.com/css2")) {
         // Return CSS with a valid woff2 URL for each font request

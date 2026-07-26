@@ -1,4 +1,3 @@
-import type { StatEvent } from "@onoo/core/types";
 import { Download, Flag, MapPin, Radio, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -375,10 +374,10 @@ export default async function GameDetailPage({ params }: GamePageProps) {
             gameId={game.id}
             homeTeamSeasonId={game.home_team_season_id}
             awayTeamSeasonId={game.away_team_season_id}
-            initialEvents={liveGameData!.events}
-            rosters={liveGameData!.rosters}
+            initialEvents={liveGameData?.events}
+            rosters={liveGameData?.rosters}
             sportConfig={
-              liveGameData!.sportConfig ?? {
+              liveGameData?.sportConfig ?? {
                 periods: 4,
                 period_minutes: 10,
                 overtime_minutes: 5,
@@ -387,7 +386,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                 players_on_court: 5,
               }
             }
-            playerNameMap={liveGameData!.playerNameMap}
+            playerNameMap={liveGameData?.playerNameMap}
           />
         ) : (
           <PublicEmptyState

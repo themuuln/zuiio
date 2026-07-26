@@ -1,5 +1,5 @@
 import { formatPlayerName, getStatLabel } from "@onoo/core";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),

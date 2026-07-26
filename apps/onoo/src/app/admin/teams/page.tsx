@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -39,7 +40,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useEntityCrud } from "@/hooks/use-entity-crud";
-import { Separator } from "@/components/ui/separator";
 
 const teamSchema = z.object({
   name: z.string().min(1, "Нэр заавал байх ёстой"),
@@ -49,9 +49,21 @@ const teamSchema = z.object({
   social_links: z.record(z.string(), z.string()).optional(),
 });
 const SOCIAL_PLATFORMS = [
-  { id: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
-  { id: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
-  { id: "twitter", label: "Twitter / X", placeholder: "https://twitter.com/..." },
+  {
+    id: "instagram",
+    label: "Instagram",
+    placeholder: "https://instagram.com/...",
+  },
+  {
+    id: "facebook",
+    label: "Facebook",
+    placeholder: "https://facebook.com/...",
+  },
+  {
+    id: "twitter",
+    label: "Twitter / X",
+    placeholder: "https://twitter.com/...",
+  },
   { id: "youtube", label: "YouTube", placeholder: "https://youtube.com/..." },
   { id: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/..." },
   { id: "website", label: "Вэб", placeholder: "https://..." },
@@ -81,7 +93,13 @@ export default function TeamsPage() {
     api: teamsApi,
     queryKey: ["admin", "teams"],
     schema: teamSchema,
-    defaultValues: { name: "", short_code: "", slug: "", primary_color: "", social_links: {} },
+    defaultValues: {
+      name: "",
+      short_code: "",
+      slug: "",
+      primary_color: "",
+      social_links: {},
+    },
     successMessages: {
       create: "Баг амжилттай нэмэгдлээ",
       update: "Баг амжилттай шинэчлэгдлээ",

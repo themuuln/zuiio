@@ -56,7 +56,10 @@ function buildMockClient(
     from: vi.fn(() => new ChainableMock(result)),
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user }, error: null }),
-      getSession: vi.fn().mockResolvedValue({ data: { session: user ? { user } : null }, error: null }),
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: user ? { user } : null },
+        error: null,
+      }),
     },
   };
   return mock;

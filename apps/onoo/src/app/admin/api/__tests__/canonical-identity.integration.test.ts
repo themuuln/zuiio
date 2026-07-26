@@ -223,7 +223,7 @@ describe("Horizon C — canonical identity RPCs", () => {
 
   it("returns athlete affiliations for linked entities", async () => {
     const [playerUser] = await createTestUsers(pool, 1);
-    const player = (
+    const _player = (
       await pool.query(
         "INSERT INTO public.players (canonical_name, nationality, user_id) VALUES ($1, 'MN', $2) RETURNING *",
         [`CI_P4_${h.tag}`, playerUser.id],

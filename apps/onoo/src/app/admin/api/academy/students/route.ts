@@ -2,9 +2,10 @@
  * GET /admin/api/academy/students — list students
  * POST /admin/api/academy/students — create student
  */
-import { createRouteHandlers, withAuth } from "@/lib/supabase/admin-route";
-import { NextResponse } from "next/server";
+
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { createRouteHandlers, withAuth } from "@/lib/supabase/admin-route";
 
 const students = createRouteHandlers("academy_students", {
   select: "*, academy_profiles(name)",
@@ -39,7 +40,8 @@ export async function POST(request: NextRequest) {
       p_notes: body.notes ?? null,
     });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data);
   });
 }
@@ -53,7 +55,8 @@ export async function PUT(request: NextRequest) {
       p_school_name: body.school_name ?? null,
       p_status: body.status ?? null,
     });
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data);
   });
 }

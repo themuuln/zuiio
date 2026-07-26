@@ -113,7 +113,8 @@ export const attendanceApi = {
   list: (params?: { program_id?: string; session_date?: string }) => {
     const searchParams = new URLSearchParams();
     if (params?.program_id) searchParams.set("program_id", params.program_id);
-    if (params?.session_date) searchParams.set("session_date", params.session_date);
+    if (params?.session_date)
+      searchParams.set("session_date", params.session_date);
     const qs = searchParams.toString();
     return request<AttendanceRow[]>(`${BASE}/attendance${qs ? `?${qs}` : ""}`);
   },
@@ -136,8 +137,7 @@ export const attendanceApi = {
 };
 
 export const consentApi = {
-  listTemplates: () =>
-    request<ConsentTemplateRow[]>(`${BASE}/consent`),
+  listTemplates: () => request<ConsentTemplateRow[]>(`${BASE}/consent`),
   list: () =>
     request<{ templates: ConsentTemplateRow[]; records: ConsentRecordRow[] }>(
       `${BASE}/consent`,

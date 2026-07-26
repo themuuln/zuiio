@@ -1,14 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
-import { orgRefApi, orgConsentApi, type ConsentPolicyRow, type OrganizationRow } from "@/app/admin/_lib/api";
+import {
+  type ConsentPolicyRow,
+  type OrganizationRow,
+  orgConsentApi,
+  orgRefApi,
+} from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,7 +41,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -41,18 +56,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
+import { Textarea } from "@/components/ui/textarea";
 
 const RETENTION_OPTIONS = [
   { value: 30, label: "30 хоног" },
@@ -76,7 +80,7 @@ export default function OrgConsentPage() {
     queryFn: () => orgRefApi.get(),
     staleTime: 3 * 60 * 1000,
   });
-  const orgs = (ref?.orgs ?? []) as OrganizationRow[]
+  const orgs = (ref?.orgs ?? []) as OrganizationRow[];
 
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -88,14 +92,21 @@ export default function OrgConsentPage() {
   });
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingPolicy, setEditingPolicy] = useState<ConsentPolicyRow | null>(null);
+  const [editingPolicy, setEditingPolicy] = useState<ConsentPolicyRow | null>(
+    null,
+  );
   const [removeConfirm, setRemoveConfirm] = useState<{
     open: boolean;
     policy: ConsentPolicyRow | null;
   }>({ open: false, policy: null });
   const form = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
-    defaultValues: { title: "", description: "", retention_days: 365, is_active: true },
+    defaultValues: {
+      title: "",
+      description: "",
+      retention_days: 365,
+      is_active: true,
+    },
   });
   const createMutation = useMutation({
     mutationFn: (values: PolicyFormValues) =>
@@ -107,7 +118,9 @@ export default function OrgConsentPage() {
         is_active: values.is_active,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "org-consent", selectedOrgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "org-consent", selectedOrgId],
+      });
       toast.success("Бодлого нэмэгдсэн");
       setDialogOpen(false);
       setEditingPolicy(null);
@@ -122,7 +135,9 @@ export default function OrgConsentPage() {
     mutationFn: ({ id, ...values }: PolicyFormValues & { id: string }) =>
       orgConsentApi.update(id, values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "org-consent", selectedOrgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "org-consent", selectedOrgId],
+      });
       toast.success("Бодлого шинэчлэгдсэн");
       setDialogOpen(false);
       setEditingPolicy(null);
@@ -136,7 +151,9 @@ export default function OrgConsentPage() {
   const removeMutation = useMutation({
     mutationFn: (id: string) => orgConsentApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "org-consent", selectedOrgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "org-consent", selectedOrgId],
+      });
       toast.success("Бодлого хасагдсан");
       setRemoveConfirm({ open: false, policy: null });
     },
@@ -158,7 +175,12 @@ export default function OrgConsentPage() {
 
   function handleCreate() {
     setEditingPolicy(null);
-    form.reset({ title: "", description: "", retention_days: 365, is_active: true });
+    form.reset({
+      title: "",
+      description: "",
+      retention_days: 365,
+      is_active: true,
+    });
     setDialogOpen(true);
   }
 
@@ -201,7 +223,9 @@ export default function OrgConsentPage() {
 
       {/* Policies list */}
       {!selectedOrgId ? (
-        <p className="text-sm text-muted-foreground">Байгууллага сонгоод бодлогуудыг харах</p>
+        <p className="text-sm text-muted-foreground">
+          Байгууллага сонгоод бодлогуудыг харах
+        </p>
       ) : policiesLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -250,9 +274,7 @@ export default function OrgConsentPage() {
                       variant="ghost"
                       size="sm"
                       className="text-destructive hover:text-destructive"
-                      onClick={() =>
-                        setRemoveConfirm({ open: true, policy })
-                      }
+                      onClick={() => setRemoveConfirm({ open: true, policy })}
                       disabled={removeMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -283,7 +305,10 @@ export default function OrgConsentPage() {
                   <FormItem>
                     <FormLabel>Гарчиг</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Өгөгдөл хадгалах бодлого" />
+                      <Input
+                        {...field}
+                        placeholder="Өгөгдөл хадгалах бодлого"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -369,7 +394,11 @@ export default function OrgConsentPage() {
                   Болих
                 </Button>
                 <Button type="submit" disabled={isPending}>
-                  {isPending ? "Хадгалж байна..." : editingPolicy ? "Хадгалах" : "Нэмэх"}
+                  {isPending
+                    ? "Хадгалж байна..."
+                    : editingPolicy
+                      ? "Хадгалах"
+                      : "Нэмэх"}
                 </Button>
               </div>
             </form>

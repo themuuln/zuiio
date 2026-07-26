@@ -2,8 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Edit, Plus, Trash2 } from "lucide-react";
-import { z } from "zod";
+import { Edit, Plus, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { ShopProductRow } from "@/app/admin/_lib/api";
 import { shopProductsApi } from "@/app/admin/_lib/api";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
@@ -34,6 +34,7 @@ const productSchema = z.object({
   slug: z.string().min(1, "Slug шаардлагатай"),
   price_mnt: z.coerce.number().int().positive("Үнэ эерэг тоо байх ёстой"),
   description: z.string().optional(),
+  variants: z.string().optional(),
 });
 
 const dateFormatter = new Intl.DateTimeFormat("mn-MN", {
@@ -52,7 +53,13 @@ export default function AdminProductsPage() {
     api: shopProductsApi,
     queryKey: ["admin", "products"],
     schema: productSchema,
-    defaultValues: { name: "", slug: "", price_mnt: "", description: "" },
+    defaultValues: {
+      name: "",
+      slug: "",
+      price_mnt: "",
+      description: "",
+      variants: "[]",
+    },
     successMessages: {
       create: "Бүтээгдэхүүн амжилттай үүсгэлээ",
       update: "Бүтээгдэхүүн амжилттай шинэчлэлээ",
@@ -63,8 +70,52 @@ export default function AdminProductsPage() {
       slug: row.slug,
       price_mnt: row.price_mnt,
       description: row.description ?? "",
+      variants: JSON.stringify(row.variants),
     }),
   });
+
+  const [variants, setVariants] = useState<
+    Array<{ size: string; stock: number }>
+  >([]);
+
+  // Sync local variant state from form value when dialog opens
+  useEffect(() => {
+    const v = crud.form.getValues("variants");
+    if (typeof v === "string" && v) {
+      try {
+        setVariants(JSON.parse(v));
+      } catch {
+        setVariants([]);
+      }
+    }
+  }, [crud.form.getValues]);
+  useEffect(() => {
+    const v = crud.form.getValues("variants");
+    if (typeof v === "string" && v) {
+      try {
+        setVariants(JSON.parse(v));
+      } catch {
+        setVariants([]);
+      }
+    }
+  }, [crud.form.getValues]);
+  function removeVariant(index: number) {
+    setVariants((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateVariant(
+    index: number,
+    field: "size" | "stock",
+    value: string | number,
+  ) {
+    setVariants((prev) =>
+      prev.map((v, i) =>
+        i === index
+          ? { ...v, [field]: field === "stock" ? Number(value) : value }
+          : v,
+      ),
+    );
+  }
 
   const columns: ColumnDef<ShopProductRow>[] = [
     {
@@ -92,8 +143,25 @@ export default function AdminProductsPage() {
     },
     {
       id: "variants",
-      header: "Хэмжээ",
-      cell: ({ row }) => `${row.original.variants?.length ?? 0} хэмжээтэй`,
+      header: "Хэмжээ / үлдэгдэл",
+      cell: ({ row }) => {
+        const vars = row.original.variants ?? [];
+        if (vars.length === 0)
+          return <span className="text-muted-foreground">—</span>;
+        return (
+          <div className="flex flex-wrap gap-1">
+            {vars.map((v) => (
+              <Badge
+                key={v.size}
+                variant={v.stock > 0 ? "outline" : "secondary"}
+                className="text-xs"
+              >
+                {v.size}: {v.stock}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "is_available",
@@ -228,7 +296,70 @@ export default function AdminProductsPage() {
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end gap-2">
+
+              {/* Variant editor */}
+              <div className="space-y-3 rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">Хэмжээ / нөөц</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addVariant}
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Нэмэх
+                  </Button>
+                </div>
+                {variants.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Бүтээгдэхүүнд хэмжээ нэмээгүй байна. Жижиг, дунд, том гэх
+                    мэт.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {variants.map((v, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: static list, no reordering
+                      <div key={i} className="flex items-end gap-2">
+                        <div className="flex-1">
+                          <label className="mb-1 block text-xs text-muted-foreground">
+                            Хэмжээ
+                          </label>
+                          <Input
+                            placeholder="S, M, L"
+                            value={v.size}
+                            onChange={(e) =>
+                              updateVariant(i, "size", e.target.value)
+                            }
+                          />
+                        </div>
+                        <div className="w-20">
+                          <label className="mb-1 block text-xs text-muted-foreground">
+                            Нөөц
+                          </label>
+                          <Input
+                            type="number"
+                            min={0}
+                            placeholder="0"
+                            value={v.stock}
+                            onChange={(e) =>
+                              updateVariant(i, "stock", e.target.value)
+                            }
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-9 shrink-0 text-destructive"
+                          onClick={() => removeVariant(i)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <Button
                   type="button"
                   variant="outline"

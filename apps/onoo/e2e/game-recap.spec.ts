@@ -34,7 +34,7 @@ test.describe("Game recap pages", () => {
     if (await gameLink.isVisible()) {
       await gameLink.click();
       // Check for lead-change flow section
-      const wormSection = page.locator(
+      const _wormSection = page.locator(
         "text=Lead Change Flow, Лид".split(",")[0],
       );
       // Any SVG on the page with more than 2 lines indicates a score worm

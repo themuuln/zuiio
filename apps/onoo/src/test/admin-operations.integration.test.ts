@@ -13,7 +13,6 @@ import {
   closePool,
   createTestUser,
   getPool,
-  newPool,
 } from "./setup-integration";
 
 // Pool for direct queries (bypasses RLS)

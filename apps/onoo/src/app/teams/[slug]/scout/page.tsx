@@ -58,7 +58,7 @@ export default async function ScoutPage({ params }: PageProps) {
   const { slug } = await params;
   const teamData = await getTeamBySlug(slug);
 
-  if (!teamData || !teamData.team) {
+  if (!teamData?.team) {
     notFound();
   }
 
@@ -109,7 +109,7 @@ export default async function ScoutPage({ params }: PageProps) {
 
   const myAgg = aggregateTeamStats(myTeamGames);
   const oppAgg = aggregateTeamStats(oppGames);
-  const opponentName = opponentData?.team.name ?? opponentSlug;
+  const _opponentName = opponentData?.team.name ?? opponentSlug;
 
   // Fetch opponent top players
   const supabase = await createClient();

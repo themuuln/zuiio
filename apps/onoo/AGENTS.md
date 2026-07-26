@@ -127,6 +127,14 @@ Every new feature, bug fix, or refactor MUST include tests AND be verified by ru
 | Database query / aggregation | Integration test (real DB) | `vitest --config vitest.integration.config.ts` |
 | Auth flow | Integration test via Supabase JS client | `vitest --config vitest.integration.config.ts` |
 | Critical user flow (login, browse) | E2E (sparingly) | Playwright |
+|
+> **Installed testing skills — load via `skill://<name>` before writing tests:**
+> | Skill | When | Source |
+> |-------|------|--------|
+> | `playwright` | E2E tests | 43 Next.js App Router best-practice rules (pproenca) |
+> | `vitest` | Unit/component tests | Patterns from Vitest's creator (Anthony Fu) |
+> | `e2e-test-scenarios` | Supabase integration tests | Auth, RLS, Realtime, DB test patterns |
+
 
 **FastGate — agent verification contract:**
 Before declaring any change complete, you MUST run `pnpm test:all`.
