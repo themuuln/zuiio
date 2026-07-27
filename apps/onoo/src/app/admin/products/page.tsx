@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Edit, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import type { ShopProductRow } from "@/app/admin/_lib/api";
 import { shopProductsApi } from "@/app/admin/_lib/api";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
@@ -115,6 +116,9 @@ export default function AdminProductsPage() {
           : v,
       ),
     );
+  }
+  function addVariant() {
+    setVariants((prev) => [...prev, { size: "", stock: 0 }]);
   }
 
   const columns: ColumnDef<ShopProductRow>[] = [

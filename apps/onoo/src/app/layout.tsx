@@ -68,22 +68,24 @@ export default function RootLayout({
         <Suspense>
           <Providers>
             <SentryInit />
-            {/* SiteNav sticks to the top on its own; scorebar flows below. */}
-            <SiteNav />
-            <ScorebarGate>
-              <ScorebarShell>
-                <Suspense
-                  fallback={
-                    <div
-                      className={`${SCOREBAR_MIN_HEIGHT} border-b border-sidebar-border bg-sidebar`}
-                      aria-hidden="true"
-                    />
-                  }
-                >
-                  <Scorebar />
-                </Suspense>
-              </ScorebarShell>
-            </ScorebarGate>
+            {/* Sticky masthead: nav + scorebar scroll away together */}
+            <div className="sticky top-0 z-50">
+              <SiteNav />
+              <ScorebarGate>
+                <ScorebarShell>
+                  <Suspense
+                    fallback={
+                      <div
+                        className={`${SCOREBAR_MIN_HEIGHT} border-b border-sidebar-border bg-sidebar`}
+                        aria-hidden="true"
+                      />
+                    }
+                  >
+                    <Scorebar />
+                  </Suspense>
+                </ScorebarShell>
+              </ScorebarGate>
+            </div>
             <div
               id="content"
               tabIndex={-1}

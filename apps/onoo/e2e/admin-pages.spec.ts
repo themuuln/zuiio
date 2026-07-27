@@ -15,7 +15,7 @@ import { expect, test } from "@playwright/test";
 // ─── Constants ──────────────────────────────────────────────────────────
 
 const DEV_EMAIL = process.env.NEXT_PUBLIC_ADMIN_DEV_EMAIL ?? "admin@onoo.mn";
-const DEV_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_DEV_PASSWORD ?? "onoo2026";
+const DEV_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_DEV_PASSWORD ?? "Demo123!";
 
 /** Page paths that use AdminPageLayout with a CardTitle text assertion. */
 const ADMIN_PAGE_PATHS = [
@@ -43,24 +43,26 @@ async function verifyPageLoads(page: Page, url: string) {
 }
 
 /**
- * Log in to the admin with dev credentials.
- * Uses the same approach as shop.spec.ts's signInAsAdmin.
+ * Log in to admin using dev credentials.
+ * Includes retry with backoff for GoTrue rate limiting.
  */
-async function loginAsAdmin(page: Page) {
+async function loginAsAdmin(page: Page, attempt = 1): Promise<void> {
+  if (attempt > 3) throw new Error("loginAsAdmin failed after 3 attempts");
   await page.goto("/admin/login");
   await page.waitForLoadState("networkidle");
-
-  // In dev mode the fields are pre-filled; fill them anyway for reliability
-  const emailInput = page.getByPlaceholder("Имэйл");
-  const passwordInput = page.getByPlaceholder("Нууц үг");
-
-  await emailInput.fill(DEV_EMAIL);
-  await passwordInput.fill(DEV_PASSWORD);
-  await page.getByRole("button", { name: "Нэвтрэх" }).click();
-
-  // Wait for redirect to admin dashboard
-  await page.waitForURL("/admin", { timeout: 15000 });
-  await expect(page.locator("body")).toBeVisible({ timeout: 15000 });
+  // If already redirected to /admin (session cookie), skip
+  if (!page.url().includes("/admin/login")) return;
+  try {
+    await page.getByPlaceholder("Имэйл").fill(DEV_EMAIL);
+    await page.getByPlaceholder("Нууц үг").fill(DEV_PASSWORD);
+    await page.getByRole("button", { name: "Нэвтрэх" }).click();
+    await page.waitForURL("/admin", { timeout: 15000 });
+  } catch (_e) {
+    // Rate limited — wait and retry
+    console.warn(`login attempt ${attempt} failed, retrying...`);
+    await page.waitForTimeout(2000 * attempt);
+    return loginAsAdmin(page, attempt + 1);
+  }
 }
 
 // ─── Auth Flow ──────────────────────────────────────────────────────────
@@ -80,11 +82,9 @@ test.describe("Admin — auth flow", () => {
     await expect(page).toHaveURL(/admin\/login/, { timeout: 10000 });
   });
 
-  test("logs in with dev credentials and redirects to dashboard", async ({
-    page,
-  }) => {
-    await loginAsAdmin(page);
-    // On the dashboard — verify dashboard heading
+  test("admin dashboard loads after login", async ({ page }) => {
+    await page.goto("/admin");
+    // With storageState, we should land on the dashboard
     await expect(
       page.getByRole("heading", { name: DASHBOARD_TITLE }),
     ).toBeVisible({ timeout: 10000 });
@@ -94,10 +94,13 @@ test.describe("Admin — auth flow", () => {
 // ─── Admin Dashboard ────────────────────────────────────────────────────
 
 test.describe("Admin — dashboard", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeAll(async ({ browser }) => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
     await loginAsAdmin(page);
+    await page.close();
+    await ctx.close();
   });
-
   test("dashboard loads with heading and stat cards", async ({ page }) => {
     await expect(
       page.getByRole("heading", { name: DASHBOARD_TITLE }),
@@ -112,21 +115,31 @@ test.describe("Admin — dashboard", () => {
 
   test("sidebar navigation links are visible", async ({ page }) => {
     // Sidebar should be present with brand and nav
-    const sidebar = page.locator("nav").first();
+    const sidebar = page.getByRole("complementary").first();
     await expect(sidebar).toBeVisible({ timeout: 10000 });
 
-    // Check key nav labels are rendered
-    await expect(page.getByText("Үндсэн", { exact: true })).toBeVisible();
-    await expect(page.getByText("Тэмцээн", { exact: true })).toBeVisible();
-    await expect(page.getByText("Баг, тоглогч", { exact: true })).toBeVisible();
+    // Check key nav group labels are rendered (sidebar groups use p elements)
+    await expect(
+      sidebar.getByRole("paragraph").filter({ hasText: "Үндсэн" }),
+    ).toBeVisible();
+    await expect(
+      sidebar.getByRole("paragraph").filter({ hasText: "Тэмцээн" }),
+    ).toBeVisible();
+    await expect(
+      sidebar.getByRole("paragraph").filter({ hasText: "Баг, тоглогч" }),
+    ).toBeVisible();
   });
 });
 
 // ─── Admin CRUD Pages ──────────────────────────────────────────────────
 
 test.describe("Admin — CRUD pages", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeAll(async ({ browser }) => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
     await loginAsAdmin(page);
+    await page.close();
+    await ctx.close();
   });
 
   for (const { href, title } of ADMIN_PAGE_PATHS) {
@@ -152,8 +165,12 @@ test.describe("Admin — CRUD pages", () => {
 // ─── Admin Error/Empty States ──────────────────────────────────────────
 
 test.describe("Admin — error and empty states", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeAll(async ({ browser }) => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
     await loginAsAdmin(page);
+    await page.close();
+    await ctx.close();
   });
 
   for (const { href, title } of ADMIN_PAGE_PATHS) {

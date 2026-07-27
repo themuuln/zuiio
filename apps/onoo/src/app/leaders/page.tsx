@@ -1,14 +1,15 @@
 import { BarChart3 } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ViewBeacon } from "@/components/view-beacon";
-import { cn } from "@/lib/utils";
+import { CompetitionSelector } from "../components/competition-selector";
+import { MultiLeaderboardSection } from "../components/multi-leaderboard-section";
 import { PublicEmptyState } from "../components/public-empty-state";
-import { getLeaders, getMvpRace } from "../lib/data";
+import { getCompetitions, getLeaders, getMvpRace } from "../lib/data";
 import type { LeaderRow } from "../lib/shared";
 import { CompactLeaderRow } from "./components/leader-row";
 import { MvpRace } from "./components/mvp-race";
 import { Podium } from "./components/podium";
+import { SortableLeaderTabs } from "./components/sortable-leader-tabs";
 import { UnqualifiedSection } from "./components/unqualified-section";
 
 export const metadata: Metadata = {
@@ -56,14 +57,8 @@ export default async function LeadersPage({
   // All leaders including unqualified, for the unqualified section
   const allLeaders = await getLeaders(true);
 
-  const competitions = Array.from(
-    new Map(
-      allLeaders.map(
-        (row) => [row.competition_id, row.competition_name] as const,
-      ),
-    ),
-  );
-  const activeCompetitionId = competition ?? competitions[0]?.[0];
+  const competitions = await getCompetitions();
+  const activeCompetitionId = competition ?? competitions[0]?.id;
   const activeStatKey =
     STATS.find((s) => s.key === stat)?.key ?? ("pts" as const);
   const activeConfig = STATS.find((s) => s.key === activeStatKey)!;
@@ -112,46 +107,19 @@ export default async function LeadersPage({
         </p>
       </header>
 
-      {competitions.length > 1 && (
-        <nav aria-label="Тэмцээн сонгох" className="flex flex-wrap gap-2">
-          {competitions.map(([id, item]) => (
-            <Link
-              key={id}
-              href={`/leaders?stat=${activeStatKey}&competition=${id}`}
-              className={cn(
-                "inline-flex h-7 shrink-0 items-center justify-center gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] font-medium whitespace-nowrap transition-all outline-none select-none [&_svg:not([class*='size-'])]:size-3.5",
-                id === activeCompetitionId
-                  ? "bg-primary text-primary-foreground hover:bg-primary/80"
-                  : "border-border bg-background hover:bg-muted hover:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-              )}
-            >
-              {item}
-            </Link>
-          ))}
-        </nav>
-      )}
+      <div className="flex items-center justify-between">
+        <CompetitionSelector
+          competitions={competitions}
+          currentId={activeCompetitionId}
+        />
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-8">
-          {/* Stat category tabs */}
-          <nav aria-label="Үзүүлэлт сонгох">
-            <div className="flex flex-wrap gap-2">
-              {STATS.map((s) => (
-                <Link
-                  key={s.key}
-                  href={`/leaders?stat=${s.key}&competition=${activeCompetitionId ?? ""}`}
-                  className={cn(
-                    "inline-flex h-8 items-center justify-center gap-1 rounded-[min(var(--radius-md),12px)] px-3 text-sm font-medium whitespace-nowrap transition-all",
-                    s.key === activeStatKey
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-border bg-background hover:bg-muted",
-                  )}
-                >
-                  {s.label}
-                </Link>
-              ))}
-            </div>
-          </nav>
+          <SortableLeaderTabs
+            activeStatKey={activeStatKey}
+            competitionId={activeCompetitionId}
+          />
           {/* Podium — top 3 */}
           {top3.length > 0 && <Podium leaders={top3} statKey={activeStatKey} />}
 
@@ -183,6 +151,8 @@ export default async function LeadersPage({
           <MvpRace candidates={mvpCandidates} className="sticky top-24" />
         </aside>
       </div>
+
+      <MultiLeaderboardSection leaders={qualifiedLeaders} />
 
       {unqualified.length > 0 && (
         <UnqualifiedSection

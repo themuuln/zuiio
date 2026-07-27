@@ -45,7 +45,7 @@ export function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
         )}
-
+      </div>
 
       {/* Content */}
       <div className="flex flex-col gap-1.5 p-4">

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import {
   academyApi,
   academyRefApi,
 } from "@/app/admin/_lib/api";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,12 @@ const STATUS_LABELS: Record<string, string> = {
 export default function AcademyStudentsPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingStudent, setEditingStudent] =
+    useState<AcademyStudentRow | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmItem, setConfirmItem] = useState<AcademyStudentRow | null>(
+    null,
+  );
 
   const { data: students = [], isPending } = useQuery({
     queryKey: ["admin", "academy", "students"],
@@ -107,6 +114,29 @@ export default function AcademyStudentsPage() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }: StudentFormValues & { id: string }) =>
+      academyApi.students.update(id, {
+        academy_id: academyId,
+        canonical_name: data.canonical_name,
+        name_latin: data.name_latin || undefined,
+        school_name: data.school_name || undefined,
+        emergency_contact_phone: data.emergency_contact_phone || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "academy", "students"],
+      });
+      toast.success("Сурагч амжилттай шинэчлэгдлээ");
+      setDialogOpen(false);
+      setEditingStudent(null);
+      form.reset();
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => academyApi.students.remove(id),
     onSuccess: () => {
@@ -114,175 +144,219 @@ export default function AcademyStudentsPage() {
         queryKey: ["admin", "academy", "students"],
       });
       toast.success("Сурагч устгагдлаа");
+      setConfirmOpen(false);
+      setConfirmItem(null);
     },
     onError: (err: Error) => {
       toast.error(err.message);
     },
   });
 
+  const isMutating = createMutation.isPending || updateMutation.isPending;
+
+  function handleEdit(student: AcademyStudentRow) {
+    setEditingStudent(student);
+    form.reset({
+      canonical_name: student.canonical_name,
+      name_latin: student.name_latin ?? "",
+      school_name: student.school_name ?? "",
+      emergency_contact_phone: student.emergency_contact_phone ?? "",
+    });
+    setDialogOpen(true);
+  }
+
   function handleSubmit(values: StudentFormValues) {
-    createMutation.mutate(values);
+    if (editingStudent) {
+      updateMutation.mutate({ ...values, id: editingStudent.id });
+    } else {
+      createMutation.mutate(values);
+    }
   }
 
   function handleDialogOpenChange(open: boolean) {
     setDialogOpen(open);
     if (!open) {
+      setEditingStudent(null);
       form.reset();
     }
   }
 
+  function handleConfirmDelete() {
+    if (!confirmItem) return;
+    deleteMutation.mutate(confirmItem.id);
+  }
+
   return (
-    <AdminPageLayout
-      title="Сурагчид"
-      loading={isPending}
-      isEmpty={students.length === 0}
-      emptyTitle="Сурагч олдсонгүй"
-      emptyDescription="Одоогоор сурагч бүртгэгдээгүй байна."
-      actions={
-        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Нэмэх
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Шинэ сурагч нэмэх</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="canonical_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Нэр</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Сурагчийн нэр" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="name_latin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Нэр (Латин)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Name (Latin)" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="school_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Сургууль</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Сургуулийн нэр" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="emergency_contact_phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Утас</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Утасны дугаар" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleDialogOpenChange(false)}
-                  >
-                    Цуцлах
-                  </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      }
-    >
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Нэр</TableHead>
-            <TableHead>Сургууль</TableHead>
-            <TableHead>Утас</TableHead>
-            <TableHead>Төлөв</TableHead>
-            <TableHead className="w-[100px]">Үйлдэл</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {students.map((student: AcademyStudentRow) => (
-            <TableRow key={student.id}>
-              <TableCell className="font-medium">
-                {student.canonical_name}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {student.school_name ?? "—"}
-              </TableCell>
-              <TableCell>{student.emergency_contact_phone ?? "—"}</TableCell>
-              <TableCell>
-                {student.status === STATUS_ACTIVE ? (
-                  <Badge variant="secondary">
-                    {STATUS_LABELS[student.status]}
-                  </Badge>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="border-muted-foreground/40 text-muted-foreground"
-                  >
-                    {STATUS_LABELS[student.status] ?? student.status}
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          `"${student.canonical_name}" сурагчийг устгах уу?`,
-                        )
-                      ) {
-                        deleteMutation.mutate(student.id);
-                      }
-                    }}
-                    aria-label={`${student.canonical_name} устгах`}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </TableCell>
+    <>
+      <AdminPageLayout
+        title="Сурагчид"
+        loading={isPending}
+        isEmpty={students.length === 0}
+        emptyTitle="Сурагч олдсонгүй"
+        emptyDescription="Одоогоор сурагч бүртгэгдээгүй байна."
+        actions={
+          <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Нэмэх
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingStudent ? "Сурагч засах" : "Шинэ сурагч нэмэх"}
+                </DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={form.control}
+                    name="canonical_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Нэр</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Сурагчийн нэр" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="name_latin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Нэр (Латин)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Name (Latin)" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="school_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Сургууль</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Сургуулийн нэр" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="emergency_contact_phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Утас</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Утасны дугаар" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleDialogOpenChange(false)}
+                    >
+                      Цуцлах
+                    </Button>
+                    <Button type="submit" disabled={isMutating}>
+                      {isMutating
+                        ? "Хадгалж байна..."
+                        : editingStudent
+                          ? "Шинэчлэх"
+                          : "Хадгалах"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        }
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Нэр</TableHead>
+              <TableHead>Сургууль</TableHead>
+              <TableHead>Утас</TableHead>
+              <TableHead>Төлөв</TableHead>
+              <TableHead className="w-[100px]">Үйлдэл</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </AdminPageLayout>
+          </TableHeader>
+          <TableBody>
+            {students.map((student: AcademyStudentRow) => (
+              <TableRow key={student.id}>
+                <TableCell className="font-medium">
+                  {student.canonical_name}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {student.school_name ?? "—"}
+                </TableCell>
+                <TableCell>{student.emergency_contact_phone ?? "—"}</TableCell>
+                <TableCell>
+                  {student.status === STATUS_ACTIVE ? (
+                    <Badge variant="secondary">
+                      {STATUS_LABELS[student.status]}
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="border-muted-foreground/40 text-muted-foreground"
+                    >
+                      {STATUS_LABELS[student.status] ?? student.status}
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(student)}
+                      aria-label={`${student.canonical_name} засах`}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setConfirmItem(student);
+                        setConfirmOpen(true);
+                      }}
+                      aria-label={`${student.canonical_name} устгах`}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </AdminPageLayout>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onConfirm={handleConfirmDelete}
+        title={`"${confirmItem?.canonical_name}" сурагчийг устгах уу?`}
+        description="Устгасны дараа мэдээллийг сэргээх боломжгүй."
+        loading={deleteMutation.isPending}
+      />
+    </>
   );
 }

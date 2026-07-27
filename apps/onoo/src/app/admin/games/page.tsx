@@ -176,7 +176,7 @@ export default function AdminGamesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Тоглолтууд</h1>
         <Dialog
           open={createOpen}
@@ -363,54 +363,60 @@ export default function AdminGamesPage() {
               </EmptyHeader>
             </Empty>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Эсрэг багууд</TableHead>
-                  <TableHead>Огноо</TableHead>
-                  <TableHead>Төлөв</TableHead>
-                  <TableHead>Үйлдэл</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {games.map((game) => (
-                  <TableRow key={game.id}>
-                    <TableCell>
-                      {getTeamName(game, "home")} vs {getTeamName(game, "away")}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(game.scheduled_at), "yyyy-MM-dd HH:mm")}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          statusBadgeVariant(game.status) as
-                            | "default"
-                            | "secondary"
-                            | "destructive"
-                            | "outline"
-                        }
-                        className={
-                          game.status === "official"
-                            ? "bg-green-600 text-white hover:bg-green-700"
-                            : undefined
-                        }
-                      >
-                        {statusLabel(game.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <a
-                        href={`/admin/games/${game.id}`}
-                        className="text-primary underline-offset-4 hover:underline"
-                      >
-                        Дэлгэрэнгүй
-                      </a>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Эсрэг багууд</TableHead>
+                    <TableHead>Огноо</TableHead>
+                    <TableHead>Төлөв</TableHead>
+                    <TableHead>Үйлдэл</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {games.map((game) => (
+                    <TableRow key={game.id}>
+                      <TableCell>
+                        {getTeamName(game, "home")} vs{" "}
+                        {getTeamName(game, "away")}
+                      </TableCell>
+                      <TableCell>
+                        {format(
+                          new Date(game.scheduled_at),
+                          "yyyy-MM-dd HH:mm",
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            statusBadgeVariant(game.status) as
+                              | "default"
+                              | "secondary"
+                              | "destructive"
+                              | "outline"
+                          }
+                          className={
+                            game.status === "official"
+                              ? "bg-green-600 text-white hover:bg-green-700"
+                              : undefined
+                          }
+                        >
+                          {statusLabel(game.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <a
+                          href={`/admin/games/${game.id}`}
+                          className="text-primary underline-offset-4 hover:underline"
+                        >
+                          Дэлгэрэнгүй
+                        </a>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

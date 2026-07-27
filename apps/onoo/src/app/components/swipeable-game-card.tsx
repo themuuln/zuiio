@@ -13,7 +13,7 @@ interface SwipeableGameCardProps {
   className?: string;
 }
 
-const REVEAL_WIDTH = 140;
+const REVEAL_WIDTH = 120;
 const THRESHOLD = 40;
 
 export function SwipeableGameCard({

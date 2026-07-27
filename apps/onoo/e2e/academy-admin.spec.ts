@@ -15,7 +15,7 @@ import { expect, test } from "@playwright/test";
 // ─── Constants ──────────────────────────────────────────────────────────
 
 const DEV_EMAIL = process.env.NEXT_PUBLIC_ADMIN_DEV_EMAIL ?? "admin@onoo.mn";
-const DEV_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_DEV_PASSWORD ?? "onoo2026";
+const DEV_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_DEV_PASSWORD ?? "Demo123!";
 
 /** Academy admin page paths with their expected title text. */
 const ACADEMY_PAGE_PATHS = [
@@ -45,23 +45,37 @@ async function verifyPageLoads(page: Page, url: string) {
 }
 
 /**
- * Log in to the admin with dev credentials.
- * Uses the same approach as admin-pages.spec.ts's loginAsAdmin.
+ * Log in to admin using dev credentials.
+ * Includes retry with backoff for GoTrue rate limiting.
  */
-async function loginAsAdmin(page: Page) {
+async function loginAsAdmin(page: Page, attempt = 1): Promise<void> {
+  if (attempt > 3) throw new Error("loginAsAdmin failed after 3 attempts");
   await page.goto("/admin/login");
   await page.waitForLoadState("networkidle");
-  await page.getByPlaceholder("Имэйл").fill(DEV_EMAIL);
-  await page.getByPlaceholder("Нууц үг").fill(DEV_PASSWORD);
-  await page.getByRole("button", { name: "Нэвтрэх" }).click();
-  await page.waitForURL(/\/admin/, { timeout: 15000 });
+  // If already redirected to /admin (session cookie), skip
+  if (!page.url().includes("/admin/login")) return;
+  try {
+    await page.getByPlaceholder("Имэйл").fill(DEV_EMAIL);
+    await page.getByPlaceholder("Нууц үг").fill(DEV_PASSWORD);
+    await page.getByRole("button", { name: "Нэвтрэх" }).click();
+    await page.waitForURL("/admin", { timeout: 15000 });
+  } catch (_e) {
+    // Rate limited — wait and retry
+    console.warn(`login attempt ${attempt} failed, retrying...`);
+    await page.waitForTimeout(2000 * attempt);
+    return loginAsAdmin(page, attempt + 1);
+  }
 }
 
 // ─── Academy Admin Page Loads ───────────────────────────────────────────
 
 test.describe("Admin — academy pages", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeAll(async ({ browser }) => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
     await loginAsAdmin(page);
+    await page.close();
+    await ctx.close();
   });
 
   for (const { href, title } of ACADEMY_PAGE_PATHS) {
@@ -79,8 +93,12 @@ test.describe("Admin — academy pages", () => {
 // ─── Academy Admin Data / Empty States ──────────────────────────────────
 
 test.describe("Admin — academy page states", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeAll(async ({ browser }) => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
     await loginAsAdmin(page);
+    await page.close();
+    await ctx.close();
   });
 
   for (const { href, title } of ACADEMY_PAGE_PATHS) {

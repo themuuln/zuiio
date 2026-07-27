@@ -60,7 +60,7 @@ export function GameCard({
         />
         <span
           className={cn(
-            "max-w-[80px] truncate text-xs font-semibold leading-tight sm:max-w-[120px]",
+            "max-w-[100px] truncate text-xs font-semibold leading-tight sm:max-w-[140px]",
             showWinner && homeWon && "font-bold",
           )}
         >
@@ -133,7 +133,7 @@ export function GameCard({
         />
         <span
           className={cn(
-            "max-w-[80px] truncate text-xs font-semibold leading-tight sm:max-w-[120px]",
+            "max-w-[100px] truncate text-xs font-semibold leading-tight sm:max-w-[140px]",
             showWinner && awayWon && "font-bold",
           )}
         >

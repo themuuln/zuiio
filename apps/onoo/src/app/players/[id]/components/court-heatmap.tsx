@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { HalfCourtSVG } from "@/app/components/basketball/half-court-svg";
+import { ShotMarkerLayer } from "@/app/components/basketball/shot-marker-layer";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -8,20 +10,24 @@ import { cn } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 export interface ShotZone {
-  /** Zone identifier (e.g. "paint", "mid-left", "three-right"). */
+  /** Zone identifier (e.g. "paint", "mid-left", "three-top").
+   *  Must match `zone_key` values in `v_public_shot_zones`. */
   id: string;
-  /** SVG path or circle data for the zone. */
+  /** SVG shape type. */
   type: "path" | "circle";
-  /** SVG `d` attribute (for paths) or center x,y (for circles). */
+  /** SVG `d` attribute (for path-type zones). */
   d?: string;
+  /** Center x (for circle-type zones). */
   cx?: number;
+  /** Center y (for circle-type zones). */
   cy?: number;
+  /** Radius (for circle-type zones). */
   r?: number;
-  /** Human-readable label for tooltip. */
+  /** Human-readable label shown in the tooltip. */
   label: string;
-  /** Shots made in this zone. */
+  /** Made shots in this zone. */
   made: number;
-  /** Shots attempted in this zone. */
+  /** Attempted shots in this zone. */
   attempted: number;
 }
 
@@ -31,13 +37,14 @@ export interface ShotDataPoint {
   y: number;
   made: boolean;
   shot_type?: string;
-  /** originating game id (present when sourced from stat_events) */
+  /** Originating game id (present when sourced from stat_events). */
   game_id?: string;
-  /** quarter / period number */
+  /** Quarter / period number. */
   period?: number;
 }
 
 interface CourtHeatmapProps {
+  /** Zone definitions with made/attempted counts. */
   zones: ShotZone[];
   /** Optional individual shot dots for scatter overlay. */
   shots?: ShotDataPoint[];
@@ -45,30 +52,112 @@ interface CourtHeatmapProps {
 }
 
 // ---------------------------------------------------------------------------
-// Court SVG constants (half-court, 600×550 viewBox)
+// Zone definitions for 500×470 viewBox
 // ---------------------------------------------------------------------------
-const COURT_WIDTH = 600;
-const COURT_HEIGHT = 550;
 
-const COURT_STROKE = "var(--color-muted-foreground)";
-const COURT_FILL = "none";
+/**
+ * Seven standard shot zones covering a FIBA half-court.
+ * IDs match the `zone_key` values stored in `v_public_shot_zones`.
+ * Positions are relative to the 500×470 court viewBox.
+ */
+const HEATMAP_ZONES: ShotZone[] = [
+  // Paint / Restricted area (around the basket)
+  {
+    id: "paint",
+    type: "circle",
+    cx: 250,
+    cy: 80,
+    r: 55,
+    label: "Paint",
+    made: 0,
+    attempted: 0,
+  },
+  // Mid-range left
+  {
+    id: "mid-left",
+    type: "circle",
+    cx: 145,
+    cy: 278,
+    r: 55,
+    label: "Mid-Range Left",
+    made: 0,
+    attempted: 0,
+  },
+  // Mid-range center
+  {
+    id: "mid-top",
+    type: "circle",
+    cx: 250,
+    cy: 230,
+    r: 50,
+    label: "Mid-Range Center",
+    made: 0,
+    attempted: 0,
+  },
+  // Mid-range right
+  {
+    id: "mid-right",
+    type: "circle",
+    cx: 355,
+    cy: 278,
+    r: 55,
+    label: "Mid-Range Right",
+    made: 0,
+    attempted: 0,
+  },
+  // Left corner 3
+  {
+    id: "three-corner-left",
+    type: "circle",
+    cx: 48,
+    cy: 436,
+    r: 32,
+    label: "Left Corner 3",
+    made: 0,
+    attempted: 0,
+  },
+  // Right corner 3
+  {
+    id: "three-corner-right",
+    type: "circle",
+    cx: 452,
+    cy: 436,
+    r: 32,
+    label: "Right Corner 3",
+    made: 0,
+    attempted: 0,
+  },
+  // Above-break 3 (top of the arc area)
+  {
+    id: "three-top",
+    type: "circle",
+    cx: 250,
+    cy: 325,
+    r: 55,
+    label: "Above Break 3",
+    made: 0,
+    attempted: 0,
+  },
+];
 
-// ── Heat-scale palette (FG% → visible, distinct color) ──────────────
+// ---------------------------------------------------------------------------
+// Heat-scale helpers
+// ---------------------------------------------------------------------------
+
 function zoneColor(made: number, attempted: number): string {
   if (attempted === 0) return "transparent";
   const pct = made / attempted;
-  if (pct >= 0.6) return "var(--brand-sports)"; // hot amber
-  if (pct >= 0.5) return "var(--brand-sports-dim)"; // deep amber
+  if (pct >= 0.6) return "var(--brand-sports)";
+  if (pct >= 0.5) return "var(--brand-sports-dim)";
   if (pct >= 0.4)
-    return "color-mix(in srgb, var(--brand-sports) 55%, #f59e0b 45%)"; // orange-amber
+    return "color-mix(in srgb, var(--brand-sports) 55%, #f59e0b 45%)";
   if (pct >= 0.3)
-    return "color-mix(in srgb, var(--color-muted-foreground) 40%, var(--brand-sports) 25%)"; // muted warm
-  return "color-mix(in srgb, var(--color-muted-foreground) 30%, transparent)"; // cool gray
+    return "color-mix(in srgb, var(--color-muted-foreground) 40%, var(--brand-sports) 25%)";
+  return "color-mix(in srgb, var(--color-muted-foreground) 30%, transparent)";
 }
 
 function zoneOpacity(made: number, attempted: number): number {
   if (attempted === 0) return 0;
-  // Range: 0.55 (cold) → 0.9 (hot) — always clearly visible
   return 0.55 + (made / attempted) * 0.35;
 }
 
@@ -77,61 +166,23 @@ function zoneOpacity(made: number, attempted: number): number {
 // ---------------------------------------------------------------------------
 
 /**
- * Interactive SVG half-court heatmap.
+ * Interactive court heatmap composed of a FIBA half-court SVG, zone
+ * overlays, and optional shot scatter dots.
  *
- * Shows shot zones with color intensity based on FG%.
- * Tap/hover a zone for stats. No external dependencies — pure SVG.
+ * Tapping / hovering a zone shows a tooltip with FGM / FGA / FG%.
+ * Zone fill intensity reflects shooting percentage.
+ * When no zone data exists, the empty state is shown.
  */
 export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
   const [activeZone, setActiveZone] = useState<ShotZone | null>(null);
   const [hoveredShot, setHoveredShot] = useState<number | null>(null);
 
+  const hasData = zones.some((z) => z.attempted > 0);
+
   return (
     <div className={cn("relative", className)}>
-      <svg
-        viewBox={`0 0 ${COURT_WIDTH} ${COURT_HEIGHT}`}
-        className="w-full"
-        role="img"
-        aria-label="Шидэлтийн бүсийн зураглал"
-      >
-        {/* Court outline */}
-        <g
-          stroke={COURT_STROKE}
-          fill={COURT_FILL}
-          strokeWidth={2.5}
-          opacity={0.55}
-        >
-          {/* Outer boundary */}
-          <rect x={20} y={20} width={560} height={510} rx={4} />
-
-          {/* Paint / key */}
-          <rect x={170} y={20} width={260} height={190} rx={2} />
-
-          {/* Free throw circle */}
-          <circle cx={300} cy={210} r={60} />
-
-          {/* Three-point arc */}
-          <path d="M 80 20 L 80 160 Q 80 420 300 460 Q 520 420 520 160 L 520 20" />
-
-          {/* Basket */}
-          <circle cx={300} cy={60} r={8} fill={COURT_STROKE} />
-          <rect
-            x={280}
-            y={20}
-            width={40}
-            height={5}
-            rx={2}
-            fill={COURT_STROKE}
-          />
-
-          {/* Backboard */}
-          <line x1={260} y1={45} x2={340} y2={45} strokeWidth={3} />
-
-          {/* Restricted area */}
-          <path d="M 260 20 Q 260 90 300 90 Q 340 90 340 20" fill="none" />
-        </g>
-
-        {/* Shot zones */}
+      <HalfCourtSVG empty={!hasData}>
+        {/* ── Shot zones ──────────────────────────────────────────────── */}
         {zones.map((zone) => {
           const color = zoneColor(zone.made, zone.attempted);
           const opacity = zoneOpacity(zone.made, zone.attempted);
@@ -143,6 +194,20 @@ export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
               ? "var(--brand-sports)"
               : "transparent";
           const emptyStrokeDash = isEmpty ? "4 3" : undefined;
+
+          const handlePointerEnter = () => {
+            setActiveZone(zone);
+            setHoveredShot(null);
+          };
+          const handlePointerLeave = () => setActiveZone(null);
+          const handleClick = () =>
+            setActiveZone((prev) => (prev?.id === zone.id ? null : zone));
+          const handleKeyDown = (e: React.KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleClick();
+            }
+          };
 
           if (zone.type === "circle") {
             return (
@@ -158,22 +223,16 @@ export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
                 strokeWidth={isEmpty ? 1.5 : 2}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ")
-                    setActiveZone((prev) =>
-                      prev?.id === zone.id ? null : zone,
-                    );
-                }}
+                onKeyDown={handleKeyDown}
                 className="cursor-pointer transition-opacity"
-                onPointerEnter={() => setActiveZone(zone)}
-                onPointerLeave={() => setActiveZone(null)}
-                onClick={() =>
-                  setActiveZone((prev) => (prev?.id === zone.id ? null : zone))
-                }
+                onPointerEnter={handlePointerEnter}
+                onPointerLeave={handlePointerLeave}
+                onClick={handleClick}
               />
             );
           }
 
+          // Path-based zones (reserved for future use — not in 7-zone set)
           return (
             <path
               key={zone.id}
@@ -185,42 +244,25 @@ export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
               strokeWidth={isEmpty ? 1.5 : 2}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ")
-                  setActiveZone((prev) => (prev?.id === zone.id ? null : zone));
-              }}
+              onKeyDown={handleKeyDown}
               className="cursor-pointer transition-opacity"
-              onPointerEnter={() => setActiveZone(zone)}
-              onPointerLeave={() => setActiveZone(null)}
-              onClick={() =>
-                setActiveZone((prev) => (prev?.id === zone.id ? null : zone))
-              }
+              onPointerEnter={handlePointerEnter}
+              onPointerLeave={handlePointerLeave}
+              onClick={handleClick}
             />
           );
         })}
-        {/* Scatter overlay — individual shot dots */}
+
+        {/* ── Shot scatter dots ──────────────────────────────────────── */}
         {shots && shots.length > 0 && (
-          <g className="shot-scatter">
-            {shots.map((shot, i) => (
-              <g key={i}>
-                <circle
-                  cx={shot.x}
-                  cy={shot.y}
-                  r={hoveredShot === i ? 6 : 4.5}
-                  fill={shot.made ? "#22c55e" : "#ef4444"}
-                  opacity={hoveredShot === i ? 1 : 0.75}
-                  stroke={shot.made ? "#16a34a" : "#dc2626"}
-                  strokeWidth={1}
-                  style={{ transition: "r 0.15s, opacity 0.15s" }}
-                  onPointerEnter={() => setHoveredShot(i)}
-                  onPointerLeave={() => setHoveredShot(null)}
-                />
-              </g>
-            ))}
-          </g>
+          <ShotMarkerLayer
+            shots={shots}
+            onHoverChange={(index) => setHoveredShot(index)}
+          />
         )}
-      </svg>
-      {/* Color legend */}
+      </HalfCourtSVG>
+
+      {/* ── Color legend ──────────────────────────────────────────────── */}
       <div className="mt-2 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
         <span className="mr-1">FG%:</span>
         <span className="flex items-center gap-0.5">
@@ -272,7 +314,7 @@ export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
         </span>
       </div>
 
-      {/* Tooltip */}
+      {/* ── Zone tooltip ──────────────────────────────────────────────── */}
       {activeZone && (
         <div
           className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-lg bg-foreground px-3 py-2 text-sm text-background shadow-lg"
@@ -291,14 +333,15 @@ export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
           </p>
         </div>
       )}
-      {/* Shot tooltip */}
-      {hoveredShot && shots?.[hoveredShot] && (
+
+      {/* ── Shot tooltip ──────────────────────────────────────────────── */}
+      {hoveredShot != null && shots?.[hoveredShot] != null && (
         <div
           className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-lg bg-foreground px-3 py-2 text-sm text-background shadow-lg"
           role="tooltip"
         >
           <p className="font-semibold">
-            {shots[hoveredShot].made ? "✓ Мade" : "✗ Missed"}
+            {shots[hoveredShot].made ? "✓ Made" : "✗ Missed"}
           </p>
           {shots[hoveredShot].shot_type && (
             <p className="text-background/70 text-xs capitalize">
@@ -312,15 +355,17 @@ export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Default zones — derived from shared court-zones.ts
+// Default zones — zeroed copies of the 7-zone set
 // ---------------------------------------------------------------------------
 
-import { COURT_ZONES } from "./court-zones";
-
-export const DEFAULT_SHOT_ZONES: ShotZone[] = COURT_ZONES.map(
-  ({ weight2pt: _w2, weight3pt: _w3, ...rest }) => ({
-    ...rest,
-    made: 0,
-    attempted: 0,
-  }),
-);
+export const DEFAULT_SHOT_ZONES: ShotZone[] = HEATMAP_ZONES.map((zone) => ({
+  id: zone.id,
+  type: zone.type,
+  d: zone.d,
+  cx: zone.cx,
+  cy: zone.cy,
+  r: zone.r,
+  label: zone.label,
+  made: 0,
+  attempted: 0,
+}));

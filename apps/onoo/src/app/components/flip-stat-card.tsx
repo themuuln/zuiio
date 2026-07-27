@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
+const FLIP_REDUCED_MOTION_STYLES = `
+@media (prefers-reduced-motion: reduce) {
+  .flip-stat-card-3d {
+    transition: none !important;
+  }
+}
+`;
+
 interface FlipStatCardProps {
   /** Primary stat value (front face) */
   value: number | null;
@@ -32,6 +40,17 @@ export function FlipStatCard({
 }: FlipStatCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
+  // Inject reduced-motion override once
+  if (typeof document !== "undefined") {
+    const id = "flip-stat-card-reduced-motion";
+    if (!document.getElementById(id)) {
+      const style = document.createElement("style");
+      style.id = id;
+      style.textContent = FLIP_REDUCED_MOTION_STYLES;
+      document.head.appendChild(style);
+    }
+  }
+
   const hasData = value != null;
 
   return (
@@ -48,7 +67,7 @@ export function FlipStatCard({
     >
       {/* Flip container */}
       <div
-        className="relative transition-transform duration-500 ease-in-out"
+        className="flip-stat-card-3d relative transition-transform duration-500 ease-in-out"
         style={{
           transformStyle: "preserve-3d",
           transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",

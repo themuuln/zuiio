@@ -53,7 +53,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               </span>
             </div>
           )}
-
+        </div>
 
         {/* Info */}
         <div className="flex flex-col gap-5">
@@ -146,9 +146,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             variantIndex={selectedVariant}
             priceMnt={product.price_mnt}
             productName={product.name}
-            variantSize={
-              currentVariant ? `${currentVariant.size}` : "Стандарт"
-            }
+            variantSize={currentVariant ? `${currentVariant.size}` : "Стандарт"}
           />
         </div>
       </div>

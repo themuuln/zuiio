@@ -28,23 +28,26 @@ export interface GameDataPoint {
 
 type StatKey = "pts" | "reb" | "ast";
 
+const STAT_KEYS: StatKey[] = ["pts", "reb", "ast"];
+
 // ---------------------------------------------------------------------------
-// Chart config — maps stat keys to labels and token colors
+// Theme colors (must match the CSS token vars)
+// ---------------------------------------------------------------------------
+
+const THEME: Record<StatKey, string> = {
+  pts: "var(--color-chart-1)",
+  reb: "var(--color-chart-2)",
+  ast: "var(--color-chart-5)",
+};
+
+// ---------------------------------------------------------------------------
+// Chart config — maps stat keys to labels for tooltip
 // ---------------------------------------------------------------------------
 
 const chartConfig = {
-  pts: {
-    label: "Оноо",
-    color: "var(--color-chart-1)",
-  },
-  reb: {
-    label: "Буулт",
-    color: "var(--color-chart-2)",
-  },
-  ast: {
-    label: "Дамжуулалт",
-    color: "var(--color-chart-5)",
-  },
+  pts: { label: "Оноо", color: THEME.pts },
+  reb: { label: "Буулт", color: THEME.reb },
+  ast: { label: "Дамжуулалт", color: THEME.ast },
 } satisfies ChartConfig;
 
 // ---------------------------------------------------------------------------
@@ -57,7 +60,7 @@ interface SeasonArcProps {
 }
 
 export function SeasonArc({ data, className }: SeasonArcProps) {
-  const [activeStat, setActiveStat] = useState<StatKey>("pts");
+  const [highlightedStat, setHighlightedStat] = useState<StatKey | null>(null);
 
   // Empty state
   if (data.length === 0) {
@@ -79,31 +82,25 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
       </div>
     );
   }
-  // Add index-based X axis (1, 2, 3…)
-  const chartData = data.map((d, i) => ({
-    ...d,
-    gameIndex: i + 1,
-  }));
 
-  const colorVar =
-    activeStat === "pts"
-      ? "var(--color-chart-1)"
-      : activeStat === "reb"
-        ? "var(--color-chart-2)"
-        : "var(--color-chart-5)";
-
-  const statLabel =
-    activeStat === "pts"
-      ? "Оноо"
-      : activeStat === "reb"
-        ? "Буулт"
-        : "Дамжуулалт";
+  // Add index + formatted short date
+  const chartData = data.map((d, i) => {
+    const dObj = new Date(d.game_date);
+    const shortDate = `${dObj.getMonth() + 1}/${dObj.getDate()}`;
+    return {
+      ...d,
+      gameIndex: i + 1,
+      shortDate,
+    };
+  });
 
   return (
     <div className={cn("space-y-4", className)}>
       <Tabs
-        value={activeStat}
-        onValueChange={(v) => setActiveStat(v as StatKey)}
+        value={highlightedStat ?? undefined}
+        onValueChange={(v) =>
+          setHighlightedStat(v === highlightedStat ? null : (v as StatKey))
+        }
       >
         <TabsList variant="line">
           <TabsTrigger value="pts">{"Оноо"}</TabsTrigger>
@@ -135,11 +132,20 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
           <ChartTooltip
             content={
               <ChartTooltipContent
-                labelFormatter={(value) => `#${value}`}
-                formatter={(value, _name, item) => {
+                labelFormatter={(value) => {
+                  const point = chartData[value - 1];
+                  return point ? `${point.shortDate} · #${value}` : `#${value}`;
+                }}
+                formatter={(value, name, item) => {
                   const point = item.payload as Record<string, unknown>;
                   const result = point.result as string;
                   const opponent = point.opponent as string;
+                  const statLabel =
+                    name === "pts"
+                      ? "Оноо"
+                      : name === "reb"
+                        ? "Буулт"
+                        : "Дамжуулалт";
                   return [
                     `${value} ${statLabel}`,
                     `${result === "W" ? "✓" : "✗"} ${opponent}`,
@@ -149,30 +155,33 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
             }
             cursor={false}
           />
-          <Area
-            type="monotone"
-            dataKey={activeStat}
-            stroke={colorVar}
-            fill={colorVar}
-            fillOpacity={0.15}
-            strokeWidth={2}
-            isAnimationActive={false}
-            dot={false}
-            activeDot={{
-              r: 5,
-              strokeWidth: 2,
-              stroke: "var(--background)",
-              fill: colorVar,
-            }}
-          />
+          {STAT_KEYS.map((key) => {
+            const isDimmed =
+              highlightedStat !== null && highlightedStat !== key;
+            return (
+              <Area
+                key={key}
+                type="monotone"
+                dataKey={key}
+                stroke={THEME[key]}
+                fill={THEME[key]}
+                fillOpacity={isDimmed ? 0.05 : 0.15}
+                strokeWidth={isDimmed ? 1 : 2.5}
+                opacity={isDimmed ? 0.35 : 1}
+                isAnimationActive={false}
+                dot={false}
+              />
+            );
+          })}
           {data.length > 8 && (
             <Brush
-              dataKey="gameIndex"
-              height={24}
+              dataKey="shortDate"
+              height={28}
               stroke="var(--color-muted-foreground)"
               fill="var(--color-muted)"
-              travellerWidth={8}
+              travellerWidth={10}
               className="text-xs"
+              tickFormatter={(v: string) => v}
             />
           )}
         </AreaChart>

@@ -22,12 +22,15 @@ import {
 } from "@/components/ui";
 import { ViewBeacon } from "@/components/view-beacon";
 import { cn } from "@/lib/utils";
+import { CompetitionSelector } from "./components/competition-selector";
 import { CountdownTimer } from "./components/countdown-timer";
-import { FlipScore } from "./components/flip-score";
+import { MultiLeaderboardSection } from "./components/multi-leaderboard-section";
 import { PublicEmptyState } from "./components/public-empty-state";
+import { ScoreBoard } from "./components/score-board";
 import { Sponsors } from "./components/sponsors";
 import {
   getBoxScore,
+  getCompetitions,
   getGamesByDate,
   getLeaders,
   getLiveGames,
@@ -43,20 +46,30 @@ export const metadata: Metadata = {
     "Монголын сагсан бөмбөгийн лигийн тоглолт, шалгуур, шилдэг тоглогчид.",
 };
 
-function formatAverage(value: number | null): string {
-  return value?.toFixed(1) ?? "—";
-}
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ competition?: string }>;
+}) {
+  const { competition } = await searchParams;
   const today = getUlaanbaatarDate();
-  const [todayGames, upcomingGames, recentGames, standings, leaders, players] =
-    await Promise.all([
-      getGamesByDate(today),
-      getLiveGames(),
-      getRecentGames(4),
-      getStandings(),
-      getLeaders(),
-      getPlayers(),
-    ]);
+  const [
+    todayGames,
+    upcomingGames,
+    recentGames,
+    standings,
+    leaders,
+    players,
+    competitions,
+  ] = await Promise.all([
+    getGamesByDate(today),
+    getLiveGames(),
+    getRecentGames(4),
+    getStandings(),
+    getLeaders(),
+    getPlayers(),
+    getCompetitions(),
+  ]);
   const liveGame = todayGames.find(
     (game) => game.status === "live_provisional",
   );
@@ -70,6 +83,13 @@ export default async function HomePage() {
   const tonightGames = todayGames.filter(
     (g) => g.status === "scheduled" || g.status === "live_provisional",
   );
+  const activeCompetitionId = competition ?? competitions[0]?.id;
+  const filteredLeaders = activeCompetitionId
+    ? leaders.filter((l) => l.competition_id === activeCompetitionId)
+    : leaders;
+  const filteredStandings = activeCompetitionId
+    ? standings.filter((s) => s.competition_id === activeCompetitionId)
+    : standings;
 
   return (
     <main className="flex flex-col">
@@ -96,7 +116,7 @@ export default async function HomePage() {
             </p>
             <h1
               id="hero-heading"
-              className="font-display text-4xl leading-tight tracking-tight sm:text-5xl lg:text-6xl"
+              className="font-display text-3xl leading-tight tracking-tight sm:text-5xl lg:text-6xl"
             >
               {heroGame ? "Тоглолтын төв" : "Лигийн бүх түүх нэг дор."}
             </h1>
@@ -105,7 +125,7 @@ export default async function HomePage() {
           {heroGame ? (
             <div className="grid gap-6 lg:grid-cols-12 lg:items-center">
               {/* Teams & Score */}
-              <div className="flex items-center justify-center gap-6 sm:gap-10 lg:col-span-8">
+              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 lg:col-span-8">
                 <Link
                   href={`/teams/${heroGame.home_team_slug}`}
                   className="flex flex-col items-center gap-3 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring rounded-xl"
@@ -124,7 +144,7 @@ export default async function HomePage() {
                 <div className="text-center">
                   {heroGame.home_score != null &&
                   heroGame.away_score != null ? (
-                    <FlipScore
+                    <ScoreBoard
                       homeScore={heroGame.home_score}
                       awayScore={heroGame.away_score}
                       className="text-warning"
@@ -462,8 +482,15 @@ export default async function HomePage() {
           </Card>
         </section>
 
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <CompetitionSelector
+            competitions={competitions}
+            currentId={activeCompetitionId}
+          />
+        </div>
+
         {/* ── Leaders + Standings ── */}
-        <section className="court-divider grid gap-6 rounded-xl bg-[var(--surface-1)] p-6 sm:p-8 lg:grid-cols-12">
+        <section className="court-divider grid gap-6 rounded-xl bg-[var(--surface-1)] p-4 sm:p-6 lg:p-8 lg:grid-cols-12">
           {/* Leaders top 3 — podium style */}
           <Card className="shadow-none lg:col-span-5">
             <CardHeader>
@@ -482,9 +509,9 @@ export default async function HomePage() {
               </CardAction>
             </CardHeader>
             <CardContent>
-              {leaders.length > 0 ? (
+              {filteredLeaders.length > 0 ? (
                 <ol className="flex flex-col gap-1">
-                  {leaders.slice(0, 3).map((leader, index) => (
+                  {filteredLeaders.slice(0, 3).map((leader, index) => (
                     <li key={`${leader.player_id}-${leader.competition_id}`}>
                       <Link
                         href={`/players/${leader.player_id}`}
@@ -563,9 +590,9 @@ export default async function HomePage() {
               </CardAction>
             </CardHeader>
             <CardContent>
-              {standings.length > 0 ? (
+              {filteredStandings.length > 0 ? (
                 <ol className="flex flex-col gap-1">
-                  {standings.slice(0, 5).map((row, index) => (
+                  {filteredStandings.slice(0, 5).map((row, index) => (
                     <li key={row.team_season_id}>
                       <Link
                         href={`/teams/${row.team_slug}`}
@@ -625,106 +652,7 @@ export default async function HomePage() {
             </CardContent>
           </Card>
         </section>
-        {/* ── Multi-category leaderboard strip ── */}
-        {leaders.length > 0 && (
-          <section className="grid gap-6 rounded-xl bg-[var(--surface-1)] p-6 sm:p-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Ангилал бүрийн шилдэг
-                </p>
-                <h2 className="mt-1 text-xl font-bold tracking-tight">
-                  Шилдгүүд ангилал бүрээр
-                </h2>
-              </div>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/leaders" className="gap-1">
-                  Бүгд <ChevronRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {(
-                [
-                  { key: "rebounds_per_game" as const, label: "Сэргэлт" },
-                  { key: "assists_per_game" as const, label: "Олголт" },
-                  { key: "stl" as const, label: "Булаалт" },
-                  { key: "blk" as const, label: "Блок" },
-                ] satisfies {
-                  key: keyof (typeof leaders)[number];
-                  label: string;
-                }[]
-              ).map(({ key, label }) => {
-                const top3 = [...leaders]
-                  .sort((a, b) => (b[key] ?? 0) - (a[key] ?? 0))
-                  .slice(0, 3);
-                const hasData = top3.some((p) => p[key] != null && p[key] > 0);
-
-                return (
-                  <Card key={key} className="shadow-none">
-                    <CardHeader>
-                      <CardTitle className="text-base">{label}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {hasData ? (
-                        <ol className="flex flex-col gap-1">
-                          {top3.map((player, index) => {
-                            const statValue = player[key];
-                            return (
-                              <li key={`${player.player_id}-${key}`}>
-                                <Link
-                                  href={`/players/${player.player_id}`}
-                                  className={cn(
-                                    "flex items-center gap-3 rounded-lg p-3 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
-                                    index === 0 &&
-                                      "bg-[var(--surface-3)] ring-1 ring-[var(--brand-sports)]/20",
-                                  )}
-                                >
-                                  <span
-                                    className={cn(
-                                      "w-5 text-sm font-black tabular-nums",
-                                      index === 0
-                                        ? "text-[var(--brand-sports)]"
-                                        : "text-muted-foreground",
-                                    )}
-                                  >
-                                    {index + 1}
-                                  </span>
-                                  <PlayerAvatar
-                                    photoUrl={player.player_photo_url}
-                                    name={player.player_name}
-                                    primaryColor={player.team_primary_color}
-                                    size="sm"
-                                  />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="truncate font-semibold">
-                                      {player.player_name}
-                                    </p>
-                                    <p className="truncate text-xs text-muted-foreground">
-                                      {player.team_name}
-                                    </p>
-                                  </div>
-                                  <span className="stat-number text-xl tabular-nums">
-                                    {formatAverage(statValue)}
-                                  </span>
-                                </Link>
-                              </li>
-                            );
-                          })}
-                        </ol>
-                      ) : (
-                        <p className="py-4 text-center text-sm text-muted-foreground">
-                          Мэдээлэл алга
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </section>
-        )}
+        <MultiLeaderboardSection leaders={filteredLeaders} />
       </div>
       <Sponsors />
     </main>

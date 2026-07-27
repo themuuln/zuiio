@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { type AcademyProgramRow, academyApi } from "@/app/admin/_lib/api";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,10 @@ export default function AcademyProgramsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProgram, setEditingProgram] =
     useState<AcademyProgramRow | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmItem, setConfirmItem] = useState<AcademyProgramRow | null>(
+    null,
+  );
 
   const { data: programs = [], isPending } = useQuery({
     queryKey: ["admin", "academy", "programs"],
@@ -136,6 +141,8 @@ export default function AcademyProgramsPage() {
         queryKey: ["admin", "academy", "programs"],
       });
       toast.success("Хөтөлбөр устгагдлаа");
+      setConfirmOpen(false);
+      setConfirmItem(null);
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -174,206 +181,217 @@ export default function AcademyProgramsPage() {
   }
 
   return (
-    <AdminPageLayout
-      title="Хөтөлбөр"
-      loading={isPending}
-      isEmpty={programs.length === 0}
-      emptyTitle="Хөтөлбөр олдсонгүй"
-      emptyDescription="Одоогоор хөтөлбөр бүртгэгдээгүй байна."
-      actions={
-        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Нэмэх
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingProgram ? "Хөтөлбөр засах" : "Шинэ хөтөлбөр нэмэх"}
-              </DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Нэр</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Хөтөлбөрийн нэр" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Тайлбар</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Тайлбар..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="age_group"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Насны ангилал</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Жнь: 10-12" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="price_mnt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Үнэ (₮)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="100000" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="duration_weeks"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Хугацаа (долоо хоног)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="12" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="is_active"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Төлөв</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
+    <>
+      <AdminPageLayout
+        title="Хөтөлбөр"
+        loading={isPending}
+        isEmpty={programs.length === 0}
+        emptyTitle="Хөтөлбөр олдсонгүй"
+        emptyDescription="Одоогоор хөтөлбөр бүртгэгдээгүй байна."
+        actions={
+          <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Нэмэх
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingProgram ? "Хөтөлбөр засах" : "Шинэ хөтөлбөр нэмэх"}
+                </DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Нэр</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
+                          <Input placeholder="Хөтөлбөрийн нэр" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Идэвхтэй</SelectItem>
-                          <SelectItem value="inactive">Идэвхгүй</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleDialogOpenChange(false)}
-                  >
-                    Цуцлах
-                  </Button>
-                  <Button type="submit" disabled={isMutating}>
-                    {isMutating ? "Хадгалж байна..." : "Хадгалах"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      }
-    >
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Нэр</TableHead>
-            <TableHead>Тайлбар</TableHead>
-            <TableHead>Насны ангилал</TableHead>
-            <TableHead>Үнэ (₮)</TableHead>
-            <TableHead>Төлөв</TableHead>
-            <TableHead className="w-[100px]">Үйлдэл</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {programs.map((program) => (
-            <TableRow key={program.id}>
-              <TableCell className="font-medium">{program.name}</TableCell>
-              <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                {program.description ?? "—"}
-              </TableCell>
-              <TableCell>{program.age_group ?? "—"}</TableCell>
-              <TableCell>
-                {program.price_mnt != null
-                  ? `${Number(program.price_mnt).toLocaleString()} ₮`
-                  : "—"}
-              </TableCell>
-              <TableCell>
-                {program.is_active ? (
-                  <Badge variant="secondary">Идэвхтэй</Badge>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="border-muted-foreground/40 text-muted-foreground"
-                  >
-                    Идэвхгүй
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(program)}
-                    aria-label={`${program.name} засах`}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          `"${program.name}" хөтөлбөрийг устгах уу?`,
-                        )
-                      ) {
-                        deleteMutation.mutate(program.id);
-                      }
-                    }}
-                    aria-label={`${program.name} устгах`}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </TableCell>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Тайлбар</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Тайлбар..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="age_group"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Насны ангилал</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Жнь: 10-12" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="price_mnt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Үнэ (₮)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="100000"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="duration_weeks"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Хугацаа (долоо хоног)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="12" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="is_active"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Төлөв</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">Идэвхтэй</SelectItem>
+                            <SelectItem value="inactive">Идэвхгүй</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleDialogOpenChange(false)}
+                    >
+                      Цуцлах
+                    </Button>
+                    <Button type="submit" disabled={isMutating}>
+                      {isMutating ? "Хадгалж байна..." : "Хадгалах"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        }
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Нэр</TableHead>
+              <TableHead>Тайлбар</TableHead>
+              <TableHead>Насны ангилал</TableHead>
+              <TableHead>Үнэ (₮)</TableHead>
+              <TableHead>Төлөв</TableHead>
+              <TableHead className="w-[100px]">Үйлдэл</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </AdminPageLayout>
+          </TableHeader>
+          <TableBody>
+            {programs.map((program) => (
+              <TableRow key={program.id}>
+                <TableCell className="font-medium">{program.name}</TableCell>
+                <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                  {program.description ?? "—"}
+                </TableCell>
+                <TableCell>{program.age_group ?? "—"}</TableCell>
+                <TableCell>
+                  {program.price_mnt != null
+                    ? `${Number(program.price_mnt).toLocaleString()} ₮`
+                    : "—"}
+                </TableCell>
+                <TableCell>
+                  {program.is_active ? (
+                    <Badge variant="secondary">Идэвхтэй</Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="border-muted-foreground/40 text-muted-foreground"
+                    >
+                      Идэвхгүй
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(program)}
+                      aria-label={`${program.name} засах`}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setConfirmItem(program);
+                        setConfirmOpen(true);
+                      }}
+                      aria-label={`${program.name} устгах`}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </AdminPageLayout>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onConfirm={() => {
+          if (confirmItem) deleteMutation.mutate(confirmItem.id);
+        }}
+        title={`"${confirmItem?.name}" хөтөлбөрийг устгах уу?`}
+        description="Устгасны дараа мэдээллийг сэргээх боломжгүй."
+        loading={deleteMutation.isPending}
+      />
+    </>
   );
 }

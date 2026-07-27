@@ -21,6 +21,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // Set a 3-second statement timeout so cleanup doesn't hang the whole suite
+  await pool.query("SET statement_timeout = '3s'");
   await pool.query(
     "DELETE FROM public.game_player_stats WHERE game_id IN (SELECT id FROM public.games WHERE competition_id = $1)",
     [SEED_COMPETITION_ID],
@@ -59,6 +61,7 @@ afterAll(async () => {
     "DELETE FROM auth.users WHERE email LIKE '%@onoo-test.mn' AND id != $1",
     [SEED_ADMIN_ID],
   );
+  await client.release();
   await closePool();
 });
 

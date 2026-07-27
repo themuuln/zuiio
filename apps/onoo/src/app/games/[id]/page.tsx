@@ -2,6 +2,7 @@ import { Download, Flag, MapPin, Radio, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ShareStatCardButton } from "@/app/components/share-stat-card-button";
 import { ReportErrorDialog } from "@/components/report-error-dialog";
 import { TeamLogo } from "@/components/team-logo";
 import {
@@ -21,9 +22,9 @@ import {
 } from "@/components/ui";
 import { ViewBeacon } from "@/components/view-beacon";
 import { cn } from "@/lib/utils";
-import { FlipScore } from "../../components/flip-score";
 import { GameStatusBadge } from "../../components/game-status-badge";
 import { PublicEmptyState } from "../../components/public-empty-state";
+import { ScoreBoard } from "../../components/score-board";
 import {
   type BoxScoreRow,
   formatGameTime,
@@ -198,12 +199,20 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                 {game.competition_name}
               </Badge>
             </div>
-            <p className="text-sm text-sidebar-foreground/60">
-              {game.season_name} · {game.league_name}
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-sidebar-foreground/60">
+                {game.season_name} · {game.league_name}
+              </p>
+              <ShareStatCardButton
+                endpoint={`/api/cards/game/${id}`}
+                filename={`${game.home_team_name}-vs-${game.away_team_name}.png`}
+                label="Карт"
+                className="h-7 px-2 text-xs"
+              />
+            </div>
           </div>
 
-          <div className="mt-8 grid grid-cols-3 items-center gap-4 sm:gap-8">
+          <div className="mt-8 grid grid-cols-1 items-center gap-4 sm:grid-cols-3 sm:gap-8">
             <Link
               href={`/teams/${game.home_team_slug}`}
               className="flex min-w-0 flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring sm:flex-row sm:text-left"
@@ -230,7 +239,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                   {formatGameTime(game.scheduled_at)}
                 </p>
               ) : (
-                <FlipScore
+                <ScoreBoard
                   homeScore={game.home_score ?? 0}
                   awayScore={game.away_score ?? 0}
                   className="justify-center"
@@ -457,7 +466,7 @@ function TeamComparison({
   const awayWidth = (away / maxValue) * 100;
 
   return (
-    <div className="grid grid-cols-12 items-center gap-3">
+    <div className="grid grid-cols-6 items-center gap-2 sm:gap-3 sm:grid-cols-12">
       <span
         className={cn(
           "col-span-2 text-right text-lg tabular-nums",

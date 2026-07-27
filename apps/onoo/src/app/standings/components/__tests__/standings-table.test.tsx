@@ -21,6 +21,12 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({
+    prefetchQuery: vi.fn(),
+  }),
+}));
+
 vi.mock("@/components/team-logo", () => ({
   TeamLogo: ({ shortCode }: { shortCode: string }) => (
     <span data-testid="team-logo">{shortCode}</span>
@@ -93,14 +99,20 @@ vi.mock("@/components/ui/table", () => ({
     className,
     style,
     onClick,
-    "aria-expanded": ariaExpanded,
+    tabIndex,
+    role,
+    onKeyDown,
+    onMouseEnter,
     "aria-label": ariaLabel,
   }: {
     children?: React.ReactNode;
     className?: string;
     style?: React.CSSProperties;
     onClick?: () => void;
-    "aria-expanded"?: boolean;
+    tabIndex?: number;
+    role?: string;
+    onKeyDown?: (e: unknown) => void;
+    onMouseEnter?: () => void;
     "aria-label"?: string;
   }) => (
     <tr
@@ -108,7 +120,10 @@ vi.mock("@/components/ui/table", () => ({
       className={className}
       style={style}
       onClick={onClick}
-      aria-expanded={ariaExpanded}
+      tabIndex={tabIndex}
+      role={role}
+      onKeyDown={onKeyDown}
+      onMouseEnter={onMouseEnter}
       aria-label={ariaLabel}
     >
       {children}
@@ -134,11 +149,16 @@ vi.mock("lucide-react", () => {
     );
   return {
     ChevronDown: createIcon("chevron-down"),
+    ChevronRight: createIcon("chevron-right"),
     Minus: createIcon("minus"),
     TrendingDown: createIcon("trending-down"),
     TrendingUp: createIcon("trending-up"),
   };
 });
+
+vi.mock("@/app/standings/components/team-drawer", () => ({
+  TeamDrawer: () => null,
+}));
 
 // ---------------------------------------------------------------------------
 // Component under test
@@ -156,6 +176,7 @@ function createRow(
 ): StandingsTableRow {
   return {
     team_season_id: overrides.id,
+    team_id: overrides.id,
     team_name: overrides.name,
     team_slug: overrides.name.toLowerCase().replace(/\s+/g, "-"),
     team_logo_url: null,

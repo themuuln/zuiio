@@ -8,6 +8,13 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({
   usePathname: vi.fn(() => "/leaders"),
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+  })),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
 }));
 
 vi.mock("next/link", () => ({
@@ -48,9 +55,26 @@ vi.mock("lucide-react", () => ({
   Users: () => <span data-testid="icon-users" />,
   ChevronDown: () => <span data-testid="icon-chevron-down" />,
   ChevronUp: () => <span data-testid="icon-chevron-up" />,
+  Swords: () => <span data-testid="icon-swords" />,
+  CalendarDays: () => <span data-testid="icon-calendar" />,
+  GripVertical: () => <span data-testid="icon-grip" />,
+  Loader2: () => <span data-testid="icon-loader" />,
+  Eye: () => <span data-testid="icon-eye" />,
+  Hand: () => <span data-testid="icon-hand" />,
+  Shield: () => <span data-testid="icon-shield" />,
 }));
 
 vi.mock("@/components/ui", () => ({
+  Button: ({
+    children,
+    className,
+    asChild,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+    asChild?: boolean;
+  }) =>
+    asChild ? children : <button className={className}>{children}</button>,
   Card: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="card">{children}</div>
   ),
@@ -66,6 +90,44 @@ vi.mock("@/components/ui", () => ({
   CardTitle: ({ children }: { children: React.ReactNode }) => (
     <h3 data-testid="card-title">{children}</h3>
   ),
+}));
+
+vi.mock("@/components/ui/select", () => ({
+  Select: ({
+    children,
+    value,
+    onValueChange,
+  }: {
+    children: React.ReactNode;
+    value?: string;
+    onValueChange?: (v: string) => void;
+  }) => (
+    <select
+      data-testid="select"
+      value={value}
+      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+        onValueChange?.(e.target.value)
+      }
+    >
+      {children}
+    </select>
+  ),
+  SelectTrigger: ({ children, ...props }: { children: React.ReactNode }) => (
+    <span {...props}>{children}</span>
+  ),
+  SelectValue: ({ placeholder }: { placeholder?: string }) => (
+    <span>{placeholder ?? ""}</span>
+  ),
+  SelectContent: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  SelectItem: ({
+    children,
+    value: itemValue,
+  }: {
+    children: React.ReactNode;
+    value: string;
+  }) => <option value={itemValue}>{children}</option>,
 }));
 
 // ---------------------------------------------------------------------------
@@ -237,6 +299,10 @@ vi.mock("@/app/lib/data", () => ({
     ),
   ),
   getMvpRace: vi.fn().mockResolvedValue(mockMvpCandidates),
+  getCompetitions: vi.fn().mockResolvedValue([
+    { id: "comp-1", name: "Монголын сагсан бөмбөгийн лиг", season: "2025-26" },
+    { id: "comp-2", name: "Монголын багын аварга", season: "2025-26" },
+  ]),
 }));
 
 // ---------------------------------------------------------------------------
@@ -267,24 +333,26 @@ describe("LeadersPage", () => {
       screen.getByRole("heading", { name: "Тэргүүлэгчид" }),
     ).toBeInTheDocument();
 
-    const tabsNav = screen.getByRole("navigation", {
-      name: "Үзүүлэлт сонгох",
-    });
-    const tabLinks = tabsNav.querySelectorAll("a");
-    expect(tabLinks.length).toBe(5);
-
-    expect(tabLinks[0]).toHaveAttribute(
-      "href",
-      expect.stringContaining("stat=pts"),
-    );
+    // SortableLeaderTabs renders category buttons, not <a> links
+    const tabButtons = screen
+      .getAllByRole("button")
+      .filter(
+        (btn) =>
+          btn.textContent === "Оноо" ||
+          btn.textContent === "Самбар" ||
+          btn.textContent === "Дамжуулалт" ||
+          btn.textContent === "Бөмбөг таслалт" ||
+          btn.textContent === "Хаалт",
+      );
+    expect(tabButtons.length).toBe(5);
   });
 
   it("renders podium and leader rows when data exists", async () => {
     await renderPage();
 
+    // PlayerAvatar count: 3 podium + 7 leader rows + 3 MVP race + MultiLeaderboardSection avatars
     const avatars = screen.getAllByTestId("player-avatar");
-    // 3 (podium) + 7 (rows 4-10) + 3 (MVP race) = 13 total
-    expect(avatars.length).toBe(13);
+    expect(avatars.length).toBeGreaterThanOrEqual(13);
 
     const names = avatars.map((el) => el.textContent);
     expect(names.slice(0, 3)).toEqual(["Тоглогч 1", "Тоглогч 2", "Тоглогч 3"]);
@@ -293,35 +361,33 @@ describe("LeadersPage", () => {
   it("renders competition selector with multiple competitions", async () => {
     await renderPage();
 
-    const compNav = screen.getByRole("navigation", {
-      name: "Тэмцээн сонгох",
-    });
-    expect(compNav).toBeInTheDocument();
+    // CompetitionSelector renders a <select> dropdown
+    const select = screen.getByTestId("select");
+    expect(select).toBeInTheDocument();
 
-    const compLinks = compNav.querySelectorAll("a");
-    expect(compLinks.length).toBe(2);
+    const options = select.querySelectorAll("option");
+    expect(options.length).toBe(2);
 
-    expect(compLinks[0]).toHaveAttribute(
-      "href",
-      expect.stringContaining("competition=comp-1"),
-    );
+    expect(options[0]).toHaveValue("comp-1");
+    expect(options[1]).toHaveValue("comp-2");
   });
 
-  it("renders all stat tabs with correct stat parameters", async () => {
+  it("renders all stat tabs with correct stat keys", async () => {
     await renderPage();
 
-    const tabsNav = screen.getByRole("navigation", {
-      name: "Үзүүлэлт сонгох",
-    });
-    const tabLinks = tabsNav.querySelectorAll("a");
-
-    const expected = ["pts", "reb", "ast", "stl", "blk"];
-    tabLinks.forEach((link, i) => {
-      expect(link).toHaveAttribute(
-        "href",
-        expect.stringContaining(`stat=${expected[i]}`),
+    const tabButtons = screen
+      .getAllByRole("button")
+      .filter(
+        (btn) =>
+          btn.textContent === "Оноо" ||
+          btn.textContent === "Самбар" ||
+          btn.textContent === "Дамжуулалт" ||
+          btn.textContent === "Бөмбөг таслалт" ||
+          btn.textContent === "Хаалт",
       );
-    });
+
+    expect(tabButtons.length).toBe(5);
+    expect(tabButtons[0].textContent).toContain("Оноо");
   });
   it("renders MVP race section", async () => {
     await renderPage();

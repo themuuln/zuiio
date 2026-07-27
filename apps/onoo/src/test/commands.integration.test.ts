@@ -1520,7 +1520,7 @@ it("submits official stats and instantly publishes the game", async () => {
       \[SEED_COMPETITION_ID\;
   ],
     )
-  expect(ss[0].cnt).toBeGreaterThan(0);
+  expect(ss[0].cnt).toBeGreaterThan(0)
 });
 
 it("rejects unauthorized user", async () => {

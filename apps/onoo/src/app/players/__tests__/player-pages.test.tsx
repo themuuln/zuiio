@@ -255,6 +255,8 @@ vi.mock("lucide-react", () => ({
   TableProperties: () => <span data-testid="icon-table" />,
   Target: () => <span data-testid="icon-target" />,
   TrendingUp: () => <span data-testid="icon-trending-up" />,
+  Share2: () => <span data-testid="icon-share" />,
+  Loader2: () => <span data-testid="icon-loader" />,
 }));
 
 vi.mock("@tanstack/react-query", async () => {

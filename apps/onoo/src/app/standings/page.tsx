@@ -1,4 +1,11 @@
-import { BarChart3, FileDown, Trophy } from "lucide-react";
+import {
+  BarChart3,
+  FileDown,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TeamLogo } from "@/components/team-logo";
@@ -12,8 +19,9 @@ import {
   CardTitle,
 } from "@/components/ui";
 import { ViewBeacon } from "@/components/view-beacon";
+import { CompetitionSelector } from "../components/competition-selector";
 import { PublicEmptyState } from "../components/public-empty-state";
-import { getStandings } from "../lib/data";
+import { getCompetitions, getStandings } from "../lib/data";
 import { StandingsTable } from "./components/standings-table";
 
 export const metadata: Metadata = {
@@ -33,6 +41,31 @@ function _getPointDifference(row: {
   return (row.points_for ?? 0) - (row.points_against ?? 0);
 }
 
+function getMovementType(streak: string | null): "up" | "down" | "neutral" {
+  if (!streak) return "neutral";
+  const first = streak.charAt(0);
+  if (first === "W") return "up";
+  if (first === "L") return "down";
+  return "neutral";
+}
+
+function StreakDirection({ streak }: { streak: string | null }) {
+  const type = getMovementType(streak);
+  return (
+    <span aria-hidden>
+      {type === "up" && (
+        <TrendingUp className="inline size-3.5 text-emerald-500" />
+      )}
+      {type === "down" && (
+        <TrendingDown className="inline size-3.5 text-red-500" />
+      )}
+      {type === "neutral" && (
+        <Minus className="inline size-3.5 text-muted-foreground" />
+      )}
+    </span>
+  );
+}
+
 export default async function StandingsPage({
   searchParams,
 }: {
@@ -40,15 +73,8 @@ export default async function StandingsPage({
 }) {
   const { competition } = await searchParams;
   const allStandings = await getStandings();
-  const competitions = Array.from(
-    new Map(
-      allStandings.map((row) => [
-        row.competition_id,
-        { name: row.competition_name, season: row.season_name },
-      ]),
-    ),
-  );
-  const activeCompetitionId = competition ?? competitions[0]?.[0];
+  const competitions = await getCompetitions();
+  const activeCompetitionId = competition ?? competitions[0]?.id;
   const standings = activeCompetitionId
     ? allStandings.filter((row) => row.competition_id === activeCompetitionId)
     : [];
@@ -72,22 +98,12 @@ export default async function StandingsPage({
             харьцуулна.
           </p>
         </div>
-        {competitions.length > 1 && (
-          <nav aria-label="Тэмцээн сонгох" className="flex flex-wrap gap-2">
-            {competitions.map(([id, item]) => (
-              <Button
-                key={id}
-                asChild
-                variant={id === activeCompetitionId ? "default" : "outline"}
-                size="sm"
-              >
-                <Link href={`/tournaments/${id}`}>
-                  {item.name} · {item.season}
-                </Link>
-              </Button>
-            ))}
-          </nav>
-        )}
+        <div className="flex items-center justify-between">
+          <CompetitionSelector
+            competitions={competitions}
+            currentId={activeCompetitionId}
+          />
+        </div>
       </header>
 
       {/* Download report link — only when a competition is selected */}
@@ -159,7 +175,6 @@ export default async function StandingsPage({
                       <div className="mt-3 flex items-center gap-3">
                         <TeamLogo
                           logoUrl={row.team_logo_url}
-                          shortCode={row.team_short_code}
                           primaryColor={row.team_primary_color}
                           size="lg"
                         />
@@ -173,12 +188,20 @@ export default async function StandingsPage({
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-3 gap-3">
+                    <CardContent className="grid grid-cols-3 gap-2 sm:gap-3">
                       <RaceStat
                         label="ХУВЬ"
                         value={formatPercent(row.win_pct)}
                       />
-                      <RaceStat label="ЦУВРАЛ" value={row.streak ?? "—"} />
+                      <RaceStat
+                        label="ЦУВРАЛ"
+                        value={
+                          <span className="inline-flex items-center gap-1">
+                            <StreakDirection streak={row.streak} />
+                            {row.streak ?? "—"}
+                          </span>
+                        }
+                      />
                       <RaceStat label="СҮҮЛИЙН 10" value={row.last10 ?? "—"} />
                     </CardContent>
                   </Card>
@@ -223,7 +246,7 @@ export default async function StandingsPage({
 
 interface RaceStatProps {
   label: string;
-  value: string;
+  value: React.ReactNode;
 }
 
 // Display-only statistic: loading and empty states are handled by the page.

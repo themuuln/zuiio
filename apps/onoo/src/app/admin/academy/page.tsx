@@ -10,8 +10,15 @@ import { type AcademyProfileRow, academyApi } from "@/app/admin/_lib/api";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -160,85 +167,109 @@ export default function AcademyProfilePage() {
         </div>
       }
     >
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="max-w-xl space-y-6"
-      >
-        <div className="space-y-2">
-          <Label htmlFor="name">Нэр</Label>
-          <Input
-            id="name"
-            placeholder="Академийн нэр"
-            {...form.register("name")}
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="max-w-xl space-y-6"
+        >
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Нэр</FormLabel>
+                <FormControl>
+                  <Input placeholder="Академийн нэр" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {form.formState.errors.name && (
-            <p className="text-sm text-destructive">
-              {form.formState.errors.name.message}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="logo_url">Лого URL</Label>
-          <Input
-            id="logo_url"
-            placeholder="https://..."
-            {...form.register("logo_url")}
+          <FormField
+            control={form.control}
+            name="logo_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Лого URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="contact_phone">Утас</Label>
-          <Input
-            id="contact_phone"
-            placeholder="Утасны дугаар"
-            {...form.register("contact_phone")}
+          <FormField
+            control={form.control}
+            name="contact_phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Утас</FormLabel>
+                <FormControl>
+                  <Input placeholder="Утасны дугаар" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="contact_email">Имэйл</Label>
-          <Input
-            id="contact_email"
-            type="email"
-            placeholder="имэйл хаяг"
-            {...form.register("contact_email")}
+          <FormField
+            control={form.control}
+            name="contact_email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Имэйл</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="имэйл хаяг" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="timezone">Цагийн бүс</Label>
-          <Select
-            onValueChange={(v) => form.setValue("timezone", v)}
-            value={form.watch("timezone")}
-          >
-            <SelectTrigger id="timezone">
-              <SelectValue placeholder="Цагийн бүс сонгох" />
-            </SelectTrigger>
-            <SelectContent>
-              {TIMEZONES.map((tz) => (
-                <SelectItem key={tz} value={tz}>
-                  {tz}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="settings">Тохиргоо (JSON)</Label>
-          <Textarea
-            id="settings"
-            placeholder='{"key": "value"}'
-            rows={6}
-            {...form.register("settings")}
+          <FormField
+            control={form.control}
+            name="timezone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Цагийн бүс</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Цагийн бүс сонгох" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {TIMEZONES.map((tz) => (
+                      <SelectItem key={tz} value={tz}>
+                        {tz}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-
-        <Button type="submit" disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
-        </Button>
-      </form>
+          <FormField
+            control={form.control}
+            name="settings"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Тохиргоо (JSON)</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder='{"key": "value"}'
+                    rows={6}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" disabled={saveMutation.isPending}>
+            {saveMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
+          </Button>
+        </form>
+      </Form>
     </AdminPageLayout>
   );
 }

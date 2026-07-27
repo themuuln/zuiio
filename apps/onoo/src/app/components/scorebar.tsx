@@ -4,10 +4,8 @@ import { getUlaanbaatarDate } from "../lib/shared";
 import { ScorebarGame } from "./scorebar-game";
 
 // Shared min-height so the layout's Suspense fallback reserves the same space
-// and the bar doesn't shift when it streams in. Matches the expanded (default,
-// unscrolled) state — a taller "rectangle" with two stacked team rows; the
-// compact state shrinks to a single inline row via a group-data variant below.
-export const SCOREBAR_MIN_HEIGHT = "min-h-[80px]";
+// and the bar doesn't shift when it streams in.
+export const SCOREBAR_MIN_HEIGHT = "min-h-[48px]";
 
 // Compact numeric label (e.g. "Ба, 7/17") for the fallback day, kept short so
 // it doesn't crowd the games in the ticker.
@@ -25,9 +23,9 @@ const getTodayDate = (): string => getUlaanbaatarDate();
 
 /**
  * Site-wide horizontally scrollable score ticker rendered below the SiteNav.
- * Server Component — fetches the day's games at request time. Sizing responds
- * to scroll via the `group/scorebar` wrapper in ScorebarShell: expanded at the
- * top, compact once the user scrolls down.
+ * Server Component — fetches the day's games at request time. NBA-inspired
+ * compact strip: single horizontal row, tight spacing, scores as the focal
+ * point.
  */
 export async function Scorebar() {
   const today = await getTodayDate();
@@ -40,11 +38,9 @@ export async function Scorebar() {
     >
       <div
         className={cn(
-          // Height snaps with the card content (flex-direction can't animate,
-          // so animating min-height would leave a visible empty gap mid-scroll).
-          "mx-auto flex max-w-7xl items-stretch gap-2 overflow-x-auto px-4 py-2 scrollbar-none sm:px-6 lg:px-8",
+          // NBA-inspired compact strip: single row, centred, tight gutter.
+          "mx-auto flex max-w-7xl items-center gap-1.5 overflow-x-auto px-3 py-1.5 scrollbar-none sm:px-6 lg:px-8",
           SCOREBAR_MIN_HEIGHT,
-          "group-data-[compact=true]/scorebar:min-h-[40px] group-data-[compact=true]/scorebar:items-center group-data-[compact=true]/scorebar:py-1",
         )}
       >
         {games.length > 0 ? (
@@ -59,7 +55,7 @@ export async function Scorebar() {
             ))}
           </>
         ) : (
-          <p className="self-center text-xs text-sidebar-foreground/40">
+          <p className="text-xs text-sidebar-foreground/40">
             Өнөөдөр тоглолт алга
           </p>
         )}

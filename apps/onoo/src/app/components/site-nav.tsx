@@ -1,11 +1,17 @@
 "use client";
 
-import { CircleDot, Search, Trophy } from "lucide-react";
+import { ChevronDown, CircleDot, Search, Trophy } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 // Lazy-load the search dialog — saves ~10K + Dialog/Input/icon code from every page
@@ -14,11 +20,15 @@ const SearchCommand = dynamic(
   { ssr: false },
 );
 
-const NAV_ITEMS = [
+// Primary items always visible; overflow items go in `Илүү` dropdown
+const PRIMARY_ITEMS = [
   { href: "/", label: "Нүүр хуудас" },
   { href: "/games", label: "Тоглолтууд" },
-  { href: "/standings", label: "Шалгуур" },
   { href: "/players", label: "Тоглогчид" },
+] as const;
+
+const OVERFLOW_ITEMS = [
+  { href: "/standings", label: "Шалгуур" },
   { href: "/leaders", label: "Тэргүүлэгчид" },
   { href: "/academy", label: "Академи" },
   { href: "/shop", label: "Дэлгүүр" },
@@ -48,7 +58,7 @@ export function SiteNav() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/90 backdrop-blur-xl">
+    <header className="border-b bg-background/90 backdrop-blur-xl">
       {/* Energetic amber accent bar — the sports signature */}
       <div
         className="h-[3px] bg-gradient-to-r from-transparent via-[var(--brand-sports)] to-transparent"
@@ -70,9 +80,9 @@ export function SiteNav() {
           <span className="hidden sm:inline">Оноо</span>
         </Link>
 
-        {/* Navigation links */}
-        <ul className="flex items-center gap-0.5 overflow-x-auto scrollbar-none nav-scroll-shadow">
-          {NAV_ITEMS.map((item) => {
+        {/* Navigation links — primary inline, overflow in dropdown on mobile */}
+        <ul className="flex items-center gap-0.5">
+          {PRIMARY_ITEMS.map((item) => {
             const active = isActive(item.href, pathname);
             return (
               <li key={item.href} className="shrink-0">
@@ -87,7 +97,6 @@ export function SiteNav() {
                   aria-current={active ? "page" : undefined}
                 >
                   {item.label}
-                  {/* Active indicator — amber underline pill */}
                   {active && (
                     <span
                       className="absolute bottom-0.5 left-1/2 h-[3px] w-5 -translate-x-1/2 rounded-full bg-[var(--brand-sports)]"
@@ -98,6 +107,42 @@ export function SiteNav() {
               </li>
             );
           })}
+
+          {/* Overflow items — dropdown on all viewports */}
+          <li>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-10 gap-1 px-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  Илүү
+                  <ChevronDown className="size-3.5" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {OVERFLOW_ITEMS.map((item) => {
+                  const active = isActive(item.href, pathname);
+                  return (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "w-full",
+                          active && "font-semibold text-[var(--brand-sports)]",
+                        )}
+                      >
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </li>
+
+          {/* Search button */}
           <li className="shrink-0">
             <Button
               variant="ghost"

@@ -36,8 +36,8 @@ async function hierarchy(pool: Pool): Promise<H> {
   const tag = `h${++_hierarchyCounter}_${id}`;
   const org = (
     await pool.query(
-      "INSERT INTO public.organizations (name,type) VALUES ($1,'league_operator') RETURNING *",
-      [`TO_${tag}`],
+      "INSERT INTO public.organizations (name,type,slug) VALUES ($1,'league_operator',$2) RETURNING *",
+      [`TO_${tag}`, `org-${tag}`],
     )
   ).rows[0];
   const sport = (
@@ -220,14 +220,18 @@ describe("RLS — memberships", () => {
       [bob.id, h.org.id],
     );
 
+    // Alice (org owner) sees all memberships in the org via admin_read_memberships policy
     const am = await asUser(
       client,
       alice.id,
       async () =>
         (await client.query("SELECT role FROM public.memberships")).rows,
     );
-    expect(am).toHaveLength(1);
-    expect(am[0].role).toBe("owner");
+    expect(am).toHaveLength(2);
+    expect(am.map((r: { role: string }) => r.role).sort()).toEqual([
+      "manager",
+      "owner",
+    ]);
 
     const bm = await asUser(
       client,

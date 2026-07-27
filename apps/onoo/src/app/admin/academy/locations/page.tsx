@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { type AcademyLocationRow, academyApi } from "@/app/admin/_lib/api";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,10 @@ export default function AcademyLocationsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLocation, setEditingLocation] =
     useState<AcademyLocationRow | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmItem, setConfirmItem] = useState<AcademyLocationRow | null>(
+    null,
+  );
 
   const { data: locations = [], isPending } = useQuery({
     queryKey: ["admin", "academy", "locations"],
@@ -127,6 +132,8 @@ export default function AcademyLocationsPage() {
         queryKey: ["admin", "academy", "locations"],
       });
       toast.success("Байршил устгагдлаа");
+      setConfirmOpen(false);
+      setConfirmItem(null);
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -164,190 +171,199 @@ export default function AcademyLocationsPage() {
   }
 
   return (
-    <AdminPageLayout
-      title="Байршил"
-      loading={isPending}
-      isEmpty={locations.length === 0}
-      emptyTitle="Байршил олдсонгүй"
-      emptyDescription="Одоогоор байршил бүртгэгдээгүй байна."
-      actions={
-        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Нэмэх
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingLocation ? "Байршил засах" : "Шинэ байршил нэмэх"}
-              </DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Нэр</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Байршлын нэр" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Хаяг</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Байршлын хаяг" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Хот</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Хот" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="hours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Цагийн хуваарь</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Жнь: Да-Ба 09:00-18:00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="is_active"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Төлөв</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
+    <>
+      <AdminPageLayout
+        title="Байршил"
+        loading={isPending}
+        isEmpty={locations.length === 0}
+        emptyTitle="Байршил олдсонгүй"
+        emptyDescription="Одоогоор байршил бүртгэгдээгүй байна."
+        actions={
+          <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Нэмэх
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingLocation ? "Байршил засах" : "Шинэ байршил нэмэх"}
+                </DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Нэр</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
+                          <Input placeholder="Байршлын нэр" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Идэвхтэй</SelectItem>
-                          <SelectItem value="inactive">Идэвхгүй</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleDialogOpenChange(false)}
-                  >
-                    Цуцлах
-                  </Button>
-                  <Button type="submit" disabled={isMutating}>
-                    {isMutating ? "Хадгалж байна..." : "Хадгалах"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      }
-    >
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Нэр</TableHead>
-            <TableHead>Хаяг</TableHead>
-            <TableHead>Хот</TableHead>
-            <TableHead>Цагийн хуваарь</TableHead>
-            <TableHead>Төлөв</TableHead>
-            <TableHead className="w-[100px]">Үйлдэл</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {locations.map((location) => (
-            <TableRow key={location.id}>
-              <TableCell className="font-medium">{location.name}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {location.address ?? "—"}
-              </TableCell>
-              <TableCell>{location.city ?? "—"}</TableCell>
-              <TableCell>{location.hours ?? "—"}</TableCell>
-              <TableCell>
-                {location.is_active ? (
-                  <Badge variant="secondary">Идэвхтэй</Badge>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="border-muted-foreground/40 text-muted-foreground"
-                  >
-                    Идэвхгүй
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(location)}
-                    aria-label={`${location.name} засах`}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      if (
-                        window.confirm(`"${location.name}" байршлыг устгах уу?`)
-                      ) {
-                        deleteMutation.mutate(location.id);
-                      }
-                    }}
-                    aria-label={`${location.name} устгах`}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </TableCell>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Хаяг</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Байршлын хаяг" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Хот</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Хот" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="hours"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Цагийн хуваарь</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Жнь: Да-Ба 09:00-18:00"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="is_active"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Төлөв</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">Идэвхтэй</SelectItem>
+                            <SelectItem value="inactive">Идэвхгүй</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleDialogOpenChange(false)}
+                    >
+                      Цуцлах
+                    </Button>
+                    <Button type="submit" disabled={isMutating}>
+                      {isMutating ? "Хадгалж байна..." : "Хадгалах"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        }
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Нэр</TableHead>
+              <TableHead>Хаяг</TableHead>
+              <TableHead>Хот</TableHead>
+              <TableHead>Цагийн хуваарь</TableHead>
+              <TableHead>Төлөв</TableHead>
+              <TableHead className="w-[100px]">Үйлдэл</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </AdminPageLayout>
+          </TableHeader>
+          <TableBody>
+            {locations.map((location) => (
+              <TableRow key={location.id}>
+                <TableCell className="font-medium">{location.name}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {location.address ?? "—"}
+                </TableCell>
+                <TableCell>{location.city ?? "—"}</TableCell>
+                <TableCell>{location.hours ?? "—"}</TableCell>
+                <TableCell>
+                  {location.is_active ? (
+                    <Badge variant="secondary">Идэвхтэй</Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="border-muted-foreground/40 text-muted-foreground"
+                    >
+                      Идэвхгүй
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(location)}
+                      aria-label={`${location.name} засах`}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setConfirmItem(location);
+                        setConfirmOpen(true);
+                      }}
+                      aria-label={`${location.name} устгах`}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </AdminPageLayout>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onConfirm={() => {
+          if (confirmItem) deleteMutation.mutate(confirmItem.id);
+        }}
+        title={`"${confirmItem?.name}" байршлыг устгах уу?`}
+        description="Устгасны дараа мэдээллийг сэргээх боломжгүй."
+        loading={deleteMutation.isPending}
+      />
+    </>
   );
 }

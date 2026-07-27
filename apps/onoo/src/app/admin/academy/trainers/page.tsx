@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { type AcademyTrainerRow, academyApi } from "@/app/admin/_lib/api";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,10 @@ export default function AcademyTrainersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTrainer, setEditingTrainer] =
     useState<AcademyTrainerRow | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmItem, setConfirmItem] = useState<AcademyTrainerRow | null>(
+    null,
+  );
 
   const { data: trainers = [], isPending } = useQuery({
     queryKey: ["admin", "academy", "trainers"],
@@ -86,7 +91,7 @@ export default function AcademyTrainersPage() {
               .split(",")
               .map((s) => s.trim())
               .filter(Boolean)
-          : undefined,
+          : [],
         bio: data.bio || undefined,
         is_active: data.is_active === "active",
       }),
@@ -113,7 +118,7 @@ export default function AcademyTrainersPage() {
               .split(",")
               .map((s) => s.trim())
               .filter(Boolean)
-          : undefined,
+          : [],
         bio: data.bio || undefined,
         is_active: data.is_active === "active",
       }),
@@ -138,6 +143,8 @@ export default function AcademyTrainersPage() {
         queryKey: ["admin", "academy", "trainers"],
       });
       toast.success("Дасгалжуулагч устгагдлаа");
+      setConfirmOpen(false);
+      setConfirmItem(null);
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -175,199 +182,209 @@ export default function AcademyTrainersPage() {
   }
 
   return (
-    <AdminPageLayout
-      title="Дасгалжуулагч"
-      loading={isPending}
-      isEmpty={trainers.length === 0}
-      emptyTitle="Дасгалжуулагч олдсонгүй"
-      emptyDescription="Одоогоор дасгалжуулагч бүртгэгдээгүй байна."
-      actions={
-        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Нэмэх
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingTrainer
-                  ? "Дасгалжуулагч засах"
-                  : "Шинэ дасгалжуулагч нэмэх"}
-              </DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Нэр</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Дасгалжуулагчийн нэр" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="photo_url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Зураг URL</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="specialties"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Мэргэжил</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Таслалаар тусгаарлана (жнь: Довтолгоо, Хамгаалалт)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="bio"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Намтар</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Дэлгэрэнгүй мэдээлэл..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="is_active"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Төлөв</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
+    <>
+      <AdminPageLayout
+        title="Дасгалжуулагч"
+        loading={isPending}
+        isEmpty={trainers.length === 0}
+        emptyTitle="Дасгалжуулагч олдсонгүй"
+        emptyDescription="Одоогоор дасгалжуулагч бүртгэгдээгүй байна."
+        actions={
+          <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Нэмэх
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingTrainer
+                    ? "Дасгалжуулагч засах"
+                    : "Шинэ дасгалжуулагч нэмэх"}
+                </DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Нэр</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
+                          <Input
+                            placeholder="Дасгалжуулагчийн нэр"
+                            {...field}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Идэвхтэй</SelectItem>
-                          <SelectItem value="inactive">Идэвхгүй</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleDialogOpenChange(false)}
-                  >
-                    Цуцлах
-                  </Button>
-                  <Button type="submit" disabled={isMutating}>
-                    {isMutating ? "Хадгалж байна..." : "Хадгалах"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      }
-    >
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Нэр</TableHead>
-            <TableHead>Мэргэжил</TableHead>
-            <TableHead>Төлөв</TableHead>
-            <TableHead className="w-[100px]">Үйлдэл</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {trainers.map((trainer) => (
-            <TableRow key={trainer.id}>
-              <TableCell className="font-medium">{trainer.name}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {trainer.specialties && trainer.specialties.length > 0
-                  ? trainer.specialties.map((s) => (
-                      <Badge key={s} variant="secondary" className="mr-1">
-                        {s}
-                      </Badge>
-                    ))
-                  : "—"}
-              </TableCell>
-              <TableCell>
-                {trainer.is_active ? (
-                  <Badge variant="secondary">Идэвхтэй</Badge>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="border-muted-foreground/40 text-muted-foreground"
-                  >
-                    Идэвхгүй
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(trainer)}
-                    aria-label={`${trainer.name} засах`}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          `"${trainer.name}" дасгалжуулагчийг устгах уу?`,
-                        )
-                      ) {
-                        deleteMutation.mutate(trainer.id);
-                      }
-                    }}
-                    aria-label={`${trainer.name} устгах`}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </TableCell>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="photo_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Зураг URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="specialties"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Мэргэжил</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Таслалаар тусгаарлана (жнь: Довтолгоо, Хамгаалалт)"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="bio"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Намтар</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Дэлгэрэнгүй мэдээлэл..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="is_active"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Төлөв</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">Идэвхтэй</SelectItem>
+                            <SelectItem value="inactive">Идэвхгүй</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleDialogOpenChange(false)}
+                    >
+                      Цуцлах
+                    </Button>
+                    <Button type="submit" disabled={isMutating}>
+                      {isMutating ? "Хадгалж байна..." : "Хадгалах"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        }
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Нэр</TableHead>
+              <TableHead>Мэргэжил</TableHead>
+              <TableHead>Төлөв</TableHead>
+              <TableHead className="w-[100px]">Үйлдэл</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </AdminPageLayout>
+          </TableHeader>
+          <TableBody>
+            {trainers.map((trainer) => (
+              <TableRow key={trainer.id}>
+                <TableCell className="font-medium">{trainer.name}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {trainer.specialties && trainer.specialties.length > 0
+                    ? trainer.specialties.map((s) => (
+                        <Badge key={s} variant="secondary" className="mr-1">
+                          {s}
+                        </Badge>
+                      ))
+                    : "—"}
+                </TableCell>
+                <TableCell>
+                  {trainer.is_active ? (
+                    <Badge variant="secondary">Идэвхтэй</Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="border-muted-foreground/40 text-muted-foreground"
+                    >
+                      Идэвхгүй
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(trainer)}
+                      aria-label={`${trainer.name} засах`}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setConfirmItem(trainer);
+                        setConfirmOpen(true);
+                      }}
+                      aria-label={`${trainer.name} устгах`}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </AdminPageLayout>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onConfirm={() => {
+          if (confirmItem) deleteMutation.mutate(confirmItem.id);
+        }}
+        title={`"${confirmItem?.name}" дасгалжуулагчийг устгах уу?`}
+        description="Устгасны дараа мэдээллийг сэргээх боломжгүй."
+        loading={deleteMutation.isPending}
+      />
+    </>
   );
 }

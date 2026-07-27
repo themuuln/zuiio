@@ -30,10 +30,6 @@ type SubmitState =
   | { status: "success"; intentId: string; message: string }
   | { status: "error"; message: string };
 
-export const metadata = {
-  title: "Бүртгүүлэх — Академи — Оноо",
-};
-
 export default function AcademyEnrollPage() {
   const searchParams = useSearchParams();
   const preselectedProgram = searchParams.get("program") ?? "";

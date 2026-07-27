@@ -1671,3 +1671,120 @@ export async function getLineupsByTeam(
 ): Promise<LineupStats[]> {
   return [];
 }
+
+/**
+ * Quick view data for the standings team drawer — recent games, top leaders, next game.
+ * Returns null if the team_season_id doesn't match any standings row.
+ */
+export async function getTeamQuickView(teamSeasonId: string): Promise<{
+  recentGames: GameWithTeams[];
+  leaders: LeaderRow[];
+  nextGame: GameWithTeams | null;
+} | null> {
+  const supabase = await createClient();
+
+  const { data: standing } = await supabase
+    .from("v_public_standings")
+    .select("team_id")
+    .eq("team_season_id", teamSeasonId)
+    .limit(1)
+    .maybeSingle();
+
+  if (!standing) return null;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const teamId = standing.team_id;
+
+  const [recentResult, leadersResult, nextResult] = await Promise.all([
+    supabase
+      .from("v_public_games")
+      .select("*")
+      .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
+      .lt("scheduled_at", `${today}T23:59:59`)
+      .order("scheduled_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("v_public_leaders")
+      .select("*")
+      .eq("team_id", teamId)
+      .order("pts", { ascending: false })
+      .limit(3),
+    supabase
+      .from("v_public_games")
+      .select("*")
+      .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
+      .gte("scheduled_at", `${today}T00:00:00`)
+      .order("scheduled_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  return {
+    recentGames: recentResult.data
+      ? recentResult.data.map((row: Record<string, unknown>) => mapGameRow(row))
+      : [],
+    leaders: leadersResult.data
+      ? leadersResult.data.map((row: Record<string, unknown>) =>
+          mapLeaderRow(row),
+        )
+      : [],
+    nextGame: nextResult.data
+      ? mapGameRow(nextResult.data as Record<string, unknown>)
+      : null,
+  };
+}
+
+/**
+ * Fetch recent finalized games for a team, ordered by scheduled_at descending.
+ * Returns an empty array if the team_season_id doesn't match any standings row.
+ */
+export async function getTeamRecentGames(
+  teamSeasonId: string,
+  limit = 5,
+): Promise<GameWithTeams[]> {
+  const supabase = await createClient();
+
+  const { data: standing } = await supabase
+    .from("v_public_standings")
+    .select("team_id")
+    .eq("team_season_id", teamSeasonId)
+    .limit(1)
+    .maybeSingle();
+
+  if (!standing) return [];
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("v_public_games")
+    .select("*")
+    .or(
+      `home_team_id.eq.${standing.team_id},away_team_id.eq.${standing.team_id}`,
+    )
+    .lt("scheduled_at", `${today}T23:59:59`)
+    .order("scheduled_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data.map((row: Record<string, unknown>) => mapGameRow(row));
+}
+
+/**
+ * Fetch top scorers for a team by team_season_id, ordered by pts descending.
+ * Returns an empty array if the query fails or no data exists.
+ */
+export async function getTeamTopScorers(
+  teamSeasonId: string,
+  limit = 3,
+): Promise<LeaderRow[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("v_public_leaders")
+    .select("*")
+    .eq("team_season_id", teamSeasonId)
+    .order("pts", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data.map((row: Record<string, unknown>) => mapLeaderRow(row));
+}

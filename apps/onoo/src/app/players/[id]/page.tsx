@@ -12,6 +12,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { LanguageToggle } from "@/app/components/language-toggle";
+import { ShareStatCardButton } from "@/app/components/share-stat-card-button";
 import { ReportErrorDialog } from "@/components/report-error-dialog";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -303,14 +304,21 @@ export default async function PlayerPage({
         {(activeProfile.points_per_game != null ||
           activeProfile.oreb_per_game != null ||
           careerTotals) && (
-          <ShareCard
-            playerName={
-              isEn
-                ? player.name_latin || player.canonical_name
-                : player.canonical_name
-            }
-            statLine={`${seasonLabel} · ${careerTotals ? `PTS ${careerTotals.pts} · REB ${careerTotals.reb} · AST ${careerTotals.ast} · ${careerTotals.gp} GP` : `PTS ${activeProfile.points_per_game?.toFixed(1) ?? "—"} · REB ${((activeProfile.oreb_per_game ?? 0) + (activeProfile.dreb_per_game ?? 0)).toFixed(1) || "—"} · AST ${activeProfile.ast_per_game?.toFixed(1) ?? "—"}`}`}
-          />
+          <div className="flex flex-wrap items-start gap-3">
+            <ShareCard
+              playerName={
+                isEn
+                  ? player.name_latin || player.canonical_name
+                  : player.canonical_name
+              }
+              statLine={`${seasonLabel} · ${careerTotals ? `PTS ${careerTotals.pts} · REB ${careerTotals.reb} · AST ${careerTotals.ast} · ${careerTotals.gp} GP` : `PTS ${activeProfile.points_per_game?.toFixed(1) ?? "—"} · REB ${((activeProfile.oreb_per_game ?? 0) + (activeProfile.dreb_per_game ?? 0)).toFixed(1) || "—"} · AST ${activeProfile.ast_per_game?.toFixed(1) ?? "—"}`}`}
+            />
+            <ShareStatCardButton
+              endpoint={`/api/cards/player/${id}`}
+              filename={`${player.canonical_name}-stat-card.png`}
+              label={isEn ? "Share card" : "Карт хуваалцах"}
+            />
+          </div>
         )}
 
         {/* ─── Recent games strip ─── */}

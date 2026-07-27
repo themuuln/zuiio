@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { AdminTableSkeleton } from "@/components/admin/admin-skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -44,11 +44,11 @@ export function AdminPageLayout({
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-2xl font-bold">{title}</CardTitle>
+          <h2 className="text-2xl font-bold">{title}</h2>
           {actions && <div className="flex items-center gap-3">{actions}</div>}
         </CardHeader>
         {headerExtras && <div className="px-6 pb-4">{headerExtras}</div>}
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           {loading ? (
             <AdminTableSkeleton rows={5} />
           ) : isEmpty ? (

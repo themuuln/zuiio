@@ -39,29 +39,35 @@ async function verifyPageLoads(page: Page, url: string) {
 }
 
 /**
- * Log in to the admin with dev credentials.
- * Uses the same approach as admin-pages.spec.ts's loginAsAdmin.
+ * Log in to admin using dev credentials.
+ * Includes retry with backoff for GoTrue rate limiting.
  */
-async function loginAsAdmin(page: Page) {
+async function loginAsAdmin(page: Page, attempt = 1): Promise<void> {
+  if (attempt > 3) throw new Error("loginAsAdmin failed after 3 attempts");
   await page.goto("/admin/login");
   await page.waitForLoadState("networkidle");
-
-  const emailInput = page.getByPlaceholder("Имэйл");
-  const passwordInput = page.getByPlaceholder("Нууц үг");
-
-  await emailInput.fill(DEV_EMAIL);
-  await passwordInput.fill(DEV_PASSWORD);
-  await page.getByRole("button", { name: "Нэвтрэх" }).click();
-
-  await page.waitForURL("/admin", { timeout: 15000 });
-  await expect(page.locator("body")).toBeVisible({ timeout: 15000 });
+  if (!page.url().includes("/admin/login")) return;
+  try {
+    await page.getByPlaceholder("Имэйл").fill(DEV_EMAIL);
+    await page.getByPlaceholder("Нууц үг").fill(DEV_PASSWORD);
+    await page.getByRole("button", { name: "Нэвтрэх" }).click();
+    await page.waitForURL("/admin", { timeout: 15000 });
+  } catch (_e) {
+    console.warn(`login attempt ${attempt} failed, retrying...`);
+    await page.waitForTimeout(2000 * attempt);
+    return loginAsAdmin(page, attempt + 1);
+  }
 }
 
 // ─── Remaining Admin CRUD Pages ────────────────────────────────────────
 
 test.describe("Admin — remaining CRUD pages", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeAll(async ({ browser }) => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
     await loginAsAdmin(page);
+    await page.close();
+    await ctx.close();
   });
 
   for (const { href, title } of ADMIN_PAGE_PATHS) {
@@ -91,11 +97,13 @@ test.describe("Admin — remaining CRUD pages", () => {
   });
 });
 
-// ─── Empty / Data States ───────────────────────────────────────────────
-
 test.describe("Admin — remaining data and empty states", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeAll(async ({ browser }) => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
     await loginAsAdmin(page);
+    await page.close();
+    await ctx.close();
   });
 
   for (const { href, title } of ADMIN_PAGE_PATHS) {

@@ -1,10 +1,12 @@
 "use client";
-
-import { ChevronDown, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { Fragment, useState } from "react";
+import { Fragment, useCallback, useState } from "react";
+import { ExpandedStandingsContent } from "@/app/standings/components/expanded-standings-content";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import {
   Table,
   TableBody,
@@ -15,13 +17,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface StandingsTableRow {
   team_season_id: string;
+  team_id: string;
   team_name: string;
   team_slug: string;
   team_logo_url: string | null;
@@ -43,7 +45,6 @@ export interface StandingsTableRow {
 interface StandingsTableProps {
   rows: StandingsTableRow[];
   className?: string;
-  /** Insert a playoff line separator after this rank (0-indexed). Default: 4 (after 4th place). */
   playoffLineAfter?: number;
 }
 
@@ -60,7 +61,6 @@ function getPointDifference(row: StandingsTableRow): number {
   return (row.points_for ?? 0) - (row.points_against ?? 0);
 }
 
-/** Derive movement direction from streak string. */
 function getMovementType(streak: string | null): "up" | "down" | "neutral" {
   if (!streak) return "neutral";
   const prefix = streak.trim().charAt(0).toUpperCase();
@@ -69,7 +69,6 @@ function getMovementType(streak: string | null): "up" | "down" | "neutral" {
   return "neutral";
 }
 
-/** Parse a "W-W-L-W-L" or "WWLWL" last5 string into individual results. */
 function parseLast5(last5: string | null): ("W" | "L")[] | null {
   if (!last5) return null;
   const chars = last5.replace(/[^WwLl]/g, "");
@@ -80,7 +79,6 @@ function parseLast5(last5: string | null): ("W" | "L")[] | null {
     .map((c) => (c.toUpperCase() === "W" ? "W" : "L"));
 }
 
-/** Render movement icon (TrendingUp/TrendingDown/Minus). */
 function MovementIndicator({ streak }: { streak: string | null }) {
   const type = getMovementType(streak);
   switch (type) {
@@ -108,7 +106,6 @@ function MovementIndicator({ streak }: { streak: string | null }) {
   }
 }
 
-/** Render last-5 form as a row of colored dots. */
 function FormGuide({ last5 }: { last5: string | null }) {
   const results = parseLast5(last5);
   if (!results) {
@@ -117,7 +114,6 @@ function FormGuide({ last5 }: { last5: string | null }) {
   return (
     <span className="inline-flex items-center gap-0.5">
       {results.map((r, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: static list
         <span
           key={i}
           className={cn(
@@ -131,7 +127,6 @@ function FormGuide({ last5 }: { last5: string | null }) {
   );
 }
 
-/** Parse a "W-L" string like "6-4" into wins and losses. */
 function parseLast10(
   last10: string | null,
 ): { wins: number; losses: number } | null {
@@ -141,7 +136,6 @@ function parseLast10(
   return { wins: Number(match[1]), losses: Number(match[2]) };
 }
 
-/** Render last-10 as 10 colored dots: green for wins, red for losses, gray for remaining. */
 function Last10Dots({ last10 }: { last10: string | null }) {
   const parsed = parseLast10(last10);
   if (!parsed) {
@@ -154,10 +148,8 @@ function Last10Dots({ last10 }: { last10: string | null }) {
   });
   return (
     <>
-      {/* Dots — visible on sm+ */}
       <span className="hidden items-center justify-center gap-0.5 sm:flex">
         {dots.map((r, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: static list
           <span
             key={i}
             className={cn(
@@ -171,7 +163,6 @@ function Last10Dots({ last10 }: { last10: string | null }) {
           />
         ))}
       </span>
-      {/* Text fallback — visible below sm */}
       <span className="text-center tabular-nums sm:hidden">{last10}</span>
     </>
   );
@@ -181,22 +172,42 @@ function Last10Dots({ last10 }: { last10: string | null }) {
 // Component
 // ---------------------------------------------------------------------------
 
-/**
- * Interactive standings table with collapsible detail rows.
- *
- * Click a team row to expand additional stats (home/away record,
- * points for/against, point difference breakdown).
- */
 export function StandingsTable({
   rows,
   className,
   playoffLineAfter = 4,
 }: StandingsTableProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  function toggleRow(id: string) {
-    setExpandedId((prev) => (prev === id ? null : id));
-  }
+  const handlePrefetch = useCallback(
+    (teamSeasonId: string) => {
+      queryClient.prefetchQuery({
+        queryKey: ["team-quickview", teamSeasonId],
+        queryFn: async () => {
+          const res = await fetch(`/api/standings/team/${teamSeasonId}`);
+          if (!res.ok) throw new Error("Failed to load team data");
+          return res.json();
+        },
+        staleTime: 30_000,
+      });
+    },
+    [queryClient],
+  );
+
+  const toggleExpand = useCallback((teamSeasonId: string) => {
+    setExpandedTeamId((prev) => (prev === teamSeasonId ? null : teamSeasonId));
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent, teamSeasonId: string) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleExpand(teamSeasonId);
+      }
+    },
+    [toggleExpand],
+  );
 
   const topColor = rows[0]?.team_primary_color;
 
@@ -234,132 +245,123 @@ export function StandingsTable({
           <TableBody>
             {rows.map((row, index) => {
               const pointDifference = getPointDifference(row);
-              const isExpanded = expandedId === row.team_season_id;
+              const isExpanded = expandedTeamId === row.team_season_id;
               return (
                 <Fragment key={row.team_season_id}>
-                  <TableRow
-                    className={cn(
-                      "cursor-pointer transition-colors hover:bg-accent/50 odd:bg-muted/50",
-                      isExpanded && "bg-muted/50",
-                    )}
-                    style={
-                      row.team_primary_color
-                        ? { borderLeft: `3px solid ${row.team_primary_color}` }
-                        : undefined
-                    }
-                    onClick={() => toggleRow(row.team_season_id)}
-                    aria-expanded={isExpanded}
-                    aria-label={`${row.team_name} — ${row.w} ялалт, ${row.l} хожигдол`}
+                  <Collapsible
+                    open={isExpanded}
+                    onOpenChange={() => toggleExpand(row.team_season_id)}
+                    style={{ display: "contents" }}
                   >
-                    <TableCell className="font-semibold tabular-nums text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5">
-                        {index + 1}
-                        <MovementIndicator streak={row.streak} />
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/teams/${row.team_slug}`}
-                        className="inline-flex items-center gap-3 font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <TeamLogo
-                          logoUrl={row.team_logo_url}
-                          shortCode={row.team_short_code}
-                          primaryColor={row.team_primary_color}
-                        />
-                        {row.team_name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-center font-semibold tabular-nums">
-                      {row.w}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums">
-                      {row.l}
-                    </TableCell>
-                    <TableCell className="text-center font-semibold tabular-nums">
-                      {formatPercent(row.win_pct)}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums text-muted-foreground">
-                      {row.gb ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="outline">{row.streak ?? "—"}</Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <FormGuide last5={row.last5 ?? null} />
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Last10Dots last10={row.last10 ?? null} />
-                    </TableCell>
-                    <TableCell
+                    <TableRow
                       className={cn(
-                        "text-right font-semibold tabular-nums",
-                        pointDifference > 0 && "text-emerald-600",
-                        pointDifference < 0 && "text-red-500",
+                        "cursor-pointer transition-colors hover:bg-accent/50 odd:bg-muted/50",
+                        isExpanded && "bg-accent/30",
                       )}
+                      style={
+                        row.team_primary_color
+                          ? {
+                              borderLeft: `3px solid ${row.team_primary_color}`,
+                            }
+                          : undefined
+                      }
+                      tabIndex={0}
+                      role="button"
+                      onClick={() => toggleExpand(row.team_season_id)}
+                      onKeyDown={(e) => handleKeyDown(e, row.team_season_id)}
+                      onMouseEnter={() => handlePrefetch(row.team_season_id)}
+                      aria-expanded={isExpanded}
+                      aria-label={`${row.team_name} — ${row.w} ялалт, ${row.l} хожигдол. Дарж дэлгэрэнгүй харах.`}
                     >
-                      {pointDifference > 0 ? "+" : ""}
-                      {pointDifference}
-                    </TableCell>
-                    <TableCell>
-                      <ChevronDown
-                        className={cn(
-                          "size-4 text-muted-foreground transition-transform",
-                          isExpanded && "rotate-180",
-                        )}
-                        aria-hidden="true"
-                      />
-                    </TableCell>
-                  </TableRow>
-
-                  {/* Expanded detail row */}
-                  {isExpanded && (
-                    <TableRow className="border-t-0 bg-muted/30">
-                      <TableCell colSpan={11} className="px-6 py-4">
-                        <div
-                          className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4"
-                          role="group"
-                          aria-label={`${row.team_name} дэлгэрэнгүй статистик`}
+                      <TableCell className="font-semibold tabular-nums text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5">
+                          {index + 1}
+                          <MovementIndicator streak={row.streak} />
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/teams/${row.team_slug}`}
+                          className="inline-flex items-center gap-3 font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <div>
-                            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                              Оноо тавьсан
-                            </p>
-                            <p className="mt-1 font-semibold tabular-nums">
-                              {row.points_for ?? "—"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                              Оноо алдсан
-                            </p>
-                            <p className="mt-1 font-semibold tabular-nums">
-                              {row.points_against ?? "—"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                              Гэрт
-                            </p>
-                            <p className="mt-1 font-semibold tabular-nums">
-                              {row.home_record ?? "—"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                              Зочилсон
-                            </p>
-                            <p className="mt-1 font-semibold tabular-nums">
-                              {row.away_record ?? "—"}
-                            </p>
+                          <TeamLogo
+                            logoUrl={row.team_logo_url}
+                            shortCode={row.team_short_code}
+                            primaryColor={row.team_primary_color}
+                          />
+                          {row.team_name}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-center font-semibold tabular-nums">
+                        {row.w}
+                      </TableCell>
+                      <TableCell className="text-center tabular-nums">
+                        {row.l}
+                      </TableCell>
+                      <TableCell className="text-center font-semibold tabular-nums">
+                        <div className="flex flex-col items-center gap-1">
+                          <span>{formatPercent(row.win_pct)}</span>
+                          <div
+                            className="h-1.5 w-full max-w-14 rounded-full bg-muted overflow-hidden"
+                            aria-hidden
+                          >
+                            <div
+                              className="h-full rounded-full bg-emerald-500/70"
+                              style={{
+                                width: `${row.win_pct <= 1 ? row.win_pct * 100 : row.win_pct}%`,
+                              }}
+                            />
                           </div>
                         </div>
                       </TableCell>
+                      <TableCell className="text-center tabular-nums text-muted-foreground">
+                        {row.gb ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline">{row.streak ?? "—"}</Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <FormGuide last5={row.last5 ?? null} />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Last10Dots last10={row.last10 ?? null} />
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "text-right font-semibold tabular-nums",
+                          pointDifference > 0 && "text-emerald-600",
+                          pointDifference < 0 && "text-red-500",
+                        )}
+                      >
+                        {pointDifference > 0 ? "+" : ""}
+                        {pointDifference}
+                      </TableCell>
+                      <TableCell>
+                        <ChevronRight
+                          className={cn(
+                            "size-4 transition-transform duration-200",
+                            isExpanded && "rotate-90",
+                          )}
+                          aria-hidden="true"
+                        />
+                      </TableCell>
                     </TableRow>
-                  )}
+                    <CollapsibleContent asChild style={{ display: "contents" }}>
+                      <TableRow>
+                        <TableCell colSpan={11} className="p-0">
+                          <div className="border-t border-border/50 px-4 py-3">
+                            <ExpandedStandingsContent
+                              teamSeasonId={row.team_season_id}
+                              teamId={row.team_id}
+                              expanded={isExpanded}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    </CollapsibleContent>
+                  </Collapsible>
 
-                  {/* Playoff line separator */}
                   {index === playoffLineAfter - 1 &&
                     index < rows.length - 1 && (
                       <TableRow className="pointer-events-none border-t-0">
@@ -382,16 +384,22 @@ export function StandingsTable({
       </div>
       <div className="md:hidden flex flex-col gap-3">
         {rows.map((row, index) => {
-          const isExpanded = expandedId === row.team_season_id;
-
+          const isExpanded = expandedTeamId === row.team_season_id;
           return (
-            <Fragment key={row.team_season_id}>
+            <Collapsible
+              key={row.team_season_id}
+              open={isExpanded}
+              onOpenChange={() => toggleExpand(row.team_season_id)}
+            >
               <button
                 type="button"
-                onClick={() => toggleRow(row.team_season_id)}
+                tabIndex={0}
+                onClick={() => toggleExpand(row.team_season_id)}
+                onKeyDown={(e) => handleKeyDown(e, row.team_season_id)}
+                onMouseEnter={() => handlePrefetch(row.team_season_id)}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl border bg-card p-4 text-left cursor-pointer transition-colors hover:bg-accent/50 odd:bg-muted/50",
-                  isExpanded && "bg-muted/50",
+                  "flex w-full items-center gap-3 rounded-xl border bg-card p-4 text-left cursor-pointer transition-colors hover:bg-accent/50 odd:bg-muted/50",
+                  isExpanded && "rounded-b-none border-b-0 bg-accent/30",
                 )}
                 style={
                   row.team_primary_color
@@ -399,7 +407,7 @@ export function StandingsTable({
                     : undefined
                 }
                 aria-expanded={isExpanded}
-                aria-label={`${row.team_name} — ${row.w} ялалт, ${row.l} хожигдол`}
+                aria-label={`${row.team_name} — ${row.w} ялалт, ${row.l} хожигдол. Дарж дэлгэрэнгүй харах.`}
               >
                 <span className="text-sm font-black tabular-nums text-muted-foreground w-6 text-center">
                   {index + 1}
@@ -419,66 +427,50 @@ export function StandingsTable({
                 <div className="text-right">
                   <FormGuide last5={row.last5 ?? null} />
                 </div>
-                <ChevronDown
+                <ChevronRight
                   className={cn(
-                    "size-4 text-muted-foreground transition-transform",
-                    isExpanded && "rotate-180",
+                    "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                    isExpanded && "rotate-90",
                   )}
-                  aria-hidden="true"
                 />
               </button>
-              {isExpanded && (
+              <CollapsibleContent>
                 <div
-                  className="grid grid-cols-2 gap-3 p-4 text-sm bg-muted/30 rounded-xl"
-                  role="group"
-                  aria-label={`${row.team_name} дэлгэрэнгүй статистик`}
+                  className={cn(
+                    "rounded-b-xl border border-t-0 bg-card p-4",
+                    isExpanded && "bg-accent/20",
+                  )}
+                  style={
+                    row.team_primary_color
+                      ? { borderLeft: `3px solid ${row.team_primary_color}` }
+                      : undefined
+                  }
                 >
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Оноо тавьсан
-                    </p>
-                    <p className="mt-1 font-semibold tabular-nums">
-                      {row.points_for ?? "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Оноо алдсан
-                    </p>
-                    <p className="mt-1 font-semibold tabular-nums">
-                      {row.points_against ?? "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Гэрт
-                    </p>
-                    <p className="mt-1 font-semibold tabular-nums">
-                      {row.home_record ?? "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Зочилсон
-                    </p>
-                    <p className="mt-1 font-semibold tabular-nums">
-                      {row.away_record ?? "—"}
-                    </p>
-                  </div>
+                  <ExpandedStandingsContent
+                    teamSeasonId={row.team_season_id}
+                    teamId={row.team_id}
+                    expanded={isExpanded}
+                  />
                 </div>
-              )}
-              {index === playoffLineAfter - 1 && index < rows.length - 1 && (
-                <div className="flex items-center gap-3 py-1">
-                  <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
-                  <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
-                    Плэйоффийн шугам
-                  </span>
-                  <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
-                </div>
-              )}
-            </Fragment>
+              </CollapsibleContent>
+            </Collapsible>
           );
         })}
+        {rows.length > 0 &&
+          rows.map((row, index) =>
+            index === playoffLineAfter - 1 && index < rows.length - 1 ? (
+              <div
+                key={`playoff-${row.team_season_id}`}
+                className="flex items-center gap-3 py-1"
+              >
+                <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
+                <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
+                  Плэйоффийн шугам
+                </span>
+                <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
+              </div>
+            ) : null,
+          )}
       </div>
     </>
   );

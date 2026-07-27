@@ -25,21 +25,6 @@ async function verifyPageLoads(page: Page, url: string) {
   return resp?.status() ?? 0;
 }
 
-/**
- * Log in to the admin with dev credentials.
- */
-async function loginAsAdmin(page: Page) {
-  await page.goto("/admin/login");
-  await page.waitForLoadState("networkidle");
-  const emailInput = page.getByPlaceholder("Имэйл");
-  const passwordInput = page.getByPlaceholder("Нууц үг");
-  await emailInput.fill(DEV_EMAIL);
-  await passwordInput.fill(DEV_PASSWORD);
-  await page.getByRole("button", { name: "Нэвтрэх" }).click();
-  await page.waitForURL("/admin", { timeout: 15000 });
-  await expect(page.locator("body")).toBeVisible({ timeout: 15000 });
-}
-
 // ─── Tests ──────────────────────────────────────────────────────────────
 
 test.describe("Guardian consent page loads", () => {
@@ -66,8 +51,14 @@ test.describe("Guardian consent page loads", () => {
 
 test.describe("Guardian consent section renders", () => {
   test("consent status card renders with structure", async ({ page }) => {
-    // Log in as admin to potentially see guardian data
-    await loginAsAdmin(page);
+    // Log in as admin (redirect-aware)
+    await page.goto("/admin/login");
+    if (page.url().includes("/admin/login")) {
+      await page.getByPlaceholder("Имэйл").fill(DEV_EMAIL);
+      await page.getByPlaceholder("Нууц үг").fill(DEV_PASSWORD);
+      await page.getByRole("button", { name: "Нэвтрэх" }).click();
+      await page.waitForURL("/admin", { timeout: 15000 });
+    }
 
     // Navigate to guardian page
     await page.goto("/guardian");
@@ -91,7 +82,13 @@ test.describe("Guardian consent section renders", () => {
   test("consent sign dialog opens and shows template body", async ({
     page,
   }) => {
-    await loginAsAdmin(page);
+    await page.goto("/admin/login");
+    if (page.url().includes("/admin/login")) {
+      await page.getByPlaceholder("Имэйл").fill(DEV_EMAIL);
+      await page.getByPlaceholder("Нууц үг").fill(DEV_PASSWORD);
+      await page.getByRole("button", { name: "Нэвтрэх" }).click();
+      await page.waitForURL("/admin", { timeout: 15000 });
+    }
 
     // Navigate to guardian page
     await page.goto("/guardian");
@@ -131,7 +128,13 @@ test.describe("Guardian consent section renders", () => {
   test("withdraw withdraw dialog opens from signed consent", async ({
     page,
   }) => {
-    await loginAsAdmin(page);
+    await page.goto("/admin/login");
+    if (page.url().includes("/admin/login")) {
+      await page.getByPlaceholder("Имэйл").fill(DEV_EMAIL);
+      await page.getByPlaceholder("Нууц үг").fill(DEV_PASSWORD);
+      await page.getByRole("button", { name: "Нэвтрэх" }).click();
+      await page.waitForURL("/admin", { timeout: 15000 });
+    }
 
     await page.goto("/guardian");
     await page.waitForLoadState("networkidle");
