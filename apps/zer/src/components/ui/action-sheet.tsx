@@ -1,6 +1,15 @@
 "use client";
 
-import { Drawer } from "@base-ui/react/drawer";
+import {
+  Drawer,
+  DrawerDescription,
+  DrawerOverlay,
+  DrawerPanelContent,
+  DrawerPopup,
+  DrawerPortal,
+  DrawerTitle,
+  DrawerViewport,
+} from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
 export interface ActionSheetAction {
@@ -31,9 +40,9 @@ export function ActionSheet({
   className,
 }: ActionSheetProps) {
   return (
-    <Drawer.Root swipeDirection="down" open={open} onOpenChange={onOpenChange}>
-      <Drawer.Portal>
-        <Drawer.Backdrop
+    <Drawer swipeDirection="down" open={open} onOpenChange={onOpenChange}>
+      <DrawerPortal>
+        <DrawerOverlay
           className={cn(
             "[--backdrop-opacity:0.4] dark:[--backdrop-opacity:0.7]",
             "fixed inset-0 min-h-dvh bg-black",
@@ -45,8 +54,8 @@ export function ActionSheet({
             "supports-[-webkit-touch-callout:none]:absolute",
           )}
         />
-        <Drawer.Viewport className="fixed inset-0 flex items-end justify-center">
-          <Drawer.Popup
+        <DrawerViewport className="fixed inset-0 flex items-end justify-center">
+          <DrawerPopup
             className={cn(
               // Layout
               "pointer-events-none flex w-full max-w-[20rem] flex-col gap-3",
@@ -62,7 +71,7 @@ export function ActionSheet({
               className,
             )}
           >
-            <Drawer.Content
+            <DrawerPanelContent
               className={cn(
                 // Main actions surface
                 "pointer-events-auto overflow-hidden",
@@ -73,24 +82,24 @@ export function ActionSheet({
             >
               {/* Screen-reader accessible heading */}
               {title && (
-                <Drawer.Title
+                <DrawerTitle
                   className={cn(
                     "px-5 pt-3 pb-1 text-sm font-semibold",
                     "border-b border-border dark:border-white",
                   )}
                 >
                   {title}
-                </Drawer.Title>
+                </DrawerTitle>
               )}
               {description && (
-                <Drawer.Description
+                <DrawerDescription
                   className={cn(
                     "px-5 pb-2 text-xs text-muted-foreground",
                     "border-b border-border dark:border-white",
                   )}
                 >
                   {description}
-                </Drawer.Description>
+                </DrawerDescription>
               )}
 
               <ul className="m-0 list-none p-0">
@@ -123,7 +132,7 @@ export function ActionSheet({
                   </li>
                 ))}
               </ul>
-            </Drawer.Content>
+            </DrawerPanelContent>
 
             {/* Destructive action — separate block */}
             {destructiveAction && (
@@ -156,9 +165,9 @@ export function ActionSheet({
                 </button>
               </div>
             )}
-          </Drawer.Popup>
-        </Drawer.Viewport>
-      </Drawer.Portal>
-    </Drawer.Root>
+          </DrawerPopup>
+        </DrawerViewport>
+      </DrawerPortal>
+    </Drawer>
   );
 }

@@ -5,6 +5,19 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// Re-export raw Base UI primitives needed by higher-level wrapper components
+const DrawerViewport = DrawerPrimitive.Viewport;
+const DrawerPopup = DrawerPrimitive.Popup;
+const DrawerPanelContent = DrawerPrimitive.Content;
+const DrawerProvider = DrawerPrimitive.Provider;
+const DrawerIndent = DrawerPrimitive.Indent;
+const DrawerIndentBackground = DrawerPrimitive.IndentBackground;
+export type DrawerHandle<T = unknown> = DrawerPrimitive.Handle<T>;
+const DrawerVirtualKeyboardProvider = DrawerPrimitive.VirtualKeyboardProvider;
+/** Type for event details passed to onOpenChange callbacks. */
+export type DrawerRootChangeEventDetails =
+  DrawerPrimitive.Root.ChangeEventDetails;
+
 type DrawerContextProps = {
   hasSnapPoints: boolean;
   modal: DrawerPrimitive.Root.Props["modal"];
@@ -220,9 +233,16 @@ export {
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
+  DrawerIndent,
+  DrawerIndentBackground,
   DrawerOverlay,
+  DrawerPanelContent,
+  DrawerPopup,
   DrawerPortal,
+  DrawerProvider,
   DrawerSwipeHandle,
   DrawerTitle,
   DrawerTrigger,
+  DrawerViewport,
+  DrawerVirtualKeyboardProvider,
 };

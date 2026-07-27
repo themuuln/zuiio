@@ -6,9 +6,12 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "hitec.pl" },
-      { protocol: "https", hostname: "*.supabase.co" },
+      {
+        protocol: "https",
+        hostname: "**",
+      },
     ],
+    unoptimized: true,
   },
   reactCompiler: true,
   // TypeScript validation is handled by `pnpm validate` before build.
@@ -20,14 +23,15 @@ const nextConfig: NextConfig = {
     inlineCss: true,
     staleTimes: {
       dynamic: 30,
-      static: 300,
+      static: 180,
     },
     optimizePackageImports: [
       "@phosphor-icons/react",
-      "@phosphor-icons/react/dist/ssr",
-      "@tanstack/react-query",
-      "date-fns",
       "lucide-react",
+      "recharts",
+      "date-fns",
+      "cmdk",
+      "@radix-ui/react-icons",
     ],
     turbopackFileSystemCacheForBuild: true,
     viewTransition: true,
@@ -42,35 +46,29 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
+        source: "/(.*?)",
         headers: [
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "X-XSS-Protection", value: "1; mode=block" },
           {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
           },
         ],
       },
       {
-        source: "/sw.js",
+        source: "/embed(.*?)",
         headers: [
           {
-            key: "Cache-Control",
-            value: "no-cache, no-store, must-revalidate",
+            key: "X-Frame-Options",
+            value: "DENY",
           },
         ],
       },
       {
-        source: "/r/:path*",
+        source: "/monitoring",
         headers: [
-          { key: "X-Robots-Tag", value: "noindex, nofollow" },
-          { key: "Referrer-Policy", value: "no-referrer" },
           {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate",
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
         ],
       },
@@ -92,12 +90,8 @@ export default withSentryConfig(nextConfig, {
   tunnelRoute: "/monitoring",
 
   webpack: {
-    // Enables automatic instrumentation of Vercel Cron Monitors
-    automaticVercelMonitors: true,
-
-    // Tree-shaking Sentry logger statements to reduce bundle size
-    treeshake: {
-      removeDebugLogging: true,
-    },
+    // Hidden source maps are used for Sentry source maps upload
+    // biome-ignore lint/style/noNonNullAssertion: this is next config
+    hiddenSourceMap: !process.env.SENTRY_UPLOAD === true,
   },
 });

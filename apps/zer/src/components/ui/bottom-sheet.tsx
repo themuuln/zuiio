@@ -1,7 +1,16 @@
 "use client";
 
-import { Drawer } from "@base-ui/react/drawer";
 import * as React from "react";
+import {
+  Drawer,
+  DrawerOverlay,
+  DrawerPanelContent,
+  DrawerPopup,
+  DrawerPortal,
+  DrawerTrigger,
+  DrawerViewport,
+  DrawerVirtualKeyboardProvider,
+} from "@/components/ui/drawer";
 import { DrawerHeader } from "@/components/ui/drawer-header";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +51,7 @@ export function BottomSheet({
 }: BottomSheetProps) {
   const content = (
     <>
-      <Drawer.Backdrop
+      <DrawerOverlay
         className={cn(
           "[--backdrop-opacity:0.2] [--bleed:3rem] dark:[--backdrop-opacity:0.7]",
           "fixed inset-0 min-h-dvh bg-black",
@@ -54,7 +63,7 @@ export function BottomSheet({
           "supports-[-webkit-touch-callout:none]:absolute",
         )}
       />
-      <Drawer.Viewport
+      <DrawerViewport
         className="fixed inset-0 flex items-end justify-center"
         style={
           {
@@ -62,7 +71,7 @@ export function BottomSheet({
           } as React.CSSProperties
         }
       >
-        <Drawer.Popup
+        <DrawerPopup
           className={cn(
             // Base
             "[--bleed:3rem] box-border w-full",
@@ -105,7 +114,7 @@ export function BottomSheet({
           {/* Drag handle */}
           <div className="mx-auto mb-4 h-1 w-12 shrink-0 rounded-full bg-neutral-300 dark:bg-neutral-700" />
 
-          <Drawer.Content
+          <DrawerPanelContent
             className={cn(
               "mx-auto flex w-full max-w-lg flex-col",
               snapPoints
@@ -125,21 +134,21 @@ export function BottomSheet({
             {footer && (
               <div className="mt-4 shrink-0 border-t pt-4">{footer}</div>
             )}
-          </Drawer.Content>
-        </Drawer.Popup>
-      </Drawer.Viewport>
+          </DrawerPanelContent>
+        </DrawerPopup>
+      </DrawerViewport>
     </>
   );
 
   const drawer = (
-    <Drawer.Root
+    <Drawer
       swipeDirection="down"
       open={open}
       onOpenChange={onOpenChange}
       snapPoints={snapPoints as (number | string)[] | undefined}
     >
       {trigger && (
-        <Drawer.Trigger
+        <DrawerTrigger
           render={(props) => {
             const { children: _, ...triggerProps } = props;
             if (React.isValidElement(trigger)) {
@@ -153,15 +162,15 @@ export function BottomSheet({
           }}
         >
           {trigger}
-        </Drawer.Trigger>
+        </DrawerTrigger>
       )}
-      <Drawer.Portal>{content}</Drawer.Portal>
-    </Drawer.Root>
+      <DrawerPortal>{content}</DrawerPortal>
+    </Drawer>
   );
 
   if (virtualKeyboard) {
     return (
-      <Drawer.VirtualKeyboardProvider>{drawer}</Drawer.VirtualKeyboardProvider>
+      <DrawerVirtualKeyboardProvider>{drawer}</DrawerVirtualKeyboardProvider>
     );
   }
 

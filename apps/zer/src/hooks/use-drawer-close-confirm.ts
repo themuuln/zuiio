@@ -1,5 +1,5 @@
-import type { Drawer } from "@base-ui/react/drawer";
 import { useCallback } from "react";
+import type { DrawerRootChangeEventDetails } from "@/components/ui/drawer";
 
 /**
  * Returns an `onOpenChange` handler that prevents the drawer from closing
@@ -26,7 +26,7 @@ export function useDrawerCloseConfirm(
   onClose: (open: boolean) => void,
 ) {
   return useCallback(
-    (open: boolean, eventDetails?: Drawer.Root.ChangeEventDetails) => {
+    (open: boolean, eventDetails?: DrawerRootChangeEventDetails) => {
       if (!open && hasUnsavedChanges && eventDetails) {
         eventDetails.cancel();
         onConfirmRequest();

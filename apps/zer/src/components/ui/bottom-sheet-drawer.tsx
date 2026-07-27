@@ -1,7 +1,19 @@
 "use client";
 
-import { Drawer } from "@base-ui/react/drawer";
 import * as React from "react";
+import {
+  Drawer,
+  type DrawerHandle,
+  DrawerIndent,
+  DrawerIndentBackground,
+  DrawerOverlay,
+  DrawerPanelContent,
+  DrawerPopup,
+  DrawerPortal,
+  DrawerProvider,
+  DrawerTrigger,
+  DrawerViewport,
+} from "@/components/ui/drawer";
 import { DrawerHeader } from "@/components/ui/drawer-header";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +31,9 @@ interface BottomSheetDrawerProps {
   /** Fixed footer slot at the bottom of the drawer. */
   footer?: React.ReactNode;
   /**
-   * Handle for detached triggers created via `Drawer.createHandle()`.
+   * Handle for detached triggers created via `Drawer.createHandle()` from Base UI.
    */
-  handle?: Drawer.Handle<unknown>;
+  handle?: DrawerHandle;
   /**
    * Determines if the drawer enters a modal state when open.
    * @default true
@@ -51,13 +63,13 @@ export function BottomSheetDrawer({
   const bleedPadding = "px-6";
 
   return (
-    <Drawer.Provider>
+    <DrawerProvider>
       {/* IndentBackground: scales down when any drawer in provider is open */}
-      <Drawer.IndentBackground className="fixed inset-0 bg-black/10 transition-all duration-300 data-[active]:bg-black/20" />
+      <DrawerIndentBackground className="fixed inset-0 bg-black/10 transition-all duration-300 data-[active]:bg-black/20" />
 
       {/* Indent: the wrapper that scales when drawer is open */}
-      <Drawer.Indent className="transition-all duration-300 data-[active]:scale-[0.97] data-[active]:opacity-80">
-        <Drawer.Root
+      <DrawerIndent className="transition-all duration-300 data-[active]:scale-[0.97] data-[active]:opacity-80">
+        <Drawer
           swipeDirection="down"
           open={open}
           onOpenChange={onOpenChange}
@@ -67,7 +79,7 @@ export function BottomSheetDrawer({
           snapPoints={[0.9]}
         >
           {trigger && (
-            <Drawer.Trigger
+            <DrawerTrigger
               render={(props) => {
                 const { children: _, ...triggerProps } = props;
                 if (React.isValidElement(trigger)) {
@@ -81,12 +93,12 @@ export function BottomSheetDrawer({
               }}
             >
               {trigger}
-            </Drawer.Trigger>
+            </DrawerTrigger>
           )}
-          <Drawer.Portal>
-            <Drawer.Backdrop className="[--backdrop-opacity:0.1] z-40 fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] dark:[--backdrop-opacity:0.4]" />
-            <Drawer.Viewport className="[--viewport-padding:0px] z-50 fixed inset-0 flex items-end justify-center p-(--viewport-padding)">
-              <Drawer.Popup
+          <DrawerPortal>
+            <DrawerOverlay className="[--backdrop-opacity:0.1] z-40 fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] dark:[--backdrop-opacity:0.4]" />
+            <DrawerViewport className="[--viewport-padding:0px] z-50 fixed inset-0 flex items-end justify-center p-(--viewport-padding)">
+              <DrawerPopup
                 className={cn(
                   "[--bleed:0px] w-full border-t border-border bg-white text-foreground outline-none shadow-lg overscroll-contain touch-auto",
                   "[transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
@@ -99,7 +111,7 @@ export function BottomSheetDrawer({
                 )}
                 style={{ height } as React.CSSProperties}
               >
-                <Drawer.Content className="mx-auto w-full flex flex-col h-full min-w-0 overflow-x-hidden">
+                <DrawerPanelContent className="mx-auto w-full flex flex-col h-full min-w-0 overflow-x-hidden">
                   {/* Header */}
                   {title && (
                     <div
@@ -136,12 +148,12 @@ export function BottomSheetDrawer({
                       {footer}
                     </div>
                   )}
-                </Drawer.Content>
-              </Drawer.Popup>
-            </Drawer.Viewport>
-          </Drawer.Portal>
-        </Drawer.Root>
-      </Drawer.Indent>
-    </Drawer.Provider>
+                </DrawerPanelContent>
+              </DrawerPopup>
+            </DrawerViewport>
+          </DrawerPortal>
+        </Drawer>
+      </DrawerIndent>
+    </DrawerProvider>
   );
 }

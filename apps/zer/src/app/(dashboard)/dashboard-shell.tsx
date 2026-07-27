@@ -1,6 +1,5 @@
 "use client";
 
-import { Drawer } from "@base-ui/react/drawer";
 import { MapPin, Plus, Storefront } from "@phosphor-icons/react/dist/ssr";
 import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
@@ -9,6 +8,11 @@ import * as React from "react";
 import { useMemo, ViewTransition } from "react";
 import { QuickCreateDropdown } from "@/components/erp/quick-create-dropdown";
 import { NavUser } from "@/components/nav-user";
+import {
+  DrawerIndent,
+  DrawerIndentBackground,
+  DrawerProvider,
+} from "@/components/ui/drawer";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   Select,
@@ -351,7 +355,7 @@ export function DashboardShell({
 
   const isShop = pathname.startsWith("/shop");
   return (
-    <Drawer.Provider>
+    <DrawerProvider>
       <RealtimeSubscriptions orgId={organizationId} />
       {isShop ? (
         <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -380,8 +384,8 @@ export function DashboardShell({
         </SidebarProvider>
       ) : (
         <>
-          <Drawer.IndentBackground className="pointer-events-none fixed inset-0 z-10 bg-black/10 opacity-0 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:opacity-100 dark:bg-black/40" />
-          <Drawer.Indent
+          <DrawerIndentBackground className="pointer-events-none fixed inset-0 z-10 bg-black/10 opacity-0 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:opacity-100 dark:bg-black/40" />
+          <DrawerIndent
             className="relative z-0 min-h-dvh transition-[transform,border-radius] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:origin-[center_top] data-active:scale-[calc(0.97+0.03*var(--drawer-swipe-progress))] data-active:translate-y-[calc(0.5rem*(1-var(--drawer-swipe-progress)))] data-active:rounded-tl-2xl data-active:rounded-tr-2xl"
             style={
               {
@@ -428,9 +432,9 @@ export function DashboardShell({
                 </div>
               </SidebarInset>
             </SidebarProvider>
-          </Drawer.Indent>
+          </DrawerIndent>
         </>
       )}
-    </Drawer.Provider>
+    </DrawerProvider>
   );
 }

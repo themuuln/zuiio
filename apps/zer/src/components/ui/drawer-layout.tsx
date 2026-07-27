@@ -1,7 +1,16 @@
 "use client";
 
-import { Drawer } from "@base-ui/react/drawer";
 import * as React from "react";
+import {
+  Drawer,
+  type DrawerHandle,
+  DrawerOverlay,
+  DrawerPanelContent,
+  DrawerPopup,
+  DrawerPortal,
+  DrawerTrigger,
+  DrawerViewport,
+} from "@/components/ui/drawer";
 import { DrawerHeader } from "@/components/ui/drawer-header";
 import { cn } from "@/lib/utils";
 
@@ -17,10 +26,10 @@ interface DrawerLayoutProps {
   /** Whether this drawer is nested inside another drawer. Reduces backdrop and adds visual hierarchy. */
   nested?: boolean;
   /**
-   * Handle for detached triggers created via `Drawer.createHandle()`.
+   * Handle for detached triggers created via `Drawer.createHandle()` from Base UI.
    * Lets you control the drawer from a trigger placed outside `<DrawerLayout>`.
    */
-  handle?: Drawer.Handle<unknown>;
+  handle?: DrawerHandle;
   /**
    * Direction the drawer slides in from.
    * `right` (default): slides from right edge.
@@ -76,7 +85,7 @@ export function DrawerLayout({
     "pr-[calc(1.5rem+3rem)] supports-[-webkit-touch-callout:none]:pr-6";
 
   return (
-    <Drawer.Root
+    <Drawer
       swipeDirection={direction === "bottom" ? "down" : "right"}
       open={open}
       onOpenChange={onOpenChange}
@@ -85,7 +94,7 @@ export function DrawerLayout({
       disablePointerDismissal={disablePointerDismissal}
     >
       {trigger && (
-        <Drawer.Trigger
+        <DrawerTrigger
           render={(props) => {
             const { children: _, ...triggerProps } = props;
             if (React.isValidElement(trigger)) {
@@ -99,7 +108,7 @@ export function DrawerLayout({
           }}
         >
           {trigger}
-        </Drawer.Trigger>
+        </DrawerTrigger>
       )}
       {/* Stack effect styles for nested drawers */}
       <style
@@ -117,8 +126,8 @@ export function DrawerLayout({
           `,
         }}
       />
-      <Drawer.Portal>
-        <Drawer.Backdrop
+      <DrawerPortal>
+        <DrawerOverlay
           forceRender={nested}
           className={cn(
             "[--bleed:3rem] fixed inset-0 min-h-dvh bg-black transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute",
@@ -128,7 +137,7 @@ export function DrawerLayout({
             "opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))]",
           )}
         />
-        <Drawer.Viewport
+        <DrawerViewport
           className={cn(
             "[--viewport-padding:0px] fixed inset-0 flex p-(--viewport-padding)",
             direction === "bottom"
@@ -138,7 +147,7 @@ export function DrawerLayout({
             "supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem]",
           )}
         >
-          <Drawer.Popup
+          <DrawerPopup
             data-drawer-popup=""
             data-nested-drawer-open={nestedDrawerOpen || undefined}
             className={cn(
@@ -155,7 +164,7 @@ export function DrawerLayout({
               className,
             )}
           >
-            <Drawer.Content className="mx-auto w-full flex flex-col h-full min-w-0 overflow-x-hidden">
+            <DrawerPanelContent className="mx-auto w-full flex flex-col h-full min-w-0 overflow-x-hidden">
               {hasStructuredLayout ? (
                 <>
                   {title && (
@@ -195,10 +204,10 @@ export function DrawerLayout({
                   {children}
                 </div>
               )}
-            </Drawer.Content>
-          </Drawer.Popup>
-        </Drawer.Viewport>
-      </Drawer.Portal>
-    </Drawer.Root>
+            </DrawerPanelContent>
+          </DrawerPopup>
+        </DrawerViewport>
+      </DrawerPortal>
+    </Drawer>
   );
 }
