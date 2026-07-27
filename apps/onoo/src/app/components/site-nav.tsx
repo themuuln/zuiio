@@ -25,13 +25,13 @@ const PRIMARY_ITEMS = [
   { href: "/", label: "Нүүр хуудас" },
   { href: "/games", label: "Тоглолтууд" },
   { href: "/players", label: "Тоглогчид" },
+  { href: "/academy", label: "Академи" },
+  { href: "/shop", label: "Дэлгүүр" },
 ] as const;
 
 const OVERFLOW_ITEMS = [
   { href: "/standings", label: "Шалгуур" },
   { href: "/leaders", label: "Тэргүүлэгчид" },
-  { href: "/academy", label: "Академи" },
-  { href: "/shop", label: "Дэлгүүр" },
 ] as const;
 
 function isActive(href: string, pathname: string): boolean {
