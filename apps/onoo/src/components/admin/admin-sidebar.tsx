@@ -16,11 +16,13 @@ import {
   GraduationCap,
   HardDrive,
   Heart,
+  Layers,
   LayoutDashboard,
   List,
   MapPin,
   Medal,
   Megaphone,
+  MessageSquareText,
   Package,
   Scale,
   School,
@@ -122,6 +124,8 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/admin/products", label: "Бүтээгдэхүүн", icon: Package },
       { href: "/admin/orders", label: "Захиалга", icon: ShoppingCart },
+      { href: "/admin/reviews", label: "Сэтгэгдэл", icon: MessageSquareText },
+      { href: "/admin/bundles", label: "Багц", icon: Layers },
     ],
   },
   {

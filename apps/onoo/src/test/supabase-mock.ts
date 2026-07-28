@@ -31,6 +31,10 @@ class MockQueryBuilder<T = unknown> {
     return this;
   }
 
+  neq(_field: string, _value: unknown) {
+    return this;
+  }
+
   ilike(_field: string, _pattern: string) {
     return this;
   }

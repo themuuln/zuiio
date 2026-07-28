@@ -659,7 +659,7 @@ export default function BoxEntryPage() {
           {/* Actions after import */}
           {syncInfo && (
             <div className="flex flex-wrap gap-3">
-              <Button asChild variant="default">
+              <Button variant="default">
                 <Link href={`/admin/games/${params.id}`}>
                   <ExternalLink className="mr-1 size-4" />
                   Тоглолт руу очих
@@ -712,7 +712,7 @@ export default function BoxEntryPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm" asChild>
+                      <Button variant="ghost" size="sm">
                         <Link
                           href={
                             sub.source_type === "official_score_sheet"

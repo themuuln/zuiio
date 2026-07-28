@@ -23,7 +23,7 @@ export default function NotFound() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center gap-3">
-          <Button asChild variant="outline">
+          <Button variant="outline">
             <Link href="/">Нүүр хуудас руу буцах</Link>
           </Button>
         </CardContent>

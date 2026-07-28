@@ -1,17 +1,11 @@
 "use client";
 
-import { ChevronDown, CircleDot, Search, Trophy } from "lucide-react";
+import { CircleDot, Search, ShoppingBag } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui";
+import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 // Lazy-load the search dialog — saves ~10K + Dialog/Input/icon code from every page
@@ -20,16 +14,10 @@ const SearchCommand = dynamic(
   { ssr: false },
 );
 
-// Primary items always visible; overflow items go in `Илүү` dropdown
-const PRIMARY_ITEMS = [
+const NAV_ITEMS = [
   { href: "/", label: "Нүүр хуудас" },
   { href: "/games", label: "Тоглолтууд" },
   { href: "/players", label: "Тоглогчид" },
-  { href: "/academy", label: "Академи" },
-  { href: "/shop", label: "Дэлгүүр" },
-] as const;
-
-const OVERFLOW_ITEMS = [
   { href: "/standings", label: "Шалгуур" },
   { href: "/leaders", label: "Тэргүүлэгчид" },
 ] as const;
@@ -68,7 +56,7 @@ export function SiteNav() {
         className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-1.5 sm:px-6 lg:px-8"
         aria-label="Үндсэн цэс"
       >
-        {/* Logo + League badge */}
+        {/* Logo */}
         <Link
           href="/"
           prefetch={true}
@@ -80,9 +68,9 @@ export function SiteNav() {
           <span className="hidden sm:inline">Оноо</span>
         </Link>
 
-        {/* Navigation links — primary inline, overflow in dropdown on mobile */}
+        {/* Navigation links — all items inline */}
         <ul className="flex items-center gap-0.5">
-          {PRIMARY_ITEMS.map((item) => {
+          {NAV_ITEMS.map((item) => {
             const active = isActive(item.href, pathname);
             return (
               <li key={item.href} className="shrink-0">
@@ -108,40 +96,6 @@ export function SiteNav() {
             );
           })}
 
-          {/* Overflow items — dropdown on all viewports */}
-          <li>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 gap-1 px-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                  Илүү
-                  <ChevronDown className="size-3.5" aria-hidden="true" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {OVERFLOW_ITEMS.map((item) => {
-                  const active = isActive(item.href, pathname);
-                  return (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          "w-full",
-                          active && "font-semibold text-[var(--brand-sports)]",
-                        )}
-                      >
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </li>
-
           {/* Search button */}
           <li className="shrink-0">
             <Button
@@ -156,14 +110,32 @@ export function SiteNav() {
           </li>
         </ul>
 
-        {/* League badge — desktop only */}
-        <span
-          className="hidden items-center gap-1.5 text-xs font-semibold text-muted-foreground lg:flex"
-          aria-hidden="true"
-        >
-          <Trophy className="size-3.5 text-[var(--brand-sports)]" />
-          <span>МБЛ 2026</span>
-        </span>
+        {/* Right-side CTAs — Academy link + Shop button */}
+        <div className="flex items-center gap-2">
+          <Link
+            href="/academy"
+            className={cn(
+              "inline-flex min-h-10 items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-[var(--duration-fast)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              isActive("/academy", pathname)
+                ? "bg-[var(--brand-sports)]/12 text-[var(--ink)] font-semibold"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+            )}
+            aria-current={isActive("/academy", pathname) ? "page" : undefined}
+          >
+            Академи
+          </Link>
+          <Button asChild size="sm" className="gap-1.5 font-semibold">
+            <Link
+              href="/shop"
+              className={cn(
+                isActive("/shop", pathname) && "bg-[var(--brand-sports)]/20",
+              )}
+            >
+              <ShoppingBag className="size-3.5" aria-hidden="true" />
+              Дэлгүүр
+            </Link>
+          </Button>
+        </div>
       </nav>
       <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
     </header>

@@ -465,13 +465,13 @@ export function TeamDrawer({ team, open, onClose }: TeamDrawerProps) {
           {/* Section 6: Quick action links */}
           {team && (
             <div className="grid grid-cols-2 gap-2 border-t border-border/50 pt-4">
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm">
                 <Link href={`/teams/${team.team_slug}`}>
                   <ExternalLink className="size-3.5" />
                   Баг харах
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm">
                 <Link href={`/teams/${team.team_slug}/analytics`}>
                   <BarChart3 className="size-3.5" />
                   Аналитик
@@ -481,7 +481,7 @@ export function TeamDrawer({ team, open, onClose }: TeamDrawerProps) {
                 variant="outline"
                 size="sm"
                 className="col-span-2"
-                asChild
+               
               >
                 <Link href={`/teams/${team.team_slug}/scout`}>
                   <Eye className="size-3.5" />

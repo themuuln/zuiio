@@ -411,14 +411,14 @@ export default async function GameDetailPage({ params }: GamePageProps) {
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button asChild variant="outline">
+          <Button variant="outline">
             <Link href="/games">← Тоглолтууд руу буцах</Link>
           </Button>
           <div className="flex flex-wrap items-center gap-2">
             <ReportErrorDialog gameId={game.id} />
             {isFinal ? (
               <>
-                <Button asChild variant="outline">
+                <Button variant="outline">
                   <a
                     href={`/api/export?gameId=${game.id}&type=boxscore`}
                     download
@@ -427,7 +427,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                     CSV
                   </a>
                 </Button>
-                <Button asChild variant="outline">
+                <Button variant="outline">
                   <a
                     href={`/api/export/pdf?gameId=${game.id}`}
                     target="_blank"

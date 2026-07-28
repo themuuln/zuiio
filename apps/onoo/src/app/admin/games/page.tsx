@@ -188,7 +188,7 @@ export default function AdminGamesPage() {
             }
           }}
         >
-          <DialogTrigger asChild>
+          <DialogTrigger>
             <Button>
               <Plus className="mr-2 size-4" />
               Шинэ тоглолт

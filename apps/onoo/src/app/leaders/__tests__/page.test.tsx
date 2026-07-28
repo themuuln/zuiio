@@ -68,13 +68,13 @@ vi.mock("@/components/ui", () => ({
   Button: ({
     children,
     className,
-    asChild,
+   ,
   }: {
     children: React.ReactNode;
     className?: string;
-    asChild?: boolean;
+   ?: boolean;
   }) =>
-    asChild ? children : <button className={className}>{children}</button>,
+    ? children : <button className={className}>{children}</button>,
   Card: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="card">{children}</div>
   ),

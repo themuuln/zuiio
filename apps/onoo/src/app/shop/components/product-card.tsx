@@ -8,6 +8,7 @@ import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { ShopProductRow } from "@/app/lib/data-shop";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductCardProps {
   product: ShopProductRow;
@@ -44,6 +45,23 @@ export function ProductCard({ product }: ProductCardProps) {
               Зураг байхгүй
             </span>
           </div>
+        )}
+
+        {/* Stock badge */}
+        {outOfStock ? (
+          <Badge
+            variant="destructive"
+            className="absolute left-2 top-2 px-2 py-0.5 text-[10px]"
+          >
+            Дууссан
+          </Badge>
+        ) : (
+          <Badge
+            variant="secondary"
+            className="absolute left-2 top-2 px-2 py-0.5 text-[10px]"
+          >
+            Бэлэн
+          </Badge>
         )}
       </div>
 

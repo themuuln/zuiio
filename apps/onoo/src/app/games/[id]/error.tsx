@@ -35,7 +35,7 @@ export default function GameDetailError({
         <EmptyContent>
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={reset}>Дахин оролдох</Button>
-            <Button asChild variant="outline">
+            <Button variant="outline">
               <Link href="/games">← Тоглолтууд руу буцах</Link>
             </Button>
           </div>

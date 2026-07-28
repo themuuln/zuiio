@@ -69,7 +69,7 @@ export function LinkStudentDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+      <DialogTrigger>
         <Button variant="outline" size="sm" disabled={!userId}>
           Холбох
         </Button>

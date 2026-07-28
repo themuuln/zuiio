@@ -16,7 +16,7 @@ export default async function PlayersPage({
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
       {/* ── Hero header — streams immediately, no data dependency ── */}
-      <header className="court-accent relative overflow-hidden rounded-xl bg-sidebar px-6 py-8 sm:px-10 sm:py-10">
+      <header className="court-accent relative overflow-hidden rounded-xl bg-sidebar px-6 py-6 sm:px-10 sm:py-8">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.06]"
           aria-hidden="true"
@@ -27,15 +27,15 @@ export default async function PlayersPage({
             ].join(", "),
           }}
         />
-        <div className="relative max-w-2xl">
+        <div className="relative">
           <p className="text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
             Тамирчдын түүх
           </p>
-          <h1 className="mt-2 font-display text-4xl leading-tight tracking-tight text-sidebar-foreground sm:text-5xl">
+          <h1 className="mt-1 font-display text-3xl leading-tight tracking-tight text-sidebar-foreground sm:text-4xl">
             Тоглогчид
           </h1>
-          <p className="mt-3 leading-relaxed text-sidebar-foreground/70">
-            Тоглогчоо нэр, баг, байрлалаар олж улирлын гүйцэтгэл болон бүрэн
+          <p className="mt-1.5 max-w-xl leading-relaxed text-sidebar-foreground/70">
+            Тоглогчоо нэр, баг, байрлалаар олж улирлын гүйцэтгэл болон
             тоглолтын түүхийг нь үзээрэй.
           </p>
         </div>

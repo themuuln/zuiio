@@ -5,8 +5,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Edit, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import type { ShopProductRow } from "@/app/admin/_lib/api";
-import { shopProductsApi } from "@/app/admin/_lib/api";
+import type { ShopProductRow, TeamOption } from "@/app/admin/_lib/api";
+import { getTeams, shopProductsApi } from "@/app/admin/_lib/api";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPageLayout } from "@/components/admin/page-layout";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useEntityCrud } from "@/hooks/use-entity-crud";
 
@@ -36,6 +43,7 @@ const productSchema = z.object({
   price_mnt: z.coerce.number().int().positive("Үнэ эерэг тоо байх ёстой"),
   description: z.string().optional(),
   variants: z.string().optional(),
+  team_id: z.string().optional(),
 });
 
 const dateFormatter = new Intl.DateTimeFormat("mn-MN", {
@@ -45,10 +53,17 @@ const dateFormatter = new Intl.DateTimeFormat("mn-MN", {
 });
 
 export default function AdminProductsPage() {
+  const [teams, setTeams] = useState<TeamOption[]>([]);
+
   const { data: products = [], isPending } = useQuery({
     queryKey: ["admin", "products"],
     queryFn: () => shopProductsApi.list(),
   });
+
+  // Fetch teams for the team selector
+  useEffect(() => {
+    getTeams().then(setTeams).catch(console.error);
+  }, []);
 
   const crud = useEntityCrud({
     api: shopProductsApi,
@@ -60,6 +75,7 @@ export default function AdminProductsPage() {
       price_mnt: "",
       description: "",
       variants: "[]",
+      team_id: "",
     },
     successMessages: {
       create: "Бүтээгдэхүүн амжилттай үүсгэлээ",
@@ -72,6 +88,7 @@ export default function AdminProductsPage() {
       price_mnt: row.price_mnt,
       description: row.description ?? "",
       variants: JSON.stringify(row.variants),
+      team_id: row.team_id ?? "",
     }),
   });
 
@@ -266,6 +283,34 @@ export default function AdminProductsPage() {
                     <FormControl>
                       <Input placeholder="product-slug" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={crud.form.control}
+                name="team_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Баг</FormLabel>
+                    <Select
+                      value={field.value || ""}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Баг сонгох..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Баггүй</SelectItem>
+                        {teams.map((team) => (
+                          <SelectItem key={team.id} value={team.id}>
+                            {team.name} ({team.short_code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

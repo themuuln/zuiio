@@ -502,7 +502,7 @@ describe("Players list page", () => {
     expect(screen.getByText("Тоглогчид")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Тоглогчоо нэр, баг, байрлалаар олж улирлын гүйцэтгэл болон бүрэн тоглолтын түүхийг нь үзээрэй.",
+        "Тоглогчоо нэр, баг, байрлалаар олж улирлын гүйцэтгэл болон тоглолтын түүхийг нь үзээрэй.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("Тамирчдын түүх")).toBeInTheDocument();

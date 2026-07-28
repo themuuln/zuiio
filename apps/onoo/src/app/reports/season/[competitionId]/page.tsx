@@ -94,7 +94,7 @@ export default async function SeasonReportPage({
         </div>
         <div className="flex flex-wrap gap-2">
           <PrintButton />
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="outline" size="sm">
             <Link href={`/standings?competition=${competitionId}`}>
               Шалгуур руу буцах
             </Link>

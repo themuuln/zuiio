@@ -44,7 +44,7 @@ export function PublicEmptyState({
         <EmptyContent>
           {children}
           {actionHref && actionLabel ? (
-            <Button asChild>
+            <Button>
               <Link href={actionHref}>{actionLabel}</Link>
             </Button>
           ) : null}

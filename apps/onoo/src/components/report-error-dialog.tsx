@@ -74,7 +74,7 @@ export function ReportErrorDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+      <DialogTrigger>
         <Button variant="ghost" size="icon-sm" aria-label="Алдаа мэдээлэх">
           <Flag className="size-4" />
         </Button>
@@ -120,7 +120,7 @@ export function ReportErrorDialog({
           </div>
 
           <DialogFooter>
-            <DialogClose asChild>
+            <DialogClose>
               <Button type="button" variant="outline">
                 Цуцлах
               </Button>

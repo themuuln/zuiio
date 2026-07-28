@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   fibaTextItemsToLines,
   parseFibaOfficialStats,
+  type FibaOfficialStats,
 } from "../fiba-official-stats";
 
 const OFFICIAL_STATS_LINES = [
@@ -9,20 +10,31 @@ const OFFICIAL_STATS_LINES = [
   "PG YELLOW BROTHERS vs ALDAR TG",
   "OFFICIAL STATISTICS",
   "31 - 56",
+  "(10-15, 8-12, 7-18, 6-11)",
   "PG YELLOW BROTHERS (PGY)",
   "No. Name Min FG M/A % 2P FG M/A % 3P FG M/A % FT M/A % RO RD Tot AS TO ST BS PF C D +/- PTS",
   "1 . TSENDBILEG 20:42 4/17 23.5 4/15 26.7 0/2 0.0 2/4 50.0 1 0 1 2 4 0 0 1 2 0 -14 10",
-  "4 . TUGULDUR 21:00 3/9 33.3 3/7 42.9 0/2 0.0 0/2 0.0 3 2 5 0 4 2 0 1 0 0 -16 6",
+  "*4 . TUGULDUR 21:00 3/9 33.3 3/7 42.9 0/2 0.0 0/2 0.0 3 2 5 0 4 2 0 1 0 0 -16 6",
   "0 . ANAND DNP",
   "Team/Coach 4 1 5 2 0 1 0 0 0 0",
-  "Totals 14/47 29.8 13/38 34.2 1/9 11.1 2/6 33.3 15 12 27 7 17 4 0 15 6 31",
+  "Totals 14/47 29.8 13/38 34.2 1/9 11.1 2/6 33.3 15 12 27 7 17 4 0 15 2 0 31",
   "ALDAR TG (ALD)",
   "No. Name Min FG M/A % 2P FG M/A % 3P FG M/A % FT M/A % RO RD Tot AS TO ST BS PF C D +/- PTS",
   "2 . BILGEERDEM 17:42 6/13 46.2 5/6 83.3 1/7 14.3 7/13 53.8 1 4 5 0 0 4 2 1 0 0 +14 20",
-  "25 . JAVKHLANTUGUS 21:00 9/14 64.3 9/11 81.8 0/3 0.0 2/3 66.7 1 5 6 1 1 5 2 3 0 0 +16 20",
+  "*25 . JAVKHLANTUGUS 21:00 9/14 64.3 9/11 81.8 0/3 0.0 2/3 66.7 1 5 6 1 1 5 2 3 0 0 +16 20",
   "0 . TEMUULEN DNP",
   "Team/Coach 2 2 4 2 1 0 0 0 0 0",
-  "Totals 22/47 46.8 21/35 60.0 1/12 8.3 11/22 50.0 14 20 34 7 13 12 3 6 0 56",
+  "Totals 22/47 46.8 21/35 60.0 1/12 8.3 11/22 50.0 14 20 34 7 13 12 3 6 0 0 56",
+  "",
+  "Points in the paint 22 64",
+  "Biggest scoring run 5-0 (14-27) 23-0 (18-63)",
+  "Second chance points 2 22",
+  "Lead changes 2",
+  "Fast break points 14 40",
+  "Times tied 2",
+  "Bench points 0 69",
+  "Time Leading 00:38 38:27",
+  "Biggest lead 2 81",
 ];
 
 describe("parseFibaOfficialStats", () => {
@@ -35,31 +47,104 @@ describe("parseFibaOfficialStats", () => {
       code: "PGY",
     });
     expect(result.teams[1]).toMatchObject({ name: "ALDAR TG", code: "ALD" });
+
+    // Player with stats: check all fields including new ones
     expect(result.teams[0].players[0]).toMatchObject({
       jerseyNumber: 1,
       name: "TSENDBILEG",
       secondsPlayed: 1242,
+      isStarter: false,
       fgm: 4,
       fga: 17,
+      twoPgm: 4,
+      twoPga: 15,
       tpm: 0,
       tpa: 2,
       ftm: 2,
       fta: 4,
       oreb: 1,
       dreb: 0,
+      reb: 1,
       ast: 2,
       tov: 4,
       stl: 0,
       blk: 0,
       pf: 1,
+      foulsCommitted: 2,
+      foulsDrawn: 0,
       pts: 10,
       plusMinus: -14,
+      dnp: false,
     });
+
+    // Starter (*) player
+    expect(result.teams[0].players[1]).toMatchObject({
+      jerseyNumber: 4,
+      name: "TUGULDUR",
+      isStarter: true,
+      plusMinus: -16,
+      pts: 6,
+    });
+
+    // DNP player
     expect(result.teams[0].players[2]).toMatchObject({
       name: "ANAND",
       dnp: true,
+      isStarter: false,
+      secondsPlayed: null,
+      plusMinus: null,
+      foulsCommitted: null,
+      foulsDrawn: null,
       pts: 0,
     });
+
+    // Team totals parsed
+    expect(result.teams[0].totals).toMatchObject({
+      fgm: 14,
+      fga: 47,
+      fgPct: 29.8,
+      pts: 31,
+      foulsCommitted: 2,
+    });
+
+    // Team/Coach rebounds
+    expect(result.teams[0].teamReb).toBe(5);
+  });
+
+  it("parses period scores from header line", () => {
+    const result = parseFibaOfficialStats(OFFICIAL_STATS_LINES);
+
+    expect(result.periodScores).toHaveLength(4);
+    expect(result.periodScores[0]).toEqual({
+      period: 1,
+      homePoints: 10,
+      awayPoints: 15,
+    });
+    expect(result.periodScores[3]).toEqual({
+      period: 4,
+      homePoints: 6,
+      awayPoints: 11,
+    });
+  });
+
+  it("parses game flow summary statistics", () => {
+    const result = parseFibaOfficialStats(OFFICIAL_STATS_LINES);
+
+    expect(result.flow).not.toBeNull();
+    expect(result.flow?.pointsInPaint).toEqual({ home: 22, away: 64 });
+    expect(result.flow?.secondChancePoints).toEqual({ home: 2, away: 22 });
+    expect(result.flow?.fastBreakPoints).toEqual({ home: 14, away: 40 });
+    expect(result.flow?.benchPoints).toEqual({ home: 0, away: 69 });
+    expect(result.flow?.biggestLead).toEqual({ home: 2, away: 81 });
+    expect(result.flow?.biggestScoringRun).toEqual({
+      homeFor: 14,
+      homeAgainst: 27,
+      awayFor: 18,
+      awayAgainst: 63,
+    });
+    expect(result.flow?.leadChanges).toBe(2);
+    expect(result.flow?.timesTied).toBe(2);
+    expect(result.flow?.timeLeading).toEqual({ home: "00:38", away: "38:27" });
   });
 
   it("warns instead of silently trusting inconsistent player totals", () => {
@@ -88,5 +173,55 @@ describe("parseFibaOfficialStats", () => {
     expect(() =>
       parseFibaOfficialStats(["OFFICIAL STATISTICS", "31 - 56"]),
     ).toThrow("Expected two team tables, found 0");
+  });
+
+  it("parses OT game with 5 period scores", () => {
+    const otLines = [
+      "ULGII EAGLES vs KEREMET",
+      "OFFICIAL STATISTICS",
+      "110 - 105",
+      "(27-28, 21-23, 36-19, 11-25, 15-10)",
+      "ULGII EAGLES (EAG)",
+      "No. Name Min FG M/A % 2P FG M/A % 3P FG M/A % FT M/A % RO RD Tot AS TO ST BS PF C D +/- PTS",
+      "*7 . KADIR 43:37 17/25 68.0 15/21 71.4 2/4 50.0 3/5 60.0 1 3 4 2 5 5 0 1 4 0 +11 39",
+      "Team/Coach 1 0 1 0 0 0 0 0 0 0",
+      "Totals 17/25 68.0 15/21 71.4 2/4 50.0 3/5 60.0 1 3 4 2 5 5 0 1 4 0 39",
+      "KEREMET (KER)",
+      "No. Name Min FG M/A % 2P FG M/A % 3P FG M/A % FT M/A % RO RD Tot AS TO ST BS PF C D +/- PTS",
+      "*10 . PLAYER1 45:00 10/20 50.0 8/14 57.1 2/6 33.3 5/6 83.3 2 4 6 8 3 1 0 2 3 1 -11 27",
+      "Team/Coach 2 3 5 0 0 0 0 0 0 0",
+      "Totals 10/20 50.0 8/14 57.1 2/6 33.3 5/6 83.3 2 4 6 8 3 1 0 2 3 1 27",
+    ];
+
+    const result = parseFibaOfficialStats(otLines);
+    expect(result.periodScores).toHaveLength(5);
+    expect(result.periodScores[4]).toEqual({
+      period: 5,
+      homePoints: 15,
+      awayPoints: 10,
+    });
+  });
+
+  it("handles flow and period scores as empty arrays when sections are missing", () => {
+    const minimalLines = [
+      "OFFICIAL STATISTICS",
+      "13 - 10",
+      "HOME TEAM (HOM)",
+      "No. Name Min FG M/A % 2P FG M/A % 3P FG M/A % FT M/A % RO RD Tot AS TO ST BS PF C D +/- PTS",
+      "*1 . PLAYER1 40:00 5/10 50.0 3/5 60.0 2/5 40.0 1/2 50.0 1 2 3 4 3 1 0 2 1 0 +10 13",
+      "Team/Coach 0 0 0 0 0 0 0 0 0 0",
+      "Totals 5/10 50.0 3/5 60.0 2/5 40.0 1/2 50.0 1 2 3 4 3 1 0 2 1 0 13",
+      "AWAY TEAM (AWY)",
+      "No. Name Min FG M/A % 2P FG M/A % 3P FG M/A % FT M/A % RO RD Tot AS TO ST BS PF C D +/- PTS",
+      "*2 . PLAYER2 40:00 4/8 50.0 2/4 50.0 2/4 50.0 0/0 0.0 0 1 1 2 2 0 0 1 0 0 -10 10",
+      "Team/Coach 0 0 0 0 0 0 0 0 0 0",
+      "Totals 4/8 50.0 2/4 50.0 2/4 50.0 0/0 0.0 0 1 1 2 2 0 0 1 0 0 10",
+    ];
+
+    const result = parseFibaOfficialStats(minimalLines);
+    expect(result.periodScores).toHaveLength(0);
+    expect(result.scoringCheckpoints).toHaveLength(0);
+    expect(result.flow).toBeNull();
+    expect(result.confidence).toBe(0.98);
   });
 });

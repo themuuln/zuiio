@@ -169,7 +169,7 @@ export default function AcademyPaymentsLedgerPage() {
       emptyDescription="Төлбөрийн бүртгэл олдсонгүй."
       actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
+          <DialogTrigger>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Төлбөр нэмэх

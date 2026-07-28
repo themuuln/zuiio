@@ -187,7 +187,7 @@ export default async function HomePage({
               {/* Quick actions */}
               <div className="flex flex-col gap-3 lg:col-span-4 lg:items-end">
                 <Button
-                  asChild
+                 
                   variant="ghost"
                   className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
                 >
@@ -323,7 +323,7 @@ export default async function HomePage({
               </div>
               {latestFinal ? (
                 <CardAction>
-                  <Button asChild variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm">
                     <Link href={`/games/${latestFinal.id}`}>
                       Дэлгэрэнгүй
                       <ChevronRight data-icon="inline-end" aria-hidden="true" />
@@ -503,7 +503,7 @@ export default async function HomePage({
                 </CardTitle>
               </div>
               <CardAction>
-                <Button asChild variant="ghost" size="sm">
+                <Button variant="ghost" size="sm">
                   <Link href="/leaders">Бүгд</Link>
                 </Button>
               </CardAction>
@@ -584,7 +584,7 @@ export default async function HomePage({
                 </CardTitle>
               </div>
               <CardAction>
-                <Button asChild variant="ghost" size="sm">
+                <Button variant="ghost" size="sm">
                   <Link href="/standings">Бүх шалгуур</Link>
                 </Button>
               </CardAction>
@@ -657,6 +657,11 @@ export default async function HomePage({
       <Sponsors />
     </main>
   );
+}
+
+function formatAverage(value: number | null | undefined): string {
+  if (value == null) return "—";
+  return Number(value).toFixed(1);
 }
 
 interface StatementStatProps {

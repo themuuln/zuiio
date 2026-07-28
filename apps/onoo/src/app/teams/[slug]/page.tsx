@@ -11,6 +11,8 @@ import { notFound } from "next/navigation";
 import { GameCard } from "@/app/components/game-card";
 import { PublicEmptyState } from "@/app/components/public-empty-state";
 import { type GameWithTeams, getTeamBySlug } from "@/app/lib/data";
+import { getProductsByTeamSlug } from "@/app/lib/data-shop";
+import { ProductCard } from "@/app/shop/components/product-card";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -68,6 +70,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const { team, players, standings, leaders, recentGames, upcomingGames } =
     data;
   const nextGame = upcomingGames[0] ?? null;
+  const teamProducts = await getProductsByTeamSlug(team.slug);
   const form = recentGames.slice(0, 5).map((game) => ({
     gameId: game.id,
     result: getResult(game, team.id),
@@ -207,7 +210,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 Багийн тэргүүлэгчид
               </h2>
             </div>
-            <Button asChild variant="outline" size="sm">
+            <Button variant="outline" size="sm">
               <Link href="/leaders">
                 Лигийн тэргүүлэгчид
                 <ChevronRight data-icon="inline-end" aria-hidden="true" />
@@ -322,6 +325,36 @@ export default async function TeamPage({ params }: TeamPageProps) {
             />
           )}
         </section>
+
+        {/* ════════════════════════════════════════════════════════
+            SHOP SECTION
+           ════════════════════════════════════════════════════════ */}
+        {teamProducts.length > 0 && (
+          <section aria-labelledby="team-shop-heading" className="flex flex-col gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Багийн дэлгүүр
+              </p>
+              <h2
+                id="team-shop-heading"
+                className="mt-1 text-2xl font-bold tracking-tight"
+              >
+                Дэлгүүр
+              </h2>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {teamProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            <Link
+              href={`/shop?team=${team.slug}`}
+              className="self-start text-sm font-medium text-[var(--brand-sports)] hover:underline"
+            >
+              Бүх бүтээгдэхүүн үзэх →
+            </Link>
+          </section>
+        )}
       </main>
     </>
   );

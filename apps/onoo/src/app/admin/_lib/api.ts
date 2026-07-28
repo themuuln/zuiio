@@ -291,11 +291,76 @@ export interface ShopProductRow {
   name_en?: string;
   description?: string;
   category?: string;
+  // Team connection
+  team_id?: string | null;
+  team_name?: string | null;
+  team_slug?: string | null;
+  team_primary_color?: string | null;
+  team_short_code?: string | null;
 }
 
 export const shopProductsApi = createEntityApi<ShopProductRow>(
   `${BASE}/products`,
 );
+
+// ── Shop: Reviews ──
+
+export interface ShopReviewRow {
+  id: string;
+  product_id: string;
+  author_name: string;
+  rating: number;
+  content: string;
+  is_approved: boolean;
+  created_at: string;
+  // Joined from products table
+  products?: { name: string } | null;
+}
+
+export const shopReviewsApi = createEntityApi<ShopReviewRow>(
+  `${BASE}/reviews`,
+);
+
+// ── Shop: Bundles ──
+
+export interface ShopBundleRow {
+  id: string;
+  name: string;
+  description?: string | null;
+  discount_percent: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export const shopBundlesApi = createEntityApi<ShopBundleRow>(
+  `${BASE}/bundles`,
+);
+
+// ── Shop: Bundle Items ──
+
+export interface BundleItemRow {
+  bundle_id: string;
+  product_id: string;
+}
+
+// ── Teams (simple list for dropdowns) ──
+
+export interface TeamOption {
+  id: string;
+  name: string;
+  slug: string;
+  short_code: string;
+}
+
+export const getTeams = async (): Promise<TeamOption[]> => {
+  const teams = await teamsApi.list();
+  return teams.map((t) => ({
+    id: t.id,
+    name: t.name,
+    slug: t.slug,
+    short_code: t.short_code ?? "",
+  }));
+};
 
 // ── Shop: Orders ──
 

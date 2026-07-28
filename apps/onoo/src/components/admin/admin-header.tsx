@@ -129,25 +129,27 @@ export function AdminHeader() {
 
         {/* User dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 gap-2 px-2">
-              <div className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <User className="size-3.5" />
-              </div>
-              <ChevronDown className="hidden size-3.5 text-muted-foreground md:block" />
-            </Button>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" size="sm" className="h-8 gap-2 px-2" />
+            }
+          >
+            <div className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <User className="size-3.5" />
+            </div>
+            <ChevronDown className="hidden size-3.5 text-muted-foreground md:block" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>Админ</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem>
               <Link href="/admin">
                 <User className="mr-2 size-4" />
                 Хянах самбар
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem>
               <Link href="/admin/login?signout=true">
                 <LogOut className="mr-2 size-4" />
                 Гарах

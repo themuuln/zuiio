@@ -191,7 +191,7 @@ export default function AcademyTrainersPage() {
         emptyDescription="Одоогоор дасгалжуулагч бүртгэгдээгүй байна."
         actions={
           <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 Нэмэх

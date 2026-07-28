@@ -1,6 +1,6 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Fragment, useCallback, useState } from "react";
 import { ExpandedStandingsContent } from "@/app/standings/components/expanded-standings-content";
@@ -347,7 +347,7 @@ export function StandingsTable({
                         />
                       </TableCell>
                     </TableRow>
-                    <CollapsibleContent asChild style={{ display: "contents" }}>
+                    <CollapsibleContent style={{ display: "contents" }}>
                       <TableRow>
                         <TableCell colSpan={11} className="p-0">
                           <div className="border-t border-border/50 px-4 py-3">

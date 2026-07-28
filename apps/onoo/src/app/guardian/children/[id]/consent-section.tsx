@@ -121,7 +121,7 @@ export default function ConsentSection({
                           if (!open) setSigningTemplate(null);
                         }}
                       >
-                        <DialogTrigger asChild>
+                        <DialogTrigger>
                           <Button
                             size="sm"
                             variant="default"
@@ -185,7 +185,7 @@ export default function ConsentSection({
                               if (!open) setWithdrawingRecord(null);
                             }}
                           >
-                            <DialogTrigger asChild>
+                            <DialogTrigger>
                               <Button
                                 size="sm"
                                 variant="outline"

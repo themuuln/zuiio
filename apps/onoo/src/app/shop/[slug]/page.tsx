@@ -1,5 +1,11 @@
 import { notFound } from "next/navigation";
-import { getShopProductBySlug } from "@/app/lib/data-shop";
+import {
+  getProductBundles,
+  getProductRatingSummary,
+  getProductReviews,
+  getRelatedProducts,
+  getShopProductBySlug,
+} from "@/app/lib/data-shop";
 import { ProductDetailClient } from "../components/product-detail-client";
 
 interface ProductPageProps {
@@ -26,9 +32,23 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  const [relatedProducts, reviews, ratingSummary, bundles] =
+    await Promise.all([
+      getRelatedProducts(slug, product.category),
+      getProductReviews(product.id),
+      getProductRatingSummary(product.id),
+      getProductBundles(product.id),
+    ]);
+
   return (
     <div className="min-h-screen">
-      <ProductDetailClient product={product} />
+      <ProductDetailClient
+        product={product}
+        relatedProducts={relatedProducts}
+        reviews={reviews}
+        ratingSummary={ratingSummary}
+        bundles={bundles}
+      />
     </div>
   );
 }

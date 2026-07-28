@@ -39,7 +39,7 @@ export function HomeDateNav({ currentDate, className }: HomeDateNavProps) {
       )}
     >
       <Button
-        asChild
+       
         variant="ghost"
         size="sm"
         aria-label="Өмнөх өдөр"
@@ -55,7 +55,7 @@ export function HomeDateNav({ currentDate, className }: HomeDateNavProps) {
           {formatShort(currentDate)}
         </span>
         {!isToday && (
-          <Button asChild variant="outline" size="xs" className="gap-1">
+          <Button variant="outline" size="xs" className="gap-1">
             <Link href="/" prefetch={false}>
               <Calendar className="size-3" aria-hidden="true" />
               Өнөөдөр
@@ -65,7 +65,7 @@ export function HomeDateNav({ currentDate, className }: HomeDateNavProps) {
       </div>
 
       <Button
-        asChild
+       
         variant="ghost"
         size="sm"
         aria-label="Дараагийн өдөр"

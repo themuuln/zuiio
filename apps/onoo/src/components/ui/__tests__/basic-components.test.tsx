@@ -74,9 +74,9 @@ describe("Button", () => {
     expect(btn).toHaveAttribute("data-size", "lg");
   });
 
-  it("renders as link when asChild is true", () => {
+  it("renders as link when is true", () => {
     render(
-      <Button asChild>
+      <Button>
         <a href="/test">Link</a>
       </Button>,
     );

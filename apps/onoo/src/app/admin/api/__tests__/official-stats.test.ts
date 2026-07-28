@@ -129,6 +129,10 @@ describe("official statistics import API", () => {
         p_game_id: "game-1",
         p_home_score: 31,
         p_away_score: 56,
+        p_projection: expect.objectContaining({
+          players: expect.any(Array),
+          teams: expect.any(Array),
+        }),
       }),
     );
     await expect(response.json()).resolves.toMatchObject({

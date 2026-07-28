@@ -23,5 +23,6 @@ export const POST = productsRoute.create((body) => {
     category: body.category ?? null,
     variants: body.variants ?? [],
     is_available: body.is_available ?? true,
+    team_id: body.team_id ?? null,
   };
 });

@@ -67,7 +67,7 @@ export function MultiLeaderboardSection({
             Шилдгүүд ангилал бүрээр
           </h2>
         </div>
-        <Button asChild variant="ghost" size="sm">
+        <Button variant="ghost" size="sm">
           <Link href="/leaders" className="gap-1">
             Бүгд <ChevronRight className="h-4 w-4" />
           </Link>

@@ -1,5 +1,7 @@
 import {
+  type FibaGameFlowStats,
   type FibaPlayerStatLine,
+  type FibaTeamBoxScore,
   type FibaTextItem,
   fibaTextItemsToLines,
   type Json,
@@ -31,7 +33,7 @@ interface SubmitOfficialStatsResult {
 interface PlayerStatLine {
   player_id: string;
   team_season_id: string;
-  seconds_played: number;
+  seconds_played: number | null;
   pts: number;
   fgm: number;
   fga: number;
@@ -46,6 +48,11 @@ interface PlayerStatLine {
   blk: number;
   tov: number;
   pf: number;
+  plus_minus: number | null;
+  fouls_committed: number | null;
+  fouls_drawn: number | null;
+  is_starter: boolean;
+  dnp: boolean;
 }
 
 /** Per-team stat line for the projection. */
@@ -66,6 +73,17 @@ interface TeamStatLine {
   blk: number;
   tov: number;
   pf: number;
+  fouls_committed: number;
+  fouls_drawn: number;
+  points_from_turnovers: number | null;
+  points_in_paint: number | null;
+  second_chance_points: number | null;
+  fast_break_points: number | null;
+  bench_points: number | null;
+  biggest_lead: number | null;
+  biggest_scoring_run_for: number | null;
+  biggest_scoring_run_against: number | null;
+  time_leading_seconds: number | null;
 }
 
 function buildPlayerStats(
@@ -77,8 +95,6 @@ function buildPlayerStats(
   const stats: PlayerStatLine[] = [];
 
   for (const player of players) {
-    if (player.dnp) continue;
-
     const playerId = rosterMap.get(player.jerseyNumber);
     if (!playerId) {
       Sentry.captureMessage(
@@ -86,71 +102,145 @@ function buildPlayerStats(
       );
     }
 
-    stats.push({
-      player_id: playerId ?? "00000000-0000-0000-0000-000000000000",
-      team_season_id: teamSeasonId,
-      seconds_played: player.secondsPlayed ?? 0,
-      pts: player.pts,
-      fgm: player.fgm,
-      fga: player.fga,
-      tpm: player.tpm,
-      tpa: player.tpa,
-      ftm: player.ftm,
-      fta: player.fta,
-      oreb: player.oreb,
-      dreb: player.dreb,
-      ast: player.ast,
-      stl: player.stl,
-      blk: player.blk,
-      tov: player.tov,
-      pf: player.pf,
-    });
+    const baseId = playerId ?? "00000000-0000-0000-0000-000000000000";
+
+    if (player.dnp) {
+      stats.push({
+        player_id: baseId,
+        team_season_id: teamSeasonId,
+        seconds_played: null,
+        pts: 0,
+        fgm: 0,
+        fga: 0,
+        tpm: 0,
+        tpa: 0,
+        ftm: 0,
+        fta: 0,
+        oreb: 0,
+        dreb: 0,
+        ast: 0,
+        stl: 0,
+        blk: 0,
+        tov: 0,
+        pf: 0,
+        plus_minus: null,
+        fouls_committed: null,
+        fouls_drawn: null,
+        is_starter: player.isStarter,
+        dnp: true,
+      });
+    } else {
+      stats.push({
+        player_id: baseId,
+        team_season_id: teamSeasonId,
+        seconds_played: player.secondsPlayed ?? 0,
+        pts: player.pts,
+        fgm: player.fgm,
+        fga: player.fga,
+        tpm: player.tpm,
+        tpa: player.tpa,
+        ftm: player.ftm,
+        fta: player.fta,
+        oreb: player.oreb,
+        dreb: player.dreb,
+        ast: player.ast,
+        stl: player.stl,
+        blk: player.blk,
+        tov: player.tov,
+        pf: player.pf,
+        plus_minus: player.plusMinus,
+        fouls_committed: player.foulsCommitted,
+        fouls_drawn: player.foulsDrawn,
+        is_starter: player.isStarter,
+        dnp: false,
+      });
+    }
   }
 
   return stats;
 }
 
-function computeTeamTotals(
-  playerStats: PlayerStatLine[],
-  teamSeasonId: string,
-): TeamStatLine {
-  const totals: TeamStatLine = {
-    team_season_id: teamSeasonId,
-    pts: 0,
-    fgm: 0,
-    fga: 0,
-    tpm: 0,
-    tpa: 0,
-    ftm: 0,
-    fta: 0,
-    oreb: 0,
-    dreb: 0,
-    team_reb: 0,
-    ast: 0,
-    stl: 0,
-    blk: 0,
-    tov: 0,
-    pf: 0,
-  };
-
-  for (const p of playerStats) {
-    totals.pts += p.pts;
-    totals.fgm += p.fgm;
-    totals.fga += p.fga;
-    totals.tpm += p.tpm;
-    totals.tpa += p.tpa;
-    totals.ftm += p.ftm;
-    totals.fta += p.fta;
-    totals.oreb += p.oreb;
-    totals.dreb += p.dreb;
-    totals.ast += p.ast;
-    totals.stl += p.stl;
-    totals.blk += p.blk;
-    totals.tov += p.tov;
-    totals.pf += p.pf;
+/**
+ * Convert "MM:SS" string to number of seconds.
+ * Returns null for falsy or unparseable values.
+ */
+function parseTimeLeadingToSeconds(time: string | null | undefined): number | null {
+  if (!time) return null;
+  const parts = time.split(":");
+  if (parts.length === 2) {
+    const mins = parseInt(parts[0], 10);
+    const secs = parseInt(parts[1], 10);
+    if (!isNaN(mins) && !isNaN(secs)) return mins * 60 + secs;
   }
+  return null;
+}
 
-  return totals;
+/**
+ * Build a TeamStatLine from the parser's exact team totals and flow stats,
+ * rather than summing from individual player lines.
+ */
+function buildTeamStatsFromParser(
+  fibaTeam: FibaTeamBoxScore,
+  teamSeasonId: string,
+  isHome: boolean,
+  flow: FibaGameFlowStats | null,
+): TeamStatLine {
+  const t = fibaTeam.totals ?? null;
+  const teamFlow = flow
+    ? (isHome
+        ? {
+            pointsFromTurnovers: flow.pointsFromTurnovers.home,
+            pointsInPaint: flow.pointsInPaint.home,
+            secondChancePoints: flow.secondChancePoints.home,
+            fastBreakPoints: flow.fastBreakPoints.home,
+            benchPoints: flow.benchPoints.home,
+            biggestLead: flow.biggestLead.home,
+            biggestScoringRunFor: flow.biggestScoringRun.homeFor,
+            biggestScoringRunAgainst: flow.biggestScoringRun.homeAgainst,
+            timeLeadingSeconds: parseTimeLeadingToSeconds(flow.timeLeading.home),
+          }
+        : {
+            pointsFromTurnovers: flow.pointsFromTurnovers.away,
+            pointsInPaint: flow.pointsInPaint.away,
+            secondChancePoints: flow.secondChancePoints.away,
+            fastBreakPoints: flow.fastBreakPoints.away,
+            benchPoints: flow.benchPoints.away,
+            biggestLead: flow.biggestLead.away,
+            biggestScoringRunFor: flow.biggestScoringRun.awayFor,
+            biggestScoringRunAgainst: flow.biggestScoringRun.awayAgainst,
+            timeLeadingSeconds: parseTimeLeadingToSeconds(flow.timeLeading.away),
+          })
+    : null;
+
+  return {
+    team_season_id: teamSeasonId,
+    pts: t?.pts ?? 0,
+    fgm: t?.fgm ?? 0,
+    fga: t?.fga ?? 0,
+    tpm: t?.threePgm ?? 0,
+    tpa: t?.threePga ?? 0,
+    ftm: t?.ftm ?? 0,
+    fta: t?.fta ?? 0,
+    oreb: t?.oreb ?? 0,
+    dreb: t?.dreb ?? 0,
+    team_reb: fibaTeam.teamReb ?? 0,
+    ast: t?.ast ?? 0,
+    stl: t?.stl ?? 0,
+    blk: t?.blk ?? 0,
+    tov: t?.tov ?? 0,
+    pf: t?.pf ?? 0,
+    fouls_committed: t?.foulsCommitted ?? 0,
+    fouls_drawn: t?.foulsDrawn ?? 0,
+    points_from_turnovers: teamFlow?.pointsFromTurnovers ?? null,
+    points_in_paint: teamFlow?.pointsInPaint ?? null,
+    second_chance_points: teamFlow?.secondChancePoints ?? null,
+    fast_break_points: teamFlow?.fastBreakPoints ?? null,
+    bench_points: teamFlow?.benchPoints ?? null,
+    biggest_lead: teamFlow?.biggestLead ?? null,
+    biggest_scoring_run_for: teamFlow?.biggestScoringRunFor ?? null,
+    biggest_scoring_run_against: teamFlow?.biggestScoringRunAgainst ?? null,
+    time_leading_seconds: teamFlow?.timeLeadingSeconds ?? null,
+  };
 }
 
 /** Extract the jersey number from a roster_entries value that may be an object or array. */
@@ -283,10 +373,10 @@ export async function POST(
     }> = [];
 
     for (const fibaTeam of boxScore.teams) {
-      const teamSeasonId =
-        boxScore.teams.indexOf(fibaTeam) === 0
-          ? game.home_team_season_id
-          : game.away_team_season_id;
+      const isHome = boxScore.teams.indexOf(fibaTeam) === 0;
+      const teamSeasonId = isHome
+        ? game.home_team_season_id
+        : game.away_team_season_id;
 
       const rosterMap =
         teamRosterMap.get(teamSeasonId) ?? new Map<number, string>();
@@ -309,7 +399,9 @@ export async function POST(
       }
 
       allPlayerStats.push(...teamPlayerStats);
-      allTeamStats.push(computeTeamTotals(teamPlayerStats, teamSeasonId));
+      allTeamStats.push(
+        buildTeamStatsFromParser(fibaTeam, teamSeasonId, isHome, boxScore.flow),
+      );
     }
 
     // ── 4. Upload evidence PDF ──────────────────────────────────────
@@ -330,7 +422,35 @@ export async function POST(
       );
     }
 
-    // ── 5. Submit and materialize via RPC ───────────────────────────
+    // ── 5. Build unified projection ────────────────────────────────
+    const projection: Json = {
+      players: allPlayerStats,
+      teams: allTeamStats,
+      summary: boxScore.flow
+        ? {
+            lead_changes: boxScore.flow.leadChanges ?? null,
+            times_tied: boxScore.flow.timesTied ?? null,
+          }
+        : null,
+      period_scores:
+        boxScore.periodScores.length > 0
+          ? boxScore.periodScores.map((ps) => ({
+              period: ps.period,
+              home_points: ps.homePoints,
+              away_points: ps.awayPoints,
+            }))
+          : null,
+      scoring_checkpoints:
+        boxScore.scoringCheckpoints.length > 0
+          ? boxScore.scoringCheckpoints.map((sc) => ({
+              elapsed_seconds: sc.elapsedSeconds,
+              home_score: sc.homeScore,
+              away_score: sc.awayScore,
+            }))
+          : null,
+    };
+
+    // ── 6. Submit and materialize via RPC ───────────────────────────
     const normalizedPayload: Json = JSON.parse(JSON.stringify(boxScore));
     const homeScore = boxScore.score.home;
     const awayScore = boxScore.score.away;
@@ -341,8 +461,7 @@ export async function POST(
         p_game_id: gameId,
         p_evidence_url: evidencePath,
         p_normalized_payload: normalizedPayload,
-        p_player_stats: allPlayerStats,
-        p_team_stats: allTeamStats,
+        p_projection: projection,
         p_home_score: homeScore,
         p_away_score: awayScore,
       },

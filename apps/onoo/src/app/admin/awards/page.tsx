@@ -135,7 +135,7 @@ export default function AwardsPage() {
       emptyDescription="Шинэ шагнал олгохын тулд дээрх товчийг дарна уу"
       actions={
         <Dialog open={grantOpen} onOpenChange={setGrantOpen}>
-          <DialogTrigger asChild>
+          <DialogTrigger>
             <Button size="sm">
               <Plus className="mr-1 size-4" />
               Шагнал олгох

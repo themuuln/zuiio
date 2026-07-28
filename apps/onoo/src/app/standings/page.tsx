@@ -109,7 +109,7 @@ export default async function StandingsPage({
       {/* Download report link — only when a competition is selected */}
       {competition != null && (
         <div className="flex justify-end">
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="outline" size="sm">
             <Link href={`/reports/season/${competition}`}>
               <FileDown className="size-4" />
               Тайлан татах
@@ -175,6 +175,7 @@ export default async function StandingsPage({
                       <div className="mt-3 flex items-center gap-3">
                         <TeamLogo
                           logoUrl={row.team_logo_url}
+                          shortCode={row.team_short_code}
                           primaryColor={row.team_primary_color}
                           size="lg"
                         />

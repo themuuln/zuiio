@@ -116,7 +116,7 @@ vi.mock("@/components/ui/dialog", () => ({
   DialogTitle: ({ children }: Record<string, unknown>) => (
     <div data-testid="dialog-title">{children as React.ReactNode}</div>
   ),
-  DialogTrigger: ({ children, asChild, ...props }: Record<string, unknown>) => (
+  DialogTrigger: ({ children,, ...props }: Record<string, unknown>) => (
     <div data-testid="dialog-trigger" {...props}>
       {children as React.ReactNode}
     </div>
