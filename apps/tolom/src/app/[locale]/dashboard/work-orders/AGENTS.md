@@ -110,7 +110,7 @@ All monetary columns use MNT (₮) formatting via `formatMNT`.
 ## Conventions
 
 - All monetary values display in MNT (₮) with `formatMNT()` or `formatCurrency()`
-- Currency is always formatted with `toLocaleString()` and `tabular-nums`
+- Currency is always formatted via `formatMNT()` with `tabular-nums`
 - Status changes on the detail page show an inline confirmation card (not a dialog)
 - Negative gross profit triggers a required loss reason textarea
 - Mobile card view in the list page shows a dot-based progress indicator for status

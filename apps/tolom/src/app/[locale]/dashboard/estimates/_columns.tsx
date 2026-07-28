@@ -16,6 +16,7 @@ import {
 import { Typography } from "@/components/ui/typography";
 import type { EstimateListItem } from "@/lib/queries/use-estimates";
 import type { EstimateStatus } from "@/lib/types";
+import { formatMNT } from "@/lib/utils";
 
 const STATUS_LABELS: Record<EstimateStatus, string> = {
   draft: "statusDraft",
@@ -214,7 +215,7 @@ export function createColumns(
         const total = row.original.grand_total;
         return (
           <span className="text-sm font-medium tabular-nums">
-            {total !== undefined ? `₮${Number(total).toLocaleString()}` : "—"}
+            {total !== undefined ? formatMNT(total) : "—"}
           </span>
         );
       },

@@ -1,11 +1,18 @@
 import {
   ArrowRight,
+  BadgeCheck,
   BarChart3,
+  Building2,
   ClipboardList,
   Code2,
-  LineChart,
+  CreditCard,
+  Globe,
+  MessageSquare,
   MessageSquareText,
   Package,
+  Smartphone,
+  Sparkles,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { cacheLife } from "next/cache";
@@ -28,26 +35,61 @@ import { cn } from "@/lib/utils";
 import { HomeClientContent } from "./_home-client";
 
 // Lazy-load below-the-fold sections — they only load when scrolled into view
-const HowItWorksSection = dynamic(() =>
-  import("./_landing-sections").then((m) => m.HowItWorksSection),
+const HowItWorksSection = dynamic(
+  () => import("./_landing-sections").then((m) => m.HowItWorksSection),
+  {
+    loading: () => (
+      <div className="h-48 bg-muted/30 animate-pulse rounded-xl" />
+    ),
+  },
 );
-const WorkflowSection = dynamic(() =>
-  import("./_landing-sections").then((m) => m.WorkflowSection),
+const WorkflowSection = dynamic(
+  () => import("./_landing-sections").then((m) => m.WorkflowSection),
+  {
+    loading: () => (
+      <div className="h-64 bg-muted/30 animate-pulse rounded-xl" />
+    ),
+  },
 );
-const DifferentiatorsSection = dynamic(() =>
-  import("./_landing-sections").then((m) => m.DifferentiatorsSection),
+const DifferentiatorsSection = dynamic(
+  () => import("./_landing-sections").then((m) => m.DifferentiatorsSection),
+  {
+    loading: () => (
+      <div className="h-64 bg-muted/30 animate-pulse rounded-xl" />
+    ),
+  },
 );
-const TestimonialsSection = dynamic(() =>
-  import("./_landing-sections").then((m) => m.TestimonialsSection),
+const TestimonialsSection = dynamic(
+  () => import("./_landing-sections").then((m) => m.TestimonialsSection),
+  {
+    loading: () => (
+      <div className="h-64 bg-muted/30 animate-pulse rounded-xl" />
+    ),
+  },
 );
-const PricingSection = dynamic(() =>
-  import("./_landing-sections").then((m) => m.PricingSection),
+const PricingSection = dynamic(
+  () => import("./_landing-sections").then((m) => m.PricingSection),
+  {
+    loading: () => (
+      <div className="h-96 bg-muted/30 animate-pulse rounded-xl" />
+    ),
+  },
 );
-const CtaSection = dynamic(() =>
-  import("./_landing-sections").then((m) => m.CtaSection),
+const CtaSection = dynamic(
+  () => import("./_landing-sections").then((m) => m.CtaSection),
+  {
+    loading: () => (
+      <div className="h-48 bg-muted/30 animate-pulse rounded-xl" />
+    ),
+  },
 );
-const LandingFooter = dynamic(() =>
-  import("./_landing-footer").then((m) => m.LandingFooter),
+const LandingFooter = dynamic(
+  () => import("./_landing-footer").then((m) => m.LandingFooter),
+  {
+    loading: () => (
+      <div className="h-64 bg-muted/30 animate-pulse rounded-xl" />
+    ),
+  },
 );
 
 const FEATURES = [
@@ -55,55 +97,55 @@ const FEATURES = [
     key: "featureWorkOrders",
     icon: ClipboardList,
     gradient: "from-blue-500/20 to-blue-600/10",
-    previewLabel: "Work Orders",
+    accentColor: "bg-blue-500/10 text-blue-600",
   },
   {
     key: "featureInventory",
     icon: Package,
     gradient: "from-emerald-500/20 to-emerald-600/10",
-    previewLabel: "Inventory",
+    accentColor: "bg-emerald-500/10 text-emerald-600",
   },
   {
     key: "featureCustomers",
     icon: Users,
     gradient: "from-sky-500/20 to-sky-600/10",
-    previewLabel: "CRM",
+    accentColor: "bg-sky-500/10 text-sky-600",
   },
   {
     key: "featurePricing",
-    icon: LineChart,
+    icon: Sparkles,
     gradient: "from-amber-500/20 to-amber-600/10",
-    previewLabel: "Pricing",
+    accentColor: "bg-amber-500/10 text-amber-600",
   },
   {
     key: "featureReports",
     icon: BarChart3,
     gradient: "from-rose-500/20 to-rose-600/10",
-    previewLabel: "Reports",
+    accentColor: "bg-rose-500/10 text-rose-600",
   },
   {
     key: "featureAnalytics",
-    icon: LineChart,
-    gradient: "from-cyan-500/20 to-cyan-600/10",
-    previewLabel: "Analytics",
+    icon: TrendingUp,
+    gradient: "from-violet-500/20 to-violet-600/10",
+    accentColor: "bg-violet-500/10 text-violet-600",
   },
   {
     key: "featureMultiBranch",
-    icon: Users,
+    icon: Building2,
     gradient: "from-slate-500/20 to-slate-600/10",
-    previewLabel: "Multi-Branch",
+    accentColor: "bg-slate-500/10 text-slate-600",
   },
   {
     key: "featureChatbot",
     icon: MessageSquareText,
     gradient: "from-orange-500/20 to-orange-600/10",
-    previewLabel: "Chat",
+    accentColor: "bg-orange-500/10 text-orange-600",
   },
   {
     key: "featureApi",
     icon: Code2,
     gradient: "from-teal-500/20 to-teal-600/10",
-    previewLabel: "API",
+    accentColor: "bg-teal-500/10 text-teal-600",
   },
 ];
 
@@ -235,27 +277,20 @@ async function HomeContent({ locale }: { locale: string }) {
                       )}
                     />
                     <CardHeader>
-                      <div className="flex size-10 items-center justify-center rounded-lg border bg-background shadow-xs">
-                        <Icon className="size-5 text-primary" />
+                      <div
+                        className={cn(
+                          "flex size-14 items-center justify-center rounded-xl",
+                          feature.accentColor,
+                        )}
+                      >
+                        <Icon className="size-7" />
                       </div>
-                      <CardTitle className="mt-3 text-base">
+                      <CardTitle className="mt-4 text-base">
                         {t(`${feature.key}`)}
                       </CardTitle>
                       <CardDescription>
                         {t(`${feature.key}Desc`)}
                       </CardDescription>
-                      <div className="mt-4 rounded-lg overflow-hidden border">
-                        <div
-                          className={cn(
-                            "flex h-28 items-center justify-center bg-gradient-to-br p-4",
-                            feature.gradient,
-                          )}
-                        >
-                          <span className="text-sm font-semibold text-foreground/80">
-                            {feature.previewLabel}
-                          </span>
-                        </div>
-                      </div>
                     </CardHeader>
                   </Card>
                 );
@@ -270,42 +305,48 @@ async function HomeContent({ locale }: { locale: string }) {
             <Typography.Muted className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
               Built for Mongolian auto shops
             </Typography.Muted>
-            <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap justify-center gap-3">
               <Badge
                 variant="outline"
                 className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
               >
-                🛡️ Хуульд нийцсэн
+                <BadgeCheck className="size-3.5 text-emerald-500" />
+                Хуульд нийцсэн
               </Badge>
               <Badge
                 variant="outline"
                 className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
               >
-                💳 Төлбөрийн систем
+                <CreditCard className="size-3.5 text-primary" />
+                Төлбөрийн систем
               </Badge>
               <Badge
                 variant="outline"
                 className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
               >
-                🔢 Монгол дугаар
+                <Globe className="size-3.5 text-sky-500" />
+                Монгол дугаар
               </Badge>
               <Badge
                 variant="outline"
                 className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
               >
-                💬 Telegram мэдэгдэл
+                <MessageSquare className="size-3.5 text-blue-500" />
+                Telegram мэдэгдэл
               </Badge>
               <Badge
                 variant="outline"
                 className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
               >
-                🇲🇳 Монгол хэл
+                <Globe className="size-3.5 text-amber-500" />
+                Монгол хэл
               </Badge>
               <Badge
                 variant="outline"
                 className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
               >
-                📱 Таблет тохиромжтой
+                <Smartphone className="size-3.5 text-violet-500" />
+                Таблет тохиромжтой
               </Badge>
             </div>
           </div>

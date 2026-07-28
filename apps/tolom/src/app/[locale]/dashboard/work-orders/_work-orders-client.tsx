@@ -46,6 +46,7 @@ import {
   type WorkOrderListItem,
 } from "@/lib/queries/use-work-orders";
 import { useSelectedBranchId } from "@/lib/stores";
+import { formatMNT } from "@/lib/utils";
 import { createColumns, getAgeDisplay } from "./_columns";
 
 // ── Status helpers ────────────────────────────────────────────
@@ -398,7 +399,7 @@ export default function WorkOrdersPage() {
                 pageSize={20}
                 onRowClick={(row) => setDetailWorkOrderId(row.id)}
                 showColumnVisibility
-                defaultColumnVisibility={{ id: false }}
+                defaultColumnVisibility={{ id: false, loss_reason: false }}
                 columnLabels={columnLabels}
                 noPagination
                 onTableReady={(t) => {
@@ -507,7 +508,7 @@ export default function WorkOrdersPage() {
                           {showTotal && (
                             <span className="text-sm font-semibold tabular-nums">
                               {wo.grand_total !== undefined
-                                ? `₮${wo.grand_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
+                                ? formatMNT(wo.grand_total)
                                 : "—"}
                             </span>
                           )}

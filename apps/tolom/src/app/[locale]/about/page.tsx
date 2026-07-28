@@ -1,4 +1,11 @@
-import { ArrowRight, Check, Wrench } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Eye,
+  Shield,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -14,12 +21,30 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
+import { LandingFooter } from "../_landing-footer";
 
 const VALUES = [
-  { key: "value1", icon: "🎯" },
-  { key: "value2", icon: "👁️" },
-  { key: "value3", icon: "🔒" },
-  { key: "value4", icon: "📈" },
+  { key: "value1", Icon: Target },
+  { key: "value2", Icon: Eye },
+  { key: "value3", Icon: Shield },
+  { key: "value4", Icon: TrendingUp },
+] as const;
+
+const APPROACH_BULLETS = [
+  "approachBullet1",
+  "approachBullet2",
+  "approachBullet3",
+  "approachBullet4",
+  "approachBullet5",
+] as const;
+
+const SECTIONS = [
+  { id: "story", key: "storyTitle" },
+  { id: "mission", key: "missionTitle" },
+  { id: "approach", key: "approachTitle" },
+  { id: "values", key: "valuesTitle" },
+  { id: "tech", key: "techTitle" },
+  { id: "cta", key: "ctaTitle" },
 ] as const;
 
 export default async function AboutPage({
@@ -38,10 +63,6 @@ async function AboutContent({ locale }: { locale: string }) {
   const t = (await getTranslations({
     locale: locale as "mn" | "en",
     namespace: "about",
-  })) as (key: string, values?: Record<string, string | number>) => string;
-  const appT = (await getTranslations({
-    locale: locale as "mn" | "en",
-    namespace: "app",
   })) as (key: string, values?: Record<string, string | number>) => string;
   const _authT = (await getTranslations({
     locale: locale as "mn" | "en",
@@ -66,7 +87,25 @@ async function AboutContent({ locale }: { locale: string }) {
             </Typography.Muted>
           </div>
         </section>
-        <section className="px-4 py-16 sm:px-6 sm:py-24">
+
+        <nav className="sticky top-16 z-40 border-b bg-background/80 backdrop-blur-xs">
+          <div className="mx-auto flex max-w-3xl items-center gap-1 overflow-x-auto px-4 py-2 sm:justify-center sm:px-6">
+            {SECTIONS.map((s) => (
+              <a
+                key={s.id}
+                href={`#${s.id}`}
+                className="inline-flex shrink-0 items-center rounded-full px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:text-sm"
+              >
+                {t(s.key)}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        <section
+          id="story"
+          className="scroll-mt-[112px] px-4 py-16 sm:px-6 sm:py-24"
+        >
           <div className="mx-auto max-w-3xl">
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("storyTitle")}
@@ -77,7 +116,10 @@ async function AboutContent({ locale }: { locale: string }) {
             </div>
           </div>
         </section>
-        <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
+        <section
+          id="mission"
+          className="scroll-mt-[112px] border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24"
+        >
           <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">
             <Card className="relative overflow-hidden">
               <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/10 to-background" />
@@ -110,27 +152,28 @@ async function AboutContent({ locale }: { locale: string }) {
             </Card>
           </div>
         </section>
-        <section className="px-4 py-16 sm:px-6 sm:py-24">
+        <section
+          id="approach"
+          className="scroll-mt-[112px] px-4 py-16 sm:px-6 sm:py-24"
+        >
           <div className="mx-auto max-w-3xl">
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("approachTitle")}
             </Typography.H2>
             <div className="mt-6 space-y-3">
-              {t("approachBody1")
-                .split("\n")
-                .filter(Boolean)
-                .map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" />
-                    <span className="text-muted-foreground">
-                      {item.replace(/^•\s*/, "")}
-                    </span>
-                  </div>
-                ))}
+              {APPROACH_BULLETS.map((key) => (
+                <div key={key} className="flex items-start gap-3">
+                  <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" />
+                  <span className="text-muted-foreground">{t(key)}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
-        <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
+        <section
+          id="values"
+          className="scroll-mt-[112px] border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24"
+        >
           <div className="mx-auto max-w-5xl">
             <Typography.H2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
               {t("valuesTitle")}
@@ -139,8 +182,8 @@ async function AboutContent({ locale }: { locale: string }) {
               {VALUES.map((v) => (
                 <Card key={v.key} className="text-center">
                   <CardHeader>
-                    <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-primary/10 text-2xl">
-                      {v.icon}
+                    <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-primary/10">
+                      <v.Icon className="size-5 text-primary" />
                     </div>
                     <CardTitle className="mt-3 text-base">
                       {t(`${v.key}`)}
@@ -152,7 +195,10 @@ async function AboutContent({ locale }: { locale: string }) {
             </div>
           </div>
         </section>
-        <section className="px-4 py-16 sm:px-6 sm:py-24">
+        <section
+          id="tech"
+          className="scroll-mt-[112px] px-4 py-16 sm:px-6 sm:py-24"
+        >
           <div className="mx-auto max-w-3xl">
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("techTitle")}
@@ -162,7 +208,10 @@ async function AboutContent({ locale }: { locale: string }) {
             </Typography.Muted>
           </div>
         </section>
-        <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
+        <section
+          id="cta"
+          className="scroll-mt-[112px] border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24"
+        >
           <div className="mx-auto max-w-2xl">
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("ctaTitle")}
@@ -191,17 +240,8 @@ async function AboutContent({ locale }: { locale: string }) {
           </div>
         </section>
       </main>
-      <footer className="border-t bg-background px-4 py-8 text-center text-xs text-muted-foreground sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-center gap-2">
-            <Wrench className="size-3" />
-            <span className="font-semibold text-foreground">
-              {appT("name")}
-            </span>
-          </div>
-          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
-        </div>
-      </footer>
+
+      <LandingFooter />
     </div>
   );
 }

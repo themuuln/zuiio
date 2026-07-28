@@ -89,7 +89,9 @@ test.describe("Bay View", () => {
       await waitForBayViewReady(page);
 
       // The three view toggles (grid/kanban/list) are aria-pressed buttons
-      const toggles = page.getByRole("button").filter({ has: page.locator("[aria-pressed]") });
+      const toggles = page
+        .getByRole("button")
+        .filter({ has: page.locator("[aria-pressed]") });
       await expect(toggles.first()).toBeVisible({ timeout: 5000 });
       expect(await toggles.count()).toBeGreaterThanOrEqual(2);
 

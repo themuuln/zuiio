@@ -26,6 +26,7 @@ import { usePurchaseOrders } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { PurchaseOrder } from "@/lib/types";
+import { formatMNT } from "@/lib/utils";
 
 const PO_STATUS_KEYS: Record<string, string> = {
   draft: "poStatusDraft",
@@ -191,7 +192,7 @@ export default function PurchaseOrdersPage() {
                     {t(PO_STATUS_KEYS[po.status] as string) ?? po.status}
                   </Badge>
                   <span className="text-sm font-medium tabular-nums shrink-0">
-                    {po.total_amount.toLocaleString()} ₮
+                    {formatMNT(po.total_amount)}
                   </span>
                   <span className="text-xs text-muted-foreground shrink-0 hidden sm:block">
                     {new Date(po.order_date).toLocaleDateString("mn-MN")}

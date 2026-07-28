@@ -13,6 +13,7 @@ import type { ExportColumn } from "@/lib/export";
 import { useInventoryBalances } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
+import { formatMNT } from "@/lib/utils";
 import type { ValuationRow } from "./_columns";
 import { columns } from "./_columns";
 
@@ -92,7 +93,7 @@ export default function ValuationPage() {
             {t("totalInventoryValue")}
           </Typography.Muted>
           <Typography.Text className="text-2xl font-semibold tabular-nums">
-            {totalValue.toLocaleString("mn-MN")} {"\u20AE"}
+            {formatMNT(totalValue)}
           </Typography.Text>
         </div>
       </CardContent>
@@ -171,10 +172,10 @@ export default function ValuationPage() {
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
-                Avg: {v.avgUnitCost.toLocaleString("mn-MN")} {"\u20AE"}
+                Avg: {formatMNT(v.avgUnitCost)}
               </span>
               <span className="font-semibold tabular-nums text-sm">
-                {v.totalValue.toLocaleString("mn-MN")} {"\u20AE"}
+                {formatMNT(v.totalValue)}
               </span>
             </div>
           </div>

@@ -938,8 +938,10 @@
     "weeklyTrend": "Weekly Trend",
     "completedOrders": "Completed Orders",
     "newCustomers": "New Customers",
-    "emptyDescription": "Create your first work order to get started.",
-    "createFirstWorkOrder": "Create Your First Work Order"
+    "emptyTitle": "Welcome to TOLOM!",
+    "emptyDescription": "Get started by creating your first work order or adding a customer.",
+    "createFirstWorkOrder": "Create Work Order",
+    "addCustomer": "Add Customer"
   },
   "workOrders": {
     "title": "Work Orders",
@@ -3468,6 +3470,11 @@
     "visionBody": "To become the Auto Repair Operating System for Mongolia, then expand into regional SaaS, parts marketplace, fleet management, payments, and data layers.",
     "approachTitle": "Our Approach",
     "approachBody1": "• Tablet-first interface designed for front desk and mechanic workflows\n• Pricing memory — solving Mongolia's real-world pricing inconsistency\n• Immutable ledger — transparent financial and inventory tracking\n• Multi-tenant architecture — isolated environments for each organization\n• RLS security — data isolation and encryption at every layer",
+    "approachBullet1": "Tablet-first interface designed for front desk and mechanic workflows",
+    "approachBullet2": "Pricing memory — solving Mongolia's real-world pricing inconsistency",
+    "approachBullet3": "Immutable ledger — transparent financial and inventory tracking",
+    "approachBullet4": "Multi-tenant architecture — isolated environments for each organization",
+    "approachBullet5": "RLS security — data isolation and encryption at every layer",
     "valuesTitle": "Our Values",
     "value1": "Simplicity",
     "value1Desc": "Easy to use for both garage owners and mechanics",

@@ -24,6 +24,7 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
+import { formatMNT } from "@/lib/utils";
 import { PartsTab } from "./_components/parts-tab";
 
 function InventoryPage() {
@@ -124,14 +125,14 @@ function InventoryPage() {
             <span className="text-xl font-semibold tabular-nums">
               {showSkeleton
                 ? "—"
-                : `${balances
-                    .reduce(
+                : formatMNT(
+                    balances.reduce(
                       (sum, b) =>
                         sum +
                         (b.quantity_on_hand ?? 0) * (b.default_price ?? 0),
                       0,
-                    )
-                    .toLocaleString()} ₮`}
+                    ),
+                  )}
             </span>
           </CardContent>
         </Card>

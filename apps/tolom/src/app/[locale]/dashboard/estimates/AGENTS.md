@@ -104,7 +104,7 @@ Also: `declined` (from sent/approved), `expired`
 
 - Estimate statuses use colored dot badges with semantic colors (gray=draft, blue=sent, green=approved, red=declined, yellow=expired, purple=converted)
 - Line items displayed in a 12-column grid layout
-- All monetary values use MNT (₮) with `toLocaleString()`
+- All monetary values use MNT (₮) with `formatMNT()`
 - The "Convert to Work Order" action only appears when status is `approved`
 - After conversion, navigation to `/dashboard/work-orders/[id]`
 - Reuses `work_orders` permissions (not separate `estimates:*` permissions)

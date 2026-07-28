@@ -33,7 +33,10 @@ test.describe("Instant Navigation", () => {
     });
 
     // Navigate to Finance via sidebar button
-    await page.getByRole("button", { name: /^finance$/i }).first().click();
+    await page
+      .getByRole("button", { name: /^finance$/i })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/dashboard\/finance/);
 
     // Navigate to Estimates via sidebar button
@@ -43,7 +46,10 @@ test.describe("Instant Navigation", () => {
     await expect(page).toHaveURL(/\/dashboard\/estimates/);
 
     // Navigate back to Dashboard via primary sidebar button
-    await page.getByRole("button", { name: /^dashboard$/i }).first().click();
+    await page
+      .getByRole("button", { name: /^dashboard$/i })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/dashboard\/?$/);
   });
 
@@ -54,7 +60,10 @@ test.describe("Instant Navigation", () => {
     await expect(page).toHaveURL(/\/dashboard\/finance/);
 
     // Return to dashboard via sidebar
-    await page.getByRole("button", { name: /^dashboard$/i }).first().click();
+    await page
+      .getByRole("button", { name: /^dashboard$/i })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/dashboard\/?$/);
   });
 });

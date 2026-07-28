@@ -1,6 +1,6 @@
 "use client";
 
-import { generateUUID } from "@zuiio/core";
+import { formatMNT, generateUUID } from "@zuiio/core";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -261,7 +261,7 @@ export default function NewPurchaseOrderPage() {
 
             <div className="flex justify-end text-lg font-semibold pt-2">
               <span>
-                {t("totalAmount")}: {totalAmount.toLocaleString("mn-MN")} ₮
+                {t("totalAmount")}: {formatMNT(totalAmount)}
               </span>
             </div>
           </CardContent>

@@ -11,6 +11,7 @@ import {
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -49,6 +50,11 @@ export function NavMain({
   isActive: (href: string) => boolean;
   onNavigate: (href: string) => void;
 }) {
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+
   return (
     <>
       {/* Primary items (Dashboard) */}
@@ -73,6 +79,7 @@ export function NavMain({
       {groups.map((group) => {
         return (
           <SidebarGroup key={group.labelKey}>
+            <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.children.map((item) =>

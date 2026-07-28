@@ -215,9 +215,7 @@ export function createColumns(
         const total = row.original.grand_total;
         return (
           <span className="text-sm font-medium tabular-nums">
-            {total !== undefined
-              ? `₮${total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
-              : "—"}
+            {total !== undefined ? formatMNT(total) : "—"}
           </span>
         );
       },
@@ -353,6 +351,7 @@ export function createColumns(
     {
       id: "loss_reason",
       accessorKey: "loss_reason",
+      enableHiding: true,
       header: ({ column }) => {
         const t = useTranslations("workOrders") as (key: string) => string;
         return (

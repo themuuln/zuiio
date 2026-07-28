@@ -44,6 +44,7 @@ import { Typography } from "@/components/ui/typography";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { createOrgQuery } from "@/lib/queries/factory";
 import { priceRuleKeys } from "@/lib/queries/keys";
+import { formatMNT } from "@/lib/utils";
 import { SettingsBlock, SettingsListItem } from "./_settings-layout";
 
 interface PriceRule {
@@ -271,9 +272,9 @@ function operatorDescription(op: string, value: number): string {
     case "multiply":
       return `× ${value}`;
     case "add_fixed":
-      return `+ ${value.toLocaleString()}₮`;
+      return `+ ${formatMNT(value)}`;
     case "set_fixed":
-      return `${value.toLocaleString()}₮ fixed`;
+      return `${formatMNT(value)} fixed`;
     case "percentage_add":
       return `+${value}%`;
     case "percentage_sub":

@@ -1,4 +1,4 @@
-import { ArrowRight, Check, HelpCircle, Star, Wrench, X } from "lucide-react";
+import { ArrowRight, Check, HelpCircle, X } from "lucide-react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -9,19 +9,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { cn } from "@/lib/utils";
-import { BillingToggle } from "./_billing-toggle";
+import { LandingFooter } from "../_landing-footer";
+import { PricingCards } from "./_pricing-cards";
 
 type FeatureStatus = boolean | "addon";
 
@@ -172,7 +163,7 @@ const FAQ_KEYS: { q: string; a: string }[] = [
   { q: "faqQ6", a: "faqA6" },
 ];
 
-function FeatureIcon({ status }: { status: FeatureStatus }) {
+function _FeatureIcon({ status }: { status: FeatureStatus }) {
   if (status === true) {
     return <Check className="mt-0.5 size-4 shrink-0 text-emerald-500" />;
   }
@@ -188,34 +179,20 @@ function FeatureIcon({ status }: { status: FeatureStatus }) {
 
 export default async function PricingPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ billing?: string }>;
 }) {
   const { locale } = await params;
-  const { billing } = await searchParams;
-  const annual = billing === "annual";
-  return <PricingContent locale={locale} annual={annual} />;
+  return <PricingContent locale={locale} />;
 }
 
-async function PricingContent({
-  locale,
-  annual,
-}: {
-  locale: string;
-  annual: boolean;
-}) {
+async function PricingContent({ locale }: { locale: string }) {
   "use cache";
   cacheLife("daily");
 
   const t = (await getTranslations({
     locale: locale as "mn" | "en",
     namespace: "pricing",
-  })) as (key: string, values?: Record<string, string | number>) => string;
-  const appT = (await getTranslations({
-    locale: locale as "mn" | "en",
-    namespace: "app",
   })) as (key: string, values?: Record<string, string | number>) => string;
 
   return (
@@ -233,11 +210,10 @@ async function PricingContent({
               {t("heroSubtitle")}
             </Typography.Muted>
 
-            <BillingToggle
-              monthly={t("monthly")}
-              yearly={t("annual")}
-              savePercent={t("savePercent")}
-            />
+            {/* Hero subtitle only — toggle + cards rendered client-side */}
+            <p className="mt-6 text-sm text-muted-foreground">
+              {t("monthly")} / {t("annual")} — {t("savePercent")}
+            </p>
           </div>
         </section>
 
@@ -276,102 +252,28 @@ async function PricingContent({
           </div>
         </section>
 
-        {/* ── Pricing Cards ───────────────────────────────────── */}
+        {/* ── Pricing Cards (client-side toggle) ──────────── */}
         <section className="px-4 py-12 sm:px-6 sm:py-16">
-          <div className="mx-auto grid max-w-7xl gap-4 sm:gap-6 lg:grid-cols-4">
-            {PLAN_DATA.map((plan) => {
-              const price = annual
-                ? `${plan.annualPrice}/жил`
-                : `${plan.monthlyPrice}/сар`;
-              const perUnit =
-                annual && plan.annualPerMonth
-                  ? `${plan.annualPerMonth}/сар`
-                  : null;
-              const isStarter = plan.key === "starter";
-              const isEnterprise = plan.key === "enterprise";
-
-              return (
-                <Card
-                  key={plan.key}
-                  size="sm"
-                  className={cn(
-                    "relative flex flex-col",
-                    plan.popular
-                      ? "overflow-visible ring-2 ring-primary shadow-md"
-                      : isEnterprise
-                        ? "border-dashed border-muted-foreground/30"
-                        : "",
-                  )}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge className="pointer-events-none whitespace-nowrap bg-primary text-primary-foreground">
-                        <Star className="mr-1 size-3" />
-                        {t("mostPopular")}
-                      </Badge>
-                    </div>
-                  )}
-
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      {t(`${plan.key}Name`)}
-                    </CardTitle>
-                    <CardDescription>{t(`${plan.key}Desc`)}</CardDescription>
-
-                    <div className="mt-4">
-                      <span className="text-3xl font-semibold tracking-tight">
-                        {price}
-                      </span>
-                      {perUnit && (
-                        <Typography.Muted className="mt-1 text-xs text-muted-foreground">
-                          {perUnit} {t("monthly").toLowerCase()}
-                        </Typography.Muted>
-                      )}
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="flex-1">
-                    <ul className="flex flex-col gap-2.5">
-                      {plan.features.map((f) => (
-                        <li
-                          key={f.text}
-                          className="flex items-start gap-2 text-sm"
-                        >
-                          <FeatureIcon status={f.included} />
-                          <span
-                            className={
-                              f.included
-                                ? ""
-                                : "text-gray-500 dark:text-gray-400"
-                            }
-                          >
-                            {f.text}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-
-                  <CardFooter className="flex-col gap-2">
-                    <Button
-                      variant={plan.ctaVariant}
-                      className="w-full"
-                      render={
-                        <Link
-                          href={isEnterprise ? "/contact" : "/auth/signup"}
-                        />
-                      }
-                    >
-                      {isEnterprise
-                        ? t("contactSales")
-                        : t(isStarter ? "getStarted" : "startTrial")}
-                      <ArrowRight className="ml-1 size-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              );
-            })}
-          </div>
+          <PricingCards
+            plans={PLAN_DATA}
+            translations={{
+              monthly: t("monthly"),
+              annual: t("annual"),
+              savePercent: t("savePercent"),
+              mostPopular: t("mostPopular"),
+              contactSales: t("contactSales"),
+              getStarted: t("getStarted"),
+              startTrial: t("startTrial"),
+              starterName: t("starterName"),
+              starterDesc: t("starterDesc"),
+              proName: t("proName"),
+              proDesc: t("proDesc"),
+              businessName: t("businessName"),
+              businessDesc: t("businessDesc"),
+              enterpriseName: t("enterpriseName"),
+              enterpriseDesc: t("enterpriseDesc"),
+            }}
+          />
         </section>
 
         {/* ── Comparison Table ────────────────────────────────── */}
@@ -459,18 +361,7 @@ async function PricingContent({
         </section>
       </main>
 
-      {/* ── Footer ──────────────────────────────────────────── */}
-      <footer className="border-t bg-background px-4 py-8 text-center text-xs text-muted-foreground sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-center gap-2">
-            <Wrench className="size-3" />
-            <span className="font-semibold text-foreground">
-              {appT("name")}
-            </span>
-          </div>
-          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 }

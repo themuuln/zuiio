@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import { Typography } from "@/components/ui/typography";
 import type { InventoryBalanceWithAvgCost } from "@/lib/types";
+import { formatMNT } from "@/lib/utils";
 
 export interface ValuationRow extends InventoryBalanceWithAvgCost {
   avgUnitCost: number;
@@ -78,7 +79,7 @@ export const columns: ColumnDef<ValuationRow>[] = [
     },
     cell: ({ row }) => (
       <span className="tabular-nums">
-        {row.original.avgUnitCost.toLocaleString("mn-MN")} ₮
+        {formatMNT(row.original.avgUnitCost)}
       </span>
     ),
   },
@@ -95,7 +96,7 @@ export const columns: ColumnDef<ValuationRow>[] = [
     },
     cell: ({ row }) => (
       <span className="font-semibold tabular-nums">
-        {row.original.totalValue.toLocaleString("mn-MN")} ₮
+        {formatMNT(row.original.totalValue)}
       </span>
     ),
   },

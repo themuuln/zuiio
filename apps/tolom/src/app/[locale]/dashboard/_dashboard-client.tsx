@@ -2,6 +2,7 @@
 
 import {
   Car,
+  ClipboardList,
   Clock,
   DollarSign,
   Lightbulb,
@@ -170,6 +171,15 @@ export default function DashboardPage() {
   const showSkeletons = isInitialLoad || (isFirstLoad && !data);
 
   const summary = data?.summary ?? null;
+
+  // ── Empty state for new orgs ──
+  const isEmpty = !!(
+    data &&
+    summary &&
+    summary.totalRevenue === 0 &&
+    summary.totalCustomers === 0 &&
+    summary.activeWorkOrders === 0
+  );
   const comparison = data?.summaryComparison ?? null;
   const insights = data?.insights ?? [];
   const workOrders = data?.recentWorkOrders ?? [];
@@ -372,6 +382,36 @@ export default function DashboardPage() {
 
         {/* Inventory alert — renders only when parts are low/out of stock */}
         {orgId && <LowStockCard orgId={orgId} />}
+
+        {isEmpty && !showSkeletons && (
+          <Card className="border-dashed border-primary/30 bg-primary/5">
+            <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+              <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
+                <ClipboardList className="size-8 text-primary" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Typography.H3>{t("dashboard.emptyTitle")}</Typography.H3>
+                <Typography.Muted>
+                  {t("dashboard.emptyDescription")}
+                </Typography.Muted>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button size="lg" onClick={() => openDrawer("newWorkOrder")}>
+                  <Plus className="size-4" />
+                  {t("dashboard.createFirstWorkOrder")}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => openDrawer("newCustomer")}
+                >
+                  <UserPlus className="size-4" />
+                  {t("dashboard.addCustomer")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 4 KPI cards — always visible, skeleton shows for values while loading */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
