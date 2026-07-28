@@ -41,37 +41,43 @@ export function TeamSwitcher() {
 
   const name = orgInfo?.orgName ?? "TOLOM";
   const canSwitchBranches = hasPermission("branches", "read");
-  const canShowDropdown = canSwitchBranches && !isMechanic;
+  const canShowDropdown =
+    canSwitchBranches && !isMechanic && branches.length > 1;
   const selectedBranch = branches.find((b) => b.id === selectedBranchId);
   const activeBranchName = selectedBranch?.name ?? t("dashboard.allBranches");
   const allSelected = selectedBranchId === "all";
+
+  const buttonContent = (
+    <>
+      <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+        <Building2 className="size-4" />
+      </div>
+      <div className="grid flex-1 text-left text-sm leading-tight transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">
+        <span className="truncate font-medium">{name}</span>
+        <span className="truncate text-xs">{activeBranchName}</span>
+      </div>
+      {canShowDropdown && (
+        <ChevronsUpDown className="ml-auto size-4 transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0" />
+      )}
+    </>
+  );
 
   return (
     <>
       <SidebarMenu>
         <SidebarMenuItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
-                  disabled={!canShowDropdown}
-                />
-              }
-            >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Building2 className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">
-                <span className="truncate font-medium">{name}</span>
-                <span className="truncate text-xs">{activeBranchName}</span>
-              </div>
-              {canShowDropdown && (
-                <ChevronsUpDown className="ml-auto size-4 transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0" />
-              )}
-            </DropdownMenuTrigger>
-            {canShowDropdown && (
+          {canShowDropdown ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
+                  />
+                }
+              >
+                {buttonContent}
+              </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
                 align="start"
@@ -102,8 +108,10 @@ export function TeamSwitcher() {
                   <span>{t("common.addBranch")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            )}
-          </DropdownMenu>
+            </DropdownMenu>
+          ) : (
+            <SidebarMenuButton size="lg">{buttonContent}</SidebarMenuButton>
+          )}
         </SidebarMenuItem>
       </SidebarMenu>
       <QuickCreateBranchDrawer
