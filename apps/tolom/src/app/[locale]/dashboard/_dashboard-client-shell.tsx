@@ -35,13 +35,15 @@ function DashboardHeader() {
   const { state, setActiveTab } = usePageHeader();
 
   return (
-    <div className="flex items-center gap-3">
-      <PageHeader
-        tabs={state.tabs.length > 0 ? state.tabs : undefined}
-        activeTab={state.activeTab}
-        onTabChange={setActiveTab}
-        actions={state.actions}
-      />
+    <div className="flex w-full items-center gap-3">
+      <div className="flex-1 min-w-0">
+        <PageHeader
+          tabs={state.tabs.length > 0 ? state.tabs : undefined}
+          activeTab={state.activeTab}
+          onTabChange={setActiveTab}
+          actions={state.actions}
+        />
+      </div>
       <BranchIndicator />
     </div>
   );
@@ -58,17 +60,21 @@ export default function DashboardClientShell({
   return (
     <AuthWrapper>
       <PageHeaderProvider>
-        <SidebarProvider
-          defaultOpen={sidebarDefaultOpen}
-          className="h-svh overflow-hidden"
-        >
-          <AppSidebar />
-          <SidebarInset className="min-h-0 min-w-0 w-auto overflow-hidden">
+        <div className="flex flex-col h-svh">
+          <DashboardHeader />
+          <SidebarProvider
+            defaultOpen={sidebarDefaultOpen}
+            className="flex-1 min-h-0 overflow-hidden flex-col [--sidebar-top:3rem]"
+          >
             <GlobalDialogs />
-            <DashboardHeader />
-            <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
-          </SidebarInset>
-        </SidebarProvider>
+            <div className="flex flex-1 min-h-0">
+              <AppSidebar />
+              <SidebarInset className="min-h-0 min-w-0 w-auto overflow-hidden">
+                <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+              </SidebarInset>
+            </div>
+          </SidebarProvider>
+        </div>
       </PageHeaderProvider>
     </AuthWrapper>
   );

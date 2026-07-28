@@ -9,6 +9,7 @@ export * from "./dropdown-menu";
 export * from "./empty";
 export * from "./form";
 export * from "./input";
+export * from "./kbd";
 export * from "./label";
 export * from "./select";
 export * from "./separator";

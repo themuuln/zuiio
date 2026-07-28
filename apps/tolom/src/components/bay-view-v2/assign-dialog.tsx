@@ -332,7 +332,7 @@ export function AssignDialog({
         onDragCancel={() => setActiveDragId(null)}
       >
         <Dialog open={open} onOpenChange={onOpenChange}>
-          <DialogContent className="sm:max-w-lg" initialFocus={searchRef}>
+          <DialogContent className="sm:max-w-[50vw]" initialFocus={searchRef}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-base">
                 Assign to Bay #{bayNumber}

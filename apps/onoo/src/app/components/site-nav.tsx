@@ -103,9 +103,12 @@ export function SiteNav() {
               size="icon"
               onClick={handleOpenSearch}
               aria-label="Хайх (⌘K)"
-              className="text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="relative text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <Search className="size-4" aria-hidden="true" />
+              <kbd className="pointer-events-none absolute -bottom-0.5 -right-0.5 flex size-3.5 items-center justify-center rounded-[3px] border bg-muted font-mono text-[7px] font-medium text-muted-foreground/60 leading-none">
+                <abbr title="Command" className="no-underline">⌘</abbr>
+              </kbd>
             </Button>
           </li>
         </ul>

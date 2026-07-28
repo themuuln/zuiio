@@ -75,6 +75,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       collapsible="icon"
       variant="sidebar"
       suppressHydrationWarning
+      style={{
+        top: "var(--sidebar-top, 0)",
+        height: "calc(100svh - var(--sidebar-top, 0))",
+      }}
       {...props}
     >
       <SidebarHeader>

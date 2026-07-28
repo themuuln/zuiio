@@ -287,7 +287,7 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
       openDetail(woId, initialAction);
       const params = new URLSearchParams(window.location.search);
       params.set("woId", woId);
-      window.history.replaceState(null, "", `?${params.toString()}`);
+      window.history.pushState(null, "", `?${params.toString()}`);
     },
     [openDetail, data, orgId, queryClient],
   );
@@ -305,7 +305,7 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
       openDetail(id);
       const params = new URLSearchParams(window.location.search);
       params.set("woId", id);
-      window.history.replaceState(null, "", `?${params.toString()}`);
+      window.history.pushState(null, "", `?${params.toString()}`);
     },
     [openDetail],
   );

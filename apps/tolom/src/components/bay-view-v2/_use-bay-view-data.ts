@@ -82,12 +82,16 @@ export function useBayViewData(
     errorName === "AppError" &&
     error !== null &&
     error.includes("doesn't have access");
-  // ── Auto-open drawer from URL param (e.g. after refresh with ?woId=xxx) ──
-  const hasAutoOpenedRef = useRef(false);
+  // ── Sync drawer to URL on popstate (browser back/forward) ──
+  // When the user navigates through history, pushState calls in the mutation
+  // handlers are bypassed and the URL changes directly. This effect detects
+  // that change and opens/closes the drawer accordingly.
   useEffect(() => {
-    if (woIdFromUrl && data && !hasAutoOpenedRef.current) {
-      hasAutoOpenedRef.current = true;
+    if (!data) return;
+    if (woIdFromUrl && woIdFromUrl !== dialogs.detailWoId) {
       dialogs.openDetail(woIdFromUrl);
+    } else if (!woIdFromUrl && dialogs.detailWoId) {
+      dialogs.closeDetail();
     }
   }, [woIdFromUrl, data, dialogs]);
 

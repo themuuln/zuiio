@@ -3,6 +3,7 @@ export const instant = false;
 
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
@@ -49,6 +50,16 @@ export async function generateMetadata({
 
 import { Suspense } from "react";
 
+/**
+ * Calls connection() inside Suspense to explicitly mark this route as dynamic.
+ * Without this, accessing params in generateMetadata triggers a blocking-
+ * prerender warning for prefetching.
+ */
+async function DynamicBoundary() {
+  await connection();
+  return null;
+}
+
 async function LocaleLayoutInner({
   children,
   params,
@@ -89,8 +100,13 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   return (
-    <Suspense fallback={null}>
-      <LocaleLayoutInner params={params}>{children}</LocaleLayoutInner>
-    </Suspense>
+    <>
+      <Suspense fallback={null}>
+        <DynamicBoundary />
+      </Suspense>
+      <Suspense fallback={null}>
+        <LocaleLayoutInner params={params}>{children}</LocaleLayoutInner>
+      </Suspense>
+    </>
   );
 }
