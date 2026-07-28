@@ -59,6 +59,8 @@ vi.mock("lucide-react", () => {
     List: icon,
     Megaphone: icon,
     UserPlus: icon,
+    MessageSquareText: icon,
+    Layers: icon,
   };
 });
 

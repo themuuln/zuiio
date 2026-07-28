@@ -382,7 +382,10 @@ export function StatusTimeline(props: StatusTimelineProps) {
                           {entry.services.map((service, idx) => {
                             const nameLong = service.name.length > 15;
                             const badge = (
-                              <span className="inline-flex items-center gap-1.5 rounded-4xl border border-border text-foreground text-xs py-1 pl-1.5 pr-2 font-medium">
+                              <span
+                                key={`${entry.work_order_id}-${service.name}-${idx}`}
+                                className="inline-flex items-center gap-1.5 rounded-4xl border border-border text-foreground text-xs py-1 pl-1.5 pr-2 font-medium"
+                              >
                                 <span className="flex items-center justify-center size-4 rounded-full bg-info/10">
                                   <Wrench className="size-2.5 text-info" />
                                 </span>
@@ -430,7 +433,10 @@ export function StatusTimeline(props: StatusTimelineProps) {
                           {entry.parts.map((part, idx) => {
                             const nameLong = part.name.length > 15;
                             const badge = (
-                              <span className="inline-flex items-center gap-1.5 rounded-4xl border border-border/60 bg-muted/30 text-muted-foreground text-xs py-1 pl-1.5 pr-2">
+                              <span
+                                key={`${entry.work_order_id}-${part.name}-${idx}`}
+                                className="inline-flex items-center gap-1.5 rounded-4xl border border-border/60 bg-muted/30 text-muted-foreground text-xs py-1 pl-1.5 pr-2"
+                              >
                                 <span className="flex items-center justify-center size-4 rounded-full bg-amber-500/10">
                                   <Package className="size-2.5 text-amber-500" />
                                 </span>

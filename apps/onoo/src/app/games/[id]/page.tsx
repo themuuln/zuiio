@@ -30,7 +30,6 @@ import {
   type GameSummaryRow,
   type PeriodScoreRow,
   type ScoringCheckpointRow,
-  type TeamGameStatsRow,
   formatGameTime,
   formatMinutes,
   getBoxScore,
@@ -327,73 +326,73 @@ export default async function GameDetailPage({ params }: GamePageProps) {
               <CardContent className="flex flex-col gap-5 pt-6">
                 <TeamComparison
                   label="Оноо"
-                  home={homeTeamStats?.team_pts ?? 0}
-                  away={awayTeamStats?.team_pts ?? 0}
+                  home={homeTeamStats?.pts ?? 0}
+                  away={awayTeamStats?.pts ?? 0}
                 />
                 <TeamComparison
                   label="Самбар"
-                  home={(homeTeamStats?.team_oreb ?? 0) + (homeTeamStats?.team_dreb ?? 0)}
-                  away={(awayTeamStats?.team_oreb ?? 0) + (awayTeamStats?.team_dreb ?? 0)}
+                  home={(homeTeamStats?.oreb ?? 0) + (homeTeamStats?.dreb ?? 0)}
+                  away={(awayTeamStats?.oreb ?? 0) + (awayTeamStats?.dreb ?? 0)}
                 />
                 <TeamComparison
                   label="Дамжуулалт"
-                  home={homeTeamStats?.team_ast ?? 0}
-                  away={awayTeamStats?.team_ast ?? 0}
+                  home={homeTeamStats?.ast ?? 0}
+                  away={awayTeamStats?.ast ?? 0}
                 />
                 <TeamComparison
                   label="Бөмбөг таслалт"
-                  home={homeTeamStats?.team_stl ?? 0}
-                  away={awayTeamStats?.team_stl ?? 0}
+                  home={homeTeamStats?.stl ?? 0}
+                  away={awayTeamStats?.stl ?? 0}
                 />
                 <TeamComparison
                   label="Блок"
-                  home={homeTeamStats?.team_blk ?? 0}
-                  away={awayTeamStats?.team_blk ?? 0}
+                  home={homeTeamStats?.blk ?? 0}
+                  away={awayTeamStats?.blk ?? 0}
                 />
                 <TeamComparison
                   label="Алдалт"
-                  home={homeTeamStats?.team_tov ?? 0}
-                  away={awayTeamStats?.team_tov ?? 0}
+                  home={homeTeamStats?.tov ?? 0}
+                  away={awayTeamStats?.tov ?? 0}
                   lowerWins
                 />
                 <TeamComparison
                   label="Хувь"
-                  home={homeTeamStats ? Math.round((homeTeamStats.team_fgm / Math.max(homeTeamStats.team_fga, 1)) * 100) : 0}
-                  away={awayTeamStats ? Math.round((awayTeamStats.team_fgm / Math.max(awayTeamStats.team_fga, 1)) * 100) : 0}
+                  home={homeTeamStats ? Math.round((homeTeamStats.fgm / Math.max(homeTeamStats.fga, 1)) * 100) : 0}
+                  away={awayTeamStats ? Math.round((awayTeamStats.fgm / Math.max(awayTeamStats.fga, 1)) * 100) : 0}
                   suffix="%"
                 />
                 <TeamComparison
                   label="2 онооны %"
-                  home={homeTeamStats ? Math.round(((homeTeamStats.team_fgm - homeTeamStats.team_tpm) / Math.max(homeTeamStats.team_fga - homeTeamStats.team_tpa, 1)) * 100) : 0}
-                  away={awayTeamStats ? Math.round(((awayTeamStats.team_fgm - awayTeamStats.team_tpm) / Math.max(awayTeamStats.team_fga - awayTeamStats.team_tpa, 1)) * 100) : 0}
+                  home={homeTeamStats ? Math.round(((homeTeamStats.fgm - homeTeamStats.tpm) / Math.max(homeTeamStats.fga - homeTeamStats.tpa, 1)) * 100) : 0}
+                  away={awayTeamStats ? Math.round(((awayTeamStats.fgm - awayTeamStats.tpm) / Math.max(awayTeamStats.fga - awayTeamStats.tpa, 1)) * 100) : 0}
                   suffix="%"
                 />
                 <TeamComparison
                   label="3 онооны %"
-                  home={homeTeamStats ? Math.round((homeTeamStats.team_tpm / Math.max(homeTeamStats.team_tpa, 1)) * 100) : 0}
-                  away={awayTeamStats ? Math.round((awayTeamStats.team_tpm / Math.max(awayTeamStats.team_tpa, 1)) * 100) : 0}
+                  home={homeTeamStats ? Math.round((homeTeamStats.tpm / Math.max(homeTeamStats.tpa, 1)) * 100) : 0}
+                  away={awayTeamStats ? Math.round((awayTeamStats.tpm / Math.max(awayTeamStats.tpa, 1)) * 100) : 0}
                   suffix="%"
                 />
                 <TeamComparison
                   label="Чөлөөт шидэлтийн %"
-                  home={homeTeamStats ? Math.round((homeTeamStats.team_ftm / Math.max(homeTeamStats.team_fta, 1)) * 100) : 0}
-                  away={awayTeamStats ? Math.round((awayTeamStats.team_ftm / Math.max(awayTeamStats.team_fta, 1)) * 100) : 0}
+                  home={homeTeamStats ? Math.round((homeTeamStats.ftm / Math.max(homeTeamStats.fta, 1)) * 100) : 0}
+                  away={awayTeamStats ? Math.round((awayTeamStats.ftm / Math.max(awayTeamStats.fta, 1)) * 100) : 0}
                   suffix="%"
                 />
                 <TeamComparison
                   label="Довтолгооны самбар"
-                  home={homeTeamStats?.team_oreb ?? 0}
-                  away={awayTeamStats?.team_oreb ?? 0}
+                  home={homeTeamStats?.oreb ?? 0}
+                  away={awayTeamStats?.oreb ?? 0}
                 />
                 <TeamComparison
                   label="Хамгаалалтын самбар"
-                  home={homeTeamStats?.team_dreb ?? 0}
-                  away={awayTeamStats?.team_dreb ?? 0}
+                  home={homeTeamStats?.dreb ?? 0}
+                  away={awayTeamStats?.dreb ?? 0}
                 />
                 <TeamComparison
                   label="Хувийн алдаа"
-                  home={homeTeamStats?.team_pf ?? 0}
-                  away={awayTeamStats?.team_pf ?? 0}
+                  home={homeTeamStats?.pf ?? 0}
+                  away={awayTeamStats?.pf ?? 0}
                   lowerWins
                 />
               </CardContent>
@@ -414,83 +413,83 @@ export default async function GameDetailPage({ params }: GamePageProps) {
             <Card className="mt-4 shadow-none">
               <CardContent className="pt-6">
                 <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3 lg:grid-cols-4">
-                  {homeTeamStats?.team_points_from_turnovers != null && (
+                  {homeTeamStats?.points_from_turnovers != null && (
                     <div className="space-y-1 rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Бөмбөг алдалтаас авсан оноо</p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_points_from_turnovers}</span>
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.points_from_turnovers}</span>
                         <span className="text-muted-foreground">–</span>
-                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_points_from_turnovers ?? 0}</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.points_from_turnovers ?? 0}</span>
                       </div>
                     </div>
                   )}
-                  {homeTeamStats?.team_points_in_paint != null && (
+                  {homeTeamStats?.points_in_paint != null && (
                     <div className="space-y-1 rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Онооны талбайн оноо</p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_points_in_paint}</span>
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.points_in_paint}</span>
                         <span className="text-muted-foreground">–</span>
-                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_points_in_paint ?? 0}</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.points_in_paint ?? 0}</span>
                       </div>
                     </div>
                   )}
-                  {homeTeamStats?.team_second_chance_points != null && (
+                  {homeTeamStats?.second_chance_points != null && (
                     <div className="space-y-1 rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Хоёр дахь боломжийн оноо</p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_second_chance_points}</span>
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.second_chance_points}</span>
                         <span className="text-muted-foreground">–</span>
-                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_second_chance_points ?? 0}</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.second_chance_points ?? 0}</span>
                       </div>
                     </div>
                   )}
-                  {homeTeamStats?.team_fast_break_points != null && (
+                  {homeTeamStats?.fast_break_points != null && (
                     <div className="space-y-1 rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Хурдан довтолгооны оноо</p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_fast_break_points}</span>
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.fast_break_points}</span>
                         <span className="text-muted-foreground">–</span>
-                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_fast_break_points ?? 0}</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.fast_break_points ?? 0}</span>
                       </div>
                     </div>
                   )}
-                  {homeTeamStats?.team_bench_points != null && (
+                  {homeTeamStats?.bench_points != null && (
                     <div className="space-y-1 rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Сэлгээний тоглогчдын оноо</p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_bench_points}</span>
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.bench_points}</span>
                         <span className="text-muted-foreground">–</span>
-                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_bench_points ?? 0}</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.bench_points ?? 0}</span>
                       </div>
                     </div>
                   )}
-                  {homeTeamStats?.team_biggest_lead != null && (
+                  {homeTeamStats?.biggest_lead != null && (
                     <div className="space-y-1 rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Хамгийн их харьцуулалт</p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_biggest_lead}</span>
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.biggest_lead}</span>
                         <span className="text-muted-foreground">–</span>
-                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_biggest_lead ?? 0}</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.biggest_lead ?? 0}</span>
                       </div>
                     </div>
                   )}
-                  {homeTeamStats?.team_biggest_scoring_run_for != null && (
+                  {homeTeamStats?.biggest_scoring_run_for != null && (
                     <div className="space-y-1 rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Хамгийн урт цуврал</p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_biggest_scoring_run_for}</span>
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.biggest_scoring_run_for}</span>
                         <span className="text-muted-foreground">–</span>
-                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_biggest_scoring_run_for ?? 0}</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.biggest_scoring_run_for ?? 0}</span>
                       </div>
                     </div>
                   )}
-                  {homeTeamStats?.team_time_leading_seconds != null && (
+                  {homeTeamStats?.time_leading_seconds != null && (
                     <div className="space-y-1 rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Тэргүүлсэн хугацаа</p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-primary">{formatMinutes(homeTeamStats.team_time_leading_seconds)}</span>
+                        <span className="text-lg font-bold text-primary">{formatMinutes(homeTeamStats.time_leading_seconds)}</span>
                         <span className="text-muted-foreground">–</span>
-                        <span className="text-lg font-bold text-warning">{formatMinutes(awayTeamStats?.team_time_leading_seconds ?? 0)}</span>
+                        <span className="text-lg font-bold text-warning">{formatMinutes(awayTeamStats?.time_leading_seconds ?? 0)}</span>
                       </div>
                     </div>
                   )}

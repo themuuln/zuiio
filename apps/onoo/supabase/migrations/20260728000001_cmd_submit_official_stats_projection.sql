@@ -174,7 +174,9 @@ begin
 
   -- 6. Supersede prior approved revision
   update public.game_revisions
-    set state = 'superseded'
+    set state = 'superseded',
+        approved_at = null,
+        approved_by = null
     where game_id = p_game_id
       and id <> v_revision.id
       and state = 'approved';

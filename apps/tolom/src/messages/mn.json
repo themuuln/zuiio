@@ -279,7 +279,9 @@
       "invitesSubtitle": "Урилгыг хүлээн авч байгууллагад нэгдэх, эсвэл өөрийн байгууллагаараа үргэлжлүүлэх.",
       "noOrganizations": "Энэ бүртгэлд холбогдсон байгууллага алга байна. Админаас эрхээ нэмүүлэх шаардлагатай.",
       "metaTitle": "Байгууллага сонгох | TOLOM",
-      "metaDescription": "Байгууллагаа сонгоод үргэлжлүүлэх."
+      "metaDescription": "Байгууллагаа сонгоод үргэлжлүүлэх.",
+      "pinExplanation": "Энэ байгууллагын PIN кодыг оруулан нэвтрэх эрхээ баталгаажуулна уу.",
+      "verifyHint": "PIN тохируулсан байна. Үргэлжлүүлэхэд PIN оруулна уу."
     },
     "customerLogin": {
       "metaTitle": "Хэрэглэгчийн нэвтрэх | TOLOM",
@@ -942,7 +944,8 @@
     "emptyTitle": "TOLOM-д тавтай морил!",
     "emptyDescription": "Эхний захиалгаа үүсгэж эсвэл харилцагчаа бүртгүүлж эхлээрэй.",
     "createFirstWorkOrder": "Захиалга үүсгэх",
-    "addCustomer": "Харилцагч бүртгэх"
+    "addCustomer": "Харилцагч бүртгэх",
+    "recentWorkOrdersDesc": "Сүүлийн 10 захиалга"
   },
   "workOrders": {
     "title": "Ажлын захиалга",
@@ -1332,7 +1335,8 @@
     "templateDescription": "Зөв толгойтой CSV загвар татаж авах",
     "downloadCsvTemplate": "CSV загвар татаж авах",
     "dragDropCsv": "CSV файл энд чирээд унагана уу",
-    "browseFiles": "файл сонгох"
+    "browseFiles": "файл сонгох",
+    "newSupplierDescription": "Бараа материалын шинэ нийлүүлэгч нэмэх."
   },
   "services": {
     "tabMyServices": "Манай үйлчилгээ",
@@ -1932,7 +1936,8 @@
     "filterCount": "{count} шүүлтүүр",
     "notFound": "Зарлага олдсонгүй",
     "taxIncluded": "Татвар багтсан",
-    "detailsSection": "Дэлгэрэнгүй"
+    "detailsSection": "Дэлгэрэнгүй",
+    "subtitle": "Байгууллагын зарлагыг хянах, бүртгэх."
   },
   "finance": {
     "title": "Санхүү",

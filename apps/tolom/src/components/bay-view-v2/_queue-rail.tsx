@@ -86,19 +86,24 @@ export function QueueRail({
                   <span className="text-[10px] text-muted-foreground/60">
                     <ElapsedText startedAt={wo.created_at} />
                   </span>
-                  <Button
-                    size="icon-xs"
-                    variant="ghost"
-                    render={<span />}
+                  <span
                     onClick={(e) => {
                       e.stopPropagation();
                       onAssignToBay(wo.id);
                     }}
-                    className="size-5 rounded text-muted-foreground/40 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.stopPropagation();
+                        onAssignToBay(wo.id);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    className="inline-flex items-center justify-center size-5 rounded text-muted-foreground/40 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                     title={t("assignToBay")}
                   >
                     <ArrowRight className="size-3" />
-                  </Button>
+                  </span>
                 </div>
               </button>
             ))}

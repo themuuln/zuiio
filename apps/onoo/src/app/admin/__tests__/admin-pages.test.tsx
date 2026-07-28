@@ -441,6 +441,7 @@ vi.mock("@/app/admin/_lib/api", () => ({
     ship: vi.fn(() => Promise.resolve({})),
     cancel: vi.fn(() => Promise.resolve({})),
   },
+  getTeams: vi.fn(() => Promise.resolve([])),
 }));
 
 // ── Mock useEntityCrud ───────────────────────────────────────────────────────
