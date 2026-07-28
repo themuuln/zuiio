@@ -159,6 +159,7 @@ export function createRouteHandler(
           options.requiredPermission.resource,
           options.requiredPermission.action,
           orgId,
+          { supabase, userId: user.id },
         );
       }
 

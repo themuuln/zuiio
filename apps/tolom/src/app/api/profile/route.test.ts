@@ -39,7 +39,7 @@ describe("GET /api/profile", () => {
       email: "john@test.com",
       role: "admin",
     });
-    expect(getCurrentUserProfileMock).toHaveBeenCalledWith({});
+    expect(getCurrentUserProfileMock).toHaveBeenCalledWith({}, user);
   });
 
   it("returns null when user has no profile", async () => {

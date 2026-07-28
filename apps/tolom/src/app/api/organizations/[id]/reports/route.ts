@@ -22,7 +22,10 @@ import {
   getWeeklyReport,
   setRevenueTarget,
 } from "@/lib/services/report-service";
-import { hasPermission } from "@/lib/supabase/role-guard";
+import {
+  hasPermission,
+  type PermissionContext,
+} from "@/lib/supabase/role-guard";
 
 // ── Report types accessible with work_orders.read (self-scoped) ──
 // These types are operational, not financial, and are scoped to the
@@ -46,14 +49,15 @@ const SELF_SERVICE_REPORT_TYPES = new Set([
 async function authorizeReportAccess(
   type: string,
   orgId: string,
+  context?: PermissionContext,
 ): Promise<"full" | "self-service"> {
-  if (await hasPermission("reports", "read", orgId)) {
+  if (await hasPermission("reports", "read", orgId, context)) {
     return "full";
   }
 
   if (SELF_SERVICE_REPORT_TYPES.has(type)) {
     // Self-service types still require work_orders.read
-    if (!(await hasPermission("work_orders", "read", orgId))) {
+    if (!(await hasPermission("work_orders", "read", orgId, context))) {
       throw new ForbiddenError("Missing required permission: work_orders.read");
     }
     return "self-service";
@@ -69,7 +73,10 @@ export const GET = createRouteHandler(
     const requestedMechanicId = searchParams.get("mechanic");
 
     // Per-type authorization — returns "full" or "self-service"
-    const accessLevel = await authorizeReportAccess(type, orgId);
+    const accessLevel = await authorizeReportAccess(type, orgId, {
+      supabase,
+      userId: user.id,
+    });
 
     const branchParam = searchParams.get("branch");
     const branchId = branchParam && branchParam !== "all" ? branchParam : null;

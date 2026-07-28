@@ -110,6 +110,7 @@ describe("organizations/[id]/reports route", () => {
           "reports",
           "read",
           orgId,
+          { supabase, userId: user.id },
         );
       });
 
@@ -142,6 +143,7 @@ describe("organizations/[id]/reports route", () => {
           "work_orders",
           "read",
           orgId,
+          { supabase, userId: user.id },
         );
       });
     });

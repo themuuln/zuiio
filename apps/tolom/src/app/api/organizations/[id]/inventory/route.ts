@@ -17,85 +17,88 @@ import { requirePermission } from "@/lib/supabase/role-guard";
  *
  * This file can be removed once all consumers migrate off ?type=.
  */
-const inventoryRedirect = createRouteHandler(async ({ request, orgId }) => {
-  // Permission check: GET needs read, mutations need update
-  await requirePermission(
-    "inventory",
-    request.method === "GET" ? "read" : "update",
-    orgId,
-  );
-
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type") ?? "parts";
-  const method = request.method;
-
-  const urlMap: Record<string, Record<string, string>> = {
-    GET: {
-      parts: `/api/organizations/${orgId}/inventory/parts`,
-      balances: `/api/organizations/${orgId}/inventory/balances`,
-      movements: `/api/organizations/${orgId}/inventory/movements`,
-      suppliers: `/api/organizations/${orgId}/inventory/suppliers`,
-      "purchase-orders": `/api/organizations/${orgId}/inventory/purchase-orders`,
-      thresholds: `/api/organizations/${orgId}/inventory/thresholds`,
-    },
-    POST: {
-      part: `/api/organizations/${orgId}/inventory/parts`,
-      movement: `/api/organizations/${orgId}/inventory/movements`,
-      supplier: `/api/organizations/${orgId}/inventory/suppliers`,
-      "purchase-order": `/api/organizations/${orgId}/inventory/purchase-orders`,
-      threshold: `/api/organizations/${orgId}/inventory/thresholds`,
-    },
-    PATCH: {
-      part: `/api/organizations/${orgId}/inventory/parts`,
-      supplier: `/api/organizations/${orgId}/inventory/suppliers`,
-      "purchase-order": `/api/organizations/${orgId}/inventory/purchase-orders`,
-    },
-    DELETE: {
-      supplier: `/api/organizations/${orgId}/inventory/suppliers`,
-    },
-  };
-
-  const methodMap = urlMap[method as keyof typeof urlMap];
-  if (!methodMap?.[type]) {
-    return apiError(
-      "VALIDATION",
-      `Unknown type "${type}" for method ${method}`,
-      400,
+const inventoryRedirect = createRouteHandler(
+  async ({ request, orgId, supabase, user }) => {
+    // Permission check: GET needs read, mutations need update
+    await requirePermission(
+      "inventory",
+      request.method === "GET" ? "read" : "update",
+      orgId,
+      { supabase, userId: user.id },
     );
-  }
 
-  let target = methodMap[type];
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get("type") ?? "parts";
+    const method = request.method;
 
-  // Special case: purchase-order-items needs po_id as path param
-  if (method === "GET" && type === "purchase-order-items") {
-    const poId = searchParams.get("po_id");
-    if (!poId) {
-      return apiError("VALIDATION", "po_id required", 400);
+    const urlMap: Record<string, Record<string, string>> = {
+      GET: {
+        parts: `/api/organizations/${orgId}/inventory/parts`,
+        balances: `/api/organizations/${orgId}/inventory/balances`,
+        movements: `/api/organizations/${orgId}/inventory/movements`,
+        suppliers: `/api/organizations/${orgId}/inventory/suppliers`,
+        "purchase-orders": `/api/organizations/${orgId}/inventory/purchase-orders`,
+        thresholds: `/api/organizations/${orgId}/inventory/thresholds`,
+      },
+      POST: {
+        part: `/api/organizations/${orgId}/inventory/parts`,
+        movement: `/api/organizations/${orgId}/inventory/movements`,
+        supplier: `/api/organizations/${orgId}/inventory/suppliers`,
+        "purchase-order": `/api/organizations/${orgId}/inventory/purchase-orders`,
+        threshold: `/api/organizations/${orgId}/inventory/thresholds`,
+      },
+      PATCH: {
+        part: `/api/organizations/${orgId}/inventory/parts`,
+        supplier: `/api/organizations/${orgId}/inventory/suppliers`,
+        "purchase-order": `/api/organizations/${orgId}/inventory/purchase-orders`,
+      },
+      DELETE: {
+        supplier: `/api/organizations/${orgId}/inventory/suppliers`,
+      },
+    };
+
+    const methodMap = urlMap[method as keyof typeof urlMap];
+    if (!methodMap?.[type]) {
+      return apiError(
+        "VALIDATION",
+        `Unknown type "${type}" for method ${method}`,
+        400,
+      );
     }
-    target = `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/items`;
-  }
 
-  // Special case: receive-po wasn't in POST URL map
-  if (method === "POST" && type === "receive-po") {
-    const body = await request.clone().json();
-    const poId = body?.po_id;
-    if (!poId) {
-      return apiError("VALIDATION", "po_id required in body", 400);
+    let target = methodMap[type];
+
+    // Special case: purchase-order-items needs po_id as path param
+    if (method === "GET" && type === "purchase-order-items") {
+      const poId = searchParams.get("po_id");
+      if (!poId) {
+        return apiError("VALIDATION", "po_id required", 400);
+      }
+      target = `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/items`;
     }
-    target = `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/receive`;
-  }
 
-  // Forward query params for search/filter
-  const newUrl = new URL(target, request.url);
-  for (const [key, value] of searchParams.entries()) {
-    if (key !== "type" && key !== "po_id") {
-      newUrl.searchParams.set(key, value);
+    // Special case: receive-po wasn't in POST URL map
+    if (method === "POST" && type === "receive-po") {
+      const body = await request.clone().json();
+      const poId = body?.po_id;
+      if (!poId) {
+        return apiError("VALIDATION", "po_id required in body", 400);
+      }
+      target = `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/receive`;
     }
-  }
 
-  // Redirect with the same body
-  return NextResponse.redirect(newUrl, { status: 308 });
-});
+    // Forward query params for search/filter
+    const newUrl = new URL(target, request.url);
+    for (const [key, value] of searchParams.entries()) {
+      if (key !== "type" && key !== "po_id") {
+        newUrl.searchParams.set(key, value);
+      }
+    }
+
+    // Redirect with the same body
+    return NextResponse.redirect(newUrl, { status: 308 });
+  },
+);
 
 export const GET = inventoryRedirect;
 export const POST = inventoryRedirect;

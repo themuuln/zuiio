@@ -38,8 +38,10 @@ describe("organizations/[id]/inventory route (redirect)", () => {
     it("redirects to /parts by default", async () => {
       requirePermissionMock.mockResolvedValue(undefined);
 
+      const supabase = {};
+      const user = { id: "test-user" };
       const request = new NextRequest(baseUrl);
-      const response = await (GET as any)({ request, orgId });
+      const response = await (GET as any)({ request, orgId, supabase, user });
 
       expect(response.status).toBe(308);
       expect(response.headers.get("location")).toContain("/inventory/parts");
@@ -48,8 +50,10 @@ describe("organizations/[id]/inventory route (redirect)", () => {
     it("redirects to /balances when type=balances", async () => {
       requirePermissionMock.mockResolvedValue(undefined);
 
+      const supabase = {};
+      const user = { id: "test-user" };
       const request = new NextRequest(`${baseUrl}?type=balances`);
-      const response = await (GET as any)({ request, orgId });
+      const response = await (GET as any)({ request, orgId, supabase, user });
 
       expect(response.status).toBe(308);
       expect(response.headers.get("location")).toContain("/inventory/balances");
@@ -58,8 +62,10 @@ describe("organizations/[id]/inventory route (redirect)", () => {
     it("redirects to /movements when type=movements", async () => {
       requirePermissionMock.mockResolvedValue(undefined);
 
+      const supabase = {};
+      const user = { id: "test-user" };
       const request = new NextRequest(`${baseUrl}?type=movements`);
-      const response = await (GET as any)({ request, orgId });
+      const response = await (GET as any)({ request, orgId, supabase, user });
 
       expect(response.status).toBe(308);
       expect(response.headers.get("location")).toContain(
@@ -70,8 +76,10 @@ describe("organizations/[id]/inventory route (redirect)", () => {
     it("forwards query params on redirect", async () => {
       requirePermissionMock.mockResolvedValue(undefined);
 
+      const supabase = {};
+      const user = { id: "test-user" };
       const request = new NextRequest(`${baseUrl}?type=parts&q=filter`);
-      const response = await (GET as any)({ request, orgId });
+      const response = await (GET as any)({ request, orgId, supabase, user });
 
       expect(response.status).toBe(308);
       const location = response.headers.get("location") as string;
@@ -81,13 +89,16 @@ describe("organizations/[id]/inventory route (redirect)", () => {
     it("checks permission with read", async () => {
       requirePermissionMock.mockResolvedValue(undefined);
 
+      const supabase = {};
+      const user = { id: "test-user" };
       const request = new NextRequest(baseUrl);
-      await (GET as any)({ request, orgId });
+      await (GET as any)({ request, orgId, supabase, user });
 
       expect(requirePermissionMock).toHaveBeenCalledWith(
         "inventory",
         "read",
         orgId,
+        { supabase, userId: user.id },
       );
     });
   });
@@ -96,17 +107,20 @@ describe("organizations/[id]/inventory route (redirect)", () => {
     it("checks permission with update and redirects for valid type", async () => {
       requirePermissionMock.mockResolvedValue(undefined);
 
+      const supabase = {};
+      const user = { id: "test-user" };
       const request = new NextRequest(`${baseUrl}?type=movement`, {
         method: "POST",
         body: JSON.stringify({}),
         headers: { "content-type": "application/json" },
       });
-      const response = await (POST as any)({ request, orgId });
+      const response = await (POST as any)({ request, orgId, supabase, user });
 
       expect(requirePermissionMock).toHaveBeenCalledWith(
         "inventory",
         "update",
         orgId,
+        { supabase, userId: user.id },
       );
       expect(response.status).toBe(308);
     });
@@ -116,15 +130,18 @@ describe("organizations/[id]/inventory route (redirect)", () => {
     it("PATCH checks update permission and redirects for valid type", async () => {
       requirePermissionMock.mockResolvedValue(undefined);
 
+      const supabase = {};
+      const user = { id: "test-user" };
       const request = new NextRequest(`${baseUrl}?type=part`, {
         method: "PATCH",
       });
-      const response = await (PATCH as any)({ request, orgId });
+      const response = await (PATCH as any)({ request, orgId, supabase, user });
 
       expect(requirePermissionMock).toHaveBeenCalledWith(
         "inventory",
         "update",
         orgId,
+        { supabase, userId: user.id },
       );
       expect(response.status).toBe(308);
     });
@@ -132,15 +149,23 @@ describe("organizations/[id]/inventory route (redirect)", () => {
     it("DELETE checks update permission and redirects for valid type", async () => {
       requirePermissionMock.mockResolvedValue(undefined);
 
+      const supabase = {};
+      const user = { id: "test-user" };
       const request = new NextRequest(`${baseUrl}?type=supplier`, {
         method: "DELETE",
       });
-      const response = await (DELETE as any)({ request, orgId });
+      const response = await (DELETE as any)({
+        request,
+        orgId,
+        supabase,
+        user,
+      });
 
       expect(requirePermissionMock).toHaveBeenCalledWith(
         "inventory",
         "update",
         orgId,
+        { supabase, userId: user.id },
       );
       expect(response.status).toBe(308);
     });
@@ -149,8 +174,10 @@ describe("organizations/[id]/inventory route (redirect)", () => {
   it("returns 400 for unsupported type", async () => {
     requirePermissionMock.mockResolvedValue(undefined);
 
+    const supabase = {};
+    const user = { id: "test-user" };
     const request = new NextRequest(`${baseUrl}?type=nonexistent`);
-    const response = await (GET as any)({ request, orgId });
+    const response = await (GET as any)({ request, orgId, supabase, user });
 
     expect(response.status).toBe(400);
     const body = await response.json();

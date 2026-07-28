@@ -1,7 +1,9 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { ForbiddenError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { withDbCapture } from "@/lib/supabase/query";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/types";
 
 const ROLE_HIERARCHY: Record<string, number> = {
   Guest: 0,
@@ -105,25 +107,45 @@ export type PermissionAction =
   | "manage"
   | "write";
 
+/**
+ * Optional context to skip redundant auth.getUser() when the caller (e.g.
+ * createRouteHandler) has already resolved the authenticated user.
+ */
+export interface PermissionContext {
+  supabase: SupabaseClient<Database>;
+  userId: string;
+}
+
 export async function requirePermission(
   resource: string,
   action: PermissionAction,
   orgId?: string,
+  context?: PermissionContext,
 ): Promise<void> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let supabase: SupabaseClient<Database>;
+  let userId: string;
 
-  if (!user) {
-    throw new ForbiddenError("Not authenticated");
+  if (context) {
+    // Caller already resolved auth — skip redundant client + getUser().
+    supabase = context.supabase;
+    userId = context.userId;
+  } else {
+    supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new ForbiddenError("Not authenticated");
+    }
+    userId = user.id;
   }
 
   // Get the user's role for this organization
   let query = supabase
     .from("organization_users")
     .select("role_id, organization_id")
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
 
   if (orgId) {
     query = query.eq("organization_id", orgId);
@@ -205,9 +227,10 @@ export async function hasPermission(
   resource: string,
   action: PermissionAction,
   orgId?: string,
+  context?: PermissionContext,
 ): Promise<boolean> {
   try {
-    await requirePermission(resource, action, orgId);
+    await requirePermission(resource, action, orgId, context);
     return true;
   } catch (error) {
     if (!(error instanceof ForbiddenError)) {

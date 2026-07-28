@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { logAuditAfter } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
@@ -417,19 +417,26 @@ export async function removeUser(
 /**
  * Gets the current authenticated user's profile, including their
  * organization membership and role information.
+ *
+ * @param user - Pre-resolved user from the route handler. Skips the
+ *   redundant auth.getUser() call — the caller already did it.
  */
 export async function getCurrentUserProfile(
   db: SupabaseClient,
+  user?: Pick<User, "id" | "email" | "phone" | "user_metadata">,
 ): Promise<UserProfile | null> {
   const supabase = db;
 
-  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (!user) {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
 
-  if (authError || !authData.user) {
-    return null;
+    if (authError || !authData.user) {
+      return null;
+    }
+
+    user = authData.user;
   }
 
-  const user = authData.user;
   const meta = user.user_metadata as unknown as Record<string, unknown>;
 
   // Get profile and membership in parallel
