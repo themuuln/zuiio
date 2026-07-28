@@ -86,6 +86,11 @@ export function OrgSettingsContent() {
         contact_phone: string | null;
         address: string | null;
         website_url: string | null;
+        logo_url: string | null;
+        banner_url: string | null;
+        business_hours: Record<string, string> | null;
+        policies: string | null;
+        social_links: Record<string, string> | null;
       } | null;
 
       return {

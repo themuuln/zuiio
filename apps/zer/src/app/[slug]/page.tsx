@@ -1,9 +1,15 @@
 import {
   Clock,
   Envelope,
+  FacebookLogo,
   Globe,
+  InstagramLogo,
+  LinkedinLogo,
   MapPin,
   Phone,
+  TiktokLogo,
+  XLogo,
+  YoutubeLogo,
 } from "@phosphor-icons/react/dist/ssr";
 import { capture } from "@zuiio/capture";
 import type { Metadata } from "next";
@@ -31,7 +37,36 @@ type OrgProfileData = {
     banner_url: string | null;
     business_hours: Record<string, string> | null;
     policies: string | null;
+    social_links: Record<string, string> | null;
   } | null;
+};
+
+const SOCIAL_ICONS = {
+  facebook: FacebookLogo,
+  instagram: InstagramLogo,
+  twitter: XLogo,
+  youtube: YoutubeLogo,
+  tiktok: TiktokLogo,
+  linkedin: LinkedinLogo,
+} as const;
+
+const SOCIAL_LABELS: Record<string, string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+  twitter: "Twitter / X",
+  youtube: "YouTube",
+  tiktok: "TikTok",
+  linkedin: "LinkedIn",
+};
+
+const DAY_LABELS: Record<string, string> = {
+  Monday: "Даваа",
+  Tuesday: "Мягмар",
+  Wednesday: "Лхагва",
+  Thursday: "Пүрэв",
+  Friday: "Баасан",
+  Saturday: "Бямба",
+  Sunday: "Ням",
 };
 
 export async function generateMetadata({
@@ -134,9 +169,9 @@ async function OrgProfileDataFetcher({
       <div className="min-h-dvh bg-background">
         <script
           type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: required for JSON-LD structured data
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-
         {/* Banner */}
         {orgData.public_profile?.banner_url ? (
           <div className="relative h-48 w-full overflow-hidden bg-muted sm:h-64">
@@ -252,6 +287,35 @@ async function OrgProfileDataFetcher({
             )}
           </div>
 
+          {/* Social Links */}
+          {orgData.public_profile?.social_links &&
+            Object.keys(orgData.public_profile.social_links).length > 0 && (
+              <div className="flex flex-wrap items-center gap-3">
+                {Object.entries(orgData.public_profile.social_links).map(
+                  ([platform, url]) => {
+                    const Icon =
+                      SOCIAL_ICONS[platform as keyof typeof SOCIAL_ICONS];
+                    if (!Icon) return null;
+                    return (
+                      <a
+                        key={platform}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+                        aria-label={platform}
+                      >
+                        <Icon className="size-3.5" />
+                        {SOCIAL_LABELS[
+                          platform as keyof typeof SOCIAL_LABELS
+                        ] ?? platform}
+                      </a>
+                    );
+                  },
+                )}
+              </div>
+            )}
+
           {/* Business hours */}
           {orgData.public_profile?.business_hours &&
             Object.keys(orgData.public_profile.business_hours).length > 0 && (
@@ -264,7 +328,9 @@ async function OrgProfileDataFetcher({
                   {Object.entries(orgData.public_profile.business_hours).map(
                     ([day, hours]) => (
                       <div key={day} className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{day}</span>
+                        <span className="text-muted-foreground">
+                          {DAY_LABELS[day] ?? day}
+                        </span>
                         <span>{hours}</span>
                       </div>
                     ),
