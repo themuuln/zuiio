@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMockSupabaseClient, type MockSupabaseClient } from "@/test/mocks/supabase";
+import {
+  createMockSupabaseClient,
+  type MockSupabaseClient,
+} from "@/test/mocks/supabase";
 
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ logAuditAfter: vi.fn() }));
@@ -30,10 +33,7 @@ vi.mock("@/lib/supabase/with-branch", () => ({
 
 import { revalidateTag } from "next/cache";
 import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
-import {
-  getStockThresholds,
-  setStockThreshold,
-} from "../inventory-service";
+import { getStockThresholds, setStockThreshold } from "../inventory-service";
 
 const ORG_ID = "org-1";
 const PART_ID = "part-1";
@@ -102,7 +102,10 @@ describe("getStockThresholds", () => {
   });
 
   it("passes branch filter when provided", async () => {
-    db.__qb.resolveWith({ data: [makeThreshold({ branch_id: "branch-1" })], error: null });
+    db.__qb.resolveWith({
+      data: [makeThreshold({ branch_id: "branch-1" })],
+      error: null,
+    });
 
     const result = await getStockThresholds(db as never, ORG_ID, "branch-1");
 
@@ -114,7 +117,11 @@ describe("getStockThresholds", () => {
     const thresholds = [
       makeThreshold({ id: "th-1", branch_id: null }),
       makeThreshold({ id: "th-2", branch_id: "branch-1", minimum_quantity: 5 }),
-      makeThreshold({ id: "th-3", branch_id: "branch-2", minimum_quantity: 20 }),
+      makeThreshold({
+        id: "th-3",
+        branch_id: "branch-2",
+        minimum_quantity: 20,
+      }),
     ];
     db.__qb.resolveWith({ data: thresholds, error: null });
 
@@ -175,11 +182,10 @@ describe("setStockThreshold", () => {
   it("falls back to auth.getUser when userId omitted", async () => {
     db.__qb.resolveOnce({ data: created, error: null });
 
-    await setStockThreshold(
-      db as never,
-      ORG_ID,
-      { part_id: PART_ID, minimum_quantity: 10 },
-    );
+    await setStockThreshold(db as never, ORG_ID, {
+      part_id: PART_ID,
+      minimum_quantity: 10,
+    });
 
     expect(db.auth.getUser).toHaveBeenCalled();
   });

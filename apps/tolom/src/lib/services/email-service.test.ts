@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { InvoiceWithItems } from "@/lib/types/composite";
 import type {
   SendBookingRequestEmailParams,
@@ -11,28 +11,38 @@ import type {
 // We expose shared sendMail/verify mocks so tests can configure rejection
 // BEFORE calling the service function.  For round-robin verification we
 // also track which transporter index each sendMail call originated from.
-const { mockCreateTransport, mockReportServerError, sharedSendMail, sharedVerify, setTransportFactory } =
-  vi.hoisted(() => {
-    const sharedSendMail = vi.fn().mockResolvedValue({ messageId: "mock-msg-id" });
-    const sharedVerify = vi.fn().mockResolvedValue(true);
+const {
+  mockCreateTransport,
+  mockReportServerError,
+  sharedSendMail,
+  sharedVerify,
+  setTransportFactory,
+} = vi.hoisted(() => {
+  const sharedSendMail = vi
+    .fn()
+    .mockResolvedValue({ messageId: "mock-msg-id" });
+  const sharedVerify = vi.fn().mockResolvedValue(true);
 
-    // Default factory — every createTransport call returns the shared mocks.
-    // Override via setTransportFactory() for tests that need per-instance tracking.
-    let factory: () => { sendMail: typeof sharedSendMail; verify: typeof sharedVerify } = () => ({
-      sendMail: sharedSendMail,
-      verify: sharedVerify,
-    });
-
-    return {
-      mockCreateTransport: vi.fn(() => factory()),
-      mockReportServerError: vi.fn(),
-      sharedSendMail,
-      sharedVerify,
-      setTransportFactory: (fn: typeof factory) => {
-        factory = fn;
-      },
-    };
+  // Default factory — every createTransport call returns the shared mocks.
+  // Override via setTransportFactory() for tests that need per-instance tracking.
+  let factory: () => {
+    sendMail: typeof sharedSendMail;
+    verify: typeof sharedVerify;
+  } = () => ({
+    sendMail: sharedSendMail,
+    verify: sharedVerify,
   });
+
+  return {
+    mockCreateTransport: vi.fn(() => factory()),
+    mockReportServerError: vi.fn(),
+    sharedSendMail,
+    sharedVerify,
+    setTransportFactory: (fn: typeof factory) => {
+      factory = fn;
+    },
+  };
+});
 
 vi.mock("nodemailer", () => ({
   default: {
@@ -43,7 +53,6 @@ vi.mock("nodemailer", () => ({
 vi.mock("@/lib/sentry-report-server", () => ({
   reportServerError: mockReportServerError,
 }));
-
 
 /** Local type for the dynamically-loaded module exports. */
 interface EmailServiceModule {
@@ -85,10 +94,12 @@ beforeEach(async () => {
   sharedVerify.mockClear();
   sharedVerify.mockResolvedValue(true);
   // Default factory: shared mocks (controllable before/after call)
-  setTransportFactory(() => ({ sendMail: sharedSendMail, verify: sharedVerify }));
+  setTransportFactory(() => ({
+    sendMail: sharedSendMail,
+    verify: sharedVerify,
+  }));
   mod = await import("./email-service");
 });
-
 
 /** Reload module with custom env (for tests that override SMTP config). */
 async function reloadWithEnv(env: Record<string, string | undefined>) {
@@ -112,7 +123,10 @@ async function reloadWithEnv(env: Record<string, string | undefined>) {
   sharedSendMail.mockResolvedValue({ messageId: "mock-msg-id" });
   sharedVerify.mockClear();
   sharedVerify.mockResolvedValue(true);
-  setTransportFactory(() => ({ sendMail: sharedSendMail, verify: sharedVerify }));
+  setTransportFactory(() => ({
+    sendMail: sharedSendMail,
+    verify: sharedVerify,
+  }));
   mod = await import("./email-service");
 }
 
@@ -284,7 +298,7 @@ describe("sendInvoiceEmail", () => {
 
     expect(result).toEqual({ id: "mock-msg-id" });
     expect(sharedSendMail).toHaveBeenCalledTimes(1);
-    const call = sharedSendMail.mock.calls[0]![0];
+    const call = sharedSendMail.mock.calls[0]?.[0];
 
     expect(call.subject).toContain("Test Garage");
     expect(call.subject).toContain("INV-001");
@@ -311,7 +325,7 @@ describe("sendInvoiceEmail", () => {
       publicInvoiceUrl: "https://tolom.app/invoice/inv-1",
     });
 
-    const html = sharedSendMail.mock.calls[0]![0].html;
+    const html = sharedSendMail.mock.calls[0]?.[0].html;
     expect(html).toContain("Please pay promptly");
     expect(html).toContain("Net 30");
   });
@@ -347,7 +361,7 @@ describe("sendReminderEmail", () => {
 
     expect(result).toEqual({ id: "mock-msg-id" });
 
-    const call = sharedSendMail.mock.calls[0]![0];
+    const call = sharedSendMail.mock.calls[0]?.[0];
 
     expect(call.to).toBe("john@example.com");
     expect(call.subject).toContain("Oil change");
@@ -394,7 +408,7 @@ describe("sendBookingRequestEmail", () => {
 
     expect(result).toEqual({ id: "mock-msg-id" });
 
-    const call = sharedSendMail.mock.calls[0]![0];
+    const call = sharedSendMail.mock.calls[0]?.[0];
 
     expect(call.to).toBe("shop@tolom.app");
     expect(call.subject).toContain("Jane Doe");
@@ -419,7 +433,7 @@ describe("sendBookingRequestEmail", () => {
       dashboardUrl: "https://tolom.app/dashboard/bookings",
     });
 
-    const html = sharedSendMail.mock.calls[0]![0].html;
+    const html = sharedSendMail.mock.calls[0]?.[0].html;
     // The template renders "\u2014" (em-dash) for null notes
     expect(html).toContain("\u2014");
   });
@@ -476,7 +490,7 @@ describe("sendEstimateEmail", () => {
 
     expect(result).toEqual({ id: "mock-msg-id" });
 
-    const call = sharedSendMail.mock.calls[0]![0];
+    const call = sharedSendMail.mock.calls[0]?.[0];
 
     expect(call.to).toBe("john@example.com");
     expect(call.subject).toContain("EST-001");
@@ -498,7 +512,7 @@ describe("sendEstimateEmail", () => {
       publicEstimateUrl: "https://tolom.app/estimate/est-001",
     });
 
-    const html = sharedSendMail.mock.calls[0]![0].html;
+    const html = sharedSendMail.mock.calls[0]?.[0].html;
     expect(html).toContain("EST-001");
   });
 
@@ -510,7 +524,7 @@ describe("sendEstimateEmail", () => {
       publicEstimateUrl: "https://tolom.app/estimate/est-001",
     });
 
-    const html = sharedSendMail.mock.calls[0]![0].html;
+    const html = sharedSendMail.mock.calls[0]?.[0].html;
     expect(html).toContain("$500");
   });
 });
@@ -675,12 +689,8 @@ describe("round-robin rotation", () => {
     //   getTransporter(): index 0, 2, 4... → always transporter[0] (sendMails[0])
     //   getFromEmail():   index 1, 3, 5... → always account[1].from (user2)
     // So all sends go through sendMails[0] with from = user2's address.
-    expect(sendMails[0].mock.calls[0][0].from).toBe(
-      "TOLOM <user2@gmail.com>",
-    );
-    expect(sendMails[0].mock.calls[1][0].from).toBe(
-      "TOLOM <user2@gmail.com>",
-    );
+    expect(sendMails[0].mock.calls[0][0].from).toBe("TOLOM <user2@gmail.com>");
+    expect(sendMails[0].mock.calls[1][0].from).toBe("TOLOM <user2@gmail.com>");
   });
 
   it("alternates from addresses across consecutive sendInvoiceEmail calls", async () => {

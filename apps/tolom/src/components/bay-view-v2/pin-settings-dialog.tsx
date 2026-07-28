@@ -129,7 +129,11 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
             </div>
           </DetailDrawer.Body>
           <DetailDrawer.Footer>
-            <Button onClick={() => onOpenChange(false)} size="default" className="w-full">
+            <Button
+              onClick={() => onOpenChange(false)}
+              size="default"
+              className="w-full"
+            >
               {t("done")}
             </Button>
           </DetailDrawer.Footer>
@@ -137,7 +141,11 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
       ) : (
         <>
           <DetailDrawer.Body>
-            <form id="pin-settings-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+            <form
+              id="pin-settings-form"
+              onSubmit={onSubmit}
+              className="flex flex-col gap-4"
+            >
               {error && (
                 <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-3 text-xs text-red-600 dark:text-red-400">
                   {error}

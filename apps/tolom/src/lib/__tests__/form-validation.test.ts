@@ -62,9 +62,9 @@ describe("normalizeMongolianPhone", () => {
     expect(normalizeMongolianPhone("+97688112233")).toBe("+97688112233");
   });
 
-  it("adds + to 976-prefixed number only at 12-digit length", () => {
-    // 976 + 9 digits = 12 total
-    expect(normalizeMongolianPhone("976881122334")).toBe("+976881122334");
+  it("adds + to 976-prefixed number at 11-digit length", () => {
+    // 976 + 8 digits = 11 total — standard Mongolian phone format
+    expect(normalizeMongolianPhone("97688112233")).toBe("+97688112233");
   });
 
   it("adds +976 to bare 8-digit number", () => {
@@ -85,9 +85,9 @@ describe("normalizeMongolianPhone", () => {
     expect(normalizeMongolianPhone("123")).toBe("123");
   });
 
-  it("does not add + when 976 prefix has non-12 length", () => {
-    // 976 + 8 digits = 11 total — does not match the length-12 condition
-    expect(normalizeMongolianPhone("97688112233")).toBe("97688112233");
+  it("does not add + for 12-digit 976-prefixed number (non-standard)", () => {
+    // 976 + 9 digits = 12 total — not a valid Mongolian phone format
+    expect(normalizeMongolianPhone("976881122334")).toBe("976881122334");
   });
 });
 

@@ -8,8 +8,8 @@
  * Requires a running Supabase local stack.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@/lib/types";
 import {
   addUserToOrg,
@@ -94,11 +94,11 @@ describeWhenSupabase("Parts Catalog RLS — cross-org isolation", () => {
   });
 
   it("Admin user can create + read parts", async () => {
-    const { data } = await admin!
-      .from("parts_catalog")
+    const { data } = await admin
+      ?.from("parts_catalog")
       .select("id, name, organization_id");
-    expect(data!.length).toBeGreaterThanOrEqual(2);
-    const ids = data!.map((r: { id: string }) => r.id);
+    expect(data?.length).toBeGreaterThanOrEqual(2);
+    const ids = data?.map((r: { id: string }) => r.id);
     expect(ids).toContain(partAId);
     expect(ids).toContain(partBId);
   });
@@ -158,8 +158,8 @@ describeWhenSupabase("Inventory Movements RLS — org-scoped", () => {
     partBId = pb.partId;
 
     // Create inventory movements via admin
-    const ma = await admin!
-      .from("inventory_movements")
+    const ma = await admin
+      ?.from("inventory_movements")
       .insert({
         organization_id: orgAId,
         branch_id: branchAId,
@@ -172,11 +172,12 @@ describeWhenSupabase("Inventory Movements RLS — org-scoped", () => {
       })
       .select()
       .single();
-    if (ma.error) throw new Error(`Failed to create movement A: ${ma.error.message}`);
+    if (ma.error)
+      throw new Error(`Failed to create movement A: ${ma.error.message}`);
     movementAId = ma.data.id;
 
-    const mb = await admin!
-      .from("inventory_movements")
+    const mb = await admin
+      ?.from("inventory_movements")
       .insert({
         organization_id: orgBId,
         branch_id: branchBId,
@@ -189,7 +190,8 @@ describeWhenSupabase("Inventory Movements RLS — org-scoped", () => {
       })
       .select()
       .single();
-    if (mb.error) throw new Error(`Failed to create movement B: ${mb.error.message}`);
+    if (mb.error)
+      throw new Error(`Failed to create movement B: ${mb.error.message}`);
     movementBId = mb.data.id;
   });
 
@@ -204,11 +206,9 @@ describeWhenSupabase("Inventory Movements RLS — org-scoped", () => {
   });
 
   it("Admin can read movements from both orgs", async () => {
-    const { data } = await admin!
-      .from("inventory_movements")
-      .select("id");
-    expect(data!.length).toBeGreaterThanOrEqual(2);
-    const ids = data!.map((r: { id: string }) => r.id);
+    const { data } = await admin?.from("inventory_movements").select("id");
+    expect(data?.length).toBeGreaterThanOrEqual(2);
+    const ids = data?.map((r: { id: string }) => r.id);
     expect(ids).toContain(movementAId);
     expect(ids).toContain(movementBId);
   });

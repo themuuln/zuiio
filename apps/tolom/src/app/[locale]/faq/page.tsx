@@ -96,14 +96,14 @@ async function FaqPageContent({ locale }: { locale: string }) {
   "use cache";
   cacheLife("daily");
 
-  const t = (await getTranslations({ locale: locale as "mn" | "en", namespace: "faq" })) as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
-  const appT = (await getTranslations({ locale: locale as "mn" | "en", namespace: "app" })) as (
-    key: string,
-    values?: Record<string, string | number>,
-  ) => string;
+  const t = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "faq",
+  })) as (key: string, values?: Record<string, string | number>) => string;
+  const appT = (await getTranslations({
+    locale: locale as "mn" | "en",
+    namespace: "app",
+  })) as (key: string, values?: Record<string, string | number>) => string;
 
   return (
     <div className="flex min-h-dvh flex-col">

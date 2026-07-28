@@ -28,7 +28,7 @@ describe("drawerDetailOptions", () => {
     } as Response);
 
     const options = drawerDetailOptions("org-1", "wo-1");
-    const result = await options.queryFn!();
+    const result = await options.queryFn?.();
 
     expect(global.fetch).toHaveBeenCalledWith(
       "/api/organizations/org-1/work-orders/wo-1/detail",
@@ -43,14 +43,14 @@ describe("drawerDetailOptions", () => {
     } as Response);
 
     const options = drawerDetailOptions("org-1", "wo-1");
-    await expect(options.queryFn!()).rejects.toThrow("Not found");
+    await expect(options.queryFn?.()).rejects.toThrow("Not found");
   });
 
   it("throws on network error", async () => {
     vi.spyOn(global, "fetch").mockRejectedValue(new Error("Network error"));
 
     const options = drawerDetailOptions("org-1", "wo-1");
-    await expect(options.queryFn!()).rejects.toThrow("Network error");
+    await expect(options.queryFn?.()).rejects.toThrow("Network error");
   });
 });
 
@@ -74,7 +74,7 @@ describe("drawerCatalogsOptions", () => {
     } as Response);
 
     const options = drawerCatalogsOptions("org-1");
-    const result = await options.queryFn!();
+    const result = await options.queryFn?.();
 
     expect(global.fetch).toHaveBeenCalledWith(
       "/api/organizations/org-1/catalogs",
@@ -89,7 +89,7 @@ describe("drawerCatalogsOptions", () => {
     } as Response);
 
     const options = drawerCatalogsOptions("org-1");
-    await expect(options.queryFn!()).rejects.toThrow("Forbidden");
+    await expect(options.queryFn?.()).rejects.toThrow("Forbidden");
   });
 });
 

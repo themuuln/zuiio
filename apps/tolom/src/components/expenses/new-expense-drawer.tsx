@@ -10,7 +10,10 @@ type NewExpenseSheetProps = {
 };
 
 export function NewExpenseDrawer({ open, onOpenChange }: NewExpenseSheetProps) {
-  const t = useTranslations("expenses") as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations("expenses") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
 
   return (
     <ResponsiveFormModal

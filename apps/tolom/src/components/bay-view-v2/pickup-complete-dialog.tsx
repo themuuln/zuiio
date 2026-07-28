@@ -1,13 +1,25 @@
 "use client";
 
-import { AlertTriangle, CalendarIcon, CheckCircle2, Loader2, MessageSquare, Star } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarIcon,
+  CheckCircle2,
+  Loader2,
+  MessageSquare,
+  Star,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
 import { AppointmentDatePicker } from "@/components/ui/appointment-date-picker";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
@@ -138,7 +150,11 @@ export function PickupCompleteDialog({
       </DetailDrawer.Header>
 
       <DetailDrawer.Body>
-        <form id="pickup-complete-form" onSubmit={onSubmit} className="flex flex-col gap-5">
+        <form
+          id="pickup-complete-form"
+          onSubmit={onSubmit}
+          className="flex flex-col gap-5"
+        >
           {/* Satisfaction */}
           <Field>
             <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">

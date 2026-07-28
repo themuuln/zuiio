@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMockSupabaseClient, type MockSupabaseClient } from "@/test/mocks/supabase";
+import {
+  createMockSupabaseClient,
+  type MockSupabaseClient,
+} from "@/test/mocks/supabase";
 
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ logAuditAfter: vi.fn() }));
@@ -161,9 +164,9 @@ describe("getPartsCar", () => {
   it("throws on db error", async () => {
     db.__qb.resolveOnce({ data: null, error: new Error("query failed") });
 
-    await expect(
-      getPartsCar(db as never, ORG_ID, "x"),
-    ).rejects.toThrow("Parts car not found");
+    await expect(getPartsCar(db as never, ORG_ID, "x")).rejects.toThrow(
+      "Parts car not found",
+    );
   });
 });
 
@@ -175,12 +178,7 @@ describe("createPartsCar", () => {
   it("creates and returns the new car with cache invalidation", async () => {
     db.__qb.resolveOnce({ data: makeCar(), error: null });
 
-    const result = await createPartsCar(
-      db as never,
-      ORG_ID,
-      USER_ID,
-      params,
-    );
+    const result = await createPartsCar(db as never, ORG_ID, USER_ID, params);
 
     expect(result.id).toBe(CAR_ID);
     expect(result.make).toBe("Toyota");
@@ -272,9 +270,9 @@ describe("deletePartsCar", () => {
   it("throws on db error", async () => {
     db.__qb.resolveWith({ data: null, error: new Error("delete failed") });
 
-    await expect(
-      deletePartsCar(db as never, ORG_ID, CAR_ID),
-    ).rejects.toThrow("delete failed");
+    await expect(deletePartsCar(db as never, ORG_ID, CAR_ID)).rejects.toThrow(
+      "delete failed",
+    );
   });
 });
 
@@ -308,9 +306,9 @@ describe("getPartsCarParts", () => {
 
   it("throws on db error", async () => {
     db.__qb.resolveWith({ data: null, error: new Error("DB error") });
-    await expect(
-      getPartsCarParts(db as never, ORG_ID, CAR_ID),
-    ).rejects.toThrow("DB error");
+    await expect(getPartsCarParts(db as never, ORG_ID, CAR_ID)).rejects.toThrow(
+      "DB error",
+    );
   });
 });
 

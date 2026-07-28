@@ -16,8 +16,12 @@ import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field";
-import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -27,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Typography } from "@/components/ui/typography";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { reportServerError } from "@/lib/sentry-report-server";
 
 // ── Types ──────────────────────────────────────────────────
@@ -76,7 +81,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [countdown, setCountdown] = useState(300);
   const [errorMessage, setErrorMessage] = useState("");
-  
+
   const form = useForm<DeviceRegistrationValues>({
     resolver: zodResolver(deviceRegistrationSchema),
     defaultValues: {
@@ -85,7 +90,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
     },
   });
   const selectedMechanicId = form.watch("selectedMechanicId");
-  const deviceName = form.watch("deviceName");
+  const _deviceName = form.watch("deviceName");
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -285,7 +290,9 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
               <FieldContent>
                 <Select
                   value={selectedMechanicId || null}
-                  onValueChange={(val) => form.setValue("selectedMechanicId", val ?? "")}
+                  onValueChange={(val) =>
+                    form.setValue("selectedMechanicId", val ?? "")
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue

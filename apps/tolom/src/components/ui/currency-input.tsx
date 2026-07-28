@@ -157,6 +157,7 @@ export function CurrencyInput({
         (e.target as HTMLInputElement).blur();
       }
       if (e.key === "Escape") {
+        setEditText(String(committedRef.current));
         setEditing(false);
       }
     },

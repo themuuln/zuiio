@@ -44,7 +44,10 @@ interface PortalInvoice {
 }
 
 export default function PortalInvoicesPage() {
-  const t = useTranslations() as (key: string, values?: Record<string, string | number>) => string;
+  const t = useTranslations() as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { customer, loading: authLoading, token } = usePortalAuth();
   const [payingInvoice, setPayingInvoice] = useState<PortalInvoice | null>(
     null,

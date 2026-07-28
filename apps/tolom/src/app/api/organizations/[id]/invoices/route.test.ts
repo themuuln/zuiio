@@ -97,9 +97,9 @@ describe("organizations/[id]/invoices route", () => {
       const request = new NextRequest(
         `http://localhost/api/organizations/${orgId}/invoices`,
       );
-      await expect(
-        (GET as any)({ request, orgId, supabase }),
-      ).rejects.toThrow("DB error");
+      await expect((GET as any)({ request, orgId, supabase })).rejects.toThrow(
+        "DB error",
+      );
     });
   });
 
@@ -148,7 +148,9 @@ describe("organizations/[id]/invoices route", () => {
           `http://localhost/api/organizations/${orgId}/invoices`,
           {
             method: "POST",
-            body: JSON.stringify({ items: [{ description: "Bad", amount: -1 }] }),
+            body: JSON.stringify({
+              items: [{ description: "Bad", amount: -1 }],
+            }),
             headers: { "content-type": "application/json" },
           },
         );
@@ -165,7 +167,9 @@ describe("organizations/[id]/invoices route", () => {
           `http://localhost/api/organizations/${orgId}/invoices`,
           {
             method: "POST",
-            body: JSON.stringify({ items: [{ description: "Test", amount: 50 }] }),
+            body: JSON.stringify({
+              items: [{ description: "Test", amount: 50 }],
+            }),
             headers: { "content-type": "application/json" },
           },
         );

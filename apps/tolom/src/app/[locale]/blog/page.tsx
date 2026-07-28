@@ -6,7 +6,12 @@ import { getTranslations } from "next-intl/server";
 import { LandingNav } from "@/components/landing-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardFooter, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardTitle,
+} from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { CategoryFilter } from "./_category-filter";
 

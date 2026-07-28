@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -32,10 +40,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { useAdminMe } from "@/lib/queries/use-admin";
-import { z } from "zod";
-import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import { useAdminMe } from "@/lib/queries/use-admin";
 
 interface Campaign {
   id: string;
@@ -329,41 +335,38 @@ export default function MarketingPage() {
           </DetailDrawer.Description>
         </DetailDrawer.Header>
         <DetailDrawer.Body>
-            <FieldGroup>
-              <Field data-invalid={!!form.formState.errors.name}>
-                <FieldLabel>
-                  Campaign Name <span className="text-destructive">*</span>
-                </FieldLabel>
-                <FieldContent>
-                  <Input
-                    placeholder="Campaign name"
-                    {...form.register("name")}
-                  />
-                  {form.formState.errors.name && (
-                    <FieldError>{form.formState.errors.name.message}</FieldError>
-                  )}
-                </FieldContent>
-              </Field>
-              <Field>
-                <FieldLabel>Type</FieldLabel>
-                <FieldContent>
-                  <Select
-                    value={form.watch("type")}
-                    onValueChange={(v) => form.setValue("type", v ?? "email")}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="sms">SMS</SelectItem>
-                      <SelectItem value="push">Push Notification</SelectItem>
-                      <SelectItem value="all">All Channels</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FieldContent>
-              </Field>
-            </FieldGroup>
+          <FieldGroup>
+            <Field data-invalid={!!form.formState.errors.name}>
+              <FieldLabel>
+                Campaign Name <span className="text-destructive">*</span>
+              </FieldLabel>
+              <FieldContent>
+                <Input placeholder="Campaign name" {...form.register("name")} />
+                {form.formState.errors.name && (
+                  <FieldError>{form.formState.errors.name.message}</FieldError>
+                )}
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel>Type</FieldLabel>
+              <FieldContent>
+                <Select
+                  value={form.watch("type")}
+                  onValueChange={(v) => form.setValue("type", v ?? "email")}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
+                    <SelectItem value="push">Push Notification</SelectItem>
+                    <SelectItem value="all">All Channels</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FieldContent>
+            </Field>
+          </FieldGroup>
         </DetailDrawer.Body>
         <DetailDrawer.Footer>
           <DetailDrawer.FooterActions>

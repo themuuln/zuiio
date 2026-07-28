@@ -63,13 +63,21 @@ describe("organizations/[id]/estimates/[estimateId]/convert route", () => {
       );
 
       await expect(
-        (POST as any)({ request, params: { estimateId }, orgId, user, supabase }),
+        (POST as any)({
+          request,
+          params: { estimateId },
+          orgId,
+          user,
+          supabase,
+        }),
       ).rejects.toThrow(NotFoundError);
     });
 
     it("handles ValidationError when estimate is already converted", async () => {
       convertEstimateToWorkOrderMock.mockRejectedValue(
-        new ValidationError("This estimate has already been converted to a work order"),
+        new ValidationError(
+          "This estimate has already been converted to a work order",
+        ),
       );
 
       const request = new NextRequest(
@@ -78,7 +86,13 @@ describe("organizations/[id]/estimates/[estimateId]/convert route", () => {
       );
 
       await expect(
-        (POST as any)({ request, params: { estimateId }, orgId, user, supabase }),
+        (POST as any)({
+          request,
+          params: { estimateId },
+          orgId,
+          user,
+          supabase,
+        }),
       ).rejects.toThrow(ValidationError);
     });
 
@@ -91,7 +105,13 @@ describe("organizations/[id]/estimates/[estimateId]/convert route", () => {
       );
 
       await expect(
-        (POST as any)({ request, params: { estimateId }, orgId, user, supabase }),
+        (POST as any)({
+          request,
+          params: { estimateId },
+          orgId,
+          user,
+          supabase,
+        }),
       ).rejects.toThrow("DB error");
     });
   });

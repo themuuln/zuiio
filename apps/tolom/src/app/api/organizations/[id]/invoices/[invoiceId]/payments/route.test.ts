@@ -133,7 +133,12 @@ describe("organizations/[id]/invoices/[invoiceId]/payments route", () => {
         supabase,
         invoiceId,
         orgId,
-        { amount: 75, method: "bank_transfer", reference: undefined, notes: undefined },
+        {
+          amount: 75,
+          method: "bank_transfer",
+          reference: undefined,
+          notes: undefined,
+        },
         user.id,
       );
     });
@@ -149,7 +154,13 @@ describe("organizations/[id]/invoices/[invoiceId]/payments route", () => {
       );
 
       await expect(
-        (POST as any)({ request, orgId, user, supabase, params: { invoiceId } }),
+        (POST as any)({
+          request,
+          orgId,
+          user,
+          supabase,
+          params: { invoiceId },
+        }),
       ).rejects.toThrow(/positive amount/);
     });
 
@@ -164,7 +175,13 @@ describe("organizations/[id]/invoices/[invoiceId]/payments route", () => {
       );
 
       await expect(
-        (POST as any)({ request, orgId, user, supabase, params: { invoiceId } }),
+        (POST as any)({
+          request,
+          orgId,
+          user,
+          supabase,
+          params: { invoiceId },
+        }),
       ).rejects.toThrow(/positive amount/);
     });
 
@@ -179,7 +196,13 @@ describe("organizations/[id]/invoices/[invoiceId]/payments route", () => {
       );
 
       await expect(
-        (POST as any)({ request, orgId, user, supabase, params: { invoiceId } }),
+        (POST as any)({
+          request,
+          orgId,
+          user,
+          supabase,
+          params: { invoiceId },
+        }),
       ).rejects.toThrow(/positive amount/);
     });
 
@@ -196,7 +219,13 @@ describe("organizations/[id]/invoices/[invoiceId]/payments route", () => {
       );
 
       await expect(
-        (POST as any)({ request, orgId, user, supabase, params: { invoiceId } }),
+        (POST as any)({
+          request,
+          orgId,
+          user,
+          supabase,
+          params: { invoiceId },
+        }),
       ).rejects.toThrow("DB error");
     });
   });

@@ -24,7 +24,6 @@ import {
   Field,
   FieldContent,
   FieldError,
-  FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -42,8 +41,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
-import { createOrgQuery } from "@/lib/queries/factory";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import { createOrgQuery } from "@/lib/queries/factory";
 import { priceRuleKeys } from "@/lib/queries/keys";
 import { SettingsBlock, SettingsListItem } from "./_settings-layout";
 
@@ -111,60 +110,62 @@ const DEFAULT_FORM: RuleForm = {
   service_name_pattern: "",
 };
 
-const priceRuleSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string(),
-  apply_to: z.enum(["part", "service", "both"]),
-  conditions_type: z.enum([
-    "class",
-    "make",
-    "make_model",
-    "fuel",
-    "body_type",
-    "all",
-  ]),
-  conditions_makes: z.string(),
-  conditions_models: z.string(),
-  conditions_classes: z.string(),
-  conditions_fuel_types: z.string(),
-  conditions_body_types: z.string(),
-  conditions_description: z.string(),
-  operator: z.enum([
-    "multiply",
-    "add_fixed",
-    "set_fixed",
-    "percentage_add",
-    "percentage_sub",
-  ]),
-  value: z.string().min(1, "Value is required"),
-  priority: z.string().min(1, "Priority is required"),
-  part_category: z.string(),
-  service_category: z.string(),
-  part_name_pattern: z.string(),
-  service_name_pattern: z.string(),
-}).superRefine((data, ctx) => {
-  // At least one brand condition required for non-"all" types
-  if (data.conditions_type !== "all") {
-    const relevantField =
-      data.conditions_type === "class"
-        ? "conditions_classes"
-        : data.conditions_type === "make" ||
-            data.conditions_type === "make_model"
-          ? "conditions_makes"
-          : data.conditions_type === "fuel"
-            ? "conditions_fuel_types"
-            : data.conditions_type === "body_type"
-              ? "conditions_body_types"
-              : null;
-    if (relevantField && !data[relevantField as keyof typeof data]?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `At least one condition value is required for this type`,
-        path: [relevantField],
-      });
+const priceRuleSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    description: z.string(),
+    apply_to: z.enum(["part", "service", "both"]),
+    conditions_type: z.enum([
+      "class",
+      "make",
+      "make_model",
+      "fuel",
+      "body_type",
+      "all",
+    ]),
+    conditions_makes: z.string(),
+    conditions_models: z.string(),
+    conditions_classes: z.string(),
+    conditions_fuel_types: z.string(),
+    conditions_body_types: z.string(),
+    conditions_description: z.string(),
+    operator: z.enum([
+      "multiply",
+      "add_fixed",
+      "set_fixed",
+      "percentage_add",
+      "percentage_sub",
+    ]),
+    value: z.string().min(1, "Value is required"),
+    priority: z.string().min(1, "Priority is required"),
+    part_category: z.string(),
+    service_category: z.string(),
+    part_name_pattern: z.string(),
+    service_name_pattern: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    // At least one brand condition required for non-"all" types
+    if (data.conditions_type !== "all") {
+      const relevantField =
+        data.conditions_type === "class"
+          ? "conditions_classes"
+          : data.conditions_type === "make" ||
+              data.conditions_type === "make_model"
+            ? "conditions_makes"
+            : data.conditions_type === "fuel"
+              ? "conditions_fuel_types"
+              : data.conditions_type === "body_type"
+                ? "conditions_body_types"
+                : null;
+      if (relevantField && !data[relevantField as keyof typeof data]?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `At least one condition value is required for this type`,
+          path: [relevantField],
+        });
+      }
     }
-  }
-});
+  });
 
 function getOperatorLabels(t: (key: string) => string): Record<string, string> {
   return {
@@ -567,9 +568,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                   placeholder={t("ruleNamePlaceholder")}
                 />
                 {form.formState.errors.name && (
-                  <FieldError>
-                    {form.formState.errors.name.message}
-                  </FieldError>
+                  <FieldError>{form.formState.errors.name.message}</FieldError>
                 )}
               </FieldContent>
             </Field>
@@ -602,9 +601,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="both">
-                          {t("appliesBoth")}
-                        </SelectItem>
+                        <SelectItem value="both">{t("appliesBoth")}</SelectItem>
                         <SelectItem value="part">
                           {t("appliesParts")}
                         </SelectItem>
@@ -888,9 +885,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
               type="submit"
               form={formId}
               size="lg"
-              disabled={
-                createPriceRule.isPending || updatePriceRule.isPending
-              }
+              disabled={createPriceRule.isPending || updatePriceRule.isPending}
             >
               {createPriceRule.isPending || updatePriceRule.isPending
                 ? t("saving")
@@ -909,24 +904,19 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       >
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("deletePriceRuleTitle")}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{t("deletePriceRuleTitle")}</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogDescription>
             {t("deletePriceRuleDesc")}
           </AlertDialogDescription>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => setDeleteConfirm(null)}
-            >
+            <AlertDialogCancel onClick={() => setDeleteConfirm(null)}>
               {t("cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={() => {
-                if (deleteConfirm)
-                  deletePriceRule.mutate(deleteConfirm);
+                if (deleteConfirm) deletePriceRule.mutate(deleteConfirm);
               }}
               disabled={deletePriceRule.isPending}
             >

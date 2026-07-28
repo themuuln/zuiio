@@ -10,8 +10,12 @@ const createCustomerMock = vi.fn();
 
 vi.mock("@/lib/api-response", () => ({
   createRouteHandler: vi.fn((handler: unknown) => handler),
-  ok: vi.fn((data: unknown) => new Response(JSON.stringify({ data }), { status: 200 })),
-  created: vi.fn((data: unknown) => new Response(JSON.stringify({ data }), { status: 201 })),
+  ok: vi.fn(
+    (data: unknown) => new Response(JSON.stringify({ data }), { status: 200 }),
+  ),
+  created: vi.fn(
+    (data: unknown) => new Response(JSON.stringify({ data }), { status: 201 }),
+  ),
 }));
 
 vi.mock("@/lib/services/customer-service", () => ({
@@ -38,7 +42,9 @@ describe("customers route", () => {
       getSharedCustomersMock.mockResolvedValue(data);
 
       const req = new NextRequest(
-        new URL("http://localhost/api/organizations/test-org/customers?shared=true"),
+        new URL(
+          "http://localhost/api/organizations/test-org/customers?shared=true",
+        ),
       );
       const response = await GET({ request: req, orgId, user, supabase: {} });
       const body = await response.json();
@@ -92,7 +98,9 @@ describe("customers route", () => {
       getSharedCustomersMock.mockRejectedValue(new Error("DB error"));
 
       const req = new NextRequest(
-        new URL("http://localhost/api/organizations/test-org/customers?shared=true"),
+        new URL(
+          "http://localhost/api/organizations/test-org/customers?shared=true",
+        ),
       );
       await expect(
         GET({ request: req, orgId, user, supabase: {} }),
@@ -104,7 +112,9 @@ describe("customers route", () => {
       getCustomersFastMock.mockResolvedValue(rows);
 
       const req = new NextRequest(
-        new URL("http://localhost/api/organizations/test-org/customers?fast=true"),
+        new URL(
+          "http://localhost/api/organizations/test-org/customers?fast=true",
+        ),
       );
       const response = await GET({ request: req, orgId, user, supabase: {} });
       const body = await response.json();
@@ -176,7 +186,9 @@ describe("customers route", () => {
       getCustomersFastMock.mockRejectedValue(new Error("Fast error"));
 
       const req = new NextRequest(
-        new URL("http://localhost/api/organizations/test-org/customers?fast=true"),
+        new URL(
+          "http://localhost/api/organizations/test-org/customers?fast=true",
+        ),
       );
       await expect(
         GET({ request: req, orgId, user, supabase: {} }),
@@ -211,7 +223,11 @@ describe("customers route", () => {
         {},
         orgId,
         "term",
-        expect.objectContaining({ page: 2, pageSize: 20, branchId: "branch-1" }),
+        expect.objectContaining({
+          page: 2,
+          pageSize: 20,
+          branchId: "branch-1",
+        }),
       );
     });
 
@@ -257,7 +273,11 @@ describe("customers route", () => {
       expect(getCustomersMock).toHaveBeenCalledWith(
         {},
         orgId,
-        expect.objectContaining({ page: 3, pageSize: 25, branchId: "branch-2" }),
+        expect.objectContaining({
+          page: 3,
+          pageSize: 25,
+          branchId: "branch-2",
+        }),
       );
     });
 

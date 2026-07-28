@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMockSupabaseClient, type MockSupabaseClient } from "@/test/mocks/supabase";
+import {
+  createMockSupabaseClient,
+  type MockSupabaseClient,
+} from "@/test/mocks/supabase";
 
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ logAuditAfter: vi.fn() }));
@@ -82,9 +85,9 @@ describe("getInventoryBalances", () => {
 
   it("throws on db error", async () => {
     db.__qb.resolveWith({ data: null, error: new Error("DB error") });
-    await expect(
-      getInventoryBalances(db as never, ORG_ID),
-    ).rejects.toThrow("DB error");
+    await expect(getInventoryBalances(db as never, ORG_ID)).rejects.toThrow(
+      "DB error",
+    );
   });
 
   it("passes branch filter when provided", async () => {
@@ -120,7 +123,11 @@ describe("getInventoryBalances", () => {
     const result = await getInventoryBalances(db as never, ORG_ID);
 
     expect(result).toHaveLength(3);
-    expect(result.map((r) => r.part_id)).toEqual(["part-1", "part-2", "part-3"]);
+    expect(result.map((r) => r.part_id)).toEqual([
+      "part-1",
+      "part-2",
+      "part-3",
+    ]);
   });
 
   it("selects the correct columns", async () => {
@@ -219,7 +226,11 @@ describe("getInventoryFast", () => {
   });
 
   it("maps stock_status correctly for low stock items", async () => {
-    const lowStockRow = { ...rpcRow, stock_status: "low_stock", quantity_on_hand: 3 };
+    const lowStockRow = {
+      ...rpcRow,
+      stock_status: "low_stock",
+      quantity_on_hand: 3,
+    };
     db.rpc.mockResolvedValue({ data: [lowStockRow], error: null });
 
     const result = await getInventoryFast(db as never, ORG_ID, {
@@ -232,7 +243,11 @@ describe("getInventoryFast", () => {
   });
 
   it("maps stock_status correctly for out of stock items", async () => {
-    const oosRow = { ...rpcRow, stock_status: "out_of_stock", quantity_on_hand: 0 };
+    const oosRow = {
+      ...rpcRow,
+      stock_status: "out_of_stock",
+      quantity_on_hand: 0,
+    };
     db.rpc.mockResolvedValue({ data: [oosRow], error: null });
 
     const result = await getInventoryFast(db as never, ORG_ID);

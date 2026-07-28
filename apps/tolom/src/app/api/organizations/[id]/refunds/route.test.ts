@@ -66,7 +66,7 @@ describe("organizations/[id]/refunds route", () => {
           `http://localhost/api/organizations/${orgId}/refunds`,
         );
         const response = await (GET as any)({ request, orgId, supabase });
-        const body = await response.json();
+        const _body = await response.json();
 
         expect(getRefundsMock).toHaveBeenCalledWith(supabase, orgId, {
           status: null,
@@ -118,7 +118,6 @@ describe("organizations/[id]/refunds route", () => {
     });
   });
   describe("POST", () => {
-
     const validBody = {
       invoice_id: "123e4567-e89b-12d3-a456-426614174000",
       amount: 100,

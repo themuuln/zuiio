@@ -20,7 +20,7 @@ export function isQueuedResult(data: unknown): data is QueuedResult {
   return typeof data === "object" && data !== null && QUEUED_SENTINEL in data;
 }
 
-function generateOptimisticId(): string {
+export function generateOptimisticId(): string {
   if (
     typeof crypto !== "undefined" &&
     typeof crypto.randomUUID === "function"

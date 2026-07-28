@@ -204,7 +204,7 @@ export type ActionState<
 export function normalizeMongolianPhone(phone: string): string {
   const digits = phone.replace(/[\s\-()]/g, "");
   if (digits.startsWith("+976")) return digits;
-  if (digits.startsWith("976") && digits.length === 12) return `+${digits}`;
+  if (digits.startsWith("976") && digits.length === 11) return `+${digits}`;
   if (digits.startsWith("0") && digits.length === 8) return `+976${digits}`;
   if (digits.length === 8) return `+976${digits}`;
   return digits;

@@ -35,9 +35,7 @@ describe("by-plate route", () => {
 
   it("returns empty array when no plate param", async () => {
     const req = new NextRequest(
-      new URL(
-        "http://localhost/api/organizations/test-org/customers/by-plate",
-      ),
+      new URL("http://localhost/api/organizations/test-org/customers/by-plate"),
     );
     const response = await GET({
       request: req,
@@ -161,9 +159,7 @@ describe("by-plate route", () => {
   it("handles customer as an array in vehicle_owners", async () => {
     const customer = { id: "c-1", name: "Bold" };
     mockLimit.mockResolvedValueOnce({
-      data: [
-        { vehicle_owners: [{ customers: [customer] }] },
-      ],
+      data: [{ vehicle_owners: [{ customers: [customer] }] }],
       error: null,
     });
 

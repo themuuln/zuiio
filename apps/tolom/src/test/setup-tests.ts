@@ -43,6 +43,11 @@ if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
 
+// Polyfill getAnimations (required by @base-ui/react ScrollAreaViewport in jsdom)
+if (!Element.prototype.getAnimations) {
+  Element.prototype.getAnimations = () => [];
+}
+
 // Polyfill window.matchMedia (required by next-themes)
 if (!globalThis.window) {
   (globalThis as { window: typeof globalThis }).window = globalThis;

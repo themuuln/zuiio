@@ -61,7 +61,10 @@ export function WorkOrderDetailDrawer({
   assignMechanicMutation: drawerAssignMechanicMutation,
   assignCustomerMutation: drawerAssignCustomerMutation,
 }: WorkOrderDetailDrawerProps) {
-  const t = useTranslations("bayView") as (key: string, params?: Record<string, string | number | Date>) => string;
+  const t = useTranslations("bayView") as (
+    key: string,
+    params?: Record<string, string | number | Date>,
+  ) => string;
 
   const queryClient = useQueryClient();
 

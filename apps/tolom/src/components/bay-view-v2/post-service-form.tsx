@@ -14,9 +14,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DetailDrawer,
-} from "@/components/ui/detail-drawer";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
@@ -539,7 +537,11 @@ export function PostServiceForm({
       </DetailDrawer.Header>
 
       <DetailDrawer.Body>
-        <form id="post-service-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+        <form
+          id="post-service-form"
+          onSubmit={onSubmit}
+          className="flex flex-col gap-4"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Left column */}
             <div className="flex flex-col gap-4">

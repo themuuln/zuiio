@@ -1,18 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ValidationError } from "@/lib/errors";
+import { reportServerError } from "@/lib/sentry-report-server";
+import type { SmartCarLookupResult } from "@/lib/smartcar/browser";
+import { lookupPlate } from "@/lib/smartcar/browser";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { withDbCapture } from "@/lib/supabase/query";
-import { lookupPlate } from "@/lib/smartcar/browser";
-import type { SmartCarLookupResult } from "@/lib/smartcar/browser";
 import type { Customer } from "@/lib/types";
 import type { WorkOrderDetail } from "@/lib/types/composite";
-import { reportServerError } from "@/lib/sentry-report-server";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
-import { createCustomer } from "./customer-service";
-import { createVehicle, updateVehicle } from "./vehicle-service";
-import { createWorkOrder } from "./work-order-service";
-
 import {
   addVehicleToQueue,
   findCustomerByPhone,
@@ -25,15 +20,16 @@ import {
   searchVehicles,
   searchVehiclesWithCustomers,
 } from "./bay-view-actions";
+import { createCustomer } from "./customer-service";
+import { createVehicle, updateVehicle } from "./vehicle-service";
+import { createWorkOrder } from "./work-order-service";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/lib/supabase/service-role", () => ({
   createServiceRoleClient: vi.fn(),
 }));
 vi.mock("@/lib/supabase/query", () => ({
-  withDbCapture: vi.fn(
-    (_label: string, promise: unknown) => promise,
-  ),
+  withDbCapture: vi.fn((_label: string, promise: unknown) => promise),
 }));
 vi.mock("@/lib/smartcar/browser", () => ({ lookupPlate: vi.fn() }));
 vi.mock("@/lib/sentry-report-server", () => ({
@@ -48,7 +44,7 @@ vi.mock("./work-order-service", () => ({ createWorkOrder: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
 const ORG_ID = "org-1";
-const USER_ID = "test-user-id";
+const _USER_ID = "test-user-id";
 
 let mockClient: ReturnType<typeof createMockSupabaseClient>;
 
@@ -98,9 +94,7 @@ describe("findCustomerByPhone", () => {
 
     expect(result).toEqual(customer);
     expect(mockClient.from).toHaveBeenCalledWith("customers");
-    expect(mockClient.rpc).toHaveBeenCalledWith(
-      "get_user_organization_id",
-    );
+    expect(mockClient.rpc).toHaveBeenCalledWith("get_user_organization_id");
   });
 
   it("returns null when no customer matches", async () => {
@@ -322,8 +316,8 @@ describe("lookupVehicleByPlate", () => {
     expect(result.exists).toBe(false);
     expect(result.smartcarFound).toBe(true);
     expect(result.vehicle).not.toBeNull();
-    expect(result.vehicle!.make).toBe("Toyota");
-    expect(result.vehicle!.engine).toBe("2000");
+    expect(result.vehicle?.make).toBe("Toyota");
+    expect(result.vehicle?.engine).toBe("2000");
     expect(lookupPlate).toHaveBeenCalledWith("ABC123");
   });
 
@@ -438,7 +432,9 @@ describe("quickRegisterVehicle", () => {
       make: "Toyota",
       model: "Camry",
     };
-    vi.mocked(createVehicle).mockResolvedValueOnce(createdVehicle as unknown as Vehicle);
+    vi.mocked(createVehicle).mockResolvedValueOnce(
+      createdVehicle as unknown as Vehicle,
+    );
 
     const result = await quickRegisterVehicle({
       plateNumber: "ABC123",
@@ -467,14 +463,18 @@ describe("quickRegisterVehicle", () => {
       data: null,
       error: null,
     });
-    vi.mocked(createCustomer).mockResolvedValueOnce({ id: "cust-new" } as unknown as Customer);
+    vi.mocked(createCustomer).mockResolvedValueOnce({
+      id: "cust-new",
+    } as unknown as Customer);
     const createdVehicle = {
       id: "v-1",
       plate_number: "ABC123",
       make: "Toyota",
       model: "Camry",
     };
-    vi.mocked(createVehicle).mockResolvedValueOnce(createdVehicle as unknown as Vehicle);
+    vi.mocked(createVehicle).mockResolvedValueOnce(
+      createdVehicle as unknown as Vehicle,
+    );
 
     const result = await quickRegisterVehicle({
       plateNumber: "ABC123",
@@ -502,7 +502,9 @@ describe("quickRegisterVehicle", () => {
       make: "Toyota",
       model: "Camry",
     };
-    vi.mocked(updateVehicle).mockResolvedValueOnce(updatedVehicle as unknown as Vehicle);
+    vi.mocked(updateVehicle).mockResolvedValueOnce(
+      updatedVehicle as unknown as Vehicle,
+    );
 
     const result = await quickRegisterVehicle({
       plateNumber: "ABC123",
@@ -525,7 +527,9 @@ describe("quickRegisterVehicle", () => {
       data: null,
       error: null,
     });
-    vi.mocked(createVehicle).mockResolvedValueOnce({ id: "v-1" } as unknown as Vehicle);
+    vi.mocked(createVehicle).mockResolvedValueOnce({
+      id: "v-1",
+    } as unknown as Vehicle);
 
     const result = await quickRegisterVehicle({
       plateNumber: "ABC123",
@@ -733,9 +737,7 @@ describe("registerMechanic", () => {
         error: null,
       }),
     };
-    vi.mocked(createServiceRoleClient).mockResolvedValue(
-      serviceRoleClient,
-    );
+    vi.mocked(createServiceRoleClient).mockResolvedValue(serviceRoleClient);
 
     const profile = {
       id: "new-auth-id",
@@ -775,9 +777,7 @@ describe("registerMechanic", () => {
       }),
       createUser: vi.fn(),
     };
-    vi.mocked(createServiceRoleClient).mockResolvedValue(
-      serviceRoleClient,
-    );
+    vi.mocked(createServiceRoleClient).mockResolvedValue(serviceRoleClient);
 
     const profile = {
       id: "existing-auth-id",
@@ -796,9 +796,9 @@ describe("registerMechanic", () => {
     });
 
     expect(serviceRoleClient.auth.admin.createUser).not.toHaveBeenCalled();
-    expect(
-      serviceRoleClient.auth.admin.listUsers,
-    ).toHaveBeenCalledWith({ perPage: 1000 });
+    expect(serviceRoleClient.auth.admin.listUsers).toHaveBeenCalledWith({
+      perPage: 1000,
+    });
     expect(mockClient.from("profiles").upsert).toHaveBeenCalledWith(
       expect.objectContaining({ id: "existing-auth-id" }),
     );
@@ -816,9 +816,7 @@ describe("registerMechanic", () => {
         error: { message: "Email already registered" },
       }),
     };
-    vi.mocked(createServiceRoleClient).mockResolvedValue(
-      serviceRoleClient,
-    );
+    vi.mocked(createServiceRoleClient).mockResolvedValue(serviceRoleClient);
 
     await expect(
       registerMechanic({
@@ -840,9 +838,7 @@ describe("registerMechanic", () => {
         error: null,
       }),
     };
-    vi.mocked(createServiceRoleClient).mockResolvedValue(
-      serviceRoleClient,
-    );
+    vi.mocked(createServiceRoleClient).mockResolvedValue(serviceRoleClient);
 
     mockClient.from("profiles").single.mockResolvedValueOnce({
       data: null,
@@ -939,9 +935,9 @@ describe("getVehicleServiceTimeline", () => {
 
 describe("addVehicleToQueue", () => {
   it("throws ValidationError when vehicleId is missing", async () => {
-    await expect(
-      addVehicleToQueue({ vehicleId: "" }),
-    ).rejects.toThrow(ValidationError);
+    await expect(addVehicleToQueue({ vehicleId: "" })).rejects.toThrow(
+      ValidationError,
+    );
   });
 
   it("creates work order when branch is provided and no active WO", async () => {
@@ -1009,9 +1005,9 @@ describe("addVehicleToQueue", () => {
       error: null,
     });
 
-    await expect(
-      addVehicleToQueue({ vehicleId: "v-1" }),
-    ).rejects.toThrow(ValidationError);
+    await expect(addVehicleToQueue({ vehicleId: "v-1" })).rejects.toThrow(
+      ValidationError,
+    );
   });
 
   it("throws when vehicle has an active work order", async () => {
@@ -1025,9 +1021,9 @@ describe("addVehicleToQueue", () => {
       error: null,
     });
 
-    await expect(
-      addVehicleToQueue({ vehicleId: "v-1" }),
-    ).rejects.toThrow("already assigned to Bay #3");
+    await expect(addVehicleToQueue({ vehicleId: "v-1" })).rejects.toThrow(
+      "already assigned to Bay #3",
+    );
   });
 
   it("throws when vehicle is already in queue (no bay)", async () => {
@@ -1041,9 +1037,9 @@ describe("addVehicleToQueue", () => {
       error: null,
     });
 
-    await expect(
-      addVehicleToQueue({ vehicleId: "v-1" }),
-    ).rejects.toThrow("already in the waiting queue");
+    await expect(addVehicleToQueue({ vehicleId: "v-1" })).rejects.toThrow(
+      "already in the waiting queue",
+    );
   });
 
   it("handles DB error during main branch lookup gracefully", async () => {
@@ -1052,8 +1048,8 @@ describe("addVehicleToQueue", () => {
       error: null,
     });
 
-    await expect(
-      addVehicleToQueue({ vehicleId: "v-1" }),
-    ).rejects.toThrow(ValidationError);
+    await expect(addVehicleToQueue({ vehicleId: "v-1" })).rejects.toThrow(
+      ValidationError,
+    );
   });
 });

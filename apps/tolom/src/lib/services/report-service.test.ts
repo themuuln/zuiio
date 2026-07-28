@@ -118,9 +118,7 @@ describe("getMechanicsList", () => {
 
   it("handles profiles query error gracefully", async () => {
     mockClient.__qb.resolveOnce({
-      data: [
-        { user_id: "u1", roles: [{ name: "Mechanic" }], branch_id: null },
-      ],
+      data: [{ user_id: "u1", roles: [{ name: "Mechanic" }], branch_id: null }],
       error: null,
     });
     mockClient.__qb.resolveOnce({
@@ -145,14 +143,29 @@ describe("getDailyReport", () => {
     });
     mockClient.__qb.resolveOnce({
       data: [
-        { final_price: 100, discount_amount: 10, service_name: "Oil Change", work_order_id: "wo-1" },
-        { final_price: 200, discount_amount: 20, service_name: "Brakes", work_order_id: "wo-2" },
+        {
+          final_price: 100,
+          discount_amount: 10,
+          service_name: "Oil Change",
+          work_order_id: "wo-1",
+        },
+        {
+          final_price: 200,
+          discount_amount: 20,
+          service_name: "Brakes",
+          work_order_id: "wo-2",
+        },
       ],
       error: null,
     });
     mockClient.__qb.resolveOnce({
       data: [
-        { final_price: 50, discount_amount: 5, part_name: "Filter", work_order_id: "wo-1" },
+        {
+          final_price: 50,
+          discount_amount: 5,
+          part_name: "Filter",
+          work_order_id: "wo-1",
+        },
       ],
       error: null,
     });
@@ -160,12 +173,22 @@ describe("getDailyReport", () => {
     mockClient.__qb.resolveOnce({
       data: [
         {
-          id: "wo-1", organization_id: "org-1", customer_id: "c-1", vehicle_id: "v-1",
-          mechanic_id: "m-1", status: "Completed", completed_at: "2025-01-15T10:00:00Z",
+          id: "wo-1",
+          organization_id: "org-1",
+          customer_id: "c-1",
+          vehicle_id: "v-1",
+          mechanic_id: "m-1",
+          status: "Completed",
+          completed_at: "2025-01-15T10:00:00Z",
         },
         {
-          id: "wo-2", organization_id: "org-1", customer_id: "c-2", vehicle_id: "v-2",
-          mechanic_id: null, status: "Completed", completed_at: "2025-01-15T11:00:00Z",
+          id: "wo-2",
+          organization_id: "org-1",
+          customer_id: "c-2",
+          vehicle_id: "v-2",
+          mechanic_id: null,
+          status: "Completed",
+          completed_at: "2025-01-15T11:00:00Z",
         },
       ],
       error: null,
@@ -220,13 +243,23 @@ describe("getDailyReport", () => {
     });
     mockClient.__qb.resolveOnce({
       data: [
-        { final_price: 100, discount_amount: 0, service_name: "Oil Change", work_order_id: "wo-1" },
+        {
+          final_price: 100,
+          discount_amount: 0,
+          service_name: "Oil Change",
+          work_order_id: "wo-1",
+        },
       ],
       error: null,
     });
     mockClient.__qb.resolveOnce({
       data: [
-        { final_price: 50, discount_amount: 0, part_name: "Filter", work_order_id: "wo-1" },
+        {
+          final_price: 50,
+          discount_amount: 0,
+          part_name: "Filter",
+          work_order_id: "wo-1",
+        },
       ],
       error: null,
     });
@@ -234,8 +267,12 @@ describe("getDailyReport", () => {
     mockClient.__qb.resolveOnce({
       data: [
         {
-          id: "wo-1", organization_id: "org-1", customer_id: "c-1", vehicle_id: "v-1",
-          mechanic_id: "m-1", status: "Completed",
+          id: "wo-1",
+          organization_id: "org-1",
+          customer_id: "c-1",
+          vehicle_id: "v-1",
+          mechanic_id: "m-1",
+          status: "Completed",
         },
       ],
       error: null,
@@ -386,7 +423,7 @@ describe("getWeeklyReport", () => {
     // making sequential builder lists non-deterministic.
     const mc = createMockSupabaseClient();
     mc.__qb.resolveWith({ data: [], error: null });
-    return mc.from("_");  // returns the qb with chainable methods
+    return mc.from("_"); // returns the qb with chainable methods
   }
 
   it("returns 7-day daily breakdown with aggregated totals", async () => {
@@ -464,9 +501,7 @@ describe("getMonthlyReport", () => {
       error: null,
     });
     mockClient.__qb.resolveOnce({
-      data: [
-        { final_price: 50, discount_amount: 5, work_order_id: "wo-1" },
-      ],
+      data: [{ final_price: 50, discount_amount: 5, work_order_id: "wo-1" }],
       error: null,
     });
 
@@ -702,7 +737,7 @@ describe("getEndOfDaySummary", () => {
     expect(m2.mechanic_name).toBe("Mech Two");
     expect(m2.work_orders_completed).toBe(1);
     expect(m2.total_revenue).toBe(150);
-  })
+  });
 
   it("returns empty summary when no work orders", async () => {
     // outer work_orders returns empty → inner function goes through empty-path
@@ -775,9 +810,7 @@ describe("getEndOfDaySummary", () => {
 
   it("handles profiles query error gracefully", async () => {
     mockClient.__qb.resolveOnce({
-      data: [
-        { id: "wo-1", mechanic_id: "m-1" },
-      ],
+      data: [{ id: "wo-1", mechanic_id: "m-1" }],
       error: null,
     });
     mockClient.__qb.resolveOnce({
@@ -1014,7 +1047,11 @@ describe("getDashboardData", () => {
     });
 
     await expect(
-      getDashboardData(mockClient as unknown as SupabaseClient, "org-1", "month"),
+      getDashboardData(
+        mockClient as unknown as SupabaseClient,
+        "org-1",
+        "month",
+      ),
     ).rejects.toThrow("RPC failed");
   });
 });
@@ -1114,9 +1151,7 @@ describe("getDailyTimeline", () => {
 
   it("handles null customer and vehicle gracefully", async () => {
     mockClient.__qb.resolveOnce({
-      data: [
-        { id: "wo-1", customer: null, vehicle: null, bay_number: null },
-      ],
+      data: [{ id: "wo-1", customer: null, vehicle: null, bay_number: null }],
       error: null,
     });
     mockClient.__qb.resolveOnce({
@@ -1292,22 +1327,38 @@ describe("getCustomReport", () => {
     mockClient.__qb.resolveOnce({ data: [{ id: "wo-1" }], error: null });
     mockClient.__qb.resolveOnce({
       data: [
-        { final_price: 100, discount_amount: 10, service_name: "Oil Change", work_order_id: "wo-1" },
+        {
+          final_price: 100,
+          discount_amount: 10,
+          service_name: "Oil Change",
+          work_order_id: "wo-1",
+        },
       ],
       error: null,
     });
     mockClient.__qb.resolveOnce({
       data: [
-        { final_price: 50, discount_amount: 5, part_name: "Filter", work_order_id: "wo-1" },
+        {
+          final_price: 50,
+          discount_amount: 5,
+          part_name: "Filter",
+          work_order_id: "wo-1",
+        },
       ],
       error: null,
     });
     // ── getRecentWorkOrdersBatched: 4 parallel ──
     mockClient.__qb.resolveOnce({
-      data: [{
-        id: "wo-1", organization_id: "org-1", customer_id: null, vehicle_id: null,
-        mechanic_id: null, status: "Completed",
-      }],
+      data: [
+        {
+          id: "wo-1",
+          organization_id: "org-1",
+          customer_id: null,
+          vehicle_id: null,
+          mechanic_id: null,
+          status: "Completed",
+        },
+      ],
       error: null,
     });
     mockClient.__qb.resolveOnce({ data: [], error: null });
@@ -1344,7 +1395,12 @@ describe("getCustomReport", () => {
     mockClient.__qb.resolveOnce({ data: [{ id: "wo-1" }], error: null });
     mockClient.__qb.resolveOnce({
       data: [
-        { final_price: 200, discount_amount: 0, service_name: "Brakes", work_order_id: "wo-1" },
+        {
+          final_price: 200,
+          discount_amount: 0,
+          service_name: "Brakes",
+          work_order_id: "wo-1",
+        },
       ],
       error: null,
     });
@@ -1352,10 +1408,16 @@ describe("getCustomReport", () => {
 
     // ── getRecentWorkOrdersBatched: 4 parallel ──
     mockClient.__qb.resolveOnce({
-      data: [{
-        id: "wo-1", organization_id: "org-1", customer_id: null, vehicle_id: null,
-        mechanic_id: "m-1", status: "Completed",
-      }],
+      data: [
+        {
+          id: "wo-1",
+          organization_id: "org-1",
+          customer_id: null,
+          vehicle_id: null,
+          mechanic_id: "m-1",
+          status: "Completed",
+        },
+      ],
       error: null,
     });
     mockClient.__qb.resolveOnce({ data: [], error: null });
@@ -1397,7 +1459,7 @@ describe("getCustomReport", () => {
     expect(result.total_discounts).toBe(0);
     expect(result.work_orders).toEqual([]);
   });
-  
+
   it("returns zero counts on work_orders query error", async () => {
     mockClient.__qb.resolveOnce({
       data: null,
@@ -1509,8 +1571,12 @@ describe("getServiceBreakdown", () => {
     );
 
     expect(result).toHaveLength(2);
-    expect(result.find((s) => s.service_name === "Other")?.total_revenue).toBe(50);
-    expect(result.find((s) => s.service_name === "Oil Change")?.total_revenue).toBe(100);
+    expect(result.find((s) => s.service_name === "Other")?.total_revenue).toBe(
+      50,
+    );
+    expect(
+      result.find((s) => s.service_name === "Oil Change")?.total_revenue,
+    ).toBe(100);
   });
 
   // ── Error-path tests ─────────────────────────────────────
@@ -1557,8 +1623,14 @@ describe("getServiceBreakdown", () => {
 
 describe("getFinanceSummaryFast", () => {
   it("calls get_finance_summary RPC and returns the data", async () => {
-    const summaryData = { total_revenue: 15000, total_cost: 8000, gross_profit: 7000 };
-    mockClient.rpc = vi.fn().mockResolvedValue({ data: summaryData, error: null });
+    const summaryData = {
+      total_revenue: 15000,
+      total_cost: 8000,
+      gross_profit: 7000,
+    };
+    mockClient.rpc = vi
+      .fn()
+      .mockResolvedValue({ data: summaryData, error: null });
 
     const result = await getFinanceSummaryFast(
       mockClient as any,
@@ -1566,15 +1638,20 @@ describe("getFinanceSummaryFast", () => {
       "month",
     );
 
-    expect(vi.mocked(mockClient.rpc)).toHaveBeenCalledWith("get_finance_summary", {
-      p_org_id: "org-1",
-      p_period: "month",
-    });
+    expect(vi.mocked(mockClient.rpc)).toHaveBeenCalledWith(
+      "get_finance_summary",
+      {
+        p_org_id: "org-1",
+        p_period: "month",
+      },
+    );
     expect(result).toEqual(summaryData);
   });
 
   it("defaults period to month", async () => {
-    mockClient.rpc = vi.fn().mockResolvedValue({ data: { rev: 100 }, error: null });
+    mockClient.rpc = vi
+      .fn()
+      .mockResolvedValue({ data: { rev: 100 }, error: null });
 
     await getFinanceSummaryFast(mockClient as any, "org-1");
 
@@ -1614,7 +1691,9 @@ describe("getMechanicLeaderboardFast", () => {
       { mechanic_name: "Mech A", total_revenue: 5000, work_orders: 10 },
       { mechanic_name: "Mech B", total_revenue: 3000, work_orders: 7 },
     ];
-    mockClient.rpc = vi.fn().mockResolvedValue({ data: leaderboardData, error: null });
+    mockClient.rpc = vi
+      .fn()
+      .mockResolvedValue({ data: leaderboardData, error: null });
 
     const result = await getMechanicLeaderboardFast(
       mockClient as any,
@@ -1622,10 +1701,13 @@ describe("getMechanicLeaderboardFast", () => {
       "month",
     );
 
-    expect(vi.mocked(mockClient.rpc)).toHaveBeenCalledWith("get_mechanic_leaderboard", {
-      p_org_id: "org-1",
-      p_period: "month",
-    });
+    expect(vi.mocked(mockClient.rpc)).toHaveBeenCalledWith(
+      "get_mechanic_leaderboard",
+      {
+        p_org_id: "org-1",
+        p_period: "month",
+      },
+    );
     expect(result).toEqual(leaderboardData);
   });
 

@@ -42,7 +42,9 @@ describe("organizations/[id]/price-rules route", () => {
     const listUrl = `http://localhost/api/organizations/${orgId}/price-rules`;
 
     it("lists price rules for the organization", async () => {
-      getPriceRulesMock.mockResolvedValue([{ id: "rule-1", name: "Test Rule" }]);
+      getPriceRulesMock.mockResolvedValue([
+        { id: "rule-1", name: "Test Rule" },
+      ]);
 
       const supabase = createMockSupabaseClient();
       const request = new NextRequest(listUrl);
@@ -227,7 +229,11 @@ describe("organizations/[id]/price-rules route", () => {
       const response = await (DELETE as any)({ supabase, orgId, request });
       const data = await response.json();
 
-      expect(deletePriceRuleMock).toHaveBeenCalledWith(supabase, "rule-1", orgId);
+      expect(deletePriceRuleMock).toHaveBeenCalledWith(
+        supabase,
+        "rule-1",
+        orgId,
+      );
       expect(data.data).toEqual({ success: true });
     });
 

@@ -102,7 +102,9 @@ describe("organizations/[id]/export route", () => {
     work_order_status_history: [
       { id: "wosh1", work_order_id: "wo1", organization_id: orgId },
     ],
-    service_catalog: [{ id: "sc1", name: "Oil Change", organization_id: orgId }],
+    service_catalog: [
+      { id: "sc1", name: "Oil Change", organization_id: orgId },
+    ],
     service_price_history: [
       { id: "sph1", service_catalog_id: "sc1", organization_id: orgId },
     ],
@@ -112,24 +114,16 @@ describe("organizations/[id]/export route", () => {
     parts_catalog: [{ id: "pc1", name: "Oil Filter", organization_id: orgId }],
     vehicle_models: [{ id: "vm1", name: "Model 3", organization_id: orgId }],
     suppliers: [{ id: "s1", name: "PartsCo", organization_id: orgId }],
-    purchase_orders: [
-      { id: "po1", status: "pending", organization_id: orgId },
-    ],
+    purchase_orders: [{ id: "po1", status: "pending", organization_id: orgId }],
     purchase_order_items: [
       { id: "poi1", purchase_order_id: "po1", organization_id: orgId },
     ],
-    inventory_movements: [
-      { id: "im1", type: "in", organization_id: orgId },
-    ],
+    inventory_movements: [{ id: "im1", type: "in", organization_id: orgId }],
     payments: [{ id: "p1", amount: 100, organization_id: orgId }],
     invoices: [{ id: "i1", total: 100, organization_id: orgId }],
     invoice_items: [{ id: "ii1", invoice_id: "i1", organization_id: orgId }],
-    invoice_payments: [
-      { id: "ip1", invoice_id: "i1", organization_id: orgId },
-    ],
-    stock_thresholds: [
-      { id: "st1", part_id: "pc1", organization_id: orgId },
-    ],
+    invoice_payments: [{ id: "ip1", invoice_id: "i1", organization_id: orgId }],
+    stock_thresholds: [{ id: "st1", part_id: "pc1", organization_id: orgId }],
     mechanic_assignments: [
       { id: "ma1", work_order_id: "wo1", organization_id: orgId },
     ],
@@ -261,7 +255,9 @@ describe("organizations/[id]/export route", () => {
         orgData,
         usersData,
       );
-      getUsersByIdsMock.mockRejectedValue(new Error("Service role not configured"));
+      getUsersByIdsMock.mockRejectedValue(
+        new Error("Service role not configured"),
+      );
 
       const req = new NextRequest(
         new URL(`http://localhost/api/organizations/${orgId}/export`),

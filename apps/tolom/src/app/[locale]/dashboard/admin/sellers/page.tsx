@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Loader2, Plus, ShieldAlert, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,12 @@ import {
 } from "@/components/ui/card";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -23,10 +30,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { useAdminMe } from "@/lib/queries/use-admin";
-import { z } from "zod";
-import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import { useAdminMe } from "@/lib/queries/use-admin";
 
 interface Org {
   id: string;
@@ -288,7 +293,11 @@ export default function SellersPage() {
             <FieldContent>
               <Select
                 value={form.watch("organization_id")}
-                onValueChange={(v) => form.setValue("organization_id", v ?? "", { shouldValidate: true })}
+                onValueChange={(v) =>
+                  form.setValue("organization_id", v ?? "", {
+                    shouldValidate: true,
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select organization" />
@@ -302,7 +311,9 @@ export default function SellersPage() {
                 </SelectContent>
               </Select>
               {form.formState.errors.organization_id && (
-                <FieldError>{form.formState.errors.organization_id.message}</FieldError>
+                <FieldError>
+                  {form.formState.errors.organization_id.message}
+                </FieldError>
               )}
             </FieldContent>
           </Field>
@@ -316,9 +327,13 @@ export default function SellersPage() {
               Cancel
             </Button>
             <Button
-              onClick={form.handleSubmit((data) => assignMutation.mutate(data.organization_id))}
+              onClick={form.handleSubmit((data) =>
+                assignMutation.mutate(data.organization_id),
+              )}
               size="lg"
-              disabled={!form.watch("organization_id") || assignMutation.isPending}
+              disabled={
+                !form.watch("organization_id") || assignMutation.isPending
+              }
             >
               {assignMutation.isPending && (
                 <Loader2 className="size-4 mr-1 animate-spin" />

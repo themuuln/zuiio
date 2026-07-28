@@ -90,11 +90,17 @@ export function ReadyForPickupForm({
   const odometerValue = Number(form.watch("odometer")) || 0;
   const feePercent = paymentMethodFees[watchedPaymentMethod] ?? 0;
   const feeAmount = useMemo(
-    () => computePaymentFeeAmount(grandTotal, watchedPaymentMethod, paymentMethodFees),
+    () =>
+      computePaymentFeeAmount(
+        grandTotal,
+        watchedPaymentMethod,
+        paymentMethodFees,
+      ),
     [grandTotal, watchedPaymentMethod, paymentMethodFees],
   );
   const totalDue = useMemo(
-    () => computePaymentTotal(grandTotal, watchedPaymentMethod, paymentMethodFees),
+    () =>
+      computePaymentTotal(grandTotal, watchedPaymentMethod, paymentMethodFees),
     [grandTotal, watchedPaymentMethod, paymentMethodFees],
   );
 
@@ -102,7 +108,11 @@ export function ReadyForPickupForm({
 
   // Auto-select default bank when switching to bank_transfer
   useEffect(() => {
-    if (watchedPaymentMethod === "bank_transfer" && !transferBankId && defaultBank) {
+    if (
+      watchedPaymentMethod === "bank_transfer" &&
+      !transferBankId &&
+      defaultBank
+    ) {
       form.setValue("transferBankId", defaultBank.id);
     }
   }, [watchedPaymentMethod, transferBankId, defaultBank, form.setValue]);

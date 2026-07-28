@@ -139,7 +139,10 @@ describe("GET /api/organizations/[id]/roles", () => {
     ];
 
     supabase.__qb.resolveOnce({ data: roles, error: null });
-    supabase.__qb.resolveOnce({ data: null, error: { message: "query failed" } });
+    supabase.__qb.resolveOnce({
+      data: null,
+      error: { message: "query failed" },
+    });
     supabase.__qb.resolveOnce({ data: [], error: null });
 
     const response = await GET({ orgId, supabase });

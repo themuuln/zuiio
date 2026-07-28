@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MechanicDashboard } from "@/app/[locale]/dashboard/mechanic/_mechanic-dashboard";
 
@@ -123,9 +123,7 @@ function createWrapper() {
   });
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
   };
 }
@@ -225,7 +223,11 @@ describe("MechanicDashboard", () => {
     mockEodData = mockEod;
     mockWoData = mockWorkOrders;
     mockTrendData = mockTrend;
-    mockClockData = { clockedIn: true, since: "2026-07-26T08:00:00", todayHours: 2.0 };
+    mockClockData = {
+      clockedIn: true,
+      since: "2026-07-26T08:00:00",
+      todayHours: 2.0,
+    };
 
     renderDashboard();
 
