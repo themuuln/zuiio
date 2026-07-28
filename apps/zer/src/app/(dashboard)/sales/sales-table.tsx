@@ -116,6 +116,7 @@ export function SalesTable({
   loading,
   /** Extra toolbar content (export, create buttons) */
   toolbar,
+  beforeTable,
 }: {
   data: SaleRow[];
   onRowClick?: (row: SaleRow) => void;
@@ -123,6 +124,8 @@ export function SalesTable({
   loading?: boolean;
   /** Extra toolbar content (export, create buttons) */
   toolbar?: React.ReactNode;
+  /** Content rendered between the search/toolbar and the table */
+  beforeTable?: React.ReactNode;
 }) {
   return (
     <DataTable
@@ -136,6 +139,7 @@ export function SalesTable({
       enableSorting
       enableColumnVisibility
       toolbar={toolbar}
+      beforeTable={beforeTable}
     />
   );
 }

@@ -202,29 +202,29 @@ export function SalesContent({
         }}
       >
         <div className="flex flex-col gap-4">
-          {/* Quick filter chips — always render for PPR structure */}
-          <div className="flex flex-wrap gap-2">
-            {FILTER_CHIPS.map((chip) => {
-              const isActive = activeChips.has(chip.key);
-              return (
-                <button
-                  key={chip.key}
-                  type="button"
-                  onClick={() => toggleChip(chip.key)}
-                  className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                    isActive
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  }`}
-                >
-                  {chip.label}
-                </button>
-              );
-            })}
-          </div>
-
           {/* SalesTable handles its own loading and empty state */}
           <SalesTable
+            beforeTable={
+              <div className="-mb-1 flex flex-wrap gap-2">
+                {FILTER_CHIPS.map((chip) => {
+                  const isActive = activeChips.has(chip.key);
+                  return (
+                    <button
+                      key={chip.key}
+                      type="button"
+                      onClick={() => toggleChip(chip.key)}
+                      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        isActive
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-input bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  );
+                })}
+              </div>
+            }
             data={filteredSales}
             onRowClick={(row) => setSelectedSaleId(row.id)}
             toolbar={

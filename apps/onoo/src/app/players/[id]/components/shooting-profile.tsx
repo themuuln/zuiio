@@ -201,6 +201,9 @@ export function ShootingProfile({
 }: ShootingProfileProps) {
   const color = teamColor ?? BRAND_ACCENT;
   const fgPct = data.fga > 0 ? (data.fgm / data.fga) * 100 : null;
+  const twoAtt = data.fga - data.tpa;
+  const twoMade = data.fgm - data.tpm;
+  const twoPct = twoAtt > 0 ? (twoMade / twoAtt) * 100 : null;
   const tpPct = data.tpa > 0 ? (data.tpm / data.tpa) * 100 : null;
   const ftPct = data.fta > 0 ? (data.ftm / data.fta) * 100 : null;
 
@@ -242,12 +245,19 @@ export function ShootingProfile({
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Three gauge rings side by side */}
-        <div className="grid grid-cols-3 gap-1 sm:gap-4">
+        <div className="grid grid-cols-2 gap-1 sm:grid-cols-4 sm:gap-4">
           <GaugeRing
             percentage={fgPct}
             label="FG%"
             made={data.fgm}
             attempted={data.fga}
+            color={color}
+          />
+          <GaugeRing
+            percentage={twoPct}
+            label="2P%"
+            made={twoMade}
+            attempted={twoAtt}
             color={color}
           />
           <GaugeRing

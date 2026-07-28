@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import fs from "node:fs";
 import path from "node:path";
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -73,9 +74,10 @@ describe("official-statistics API with a real Mongolian scoresheet", () => {
   });
 
   it("parses B20.pdf and sends its bytes and synchronized score to Supabase", async () => {
-    const pdfBytes = await readFile(
-      path.join(process.cwd(), "test/fixtures/fiba-official-stats/B20.pdf"),
-    );
+    const fixtureDir = fs.existsSync(path.join(process.cwd(), "test/fixtures/fiba-official-stats"))
+      ? path.join(process.cwd(), "test/fixtures/fiba-official-stats")
+      : path.join(process.cwd(), "apps/onoo/test/fixtures/fiba-official-stats");
+    const pdfBytes = await readFile(path.join(fixtureDir, "B20.pdf"));
     const file = new File([pdfBytes], "B20.pdf", { type: "application/pdf" });
 
     const response = await POST(makeRequest(file), {
@@ -83,6 +85,7 @@ describe("official-statistics API with a real Mongolian scoresheet", () => {
     });
 
     expect(response.status).toBe(201);
+    vi.unstubAllGlobals();
     expect(upload).toHaveBeenCalledWith(
       expect.stringMatching(/^game-1\/.+\.pdf$/),
       expect.objectContaining({ name: "B20.pdf", size: pdfBytes.byteLength }),

@@ -27,10 +27,15 @@ import { PublicEmptyState } from "../../components/public-empty-state";
 import { ScoreBoard } from "../../components/score-board";
 import {
   type BoxScoreRow,
+  type GameSummaryRow,
+  type PeriodScoreRow,
+  type ScoringCheckpointRow,
+  type TeamGameStatsRow,
   formatGameTime,
   formatMinutes,
   getBoxScore,
   getGameById,
+  getGameDetailStats,
   getLiveGameData,
   getPlayByPlay,
 } from "../../lib/data";
@@ -58,28 +63,7 @@ export async function generateMetadata({
   };
 }
 
-interface TeamTotals {
-  pts: number;
-  reb: number;
-  ast: number;
-  stl: number;
-  blk: number;
-  tov: number;
-}
 
-function calculateTeamTotals(rows: BoxScoreRow[]): TeamTotals {
-  return rows.reduce<TeamTotals>(
-    (totals, row) => ({
-      pts: totals.pts + row.pts,
-      reb: totals.reb + row.oreb + row.dreb,
-      ast: totals.ast + row.ast,
-      stl: totals.stl + row.stl,
-      blk: totals.blk + row.blk,
-      tov: totals.tov + row.tov,
-    }),
-    { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, tov: 0 },
-  );
-}
 
 export default async function GameDetailPage({ params }: GamePageProps) {
   const { id } = await params;
@@ -93,14 +77,18 @@ export default async function GameDetailPage({ params }: GamePageProps) {
   const isLive = game.status === "live_provisional";
   const boxScore = isFinal ? await getBoxScore(game.id) : [];
   const liveGameData = isLive ? await getLiveGameData(game.id) : null;
-  const homeRows = boxScore.filter(
+  const gameDetailStats = isFinal ? await getGameDetailStats(game.id) : null;
+  const teamStats = gameDetailStats?.teamStats ?? [];
+  const homeTeamStats = teamStats.find(
     (row) => row.team_season_id === game.home_team_season_id,
   );
-  const awayRows = boxScore.filter(
+  const awayTeamStats = teamStats.find(
     (row) => row.team_season_id === game.away_team_season_id,
   );
-  const homeTotals = calculateTeamTotals(homeRows);
-  const awayTotals = calculateTeamTotals(awayRows);
+  const periodScores = gameDetailStats?.periodScores ?? [];
+  const scoringCheckpoints = gameDetailStats?.scoringCheckpoints ?? [];
+  const summary = gameDetailStats?.summary ?? null;
+
   // Play-by-play for lead change flow
   const playByPlay = isFinal ? await getPlayByPlay(game.id) : [];
   const scoringEvents = playByPlay.filter((e) =>
@@ -339,30 +327,260 @@ export default async function GameDetailPage({ params }: GamePageProps) {
               <CardContent className="flex flex-col gap-5 pt-6">
                 <TeamComparison
                   label="Оноо"
-                  home={homeTotals.pts}
-                  away={awayTotals.pts}
+                  home={homeTeamStats?.team_pts ?? 0}
+                  away={awayTeamStats?.team_pts ?? 0}
                 />
                 <TeamComparison
                   label="Самбар"
-                  home={homeTotals.reb}
-                  away={awayTotals.reb}
+                  home={(homeTeamStats?.team_oreb ?? 0) + (homeTeamStats?.team_dreb ?? 0)}
+                  away={(awayTeamStats?.team_oreb ?? 0) + (awayTeamStats?.team_dreb ?? 0)}
                 />
                 <TeamComparison
                   label="Дамжуулалт"
-                  home={homeTotals.ast}
-                  away={awayTotals.ast}
+                  home={homeTeamStats?.team_ast ?? 0}
+                  away={awayTeamStats?.team_ast ?? 0}
                 />
                 <TeamComparison
                   label="Бөмбөг таслалт"
-                  home={homeTotals.stl}
-                  away={awayTotals.stl}
+                  home={homeTeamStats?.team_stl ?? 0}
+                  away={awayTeamStats?.team_stl ?? 0}
+                />
+                <TeamComparison
+                  label="Блок"
+                  home={homeTeamStats?.team_blk ?? 0}
+                  away={awayTeamStats?.team_blk ?? 0}
                 />
                 <TeamComparison
                   label="Алдалт"
-                  home={homeTotals.tov}
-                  away={awayTotals.tov}
+                  home={homeTeamStats?.team_tov ?? 0}
+                  away={awayTeamStats?.team_tov ?? 0}
                   lowerWins
                 />
+                <TeamComparison
+                  label="Хувь"
+                  home={homeTeamStats ? Math.round((homeTeamStats.team_fgm / Math.max(homeTeamStats.team_fga, 1)) * 100) : 0}
+                  away={awayTeamStats ? Math.round((awayTeamStats.team_fgm / Math.max(awayTeamStats.team_fga, 1)) * 100) : 0}
+                  suffix="%"
+                />
+                <TeamComparison
+                  label="2 онооны %"
+                  home={homeTeamStats ? Math.round(((homeTeamStats.team_fgm - homeTeamStats.team_tpm) / Math.max(homeTeamStats.team_fga - homeTeamStats.team_tpa, 1)) * 100) : 0}
+                  away={awayTeamStats ? Math.round(((awayTeamStats.team_fgm - awayTeamStats.team_tpm) / Math.max(awayTeamStats.team_fga - awayTeamStats.team_tpa, 1)) * 100) : 0}
+                  suffix="%"
+                />
+                <TeamComparison
+                  label="3 онооны %"
+                  home={homeTeamStats ? Math.round((homeTeamStats.team_tpm / Math.max(homeTeamStats.team_tpa, 1)) * 100) : 0}
+                  away={awayTeamStats ? Math.round((awayTeamStats.team_tpm / Math.max(awayTeamStats.team_tpa, 1)) * 100) : 0}
+                  suffix="%"
+                />
+                <TeamComparison
+                  label="Чөлөөт шидэлтийн %"
+                  home={homeTeamStats ? Math.round((homeTeamStats.team_ftm / Math.max(homeTeamStats.team_fta, 1)) * 100) : 0}
+                  away={awayTeamStats ? Math.round((awayTeamStats.team_ftm / Math.max(awayTeamStats.team_fta, 1)) * 100) : 0}
+                  suffix="%"
+                />
+                <TeamComparison
+                  label="Довтолгооны самбар"
+                  home={homeTeamStats?.team_oreb ?? 0}
+                  away={awayTeamStats?.team_oreb ?? 0}
+                />
+                <TeamComparison
+                  label="Хамгаалалтын самбар"
+                  home={homeTeamStats?.team_dreb ?? 0}
+                  away={awayTeamStats?.team_dreb ?? 0}
+                />
+                <TeamComparison
+                  label="Хувийн алдаа"
+                  home={homeTeamStats?.team_pf ?? 0}
+                  away={awayTeamStats?.team_pf ?? 0}
+                  lowerWins
+                />
+              </CardContent>
+            </Card>
+          </section>
+        ) : null}
+
+        {isFinal && summary ? (
+          <section aria-labelledby="game-flow-heading">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Тоглоомын анализ
+              </p>
+              <h2 id="game-flow-heading" className="mt-1 text-2xl font-bold tracking-tight">
+                Тоглоомын урсгал
+              </h2>
+            </div>
+            <Card className="mt-4 shadow-none">
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3 lg:grid-cols-4">
+                  {homeTeamStats?.team_points_from_turnovers != null && (
+                    <div className="space-y-1 rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Бөмбөг алдалтаас авсан оноо</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_points_from_turnovers}</span>
+                        <span className="text-muted-foreground">–</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_points_from_turnovers ?? 0}</span>
+                      </div>
+                    </div>
+                  )}
+                  {homeTeamStats?.team_points_in_paint != null && (
+                    <div className="space-y-1 rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Онооны талбайн оноо</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_points_in_paint}</span>
+                        <span className="text-muted-foreground">–</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_points_in_paint ?? 0}</span>
+                      </div>
+                    </div>
+                  )}
+                  {homeTeamStats?.team_second_chance_points != null && (
+                    <div className="space-y-1 rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Хоёр дахь боломжийн оноо</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_second_chance_points}</span>
+                        <span className="text-muted-foreground">–</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_second_chance_points ?? 0}</span>
+                      </div>
+                    </div>
+                  )}
+                  {homeTeamStats?.team_fast_break_points != null && (
+                    <div className="space-y-1 rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Хурдан довтолгооны оноо</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_fast_break_points}</span>
+                        <span className="text-muted-foreground">–</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_fast_break_points ?? 0}</span>
+                      </div>
+                    </div>
+                  )}
+                  {homeTeamStats?.team_bench_points != null && (
+                    <div className="space-y-1 rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Сэлгээний тоглогчдын оноо</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_bench_points}</span>
+                        <span className="text-muted-foreground">–</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_bench_points ?? 0}</span>
+                      </div>
+                    </div>
+                  )}
+                  {homeTeamStats?.team_biggest_lead != null && (
+                    <div className="space-y-1 rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Хамгийн их харьцуулалт</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_biggest_lead}</span>
+                        <span className="text-muted-foreground">–</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_biggest_lead ?? 0}</span>
+                      </div>
+                    </div>
+                  )}
+                  {homeTeamStats?.team_biggest_scoring_run_for != null && (
+                    <div className="space-y-1 rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Хамгийн урт цуврал</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-primary">{homeTeamStats.team_biggest_scoring_run_for}</span>
+                        <span className="text-muted-foreground">–</span>
+                        <span className="text-lg font-bold text-warning">{awayTeamStats?.team_biggest_scoring_run_for ?? 0}</span>
+                      </div>
+                    </div>
+                  )}
+                  {homeTeamStats?.team_time_leading_seconds != null && (
+                    <div className="space-y-1 rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Тэргүүлсэн хугацаа</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-primary">{formatMinutes(homeTeamStats.team_time_leading_seconds)}</span>
+                        <span className="text-muted-foreground">–</span>
+                        <span className="text-lg font-bold text-warning">{formatMinutes(awayTeamStats?.team_time_leading_seconds ?? 0)}</span>
+                      </div>
+                    </div>
+                  )}
+                  {summary.lead_changes != null && (
+                    <div className="col-span-2 space-y-1 rounded-lg border p-3 text-center sm:col-span-3 lg:col-span-2">
+                      <p className="text-xs text-muted-foreground">Тэргүүлсэн солигдол / Тэнцэл</p>
+                      <div className="flex items-center justify-center gap-4">
+                        <span className="text-lg font-bold">{summary.lead_changes} удаа тэргүүлэлт солигдсон</span>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-lg font-bold">{summary.times_tied} удаа тэнцсэн</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        ) : null}
+
+        {isFinal && periodScores.length > 0 ? (
+          <section aria-labelledby="periods-heading">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Үеийн дүн
+              </p>
+              <h2 id="periods-heading" className="mt-1 text-2xl font-bold tracking-tight">
+                Үеүүд
+              </h2>
+            </div>
+            <Card className="mt-4 shadow-none">
+              <CardContent className="overflow-x-auto p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Үе</TableHead>
+                      <TableHead className="text-right">{game.home_team_name}</TableHead>
+                      <TableHead className="text-right">{game.away_team_name}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {periodScores.map((ps) => (
+                      <TableRow key={ps.period}>
+                        <TableCell className="font-medium">
+                          {ps.period <= 4 ? `${ps.period}-р үе` : `Нэмэлт цаг`}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{ps.home_points}</TableCell>
+                        <TableCell className="text-right tabular-nums">{ps.away_points}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </section>
+        ) : null}
+
+        {isFinal && scoringCheckpoints.length > 0 ? (
+          <section aria-labelledby="checkpoints-heading">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Тоглоомын үе шат
+              </p>
+              <h2 id="checkpoints-heading" className="mt-1 text-2xl font-bold tracking-tight">
+                5 минутын үзүүлэлт
+              </h2>
+            </div>
+            <Card className="mt-4 shadow-none">
+              <CardContent className="overflow-x-auto p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Цаг</TableHead>
+                      <TableHead className="text-right">{game.home_team_name}</TableHead>
+                      <TableHead className="text-right">{game.away_team_name}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {scoringCheckpoints.map((cp) => (
+                      <TableRow key={cp.elapsed_seconds}>
+                        <TableCell className="font-medium">
+                          {cp.elapsed_seconds >= 3600
+                            ? `${Math.floor(cp.elapsed_seconds / 60)} мин`
+                            : `${cp.elapsed_seconds / 60} мин`}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{cp.home_score}</TableCell>
+                        <TableCell className="text-right tabular-nums">{cp.away_score}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </section>
@@ -451,6 +669,7 @@ interface TeamComparisonProps {
   home: number;
   away: number;
   lowerWins?: boolean;
+  suffix?: string;
 }
 
 function TeamComparison({
@@ -458,6 +677,7 @@ function TeamComparison({
   home,
   away,
   lowerWins = false,
+  suffix,
 }: TeamComparisonProps) {
   const homeWins = lowerWins ? home < away : home > away;
   const awayWins = lowerWins ? away < home : away > home;
@@ -473,7 +693,7 @@ function TeamComparison({
           homeWins && "font-black",
         )}
       >
-        {home}
+        {home}{suffix}
       </span>
       <svg
         className="col-span-3 h-3 w-full text-primary"
@@ -512,7 +732,7 @@ function TeamComparison({
           awayWins && "font-black",
         )}
       >
-        {away}
+        {away}{suffix}
       </span>
     </div>
   );
@@ -520,6 +740,15 @@ function TeamComparison({
 
 interface BoxScoreSectionProps {
   rows: BoxScoreRow[];
+}
+
+function pctOrDash(made: number, att: number): string {
+  if (att <= 0) return "—";
+  return `${Math.round((made / att) * 100)}%`;
+}
+
+function statOrDash(val: number | null | undefined): string | number {
+  return val != null ? val : "—";
 }
 
 function BoxScoreSection({ rows }: BoxScoreSectionProps) {
@@ -547,90 +776,138 @@ function BoxScoreSection({ rows }: BoxScoreSectionProps) {
           Box score
         </h2>
       </div>
-      {teams.map((teamName) => (
-        <Card key={teamName} className="shadow-none">
-          <CardHeader>
-            <CardTitle>{teamName}</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-x-auto p-0">
-            <Table aria-label={`${teamName} box score`}>
-              <TableCaption className="sr-only">
-                {teamName} тоглогчдын бүрэн статистик
-              </TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Тоглогч</TableHead>
-                  <TableHead className="text-right">МИН</TableHead>
-                  <TableHead className="text-right">ОНОО</TableHead>
-                  <TableHead className="text-right">FG</TableHead>
-                  <TableHead className="text-right">3P</TableHead>
-                  <TableHead className="text-right">FT</TableHead>
-                  <TableHead className="text-right">САМБ</TableHead>
-                  <TableHead className="text-right">ДАМЖ</TableHead>
-                  <TableHead className="hidden text-right md:table-cell">
-                    ТАС
-                  </TableHead>
-                  <TableHead className="hidden text-right md:table-cell">
-                    ХАА
-                  </TableHead>
-                  <TableHead className="hidden text-right md:table-cell">
-                    АЛД
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows
-                  .filter((row) => row.team_name === teamName)
-                  .map((row) => (
-                    <TableRow
-                      key={`${row.team_season_id}-${row.player_id}`}
-                      className="hover:bg-accent/50"
-                    >
-                      <TableCell>
-                        <Link
-                          href={`/players/${row.player_id}`}
-                          className="font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          {row.player_name}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatMinutes(row.seconds_played)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        <span className="stat-number">{row.pts}</span>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {row.fgm}/{row.fga}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {row.tpm}/{row.tpa}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {row.ftm}/{row.fta}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {row.oreb + row.dreb}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {row.ast}
-                      </TableCell>
-                      <TableCell className="hidden text-right tabular-nums md:table-cell">
-                        {row.stl}
-                      </TableCell>
-                      <TableCell className="hidden text-right tabular-nums md:table-cell">
-                        {row.blk}
-                      </TableCell>
-                      <TableCell className="hidden text-right tabular-nums md:table-cell">
-                        {row.tov}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      ))}
+      {teams.map((teamName) => {
+        const teamRows = rows
+          .filter((row) => row.team_name === teamName)
+          .sort((a, b) => {
+            if (a.dnp_reason && !b.dnp_reason) return 1;
+            if (!a.dnp_reason && b.dnp_reason) return -1;
+            return (a.jersey_number ?? 999) - (b.jersey_number ?? 999);
+          });
+
+        return (
+          <Card key={teamName} className="shadow-none">
+            <CardHeader>
+              <CardTitle>{teamName}</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-x-auto p-0">
+              <Table aria-label={`${teamName} box score`}>
+                <TableCaption className="sr-only">
+                  {teamName} тоглогчдын бүрэн статистик
+                </TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead aria-label="Гарааны" className="w-0" />
+                    <TableHead>#</TableHead>
+                    <TableHead>Тоглогч</TableHead>
+                    <TableHead className="text-right">МИН</TableHead>
+                    <TableHead className="text-right">FG</TableHead>
+                    <TableHead className="text-right">2P</TableHead>
+                    <TableHead className="text-right">3P</TableHead>
+                    <TableHead className="text-right">FT</TableHead>
+                    <TableHead className="text-right">ДСАМ</TableHead>
+                    <TableHead className="text-right">ХСАМ</TableHead>
+                    <TableHead className="text-right">САМБ</TableHead>
+                    <TableHead className="text-right">ДАМЖ</TableHead>
+                    <TableHead className="text-right">ТАС</TableHead>
+                    <TableHead className="text-right">ХАА</TableHead>
+                    <TableHead className="text-right">АЛД</TableHead>
+                    <TableHead className="text-right">PF</TableHead>
+                    <TableHead className="text-right">C</TableHead>
+                    <TableHead className="text-right">D</TableHead>
+                    <TableHead className="text-right">+/−</TableHead>
+                    <TableHead className="text-right">ОНОО</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {teamRows.map((row) => {
+                    const isDnp = row.dnp_reason != null;
+                    return (
+                      <TableRow
+                        key={`${row.team_season_id}-${row.player_id}`}
+                        className={cn(
+                          "hover:bg-accent/50",
+                          isDnp && "text-muted-foreground",
+                        )}
+                      >
+                        <TableCell className="w-0 pr-0">
+                          {row.is_starter ? (
+                            <Badge
+                              variant="outline"
+                              className="h-5 px-1.5 text-[10px] font-semibold leading-none"
+                              aria-label="Гарааны"
+                            >
+                              Г
+                            </Badge>
+                          ) : null}
+                        </TableCell>
+                        <TableCell className="tabular-nums">
+                          {row.jersey_number ?? "—"}
+                        </TableCell>
+                        <TableCell>
+                          {isDnp ? (
+                            <span className="flex items-center gap-1.5">
+                              <span className="font-semibold">{row.player_name}</span>
+                              <Badge
+                                variant="secondary"
+                                className="h-5 px-1.5 text-[10px] font-semibold leading-none"
+                              >
+                                DNP
+                              </Badge>
+                            </span>
+                          ) : (
+                            <Link
+                              href={`/players/${row.player_id}`}
+                              className="font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              {row.player_name}
+                            </Link>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {isDnp ? "—" : formatMinutes(row.seconds_played)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {isDnp ? "—" : `${row.fgm}/${row.fga} (${pctOrDash(row.fgm, row.fga)})`}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {isDnp ? "—" : `${row.fgm - row.tpm}/${row.fga - row.tpa} (${pctOrDash(row.fgm - row.tpm, row.fga - row.tpa)})`}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {isDnp ? "—" : `${row.tpm}/${row.tpa} (${pctOrDash(row.tpm, row.tpa)})`}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {isDnp ? "—" : `${row.ftm}/${row.fta} (${pctOrDash(row.ftm, row.fta)})`}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{isDnp ? "—" : row.oreb}</TableCell>
+                        <TableCell className="text-right tabular-nums">{isDnp ? "—" : row.dreb}</TableCell>
+                        <TableCell className="text-right tabular-nums">{isDnp ? "—" : row.oreb + row.dreb}</TableCell>
+                        <TableCell className="text-right tabular-nums">{isDnp ? "—" : row.ast}</TableCell>
+                        <TableCell className="text-right tabular-nums">{isDnp ? "—" : row.stl}</TableCell>
+                        <TableCell className="text-right tabular-nums">{isDnp ? "—" : row.blk}</TableCell>
+                        <TableCell className="text-right tabular-nums">{isDnp ? "—" : row.tov}</TableCell>
+                        <TableCell className="text-right tabular-nums">{isDnp ? "—" : row.pf}</TableCell>
+                        <TableCell className="text-right tabular-nums">{statOrDash(row.fouls_committed)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{statOrDash(row.fouls_drawn)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{statOrDash(row.plus_minus)}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {isDnp ? (
+                            "—"
+                          ) : (
+                            <span className="font-semibold">{row.pts}</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
+      })}
     </section>
   );
 }
+
+

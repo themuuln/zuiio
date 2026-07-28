@@ -22,20 +22,24 @@ import type {
   BoxScoreRow,
   ClassificationRound,
   CompetitionRow,
+  GameSummaryRow,
   GameWithTeams,
   HeadToHeadGame,
   HeadToHeadResult,
   LeaderRow,
   LineupStats,
   MvpRaceRow,
+  PeriodScoreRow,
   PlayByPlayRow,
   PlayerAwardRow,
   PlayerDirectoryRow,
   PlayerGameLine,
   PlayerProfileRow,
+  ScoringCheckpointRow,
   SearchAllResult,
   ShotZoneStat,
   StandingRow,
+  TeamGameStatsRow,
   TeamRosterRow,
   TournamentGroup,
   TournamentPhase,
@@ -60,20 +64,24 @@ export type {
   BoxScoreRow,
   ClassificationRound,
   CompetitionRow,
+  GameSummaryRow,
   GameWithTeams,
   HeadToHeadGame,
   HeadToHeadResult,
   LeaderRow,
   LineupStats,
   MvpRaceRow,
+  PeriodScoreRow,
   PlayByPlayRow,
   PlayerAwardRow,
   PlayerDirectoryRow,
   PlayerGameLine,
   PlayerProfileRow,
+  ScoringCheckpointRow,
   SearchAllResult,
   ShotZoneStat,
   StandingRow,
+  TeamGameStatsRow,
   TeamRosterRow,
   TournamentGroup,
   TournamentPhase,
@@ -506,6 +514,29 @@ export async function getBoxScore(gameId: string): Promise<BoxScoreRow[]> {
 
   if (error || !data) return [];
   return data as unknown as BoxScoreRow[];
+}
+
+export async function getGameDetailStats(gameId: string): Promise<{
+  teamStats: TeamGameStatsRow[];
+  periodScores: PeriodScoreRow[];
+  scoringCheckpoints: ScoringCheckpointRow[];
+  summary: GameSummaryRow | null;
+}> {
+  const supabase = await createClient();
+
+  const [teamStatsRes, periodRes, checkpointRes, summaryRes] = await Promise.all([
+    supabase.from("v_public_team_game_stats").select("*").eq("game_id", gameId),
+    supabase.from("v_public_game_period_scores").select("*").eq("game_id", gameId).order("period"),
+    supabase.from("v_public_game_scoring_checkpoints").select("*").eq("game_id", gameId).order("elapsed_seconds"),
+    supabase.from("v_public_game_summary").select("*").eq("game_id", gameId).maybeSingle(),
+  ]);
+
+  return {
+    teamStats: (teamStatsRes.data ?? []) as TeamGameStatsRow[],
+    periodScores: (periodRes.data ?? []) as PeriodScoreRow[],
+    scoringCheckpoints: (checkpointRes.data ?? []) as ScoringCheckpointRow[],
+    summary: (summaryRes.data as GameSummaryRow) ?? null,
+  };
 }
 
 export async function getPlayByPlay(gameId: string): Promise<PlayByPlayRow[]> {
@@ -1138,7 +1169,7 @@ export async function getLiveGameData(gameId: string): Promise<{
 import { calculateTeamAdvancedStats } from "@onoo/core/stats";
 import type {
   TeamAdvancedStatsPerGame,
-  TeamGameStatsRow,
+  TeamGameStatsRow as LegacyTeamGameStatsRow,
   TeamSeasonAggregates,
 } from "../lib/types/team-stats";
 
@@ -1159,7 +1190,7 @@ export async function getTeamGameStats(
 
   if (error || !data) return [];
 
-  return (data as unknown as TeamGameStatsRow[]).map((row) => {
+  return (data as unknown as LegacyTeamGameStatsRow[]).map((row) => {
     const teamStats = {
       pts: row.team_pts,
       fgm: row.team_fgm,

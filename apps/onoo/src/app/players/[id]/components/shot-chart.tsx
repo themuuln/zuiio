@@ -10,9 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { ShotZoneStat } from "../../../lib/shared";
+import { PublicEmptyState } from "@/app/components/public-empty-state";
 import type { ShotDataPoint, ShotZone } from "./court-heatmap";
 import { CourtHeatmap, DEFAULT_SHOT_ZONES } from "./court-heatmap";
-import { COURT_ZONES } from "./court-zones";
 import type { ShootingData } from "./shooting-profile";
 
 interface ShotChartProps {
@@ -37,8 +37,8 @@ const pct = (made: number, attempted: number): number | null =>
  *
  * Renders the real half-court heatmap from zone aggregates when shot-location
  * data exists, and a shooting-efficiency breakdown derived from the season
- * shooting profile (always available). The heatmap is honest: when no
- * shot-location events are captured yet it shows the empty court with a note.
+ * shooting profile (always available). When no shot-location events are
+ * captured yet it shows a PublicEmptyState instead of a fabricated heatmap.
  */
 export function ShotChart({
   shotZones,
@@ -60,9 +60,8 @@ export function ShotChart({
     shotZones.map((z) => [z.zone_key, z] as const),
   );
   const hasZoneData = shotZones.length > 0;
-  const hasProfileData = fg > 0;
 
-  // When real zone data exists, use it. Otherwise estimate from shooting profile.
+  // Real zone data from DB, or empty array when none exists.
   const zones: ShotZone[] = hasZoneData
     ? DEFAULT_SHOT_ZONES.map((zone) => {
         const stat = zonesById[zone.id];
@@ -70,21 +69,7 @@ export function ShotChart({
           ? { ...zone, made: stat.made, attempted: stat.attempted }
           : zone;
       })
-    : COURT_ZONES.map((zone) => {
-        if (!hasProfileData) return { ...zone, made: 0, attempted: 0 };
-
-        // Distribute shots across zones using typical basketball weights
-        const isThree = zone.id.startsWith("three");
-        const attempts = isThree ? threeAttempts : twoAttempts;
-        const made = isThree ? threeMade : twoMade;
-        const weight = isThree ? zone.weight3pt : zone.weight2pt;
-
-        const zoneAttempts = Math.round(attempts * weight);
-        const zonePct = attempts > 0 ? made / attempts : 0;
-        const zoneMade = Math.round(zoneAttempts * zonePct);
-
-        return { ...zone, made: zoneMade, attempted: zoneAttempts };
-      });
+    : [];
 
   const fgPct = pct(safe(fgm), fg);
   const twoPct = pct(twoMade, twoAttempts);
@@ -127,21 +112,20 @@ export function ShotChart({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Court heatmap */}
-          <div className="space-y-2">
-            <CourtHeatmap zones={zones} shots={shots} />
-            {!hasZoneData && (
-              <p className="text-center text-xs text-muted-foreground">
-                {hasProfileData
-                  ? isEn
-                    ? "Zone distribution estimated from season totals — track games with shot locations for precise data."
-                    : "Бүсийн хуваарилалт улирлын нийлбэрээс тооцоологдсон — нарийвчилсан өгөгдөл авахын тулд шидэлтийн байршил бүртгэнэ үү."
-                  : isEn
-                    ? "Shot-location tracking not yet available — court shows no zone data."
-                    : "Шидэлтийн байршил бүртгэгдээгүй тул талбайн бүс хоосон харуулагдаж байна."}
-              </p>
-            )}
-          </div>
+          {/* Court heatmap or empty state */}
+          {hasZoneData ? (
+            <div className="space-y-2">
+              <CourtHeatmap zones={zones} shots={shots} />
+            </div>
+          ) : (
+            <PublicEmptyState
+              icon={Target}
+              title={isEn ? "Shot locations not tracked" : "Шидэлтийн байршил бүртгэгдээгүй"}
+              description={isEn
+                ? "Track games with shot locations for precise zone data."
+                : "Шидэлтийн байршил бүртгэхэд дэлгэрэнгүй бүсийн мэдээлэл гарна."}
+            />
+          )}
 
           {/* Efficiency breakdown */}
           <div className="space-y-3">

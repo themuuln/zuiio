@@ -629,10 +629,13 @@ export default async function PlayerPage({
                           <StatHead>{getStatLabel("ast", locale)}</StatHead>
                           <StatHead>{getStatLabel("stl", locale)}</StatHead>
                           <StatHead>{getStatLabel("blk", locale)}</StatHead>
+                          <StatHead>{isEn ? "PF" : "Алдаа"}</StatHead>
+                          <StatHead>{isEn ? "C" : "Алдаа гаргасан"}</StatHead>
+                          <StatHead>{isEn ? "D" : "Алдаа татсан"}</StatHead>
                         </tr>
                       </thead>
                       <tbody>
-                        {[...playerGameLog].reverse().map((line) => (
+                        {[...playerGameLog].reverse().filter((line) => line.seconds_played != null).map((line) => (
                           <tr
                             key={line.game_id}
                             className="border-b last:border-0 hover:bg-muted/25"
@@ -665,13 +668,12 @@ export default async function PlayerPage({
                               </Badge>
                             </td>
                             <StatCell
-                              strong={line.team_score - line.opponent_score > 0}
-                              muted={line.team_score - line.opponent_score < 0}
+                              strong={line.plus_minus != null && line.plus_minus > 0}
+                              muted={line.plus_minus != null && line.plus_minus < 0}
                             >
-                              {line.team_score - line.opponent_score > 0
-                                ? "+"
-                                : ""}
-                              {line.team_score - line.opponent_score}
+                              {line.plus_minus != null
+                                ? (line.plus_minus > 0 ? "+" : "") + line.plus_minus
+                                : "—"}
                             </StatCell>
                             <StatCell muted>
                               {formatMinutes(line.seconds_played)}
@@ -687,6 +689,9 @@ export default async function PlayerPage({
                             <StatCell>{line.ast}</StatCell>
                             <StatCell>{line.stl}</StatCell>
                             <StatCell>{line.blk}</StatCell>
+                            <StatCell>{line.pf}</StatCell>
+                            <StatCell>{line.fouls_committed != null ? line.fouls_committed : "—"}</StatCell>
+                            <StatCell>{line.fouls_drawn != null ? line.fouls_drawn : "—"}</StatCell>
                           </tr>
                         ))}
                       </tbody>

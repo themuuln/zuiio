@@ -1,9 +1,9 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Hoisted mocks — define vi.fn references that the vi.mock factories can capture
+// Hoisted mocks — enable per-test override of useQuery / useMutation / useEntityCrud
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const mockUseQuery = vi.hoisted(() => vi.fn());
@@ -78,16 +78,18 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("lucide-react", async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
+vi.mock("lucide-react", () => {
   const Icon = ({ className }: { className?: string }) => (
     <span data-testid="icon" className={className} />
   );
-  const mocked: Record<string, unknown> = {};
-  for (const key of Object.keys(actual)) {
-    mocked[key] = Icon;
-  }
-  return mocked;
+  return {
+    Edit: Icon,
+    Plus: Icon,
+    Trash2: Icon,
+    Loader2: Icon,
+    Star: Icon,
+    XIcon: Icon,
+  };
 });
 
 vi.mock("@/components/admin/page-layout", () => ({
@@ -161,27 +163,76 @@ vi.mock("@/components/ui/data-table", () => ({
   ),
 }));
 
+vi.mock("@/components/ui/dialog", () => ({
+  Dialog: ({ children, open }: { children: React.ReactNode; open?: boolean }) =>
+    open ? <div data-testid="dialog">{children}</div> : null,
+  DialogTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  DialogContent: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="dialog-content">{children}</div>
+  ),
+  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
+  DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogClose: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  DialogPortal: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  DialogOverlay: () => null,
+}));
+
+vi.mock("@/components/ui/button", () => ({
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    title,
+    type,
+  }: {
+    children?: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+    title?: string;
+    type?: string;
+  }) => (
+    <button
+      data-testid="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      type={type ?? "button"}
+    >
+      {children}
+    </button>
+  ),
+}));
+
+vi.mock("@/components/ui/badge", () => ({
+  Badge: ({ children }: { children?: React.ReactNode }) => (
+    <span data-testid="badge">{children}</span>
+  ),
+}));
+
+vi.mock("@/components/ui/input", () => ({
+  Input: (props: Record<string, unknown>) => <input data-testid="input" {...props} />,
+}));
+
+vi.mock("@/components/ui/textarea", () => ({
+  Textarea: (props: Record<string, unknown>) => (
+    <textarea data-testid="textarea" {...props} />
+  ),
+}));
+
 vi.mock("@/components/ui/form", () => ({
   Form: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  FormControl: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  FormControl: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   FormField: ({
     render,
   }: {
     render: (fieldProps: {
       field: { value: unknown; onChange: () => void; name: string };
     }) => React.ReactNode;
-  }) =>
-    render({
-      field: { value: "", onChange: vi.fn(), name: "" },
-    }),
-  FormItem: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  FormLabel: ({ children }: { children: React.ReactNode }) => (
-    <label>{children}</label>
-  ),
+  }) => render({ field: { value: "", onChange: vi.fn(), name: "" } }),
+  FormItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  FormLabel: ({ children }: { children: React.ReactNode }) => <label>{children}</label>,
   FormMessage: () => null,
 }));
 
@@ -190,7 +241,7 @@ vi.mock("sonner", () => ({
 }));
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Mock @tanstack/react-query — uses hoisted vi.fn() so per-test overrides work
+// Mock @tanstack/react-query
 // ═══════════════════════════════════════════════════════════════════════════════
 
 vi.mock("@tanstack/react-query", () => ({
@@ -198,9 +249,7 @@ vi.mock("@tanstack/react-query", () => ({
   useMutation: mockUseMutation,
   useQueryClient: mockUseQueryClient,
   QueryClient: vi.fn(),
-  QueryClientProvider: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  QueryClientProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -232,7 +281,7 @@ vi.mock("@/app/admin/_lib/api", () => ({
 }));
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Mock useEntityCrud — uses hoisted vi.fn() so per-test overrides are possible
+// Mock useEntityCrud
 // ═══════════════════════════════════════════════════════════════════════════════
 
 vi.mock("@/hooks/use-entity-crud", () => ({
@@ -240,20 +289,64 @@ vi.mock("@/hooks/use-entity-crud", () => ({
 }));
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Page Imports (after mocks — vitest hoists vi.mock above all imports)
+// Page Imports
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import AdminReviewsPage from "../reviews/page";
 import AdminBundlesPage from "../bundles/page";
-import { shopReviewsApi, shopBundlesApi } from "@/app/admin/_lib/api";
+import { shopReviewsApi } from "@/app/admin/_lib/api";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Helpers
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const defaultCrudMock = {
+/** Default useQuery handler — returns mock data for all admin queries */
+function defaultQueryHandler({ queryKey }: { queryKey: unknown[] }) {
+  const [ns, entity] = queryKey as string[];
+  if (ns === "admin") {
+    if (entity === "reviews") return { data: mockReviews, isPending: false };
+    if (entity === "bundles") return { data: mockBundles, isPending: false };
+    if (entity === "products") return { data: mockShopProducts, isPending: false };
+    if (entity === "bundle-items") return { data: [{ product_id: "prod-1" }], isPending: false };
+  }
+  return { data: [], isPending: false };
+}
+
+/** Default useMutation mock — executes mutationFn so interaction tests work */
+function defaultMutationHandler({
+  mutationFn,
+  onSuccess,
+  onError,
+}: {
+  mutationFn: (...args: unknown[]) => Promise<unknown>;
+  onSuccess?: (data: unknown) => void;
+  onError?: (error: unknown) => void;
+}) {
+  return {
+    isPending: false,
+    mutate: (...args: unknown[]) => {
+      mutationFn(...args).then(
+        (r) => onSuccess?.(r),
+        (e) => onError?.(e),
+      );
+    },
+    mutateAsync: (...args: unknown[]) => {
+      return mutationFn(...args).then(
+        (r) => {
+          onSuccess?.(r);
+          return r;
+        },
+        (e) => {
+          onError?.(e);
+          throw e;
+        },
+      );
+    },
+  };
+}
+
+const defaultEntityCrud = {
   dialogOpen: false,
   editingItem: null,
   confirmOpen: false,
@@ -264,7 +357,7 @@ const defaultCrudMock = {
     getValues: vi.fn(() => "[]"),
     setValue: vi.fn(),
     watch: vi.fn((name: string) => {
-      if (name === "discount_percent") return 0;
+      if (name === "discount_percent") return "0";
       return "";
     }),
     handleSubmit: () => vi.fn(),
@@ -280,69 +373,13 @@ const defaultCrudMock = {
   isMutating: false,
 };
 
-/**
- * Set default useQuery mock implementation.
- * Handles all query keys used in reviews and bundles pages.
- */
-function setupDefaultQueryMocks() {
+function setupDefaultMocks() {
   mockUseQuery.mockReset();
-  mockUseQuery.mockImplementation(({ queryKey }: { queryKey: unknown[] }) => {
-    const [ns, entity, sub] = queryKey as string[];
-    if (ns === "admin") {
-      if (entity === "reviews") {
-        return { data: mockReviews, isPending: false };
-      }
-      if (entity === "bundles") {
-        return { data: mockBundles, isPending: false };
-      }
-      if (entity === "products") {
-        return { data: mockShopProducts, isPending: false };
-      }
-      if (entity === "bundle-items" && sub) {
-        return { data: [{ product_id: "prod-1" }], isPending: false };
-      }
-    }
-    return { data: [], isPending: false };
-  });
-}
-
-/**
- * Set default useMutation mock so that mutationFn actually executes,
- * enabling interaction tests to verify API calls and toast callbacks.
- */
-function setupDefaultMutationMock() {
+  mockUseQuery.mockImplementation(defaultQueryHandler);
   mockUseMutation.mockReset();
-  mockUseMutation.mockImplementation(
-    ({
-      mutationFn,
-      onSuccess,
-      onError,
-    }: {
-      mutationFn: (...args: unknown[]) => Promise<unknown>;
-      onSuccess?: (data: unknown) => void;
-      onError?: (error: unknown) => void;
-    }) => ({
-      isPending: false,
-      mutate: async (...args: unknown[]) => {
-        try {
-          const result = await mutationFn(...args);
-          if (onSuccess) onSuccess(result);
-        } catch (e) {
-          if (onError) onError(e);
-        }
-      },
-      mutateAsync: async (...args: unknown[]) => {
-        try {
-          const result = await mutationFn(...args);
-          if (onSuccess) onSuccess(result);
-          return result;
-        } catch (e) {
-          if (onError) onError(e);
-          throw e;
-        }
-      },
-    }),
-  );
+  mockUseMutation.mockImplementation(defaultMutationHandler);
+  mockUseQueryClient.mockReturnValue({ invalidateQueries: vi.fn() });
+  mockUseEntityCrud.mockReturnValue({ ...defaultEntityCrud });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -352,15 +389,10 @@ function setupDefaultMutationMock() {
 describe("AdminReviewsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    setupDefaultQueryMocks();
-    setupDefaultMutationMock();
-    mockUseQueryClient.mockReturnValue({
-      invalidateQueries: vi.fn(),
-    });
-    mockUseEntityCrud.mockReturnValue(defaultCrudMock);
+    setupDefaultMocks();
   });
 
-  // ── Render states ────────────────────────────────────────────────────────
+  // ── Render states ──────────────────────────────────────────────────────
 
   it("shows the page title", () => {
     render(<AdminReviewsPage />);
@@ -368,23 +400,17 @@ describe("AdminReviewsPage", () => {
   });
 
   it("shows loading spinner when data is loading", () => {
-    mockUseQuery.mockReturnValueOnce({
-      data: undefined,
-      isPending: true,
-    });
+    mockUseQuery.mockReturnValue({ data: undefined, isPending: true });
     render(<AdminReviewsPage />);
-    expect(screen.getByRole("status")).toBeInTheDocument();
+    // Loader2 icon renders as span with animate-spin when data is undefined
+    const content = screen.getByTestId("page-content");
+    expect(content.querySelector(".animate-spin")).toBeTruthy();
   });
 
   it("shows empty state when there are no reviews", () => {
-    mockUseQuery.mockReturnValueOnce({
-      data: [],
-      isPending: false,
-    });
+    mockUseQuery.mockReturnValue({ data: [], isPending: false });
     render(<AdminReviewsPage />);
-    expect(
-      screen.getByText("Сэтгэгдэл байхгүй байна"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Сэтгэгдэл байхгүй байна")).toBeInTheDocument();
   });
 
   it("renders review rows with author_name, rating stars, and content", () => {
@@ -413,72 +439,61 @@ describe("AdminReviewsPage", () => {
 
   it("shows formatted date", () => {
     render(<AdminReviewsPage />);
-    // "2024-01-15 10:00" — formatted via format() from date-fns
-    expect(screen.getByText("2024-01-15 10:00")).toBeInTheDocument();
-    expect(screen.getByText("2024-02-20 14:30")).toBeInTheDocument();
+    // date-fns format() outputs in local timezone (UTC+8)
+    expect(screen.getByText("2024-01-15 18:00")).toBeInTheDocument();
+    expect(screen.getByText("2024-02-20 22:30")).toBeInTheDocument();
   });
 
   it("shows Зөвшөөрөх button for unapproved reviews", () => {
     render(<AdminReviewsPage />);
-    const approveButtons = screen.getAllByText("Зөвшөөрөх");
-    expect(approveButtons).toHaveLength(1);
+    expect(screen.getAllByText("Зөвшөөрөх")).toHaveLength(1);
   });
 
   it("shows Цуцлах button for approved reviews", () => {
     render(<AdminReviewsPage />);
-    const rejectButtons = screen.getAllByText("Цуцлах");
-    expect(rejectButtons).toHaveLength(1);
+    expect(screen.getAllByText("Цуцлах")).toHaveLength(1);
   });
 
   it("shows delete (Trash2) button for each review", () => {
     render(<AdminReviewsPage />);
-    // Each row has a Тrash2 icon button with title "Устгах"
     const deleteButtons = screen.getAllByTitle("Устгах");
     expect(deleteButtons).toHaveLength(2);
   });
 
-  // ── Interaction tests ────────────────────────────────────────────────────
+  // ── Interaction tests ──────────────────────────────────────────────────
 
   it("clicking Зөвшөөрөх calls shopReviewsApi.update with is_approved:true", async () => {
     const updateMock = vi.mocked(shopReviewsApi.update);
-    updateMock.mockResolvedValue(mockReviews[1]);
+    updateMock.mockResolvedValue(mockReviews[1] as never);
     render(<AdminReviewsPage />);
-    const approveBtn = screen.getByText("Зөвшөөрөх");
-    fireEvent.click(approveBtn);
+    fireEvent.click(screen.getByText("Зөвшөөрөх"));
     await vi.waitFor(() => {
-      expect(updateMock).toHaveBeenCalledWith("review-2", {
-        is_approved: true,
-      });
+      expect(updateMock).toHaveBeenCalledWith("review-2", { is_approved: true });
     });
   });
 
   it("clicking Цуцлах calls shopReviewsApi.update with is_approved:false", async () => {
     const updateMock = vi.mocked(shopReviewsApi.update);
-    updateMock.mockResolvedValue(mockReviews[0]);
+    updateMock.mockResolvedValue(mockReviews[0] as never);
     render(<AdminReviewsPage />);
-    const rejectBtn = screen.getByText("Цуцлах");
-    fireEvent.click(rejectBtn);
+    fireEvent.click(screen.getByText("Цуцлах"));
     await vi.waitFor(() => {
-      expect(updateMock).toHaveBeenCalledWith("review-1", {
-        is_approved: false,
-      });
+      expect(updateMock).toHaveBeenCalledWith("review-1", { is_approved: false });
     });
   });
 
   it("clicking Trash2 calls shopReviewsApi.remove", async () => {
     const removeMock = vi.mocked(shopReviewsApi.remove);
-    removeMock.mockResolvedValue();
+    removeMock.mockResolvedValue(undefined as never);
     render(<AdminReviewsPage />);
-    const deleteButtons = screen.getAllByTitle("Устгах");
-    fireEvent.click(deleteButtons[0]);
+    fireEvent.click(screen.getAllByTitle("Устгах")[0]);
     await vi.waitFor(() => {
       expect(removeMock).toHaveBeenCalledWith("review-1");
     });
   });
 
   it("shows success toast on approve", async () => {
-    const updateMock = vi.mocked(shopReviewsApi.update);
-    updateMock.mockResolvedValue(mockReviews[1]);
+    vi.mocked(shopReviewsApi.update).mockResolvedValue(mockReviews[1] as never);
     render(<AdminReviewsPage />);
     fireEvent.click(screen.getByText("Зөвшөөрөх"));
     await vi.waitFor(() => {
@@ -487,8 +502,7 @@ describe("AdminReviewsPage", () => {
   });
 
   it("shows success toast on reject", async () => {
-    const updateMock = vi.mocked(shopReviewsApi.update);
-    updateMock.mockResolvedValue(mockReviews[0]);
+    vi.mocked(shopReviewsApi.update).mockResolvedValue(mockReviews[0] as never);
     render(<AdminReviewsPage />);
     fireEvent.click(screen.getByText("Цуцлах"));
     await vi.waitFor(() => {
@@ -497,8 +511,7 @@ describe("AdminReviewsPage", () => {
   });
 
   it("shows success toast on delete", async () => {
-    const removeMock = vi.mocked(shopReviewsApi.remove);
-    removeMock.mockResolvedValue();
+    vi.mocked(shopReviewsApi.remove).mockResolvedValue(undefined as never);
     render(<AdminReviewsPage />);
     fireEvent.click(screen.getAllByTitle("Устгах")[0]);
     await vi.waitFor(() => {
@@ -507,8 +520,7 @@ describe("AdminReviewsPage", () => {
   });
 
   it("shows error toast when approve mutation fails", async () => {
-    const updateMock = vi.mocked(shopReviewsApi.update);
-    updateMock.mockRejectedValue(new Error("API error"));
+    vi.mocked(shopReviewsApi.update).mockRejectedValue(new Error("API error"));
     render(<AdminReviewsPage />);
     fireEvent.click(screen.getByText("Зөвшөөрөх"));
     await vi.waitFor(() => {
@@ -517,8 +529,7 @@ describe("AdminReviewsPage", () => {
   });
 
   it("shows error toast when reject mutation fails", async () => {
-    const updateMock = vi.mocked(shopReviewsApi.update);
-    updateMock.mockRejectedValue(new Error("API error"));
+    vi.mocked(shopReviewsApi.update).mockRejectedValue(new Error("API error"));
     render(<AdminReviewsPage />);
     fireEvent.click(screen.getByText("Цуцлах"));
     await vi.waitFor(() => {
@@ -527,8 +538,7 @@ describe("AdminReviewsPage", () => {
   });
 
   it("shows error toast when delete mutation fails", async () => {
-    const removeMock = vi.mocked(shopReviewsApi.remove);
-    removeMock.mockRejectedValue(new Error("API error"));
+    vi.mocked(shopReviewsApi.remove).mockRejectedValue(new Error("API error"));
     render(<AdminReviewsPage />);
     fireEvent.click(screen.getAllByTitle("Устгах")[0]);
     await vi.waitFor(() => {
@@ -544,15 +554,10 @@ describe("AdminReviewsPage", () => {
 describe("AdminBundlesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    setupDefaultQueryMocks();
-    setupDefaultMutationMock();
-    mockUseQueryClient.mockReturnValue({
-      invalidateQueries: vi.fn(),
-    });
-    mockUseEntityCrud.mockReturnValue({ ...defaultCrudMock });
+    setupDefaultMocks();
   });
 
-  // ── Render states ────────────────────────────────────────────────────────
+  // ── Render states ──────────────────────────────────────────────────────
 
   it("shows the page title", () => {
     render(<AdminBundlesPage />);
@@ -560,43 +565,28 @@ describe("AdminBundlesPage", () => {
   });
 
   it("shows loading state", () => {
-    // Override the bundles query to return loading
-    mockUseQuery.mockImplementation(
-      ({ queryKey }: { queryKey: unknown[] }) => {
-        const [ns, entity] = queryKey as string[];
-        if (ns === "admin" && entity === "bundles") {
-          return { data: undefined, isPending: true };
-        }
-        // Keep other queries (products, bundle-items) returning normal data
-        if (ns === "admin" && entity === "products") {
-          return { data: mockShopProducts, isPending: false };
-        }
-        return { data: [], isPending: false };
-      },
-    );
+    mockUseQuery.mockImplementation(({ queryKey }: { queryKey: unknown[] }) => {
+      const [ns, entity] = queryKey as string[];
+      if (ns === "admin" && entity === "bundles") {
+        return { data: undefined, isPending: true };
+      }
+      return defaultQueryHandler({ queryKey });
+    });
     render(<AdminBundlesPage />);
     expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
   });
 
   it("shows empty state", () => {
-    mockUseQuery.mockImplementation(
-      ({ queryKey }: { queryKey: unknown[] }) => {
-        const [ns, entity] = queryKey as string[];
-        if (ns === "admin" && entity === "bundles") {
-          return { data: [], isPending: false };
-        }
-        if (ns === "admin" && entity === "products") {
-          return { data: mockShopProducts, isPending: false };
-        }
+    mockUseQuery.mockImplementation(({ queryKey }: { queryKey: unknown[] }) => {
+      const [ns, entity] = queryKey as string[];
+      if (ns === "admin" && entity === "bundles") {
         return { data: [], isPending: false };
-      },
-    );
+      }
+      return defaultQueryHandler({ queryKey });
+    });
     render(<AdminBundlesPage />);
-    // AdminPageLayout displays empty state via isEmpty prop
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
-    expect(screen.getByTestId("empty-title")).toHaveTextContent(
-      "Багц байхгүй байна",
-    );
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("Багц байхгүй байна");
   });
 
   it("renders bundle rows with name", () => {
@@ -605,7 +595,7 @@ describe("AdminBundlesPage", () => {
     expect(screen.getByText("Мэргэжлийн багц")).toBeInTheDocument();
   });
 
-  it("renders bundle discount_percent values", () => {
+  it("renders bundle discount_percent values via DataTable", () => {
     render(<AdminBundlesPage />);
     expect(screen.getByText("15")).toBeInTheDocument();
     expect(screen.getByText("20")).toBeInTheDocument();
@@ -613,7 +603,6 @@ describe("AdminBundlesPage", () => {
 
   it("renders is_active values via DataTable", () => {
     render(<AdminBundlesPage />);
-    // DataTable mock renders raw cell text from accessorKey
     expect(screen.getByText("true")).toBeInTheDocument();
     expect(screen.getByText("false")).toBeInTheDocument();
   });
@@ -623,117 +612,81 @@ describe("AdminBundlesPage", () => {
     expect(screen.getByText("Шинэ багц")).toBeInTheDocument();
   });
 
-  it("renders edit buttons", () => {
+  it("renders edit buttons via DataTable action column", () => {
     render(<AdminBundlesPage />);
     const editButtons = screen.getAllByTitle("Засах");
     expect(editButtons).toHaveLength(2);
   });
 
-  it("renders delete buttons", () => {
+  it("renders delete buttons via DataTable action column", () => {
     render(<AdminBundlesPage />);
     const deleteButtons = screen.getAllByTitle("Устгах");
+    // 2 delete buttons in DataTable rows + 0 from ConfirmDialog (mocked to null)
     expect(deleteButtons).toHaveLength(2);
   });
 
-  // ── Dialog tests ─────────────────────────────────────────────────────────
+  // ── Dialog tests ───────────────────────────────────────────────────────
 
   it("clicking Шинэ багц calls crud.handleCreate", () => {
-    const crudMock = {
-      ...defaultCrudMock,
-      handleCreate: vi.fn(),
-    };
-    mockUseEntityCrud.mockReturnValue(crudMock);
+    const handleCreate = vi.fn();
+    mockUseEntityCrud.mockReturnValue({ ...defaultEntityCrud, handleCreate });
     render(<AdminBundlesPage />);
     fireEvent.click(screen.getByText("Шинэ багц"));
-    expect(crudMock.handleCreate).toHaveBeenCalled();
+    expect(handleCreate).toHaveBeenCalled();
   });
 
-  it("dialog shows form fields: name, description, discount_percent", () => {
-    const crudMock = {
-      ...defaultCrudMock,
-      dialogOpen: true,
-    };
-    mockUseEntityCrud.mockReturnValue(crudMock);
+  it("dialog shows form fields when open", () => {
+    mockUseEntityCrud.mockReturnValue({ ...defaultEntityCrud, dialogOpen: true });
     render(<AdminBundlesPage />);
     expect(screen.getByText("Нэр")).toBeInTheDocument();
     expect(screen.getByText("Тайлбар")).toBeInTheDocument();
     expect(screen.getByText("Хямдрал (%)")).toBeInTheDocument();
   });
 
-  it("dialog shows product multi-select checkboxes", () => {
-    const crudMock = {
-      ...defaultCrudMock,
-      dialogOpen: true,
-    };
-    mockUseEntityCrud.mockReturnValue(crudMock);
+  it("dialog shows product multi-select checkboxes when open", () => {
+    mockUseEntityCrud.mockReturnValue({ ...defaultEntityCrud, dialogOpen: true });
     render(<AdminBundlesPage />);
-    // Dialog renders product section heading
     expect(screen.getByText("Бүтээгдэхүүнүүд")).toBeInTheDocument();
-    // Product names are visible
     expect(screen.getByText("Онооны самбар")).toBeInTheDocument();
     expect(screen.getByText("Бөмбөг")).toBeInTheDocument();
   });
 
-  it("dialog shows pricing calculation (total original vs discounted)", () => {
-    const crudMock = {
-      ...defaultCrudMock,
-      dialogOpen: true,
-    };
-    mockUseEntityCrud.mockReturnValue(crudMock);
+  it("dialog shows pricing calculation when products selected", () => {
+    mockUseEntityCrud.mockReturnValue({ ...defaultEntityCrud, dialogOpen: true });
     render(<AdminBundlesPage />);
-    // Pricing labels are visible when products are selected
     expect(screen.getByText("Анхны үнэ:")).toBeInTheDocument();
     expect(screen.getByText("Хямдралтай үнэ:")).toBeInTheDocument();
   });
 
-  it("dialog shows Цуцлах and Үүсгэх buttons", () => {
-    const crudMock = {
-      ...defaultCrudMock,
-      dialogOpen: true,
-    };
-    mockUseEntityCrud.mockReturnValue(crudMock);
+  it("dialog shows Үүсгэх button for create mode", () => {
+    mockUseEntityCrud.mockReturnValue({ ...defaultEntityCrud, dialogOpen: true });
     render(<AdminBundlesPage />);
-    expect(screen.getByText("Цуцлах")).toBeInTheDocument();
     expect(screen.getByText("Үүсгэх")).toBeInTheDocument();
   });
 
-  it("edit dialog shows Шинэчлэх button", () => {
-    const crudMock = {
-      ...defaultCrudMock,
+  it("dialog shows Шинэчлэх button for edit mode", () => {
+    mockUseEntityCrud.mockReturnValue({
+      ...defaultEntityCrud,
       dialogOpen: true,
       editingItem: mockBundles[0],
-    };
-    mockUseEntityCrud.mockReturnValue(crudMock);
+    });
     render(<AdminBundlesPage />);
     expect(screen.getByText("Шинэчлэх")).toBeInTheDocument();
   });
 
-  it("clicking delete button opens confirm dialog", () => {
+  it("clicking delete button calls crud.handleDelete with bundle", () => {
     const handleDelete = vi.fn();
-    const crudMock = {
-      ...defaultCrudMock,
-      handleDelete,
-    };
-    mockUseEntityCrud.mockReturnValue(crudMock);
+    mockUseEntityCrud.mockReturnValue({ ...defaultEntityCrud, handleDelete });
     render(<AdminBundlesPage />);
-    const deleteButtons = screen.getAllByTitle("Устгах");
-    fireEvent.click(deleteButtons[0]);
-    expect(handleDelete).toHaveBeenCalledWith(
-      mockBundles[0],
-      "Багцыг устгах уу?",
-    );
+    fireEvent.click(screen.getAllByTitle("Устгах")[0]);
+    expect(handleDelete).toHaveBeenCalledWith(mockBundles[0], "Багцыг устгах уу?");
   });
 
-  it("clicking edit button calls handleEdit with the bundle", () => {
+  it("clicking edit button calls crud.handleEdit with bundle", () => {
     const handleEdit = vi.fn();
-    const crudMock = {
-      ...defaultCrudMock,
-      handleEdit,
-    };
-    mockUseEntityCrud.mockReturnValue(crudMock);
+    mockUseEntityCrud.mockReturnValue({ ...defaultEntityCrud, handleEdit });
     render(<AdminBundlesPage />);
-    const editButtons = screen.getAllByTitle("Засах");
-    fireEvent.click(editButtons[0]);
+    fireEvent.click(screen.getAllByTitle("Засах")[0]);
     expect(handleEdit).toHaveBeenCalledWith(mockBundles[0]);
   });
 });

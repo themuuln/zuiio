@@ -189,26 +189,32 @@ function buildTeamStatsFromParser(
   const teamFlow = flow
     ? (isHome
         ? {
-            pointsFromTurnovers: flow.pointsFromTurnovers.home,
-            pointsInPaint: flow.pointsInPaint.home,
-            secondChancePoints: flow.secondChancePoints.home,
-            fastBreakPoints: flow.fastBreakPoints.home,
-            benchPoints: flow.benchPoints.home,
-            biggestLead: flow.biggestLead.home,
-            biggestScoringRunFor: flow.biggestScoringRun.homeFor,
-            biggestScoringRunAgainst: flow.biggestScoringRun.homeAgainst,
-            timeLeadingSeconds: parseTimeLeadingToSeconds(flow.timeLeading.home),
+            pointsFromTurnovers: flow.pointsFromTurnovers?.home ?? null,
+            pointsInPaint: flow.pointsInPaint?.home ?? null,
+            secondChancePoints: flow.secondChancePoints?.home ?? null,
+            fastBreakPoints: flow.fastBreakPoints?.home ?? null,
+            benchPoints: flow.benchPoints?.home ?? null,
+            biggestLead: flow.biggestLead?.home ?? null,
+            biggestScoringRunFor: flow.biggestScoringRun?.homeFor ?? null,
+            biggestScoringRunAgainst: flow.biggestScoringRun?.homeAgainst ?? null,
+            timeLeadingSeconds:
+              flow.timeLeading?.home != null
+                ? parseTimeLeadingToSeconds(flow.timeLeading.home)
+                : null,
           }
         : {
-            pointsFromTurnovers: flow.pointsFromTurnovers.away,
-            pointsInPaint: flow.pointsInPaint.away,
-            secondChancePoints: flow.secondChancePoints.away,
-            fastBreakPoints: flow.fastBreakPoints.away,
-            benchPoints: flow.benchPoints.away,
-            biggestLead: flow.biggestLead.away,
-            biggestScoringRunFor: flow.biggestScoringRun.awayFor,
-            biggestScoringRunAgainst: flow.biggestScoringRun.awayAgainst,
-            timeLeadingSeconds: parseTimeLeadingToSeconds(flow.timeLeading.away),
+            pointsFromTurnovers: flow.pointsFromTurnovers?.away ?? null,
+            pointsInPaint: flow.pointsInPaint?.away ?? null,
+            secondChancePoints: flow.secondChancePoints?.away ?? null,
+            fastBreakPoints: flow.fastBreakPoints?.away ?? null,
+            benchPoints: flow.benchPoints?.away ?? null,
+            biggestLead: flow.biggestLead?.away ?? null,
+            biggestScoringRunFor: flow.biggestScoringRun?.awayFor ?? null,
+            biggestScoringRunAgainst: flow.biggestScoringRun?.awayAgainst ?? null,
+            timeLeadingSeconds:
+              flow.timeLeading?.away != null
+                ? parseTimeLeadingToSeconds(flow.timeLeading.away)
+                : null,
           })
     : null;
 

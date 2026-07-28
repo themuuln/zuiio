@@ -132,6 +132,8 @@ export type LeaderRow = {
   blk: number | null;
   tov: number | null;
   pf: number | null;
+  avg_plus_minus: number | null;
+  avg_fouls_drawn: number | null;
   // Backward-compatible aliases
   player_latin: string | null;
   team_short: string;
@@ -199,6 +201,11 @@ export type BoxScoreRow = {
   source_type: string;
   evidence_url: string | null;
   source_reviewed_at: string;
+  plus_minus: number | null;
+  fouls_committed: number | null;
+  fouls_drawn: number | null;
+  is_starter: boolean;
+  dnp_reason: string | null;
   // Backward-compatible alias
   team_short: string;
 };
@@ -212,6 +219,73 @@ export interface PlayerGameLine extends BoxScoreRow {
   opponent_score: number;
   result: "W" | "L";
   is_home: boolean;
+}
+
+export interface TeamGameStatsRow {
+  game_id: string;
+  team_season_id: string;
+  team_name: string;
+  pts: number;
+  fgm: number;
+  fga: number;
+  tpm: number;
+  tpa: number;
+  ftm: number;
+  fta: number;
+  oreb: number;
+  dreb: number;
+  team_reb: number;
+  ast: number;
+  stl: number;
+  blk: number;
+  tov: number;
+  pf: number;
+  fouls_committed: number;
+  fouls_drawn: number;
+  points_from_turnovers: number | null;
+  points_in_paint: number | null;
+  second_chance_points: number | null;
+  fast_break_points: number | null;
+  bench_points: number | null;
+  biggest_lead: number | null;
+  biggest_scoring_run_for: number | null;
+  biggest_scoring_run_against: number | null;
+  time_leading_seconds: number | null;
+  opponent_pts: number;
+  opponent_fgm: number;
+  opponent_fga: number;
+  opponent_tpm: number;
+  opponent_tpa: number;
+  opponent_ftm: number;
+  opponent_fta: number;
+  opponent_oreb: number;
+  opponent_dreb: number;
+  opponent_team_reb: number;
+  opponent_ast: number;
+  opponent_stl: number;
+  opponent_blk: number;
+  opponent_tov: number;
+  opponent_pf: number;
+}
+
+export interface PeriodScoreRow {
+  game_id: string;
+  period: number;
+  home_points: number;
+  away_points: number;
+}
+
+export interface ScoringCheckpointRow {
+  game_id: string;
+  elapsed_seconds: number;
+  home_score: number;
+  away_score: number;
+}
+
+export interface GameSummaryRow {
+  game_id: string;
+  lead_changes: number | null;
+  times_tied: number | null;
 }
 
 export type TeamRosterRow = {
@@ -453,7 +527,6 @@ export function statusVariant(
 }
 export type {
   TeamAdvancedStatsPerGame,
-  TeamGameStatsRow,
   TeamSeasonAggregates,
 } from "./types/team-stats";
 

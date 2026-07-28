@@ -8,7 +8,6 @@ import {
 } from "@/app/lib/data";
 import { EfficiencyChart } from "./components/efficiency-chart";
 import { FourFactorsChart } from "./components/four-factors-chart";
-import { LineupAnalysis } from "./components/lineup-analysis";
 import { PerGameTable } from "./components/per-game-table";
 import { TeamStatsSummary } from "./components/team-stats-summary";
 
@@ -76,20 +75,6 @@ export default async function TeamAnalyticsPage({ params }: PageProps) {
 
           {/* Per-game table */}
           <PerGameTable games={games} />
-
-          {/* Lineup analysis */}
-          <section>
-            <h2 className="text-xl font-bold tracking-tight mb-4">
-              Бүрэлдэхүүний дүн шинжилгээ
-            </h2>
-            {teamSeasonId ? (
-              <LineupAnalysis teamSeasonId={teamSeasonId} />
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                Бүрэлдэхүүний шинжилгээ хийхэд баг улиралд холбогдоогүй байна.
-              </p>
-            )}
-          </section>
         </div>
       </div>
     </div>

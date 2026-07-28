@@ -70,6 +70,8 @@ interface DataTableProps<TData, TValue> {
   onRowSelectionChange?: (selectedRows: TData[]) => void;
   /** Extra toolbar content rendered after search, before column toggle */
   toolbar?: React.ReactNode;
+  /** Content rendered between the toolbar and the table */
+  beforeTable?: React.ReactNode;
   /**
    * Enable manual (server-side) pagination.
    * When true, the DataTable does NOT slice data internally and
@@ -121,6 +123,7 @@ export function DataTable<TData, TValue>({
   onRowClick,
   onRowSelectionChange,
   toolbar,
+  beforeTable,
   manualPagination = false,
   currentPage,
   totalPages,
@@ -348,6 +351,9 @@ export function DataTable<TData, TValue>({
           )}
         </div>
       </div>
+
+      {/* ── Before table slot ── */}
+      {beforeTable}
 
       {/* ── Table ── */}
       <div className="relative overflow-x-auto rounded-lg border">

@@ -51,6 +51,8 @@ interface CategoryConfig {
   key: string;
   label: string;
   getValue: (leader: LeaderRow) => number;
+  isEligible?: (leader: LeaderRow) => boolean;
+  sort?: 'asc' | 'desc';
 }
 
 const CATEGORIES: CategoryConfig[] = [
@@ -79,6 +81,72 @@ const CATEGORIES: CategoryConfig[] = [
     label: "Хаалт",
     getValue: (leader) => leader.blk ?? 0,
   },
+  {
+    key: "fg_pct",
+    label: "Шидэлт %",
+    getValue: (leader) => (leader.fga ?? 0) > 0 ? ((leader.fgm ?? 0) / (leader.fga ?? 0)) * 100 : 0,
+    isEligible: (leader) => (leader.fga ?? 0) >= 10,
+  },
+  {
+    key: "two_pt_pct",
+    label: "2 оноо %",
+    getValue: (leader) => {
+      const twoAtt = (leader.fga ?? 0) - (leader.tpa ?? 0);
+      const twoMade = (leader.fgm ?? 0) - (leader.tpm ?? 0);
+      return twoAtt > 0 ? (twoMade / twoAtt) * 100 : 0;
+    },
+    isEligible: (leader) => ((leader.fga ?? 0) - (leader.tpa ?? 0)) >= 10,
+  },
+  {
+    key: "three_pt_pct",
+    label: "3 оноо %",
+    getValue: (leader) => (leader.tpa ?? 0) > 0 ? ((leader.tpm ?? 0) / (leader.tpa ?? 0)) * 100 : 0,
+    isEligible: (leader) => (leader.tpa ?? 0) >= 5,
+  },
+  {
+    key: "ft_pct",
+    label: "Чөлөөт %",
+    getValue: (leader) => (leader.fta ?? 0) > 0 ? ((leader.ftm ?? 0) / (leader.fta ?? 0)) * 100 : 0,
+    isEligible: (leader) => (leader.fta ?? 0) >= 5,
+  },
+  {
+    key: "mpg",
+    label: "Тоглосон цаг",
+    getValue: (leader) => leader.mpg ?? 0,
+  },
+  {
+    key: "eff",
+    label: "EFF",
+    getValue: (leader) => {
+      const pts = leader.pts ?? 0;
+      const reb = (leader.oreb ?? 0) + (leader.dreb ?? 0);
+      const ast = leader.ast ?? 0;
+      const stl = leader.stl ?? 0;
+      const blk = leader.blk ?? 0;
+      const fgm = leader.fgm ?? 0;
+      const fga = leader.fga ?? 0;
+      const ftm = leader.ftm ?? 0;
+      const fta = leader.fta ?? 0;
+      const tov = leader.tov ?? 0;
+      return (pts + reb + ast + stl + blk) - (fga - fgm) - (fta - ftm) - tov;
+    },
+  },
+  {
+    key: "plus_minus",
+    label: "+−",
+    getValue: (leader) => leader.avg_plus_minus ?? 0,
+  },
+  {
+    key: "fouls_drawn",
+    label: "ДА татсан",
+    getValue: (leader) => leader.avg_fouls_drawn ?? 0,
+  },
+  {
+    key: "pf",
+    label: "Алдаа",
+    getValue: (leader) => leader.pf ?? 0,
+    sort: 'asc',
+  },
 ];
 
 interface LeaderTabsProps {
@@ -90,8 +158,12 @@ function rankedLeaders(
   leaders: LeaderRow[],
   category: CategoryConfig,
 ): LeaderRow[] {
-  return leaders
-    .sort((a, b) => category.getValue(b) - category.getValue(a))
+  const eligible = category.isEligible
+    ? leaders.filter(category.isEligible)
+    : leaders;
+  const direction = category.sort === 'asc' ? 1 : -1;
+  return [...eligible]
+    .sort((a, b) => direction * (category.getValue(a) - category.getValue(b)))
     .slice(0, 10);
 }
 
@@ -166,14 +238,14 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
+      const validKeys = CATEGORIES.map((c) => c.key);
       if (saved) {
         const parsed = JSON.parse(saved) as string[];
-        // Validate: all keys must exist in CATEGORIES
-        const validKeys = CATEGORIES.map((c) => c.key);
-        if (parsed.every((k) => validKeys.includes(k))) {
-          setCategoryOrder(parsed);
-          setActiveTab(parsed[0]);
-        }
+        // Keep valid saved keys, append any new keys not yet persisted
+        const existing = parsed.filter((k) => validKeys.includes(k));
+        const newKeys = validKeys.filter((k) => !existing.includes(k));
+        setCategoryOrder([...existing, ...newKeys]);
+        setActiveTab([...existing, ...newKeys][0]);
       }
     } catch {
       // Ignore invalid data
