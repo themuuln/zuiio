@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { NumericInput } from "@/components/ui/numeric-input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -450,109 +451,301 @@ export function PartsTab({
           </Card>
         ) : (
           <Card>
-            <CardContent className="overflow-x-auto p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="px-3 py-1.5 text-left">
-                      <SortKeyHeader
-                        label="Name"
-                        sortKey="name"
-                        currentSortKey={sortKey}
-                        sortDir={sortDir}
-                        onSort={handleSort}
-                      />
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-left">
-                      <SortKeyHeader
-                        label="Popularity"
-                        sortKey="popularity"
-                        currentSortKey={sortKey}
-                        sortDir={sortDir}
-                        onSort={handleSort}
-                        icon={Star}
-                      />
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-left">
-                      <SortKeyHeader
-                        label="Category"
-                        sortKey="category"
-                        currentSortKey={sortKey}
-                        sortDir={sortDir}
-                        onSort={handleSort}
-                      />
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-right">
-                      <SortKeyHeader
-                        label="Default Price"
-                        sortKey="price"
-                        currentSortKey={sortKey}
-                        sortDir={sortDir}
-                        onSort={handleSort}
-                      />
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-right">
-                      <SortKeyHeader
-                        label="On Hand"
-                        sortKey="stock"
-                        currentSortKey={sortKey}
-                        sortDir={sortDir}
-                        onSort={handleSort}
-                      />
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-center font-medium text-muted-foreground">
-                      Status
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-center font-medium text-muted-foreground">
-                      Min
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
-                      Part #
-                    </TableHead>
-                    <TableHead className="w-14" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedParts.map((part) => {
-                    const bal = balanceMap.get(part.id);
-                    const qty = bal?.quantity_on_hand ?? 0;
-                    const min = thresholdMap[part.id] ?? 5;
-                    const status = qty <= 0 ? "out" : qty < min ? "low" : "ok";
-                    return (
-                      <TableRow
-                        key={part.id}
-                        className="border-b border-border transition-colors hover:bg-muted/30"
-                      >
-                        <TableCell className="px-3 py-1.5 font-medium">
-                          <Link
-                            href={`/dashboard/inventory/parts/${part.id}`}
-                            className="hover:underline text-foreground"
-                          >
-                            {locale === "mn" && part.name_mn
-                              ? part.name_mn
-                              : part.name}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5">
-                          {part.popularity_score != null && (
-                            <Badge variant="outline" className="gap-1">
-                              {part.popularity_score >= 80 ? (
-                                <Star className="size-3" />
-                              ) : null}
-                              {part.popularity_score}
+            {/* Desktop: table view */}
+            <div className="hidden md:block">
+              <CardContent className="overflow-x-auto p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="px-3 py-1.5 text-left">
+                        <SortKeyHeader
+                          label="Name"
+                          sortKey="name"
+                          currentSortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={handleSort}
+                        />
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-left">
+                        <SortKeyHeader
+                          label="Popularity"
+                          sortKey="popularity"
+                          currentSortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={handleSort}
+                          icon={Star}
+                        />
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-left">
+                        <SortKeyHeader
+                          label="Category"
+                          sortKey="category"
+                          currentSortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={handleSort}
+                        />
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-right">
+                        <SortKeyHeader
+                          label="Default Price"
+                          sortKey="price"
+                          currentSortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={handleSort}
+                        />
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-right">
+                        <SortKeyHeader
+                          label="On Hand"
+                          sortKey="stock"
+                          currentSortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={handleSort}
+                        />
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-center font-medium text-muted-foreground">
+                        Status
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-center font-medium text-muted-foreground">
+                        Min
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
+                        Part #
+                      </TableHead>
+                      <TableHead className="w-14" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedParts.map((part) => {
+                      const bal = balanceMap.get(part.id);
+                      const qty = bal?.quantity_on_hand ?? 0;
+                      const min = thresholdMap[part.id] ?? 5;
+                      const status = qty <= 0 ? "out" : qty < min ? "low" : "ok";
+                      return (
+                        <TableRow
+                          key={part.id}
+                          className="border-b border-border transition-colors hover:bg-muted/30"
+                        >
+                          <TableCell className="px-3 py-1.5 font-medium">
+                            <Link
+                              href={`/dashboard/inventory/parts/${part.id}`}
+                              className="hover:underline text-foreground"
+                            >
+                              {locale === "mn" && part.name_mn
+                                ? part.name_mn
+                                : part.name}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5">
+                            {part.popularity_score != null && (
+                              <Badge variant="outline" className="gap-1">
+                                {part.popularity_score >= 80 ? (
+                                  <Star className="size-3" />
+                                ) : null}
+                                {part.popularity_score}
                             </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5 text-muted-foreground">
+                            )}
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5 text-muted-foreground">
+                            {part.category ?? "—"}
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5 text-right tabular-nums">
+                            {part.default_price
+                              ? formatMNT(part.default_price)
+                              : "—"}
+                          </TableCell>
+                          <TableCell
+                            className={`px-3 py-1.5 text-right font-semibold tabular-nums ${
+                              status === "out"
+                                ? "text-destructive"
+                                : status === "low"
+                                  ? "text-amber-600"
+                                  : ""
+                            }`}
+                          >
+                            {qty} {part.unit}
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5 text-center">
+                            <Badge variant="outline" className="gap-1">
+                              {status === "out" && (
+                                <AlertTriangle className="size-3" />
+                              )}
+                              {status === "out"
+                                ? t("outOfStock")
+                                : status === "low"
+                                  ? t("lowStock")
+                                  : t("inStock")}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5 text-center">
+                            {editingThreshold === part.id ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <NumericInput
+                                  value={Number(thresholdValue) || 0}
+                                  onChange={(qty) =>
+                                    setThresholdValue(String(qty))
+                                  }
+                                  className="h-8 w-16 text-center"
+                                  min={0}
+                                />
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleSaveThreshold(
+                                      part.id,
+                                      Number(thresholdValue) || 0,
+                                    )
+                                  }
+                                >
+                                  Save
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="xs"
+                                onClick={() => {
+                                  setEditingThreshold(part.id);
+                                  setThresholdValue(
+                                    String(thresholdMap[part.id] ?? 5),
+                                  );
+                                }}
+                              >
+                                {thresholdMap[part.id] ?? 5}
+                              </Button>
+                            )}
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5 text-muted-foreground font-mono text-xs">
+                            {part.part_number ?? "—"}
+                          </TableCell>
+                          <TableCell className="px-1 py-1.5">
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="xs"
+                                onClick={() => setViewingPart(part)}
+                                title="View"
+                              >
+                                <Eye className="size-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="xs"
+                                onClick={() => setEditingPart(part)}
+                                title="Edit"
+                              >
+                                <Pencil className="size-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="xs"
+                                onClick={() => setDeletingPart(part)}
+                                title={t("delete")}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </div>
+            {/* Mobile: card view */}
+            <div className="grid gap-2 md:hidden p-3">
+              {sortedParts.map((part) => {
+                const bal = balanceMap.get(part.id);
+                const qty = bal?.quantity_on_hand ?? 0;
+                const min = thresholdMap[part.id] ?? 5;
+                const status = qty <= 0 ? "out" : qty < min ? "low" : "ok";
+                return (
+                  <div
+                    key={part.id}
+                    className="border border-border/50 rounded-lg p-3 space-y-2 text-sm"
+                  >
+                    {/* top row: name + part number + actions */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <Link
+                          href={`/dashboard/inventory/parts/${part.id}`}
+                          className="font-medium hover:underline text-foreground line-clamp-1"
+                        >
+                          {locale === "mn" && part.name_mn
+                            ? part.name_mn
+                            : part.name}
+                        </Link>
+                        {part.popularity_score != null && (
+                          <Badge variant="outline" className="gap-1 mt-0.5">
+                            {part.popularity_score >= 80 ? (
+                              <Star className="size-3" />
+                            ) : null}
+                            {part.popularity_score}
+                          </Badge>
+                        )}
+                        {part.part_number && (
+                          <div className="text-xs text-muted-foreground font-mono mt-0.5">
+                            {part.part_number}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => setViewingPart(part)}
+                          title="View"
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => setEditingPart(part)}
+                          title="Edit"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => setDeletingPart(part)}
+                          title={t("delete")}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    {/* info grid: category, price, qty, status */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">
+                          {t("category")}
+                        </span>
+                        <p className="font-medium truncate mt-0.5">
                           {part.category ?? "—"}
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5 text-right tabular-nums">
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">
+                          {t("price")}
+                        </span>
+                        <p className="font-medium tabular-nums mt-0.5">
                           {part.default_price
                             ? formatMNT(part.default_price)
                             : "—"}
-                        </TableCell>
-                        <TableCell
-                          className={`px-3 py-1.5 text-right font-semibold tabular-nums ${
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">
+                          {t("onHand")}
+                        </span>
+                        <p
+                          className={`font-semibold tabular-nums mt-0.5 ${
                             status === "out"
                               ? "text-destructive"
                               : status === "low"
@@ -561,11 +754,19 @@ export function PartsTab({
                           }`}
                         >
                           {qty} {part.unit}
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5 text-center">
-                          <Badge variant="outline" className="gap-1">
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">
+                          {t("status")}
+                        </span>
+                        <div className="mt-0.5">
+                          <Badge
+                            variant="outline"
+                            className="gap-1 text-[10px] px-1.5 py-0"
+                          >
                             {status === "out" && (
-                              <AlertTriangle className="size-3" />
+                              <AlertTriangle className="size-2.5" />
                             )}
                             {status === "out"
                               ? t("outOfStock")
@@ -573,84 +774,57 @@ export function PartsTab({
                                 ? t("lowStock")
                                 : t("inStock")}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5 text-center">
-                          {editingThreshold === part.id ? (
-                            <div className="flex items-center justify-center gap-1">
-                              <NumericInput
-                                value={Number(thresholdValue) || 0}
-                                onChange={(qty) =>
-                                  setThresholdValue(String(qty))
-                                }
-                                className="h-8 w-16 text-center"
-                                min={0}
-                              />
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() =>
-                                  handleSaveThreshold(
-                                    part.id,
-                                    Number(thresholdValue) || 0,
-                                  )
-                                }
-                              >
-                                Save
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="xs"
-                              onClick={() => {
-                                setEditingThreshold(part.id);
-                                setThresholdValue(
-                                  String(thresholdMap[part.id] ?? 5),
-                                );
-                              }}
-                            >
-                              {thresholdMap[part.id] ?? 5}
-                            </Button>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5 text-muted-foreground font-mono text-xs">
-                          {part.part_number ?? "—"}
-                        </TableCell>
-                        <TableCell className="px-1 py-1.5">
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="xs"
-                              onClick={() => setViewingPart(part)}
-                              title="View"
-                            >
-                              <Eye className="size-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="xs"
-                              onClick={() => setEditingPart(part)}
-                              title="Edit"
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="xs"
-                              onClick={() => setDeletingPart(part)}
-                              title={t("delete")}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
+                        </div>
+                      </div>
+                    </div>
+                    {/* min threshold row */}
+                    <div className="flex items-center justify-between pt-1.5 border-t border-border/50">
+                      <span className="text-muted-foreground text-xs">
+                        {t("minThreshold")}
+                      </span>
+                      {editingThreshold === part.id ? (
+                        <div className="flex items-center gap-1">
+                          <NumericInput
+                            value={Number(thresholdValue) || 0}
+                            onChange={(qty) =>
+                              setThresholdValue(String(qty))
+                            }
+                            className="h-7 w-14 text-center"
+                            min={0}
+                          />
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() =>
+                              handleSaveThreshold(
+                                part.id,
+                                Number(thresholdValue) || 0,
+                              )
+                            }
+                          >
+                            Save
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => {
+                            setEditingThreshold(part.id);
+                            setThresholdValue(
+                              String(thresholdMap[part.id] ?? 5),
+                            );
+                          }}
+                        >
+                          {thresholdMap[part.id] ?? 5}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </Card>
         ))}
 
@@ -679,131 +853,236 @@ export function PartsTab({
           </Card>
         ) : (
           <Card>
-            <CardContent className="overflow-x-auto p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="px-3 py-1.5 text-left">
-                      <SortKeyHeader
-                        label="Name"
-                        sortKey="name"
-                        currentSortKey={globalSortKey}
-                        sortDir={globalSortDir}
-                        onSort={handleGlobalSort}
-                      />
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-left">
-                      <SortKeyHeader
-                        label="Category"
-                        sortKey="category"
-                        currentSortKey={globalSortKey}
-                        sortDir={globalSortDir}
-                        onSort={handleGlobalSort}
-                      />
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
-                      Unit
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
-                      Part #
-                    </TableHead>
-                    <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
-                      Status in My Org
-                    </TableHead>
-                    <TableHead className="w-44 px-3 py-1.5 text-center font-medium text-muted-foreground" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedGlobalParts.map((gp) => {
-                    const localPart = localPartsByGlobalId.get(gp.id);
-                    return (
-                      <TableRow
-                        key={gp.id}
-                        className="border-b border-border transition-colors hover:bg-muted/30"
-                      >
-                        <TableCell className="px-3 py-1.5 font-medium">
-                          <div className="flex flex-col">
-                            <span>
-                              {locale === "mn" && gp.name_mn
-                                ? gp.name_mn
-                                : gp.name}
-                            </span>
-                            {locale !== "mn" && gp.name_mn && (
-                              <span className="text-xs text-muted-foreground">
-                                {gp.name_mn}
+            {/* Desktop: table view */}
+            <div className="hidden md:block">
+              <CardContent className="overflow-x-auto p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="px-3 py-1.5 text-left">
+                        <SortKeyHeader
+                          label="Name"
+                          sortKey="name"
+                          currentSortKey={globalSortKey}
+                          sortDir={globalSortDir}
+                          onSort={handleGlobalSort}
+                        />
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-left">
+                        <SortKeyHeader
+                          label="Category"
+                          sortKey="category"
+                          currentSortKey={globalSortKey}
+                          sortDir={globalSortDir}
+                          onSort={handleGlobalSort}
+                        />
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
+                        Unit
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
+                        Part #
+                      </TableHead>
+                      <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
+                        Status in My Org
+                      </TableHead>
+                      <TableHead className="w-44 px-3 py-1.5 text-center font-medium text-muted-foreground" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedGlobalParts.map((gp) => {
+                      const localPart = localPartsByGlobalId.get(gp.id);
+                      return (
+                        <TableRow
+                          key={gp.id}
+                          className="border-b border-border transition-colors hover:bg-muted/30"
+                        >
+                          <TableCell className="px-3 py-1.5 font-medium">
+                            <div className="flex flex-col">
+                              <span>
+                                {locale === "mn" && gp.name_mn
+                                  ? gp.name_mn
+                                  : gp.name}
                               </span>
-                            )}
-                            {locale === "mn" && gp.name && (
-                              <span className="text-xs text-muted-foreground">
-                                {gp.name}
-                              </span>
-                            )}
-                          </div>
-                          {gp.description && (
-                            <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-xs">
-                              {gp.description}
+                              {locale !== "mn" && gp.name_mn && (
+                                <span className="text-xs text-muted-foreground">
+                                  {gp.name_mn}
+                                </span>
+                              )}
+                              {locale === "mn" && gp.name && (
+                                <span className="text-xs text-muted-foreground">
+                                  {gp.name}
+                                </span>
+                              )}
                             </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5 text-muted-foreground">
+                            {gp.description && (
+                              <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-xs">
+                                {gp.description}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5 text-muted-foreground">
+                            {gp.category ?? "—"}
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5 text-muted-foreground">
+                            {gp.unit}
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5 text-muted-foreground font-mono text-xs">
+                            {gp.part_number ?? "—"}
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5">
+                            {localPart ? (
+                              <div className="flex flex-col gap-1 items-start">
+                                <Badge variant="secondary">
+                                  {t("inInventory")}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                                  {locale === "mn" && localPart.name_mn
+                                    ? localPart.name_mn
+                                    : localPart.name}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                —
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="px-3 py-1.5 text-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (localPart) {
+                                  setEditingPart(localPart);
+                                } else {
+                                  setForkingData({
+                                    name: gp.name,
+                                    name_mn: gp.name_mn ?? undefined,
+                                    part_number: gp.part_number ?? undefined,
+                                    category: gp.category ?? undefined,
+                                    description: gp.description ?? undefined,
+                                    unit: gp.unit ?? undefined,
+                                    global_part_id: gp.id,
+                                  });
+                                  setShowAddPart(true);
+                                }
+                              }}
+                              className="w-full gap-1 h-8"
+                            >
+                              <Pencil className="size-3" />
+                              {t("editLocalCopy")}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </div>
+            {/* Mobile: card view */}
+            <div className="grid gap-2 md:hidden p-3">
+              {sortedGlobalParts.map((gp) => {
+                const localPart = localPartsByGlobalId.get(gp.id);
+                return (
+                  <div
+                    key={gp.id}
+                    className="border border-border/50 rounded-lg p-3 space-y-2 text-sm"
+                  >
+                    {/* name row */}
+                    <div>
+                      <span className="font-medium text-foreground line-clamp-1">
+                        {locale === "mn" && gp.name_mn
+                          ? gp.name_mn
+                          : gp.name}
+                      </span>
+                      {locale !== "mn" && gp.name_mn && (
+                        <span className="text-xs text-muted-foreground block">
+                          {gp.name_mn}
+                        </span>
+                      )}
+                      {locale === "mn" && gp.name && (
+                        <span className="text-xs text-muted-foreground block">
+                          {gp.name}
+                        </span>
+                      )}
+                      {gp.description && (
+                        <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                          {gp.description}
+                        </div>
+                      )}
+                    </div>
+                    {/* info grid */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">
+                          {t("category")}
+                        </span>
+                        <p className="font-medium truncate mt-0.5">
                           {gp.category ?? "—"}
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5 text-muted-foreground">
-                          {gp.unit}
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5 text-muted-foreground font-mono text-xs">
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">
+                          Unit
+                        </span>
+                        <p className="font-medium mt-0.5">{gp.unit}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">
+                          {t("partNumber")}
+                        </span>
+                        <p className="font-mono mt-0.5">
                           {gp.part_number ?? "—"}
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5">
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">
+                          Status in My Org
+                        </span>
+                        <div className="mt-0.5">
                           {localPart ? (
-                            <div className="flex flex-col gap-1 items-start">
-                              <Badge variant="secondary">
-                                {t("inInventory")}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground truncate max-w-[150px]">
-                                {locale === "mn" && localPart.name_mn
-                                  ? localPart.name_mn
-                                  : localPart.name}
-                              </span>
-                            </div>
+                            <Badge variant="secondary">
+                              {t("inInventory")}
+                            </Badge>
                           ) : (
-                            <span className="text-xs text-muted-foreground">
-                              —
-                            </span>
+                            <span className="text-muted-foreground">—</span>
                           )}
-                        </TableCell>
-                        <TableCell className="px-3 py-1.5 text-center">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              if (localPart) {
-                                setEditingPart(localPart);
-                              } else {
-                                setForkingData({
-                                  name: gp.name,
-                                  name_mn: gp.name_mn ?? undefined,
-                                  part_number: gp.part_number ?? undefined,
-                                  category: gp.category ?? undefined,
-                                  description: gp.description ?? undefined,
-                                  unit: gp.unit ?? undefined,
-                                  global_part_id: gp.id,
-                                });
-                                setShowAddPart(true);
-                              }
-                            }}
-                            className="w-full gap-1 h-8"
-                          >
-                            <Pencil className="size-3" />
-                            {t("editLocalCopy")}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
+                        </div>
+                      </div>
+                    </div>
+                    {/* action button */}
+                    <div className="pt-1.5 border-t border-border/50">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (localPart) {
+                            setEditingPart(localPart);
+                          } else {
+                            setForkingData({
+                              name: gp.name,
+                              name_mn: gp.name_mn ?? undefined,
+                              part_number: gp.part_number ?? undefined,
+                              category: gp.category ?? undefined,
+                              description: gp.description ?? undefined,
+                              unit: gp.unit ?? undefined,
+                              global_part_id: gp.id,
+                            });
+                            setShowAddPart(true);
+                          }
+                        }}
+                        className="w-full gap-1 h-8"
+                      >
+                        <Pencil className="size-3" />
+                        {t("editLocalCopy")}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </Card>
         ))}
 

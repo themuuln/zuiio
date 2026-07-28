@@ -21,7 +21,7 @@ export function AnimatedCounter({
   className,
   duration = 1500,
 }: AnimatedCounterProps) {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState<number | null>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -43,7 +43,10 @@ export function AnimatedCounter({
   }, [hasAnimated]);
 
   useEffect(() => {
-    if (!hasAnimated || end === 0) return;
+    if (!hasAnimated || end === 0) {
+      setCount(0);
+      return;
+    }
 
     let startTime: number | null = null;
     const startValue = 0;
@@ -67,16 +70,23 @@ export function AnimatedCounter({
     requestAnimationFrame(animate);
   }, [hasAnimated, end, duration]);
 
-  const formatted = count.toLocaleString("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
+  const formatted =
+    count !== null
+      ? count.toLocaleString("en-US", {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+        })
+      : "";
 
   return (
     <div ref={ref} className={cn("", className)}>
-      {prefix}
-      {formatted}
-      {suffix}
+      {count !== null && (
+        <>
+          {prefix}
+          {formatted}
+          {suffix}
+        </>
+      )}
     </div>
   );
 }

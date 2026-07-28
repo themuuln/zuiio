@@ -1,7 +1,13 @@
 import withPWAInit from "@ducanh2912/next-pwa";
+// @ts-expect-error — @next/bundle-analyzer has no TS declarations, works at runtime
+import withBundleAnalyzer from "@next/bundle-analyzer";
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+
+const withBA = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const withNextIntl = createNextIntlPlugin({
   requestConfig: "./src/lib/i18n/request.ts",
@@ -103,11 +109,13 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === "development",
 });
 
-export default withPWA(
-  withSentryConfig(withNextIntl(nextConfig), {
-    org: process.env.SENTRY_ORG,
-    project: process.env.SENTRY_PROJECT,
-    silent: true,
-    widenClientFileUpload: false,
-  }),
+export default withBA(
+  withPWA(
+    withSentryConfig(withNextIntl(nextConfig), {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      silent: true,
+      widenClientFileUpload: false,
+    }),
+  ),
 );

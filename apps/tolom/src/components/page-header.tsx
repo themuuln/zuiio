@@ -31,7 +31,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandShortcut,
 } from "@/components/ui/command";
 import {
   DropdownMenu,
@@ -128,14 +127,7 @@ export function PageHeader({
     [push],
   );
 
-  const commandItems = useMemo(
-    () =>
-      searchItems.map((item, index) => ({
-        ...item,
-        shortcut: `G ${index + 1}`,
-      })),
-    [searchItems],
-  );
+  const commandItems = useMemo(() => searchItems, [searchItems]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -396,7 +388,6 @@ export function PageHeader({
                   >
                     <Icon className="size-4" />
                     <span>{t(item.labelKey)}</span>
-                    <CommandShortcut>{item.shortcut}</CommandShortcut>
                   </CommandItem>
                 );
               })}

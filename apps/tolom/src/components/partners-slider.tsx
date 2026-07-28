@@ -3,7 +3,6 @@
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 
@@ -59,16 +58,6 @@ export function PartnersSlider() {
               Facebook
             </Button>
           </div>
-        </div>
-
-        {/* Coming soon badge */}
-        <div className="mt-8 text-center">
-          <Badge
-            variant="secondary"
-            className="px-4 py-1.5 text-xs font-medium"
-          >
-            {t("partnersComingSoon")}
-          </Badge>
         </div>
       </div>
     </section>
