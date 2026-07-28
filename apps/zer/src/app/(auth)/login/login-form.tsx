@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Envelope, Lock } from "@phosphor-icons/react";
+import { ArrowRight, Envelope, GoogleLogo, Lock } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useActionState } from "react";
 import { AuthCard } from "@/components/ui/auth-card";
@@ -74,16 +74,24 @@ export function LoginForm({
               />
             </div>
           </Field>
+          <div className="-mt-1 flex items-center justify-between">
+            <Link
+              href="/forgot-password"
+              className="text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
+            >
+              Нууц үгээ мартсан?
+            </Link>
+          </div>
         </FieldGroup>
         <ErrorBanner error={urlErrorMessage} />
         <ErrorBanner error={state?.error} />
 
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} className="w-full">
           Нэвтрэх
           <ArrowRight data-icon="inline-end" />
         </Button>
 
-        <div className="relative flex items-center gap-3 my-1">
+        <div className="relative flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
           <span className="text-xs text-muted-foreground uppercase tracking-wider">
             Эсвэл
@@ -92,8 +100,9 @@ export function LoginForm({
         </div>
 
         <Link href={`/sso?next=${encodeURIComponent(next)}`}>
-          <Button type="button" variant="outline" className="w-full">
-            SSO-р нэвтрэх
+          <Button type="button" variant="outline" className="w-full gap-2">
+            <GoogleLogo className="size-4" weight="bold" />
+            Google-р нэвтрэх
           </Button>
         </Link>
 
@@ -101,7 +110,7 @@ export function LoginForm({
           Бүртгэлгүй юу?{" "}
           <Link
             href="/register"
-            className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
+            className="font-medium text-foreground underline-offset-4 hover:text-primary hover:underline"
           >
             Бүртгүүлэх
           </Link>
