@@ -67,23 +67,59 @@ export async function updatePublicProfile(
   const contactPhone = (formData.get("contact_phone") as string) || null;
   const address = (formData.get("address") as string) || null;
   const websiteUrl = (formData.get("website_url") as string) || null;
+  const logoUrl = (formData.get("logo_url") as string) || null;
+  const bannerUrl = (formData.get("banner_url") as string) || null;
+  const policies = (formData.get("policies") as string) || null;
+
+  // Parse business hours from form (JSON string sent by client)
+  let businessHours: Record<string, string> | null = null;
+  const businessHoursRaw = formData.get("business_hours") as string;
+  if (businessHoursRaw) {
+    try {
+      businessHours = JSON.parse(businessHoursRaw);
+    } catch {
+      // Invalid JSON, skip
+    }
+  }
+
+  // Build social links object from individual form fields
+  const socialLinks: Record<string, string> = {};
+  const socialPlatforms = [
+    "facebook",
+    "instagram",
+    "twitter",
+    "youtube",
+    "tiktok",
+    "linkedin",
+  ];
+  for (const platform of socialPlatforms) {
+    const url = formData.get(`social_${platform}`) as string;
+    if (url?.trim()) {
+      socialLinks[platform] = url.trim();
+    }
+  }
+
+  const payload: Record<string, unknown> = {
+    organization_id: organizationId,
+    catalog_enabled: catalogEnabled,
+    display_name: displayName,
+    description,
+    contact_email: contactEmail,
+    contact_phone: contactPhone,
+    address,
+    website_url: websiteUrl,
+    logo_url: logoUrl,
+    banner_url: bannerUrl,
+    policies,
+    business_hours:
+      Object.keys(businessHours ?? {}).length > 0 ? businessHours : null,
+    social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
+    updated_at: new Date().toISOString(),
+  };
 
   const result = await supabase
     .from("organization_public_profiles" as never)
-    .upsert(
-      {
-        organization_id: organizationId,
-        catalog_enabled: catalogEnabled,
-        display_name: displayName,
-        description,
-        contact_email: contactEmail,
-        contact_phone: contactPhone,
-        address,
-        website_url: websiteUrl,
-        updated_at: new Date().toISOString(),
-      } as never,
-      { onConflict: "organization_id" },
-    );
+    .upsert(payload as never, { onConflict: "organization_id" });
 
   if (result.error) {
     capture(result.error, { context: "updatePublicProfile" });
