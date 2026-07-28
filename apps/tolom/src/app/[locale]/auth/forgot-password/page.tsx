@@ -2,7 +2,13 @@
 
 import { ArrowLeft, Loader2, Mail, RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -54,7 +60,7 @@ export default function ForgotPasswordPage() {
     setCooldown(30);
     const form = new FormData();
     form.append("identifier", identifier);
-    formAction(form);
+    startTransition(() => formAction(form));
     toast.success(t("resentMessage"));
   };
 

@@ -16,6 +16,12 @@ export async function completeOrganizationLogin(
   _prevState: CompleteOrganizationLoginState,
   formData: FormData,
 ): Promise<CompleteOrganizationLoginState> {
+  // Guard against non-FormData arguments (React 19 useActionState edge case
+  // during window.location.replace() navigation teardown).
+  if (typeof formData?.get !== "function") {
+    return { formError: "Invalid form submission" };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
