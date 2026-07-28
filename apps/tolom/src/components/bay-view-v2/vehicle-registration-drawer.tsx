@@ -496,7 +496,7 @@ export function VehicleRegistrationDrawer({
     <DetailDrawer
       open={open}
       onOpenChange={onOpenChange}
-      size="full"
+      size="1/2"
       modal={false}
     >
       {/* ── Header ──────────────────────────────────────────── */}
@@ -543,7 +543,7 @@ export function VehicleRegistrationDrawer({
                       handleLookup();
                     }
                   }}
-                  placeholder={`${t("enterPlate")} — ${t("lookupSubtitle")}`}
+                  placeholder={t("enterPlate")}
                   className="h-9 pl-10 pr-8 font-mono uppercase"
                 />
                 {searchLoading && (
@@ -684,6 +684,7 @@ export function VehicleRegistrationDrawer({
                     <Field data-invalid={!!form.formState.errors.year}>
                       <FieldContent>
                         <NumericInput
+                          size="sm"
                           value={
                             formValues.year ? parseInt(formValues.year, 10) : 0
                           }
@@ -753,6 +754,7 @@ export function VehicleRegistrationDrawer({
                       <Field data-invalid={!!form.formState.errors.odometer}>
                         <FieldContent>
                           <NumericInput
+                            size="sm"
                             value={
                               formValues.odometer
                                 ? parseInt(formValues.odometer, 10)
@@ -910,6 +912,12 @@ export function VehicleRegistrationDrawer({
                         placeholder={t("complaintPlaceholder")}
                         className="min-h-[60px] text-xs resize-none"
                         {...form.register("complaint")}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            form.handleSubmit(handleSave)();
+                          }
+                        }}
                       />
                     </FieldContent>
                   </Field>

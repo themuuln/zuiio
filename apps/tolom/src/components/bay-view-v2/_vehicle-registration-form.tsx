@@ -389,7 +389,7 @@ export function VehicleRegistrationForm({
                 handleLookup();
               }
             }}
-            placeholder={`${t("enterPlate")} — ${t("lookupSubtitle")}`}
+            placeholder={t("enterPlate")}
             className="h-9 pl-10 pr-8 font-mono uppercase"
           />
           {searchLoading && (
@@ -549,6 +549,7 @@ export function VehicleRegistrationForm({
               <Field data-invalid={!!form.formState.errors.year}>
                 <FieldContent>
                   <NumericInput
+                    size="sm"
                     value={formValues.year ? parseInt(formValues.year, 10) : 0}
                     onChange={(val) =>
                       form.setValue("year", val?.toString() ?? "", {
@@ -616,6 +617,7 @@ export function VehicleRegistrationForm({
                 <Field data-invalid={!!form.formState.errors.odometer}>
                   <FieldContent>
                     <NumericInput
+                      size="sm"
                       value={
                         formValues.odometer
                           ? parseInt(formValues.odometer, 10)
@@ -763,6 +765,12 @@ export function VehicleRegistrationForm({
                   placeholder={t("complaintPlaceholder")}
                   className="min-h-[60px] text-xs resize-none"
                   {...form.register("complaint")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      form.handleSubmit(handleSave)();
+                    }
+                  }}
                 />
               </FieldContent>
             </Field>

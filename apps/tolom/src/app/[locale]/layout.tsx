@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations } from "next-intl/server";
+import { getMessages } from "next-intl/server";
 import { Toaster } from "sonner";
 import { DrawerProvider } from "@/components/drawer-provider";
 import { HtmlLang } from "@/components/html-lang";
@@ -22,38 +22,25 @@ export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  const t = await getTranslations({
-    locale: locale as "en" | "mn",
-    namespace: "home",
-  });
-  return {
-    title: { default: t("title"), template: "%s | TOLOM" },
-    description: t("subtitle"),
-    metadataBase: new URL(baseUrl),
-    manifest: "/manifest.json",
-    openGraph: {
-      title: t("title"),
-      description: t("subtitle"),
-      url: "./",
-      siteName: "TOLOM",
-      locale,
-      type: "website",
-    },
-  };
-}
+// Static metadata to avoid blocking prefetch for instant pages.
+// Locale-aware metadata is set at the page level where needed.
+export const metadata: Metadata = {
+  title: { default: "TOLOM", template: "%s | TOLOM" },
+  description: "Auto repair shop management system",
+  metadataBase: new URL(baseUrl),
+  manifest: "/manifest.json",
+  openGraph: {
+    siteName: "TOLOM",
+    type: "website",
+  },
+};
 
 import { Suspense } from "react";
 
 /**
  * Calls connection() inside Suspense to explicitly mark this route as dynamic.
- * Without this, accessing params in generateMetadata triggers a blocking-
- * prerender warning for prefetching.
+ * The layout awaits params to get the locale, which prevents static
+ * prerendering, so connection() ensures prefetch doesn't block on this.
  */
 async function DynamicBoundary() {
   await connection();

@@ -642,7 +642,7 @@
     "pickupCompleteTitle": "Complete & Collect Feedback",
     "switchToLookup": "Switch to Lookup",
     "switchToRegister": "Switch to Register",
-    "enterPlate": "Enter plate number...",
+    "enterPlate": "Plate number (e.g. 1111УБА)",
     "lookup": "Lookup",
     "vehicleInfo": "Vehicle Info",
     "makeRequired": "Make *",

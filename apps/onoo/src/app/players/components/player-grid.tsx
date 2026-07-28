@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  LayoutGrid,
-  List,
-  Search,
-  Users,
-  X,
-} from "lucide-react";
+import { LayoutGrid, List, Search, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PlayerAvatar } from "@/components/player-avatar";
@@ -124,7 +118,7 @@ export function PlayerGrid({
   return (
     <div className={cn("flex flex-col gap-6", className)}>
       {/* ── Compact toolbar — sticky ── */}
-      <div className="sticky top-[88px] z-10 -mx-4 flex flex-wrap items-end gap-3 bg-[var(--surface-2)] px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="sticky top-[96px] z-10 -mx-4 flex flex-wrap items-end gap-3 bg-[var(--surface-2)] px-4 pt-4 pb-3 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         {/* Search */}
         <div className="relative min-w-[180px] flex-1">
           <Search
@@ -143,10 +137,7 @@ export function PlayerGrid({
 
         {/* Team filter */}
         <Select value={teamFilter} onValueChange={setTeamFilter}>
-          <SelectTrigger
-            className="h-9 w-[160px]"
-            aria-label="Багаар шүүх"
-          >
+          <SelectTrigger className="h-9 w-[160px]" aria-label="Багаар шүүх">
             <SelectValue placeholder="Бүх баг" />
           </SelectTrigger>
           <SelectContent>
@@ -163,10 +154,7 @@ export function PlayerGrid({
 
         {/* Position filter */}
         <Select value={positionFilter} onValueChange={setPositionFilter}>
-          <SelectTrigger
-            className="h-9 w-[140px]"
-            aria-label="Байрлалаар шүүх"
-          >
+          <SelectTrigger className="h-9 w-[140px]" aria-label="Байрлалаар шүүх">
             <SelectValue placeholder="Бүх байрлал" />
           </SelectTrigger>
           <SelectContent>
@@ -186,10 +174,7 @@ export function PlayerGrid({
           value={sortKey}
           onValueChange={(value) => setSortKey(value as SortKey)}
         >
-          <SelectTrigger
-            className="h-9 w-[140px]"
-            aria-label="Эрэмбэлэх"
-          >
+          <SelectTrigger className="h-9 w-[140px]" aria-label="Эрэмбэлэх">
             <SelectValue placeholder="Эрэмбэлэх" />
           </SelectTrigger>
           <SelectContent>
@@ -208,167 +193,167 @@ export function PlayerGrid({
         </Badge>
       </div>
 
-          {/* Active filter chips */}
-          {hasActiveFilters && (
-            <div className="flex flex-wrap items-center gap-2">
-              {search && (
-                <Badge variant="outline">
-                  &ldquo;{search}&rdquo;
-                  <button
-                    type="button"
-                    onClick={() => setSearch("")}
-                    aria-label={`Хайлт устгах: ${search}`}
-                    className="ml-0.5 inline-flex size-3.5 items-center justify-center rounded-full hover:bg-foreground/10"
-                  >
-                    <X className="size-2.5" aria-hidden="true" />
-                  </button>
-                </Badge>
-              )}
-              {teamFilter !== "all" && (
-                <Badge variant="outline">
-                  {teams.find((t) => t.slug === teamFilter)?.name ?? teamFilter}
-                  <button
-                    type="button"
-                    onClick={() => setTeamFilter("all")}
-                    aria-label="Багийн шүүлт устгах"
-                    className="ml-0.5 inline-flex size-3.5 items-center justify-center rounded-full hover:bg-foreground/10"
-                  >
-                    <X className="size-2.5" aria-hidden="true" />
-                  </button>
-                </Badge>
-              )}
-              {positionFilter !== "all" && (
-                <Badge variant="outline">
-                  {positionFilter}
-                  <button
-                    type="button"
-                    onClick={() => setPositionFilter("all")}
-                    aria-label="Байрлалын шүүлт устгах"
-                    className="ml-0.5 inline-flex size-3.5 items-center justify-center rounded-full hover:bg-foreground/10"
-                  >
-                    <X className="size-2.5" aria-hidden="true" />
-                  </button>
-                </Badge>
-              )}
-              <Button
+      {/* Active filter chips */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2">
+          {search && (
+            <Badge variant="outline">
+              &ldquo;{search}&rdquo;
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
+                onClick={() => setSearch("")}
+                aria-label={`Хайлт устгах: ${search}`}
+                className="ml-0.5 inline-flex size-3.5 items-center justify-center rounded-full hover:bg-foreground/10"
               >
-                Бүгд устгах
-              </Button>
-            </div>
+                <X className="size-2.5" aria-hidden="true" />
+              </button>
+            </Badge>
           )}
-
-        {/* ── Grid / Table views ── */}
-        <div className="mt-4">
-          {filteredPlayers.length === 0 ? (
-            <PublicEmptyState
-              icon={Users}
-              title="Тоглогч олдсонгүй"
-              description="Хайх нөхцөлөө өөрчилж эсвэл шүүлтүүрээ цэвэрлээрэй."
-            >
-              <Button type="button" onClick={clearFilters}>
-                Шүүлтүүр цэвэрлэх
-              </Button>
-            </PublicEmptyState>
-          ) : (
-            <Tabs defaultValue="cards" className="flex flex-col gap-4">
-              <TabsList variant="line">
-                <TabsTrigger value="cards">
-                  <LayoutGrid className="mr-1.5 size-3.5" aria-hidden="true" />
-                  Хүснэгт
-                </TabsTrigger>
-                <TabsTrigger value="table">
-                  <List className="mr-1.5 size-3.5" aria-hidden="true" />
-                  Жагсаалт
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Card grid view */}
-              <TabsContent value="cards">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredPlayers.map((player) => (
-                    <PlayerCard key={player.player_id} player={player} />
-                  ))}
-                </div>
-              </TabsContent>
-
-              {/* Table view */}
-              <TabsContent value="table">
-                <Card className="shadow-none">
-                  <CardContent className="overflow-x-auto p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Тоглогч</TableHead>
-                          <TableHead>Баг</TableHead>
-                          <TableHead className="hidden sm:table-cell">
-                            Байрлал
-                          </TableHead>
-                          <TableHead className="text-right">ТТ</TableHead>
-                          <TableHead className="text-right">ОНОО</TableHead>
-                          <TableHead className="text-right">САМБ</TableHead>
-                          <TableHead className="text-right">ДАМЖ</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredPlayers.map((player) => (
-                          <TableRow key={player.player_id}>
-                            <TableCell>
-                              <Link
-                                href={`/players/${player.player_id}`}
-                                className="font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                              >
-                                {player.player_name}
-                              </Link>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <TeamLogo
-                                  logoUrl={player.team_logo_url}
-                                  shortCode={player.team_short_code}
-                                  primaryColor={player.team_primary_color}
-                                  size="sm"
-                                />
-                                <Link
-                                  href={`/teams/${player.team_slug}`}
-                                  className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                >
-                                  {player.team_name}
-                                </Link>
-                              </div>
-                            </TableCell>
-                            <TableCell className="hidden sm:table-cell">
-                              {player.player_position ?? (
-                                <span className="text-muted-foreground/50">
-                                  —
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right tabular-nums">
-                              {player.games_played ?? 0}
-                            </TableCell>
-                            <TableCell className="text-right font-semibold tabular-nums">
-                              {formatStat(player.points_per_game)}
-                            </TableCell>
-                            <TableCell className="text-right tabular-nums">
-                              {formatStat(player.rebounds_per_game)}
-                            </TableCell>
-                            <TableCell className="text-right tabular-nums">
-                              {formatStat(player.assists_per_game)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+          {teamFilter !== "all" && (
+            <Badge variant="outline">
+              {teams.find((t) => t.slug === teamFilter)?.name ?? teamFilter}
+              <button
+                type="button"
+                onClick={() => setTeamFilter("all")}
+                aria-label="Багийн шүүлт устгах"
+                className="ml-0.5 inline-flex size-3.5 items-center justify-center rounded-full hover:bg-foreground/10"
+              >
+                <X className="size-2.5" aria-hidden="true" />
+              </button>
+            </Badge>
           )}
+          {positionFilter !== "all" && (
+            <Badge variant="outline">
+              {positionFilter}
+              <button
+                type="button"
+                onClick={() => setPositionFilter("all")}
+                aria-label="Байрлалын шүүлт устгах"
+                className="ml-0.5 inline-flex size-3.5 items-center justify-center rounded-full hover:bg-foreground/10"
+              >
+                <X className="size-2.5" aria-hidden="true" />
+              </button>
+            </Badge>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+          >
+            Бүгд устгах
+          </Button>
         </div>
+      )}
+
+      {/* ── Grid / Table views ── */}
+      <div className="mt-4">
+        {filteredPlayers.length === 0 ? (
+          <PublicEmptyState
+            icon={Users}
+            title="Тоглогч олдсонгүй"
+            description="Хайх нөхцөлөө өөрчилж эсвэл шүүлтүүрээ цэвэрлээрэй."
+          >
+            <Button type="button" onClick={clearFilters}>
+              Шүүлтүүр цэвэрлэх
+            </Button>
+          </PublicEmptyState>
+        ) : (
+          <Tabs defaultValue="cards" className="flex flex-col gap-4">
+            <TabsList variant="line">
+              <TabsTrigger value="cards">
+                <LayoutGrid className="mr-1.5 size-3.5" aria-hidden="true" />
+                Хүснэгт
+              </TabsTrigger>
+              <TabsTrigger value="table">
+                <List className="mr-1.5 size-3.5" aria-hidden="true" />
+                Жагсаалт
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Card grid view */}
+            <TabsContent value="cards">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredPlayers.map((player) => (
+                  <PlayerCard key={player.player_id} player={player} />
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Table view */}
+            <TabsContent value="table">
+              <Card className="shadow-none">
+                <CardContent className="overflow-x-auto p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Тоглогч</TableHead>
+                        <TableHead>Баг</TableHead>
+                        <TableHead className="hidden sm:table-cell">
+                          Байрлал
+                        </TableHead>
+                        <TableHead className="text-right">ТТ</TableHead>
+                        <TableHead className="text-right">ОНОО</TableHead>
+                        <TableHead className="text-right">САМБ</TableHead>
+                        <TableHead className="text-right">ДАМЖ</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredPlayers.map((player) => (
+                        <TableRow key={player.player_id}>
+                          <TableCell>
+                            <Link
+                              href={`/players/${player.player_id}`}
+                              className="font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                              {player.player_name}
+                            </Link>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <TeamLogo
+                                logoUrl={player.team_logo_url}
+                                shortCode={player.team_short_code}
+                                primaryColor={player.team_primary_color}
+                                size="sm"
+                              />
+                              <Link
+                                href={`/teams/${player.team_slug}`}
+                                className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              >
+                                {player.team_name}
+                              </Link>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            {player.player_position ?? (
+                              <span className="text-muted-foreground/50">
+                                —
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {player.games_played ?? 0}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold tabular-nums">
+                            {formatStat(player.points_per_game)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {formatStat(player.rebounds_per_game)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {formatStat(player.assists_per_game)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        )}
+      </div>
     </div>
   );
 }
@@ -383,11 +368,7 @@ interface PlayerCardProps {
   className?: string;
 }
 
-function PlayerCard({
-  player,
-  rank,
-  className,
-}: PlayerCardProps) {
+function PlayerCard({ player, rank, className }: PlayerCardProps) {
   return (
     <Link
       href={`/players/${player.player_id}`}
@@ -439,10 +420,7 @@ function PlayerCard({
           </div>
         </CardHeader>
         <CardContent className="mt-3 grid grid-cols-3 divide-x divide-border/40 border-t border-border/40 bg-[var(--surface-2)]/50 px-4 py-2.5">
-          <PlayerStat
-            label="ОНОО"
-            value={formatStat(player.points_per_game)}
-          />
+          <PlayerStat label="ОНОО" value={formatStat(player.points_per_game)} />
           <PlayerStat
             label="САМБ"
             value={formatStat(player.rebounds_per_game)}
@@ -500,11 +478,7 @@ export function PlayerGridSkeleton({ className }: PlayerGridSkeletonProps) {
   return (
     <div className={cn("grid gap-4 sm:grid-cols-2 lg:grid-cols-3", className)}>
       {placeholders.map((placeholder) => (
-        <Card
-          key={placeholder}
-          className="shadow-none"
-          aria-hidden="true"
-        >
+        <Card key={placeholder} className="shadow-none" aria-hidden="true">
           <CardHeader className="pb-0">
             <div className="flex items-center gap-3">
               <Skeleton className="size-10 rounded-full" />

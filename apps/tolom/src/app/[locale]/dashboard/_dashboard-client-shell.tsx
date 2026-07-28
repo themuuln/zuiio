@@ -60,21 +60,19 @@ export default function DashboardClientShell({
   return (
     <AuthWrapper>
       <PageHeaderProvider>
-        <div className="flex flex-col h-svh">
+        <SidebarProvider
+          defaultOpen={sidebarDefaultOpen}
+          className="flex flex-col [--sidebar-top:3rem]"
+        >
           <DashboardHeader />
-          <SidebarProvider
-            defaultOpen={sidebarDefaultOpen}
-            className="flex-1 min-h-0 overflow-hidden flex-col [--sidebar-top:3rem]"
-          >
-            <GlobalDialogs />
-            <div className="flex flex-1 min-h-0">
-              <AppSidebar />
-              <SidebarInset className="min-h-0 min-w-0 w-auto overflow-hidden">
-                <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
-              </SidebarInset>
-            </div>
-          </SidebarProvider>
-        </div>
+          <GlobalDialogs />
+          <div className="flex flex-1 min-h-0">
+            <AppSidebar />
+            <SidebarInset className="min-h-0 min-w-0 w-auto overflow-hidden">
+              <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
       </PageHeaderProvider>
     </AuthWrapper>
   );
