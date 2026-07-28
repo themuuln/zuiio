@@ -31,7 +31,6 @@ const nextConfig: NextConfig = {
       "recharts",
       "date-fns",
       "cmdk",
-      "@radix-ui/react-icons",
     ],
     turbopackFileSystemCacheForBuild: true,
     viewTransition: true,

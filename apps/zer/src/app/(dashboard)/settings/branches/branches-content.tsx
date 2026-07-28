@@ -193,7 +193,7 @@ export function BranchesContent() {
                 if (!open) setEditTarget(null);
               }}
             >
-              <DialogTrigger asChild>
+              <DialogTrigger>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -221,7 +221,7 @@ export function BranchesContent() {
                 if (!open) setDeleteTarget(null);
               }}
             >
-              <AlertDialogTrigger asChild>
+              <AlertDialogTrigger>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -371,7 +371,7 @@ export function BranchesContent() {
           <div className="flex items-center justify-between px-6 py-4">
             <div />
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-              <DialogTrigger asChild>
+              <DialogTrigger>
                 <Button size="sm">
                   <Plus className="size-4" />
                   Шинэ салбар

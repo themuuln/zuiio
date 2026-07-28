@@ -39,7 +39,7 @@ export function OfflineIndicator({
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
+      <TooltipTrigger>
         <Button
           variant={isOnline ? "outline" : "destructive"}
           size="sm"

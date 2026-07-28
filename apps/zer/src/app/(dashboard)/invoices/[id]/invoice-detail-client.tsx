@@ -130,7 +130,7 @@ export function InvoiceDetailClient({
           if (next) setShareResult(null);
         }}
       >
-        <DialogTrigger asChild>
+        <DialogTrigger>
           <Button variant="outline" size="sm" type="button">
             <ShareNetwork data-icon="inline-start" />
             Хуваалцах

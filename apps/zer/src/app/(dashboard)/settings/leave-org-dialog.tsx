@@ -46,7 +46,7 @@ export function LeaveOrganizationDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
+      <AlertDialogTrigger>
         <Button variant="destructive">Байгууллагаас гарах</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

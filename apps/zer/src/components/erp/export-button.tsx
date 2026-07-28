@@ -86,12 +86,14 @@ export function ExportButton({ href, filename }: ExportButtonProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" disabled={isExporting !== null}>
-          <DownloadSimple className="size-4" />
-          {isExporting !== null ? "Татаж байна..." : "Экспорт"}
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="outline" disabled={isExporting !== null}>
+            <DownloadSimple className="size-4" />
+            {isExporting !== null ? "Татаж байна..." : "Экспорт"}
+          </Button>
+        }
+      />
       <DropdownMenuContent align="end">
         {formatOptions.map(({ format, label, icon }) => (
           <DropdownMenuItem

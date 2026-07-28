@@ -621,7 +621,7 @@ export function CheckoutForm({
       {/* === CUSTOMER (collapsible, hidden for orgs without checkout CRM) === */}
       {hasCheckoutCustomer && (
         <Collapsible open={customerOpen} onOpenChange={setCustomerOpen}>
-          <CollapsibleTrigger asChild>
+          <CollapsibleTrigger>
             <button
               type="button"
               className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"

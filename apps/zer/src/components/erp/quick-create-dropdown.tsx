@@ -52,12 +52,14 @@ export function QuickCreateDropdown({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="default" size="sm" className="h-8 gap-1">
-            <PlusIcon className="size-4" />
-            <span className="hidden sm:inline">Шинэ</span>
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button variant="default" size="sm" className="h-8 gap-1">
+              <PlusIcon className="size-4" />
+              <span className="hidden sm:inline">Шинэ</span>
+            </Button>
+          }
+        />
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel>Бүртгэл нэмэх</DropdownMenuLabel>
           <DropdownMenuSeparator />

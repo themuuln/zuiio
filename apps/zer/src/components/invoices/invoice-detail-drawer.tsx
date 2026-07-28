@@ -168,7 +168,7 @@ export function InvoiceDetailDrawer({
                   setShareResult({ token: data.invoice.token });
               }}
             >
-              <DialogTrigger asChild>
+              <DialogTrigger>
                 <Button variant="outline" size="sm">
                   <ShareNetwork data-icon="inline-start" />
                   Хуваалцах

@@ -59,42 +59,7 @@
       },
       "style": {
         "noNonNullAssertion": "warn",
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "paths": {
-              "@radix-ui/react-accordion": "Use @base-ui/react/accordion instead.",
-              "@radix-ui/react-alert-dialog": "Use @base-ui/react/alert-dialog instead.",
-              "@radix-ui/react-aspect-ratio": "Use @base-ui/react/aspect-ratio instead.",
-              "@radix-ui/react-avatar": "Use @base-ui/react/avatar instead.",
-              "@radix-ui/react-button": "Use @base-ui/react/button instead.",
-              "@radix-ui/react-checkbox": "Use @base-ui/react/checkbox instead.",
-              "@radix-ui/react-collapsible": "Use @base-ui/react/collapsible instead.",
-              "@radix-ui/react-context-menu": "Use @base-ui/react/context-menu instead.",
-              "@radix-ui/react-dialog": "Use @base-ui/react/dialog instead.",
-              "@radix-ui/react-dropdown-menu": "Use @base-ui/react/menu instead.",
-              "@radix-ui/react-hover-card": "Use @base-ui/react/hover-card instead.",
-              "@radix-ui/react-label": "Use @base-ui/react/field instead.",
-              "@radix-ui/react-menubar": "Use @base-ui/react/menubar instead.",
-              "@radix-ui/react-navigation-menu": "Use base-ui primitives instead.",
-              "@radix-ui/react-popover": "Use @base-ui/react/popover instead.",
-              "@radix-ui/react-progress": "Use @base-ui/react/progress instead.",
-              "@radix-ui/react-radio-group": "Use @base-ui/react/radio-group instead.",
-              "@radix-ui/react-scroll-area": "Use @base-ui/react/scroll-area instead.",
-              "@radix-ui/react-select": "Use @base-ui/react/select instead.",
-              "@radix-ui/react-separator": "Use @base-ui/react/separator instead.",
-              "@radix-ui/react-slider": "Use @base-ui/react/slider instead.",
-              "@radix-ui/react-slot": "Use @base-ui/react/merge-props or use-render instead.",
-              "@radix-ui/react-switch": "Use @base-ui/react/switch instead.",
-              "@radix-ui/react-tabs": "Use @base-ui/react/tabs instead.",
-              "@radix-ui/react-toast": "Use sonner instead.",
-              "@radix-ui/react-toggle": "Use @base-ui/react/toggle instead.",
-              "@radix-ui/react-toggle-group": "Use @base-ui/react/toggle-group instead.",
-              "@radix-ui/react-tooltip": "Use @base-ui/react/tooltip instead.",
-              "radix-ui": "Use @base-ui/react/* instead. The radix-ui bundle is deprecated."
-            }
-          }
-        },
+
         "useTemplate": "error"
       },
       "suspicious": {

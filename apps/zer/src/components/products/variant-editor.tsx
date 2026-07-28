@@ -286,16 +286,18 @@ function BulkActionBar({
       </span>
 
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2 text-[11px] font-medium text-foreground hover:bg-muted"
-          >
-            <Calculator className="size-3" />
-            Бүгдэд үнэ тохируулах
-            <CaretDown className="size-3" />
-          </button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2 text-[11px] font-medium text-foreground hover:bg-muted"
+            >
+              <Calculator className="size-3" />
+              Бүгдэд үнэ тохируулах
+              <CaretDown className="size-3" />
+            </button>
+          }
+        />
         <DropdownMenuContent align="start" className="min-w-40 z-[100]">
           <DropdownMenuItem onSelect={applyParentPrices}>
             Эх үнээр тохируулах (өртөг + зарах)
@@ -321,16 +323,18 @@ function BulkActionBar({
       </DropdownMenu>
 
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2 text-[11px] font-medium text-foreground hover:bg-muted"
-          >
-            <CurrencyDollar className="size-3" />
-            Бүгдэд үлдэгдэл тохируулах
-            <CaretDown className="size-3" />
-          </button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2 text-[11px] font-medium text-foreground hover:bg-muted"
+            >
+              <CurrencyDollar className="size-3" />
+              Бүгдэд үлдэгдэл тохируулах
+              <CaretDown className="size-3" />
+            </button>
+          }
+        />
         <DropdownMenuContent align="start" className="min-w-40 z-[100]">
           <DropdownMenuItem onSelect={() => applyToAll("current_stock", 0)}>
             Бүгдийг 0 болгох

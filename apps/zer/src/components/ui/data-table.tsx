@@ -150,12 +150,10 @@ export function DataTable<TData, TValue>({
               };
               return (
                 <Checkbox
-                  checked={
-                    t.getIsAllPageRowsSelected() ||
-                    (t.getIsSomePageRowsSelected() && "indeterminate")
-                  }
+                  checked={t.getIsAllPageRowsSelected()}
+                  indeterminate={t.getIsSomePageRowsSelected()}
                   onCheckedChange={(value) =>
-                    t.toggleAllPageRowsSelected(!!value)
+                    t.toggleAllPageRowsSelected(value)
                   }
                   aria-label="Бүгдийг сонгох"
                 />
@@ -314,7 +312,8 @@ export function DataTable<TData, TValue>({
           {toolbar}
           {enableColumnVisibility && (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+              <DropdownMenuTrigger
+              render={
                 <Button
                   variant="outline"
                   size="sm"
@@ -323,7 +322,8 @@ export function DataTable<TData, TValue>({
                   <SlidersHorizontal className="size-3.5 sm:size-4" />
                   <span className="hidden sm:inline">Баганууд</span>
                 </Button>
-              </DropdownMenuTrigger>
+              }
+            />
               <DropdownMenuContent align="end">
                 {table
                   .getAllColumns()

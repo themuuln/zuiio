@@ -139,7 +139,7 @@ export default function WarehousesPage() {
         description="Олон агуулахын бүртгэл, удирдлага"
         actions={
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button size="sm">
                 <Plus data-icon="inline-start" />
                 Шинэ агуулах
@@ -262,7 +262,7 @@ export default function WarehousesPage() {
       description="Олон агуулахын бүртгэл, удирдлага"
       actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
+          <DialogTrigger>
             <Button size="sm">
               <Plus data-icon="inline-start" />
               Шинэ агуулах

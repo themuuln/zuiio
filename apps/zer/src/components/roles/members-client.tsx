@@ -140,7 +140,7 @@ export function MembersClient({
       {/* Invite dialog */}
       {canInvite && (
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-          <DialogTrigger asChild>
+          <DialogTrigger>
             <div className="flex items-center justify-between px-6 py-4">
               <div />
               <Button>
@@ -282,7 +282,7 @@ export function MembersClient({
                         if (!open) setRemoveTarget(null);
                       }}
                     >
-                      <AlertDialogTrigger asChild>
+                      <AlertDialogTrigger>
                         <Button
                           variant="ghost"
                           size="icon"
