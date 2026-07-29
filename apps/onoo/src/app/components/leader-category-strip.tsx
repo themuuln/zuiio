@@ -76,15 +76,15 @@ export function LeaderCategoryStrip({
           Бүгдийг харах
         </Link>
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-none">
+      <div className="flex flex-col gap-1.5">
         {sorted.map((player, i) => {
-          const rank = RANK_STYLES[i];
+          const rank = RANK_STYLES[i]!;
           return (
             <Link
               key={player.player_id}
               href={`/players/${player.player_id}`}
               className={cn(
-                "flex min-w-44 shrink-0 snap-start items-center gap-3 rounded-xl border bg-card px-3 py-2.5 transition-[box-shadow,transform] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "flex w-full items-center gap-3 rounded-xl border bg-card px-3 py-2.5 transition-[box-shadow,transform] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 rank.border,
               )}
             >
