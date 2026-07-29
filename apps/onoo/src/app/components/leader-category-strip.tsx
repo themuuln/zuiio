@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PlayerAvatar } from "@/components/player-avatar";
 import type { LeaderRow } from "@/lib/shared";
+import { cn } from "@/lib/utils";
 
 interface LeaderCategoryStripProps {
   statKey: string;
@@ -10,9 +11,24 @@ interface LeaderCategoryStripProps {
   getValue: (row: LeaderRow) => number;
 }
 
+const RANK_STYLES = [
+  {
+    badge: "bg-accent text-accent-foreground",
+    border: "border-accent/20",
+  },
+  {
+    badge: "bg-muted-foreground/10 text-muted-foreground",
+    border: "border-border",
+  },
+  {
+    badge: "bg-muted-foreground/5 text-muted-foreground/50",
+    border: "border-border/50",
+  },
+] as const;
+
 /**
  * Horizontal scrollable strip showing top 3 players for a stat category.
- * Each card shows avatar (32px), player name, team, and stat value.
+ * Each card shows rank badge, avatar, player name, team, and stat value.
  * Falls back to empty state when fewer than 3 qualified players exist.
  */
 export function LeaderCategoryStrip({
@@ -32,14 +48,16 @@ export function LeaderCategoryStrip({
 
   if (sorted.length < 3) {
     return (
-      <div className="rounded-xl border bg-card p-4 text-center text-sm text-muted-foreground">
-        <p className="mb-1 text-xs font-semibold">
-          {icon && (
-            <span className="mr-1 inline-block align-middle">{icon}</span>
-          )}
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-card px-4 py-8 text-center">
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          {icon}
+        </div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </p>
-        <p>Шалгуур хангасан тоглогч хүрэлцэхгүй байна</p>
+        <p className="mt-1 text-sm text-muted-foreground/60">
+          Шалгуур хангасан тоглогч хүрэлцэхгүй байна
+        </p>
       </div>
     );
   }
@@ -59,34 +77,49 @@ export function LeaderCategoryStrip({
         </Link>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-none">
-        {sorted.map((player, i) => (
-          <Link
-            key={player.player_id}
-            href={`/players/${player.player_id}`}
-            className="flex min-w-56 shrink-0 snap-start items-center gap-3 rounded-xl border bg-card px-4 py-3 transition-[box-shadow,transform] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <span className="w-4 text-xs font-bold tabular-nums text-muted-foreground">
-              {i + 1}
-            </span>
-            <PlayerAvatar
-              photoUrl={player.player_photo_url}
-              name={player.player_name}
-              primaryColor={player.team_primary_color}
-              size="sm"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold leading-tight">
-                {player.player_name}
-              </p>
-              <p className="truncate text-xs leading-tight text-muted-foreground">
-                {player.team_name}
-              </p>
-            </div>
-            <span className="stat-number text-xl tabular-nums font-bold">
-              {getValue(player).toFixed(1)}
-            </span>
-          </Link>
-        ))}
+        {sorted.map((player, i) => {
+          const rank = RANK_STYLES[i];
+          return (
+            <Link
+              key={player.player_id}
+              href={`/players/${player.player_id}`}
+              className={cn(
+                "flex min-w-44 shrink-0 snap-start items-center gap-3 rounded-xl border bg-card px-3 py-2.5 transition-[box-shadow,transform] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                rank.border,
+              )}
+            >
+              {/* Rank badge */}
+              <div
+                className={cn(
+                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold tabular-nums",
+                  rank.badge,
+                )}
+              >
+                {i + 1}
+              </div>
+              <PlayerAvatar
+                photoUrl={player.player_photo_url}
+                name={player.player_name}
+                primaryColor={player.team_primary_color}
+                size="sm"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold leading-tight">
+                  {player.player_name}
+                </p>
+                <p className="truncate text-xs leading-tight text-muted-foreground">
+                  {player.team_name}
+                </p>
+              </div>
+              {/* Stat value */}
+              <div className="text-right">
+                <span className="stat-number text-base tabular-nums font-bold">
+                  {getValue(player).toFixed(1)}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
