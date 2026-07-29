@@ -14,7 +14,7 @@ import { ALL_STATUSES, STATUS_COLUMN } from "./_constants";
 import { ErrorSection } from "./_error-display";
 import { BayCard } from "./bay-card";
 
-// ── KanbanDropColumn (moved from _types.tsx) ───────────────────
+// ── KanbanDropColumn ────────────────────────────────────────────
 
 export function KanbanDropColumn({
   status,
@@ -41,6 +41,30 @@ export function KanbanDropColumn({
     >
       {children}
     </section>
+  );
+}
+
+// ── AvailableQueueColumn (droppable queue / waiting list) ──────
+
+function AvailableQueueColumn({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: "waiting-queue",
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-4 bg-card/85 rounded-xl py-3 border border-border/50 transition-all duration-200",
+        isOver && "bg-primary/[0.03] ring-1 ring-primary/20 border-primary/30",
+      )}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -102,8 +126,8 @@ export const KanbanView = React.memo(function KanbanView({
 
   return (
     <div className="flex h-full gap-4 overflow-x-auto overflow-y-hidden p-4 w-full">
-      {/* Kanban Column: Vacant Bays */}
-      <div className="flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-4 bg-card/85 rounded-xl py-3 border border-border/50">
+      {/* Kanban Column: Vacant Bays / Queue */}
+      <AvailableQueueColumn>
         <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-4 pb-2.5 select-none">
           <div className="font-heading text-xs uppercase tracking-wider font-bold text-muted-foreground">
             {t("available")}
@@ -146,7 +170,7 @@ export const KanbanView = React.memo(function KanbanView({
             </div>
           )}
         </div>
-      </div>
+      </AvailableQueueColumn>
 
       {STATUS_COLUMNS.map((status) => {
         const baysWithStatus = searchedBays.filter(

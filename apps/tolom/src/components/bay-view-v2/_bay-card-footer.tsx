@@ -20,10 +20,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import { useBayCardContext } from "./_bay-card-context";
 import type { BayCardWorkOrder } from "./_bay-card-types";
-import { STATUS_BTN_SOLID } from "./_constants";
 
 interface BayCardFooterProps {
   workOrder: BayCardWorkOrder;
@@ -76,10 +74,6 @@ export function BayCardFooter({
       label: "Complete",
     },
   ];
-  const targetStatus = statusActions.find(
-    (a) => a.status === workOrder.status,
-  )?.targetStatus;
-  const btnBg = targetStatus ? STATUS_BTN_SOLID[targetStatus] : "";
 
   return (
     <div
@@ -91,10 +85,7 @@ export function BayCardFooter({
           <Button
             key={action.status}
             size="sm"
-            className={cn(
-              "h-7 gap-1 rounded-lg px-2.5 text-[11px] font-bold text-primary-foreground hover:opacity-85",
-              btnBg,
-            )}
+            className="h-8 gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
             onClick={(e) => {
               e.stopPropagation();
               onStatusChange(workOrder.id, action.targetStatus);

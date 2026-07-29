@@ -151,7 +151,7 @@ export const BayViewViews = React.memo(function BayViewViews({
   if (viewMode === "kanban") {
     if (searchedBranchSections) {
       return (
-        <div className="flex-1 min-h-0 overflow-y-auto p-4">
+        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
           {searchedBranchSections.map((section) => (
             <div key={section.branchId} className="mb-6 last:mb-0">
               {searchedBranchSections.length > 1 && (
@@ -178,7 +178,7 @@ export const BayViewViews = React.memo(function BayViewViews({
       );
     }
     return (
-      <div className="flex-1 min-h-0 overflow-y-auto p-4">
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
         <KanbanView
           searchedBays={searchedBays}
           assignableBays={[]}

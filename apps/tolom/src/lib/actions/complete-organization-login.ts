@@ -1,6 +1,6 @@
 "use server";
 
-import { AppError, UnauthorizedError } from "@/lib/errors";
+import { AppError } from "@/lib/errors";
 import type { ActionState } from "@/lib/form-validation";
 import { flattenFieldErrors } from "@/lib/form-validation";
 import { reportServerError } from "@/lib/sentry-report-server";
@@ -26,7 +26,9 @@ export async function completeOrganizationLogin(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new UnauthorizedError();
+  if (!user) {
+    return { formError: "User not authenticated. Please sign in again." };
+  }
 
   const raw = {
     organizationId: String(formData.get("organizationId") ?? ""),

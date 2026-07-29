@@ -91,7 +91,9 @@ export function DrawerSkeletonLayout({
               <Skeleton className="h-3 w-20" />
               <Skeleton className="h-3 w-16" />
             </div>
+            <Skeleton className="h-5 w-9 rounded-full" />
           </div>
+          <Skeleton className="h-12 w-full sm:w-72 rounded-lg" />
         </div>
       </div>
     </div>

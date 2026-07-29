@@ -136,7 +136,7 @@ export function DrawerFooter({
   );
 
   return (
-    <div className="shrink-0 border-t border-border bg-background px-3 py-2 flex flex-col gap-2">
+    <div className="flex shrink-0 flex-col gap-3 border-t border-border/70 bg-card px-4 py-3">
       {/* Status change confirmation */}
       {confirmStatus && (
         <Alert variant="destructive">
@@ -182,10 +182,10 @@ export function DrawerFooter({
       )}
 
       {/* Primary status flow + secondary actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         {/* Secondary actions — left-aligned */}
         {(canInvoice || canCancel) && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Invoice */}
             {canInvoice &&
               (invoicePublicToken ? (
@@ -194,7 +194,7 @@ export function DrawerFooter({
                 >
                   <Button
                     variant="outline"
-                    className="h-9 px-3 text-xs"
+                    className="h-10 px-3 text-xs"
                     onClick={() =>
                       window.open(
                         `${window.location.origin}/invoice/${invoicePublicToken}`,
@@ -209,7 +209,7 @@ export function DrawerFooter({
               ) : (
                 <Button
                   variant="outline"
-                  className="h-9 px-3 text-xs"
+                  className="h-10 px-3 text-xs"
                   onClick={onCreateInvoice}
                   disabled={saving || creatingInvoice}
                 >
@@ -227,7 +227,7 @@ export function DrawerFooter({
                 variant="ghost"
                 onClick={() => onChangeStatus("Cancelled")}
                 disabled={saving}
-                className="h-9 px-2.5 text-xs text-muted-foreground hover:text-destructive"
+                className="h-10 px-3 text-xs text-muted-foreground hover:text-destructive"
               >
                 <X className="size-3.5" />
                 {t("cancel")}
@@ -237,7 +237,7 @@ export function DrawerFooter({
         )}
 
         {/* Primary status actions — right-aligned */}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
           {actions.map((action) => {
             const Icon = action.icon;
             const isDefault = (action.variant ?? "default") === "default";
@@ -246,7 +246,7 @@ export function DrawerFooter({
               <Button
                 key={action.key}
                 variant={isDefault ? "default" : "outline"}
-                className="h-9 px-4 text-xs font-semibold"
+                className="h-11 flex-1 px-4 text-xs font-semibold sm:flex-none"
                 onClick={action.onClick}
                 disabled={saving || isPending}
               >

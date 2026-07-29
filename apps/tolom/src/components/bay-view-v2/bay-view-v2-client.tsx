@@ -257,7 +257,7 @@ export function BayViewV2Client() {
 
           {/* ── Bay Views / Queue Rail ── */}
           <div className="flex min-h-0 flex-1 bg-transparent">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                   {[1, 2, 3, 4, 5, 6].map((i) => (

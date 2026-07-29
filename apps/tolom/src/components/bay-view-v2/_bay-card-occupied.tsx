@@ -2,7 +2,6 @@
 
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Separator } from "@/components/ui/separator";
 import { useBayCardContext } from "./_bay-card-context";
 import { BayCardFooter } from "./_bay-card-footer";
 import type { BayCardProps } from "./_bay-card-types";
@@ -44,31 +43,26 @@ export function BayCardOccupied({ bay }: BayCardOccupiedProps) {
   const isCritical = elapsed != null && elapsed > 180;
   return (
     <>
-      {/* ── Header: Bay number + Status + Elapsed ── */}
-      <div className="flex select-none items-center justify-between px-4 py-2.5">
-        <div className="flex items-center gap-2">
+      <header className="flex min-h-12 select-none items-center justify-between gap-3 border-b border-border/60 px-5 py-3">
+        <div className="flex min-w-0 items-center gap-2">
           <BayNumberLabel
             bayNumber={bay.bayNumber}
-            className="text-sm font-semibold text-foreground/80"
+            className="text-xs text-foreground/70"
           />
           {isPending && (
             <Loader2 className="size-3 animate-spin text-muted-foreground/60" />
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5">
           {isStuck && (
             <span
-              title={
-                isCritical ? "Over 3 hours in bay!" : "Over 2 hours in bay"
-              }
-              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                isCritical
-                  ? "bg-destructive/10 text-destructive"
-                  : "bg-amber-500/10 text-amber-500"
-              }`}
+              role="img"
+              aria-label={t("bayOverTime", {
+                hours: isCritical ? 3 : 2,
+              })}
+              className={isCritical ? "text-destructive" : "text-warning"}
             >
-              <AlertTriangle className="size-3" />
-              {isCritical ? "3h+" : "2h+"}
+              <AlertTriangle className="size-4" />
             </span>
           )}
           <BayStatusBadge
@@ -76,45 +70,50 @@ export function BayCardOccupied({ bay }: BayCardOccupiedProps) {
             label={t(STATUS_TRANSLATION_KEYS[wo.status])}
           />
         </div>
-      </div>
+      </header>
 
-      <Separator />
-
-      {/* ── Content: Vehicle + Mechanic (compact) ── */}
-      <div className="flex flex-1 flex-col gap-3 px-4 py-3">
+      <div className="flex min-h-0 flex-1 flex-col justify-center gap-5 px-5 py-5">
         <BayCardVehicleInfo
           vehicle={wo.vehicle}
           startedAt={wo.started_at ?? wo.created_at}
           workOrderId={wo.id}
           draggable
           draggableDisabled={isPending || isKanbanMode}
-          showWatermark
           yearLayout="inline"
+          className="gap-2"
         />
-        <MechanicDisplay
-          variant="row"
-          workOrderId={wo.id}
-          mechanic={wo.mechanic}
-          helpers={wo.helpers}
-          status={wo.status}
-          allMechanics={mechanics}
-          isPending={isPending}
-          onRemoveHelper={onRemoveHelper}
-          onAssignMechanic={onAssignMechanic}
-          onRemoveMechanic={onRemoveMechanic}
-          onAddHelper={onAddHelper}
-        />
+
+        <div className="flex min-w-0 items-center gap-3 border-t border-border/50 pt-4">
+          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {t("listHeaderMechanic")}
+          </span>
+          <MechanicDisplay
+            variant="row"
+            workOrderId={wo.id}
+            mechanic={wo.mechanic}
+            helpers={wo.helpers}
+            status={wo.status}
+            allMechanics={mechanics}
+            isPending={isPending}
+            onRemoveHelper={onRemoveHelper}
+            onAssignMechanic={onAssignMechanic}
+            onRemoveMechanic={onRemoveMechanic}
+            onAddHelper={onAddHelper}
+          />
+        </div>
       </div>
 
-      <Separator />
-
-      {/* ── Footer: Customer (one line) + Actions ── */}
-      <div className="flex items-center gap-3 px-4 py-2">
-        <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-          {wo.customer_name ?? "—"}
-        </span>
+      <footer className="flex min-h-14 items-center gap-3 border-t border-border/60 px-5 py-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {t("listHeaderCustomer")}
+          </p>
+          <p className="truncate text-sm font-medium text-foreground/85">
+            {wo.customer_name ?? "—"}
+          </p>
+        </div>
         <BayCardFooter workOrder={wo} isPending={isPending} />
-      </div>
+      </footer>
     </>
   );
 }

@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { memo, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
 import { TotalsSummary } from "@/components/work-orders/line-items";
 import type { WorkOrderPart, WorkOrderService } from "@/lib/types";
 import type { WorkOrderDetail } from "@/lib/types/composite";
@@ -14,25 +13,25 @@ import type { CatalogPartItem, CatalogServiceItem } from "./_drawer-types";
 
 // ── Dynamic imports (code-split heavy sections) ────────────────
 
-const sectionLoading = (h: string) => () => (
-  <div className={`h-${h} animate-pulse rounded-lg bg-muted/10`} />
+const sectionLoading = (heightClass: string) => () => (
+  <div className={`animate-pulse rounded-lg bg-muted/10 ${heightClass}`} />
 );
 
 const WorkOrderServicesSection = dynamic(
   () => import("./_services-section").then((m) => m.ServicesSection),
-  { ssr: false, loading: sectionLoading("24") },
+  { ssr: false, loading: sectionLoading("h-24") },
 );
 const WorkOrderPartsSection = dynamic(
   () => import("./_parts-section").then((m) => m.PartsSection),
-  { ssr: false, loading: sectionLoading("24") },
+  { ssr: false, loading: sectionLoading("h-24") },
 );
 const WorkOrderNotesSection = dynamic(
   () => import("./_notes-section").then((m) => m.NotesSection),
-  { ssr: false, loading: sectionLoading("16") },
+  { ssr: false, loading: sectionLoading("h-16") },
 );
 const WorkOrderTimelineSection = dynamic(
   () => import("./_status-timeline").then((m) => m.StatusTimeline),
-  { ssr: false, loading: sectionLoading("32") },
+  { ssr: false, loading: sectionLoading("h-32") },
 );
 
 // ── Props ───────────────────────────────────────────────────────
@@ -281,111 +280,114 @@ export function DrawerContentPanel({
   const discountTotal = wo.discount_total ?? 0;
 
   return (
-    <>
-      {/* Scrollable sections area */}
-      <div className="relative flex-1 overflow-y-auto min-h-0 lg:overflow-hidden">
-        <VehicleMakeLogo
-          make={wo.vehicle?.make}
-          size="70%"
-          className="absolute inset-0 m-auto pointer-events-none select-none text-primary/[0.03]"
-          aria-hidden
-        />
-        <div className="relative px-3 py-2 lg:h-full">
-          <div className="grid grid-cols-1 lg:grid-cols-3 lg:h-full gap-3">
-            {/* Left column: services, parts, notes */}
-            <div className="lg:col-span-2 lg:overflow-y-auto lg:min-h-0">
-              <div className="flex flex-col divide-y divide-border/40">
-                <MemoizedServicesZone
-                  services={services}
-                  catalog={catalog}
-                  locale={locale}
-                  isFullScreen={isFullScreen}
-                  onAddServiceOpenChange={onAddServiceOpenChange}
-                  onEditPriceSave={onEditServicePriceSave}
-                  onEditQtySave={onEditServiceQtySave}
-                  t={t}
-                  lastAddedServiceId={lastAddedServiceId}
-                />
-
-                <MemoizedPartsZone
-                  parts={parts}
-                  partsCatalog={partsCatalog}
-                  locale={locale}
-                  onAddPartOpenChange={onAddPartOpenChange}
-                  onEditPriceSave={onEditPartPriceSave}
-                  onEditQtySave={onEditPartQtySave}
-                  t={t}
-                  lastAddedPartId={lastAddedPartId}
-                />
-
-                {orgId && workOrderId ? (
-                  <MemoizedNotesZone
-                    complaint={complaint}
-                    diagnosis={diagnosis}
-                    notes={notes}
-                    orgId={orgId}
-                    workOrderId={workOrderId}
-                    onUpdated={onNotesUpdated}
-                    t={t}
-                  />
-                ) : null}
-                {/* Opened date */}
-                {wo.created_at && (
-                  <div className="flex items-center justify-end pt-1">
-                    <span className="text-[10px] text-muted-foreground/50">
-                      {t("openedDate", {
-                        date: new Date(wo.created_at).toLocaleDateString(),
-                      })}
-                    </span>
-                  </div>
-                )}
-                {/* Sticky price summary — floats at bottom of scroll */}
-                <div className="sticky bottom-0 bg-card/95 backdrop-blur-sm border-t border-border/40 -mx-3 px-3 py-2 z-10">
-                  <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">
-                    <div className="flex flex-col">
-                      <Label className="text-xs font-medium">
-                        {locale === "en" ? "VAT" : "НӨАТ"}
-                      </Label>
-                      <span className="text-[10px] text-muted-foreground">
-                        {locale === "en"
-                          ? "Value Added Tax"
-                          : "Нэмэгдсэн Өртөгт Татвар"}
-                      </span>
-                    </div>
-                    <Switch
-                      checked={nuatEnabled}
-                      onCheckedChange={onNuatToggle}
-                    />
-                  </div>
-                  <TotalsSummary
-                    servicesTotal={servicesTotal}
-                    partsTotal={partsTotal}
-                    grandTotal={grandTotal}
-                    serviceCount={services.length}
-                    partCount={parts.length}
-                    discountTotal={discountTotal}
-                    taxRate={taxRate}
-                    nuatEnabled={nuatEnabled}
-                    locale={locale}
-                    t={t}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Right column: timeline */}
-            <div className="flex flex-col gap-3 lg:border-l lg:border-border/40 lg:pl-4 lg:overflow-y-auto lg:min-h-0">
-              <MemoizedTimelineZone
-                statusHistory={statusHistory}
-                serviceHistory={serviceHistory}
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div
+          className={
+            isFullScreen
+              ? "mx-auto grid w-full max-w-7xl items-start gap-4 px-4 py-4 xl:grid-cols-[minmax(0,1fr)_19rem]"
+              : "mx-auto w-full max-w-3xl px-4 py-4"
+          }
+        >
+          <main className="min-w-0">
+            <div className="flex flex-col gap-4">
+              <MemoizedServicesZone
+                services={services}
+                catalog={catalog}
+                locale={locale}
+                isFullScreen={isFullScreen}
+                onAddServiceOpenChange={onAddServiceOpenChange}
+                onEditPriceSave={onEditServicePriceSave}
+                onEditQtySave={onEditServiceQtySave}
                 t={t}
+                lastAddedServiceId={lastAddedServiceId}
               />
+
+              <MemoizedPartsZone
+                parts={parts}
+                partsCatalog={partsCatalog}
+                locale={locale}
+                onAddPartOpenChange={onAddPartOpenChange}
+                onEditPriceSave={onEditPartPriceSave}
+                onEditQtySave={onEditPartQtySave}
+                t={t}
+                lastAddedPartId={lastAddedPartId}
+              />
+
+              {orgId && workOrderId ? (
+                <MemoizedNotesZone
+                  complaint={complaint}
+                  diagnosis={diagnosis}
+                  notes={notes}
+                  orgId={orgId}
+                  workOrderId={workOrderId}
+                  onUpdated={onNotesUpdated}
+                  t={t}
+                />
+              ) : null}
             </div>
-          </div>
+          </main>
+
+          <aside
+            className={
+              isFullScreen
+                ? "min-w-0 border-t border-border/60 pt-4 xl:sticky xl:top-0 xl:border-l xl:border-t-0 xl:pl-4 xl:pt-0"
+                : "mt-4 border-t border-border/60 pt-4"
+            }
+          >
+            <MemoizedTimelineZone
+              statusHistory={statusHistory}
+              serviceHistory={serviceHistory}
+              t={t}
+            />
+            {wo.created_at && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                {t("openedDate", {
+                  date: new Date(wo.created_at).toLocaleDateString(),
+                })}
+              </p>
+            )}
+          </aside>
         </div>
       </div>
 
-      {/* Footer */}
+      <div className="shrink-0 border-t border-border/70 bg-card px-4 py-3">
+        <div
+          className={
+            isFullScreen
+              ? "mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+              : "mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+          }
+        >
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/60 px-3 py-2">
+            <div>
+              <Label className="text-xs font-medium">
+                {locale === "en" ? "VAT" : "НӨАТ"}
+              </Label>
+              <p className="text-[11px] text-muted-foreground">
+                {locale === "en"
+                  ? "Value Added Tax"
+                  : "Нэмэгдсэн Өртөгт Татвар"}
+              </p>
+            </div>
+            <Switch checked={nuatEnabled} onCheckedChange={onNuatToggle} />
+          </div>
+          <div className="min-w-0 sm:min-w-[18rem]">
+            <TotalsSummary
+              servicesTotal={servicesTotal}
+              partsTotal={partsTotal}
+              grandTotal={grandTotal}
+              serviceCount={services.length}
+              partCount={parts.length}
+              discountTotal={discountTotal}
+              taxRate={taxRate}
+              nuatEnabled={nuatEnabled}
+              locale={locale}
+              t={t}
+            />
+          </div>
+        </div>
+      </div>
       <DrawerFooter
         wo={wo}
         invoicePublicToken={invoicePublicToken}
@@ -404,6 +406,6 @@ export function DrawerContentPanel({
         onCreateInvoice={onCreateInvoice}
         t={t}
       />
-    </>
+    </div>
   );
 }

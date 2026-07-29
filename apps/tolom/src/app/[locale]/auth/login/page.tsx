@@ -163,20 +163,12 @@ function LoginForm() {
             )}
           </Field>
           <Field className="gap-1">
-            <div className="flex items-center justify-between">
-              <FieldLabel
-                htmlFor="password"
-                className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono font-bold"
-              >
-                {t("passwordLabel")} <span className="text-destructive">*</span>
-              </FieldLabel>
-              <Link
-                href="/auth/forgot-password"
-                className="text-[9px] text-muted-foreground hover:text-foreground underline-offset-4 hover:underline font-mono"
-              >
-                {t("forgotPassword")}
-              </Link>
-            </div>
+            <FieldLabel
+              htmlFor="password"
+              className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono font-bold"
+            >
+              {t("passwordLabel")} <span className="text-destructive">*</span>
+            </FieldLabel>
             <div className="relative">
               <Input
                 id="password"
@@ -207,10 +199,16 @@ function LoginForm() {
             {"password" in fieldErrors && (
               <FieldError>{fieldErrors.password}</FieldError>
             )}
+            <Link
+              href="/auth/forgot-password"
+              className="text-[9px] text-muted-foreground hover:text-foreground underline-offset-4 hover:underline font-mono mt-1"
+            >
+              {t("forgotPassword")}
+            </Link>
           </Field>
 
           {/* Keep me signed in */}
-          <div className="flex items-center gap-2 -mt-2">
+          <div className="flex items-center gap-2 pt-2">
             <Checkbox
               id="rememberMe"
               checked={rememberMe}

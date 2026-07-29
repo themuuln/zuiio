@@ -37,9 +37,8 @@ export function DraggableVehicleWrapper({
       aria-roledescription="draggable vehicle"
       style={style}
       className={cn(
-        "flex flex-1 items-center gap-4 cursor-grab active:cursor-grabbing select-none touch-manipulation hover:bg-muted/40 rounded-xl p-2 transition-[color,background-color,border-color,opacity] duration-200 border border-transparent hover:border-border/40",
-        isDragging &&
-          "opacity-50 shadow-md bg-muted/20 border-dashed border-primary/30",
+        "group flex min-w-0 cursor-grab select-none rounded-lg px-1 py-1 touch-manipulation transition-[background-color,opacity,transform] duration-200 hover:bg-muted/30 active:cursor-grabbing",
+        isDragging && "bg-muted/40 opacity-50 ring-1 ring-primary/30",
       )}
     >
       {children}

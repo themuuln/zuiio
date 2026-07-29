@@ -154,7 +154,7 @@ function DrawerHeaderSectionInner({
   );
 
   return (
-    <DrawerHeader className="border-b border-border px-3 py-2.5 text-left shrink-0">
+    <DrawerHeader className="shrink-0 border-b border-border/70 bg-card px-4 py-3 text-left">
       <DrawerTitle className="sr-only">
         {wo
           ? `${t("workOrder")} — ${wo.vehicle?.plate_number ?? wo.id?.slice(0, 8) ?? ""}`
@@ -163,12 +163,12 @@ function DrawerHeaderSectionInner({
       <DrawerDescription className="sr-only">
         {t("workOrderDrawerDescription")}
       </DrawerDescription>
-      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-        {/* Left: Vehicle */}
+
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-muted ring-1 ring-border">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
             {loading ? (
-              <Skeleton className="size-10 rounded-xl" />
+              <Skeleton className="size-10 rounded-lg" />
             ) : (
               <VehicleMakeLogo
                 make={wo?.vehicle?.make}
@@ -177,14 +177,15 @@ function DrawerHeaderSectionInner({
               />
             )}
           </div>
-          <div className="min-w-0 flex flex-col gap-0.5">
+
+          <div className="min-w-0">
             {loading ? (
               <>
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-5 w-20 rounded-md" />
-                  <Skeleton className="h-3.5 w-14 rounded-sm" />
+                  <Skeleton className="h-5 w-24 rounded-full" />
                 </div>
-                <Skeleton className="h-3 w-28" />
+                <Skeleton className="mt-1 h-3 w-36" />
               </>
             ) : (
               <>
@@ -192,141 +193,124 @@ function DrawerHeaderSectionInner({
                   {wo?.vehicle?.plate_number ? (
                     <MongolianLicensePlate plate={wo.vehicle.plate_number} />
                   ) : (
-                    <span className="font-bold text-sm">{t("workOrder")}</span>
-                  )}
-                  {wo && (
-                    <span className="font-mono text-xs text-muted-foreground/80 font-medium">
-                      WO#{wo.id?.slice(0, 8) ?? ""}
+                    <span className="text-sm font-semibold">
+                      {t("workOrder")}
                     </span>
                   )}
+                  {wo?.status && <StatusPill status={wo.status} />}
                   {isAddingService && (
-                    <Loader2 className="size-3 animate-spin text-primary" />
+                    <Loader2 className="size-3.5 animate-spin text-primary" />
                   )}
                 </div>
-                {wo?.vehicle && (
-                  <div className="text-xs font-semibold text-foreground/90 flex items-center gap-1">
-                    <span>
-                      {wo.vehicle.make} {wo.vehicle.model}
-                    </span>
-                    {wo.vehicle.year && (
-                      <span className="text-muted-foreground/60 font-normal">
-                        ({wo.vehicle.year})
-                      </span>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Center: Customer */}
-        {loading ? (
-          <div className="flex items-center gap-2 justify-center">
-            <Skeleton className="size-3.5 rounded-full" />
-            <Skeleton className="h-3 w-28" />
-          </div>
-        ) : wo ? (
-          <div className="flex items-center gap-2 min-w-0 justify-center">
-            {wo.customer ? (
-              <>
-                <User className="size-3.5 text-muted-foreground/60 shrink-0" />
-                <span className="font-medium text-xs text-foreground/80 truncate">
-                  {[wo.customer.first_name, wo.customer.last_name]
-                    .filter(Boolean)
-                    .join(" ") ||
-                    wo.customer.phone ||
-                    t("unknownCustomer")}
-                </span>
-                {wo.customer.phone &&
-                  [wo.customer.first_name, wo.customer.last_name]
-                    .filter(Boolean)
-                    .join(" ") && (
-                    <span className="text-muted-foreground/60 font-mono text-xs">
-                      {wo.customer.phone}
+                <p className="mt-0.5 truncate text-xs font-medium text-foreground/85">
+                  {wo?.vehicle
+                    ? `${wo.vehicle.make} ${wo.vehicle.model}${wo.vehicle.year ? ` · ${wo.vehicle.year}` : ""}`
+                    : t("workOrder")}
+                  {wo?.id && (
+                    <span className="ml-2 font-mono font-normal text-muted-foreground">
+                      WO#{wo.id.slice(0, 8)}
                     </span>
                   )}
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={onShowCustomerPicker}
-                  aria-label={t("selectCustomer")}
-                >
-                  <UserPlus className="size-3" />
-                </Button>
+                </p>
               </>
-            ) : (
-              <button
-                type="button"
-                onClick={onShowCustomerPicker}
-                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <UserPlus className="size-3.5" />
-                {t("selectCustomer")}
-              </button>
             )}
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 justify-center">
-            <Skeleton className="size-3.5 rounded-full" />
-            <Skeleton className="h-3 w-28" />
-          </div>
-        )}
-
-        {/* Right: Mechanic + Status + Actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          {wo && orgId && workOrderId && (
-            <MechanicDisplay
-              variant="row"
-              workOrderId={workOrderId}
-              mechanic={wo.mechanic}
-              helpers={helpers as MechanicRef[]}
-              status={wo.status}
-              allMechanics={effectiveMechanics}
-              onAssignMechanic={handleAssignMechanic}
-              onAddHelper={handleAddHelper}
-              onRemoveMechanic={handleRemoveMechanic}
-              onRemoveHelper={handleRemoveHelper}
-            />
-          )}
-          <div className="flex items-center gap-2 shrink-0">
-            {showBack && (
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={onBack}
-                aria-label={t("backLabel")}
-              >
-                <ArrowLeft className="size-4" />
-              </Button>
-            )}
-            {wo?.status && <StatusPill status={wo.status} />}
-            {!showBack && (
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={onToggleFullScreen}
-                aria-label={
-                  isFullScreen ? t("exitFullscreen") : t("fullscreen")
-                }
-              >
-                {isFullScreen ? (
-                  <Minimize2 className="size-4" />
-                ) : (
-                  <Maximize2 className="size-4" />
-                )}
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={onClose}
-              aria-label={t("close")}
-            >
-              <X className="size-4" />
-            </Button>
           </div>
         </div>
+
+        <div className="flex shrink-0 items-center gap-1">
+          {showBack && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onBack}
+              aria-label={t("backLabel")}
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+          )}
+          {!showBack && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onToggleFullScreen}
+              aria-label={isFullScreen ? t("exitFullscreen") : t("fullscreen")}
+            >
+              {isFullScreen ? (
+                <Minimize2 className="size-4" />
+              ) : (
+                <Maximize2 className="size-4" />
+              )}
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onClose}
+            aria-label={t("close")}
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-2 border-t border-border/60 pt-2.5 sm:grid-cols-2">
+        {loading ? (
+          <>
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </>
+        ) : wo ? (
+          <>
+            <button
+              type="button"
+              onClick={onShowCustomerPicker}
+              className="group flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <User className="size-4 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[10px] font-medium text-muted-foreground">
+                  {t("listHeaderCustomer")}
+                </span>
+                <span className="block truncate text-xs font-medium text-foreground">
+                  {wo?.customer
+                    ? [wo.customer.first_name, wo.customer.last_name]
+                        .filter(Boolean)
+                        .join(" ") ||
+                      wo.customer.phone ||
+                      t("unknownCustomer")
+                    : t("selectCustomer")}
+                </span>
+              </span>
+              <UserPlus className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+            </button>
+
+            <div className="flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.5">
+              <div className="min-w-0 flex-1">
+                <span className="block text-[10px] font-medium text-muted-foreground">
+                  {t("listHeaderMechanic")}
+                </span>
+                {wo && orgId && workOrderId ? (
+                  <MechanicDisplay
+                    variant="row"
+                    workOrderId={workOrderId}
+                    mechanic={wo.mechanic}
+                    helpers={helpers as MechanicRef[]}
+                    status={wo.status}
+                    allMechanics={effectiveMechanics}
+                    onAssignMechanic={handleAssignMechanic}
+                    onAddHelper={handleAddHelper}
+                    onRemoveMechanic={handleRemoveMechanic}
+                    onRemoveHelper={handleRemoveHelper}
+                  />
+                ) : (
+                  <span className="block text-xs text-muted-foreground">
+                    {t("unassigned")}
+                  </span>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </DrawerHeader>
   );

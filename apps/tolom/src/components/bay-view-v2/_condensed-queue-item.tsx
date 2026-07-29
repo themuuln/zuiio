@@ -1,10 +1,11 @@
 "use client";
 
+import { useDraggable } from "@dnd-kit/core";
 import { Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import type { Vehicle } from "@/lib/types";
-import { formatPlateNumber } from "@/lib/utils";
+import { cn, formatPlateNumber } from "@/lib/utils";
 
 /** Compute wait time text and urgency from a created_at timestamp. */
 function _getWaitTime(createdAt: string): { text: string; urgent: boolean } {
@@ -35,6 +36,12 @@ export function CondensedQueueItem({
     _getWaitTime(workOrder.created_at),
   );
 
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: `vehicle-${workOrder.id}`,
+      data: { type: "vehicle", workOrderId: workOrder.id },
+    });
+
   useEffect(() => {
     const ref = new Date(workOrder.created_at).getTime();
     const tick = () => {
@@ -53,12 +60,28 @@ export function CondensedQueueItem({
     return () => clearInterval(interval);
   }, [workOrder.created_at]);
 
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: 50,
+      }
+    : undefined;
+
   if (!v) {
     return (
       <button
         type="button"
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
         onClick={onClick}
-        className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card px-4 py-3 text-left ring-1 ring-foreground/10 hover:bg-accent/30 transition-colors cursor-pointer w-full shrink-0"
+        style={style}
+        className={cn(
+          "flex flex-col gap-1 rounded-xl border border-border/60 bg-card px-4 py-3 text-left ring-1 ring-foreground/10 transition-colors w-full shrink-0",
+          "cursor-grab touch-manipulation active:cursor-grabbing",
+          isDragging && "opacity-50",
+          "hover:bg-accent/30",
+        )}
       >
         <span className="text-sm font-bold font-mono tracking-tight text-foreground">
           WO {workOrder.id.slice(0, 8)}
@@ -74,8 +97,17 @@ export function CondensedQueueItem({
   return (
     <button
       type="button"
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
       onClick={onClick}
-      className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card px-4 py-3 text-left ring-1 ring-foreground/10 hover:border-primary/30 hover:bg-accent/30 transition-colors cursor-pointer w-full shrink-0"
+      style={style}
+      className={cn(
+        "flex flex-col gap-1 rounded-xl border border-border/60 bg-card px-4 py-3 text-left ring-1 ring-foreground/10 transition-colors w-full shrink-0",
+        "cursor-grab touch-manipulation active:cursor-grabbing",
+        isDragging && "opacity-50",
+        "hover:border-primary/30 hover:bg-accent/30",
+      )}
     >
       <span className="text-sm font-bold font-mono tracking-tight text-foreground">
         {formatPlateNumber(v.plate_number)}

@@ -11,7 +11,6 @@ import {
   LayoutGrid,
   type LucideIcon,
   Package,
-  Settings,
   Sparkles,
   Users,
   Wrench,
@@ -287,12 +286,6 @@ const settingsItems: NavItem[] = [
     labelKey: "nav.organization",
     href: "/dashboard/organization",
     icon: Building2,
-  },
-  {
-    labelKey: "nav.settings",
-    href: "/dashboard/settings",
-    icon: Settings,
-    requiredPermission: { resource: "settings", action: "read" },
   },
 ];
 

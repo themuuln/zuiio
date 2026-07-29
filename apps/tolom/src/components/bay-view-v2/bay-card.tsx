@@ -19,8 +19,6 @@ import type { BayCardProps } from "./_bay-card-types";
 import { BayCardVehicleInfo } from "./_bay-card-vehicle-info";
 import { BayNumberLabel } from "./_bay-number-label";
 import { BayStatusBadge } from "./_bay-status-badge";
-import { STATUS_ACCENT, URGENCY_CRITICAL, URGENCY_WARNING } from "./_constants";
-import { elapsedMinutes } from "./_helpers";
 import { MechanicDisplay } from "./_mechanic-display";
 
 export type { BayCardProps } from "./_bay-card-types";
@@ -87,13 +85,6 @@ export const BayCard = React.memo(function BayCard({
     id: `bay-${bay.bayNumber}`,
   });
   const wo = bay.workOrder;
-  const elapsed = elapsedMinutes(wo?.started_at);
-  const urgencyClass =
-    elapsed != null && elapsed > 180
-      ? `${URGENCY_CRITICAL} animate-pulse`
-      : elapsed != null && elapsed > 120
-        ? `${URGENCY_WARNING} animate-pulse`
-        : "";
 
   // ── Animate empty → occupied transition ──
   const prevWoRef = useRef(bay.workOrder);
@@ -201,13 +192,13 @@ export const BayCard = React.memo(function BayCard({
         {...(isCardDraggable ? attributes : {})}
         style={cardStyle}
         className={cn(
-          "flex h-full flex-col gap-0 rounded-xl py-0 transition-[color,background-color,border-color,opacity] duration-300",
+          "flex h-full min-h-[220px] flex-col gap-0 overflow-hidden rounded-xl py-0 transition-[color,background-color,border-color,opacity,transform] duration-200",
           animateAssign && "animate-bay-assigned",
           wo
-            ? "cursor-pointer border bg-card shadow-none ring-1 ring-foreground/10 hover:border-primary/25 hover:bg-card/90 hover:ring-2 hover:ring-foreground/15"
-            : "border-dashed border-muted-foreground/30 bg-muted/10 hover:bg-muted/15",
+            ? "cursor-pointer bg-card ring-1 ring-foreground/10 hover:bg-accent/20 hover:ring-foreground/20"
+            : "border border-dashed border-muted-foreground/30 bg-muted/10 hover:bg-muted/15",
           isOver && !wo && "border-primary/50 bg-primary/5",
-          isOver && !!wo && "ring-2 ring-primary/30 bg-primary/[0.02]",
+          isOver && !!wo && "bg-primary/[0.02] ring-2 ring-primary/30",
           isCardDraggable &&
             "cursor-grab touch-manipulation active:cursor-grabbing",
           isDragging && "opacity-50",
@@ -217,16 +208,6 @@ export const BayCard = React.memo(function BayCard({
         onMouseEnter={handleMouseEnter}
         onPointerDown={handlePointerDown}
       >
-        {wo && (
-          <div
-            className={cn(
-              "h-1 w-full shrink-0 rounded-t-xl",
-              STATUS_ACCENT[wo.status] ?? "bg-muted",
-              urgencyClass,
-            )}
-          />
-        )}
-
         {wo ? (
           <BayCardProvider value={providerValue}>
             <BayCardOccupied bay={bay} />

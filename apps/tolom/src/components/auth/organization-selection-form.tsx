@@ -106,15 +106,6 @@ export function OrganizationSelectionForm({
     }
   }, [state?.redirectTo]);
 
-  // Dev auto-submit: automatically complete org login when DEV_PIN is set
-  useEffect(() => {
-    if (DEV_PIN && !state?.formError && !state?.redirectTo && !isPending) {
-      const timeout = setTimeout(() => formRef.current?.requestSubmit(), 300);
-      return () => clearTimeout(timeout);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state?.redirectTo, state?.formError, isPending]);
-
   if (organizations.length === 0) {
     return (
       <div className="flex flex-col gap-3 text-center">
