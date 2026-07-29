@@ -44,6 +44,7 @@ interface PricingCardProps {
   highlighted?: boolean;
   ctaLabel: string;
   className?: string;
+  badge?: string;
 }
 
 export function PricingCard({
@@ -54,6 +55,7 @@ export function PricingCard({
   highlighted,
   ctaLabel,
   className,
+  badge,
 }: PricingCardProps) {
   return (
     <div
@@ -65,6 +67,11 @@ export function PricingCard({
         className,
       )}
     >
+      {badge && (
+        <div className="absolute -top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+          {badge}
+        </div>
+      )}
       {highlighted && (
         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm">
           <StarIcon /> Most popular
@@ -83,14 +90,16 @@ export function PricingCard({
           <span className="text-sm text-muted-foreground">/month</span>
         )}
       </div>
-      <ul className="mt-8 flex-1 space-y-3.5">
-        {features.map((feature) => (
-          <li key={feature} className="flex items-start gap-3 text-sm">
-            <CheckIcon className="mt-0.5 shrink-0 text-primary" />
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
+      {features.length > 0 && (
+        <ul className="mt-8 flex-1 space-y-3.5">
+          {features.map((feature) => (
+            <li key={feature} className="flex items-start gap-3 text-sm">
+              <CheckIcon className="mt-0.5 shrink-0 text-primary" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <Link
         href="/pricing"
         className={cn(
