@@ -28,26 +28,12 @@ export type { BayCardProps } from "./_bay-card-types";
 export function BayCardDragPreview({ bay }: { bay: BayCardProps["bay"] }) {
   const wo = bay.workOrder;
   if (!wo) return null;
-  const elapsed = elapsedMinutes(wo.started_at);
-  const urgencyClass =
-    elapsed != null && elapsed > 180
-      ? `${URGENCY_CRITICAL} animate-pulse`
-      : elapsed != null && elapsed > 120
-        ? `${URGENCY_WARNING} animate-pulse`
-        : "";
   return (
     <div
       className={cn(
         "relative flex h-full min-h-[180px] flex-col gap-0 overflow-hidden rounded-xl border border-border/70 bg-card py-0 shadow-2xl",
       )}
     >
-      <div
-        className={cn(
-          "h-1 w-full shrink-0 rounded-t-xl",
-          STATUS_ACCENT[wo.status] ?? "bg-muted",
-          urgencyClass,
-        )}
-      />
       <div className="flex select-none items-center justify-between py-2.5 pl-5 pr-3">
         <BayNumberLabel
           bayNumber={bay.bayNumber}

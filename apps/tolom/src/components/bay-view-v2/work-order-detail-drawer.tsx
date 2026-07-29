@@ -557,7 +557,7 @@ export function WorkOrderDetailDrawer({
               {null}
             </DrawerSkeleton>
           ) : !wo ? (
-            <DrawerSkeletonLayout />
+            <DrawerSkeletonLayout isFullScreen={isFullScreen} />
           ) : (
             <DrawerContentPanel
               wo={wo}
