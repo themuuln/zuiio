@@ -15,50 +15,67 @@ const plans = [
     name: "Үнэгүй",
     monthlyPrice: "₮0",
     yearlyPrice: "₮0",
-    description: "Жижиг бизнес эхлэхэд тохиромжтой",
+    description: "Ганц эзэмшигчид тохиромжтой",
     features: [
+      "1 эзэмшигч",
       "200 хүртэлх бараа",
       "Борлуулалт ба POS касс",
       "Зарлагын бүртгэл",
       "Үндсэн тайлан",
-      "Харилцагчийн бүртгэл",
-      "Имэйл дэмжлэг",
+      "И-мэйл дэмжлэг",
     ],
     highlighted: false,
     icon: true,
   },
   {
     name: "Стандарт",
-    monthlyPrice: "₮49,000",
-    yearlyPrice: "₮39,000",
-    description: "Өсөн нэмэгдэж буй бизнест тохиромжтой",
+    monthlyPrice: "₮79,000",
+    yearlyPrice: "₮790,000",
+    description: "Нэг салбарт бүрэн хяналт",
     features: [
       "5,000 хүртэлх бараа",
+      "Борлуулалт ба POS касс",
+      "Зарлагын бүртгэл",
+      "Харилцагчийн бүртгэл",
       "Бүх төрлийн тайлан",
+      "Олон агуулах",
+      "Худалдан авалт ба нийлүүлэгч",
       "Онлайн дэлгүүр",
       "AI Telegram туслах",
       "Автомат өдрийн тайлан",
-      "Олон агуулах",
-      "Худалдан авалт ба нийлүүлэгч",
       "Тэргүүлэх дэмжлэг",
     ],
     highlighted: true,
     icon: false,
   },
   {
-    name: "Аж ахуйн",
-    monthlyPrice: "₮99,000",
-    yearlyPrice: "₮79,000",
-    description: "Томоохон байгууллагад тохиромжтой",
+    name: "Бизнес",
+    monthlyPrice: "₮129,000",
+    yearlyPrice: "₮1,290,000",
+    description: "Олон салбар, бүрэн хяналт",
     features: [
       "Барааны тоо хязгааргүй",
       "Бүрэн боломж — бүх модуль",
+      "Олон салбар",
       "Нягтлан бодох бүртгэл",
       "Үйлдвэрлэлийн удирдлага (BOM)",
       "Хүний нөөц ба цалин",
-      "Олон салбар",
       "API холболт",
       "24/7 тэргүүлэх дэмжлэг",
+    ],
+    highlighted: false,
+    icon: true,
+  },
+  {
+    name: "Аж ахуйн",
+    monthlyPrice: "from ₮8M/yr",
+    yearlyPrice: "₮8 сая/жил",
+    description: "Томоохон байгууллага, групп компаниудад",
+    features: [
+      "Тохиролцсон хязгаар",
+      "Тусгай интеграц",
+      "Тусгай сервер",
+      "Dedicated support SLA",
     ],
     highlighted: false,
     icon: true,
@@ -66,7 +83,7 @@ const plans = [
 ];
 
 export function Pricing() {
-  const [isYearly, setIsYearly] = useState(false);
+  const [isYearly, setIsYearly] = useState(true);
 
   return (
     <section
@@ -117,13 +134,13 @@ export function Pricing() {
             >
               Жилийн
               <span className="ml-1.5 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">
-                -20%
+                2 сар үнэгүй
               </span>
             </button>
           </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-3 lg:gap-6">
+        <div className="grid gap-8 lg:grid-cols-4 lg:gap-6">
           {plans.map((plan) => (
             <div
               key={plan.name}
@@ -152,11 +169,18 @@ export function Pricing() {
                   <span className="text-4xl font-bold tracking-tight">
                     {isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                   </span>
-                  <span className="text-sm text-muted-foreground">/сар</span>
+                  <span className="text-sm text-muted-foreground">
+                    {plan.name === "Аж ахуйн" ? "" : isYearly ? "/жил" : "/сар"}
+                  </span>
                 </div>
-                {isYearly && plan.yearlyPrice !== "₮0" && (
-                  <p className="mt-1 text-xs text-muted-foreground line-through">
-                    {plan.monthlyPrice}/сар
+                {isYearly && plan.name === "Стандарт" && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    ₮65,833/сар
+                  </p>
+                )}
+                {isYearly && plan.name === "Бизнес" && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    ₮165,833/сар
                   </p>
                 )}
               </div>

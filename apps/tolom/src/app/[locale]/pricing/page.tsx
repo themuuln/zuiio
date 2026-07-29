@@ -33,29 +33,13 @@ interface PlanData {
 
 const PLAN_DATA: PlanData[] = [
   {
-    key: "enterprise",
-    monthlyPrice: "Custom",
-    annualPrice: "Custom",
-    annualPerMonth: "",
-    features: [
-      { text: "For chains, dealerships & fleets", included: true },
-      { text: "Unlimited branches & users", included: true },
-      { text: "Custom integrations & API access", included: true },
-      { text: "Dedicated database & infra options", included: true },
-      { text: "Fleet management module", included: true },
-      { text: "Custom reporting & priority SLA", included: true },
-    ],
-    ctaVariant: "outline",
-    popular: false,
-  },
-  {
     key: "business",
-    monthlyPrice: "₮1,590,000",
-    annualPrice: "₮15,900,000",
-    annualPerMonth: "₮1,325,000",
+    monthlyPrice: "₮1,790,000",
+    annualPrice: "₮17,900,000",
+    annualPerMonth: "₮1,492,000",
     features: [
       { text: "3 branches · 25 users · 5,000 WOs/mo", included: true },
-      { text: "Everything in Pro", included: true },
+      { text: "Everything in Complete", included: true },
       { text: "Multi-branch dashboard & inventory transfer", included: true },
       { text: "API access & advanced BI", included: true },
       { text: "Custom invoice templates", included: true },
@@ -65,13 +49,13 @@ const PLAN_DATA: PlanData[] = [
     popular: false,
   },
   {
-    key: "pro",
+    key: "complete",
     monthlyPrice: "₮699,000",
     annualPrice: "₮6,990,000",
     annualPerMonth: "₮583,000",
     features: [
       { text: "1 branch · 10 users · 1,500 WOs/mo", included: true },
-      { text: "Tablet-first workflow & CRM", included: true },
+      { text: "Everything in Core", included: true },
       { text: "Inventory management & stock control", included: true },
       {
         text: "Mechanic accountability & performance tracking",
@@ -84,7 +68,7 @@ const PLAN_DATA: PlanData[] = [
     popular: true,
   },
   {
-    key: "starter",
+    key: "core",
     monthlyPrice: "₮299,000",
     annualPrice: "₮2,990,000",
     annualPerMonth: "₮249,000",
@@ -95,6 +79,21 @@ const PLAN_DATA: PlanData[] = [
       { text: "Work orders & service history", included: true },
       { text: "Mechanic reports & pricing memory", included: true },
       { text: "Basic reports & email support", included: true },
+    ],
+    ctaVariant: "outline",
+    popular: false,
+  },
+  {
+    key: "enterprise",
+    monthlyPrice: "from ₮2.49M/mo",
+    annualPrice: "From ₮29,880,000",
+    annualPerMonth: "",
+    features: [
+      { text: "From ₮2.49M/month — tailored deployment", included: true },
+      { text: "4+ branches, SSO, & custom integrations", included: true },
+      { text: "Dedicated database & infra options", included: true },
+      { text: "Fleet management module", included: true },
+      { text: "Custom reporting & priority SLA", included: true },
     ],
     ctaVariant: "outline",
     popular: false,
@@ -212,7 +211,7 @@ async function PricingContent({ locale }: { locale: string }) {
 
             {/* Hero subtitle only — toggle + cards rendered client-side */}
             <p className="mt-6 text-sm text-muted-foreground">
-              {t("monthly")} / {t("annual")} — {t("savePercent")}
+              {t("annualCta")}
             </p>
           </div>
         </section>
@@ -264,10 +263,10 @@ async function PricingContent({ locale }: { locale: string }) {
               contactSales: t("contactSales"),
               getStarted: t("getStarted"),
               startTrial: t("startTrial"),
-              starterName: t("starterName"),
-              starterDesc: t("starterDesc"),
-              proName: t("proName"),
-              proDesc: t("proDesc"),
+              starterName: t("coreName"),
+              starterDesc: t("coreDesc"),
+              proName: t("completeName"),
+              proDesc: t("completeDesc"),
               businessName: t("businessName"),
               businessDesc: t("businessDesc"),
               enterpriseName: t("enterpriseName"),
@@ -291,9 +290,11 @@ async function PricingContent({ locale }: { locale: string }) {
                       aria-label={t("feature")}
                     />
                     <th className="pb-3 px-4 font-medium text-muted-foreground">
-                      {t("starterName")}
+                      {t("coreName")}
                     </th>
-                    <th className="pb-3 px-4 font-semibold">{t("proName")}</th>
+                    <th className="pb-3 px-4 font-semibold">
+                      {t("completeName")}
+                    </th>
                     <th className="pb-3 pl-4 font-medium text-muted-foreground">
                       {t("businessName")}
                     </th>
