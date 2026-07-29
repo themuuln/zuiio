@@ -1,13 +1,17 @@
 import withPWAInit from "@ducanh2912/next-pwa";
-// @ts-expect-error — @next/bundle-analyzer has no TS declarations, works at runtime
-import withBundleAnalyzer from "@next/bundle-analyzer";
+
+const withBundleAnalyzer =
+  process.env.ANALYZE === "true"
+    ? require("@next/bundle-analyzer").default
+    : null;
+
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-const withBA = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === "true",
-});
+const withBA = withBundleAnalyzer
+  ? withBundleAnalyzer({ enabled: true })
+  : (config: NextConfig) => config;
 
 const withNextIntl = createNextIntlPlugin({
   requestConfig: "./src/lib/i18n/request.ts",
