@@ -58,8 +58,9 @@ describe("ProductCard", () => {
   it("shows image with alt text", () => {
     render(<ProductCard product={makeProduct()} />);
     const img = screen.getByRole("img");
-    expect(img).toHaveAttribute("src", "/img/mayk.jpg");
+    // next/image transforms the src to an optimization URL
     expect(img).toHaveAttribute("alt", "Майк");
+    expect(img).toHaveAttribute("loading", "lazy");
   });
 
   it("shows placeholder when no images", () => {

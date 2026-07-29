@@ -1,5 +1,7 @@
 "use client";
 
+import { formatDistanceToNow } from "date-fns";
+import { mn } from "date-fns/locale";
 import {
   ArrowLeft,
   ChevronRight,
@@ -8,8 +10,6 @@ import {
   Info,
   LinkIcon,
   MessageCircle,
-  Minus,
-  Plus,
   Ruler,
   Share2,
   ShoppingBag,
@@ -17,10 +17,9 @@ import {
   Tag,
   Truck,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { mn } from "date-fns/locale";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { toast } from "sonner";
 import type {
@@ -28,7 +27,6 @@ import type {
   ProductReview,
   ShopProductRow,
 } from "@/app/lib/data-shop";
-import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { submitProductReviewAction } from "../actions/submit-review";
 import { OrderDialog } from "./order-dialog";
 import { ProductCard } from "./product-card";
 
@@ -93,7 +92,6 @@ function ReviewForm({ productId }: { productId: string }) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [content, setContent] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -111,31 +109,24 @@ function ReviewForm({ productId }: { productId: string }) {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.from("product_reviews").insert({
-        product_id: productId,
-        author_name: authorName.trim(),
-        rating,
-        content: content.trim(),
-      });
+    const formData = new FormData();
+    formData.set("productId", productId);
+    formData.set("authorName", authorName.trim());
+    formData.set("rating", String(rating));
+    formData.set("content", content.trim());
 
-      if (error) {
-        toast.error(
-          error.message ?? "Сэтгэгдэл илгээхэд алдаа гарлаа. Дахиж оролдоно уу.",
-        );
-        return;
-      }
+    const result = await submitProductReviewAction(
+      { success: false },
+      formData,
+    );
 
-      toast.success(
-        "Сэтгэгдэл илгээгдлээ, баталгаажсаны дараа харагдана",
-      );
+    if (result.success) {
+      toast.success("Сэтгэгдэл илгээгдлээ, баталгаажсаны дараа харагдана");
       setSubmitted(true);
-    } catch {
-      toast.error("Сүлжээний алдаа. Дахиж оролдоно уу.");
-    } finally {
-      setSubmitting(false);
+    } else {
+      toast.error(
+        result.error ?? "Сэтгэгдэл илгээхэд алдаа гарлаа. Дахиж оролдоно уу.",
+      );
     }
   }
 
@@ -228,12 +219,8 @@ function ReviewForm({ productId }: { productId: string }) {
           </p>
         </div>
 
-        <Button
-          type="submit"
-          disabled={submitting}
-          className="w-full"
-        >
-          {submitting ? "Илгээж байна..." : "Сэтгэгдэл илгээх"}
+        <Button type="submit" className="w-full">
+          Сэтгэгдэл илгээх
         </Button>
       </div>
     </form>
@@ -250,7 +237,6 @@ export function ProductDetailClient({
   const [imgError, setImgError] = useState<Record<number, boolean>>({});
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState(0);
-  const [quantity, setQuantity] = useState(1);
   const [orderOpen, setOrderOpen] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [sizeRecOpen, setSizeRecOpen] = useState(false);
@@ -266,7 +252,6 @@ export function ProductDetailClient({
   const hasStock = currentVariant
     ? currentVariant.stock > 0
     : !hasVariants && product.is_available;
-  const maxStock = currentVariant?.stock ?? 0;
   const isClothing = hasVariants;
   const images = product.images ?? [];
   const productUrl =
@@ -371,14 +356,16 @@ export function ProductDetailClient({
           {/* Main image */}
           <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-1)]">
             {images.length > 0 && !imgError[selectedImage] ? (
-              // biome-ignore lint/performance/noImgElement: dynamic product image
-              <img
-                src={images[selectedImage]}
+              <Image
+                src={images[selectedImage] ?? ""}
                 alt={`${product.name} — ${selectedImage + 1}`}
-                className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.03]"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover transition-transform duration-500 hover:scale-[1.03]"
                 onError={() =>
                   setImgError((prev) => ({ ...prev, [selectedImage]: true }))
                 }
+                priority={selectedImage === 0}
               />
             ) : (
               <div className="flex flex-col items-center gap-4 text-muted-foreground/40">
@@ -453,7 +440,7 @@ export function ProductDetailClient({
             <div className="flex gap-2 overflow-x-auto pb-1">
               {images.map((src, i) => (
                 <button
-                  key={i}
+                  key={src}
                   type="button"
                   onClick={() => {
                     setSelectedImage(i);
@@ -463,17 +450,18 @@ export function ProductDetailClient({
                       return next;
                     });
                   }}
-                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+                  className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
                     i === selectedImage
                       ? "border-[var(--brand-sports)] opacity-100"
                       : "border-border/50 opacity-60 hover:opacity-90"
                   }`}
                 >
-                  {/* biome-ignore lint/performance/noImgElement: gallery thumbnail */}
-                  <img
+                  <Image
                     src={src}
                     alt=""
-                    className="h-full w-full object-cover"
+                    fill
+                    sizes="64px"
+                    className="object-cover"
                   />
                 </button>
               ))}
@@ -571,7 +559,6 @@ export function ProductDetailClient({
                       disabled={isOutOfStock}
                       onClick={() => {
                         setSelectedVariant(i);
-                        setQuantity(1);
                       }}
                       className={
                         isLow && !isOutOfStock && !isSelected
@@ -580,7 +567,11 @@ export function ProductDetailClient({
                       }
                     >
                       {v.size}
-                      {isOutOfStock ? " (дууссан)" : ` (${v.stock})`}
+                      {isOutOfStock && (
+                        <span className="ml-1 text-[10px] font-normal text-destructive">
+                          Дууссан
+                        </span>
+                      )}
                     </Button>
                   );
                 })}
@@ -609,34 +600,9 @@ export function ProductDetailClient({
           {/* Quantity + Buy section */}
           {hasStock && product.is_available ? (
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              {/* Quantity selector */}
-              <div className="flex items-center gap-0 self-start rounded-lg border border-border/50">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                  className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-[var(--surface-2)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
-                  aria-label="Багасгах"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="flex h-10 w-12 items-center justify-center text-sm font-medium tabular-nums">
-                  {quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
-                  disabled={quantity >= maxStock}
-                  className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-[var(--surface-2)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
-                  aria-label="Нэмэх"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-
               <Button
                 size="lg"
-                className="w-full sm:w-auto sm:flex-1"
+                className="w-full sm:flex-1"
                 onClick={() => setOrderOpen(true)}
               >
                 <ShoppingBag className="mr-2 h-4 w-4" />
@@ -705,13 +671,9 @@ export function ProductDetailClient({
             onOpenChange={setOrderOpen}
             productId={product.id}
             variantIndex={selectedVariant}
-            priceMnt={product.price_mnt * quantity}
+            priceMnt={product.price_mnt}
             productName={product.name}
-            variantSize={
-              currentVariant
-                ? `${currentVariant.size} × ${quantity}`
-                : "Стандарт"
-            }
+            variantSize={currentVariant ? currentVariant.size : "Стандарт"}
           />
         </div>
       </div>
@@ -728,7 +690,8 @@ export function ProductDetailClient({
             <div
               className="flex size-14 items-center justify-center rounded-xl text-lg font-bold text-white"
               style={{
-                backgroundColor: product.team_primary_color ?? "var(--brand-sports)",
+                backgroundColor:
+                  product.team_primary_color ?? "var(--brand-sports)",
               }}
             >
               {product.team_short_code ?? "T"}
@@ -918,7 +881,10 @@ export function ProductDetailClient({
                         ? (count / ratingSummary.count) * 100
                         : 0;
                     return (
-                      <div key={star} className="flex items-center gap-2 text-xs">
+                      <div
+                        key={star}
+                        className="flex items-center gap-2 text-xs"
+                      >
                         <span className="w-4 text-right text-muted-foreground">
                           {star}
                         </span>

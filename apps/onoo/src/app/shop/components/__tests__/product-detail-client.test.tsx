@@ -1,14 +1,18 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Shared Mocks ──────────────────────────────────────────────────────────────
 
 vi.mock("next/link", () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  ),
+  default: ({
+    children,
+    href,
+  }: {
+    children: React.ReactNode;
+    href: string;
+  }) => <a href={href}>{children}</a>,
 }));
 
 vi.mock("lucide-react", async (importOriginal) => {
@@ -33,14 +37,12 @@ vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({ push: vi.fn() })),
 }));
 
-// Mock the supabase client (used by ReviewForm)
-const mockInsert = vi.fn().mockResolvedValue({ error: null });
-vi.mock("@/lib/supabase/client", () => ({
-  createClient: vi.fn(() => ({
-    from: vi.fn(() => ({
-      insert: mockInsert,
-    })),
-  })),
+// Mock the server action (used by ReviewForm)
+const { mockSubmitReview } = vi.hoisted(() => ({
+  mockSubmitReview: vi.fn().mockResolvedValue({ success: true }),
+}));
+vi.mock("@/app/shop/actions/submit-review", () => ({
+  submitProductReviewAction: mockSubmitReview,
 }));
 
 vi.mock("date-fns", () => ({
@@ -63,7 +65,12 @@ vi.mock("@/components/ui/badge", () => ({
     variant?: string;
     className?: string;
   }) => (
-    <span data-testid="badge" data-variant={variant} className={className} {...props}>
+    <span
+      data-testid="badge"
+      data-variant={variant}
+      className={className}
+      {...props}
+    >
       {children}
     </span>
   ),
@@ -109,6 +116,7 @@ vi.mock("@/components/ui/dialog", () => ({
         {children}
         {onOpenChange && (
           <button
+            type="button"
             data-testid="dialog-close"
             onClick={() => onOpenChange(false)}
           >
@@ -160,7 +168,11 @@ vi.mock("./product-card", () => ({
 
 // ── Imports (after mocks, vitest hoists vi.mock above imports) ────────────────
 
-import type { ProductBundle, ProductReview, ShopProductRow } from "@/app/lib/data-shop";
+import type {
+  ProductBundle,
+  ProductReview,
+  ShopProductRow,
+} from "@/app/lib/data-shop";
 import { ProductDetailClient } from "../product-detail-client";
 
 // ── Test Data ─────────────────────────────────────────────────────────────────
@@ -208,7 +220,11 @@ describe("ProductDetailClient — review display", () => {
     render(
       <ProductDetailClient
         product={makeProduct()}
-        ratingSummary={{ average: 4.3, count: 12, distribution: { 1: 1, 2: 2, 3: 1, 4: 3, 5: 5 } }}
+        ratingSummary={{
+          average: 4.3,
+          count: 12,
+          distribution: { 1: 1, 2: 2, 3: 1, 4: 3, 5: 5 },
+        }}
       />,
     );
 
@@ -221,15 +237,29 @@ describe("ProductDetailClient — review display", () => {
 
   it("renders review list with author names and ratings", () => {
     const reviews: ProductReview[] = [
-      makeReview({ id: "rev-1", author_name: "Бат", rating: 5, content: "Маш сайн" }),
-      makeReview({ id: "rev-2", author_name: "Дорж", rating: 4, content: "Сайн байна" }),
+      makeReview({
+        id: "rev-1",
+        author_name: "Бат",
+        rating: 5,
+        content: "Маш сайн",
+      }),
+      makeReview({
+        id: "rev-2",
+        author_name: "Дорж",
+        rating: 4,
+        content: "Сайн байна",
+      }),
     ];
 
     render(
       <ProductDetailClient
         product={makeProduct()}
         reviews={reviews}
-        ratingSummary={{ average: 4.5, count: 2, distribution: { 1: 0, 2: 0, 3: 0, 4: 1, 5: 1 } }}
+        ratingSummary={{
+          average: 4.5,
+          count: 2,
+          distribution: { 1: 0, 2: 0, 3: 0, 4: 1, 5: 1 },
+        }}
       />,
     );
 
@@ -247,24 +277,22 @@ describe("ProductDetailClient — review display", () => {
       <ProductDetailClient
         product={makeProduct()}
         reviews={[]}
-        ratingSummary={{ average: 0, count: 0, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } }}
+        ratingSummary={{
+          average: 0,
+          count: 0,
+          distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        }}
       />,
     );
 
     // Text spans two lines in the source; use a substring via function matcher
     expect(
-      screen.getByText((content) =>
-        content.includes("хараахан байхгүй"),
-      ),
+      screen.getByText((content) => content.includes("хараахан байхгүй")),
     ).toBeInTheDocument();
   });
 
   it("renders review submission form", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Form heading
     expect(screen.getByText("Сэтгэгдэл үлдээх")).toBeInTheDocument();
@@ -282,11 +310,7 @@ describe("ProductDetailClient — review display", () => {
   });
 
   it("renders star icons in review form selector", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Star icons rendered in the review form
     const stars = screen.getAllByTestId("icon-Star");
@@ -322,10 +346,7 @@ describe("ProductDetailClient — related products and bundles", () => {
 
   it("does not render related products section when empty", () => {
     render(
-      <ProductDetailClient
-        product={makeProduct()}
-        relatedProducts={[]}
-      />,
+      <ProductDetailClient product={makeProduct()} relatedProducts={[]} />,
     );
 
     expect(screen.queryByText("Санал болгох")).not.toBeInTheDocument();
@@ -344,12 +365,7 @@ describe("ProductDetailClient — related products and bundles", () => {
       },
     ];
 
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-        bundles={bundles}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} bundles={bundles} />);
 
     // Bundle section title
     expect(screen.getByText("Багц санал")).toBeInTheDocument();
@@ -365,12 +381,7 @@ describe("ProductDetailClient — related products and bundles", () => {
   });
 
   it("does not render bundle section when empty", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-        bundles={[]}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} bundles={[]} />);
 
     expect(screen.queryByText("Багц санал")).not.toBeInTheDocument();
   });
@@ -378,11 +389,7 @@ describe("ProductDetailClient — related products and bundles", () => {
 
 describe("ProductDetailClient — product info", () => {
   it("renders product name and price", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Product name appears in both breadcrumb and h1; use h1 role
     expect(
@@ -394,21 +401,13 @@ describe("ProductDetailClient — product info", () => {
   });
 
   it("renders variant selector for clothing", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     expect(screen.getByText("Хэмжээ")).toBeInTheDocument();
   });
 
   it("renders back link", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     expect(screen.getByText("Дэлгүүр лүү буцах")).toBeInTheDocument();
   });
@@ -475,21 +474,13 @@ describe("ProductDetailClient — team info section", () => {
   });
 
   it("does not render team section when team_id is null", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct({ team_id: null })}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct({ team_id: null })} />);
 
     expect(screen.queryByText("Багийн бүтээгдэхүүн")).not.toBeInTheDocument();
   });
 
   it("does not render team section when team_id is undefined", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     expect(screen.queryByText("Багийн бүтээгдэхүүн")).not.toBeInTheDocument();
   });
@@ -501,13 +492,7 @@ describe("ProductDetailClient — review form interaction", () => {
   });
 
   it('shows "Сэтгэгдэл илгээгдлээ" toast on successful form submission', async () => {
-    mockInsert.mockResolvedValue({ error: null });
-
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Fill in author name
     fireEvent.change(screen.getByPlaceholderText("Таны нэр"), {
@@ -537,11 +522,7 @@ describe("ProductDetailClient — review form interaction", () => {
   });
 
   it("shows error toast when submitting with empty fields", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Submit without filling any fields
     fireEvent.click(screen.getByText("Сэтгэгдэл илгээх"));
@@ -553,11 +534,7 @@ describe("ProductDetailClient — review form interaction", () => {
   });
 
   it("star rating buttons are clickable", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Click the 4-star button
     const starBtn = screen.getByRole("button", { name: "4 од" });
@@ -596,12 +573,7 @@ describe("ProductDetailClient — bundle section edge cases", () => {
       },
     ];
 
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-        bundles={bundles}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} bundles={bundles} />);
 
     expect(screen.getByText("Гэр бүлийн багц")).toBeInTheDocument();
     expect(screen.getByText("Спорт багц")).toBeInTheDocument();
@@ -633,17 +605,12 @@ describe("ProductDetailClient — bundle section edge cases", () => {
       },
     ];
 
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-        bundles={bundles}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} bundles={bundles} />);
 
     // Original price shown with line-through (multiple elements with 50,000 exist)
-    expect(screen.getAllByText((content) => content.includes("50,000")).length).toBeGreaterThanOrEqual(
-      1,
-    );
+    expect(
+      screen.getAllByText((content) => content.includes("50,000")).length,
+    ).toBeGreaterThanOrEqual(1);
     // Discounted price shown in brand color
     expect(screen.getByText("₮42,500")).toBeInTheDocument();
   });
@@ -655,11 +622,7 @@ describe("ProductDetailClient — size guide dialog", () => {
   });
 
   it("clicking size guide button opens the dialog", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Dialog should not be visible initially
     expect(screen.queryByTestId("dialog")).not.toBeInTheDocument();
@@ -673,11 +636,7 @@ describe("ProductDetailClient — size guide dialog", () => {
   });
 
   it("dialog shows size chart table (S-XXL)", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Open dialog
     fireEvent.click(screen.getByText("Заавар"));
@@ -702,11 +661,7 @@ describe("ProductDetailClient — size guide dialog", () => {
   });
 
   it("clicking close hides the dialog", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Open dialog
     fireEvent.click(screen.getByText("Заавар"));
@@ -726,18 +681,16 @@ describe("ProductDetailClient — size recommendation dialog", () => {
   });
 
   it("height input form is visible when dialog opens", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Click the size recommendation button
     fireEvent.click(screen.getByText("Хэмжээгээ мэдэх"));
 
     // Dialog should be visible with height options — title and button both exist
     expect(screen.getByTestId("dialog")).toBeInTheDocument();
-    expect(screen.getAllByText("Хэмжээгээ мэдэх").length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByText("Хэмжээгээ мэдэх").length,
+    ).toBeGreaterThanOrEqual(1);
     expect(
       screen.getByText("Өндрөө сонгоод тохирох хэмжээг харна уу."),
     ).toBeInTheDocument();
@@ -749,11 +702,7 @@ describe("ProductDetailClient — size recommendation dialog", () => {
   });
 
   it("shows suggested size when height entered", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Open dialog
     fireEvent.click(screen.getByText("Хэмжээгээ мэдэх"));
@@ -763,8 +712,8 @@ describe("ProductDetailClient — size recommendation dialog", () => {
 
     // Should show the recommended size
     expect(
-      screen.getByText((content) =>
-        content.includes("175 см өндөрт") && content.includes("L"),
+      screen.getByText(
+        (content) => content.includes("175 см өндөрт") && content.includes("L"),
       ),
     ).toBeInTheDocument();
   });
@@ -775,9 +724,7 @@ describe("ProductDetailClient — mobile sticky buy bar", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    triggerObserver = vi.fn() as unknown as (
-      isIntersecting: boolean,
-    ) => void;
+    triggerObserver = vi.fn() as unknown as (isIntersecting: boolean) => void;
 
     // Use a class so IntersectionObserver is constructible with `new`
     class MockIntersectionObserver {
@@ -795,10 +742,7 @@ describe("ProductDetailClient — mobile sticky buy bar", () => {
             target: document.createElement("div"),
             time: Date.now(),
           };
-          this.callback(
-            [entry],
-            null as unknown as IntersectionObserver,
-          );
+          this.callback([entry], null as unknown as IntersectionObserver);
         };
       }
       observe = vi.fn();
@@ -815,11 +759,7 @@ describe("ProductDetailClient — mobile sticky buy bar", () => {
   });
 
   it("sticky buy bar has md:hidden class", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Trigger observer to mark as not intersecting (scrolled past)
     act(() => {
@@ -833,11 +773,7 @@ describe("ProductDetailClient — mobile sticky buy bar", () => {
   });
 
   it('shows "Худалдаж авах" button in sticky bar', () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
+    render(<ProductDetailClient product={makeProduct()} />);
 
     // Initially sticky bar is not visible — only one buy button
     expect(screen.getAllByText("Худалдаж авах")).toHaveLength(1);
@@ -851,65 +787,5 @@ describe("ProductDetailClient — mobile sticky buy bar", () => {
     expect(screen.getAllByText("Худалдаж авах").length).toBeGreaterThanOrEqual(
       2,
     );
-  });
-});
-
-describe("ProductDetailClient — quantity selector", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("plus and minus buttons are rendered", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
-
-    // Minus button with aria-label "Багасгах"
-    expect(
-      screen.getByRole("button", { name: "Багасгах" }),
-    ).toBeInTheDocument();
-    // Plus button with aria-label "Нэмэх"
-    expect(
-      screen.getByRole("button", { name: "Нэмэх" }),
-    ).toBeInTheDocument();
-  });
-
-  it("default quantity is 1", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
-
-    // The quantity display is a span with text "1" inside the quantity selector
-    // There could be other "1" texts, so verify within the quantity selector context
-    const minusBtn = screen.getByRole("button", { name: "Багасгах" });
-    expect(minusBtn).toBeDisabled(); // At quantity 1, minus is disabled
-  });
-
-  it("increment increases quantity and decrement decreases it", () => {
-    render(
-      <ProductDetailClient
-        product={makeProduct()}
-      />,
-    );
-
-    // Click plus
-    fireEvent.click(screen.getByRole("button", { name: "Нэмэх" }));
-
-    // After increment, minus should no longer be disabled
-    expect(
-      screen.getByRole("button", { name: "Багасгах" }),
-    ).not.toBeDisabled();
-
-    // Click minus to go back to 1
-    fireEvent.click(screen.getByRole("button", { name: "Багасгах" }));
-
-    // Minus should be disabled again at 1
-    expect(
-      screen.getByRole("button", { name: "Багасгах" }),
-    ).toBeDisabled();
   });
 });

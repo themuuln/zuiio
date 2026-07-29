@@ -5,6 +5,7 @@
 "use client";
 
 import { ShoppingBag } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import type { ShopProductRow } from "@/app/lib/data-shop";
@@ -31,12 +32,14 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Image container */}
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-[var(--surface-2)]">
         {(product.images?.length ?? 0) > 0 && !imgError ? (
-          // biome-ignore lint/performance/noImgElement: dynamic product image
-          <img
-            src={product.images?.[0]}
+          <Image
+            src={product.images?.[0] ?? ""}
             alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-[var(--duration-normal)] ease-[var(--ease-sport)] group-hover:scale-[1.03]"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-[var(--duration-normal)] ease-[var(--ease-sport)] group-hover:scale-[1.03]"
             onError={() => setImgError(true)}
+            loading="lazy"
           />
         ) : (
           <div className="flex flex-col items-center gap-2 text-muted-foreground/40">
