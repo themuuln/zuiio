@@ -6323,6 +6323,7 @@ export type Database = {
               p_payment_method: string
               p_salesperson_id: string
               p_total_amount: number
+              p_original_amount?: number
               p_user_id: string
             }
             Returns: Json
@@ -6341,6 +6342,7 @@ export type Database = {
               p_payment_method: string
               p_salesperson_id: string
               p_total_amount: number
+              p_original_amount?: number
               p_user_id: string
             }
             Returns: Json
