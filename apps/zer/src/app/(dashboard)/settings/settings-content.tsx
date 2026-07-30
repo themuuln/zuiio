@@ -3,6 +3,7 @@
 import {
   Cube,
   GearSix,
+  MapPinArea,
   TelegramLogo,
   WarningCircle,
 } from "@phosphor-icons/react/dist/ssr";
@@ -116,7 +117,7 @@ interface SettingsData {
 }
 
 export function SettingsContent() {
-  const { organizationId, hasBrands, hasEmailReports } = useOrgSettings();
+  const { organizationId, hasBrands, hasDeliveryTracking, hasEmailReports } = useOrgSettings();
 
   const { data, isLoading } = useQuery({
     queryKey: ["settings:overview", organizationId],
@@ -535,6 +536,29 @@ export function SettingsContent() {
               <Link href="/settings/presets">
                 <Cube className="size-4" />
                 Брэнд сан нээх
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Delivery Zones */}
+      {hasDeliveryTracking ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPinArea className="size-5" />
+              Хүргэлтийн бүсүүд
+            </CardTitle>
+            <CardDescription>
+              Хүргэлтийн үнийн бүс, санхүүжилт, тохиргоо
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <Link href="/settings/delivery-zones">
+                <MapPinArea className="size-4" />
+                Бүсүүд удирдах
               </Link>
             </Button>
           </CardContent>

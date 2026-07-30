@@ -1,9 +1,19 @@
 "use client";
 
-import { CaretDown, CaretUp, Plus, Star, X } from "@phosphor-icons/react";
+import {
+  CaretDown,
+  CaretUp,
+  ImageSquare,
+  Plus,
+  Sparkle,
+  Star,
+  X,
+} from "@phosphor-icons/react";
 import { capture } from "@zuiio/capture";
 import Image from "next/image";
 import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { compressImage } from "@/lib/compress-image";
 import { createClient } from "@/lib/supabase/client";
@@ -176,6 +186,56 @@ export function ProductImageManager({
               disabled={uploading}
             />
           </label>
+        )}
+      </div>
+      {/* AI Actions */}
+      <div className="flex gap-2 pt-1">
+        {imageUrls[0] && (
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-amber-600 hover:text-amber-700"
+              onClick={async () => {
+                try {
+                  toast.loading("Зураг сайжруулж байна...");
+                  const { enhanceProductPhoto } = await import(
+                    "@/lib/ai/image-enhancer"
+                  );
+                  const result = await enhanceProductPhoto(imageUrls[0]);
+                  toast.dismiss();
+                  if (result.imageUrl) {
+                    onChange([result.imageUrl, ...imageUrls.slice(1)]);
+                    toast.success("Зураг сайжруулагдлаа!");
+                  } else {
+                    toast.error(result.error || "Алдаа гарлаа");
+                  }
+                } catch (_err) {
+                  toast.dismiss();
+                  toast.error("Зураг сайжруулахад алдаа гарлаа");
+                }
+              }}
+            >
+              <ImageSquare className="size-3" />
+              AI сайжруулах
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-amber-600 hover:text-amber-700"
+              onClick={() => {
+                window.open(
+                  `/ai/poster?image=${encodeURIComponent(imageUrls[0])}`,
+                  "_blank",
+                );
+              }}
+            >
+              <Sparkle className="size-3" />
+              AI постер
+            </Button>
+          </>
         )}
       </div>
       {imageUrls.length === 0 && (

@@ -17,6 +17,8 @@ import {
   MapPin,
   Package,
   Percent,
+  Sparkle,
+  ImageSquare,
   Storefront,
   Trolley,
   Truck,
@@ -177,6 +179,31 @@ export const navGroups: NavGroup[] = [
         href: "/accounting",
         icon: Calculator,
         featureKey: "accounting",
+      },
+    ],
+  },
+  {
+    label: "AI хэрэгслүүд",
+    items: [
+      {
+        title: "AI постер",
+        href: "/ai/poster",
+        icon: ImageSquare,
+      },
+      {
+        title: "AI зураг сайжруулах",
+        href: "/ai/enhance",
+        icon: ImageSquare,
+      },
+      {
+        title: "AI лого",
+        href: "/ai/logo",
+        icon: ImageSquare,
+      },
+      {
+        title: "AI нэр санал болгох",
+        href: "/ai/naming",
+        icon: Sparkle,
       },
     ],
   },

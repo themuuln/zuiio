@@ -11,11 +11,13 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { deleteProduct } from "@/app/(dashboard)/products/actions";
+import { ProductAiActions } from "@/components/products/product-ai-actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { InfoRow } from "@/components/ui/info-row";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { enhanceProductPhoto } from "@/lib/ai/image-enhancer";
 import { formatCurrency } from "@/lib/format";
 import { productKeys } from "@/lib/query/keys";
 import { useOptimisticDelete } from "@/lib/query/use-optimistic";
@@ -240,6 +242,24 @@ export function ProductDetailDrawer({
             value={`${product.min_stock ?? 0} ${product.unit ?? "ширхэг"}`}
           />
         </div>
+
+        {/* AI actions */}
+        <ProductAiActions
+          productId={product.id}
+          productName={product.name}
+          imageUrl={product.image_url}
+          onEnhanceImage={async () => {
+            if (!product.image_url) return;
+            try {
+              const result = await enhanceProductPhoto(product.image_url);
+              if (result.imageUrl) {
+                toast.success("Зураг сайжруулагдлаа!");
+              }
+            } catch {
+              toast.error("Зураг сайжруулахад алдаа гарлаа");
+            }
+          }}
+        />
 
         {/* Variants section */}
         {product.variants && product.variants.length > 0 && (

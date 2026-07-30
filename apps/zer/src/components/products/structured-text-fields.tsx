@@ -1,7 +1,11 @@
 "use client";
 
+import { Sparkle } from "@phosphor-icons/react/dist/ssr";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { generateProductDescription } from "@/lib/ai/product-description";
 
 export interface StructuredTextValues {
   description: string;
@@ -13,6 +17,7 @@ export interface StructuredTextValues {
 interface StructuredTextFieldsProps {
   values: StructuredTextValues;
   onChange: (values: StructuredTextValues) => void;
+  productName?: string;
 }
 
 const FIELDS = [
@@ -45,7 +50,26 @@ const FIELDS = [
 export function StructuredTextFields({
   values,
   onChange,
+  productName,
 }: StructuredTextFieldsProps) {
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  async function handleGenerate() {
+    if (!productName) return;
+    setIsGenerating(true);
+    try {
+      const result = await generateProductDescription({ productName });
+      if (result.description) {
+        onChange({ ...values, description: result.description });
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error("Тайлбар үүсгэхэд алдаа гарлаа");
+    } finally {
+      setIsGenerating(false);
+    }
+  }
   return (
     <div className="space-y-4">
       <Label className="text-base font-semibold">Дэлгэрэнгүй мэдээлэл</Label>
@@ -54,9 +78,20 @@ export function StructuredTextFields({
           <div key={field.key} className="space-y-1">
             <Label
               htmlFor={`text-${field.key}`}
-              className="text-xs text-muted-foreground"
+              className="text-xs text-muted-foreground flex items-center gap-2"
             >
               {field.label}
+              {field.key === "description" && productName && (
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  className="inline-flex items-center gap-1 text-xs text-amber-500 hover:text-amber-600 transition-colors"
+                >
+                  <Sparkle className="size-3" />
+                  {isGenerating ? "Үүсгэж байна..." : "AI үүсгэх"}
+                </button>
+              )}
             </Label>
             <Textarea
               id={`text-${field.key}`}
