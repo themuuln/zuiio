@@ -5,6 +5,7 @@ import { describeEvent, formatClock } from "@onoo/core/format";
 import { deriveBoxScore } from "@onoo/core/stats";
 import type { GameRoster, SportConfig, StatEvent } from "@onoo/core/types";
 import { useEffect, useState } from "react";
+import { ScoreBoard } from "@/components/score-board";
 import {
   Table,
   TableBody,
@@ -123,20 +124,13 @@ export function LiveGameCenter({
   return (
     <div className="space-y-4">
       {/* Score Header */}
-      <div className="flex items-center justify-between rounded-lg bg-primary p-4 text-primary-foreground">
-        <div className="text-center">
-          <div className="text-2xl font-bold">{homeTeamStats?.pts ?? 0}</div>
-          <div className="text-sm text-primary-foreground/70">Эхний</div>
-        </div>
-        <div className="text-center">
-          <div className="text-lg font-semibold">Амьд</div>
-          <div className="text-sm text-primary-foreground/70">Шууд</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold">{awayTeamStats?.pts ?? 0}</div>
-          <div className="text-sm text-primary-foreground/70">Зочин</div>
-        </div>
-      </div>
+      <ScoreBoard
+        homeScore={homeTeamStats?.pts ?? 0}
+        awayScore={awayTeamStats?.pts ?? 0}
+        homeLabel="Эхний"
+        awayLabel="Зочин"
+        className="rounded-lg bg-primary p-4 text-primary-foreground"
+      />
 
       {/* Tabs */}
       <div
