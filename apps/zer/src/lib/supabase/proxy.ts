@@ -3,7 +3,7 @@ import { capture } from "@zuiio/capture";
 import { type NextRequest, NextResponse } from "next/server";
 import { PUBLIC_ROUTES } from "@/lib/constants";
 import { getSupabaseEnv } from "./env";
-import type { Database } from "./types";
+import type { Database } from "../database.types";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });

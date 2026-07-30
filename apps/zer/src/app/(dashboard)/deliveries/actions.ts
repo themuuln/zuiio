@@ -216,7 +216,7 @@ export async function updateDeliveryStatus(
   }
 
   // Build update payload — set timestamps on terminal/signpost transitions
-  const updatePayload: Record<string, string | null> = { status };
+  const updatePayload: { status: string; delivered_at?: string | null; picked_up_at?: string | null } = { status };
   if (status === "delivered") {
     updatePayload.delivered_at = new Date().toISOString();
   }
@@ -341,7 +341,7 @@ export async function assignDelivery(deliveryId: string, assignedTo: string) {
       "assigned",
       "delivery",
       deliveryId,
-      { assigned_to: assignedTo },
+      { assigned_to: { old: null, new: assignedTo } },
       `Хүргэлт "${delivery.contact_name}" курьерт оноосон`,
     ),
   );

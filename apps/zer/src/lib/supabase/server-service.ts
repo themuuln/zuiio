@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseEnv } from "./env";
-import type { Database } from "./types";
+import type { Database } from "../database.types";
 
 /**
  * Creates a Supabase admin client using the SERVICE_ROLE key.

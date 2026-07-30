@@ -13,7 +13,8 @@ export type AuditAction =
   | "shared"
   | "payment_received"
   | "activated"
-  | "deactivated";
+  | "deactivated"
+  | "assigned";
 
 export type EntityType =
   | "product"
