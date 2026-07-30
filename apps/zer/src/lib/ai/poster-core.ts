@@ -16,13 +16,13 @@ export type PlatformSize = {
 
 export const POSTER_STYLES: PosterStyle[] = [
   { id: "minimal", label: "Минимал", prompt: "clean minimal design, lots of white space, elegant, product-focused" },
-  { id: "luxury", label: "Тансаг", prompt: "luxury premium design, gold accents, sophisticated, high-end feel" },
-  { id: "sale", label: "Хямдрал", prompt: "sale promotion, bright colors, attention-grabbing, discount feel, celebratory" },
-  { id: "seasonal", label: "Улирлын", prompt: "seasonal theme, festive decorations, holiday-appropriate colors" },
-  { id: "modern", label: "Орчин үеийн", prompt: "modern trendy design, bold colors, contemporary, minimalist" },
+  { id: "studio", label: "Studio", prompt: "professional studio photography, soft lighting, clean background, high-end product shot" },
+  { id: "elegant", label: "Elegant", prompt: "elegant luxury design, premium feel, sophisticated tones, refined" },
   { id: "nature", label: "Байгалийн", prompt: "natural outdoor setting, green tones, organic feel, eco-friendly" },
-  { id: "tech", label: "Технологи", prompt: "tech modern design, blue tones, digital feel, innovative" },
-  { id: "food", label: "Хоол", prompt: "appetizing food presentation, warm colors, delicious, fresh" },
+  { id: "gradient", label: "Gradient", prompt: "smooth gradient background, modern colorful design, trending gradient style" },
+  { id: "model_male", label: "Эрэгтэй загвар", prompt: "male model wearing or holding the product, lifestyle fashion photography" },
+  { id: "model_female", label: "Эмэгтэй загвар", prompt: "female model wearing or holding the product, lifestyle fashion photography" },
+  { id: "model_couple", label: "Хос загвар", prompt: "couple together with the product, lifestyle photography, warm and inviting" },
   { id: "custom", label: "Тохируулах", prompt: "" },
 ];
 
