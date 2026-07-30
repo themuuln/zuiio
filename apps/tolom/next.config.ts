@@ -52,6 +52,18 @@ const nextConfig: NextConfig = {
     turbopackRustReactCompiler: true,
     // Next.js 16.3+ requires this for TypeScript 7.x compatibility
     useTypeScriptCli: true,
+    inlineCss: true,
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "date-fns",
+      "@phosphor-icons/react",
+      "@tanstack/react-query",
+    ],
   },
 
   // ── Next.js 16.3: Instant Navigations ──────────────────────

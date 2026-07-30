@@ -82,15 +82,14 @@ export default withSentryConfig(nextConfig, {
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
 
-  // Upload a larger set of source maps for prettier stack traces
-  widenClientFileUpload: true,
+  // Narrow source maps for faster builds (sufficient for error tracking)
+  widenClientFileUpload: false,
 
   // Bypass ad-blockers by proxying Sentry events through a Next.js route
   tunnelRoute: "/monitoring",
 
   webpack: {
-    // Hidden source maps are used for Sentry source maps upload
-    // biome-ignore lint/style/noNonNullAssertion: this is next config
-    hiddenSourceMap: !process.env.SENTRY_UPLOAD === true,
+    // Hidden source maps are only uploaded when SENTRY_UPLOAD is explicitly set
+    hiddenSourceMap: process.env.SENTRY_UPLOAD !== "true",
   },
 });

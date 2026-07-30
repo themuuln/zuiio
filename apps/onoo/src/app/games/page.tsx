@@ -1,29 +1,12 @@
-import { CalendarDays, Radio } from "lucide-react";
 import type { Metadata } from "next";
-import { Badge } from "@/components/ui";
-import { cn } from "@/lib/utils";
-import { PublicEmptyState } from "../components/public-empty-state";
-import { SwipeableGameCard } from "../components/swipeable-game-card";
-import {
-  formatDate,
-  type GameWithTeams,
-  getGamesByDate,
-  getUlaanbaatarDate,
-} from "../lib/data";
+import { getUlaanbaatarDate } from "../lib/data";
 import { DateNav } from "./components/date-nav";
+import { GamesList } from "./components/games-list";
 
 export const metadata: Metadata = {
   title: "Тоглолтууд — Оноо",
   description: "Сагсан бөмбөгийн лигийн тоглолтын хуваарь ба үр дүн.",
 };
-
-function isFinal(game: GameWithTeams): boolean {
-  return (
-    game.status === "final_pending_review" ||
-    game.status === "league_verified" ||
-    game.status === "official"
-  );
-}
 
 export default async function GamesPage({
   searchParams,
@@ -32,145 +15,24 @@ export default async function GamesPage({
 }) {
   const { date } = await searchParams;
   const dateStr = date ?? await getUlaanbaatarDate();
-  const games = await getGamesByDate(dateStr);
-  const liveGames = games.filter((game) => game.status === "live_provisional");
-  const upcomingGames = games.filter(
-    (game) =>
-      game.status === "scheduled" ||
-      game.status === "postponed" ||
-      game.status === "cancelled",
-  );
-  const completedGames = games.filter(isFinal);
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-      {/* Header + date nav row */}
-      <div className="grid gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-7">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Хуваарь ба үр дүн
-          </p>
-          <h1 className="mt-2 font-display text-4xl leading-tight tracking-tight sm:text-5xl">
-            Тоглолтын төв
-          </h1>
-          <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">
-            Өдрийн бүх тоглолтыг шууд, удахгүй, дууссан төлөвөөр нь нэг дор
-            хараарай.
-          </p>
-        </div>
-        <div className="lg:col-span-5 lg:justify-self-end">
-          <p className="mb-2 text-sm font-semibold">{formatDate(dateStr)}</p>
-          <DateNav currentDate={dateStr} />
-        </div>
+      {/* Header */}
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Тоглолтын хуваарь
+        </p>
+        <h1 className="font-display text-4xl leading-tight tracking-tight sm:text-5xl">
+          Тоглолтууд
+        </h1>
       </div>
 
-      {/* Quick stats bar */}
-      {games.length > 0 && (
-        <div
-          className="flex flex-wrap gap-4 rounded-lg bg-[var(--surface-2)] px-4 py-2.5 text-sm font-medium text-muted-foreground"
-          role="status"
-          aria-label="Өдрийн товч мэдээлэл"
-        >
-          {liveGames.length > 0 && (
-            <span className="flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-destructive animate-pulse" />
-              {liveGames.length} шууд
-            </span>
-          )}
-          {upcomingGames.length > 0 && (
-            <span>{upcomingGames.length} удахгүй</span>
-          )}
-          {completedGames.length > 0 && (
-            <span>{completedGames.length} дууссан</span>
-          )}
-        </div>
-      )}
+      {/* Date navigation */}
+      <DateNav currentDate={dateStr} />
 
-      {games.length === 0 ? (
-        <PublicEmptyState
-          icon={CalendarDays}
-          title="Энэ өдөр тоглолтгүй"
-          description="Өөр өдөр сонгох эсвэл өнөөдрийн хуваарь руу буцаж шалгана уу."
-          actionHref={`/games?date=${await getUlaanbaatarDate()}`}
-          actionLabel="Өнөөдөр рүү буцах"
-        />
-      ) : (
-        <div className="flex flex-col gap-10">
-          {liveGames.length > 0 ? (
-            <GameGroup
-              id="live-games"
-              eyebrow="Яг одоо"
-              title="Шууд тоглолт"
-              games={liveGames}
-              live
-            />
-          ) : null}
-          {upcomingGames.length > 0 ? (
-            <GameGroup
-              id="upcoming-games"
-              eyebrow="Дараагийн бөмбөг"
-              title="Удахгүй эхлэх"
-              games={upcomingGames}
-            />
-          ) : null}
-          {completedGames.length > 0 ? (
-            <GameGroup
-              id="completed-games"
-              eyebrow="Баталгаажсан түүх"
-              title="Дууссан тоглолт"
-              games={completedGames}
-            />
-          ) : null}
-        </div>
-      )}
+      {/* Games list (streams via Suspense) */}
+      <GamesList dateStr={dateStr} />
     </main>
-  );
-}
-
-interface GameGroupProps {
-  id: string;
-  eyebrow: string;
-  title: string;
-  games: GameWithTeams[];
-  live?: boolean;
-}
-
-function GameGroup({
-  id,
-  eyebrow,
-  title,
-  games,
-  live = false,
-}: GameGroupProps) {
-  return (
-    <section
-      aria-labelledby={id}
-      className="flex flex-col gap-5 border-b border-border/40 pb-8 last:border-b-0 last:pb-0"
-    >
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p
-            className={cn(
-              "text-xs font-semibold uppercase tracking-wider",
-              live ? "text-destructive" : "text-muted-foreground",
-            )}
-          >
-            {eyebrow}
-          </p>
-          <h2 id={id} className="mt-1 text-2xl font-bold tracking-tight">
-            {title}
-          </h2>
-        </div>
-        <Badge variant={live ? "destructive" : "secondary"}>
-          {live ? <Radio data-icon="inline-start" aria-hidden="true" /> : null}
-          {games.length} тоглолт
-        </Badge>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        {games.map((game) => (
-          <SwipeableGameCard key={game.id} game={game} featured={live} />
-        ))}
-      </div>
-    </section>
   );
 }

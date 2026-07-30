@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
       "recharts",
       "date-fns",
       "@tanstack/react-query",
+      "@phosphor-icons/react",
     ],
     turbopackFileSystemCacheForBuild: true,
   },
