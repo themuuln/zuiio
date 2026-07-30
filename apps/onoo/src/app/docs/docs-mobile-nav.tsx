@@ -19,7 +19,8 @@ export function DocsMobileNav() {
   const router = useRouter();
 
   const flatNavItems = DOCS_NAV.flatMap((g) => g.items);
-  const currentLabel = flatNavItems.find((i) => i.href === pathname)?.label ?? "";
+  const currentLabel = flatNavItems.find((i) => i.href === pathname)?.label;
+  const selectValue = pathname;
 
   return (
     <div className="rounded-xl border bg-card p-4 shadow-sm lg:hidden">

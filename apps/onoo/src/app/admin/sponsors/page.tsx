@@ -11,6 +11,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
@@ -388,10 +389,11 @@ export default function SponsorsPage() {
                   <div className="flex items-center gap-2">
                     {sponsor.logo_url ? (
                       <div className="relative size-10 overflow-hidden rounded-md border bg-muted">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={sponsor.logo_url}
                           alt={`${sponsor.name} лого`}
+                          width={40}
+                          height={40}
                           className="size-full object-contain"
                         />
                       </div>
@@ -589,7 +591,12 @@ export default function SponsorsPage() {
                 onValueChange={setPlacementCompetition}
               >
                 <SelectTrigger id="placement-competition">
-                  <SelectValue placeholder="Тэмцээн сонгох">{competitions.find((c) => c.id === placementCompetition)?.name}</SelectValue>
+                  <SelectValue placeholder="Тэмцээн сонгох">
+                    {
+                      competitions.find((c) => c.id === placementCompetition)
+                        ?.name
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {competitions.map((c) => (

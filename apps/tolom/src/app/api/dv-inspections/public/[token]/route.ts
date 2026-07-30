@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 
@@ -20,16 +20,6 @@ interface PublicInspectionItem {
   technician_notes: string | null;
   has_photo: boolean;
   photo_urls: string[];
-}
-
-interface PublicInspection {
-  id: string;
-  status: string;
-  odometer: number | null;
-  fuel_level: string | null;
-  technician_notes: string | null;
-  vehicle: PublicVehicle | null;
-  items: PublicInspectionItem[];
 }
 
 /**

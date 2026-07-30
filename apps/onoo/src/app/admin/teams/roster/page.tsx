@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ListRestart, Trash2 } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -132,7 +133,12 @@ export default function RosterPage() {
                 onValueChange={setSelectedTeamSeasonId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Баг сонгох">{teamSeasons.find(ts => ts.id === selectedTeamSeasonId)?.teams?.name}</SelectValue>
+                  <SelectValue placeholder="Баг сонгох">
+                    {
+                      teamSeasons.find((ts) => ts.id === selectedTeamSeasonId)
+                        ?.teams?.name
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {teamSeasons.map((ts) => (
@@ -171,9 +177,11 @@ export default function RosterPage() {
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     {item.players?.photo_url && (
-                      <img
+                      <Image
                         src={item.players.photo_url}
                         alt=""
+                        width={28}
+                        height={28}
                         className="h-7 w-7 rounded-full object-cover"
                       />
                     )}

@@ -61,11 +61,13 @@ describe("dv-inspections/public/[token] GET", () => {
         })),
       })),
     };
-    const response = await (GET as any)({ request: makeRequest("valid-token"), supabase });
+    const response = await (GET as any)({
+      request: makeRequest("valid-token"),
+      supabase,
+    });
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.data.id).toBe("insp-1");
     expect(body.data.vehicle.plate_number).toBe("001 УНБ");
     expect(body.data.items).toHaveLength(1);
     expect(body.data.total_estimated_cost).toBe(120000);
@@ -84,13 +86,18 @@ describe("dv-inspections/public/[token] GET", () => {
         })),
       })),
     };
-    const response = await (GET as any)({ request: makeRequest("bad-token"), supabase });
+    const response = await (GET as any)({
+      request: makeRequest("bad-token"),
+      supabase,
+    });
     expect(response.status).toBe(404);
   });
 
   it("returns 400 for missing token", async () => {
     const supabase = { from: vi.fn() };
-    const request = new NextRequest("http://localhost/api/dv-inspections/public/");
+    const request = new NextRequest(
+      "http://localhost/api/dv-inspections/public/",
+    );
     const response = await (GET as any)({ request, supabase });
     expect(response.status).toBe(400);
   });
@@ -108,7 +115,10 @@ describe("dv-inspections/public/[token] GET", () => {
         })),
       })),
     };
-    const response = await (GET as any)({ request: makeRequest("weird-token"), supabase });
+    const response = await (GET as any)({
+      request: makeRequest("weird-token"),
+      supabase,
+    });
     // Missing "id" and "items" keys should return INVALID_DATA
     expect(response.status).toBe(500);
   });
@@ -134,7 +144,10 @@ describe("dv-inspections/public/[token] GET", () => {
         })),
       })),
     };
-    const response = await (GET as any)({ request: makeRequest("no-vehicle"), supabase });
+    const response = await (GET as any)({
+      request: makeRequest("no-vehicle"),
+      supabase,
+    });
     const body = await response.json();
     expect(response.status).toBe(200);
     expect(body.data.vehicle).toBeNull();

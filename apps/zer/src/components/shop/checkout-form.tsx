@@ -184,9 +184,7 @@ export function CheckoutForm({
     enabled: hasDeliveryTracking,
     queryFn: async () => {
       const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const db = supabase as any;
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("delivery_zones")
         .select("id, name, base_fee, free_delivery_threshold")
         .eq("is_active", true)

@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import { submitCustomerApproval } from "@/lib/services/dvi-service";
@@ -11,7 +11,8 @@ import { submitCustomerApproval } from "@/lib/services/dvi-service";
  */
 export const POST = createSimpleRouteHandler(
   async ({ request, supabase }) => {
-    const token = request.nextUrl.pathname.split("/").pop() ?? "";
+    const segments = request.nextUrl.pathname.split("/");
+    const token = segments[segments.length - 2] ?? "";
 
     if (!token) {
       return apiError("MISSING_TOKEN", "Inspection token is required", 400);
