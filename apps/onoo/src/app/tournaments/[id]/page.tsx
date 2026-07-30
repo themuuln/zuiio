@@ -9,11 +9,13 @@ import {
   getCompetition,
   getLeaders,
   getStandings,
+  getTournamentBracket,
   getTournamentGroups,
   getTournamentPhases,
 } from "../../lib/data";
 import { ClassificationBracket } from "./components/classification-bracket";
 import { GroupStandings } from "./components/group-standings";
+import { TournamentBracket } from "./components/tournament-bracket";
 
 export async function generateMetadata({
   params,
@@ -43,6 +45,7 @@ export default async function TournamentPage({
     phases,
     groups,
     classificationRounds,
+    bracket,
   ] = await Promise.all([
     getCompetition(id),
     getStandings(),
@@ -50,6 +53,7 @@ export default async function TournamentPage({
     getTournamentPhases(id),
     getTournamentGroups(id),
     getClassificationRounds(id),
+    getTournamentBracket(id),
   ]);
 
   if (!competition) {
@@ -242,7 +246,7 @@ export default async function TournamentPage({
         )}
       </section>
 
-      {/* Classification Bracket */}
+      {/* Knockout Bracket */}      <section aria-labelledby="tournament-bracket">        {bracket.length > 0 ? (          <TournamentBracket matchups={bracket} />        ) : (          <div className="relative">            <div className="blur-[3px] pointer-events-none">              <TournamentBracket matchups={[]} />            </div>            <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[1px]">              <div className="rounded-lg border bg-background px-4 py-2 text-center shadow-sm">                <p className="text-sm font-medium text-muted-foreground">                  Тун удахгүй                </p>                <p className="text-xs text-muted-foreground/60">Coming Soon</p>              </div>            </div>          </div>        )}      </section>      {/* Classification Bracket */}
       <section aria-labelledby="tournament-classification">
         {phases.length > 0 && classificationRounds.length > 0 ? (
           <ClassificationBracket rounds={classificationRounds} />

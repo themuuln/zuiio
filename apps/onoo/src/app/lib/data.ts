@@ -1537,35 +1537,47 @@ export async function getPublicAcademyData(): Promise<PublicAcademyPageData> {
 // ---------------------------------------------------------------------------
 
 /**
- * Fetch all competitions from v_public_standings with deduplication.
+ * Fetch all competitions with their season and league names.
+ * Uses the competitions table directly (lightweight single-table query)
+ * instead of the heavy v_public_standings view.
  * Returns an empty array if the query fails or no data exists.
  */
 export const getCompetitions = cache(
   async (): Promise<CompetitionRow[]> => {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from("v_public_standings")
-      .select("competition_id, competition_name, season_name, league_id, league_slug");
+      .from("competitions")
+      .select(`
+        id,
+        name,
+        seasons!inner (
+          name,
+          leagues!inner (
+            slug
+          )
+        )
+      `);
 
     if (error || !data) {
       captureError("getCompetitions", error);
       return [];
     }
 
-    const seen = new Set<string>();
-    const rows: CompetitionRow[] = [];
-    for (const row of data) {
-      if (!seen.has(row.competition_id)) {
-        seen.add(row.competition_id);
-        rows.push({
-          id: row.competition_id,
-          name: row.competition_name,
-          season: row.season_name,
-          league: row.league_slug ?? "",
-        });
-      }
-    }
-    return rows;
+    // Supabase returns FK relationships as arrays; seasons is seasons[].
+    return data.map((row: Record<string, unknown>) => {
+      const season = (Array.isArray(row.seasons) ? row.seasons[0] : null) as
+        | { name: string; leagues: { slug: string }[] }
+        | undefined;
+      const league = Array.isArray(season?.leagues)
+        ? season?.leagues[0]
+        : null;
+      return {
+        id: row.id as string,
+        name: row.name as string,
+        season: season?.name ?? "",
+        league: league?.slug ?? "",
+      };
+    });
   },
 );
 
@@ -1718,6 +1730,20 @@ export async function getClassificationRounds(
 export async function getLineupsByTeam(
   _teamSeasonId: string,
 ): Promise<LineupStats[]> {
+  return [];
+}
+
+/**
+ * Fetch bracket matchups for a competition's knockout stage.
+ *
+ * INTENTIONAL STUB: Returns an empty array awaiting the knockout phase DB
+ * schema with round+position data. Once games have round/position assigned,
+ * this function will query the games table filtered to the competition's
+ * knockout phase and return BracketMatchup[].
+ */
+export async function getTournamentBracket(
+  _competitionId: string,
+): Promise<import("../tournaments/[id]/components/tournament-bracket").BracketMatchup[]> {
   return [];
 }
 

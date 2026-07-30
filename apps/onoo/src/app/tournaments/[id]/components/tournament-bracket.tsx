@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-interface BracketTeam {
+export interface BracketTeam {
   id: string;
   name: string;
   shortCode: string;
@@ -11,7 +11,7 @@ interface BracketTeam {
   winner?: boolean;
 }
 
-interface BracketMatchup {
+export interface BracketMatchup {
   id: string;
   round: number;
   position: number;
