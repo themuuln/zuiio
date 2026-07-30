@@ -399,8 +399,42 @@ export function CheckoutForm({
 
       return { previousSales, previousProducts };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data, _vars, _context) => {
       if (data?.saleId) {
+        // Create delivery if delivery was enabled
+        if (deliveryEnabled) {
+          try {
+            const { createDelivery } = await import(
+              "@/app/(dashboard)/deliveries/actions"
+            );
+            const deliveryForm = new FormData();
+            deliveryForm.set("sale_id", data.saleId);
+            deliveryForm.set("contact_name", deliveryContactName);
+            deliveryForm.set("contact_phone", deliveryContactPhone);
+            if (deliveryAddress) {
+              deliveryForm.set("address", deliveryAddress);
+            }
+            if (deliveryAddressNote) {
+              deliveryForm.set("address_note", deliveryAddressNote);
+            }
+            if (deliveryZoneId) {
+              deliveryForm.set("zone_id", deliveryZoneId);
+            }
+            if (deliveryRequestedAt) {
+              deliveryForm.set("requested_at", deliveryRequestedAt);
+            }
+            const result = await createDelivery(undefined, deliveryForm);
+            if ("error" in result && result.error) {
+              capture(new Error(result.error), {
+                context: "checkout: create delivery",
+              });
+            }
+          } catch (e) {
+            capture(e, { context: "checkout: create delivery" });
+            // Don't block — sale already created
+          }
+        }
+
         clearCart();
         onClose?.();
         if (hasReceiptDrawer) {
