@@ -16,6 +16,7 @@ export interface OrgSettings {
   hasCategories: boolean;
   hasEmailReports: boolean;
   hasAuditLog: boolean;
+  hasDeliveryTracking: boolean;
   /** Show the customer/staff section in the shop checkout drawer */
   hasCheckoutCustomer: boolean;
   /** Show banknote quick-amount chips in the shop checkout drawer */
@@ -40,6 +41,7 @@ const defaults: OrgSettings = {
   hasCategories: true,
   hasEmailReports: false,
   hasAuditLog: true,
+  hasDeliveryTracking: false,
   hasCheckoutCustomer: true,
   hasCheckoutQuickAmounts: true,
   hasReceiptDrawer: true,

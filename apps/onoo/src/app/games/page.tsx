@@ -31,7 +31,7 @@ export default async function GamesPage({
   searchParams: Promise<{ date?: string }>;
 }) {
   const { date } = await searchParams;
-  const dateStr = date ?? getUlaanbaatarDate();
+  const dateStr = date ?? await getUlaanbaatarDate();
   const games = await getGamesByDate(dateStr);
   const liveGames = games.filter((game) => game.status === "live_provisional");
   const upcomingGames = games.filter(
@@ -91,7 +91,7 @@ export default async function GamesPage({
           icon={CalendarDays}
           title="Энэ өдөр тоглолтгүй"
           description="Өөр өдөр сонгох эсвэл өнөөдрийн хуваарь руу буцаж шалгана уу."
-          actionHref={`/games?date=${getUlaanbaatarDate()}`}
+          actionHref={`/games?date=${await getUlaanbaatarDate()}`}
           actionLabel="Өнөөдөр рүү буцах"
         />
       ) : (

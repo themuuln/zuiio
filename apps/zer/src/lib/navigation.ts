@@ -19,6 +19,7 @@ import {
   Percent,
   Storefront,
   Trolley,
+  Truck,
   Users,
   Warehouse,
 } from "@phosphor-icons/react/dist/ssr";
@@ -73,6 +74,12 @@ export const navGroups: NavGroup[] = [
         href: "/returns",
         icon: ArrowCounterClockwise,
         featureKey: "returns",
+      },
+      {
+        title: "Хүргэлт",
+        href: "/deliveries",
+        icon: Truck,
+        featureKey: "deliveries",
       },
     ],
   },

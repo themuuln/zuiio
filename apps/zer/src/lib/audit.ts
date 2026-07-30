@@ -33,7 +33,8 @@ export type EntityType =
   | "account"
   | "budget"
   | "loyalty_setting"
-  | "loyalty_reward";
+  | "loyalty_reward"
+  | "delivery";
 
 type FieldChange = {
   old: unknown;

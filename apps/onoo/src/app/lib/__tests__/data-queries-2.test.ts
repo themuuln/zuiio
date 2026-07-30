@@ -30,9 +30,15 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock("@/lib/supabase/public", () => ({
+  createPublicClient: vi.fn(),
+}));
+
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 const mockCreateClient = vi.mocked(createClient);
+const mockCreatePublicClient = vi.mocked(createPublicClient);
 
 // ---------------------------------------------------------------------------
 // Mock data factories
@@ -204,6 +210,7 @@ describe("getRecentGames", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns an empty array when no games exist", async () => {
@@ -251,6 +258,7 @@ describe("getLiveGames", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns an empty array when no live games exist", async () => {
@@ -285,6 +293,7 @@ describe("getGameById", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns null when no game data exists", async () => {
@@ -332,6 +341,7 @@ describe("getScorebarGames", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns today games when data exists", async () => {
@@ -391,6 +401,7 @@ describe("getPlayByPlay", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns an empty array when no play-by-play exists", async () => {
@@ -423,6 +434,7 @@ describe("getBoxScore", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns an empty array when no box score exists", async () => {
@@ -465,6 +477,7 @@ describe("getGameRosters", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns an empty array when no roster exists", async () => {
@@ -499,6 +512,7 @@ describe("getPlayerAwards", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns an empty array when no awards exist", async () => {
@@ -531,6 +545,7 @@ describe("getCompetition", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns null when single() errors or no data", async () => {
@@ -562,6 +577,7 @@ describe("getPlayerShotZones", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns an empty array when no shot zones exist", async () => {
@@ -597,6 +613,7 @@ describe("getPlayerShootingProfile", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns null when maybeSingle() yields no data", async () => {

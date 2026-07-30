@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { withSupabaseConsoleCapture } from "@zuiio/capture";
 import { cookies } from "next/headers";
 import { getSupabaseEnv } from "./env";
-import type { Database } from "./types";
+import type { Database } from "../database.types";
 
 export async function createClient() {
   const cookieStore = await cookies();

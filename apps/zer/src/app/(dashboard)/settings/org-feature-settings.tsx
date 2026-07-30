@@ -24,6 +24,7 @@ type OrgSettings = {
   has_email_reports: boolean;
   has_audit_log: boolean;
   has_hr: boolean;
+  has_delivery_tracking: boolean;
 };
 
 const SETTINGS: {
@@ -82,6 +83,11 @@ const SETTINGS: {
     key: "has_hr",
     label: "Хүний нөөц, цалин",
     description: "Ажилтны бүртгэл, ирц, чөлөө, цалингийн модуль",
+  },
+  {
+    key: "has_delivery_tracking",
+    label: "Хүргэлтийн удирдлага",
+    description: "Захиалгын хүргэлт бүртгэх, статус хянах, бүсчилсэн үнэ тогтоох",
   },
 ];
 

@@ -5,6 +5,7 @@
  */
 
 import { cache } from "react";
+import { cacheLife } from "next/cache";
 import { captureError } from "@/lib/errors";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -63,8 +64,11 @@ export interface ProductBundle {
 
 /**
  * Fetch all publicly available shop products from v_public_shop_products.
+ * Cached cross-request via "use cache" — product data changes infrequently.
  */
 export const getShopProducts = cache(async (): Promise<ShopProductRow[]> => {
+  "use cache";
+  cacheLife("standard");
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("v_public_shop_products")

@@ -4,7 +4,6 @@ import {
   Radio,
   Search,
   Trophy,
-  Users,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -24,7 +23,7 @@ import { ViewBeacon } from "@/components/view-beacon";
 import { cn } from "@/lib/utils";
 import { CompetitionSelector } from "./components/competition-selector";
 import { CountdownTimer } from "./components/countdown-timer";
-import { MultiLeaderboardSection } from "./components/multi-leaderboard-section";
+import { HomeStandingsLeaders } from "./components/home-standings-leaders";
 import { PublicEmptyState } from "./components/public-empty-state";
 import { ScoreBoard } from "./components/score-board";
 import { Sponsors } from "./components/sponsors";
@@ -32,11 +31,9 @@ import {
   getBoxScore,
   getCompetitions,
   getGamesByDate,
-  getLeaders,
   getLiveGames,
   getPlayers,
   getRecentGames,
-  getStandings,
   getUlaanbaatarDate,
 } from "./lib/data";
 
@@ -52,21 +49,17 @@ export default async function HomePage({
   searchParams: Promise<{ competition?: string }>;
 }) {
   const { competition } = await searchParams;
-  const today = getUlaanbaatarDate();
+  const today = await getUlaanbaatarDate();
   const [
     todayGames,
     upcomingGames,
     recentGames,
-    standings,
-    leaders,
     players,
     competitions,
   ] = await Promise.all([
     getGamesByDate(today),
     getLiveGames(),
     getRecentGames(4),
-    getStandings(),
-    getLeaders(),
     getPlayers(),
     getCompetitions(),
   ]);
@@ -84,12 +77,6 @@ export default async function HomePage({
     (g) => g.status === "scheduled" || g.status === "live_provisional",
   );
   const activeCompetitionId = competition ?? competitions[0]?.id;
-  const filteredLeaders = activeCompetitionId
-    ? leaders.filter((l) => l.competition_id === activeCompetitionId)
-    : leaders;
-  const filteredStandings = activeCompetitionId
-    ? standings.filter((s) => s.competition_id === activeCompetitionId)
-    : standings;
 
   return (
     <main className="flex flex-col">
@@ -489,170 +476,11 @@ export default async function HomePage({
           />
         </div>
 
-        {/* ── Leaders + Standings ── */}
-        <section className="court-divider grid gap-6 rounded-xl bg-[var(--surface-1)] p-4 sm:p-6 lg:p-8 lg:grid-cols-12">
-          {/* Leaders top 3 — podium style */}
-          <Card className="shadow-none lg:col-span-5">
-            <CardHeader>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Лигийн шилдгүүд
-                </p>
-                <CardTitle className="mt-1 text-xl tracking-tight">
-                  Онооны тэргүүлэгчид
-                </CardTitle>
-              </div>
-              <CardAction>
-                <Button variant="ghost" size="sm">
-                  <Link href="/leaders">Бүгд</Link>
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              {filteredLeaders.length > 0 ? (
-                <ol className="flex flex-col gap-1">
-                  {filteredLeaders.slice(0, 3).map((leader, index) => (
-                    <li key={`${leader.player_id}-${leader.competition_id}`}>
-                      <Link
-                        href={`/players/${leader.player_id}`}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg p-3 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
-                          index === 0 &&
-                            "bg-[var(--surface-3)] ring-1 ring-[var(--brand-sports)]/20",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "w-5 text-sm font-black tabular-nums",
-                            index === 0
-                              ? "text-[var(--brand-sports)]"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          {index + 1}
-                        </span>
-                        <PlayerAvatar
-                          photoUrl={leader.player_photo_url}
-                          name={leader.player_name}
-                          primaryColor={leader.team_primary_color}
-                          size={index === 0 ? "md" : "sm"}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p
-                            className={cn(
-                              "truncate font-semibold",
-                              index === 0 && "text-base",
-                            )}
-                          >
-                            {leader.player_name}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {leader.team_name}
-                          </p>
-                        </div>
-                        <span
-                          className={cn(
-                            "stat-number",
-                            index === 0 ? "text-2xl" : "text-xl",
-                          )}
-                        >
-                          {formatAverage(leader.pts)}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <PublicEmptyState
-                  icon={Users}
-                  title="Тэргүүлэгч тодроогүй байна"
-                  description="Тоглогчид шаардлагатай тоглолтын тоонд хүрэхэд эрэмбэ үүснэ."
-                />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Standings top 5 — compact table with team colors */}
-          <Card className="shadow-none lg:col-span-7">
-            <CardHeader>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Лигийн өрсөлдөөн
-                </p>
-                <CardTitle className="mt-1 text-xl tracking-tight">
-                  Шалгуурын эхний тав
-                </CardTitle>
-              </div>
-              <CardAction>
-                <Button variant="ghost" size="sm">
-                  <Link href="/standings">Бүх шалгуур</Link>
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              {filteredStandings.length > 0 ? (
-                <ol className="flex flex-col gap-1">
-                  {filteredStandings.slice(0, 5).map((row, index) => (
-                    <li key={row.team_season_id}>
-                      <Link
-                        href={`/teams/${row.team_slug}`}
-                        className={cn(
-                          "grid grid-cols-12 items-center gap-3 rounded-lg p-3 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
-                          index === 0 &&
-                            "bg-[var(--surface-3)] ring-1 ring-[var(--brand-sports)]/20",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "col-span-1 text-sm font-black tabular-nums",
-                            index === 0
-                              ? "text-[var(--brand-sports)]"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          {index + 1}
-                        </span>
-                        <span className="col-span-7 flex min-w-0 items-center gap-3">
-                          <TeamLogo
-                            logoUrl={row.team_logo_url}
-                            shortCode={row.team_short_code}
-                            primaryColor={row.team_primary_color}
-                          />
-                          <span
-                            className={cn(
-                              "truncate font-semibold",
-                              index === 0 && "text-base",
-                            )}
-                          >
-                            {row.team_name}
-                          </span>
-                        </span>
-                        <span className="col-span-2 text-center text-sm tabular-nums text-muted-foreground">
-                          {row.w}-{row.l}
-                        </span>
-                        <span
-                          className={cn(
-                            "col-span-2 text-right font-black tabular-nums",
-                            index === 0 && "text-[var(--brand-sports)]",
-                          )}
-                        >
-                          {(row.win_pct * 100).toFixed(1)}%
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <PublicEmptyState
-                  icon={Trophy}
-                  title="Шалгуур хараахан үүсээгүй"
-                  description="Баталгаажсан эхний тоглолтын дараа багуудын байрлал энд шинэчлэгдэнэ."
-                />
-              )}
-            </CardContent>
-          </Card>
-        </section>
-        <MultiLeaderboardSection leaders={filteredLeaders} />
+        {/* ── Leaders + Standings (streamed via Suspense) ── */}
+        <HomeStandingsLeaders
+          competitions={competitions}
+          activeCompetitionId={activeCompetitionId}
+        />
       </div>
       <Sponsors />
     </main>

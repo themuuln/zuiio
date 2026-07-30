@@ -19,7 +19,7 @@ function shortDateLabel(dateStr: string): string {
   });
 }
 
-const getTodayDate = (): string => getUlaanbaatarDate();
+const getTodayDate = async (): Promise<string> => getUlaanbaatarDate();
 
 /**
  * Site-wide horizontally scrollable score ticker rendered below the SiteNav.

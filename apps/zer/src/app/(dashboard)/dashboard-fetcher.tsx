@@ -120,6 +120,7 @@ export async function DashboardFetcher({
             hasCategories,
             hasEmailReports,
             hasAuditLog,
+            hasDeliveryTracking: org.has_delivery_tracking !== false,
             hasCheckoutCustomer: posSettings?.has_checkout_customer !== false,
             hasCheckoutQuickAmounts:
               posSettings?.has_checkout_quick_amounts !== false,

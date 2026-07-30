@@ -1,5 +1,6 @@
 import { Download, Flag, MapPin, Radio, Trophy } from "lucide-react";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShareStatCardButton } from "@/app/components/share-stat-card-button";
@@ -41,8 +42,13 @@ import {
 import { LiveGameCenter } from "./components/live-game-center";
 import { LiveStream } from "./components/live-stream";
 import { RecapHeader } from "./components/recap-header";
-import { ScoreWorm } from "./components/score-worm";
 import { PlayerHighlights, TopPerformers } from "./components/top-performers";
+
+// Lazy-load recharts-heavy component to reduce initial JS bundle
+const ScoreWorm = dynamic(
+  () => import("./components/score-worm").then((m) => ({ default: m.ScoreWorm })),
+  { ssr: false },
+);
 
 interface GamePageProps {
   params: Promise<{ id: string }>;

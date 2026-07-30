@@ -13,6 +13,7 @@
 import type { GameRoster, SportConfig, StatEvent } from "@onoo/core/types";
 import { cache } from "react";
 import { captureError } from "@/lib/errors";
+import { createPublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 // Import shared types for internal use + re-export for backward compatibility
@@ -115,7 +116,7 @@ function mapGameRow(row: Record<string, unknown>): GameWithTeams {
 }
 export const getGamesByDate = cache(
   async (dateStr: string): Promise<GameWithTeams[]> => {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const start = `${dateStr}T00:00:00`;
     const end = `${dateStr}T23:59:59`;
 
@@ -250,18 +251,20 @@ function mapLeaderRow(row: Record<string, unknown>): LeaderRow {
     team_games_played: Number(l.team_games_played) || 0,
   };
 }
-export async function getStandings(): Promise<StandingRow[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("v_public_standings")
-    .select("*")
-    .order("win_pct", { ascending: false });
-  if (error || !data) {
-    captureError("getStandings", error);
-    return [];
-  }
-  return data.map((row: Record<string, unknown>) => mapStandingRow(row));
-}
+export const getStandings = cache(
+  async (): Promise<StandingRow[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("v_public_standings")
+      .select("*")
+      .order("win_pct", { ascending: false });
+    if (error || !data) {
+      captureError("getStandings", error);
+      return [];
+    }
+    return data.map((row: Record<string, unknown>) => mapStandingRow(row));
+  },
+);
 
 export const getLeaders = cache(
   async (
@@ -1537,32 +1540,34 @@ export async function getPublicAcademyData(): Promise<PublicAcademyPageData> {
  * Fetch all competitions from v_public_standings with deduplication.
  * Returns an empty array if the query fails or no data exists.
  */
-export async function getCompetitions(): Promise<CompetitionRow[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("v_public_standings")
-    .select("competition_id, competition_name, season_name, league_id");
+export const getCompetitions = cache(
+  async (): Promise<CompetitionRow[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("v_public_standings")
+      .select("competition_id, competition_name, season_name, league_id, league_slug");
 
-  if (error || !data) {
-    captureError("getCompetitions", error);
-    return [];
-  }
-
-  const seen = new Set<string>();
-  const rows: CompetitionRow[] = [];
-  for (const row of data) {
-    if (!seen.has(row.competition_id)) {
-      seen.add(row.competition_id);
-      rows.push({
-        id: row.competition_id,
-        name: row.competition_name,
-        season: row.season_name,
-        league: row.league_id,
-      });
+    if (error || !data) {
+      captureError("getCompetitions", error);
+      return [];
     }
-  }
-  return rows;
-}
+
+    const seen = new Set<string>();
+    const rows: CompetitionRow[] = [];
+    for (const row of data) {
+      if (!seen.has(row.competition_id)) {
+        seen.add(row.competition_id);
+        rows.push({
+          id: row.competition_id,
+          name: row.competition_name,
+          season: row.season_name,
+          league: row.league_slug ?? "",
+        });
+      }
+    }
+    return rows;
+  },
+);
 
 /**
  * Head-to-head record between two teams.

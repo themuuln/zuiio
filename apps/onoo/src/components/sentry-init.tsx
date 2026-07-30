@@ -10,6 +10,7 @@ import { useEffect } from "react";
  */
 export function SentryInit() {
   useEffect(() => {
+    if ((Sentry as unknown as { isInitialized?: () => boolean }).isInitialized?.()) return;
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_GLITCHTIP_DSN,
       tracesSampleRate: 0,

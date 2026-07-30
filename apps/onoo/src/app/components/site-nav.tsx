@@ -127,7 +127,7 @@ export function SiteNav() {
           >
             Академи
           </Link>
-          <Button asChild size="sm" className="gap-1.5 font-semibold">
+          <Button asChild nativeButton={false} size="sm" className="gap-1.5 font-semibold">
             <Link
               href="/shop"
               className={cn(

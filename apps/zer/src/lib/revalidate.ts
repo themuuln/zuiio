@@ -15,6 +15,7 @@ export const ENTITY_PATHS = {
   returns: ["/", "/returns"],
   invoices: ["/invoices"],
   quotations: ["/", "/quotations"],
+  deliveries: ["/", "/deliveries"],
   discounts: ["/", "/discounts"],
   products: ["/products", "/inventory"],
   inventory: ["/inventory", "/inventory/movements", "/products"],

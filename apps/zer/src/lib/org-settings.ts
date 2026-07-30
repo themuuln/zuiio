@@ -16,6 +16,7 @@ const ALLOWED_SETTINGS = new Set([
   "has_checkout_customer",
   "has_checkout_quick_amounts",
   "has_receipt_drawer",
+  "has_delivery_tracking",
   "onboarding_completed",
 ]);
 

@@ -430,7 +430,9 @@ export function formatDateULAT(date: Date): string {
 // ---------------------------------------------------------------------------
 
 /** Return today's date string in Asia/Ulaanbaatar timezone (UTC+8). */
-export function getUlaanbaatarDate(): string {
+export async function getUlaanbaatarDate(): Promise<string> {
+  const { connection } = await import("next/server");
+  await connection();
   return formatDateULAT(new Date());
 }
 

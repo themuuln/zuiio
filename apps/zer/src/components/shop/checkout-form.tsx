@@ -8,6 +8,7 @@ import {
   CreditCard,
   FileText,
   ShoppingCart,
+  Truck,
   User,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -25,6 +26,16 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   type CurrencyOption,
   CurrencySelector,
@@ -110,8 +121,12 @@ export function CheckoutForm({
   }) => void;
 }) {
   const { items, totalAmount, clearCart } = useCart();
-  const { hasCheckoutCustomer, hasCheckoutQuickAmounts, hasReceiptDrawer } =
-    useOrgSettings();
+  const {
+    hasCheckoutCustomer,
+    hasCheckoutQuickAmounts,
+    hasReceiptDrawer,
+    hasDeliveryTracking,
+  } = useOrgSettings();
   const router = useRouter();
   // Fetch contacts (skipped when the org doesn't register customers at checkout)
   const { data: contacts = [] } = useQuery({
@@ -151,6 +166,54 @@ export function CheckoutForm({
   const [customerOpen, setCustomerOpen] = useState(false);
   const [orderExpanded, setOrderExpanded] = useState(true);
 
+  // Delivery state
+  const [deliveryEnabled, setDeliveryEnabled] = useState(false);
+  const [deliveryContactName, setDeliveryContactName] = useState("");
+  const [deliveryContactPhone, setDeliveryContactPhone] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryAddressNote, setDeliveryAddressNote] = useState("");
+  const [deliveryZoneId, setDeliveryZoneId] = useState<string | null>(null);
+  const [deliveryRequestedAt, setDeliveryRequestedAt] = useState("");
+
+  // Delivery zones query
+  const { data: deliveryZones = [] } = useQuery({
+    queryKey: ["delivery_zones"],
+    enabled: hasDeliveryTracking,
+    queryFn: async () => {
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
+      const { data, error } = await db
+        .from("delivery_zones")
+        .select("id, name, base_fee, free_delivery_threshold")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (error) {
+        capture(error, { context: "[checkout] fetch delivery zones" });
+        throw error;
+      }
+      return data ?? [];
+    },
+  });
+
+  // Sync customer name/phone to delivery contact when delivery is enabled
+  useEffect(() => {
+    if (deliveryEnabled) {
+      if (!deliveryContactName && customerName) {
+        setDeliveryContactName(customerName);
+      }
+      if (!deliveryContactPhone && customerPhone) {
+        setDeliveryContactPhone(customerPhone);
+      }
+    }
+  }, [
+    deliveryEnabled,
+    customerName,
+    customerPhone,
+    deliveryContactName,
+    deliveryContactPhone,
+  ]);
+
   // Payment state — paid amount defaults to the full total so the common
   // exact-payment sale is a single Enter press.
   const [paymentMethod, setPaymentMethod] = useState("card");
@@ -180,6 +243,12 @@ export function CheckoutForm({
   const paidAmountInputRef = useRef<HTMLInputElement>(null);
   const customerNameInputRef = useRef<HTMLInputElement>(null);
   const customerPhoneInputRef = useRef<HTMLInputElement>(null);
+  const deliveryAddressInputRef = useRef<HTMLInputElement>(null);
+  const deliveryContactNameInputRef = useRef<HTMLInputElement>(null);
+  const deliveryContactPhoneInputRef = useRef<HTMLInputElement>(null);
+  const deliveryAddressNoteInputRef = useRef<HTMLInputElement>(null);
+  const deliveryZoneIdInputRef = useRef<HTMLInputElement>(null);
+  const deliveryRequestedAtInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   const paidAmount = Number(paidAmountStr) || 0;
@@ -224,6 +293,19 @@ export function CheckoutForm({
       formData.set("customer_name", customerName);
       if (customerPhone) {
         formData.set("customer_phone", customerPhone);
+      }
+    }
+
+    if (deliveryEnabled) {
+      formData.set("delivery_address", deliveryAddress);
+      formData.set("delivery_contact_name", deliveryContactName);
+      formData.set("delivery_contact_phone", deliveryContactPhone);
+      formData.set("delivery_address_note", deliveryAddressNote);
+      if (deliveryZoneId) {
+        formData.set("delivery_zone_id", deliveryZoneId);
+      }
+      if (deliveryRequestedAt) {
+        formData.set("delivery_requested_at", deliveryRequestedAt);
       }
     }
   };
@@ -416,6 +498,12 @@ export function CheckoutForm({
         name="exchange_rate"
         value={selectedCurrency.exchange_rate}
       />
+      <input type="hidden" name="delivery_address" ref={deliveryAddressInputRef} />
+      <input type="hidden" name="delivery_contact_name" ref={deliveryContactNameInputRef} />
+      <input type="hidden" name="delivery_contact_phone" ref={deliveryContactPhoneInputRef} />
+      <input type="hidden" name="delivery_address_note" ref={deliveryAddressNoteInputRef} />
+      <input type="hidden" name="delivery_zone_id" ref={deliveryZoneIdInputRef} />
+      <input type="hidden" name="delivery_requested_at" ref={deliveryRequestedAtInputRef} />
       <div className="rounded-xl border border-border bg-card">
         {/* Total row — always visible */}
         <button
@@ -666,6 +754,127 @@ export function CheckoutForm({
                   Борлуулагч
                 </span>
                 <StaffPicker />
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+      {/* === DELIVERY (collapsible, gated on hasDeliveryTracking) === */}
+      {hasDeliveryTracking && (
+        <Collapsible
+          open={deliveryEnabled}
+          onOpenChange={setDeliveryEnabled}
+        >
+          <CollapsibleTrigger>
+            <button
+              type="button"
+              className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              aria-expanded={deliveryEnabled}
+              aria-controls="checkout-delivery-section"
+            >
+              <div className="flex items-center gap-2">
+                <Truck className="size-4 text-muted-foreground" />
+                <span className="text-sm font-medium">
+                  {deliveryEnabled ? "Хүргэлттэй" : "Хүргэлтгүй"}
+                </span>
+              </div>
+              {deliveryEnabled ? (
+                <CaretUp className="size-4 text-muted-foreground" />
+              ) : (
+                <CaretDown className="size-4 text-muted-foreground" />
+              )}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <div
+              id="checkout-delivery-section"
+              className="space-y-3 rounded-xl border border-border bg-card p-4"
+            >
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="delivery-toggle"
+                  checked={deliveryEnabled}
+                  onCheckedChange={(checked) =>
+                    setDeliveryEnabled(checked === true)
+                  }
+                />
+                <Label htmlFor="delivery-toggle" className="text-sm font-medium">
+                  Хүргэлттэй
+                </Label>
+              </div>
+              <Separator />
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Холбоо барих нэр
+                </span>
+                <Input
+                  value={deliveryContactName}
+                  onChange={(e) => setDeliveryContactName(e.target.value)}
+                  placeholder="Нэр"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Утас
+                </span>
+                <Input
+                  value={deliveryContactPhone}
+                  onChange={(e) => setDeliveryContactPhone(e.target.value)}
+                  placeholder="Утасны дугаар"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Хаяг
+                </span>
+                <Textarea
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  placeholder="Хаяг"
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Орц, давхар, тоот
+                </span>
+                <Input
+                  value={deliveryAddressNote}
+                  onChange={(e) => setDeliveryAddressNote(e.target.value)}
+                  placeholder="Орц, давхар, тоот"
+                />
+              </div>
+              {deliveryZones.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Хүргэлтийн бүс
+                  </span>
+                  <Select
+                    value={deliveryZoneId ?? ""}
+                    onValueChange={(v) => setDeliveryZoneId(v || null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Бүс сонгох" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {deliveryZones.map((zone: { id: string; name: string }) => (
+                        <SelectItem key={zone.id} value={zone.id}>
+                          {zone.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Хүргүүлэх өдөр / цаг
+                </span>
+                <Input
+                  type="datetime-local"
+                  value={deliveryRequestedAt}
+                  onChange={(e) => setDeliveryRequestedAt(e.target.value)}
+                />
               </div>
             </div>
           </CollapsibleContent>

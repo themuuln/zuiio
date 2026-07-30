@@ -50,6 +50,7 @@ export const FEATURES: FeatureDef[] = [
     description: "Худалдан авалтын бүртгэл",
   },
   { key: "returns", label: "Буцаалт", description: "Буцаалтын бүртгэл" },
+  { key: "deliveries", label: "Хүргэлт", description: "Хүргэлтийн удирдлага, хяналт" },
   {
     key: "invoices",
     label: "Нэхэмжлэх",
@@ -114,6 +115,7 @@ export const NAV_FEATURE_MAP: Record<string, string> = {
   "/expenses": "expenses",
   "/purchases": "purchases",
   "/returns": "returns",
+  "/deliveries": "deliveries",
   "/invoices": "invoices",
   "/quotations": "quotations",
   "/discounts": "discounts",

@@ -10,9 +10,15 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock("@/lib/supabase/public", () => ({
+  createPublicClient: vi.fn(),
+}));
+
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 const mockCreateClient = vi.mocked(createClient);
+const mockCreatePublicClient = vi.mocked(createPublicClient);
 
 function makeStandingRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -175,10 +181,12 @@ describe("getGamesByDate", () => {
     vi.clearAllMocks();
     mock = createMockSupabase();
     mockCreateClient.mockResolvedValue(mock as never);
+    mockCreatePublicClient.mockReturnValue(mock as never);
   });
 
   it("returns an empty array when no games", async () => {
     setQueryResult(mock, "v_public_games", []);
+    setQueryResult(mock, "v_public_live_games", []);
     const result = await getGamesByDate("2026-07-22");
     expect(result).toEqual([]);
   });
