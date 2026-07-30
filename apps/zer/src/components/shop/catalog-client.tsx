@@ -324,7 +324,7 @@ export function CatalogClient({
     <div className="lg:flex lg:items-start lg:gap-5">
       {/* Desktop category sidebar */}
       <aside className="sticky top-0 hidden w-56 shrink-0 self-start lg:block">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 pt-4">
           <p className="px-2 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Ангилал
           </p>
