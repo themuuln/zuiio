@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PlayerAvatar } from "@/components/player-avatar";
-import type { LeaderRow } from "@/lib/shared";
+import type { LeaderRow } from "@/app/lib/shared";
 import { cn } from "@/lib/utils";
 
 interface LeaderCategoryStripProps {

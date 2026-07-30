@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { getLeaders, getStandings } from "../lib/data";
 import type { CompetitionRow } from "../lib/shared";
+import { MultiLeaderboardSection } from "./multi-leaderboard-section";
 import { PublicEmptyState } from "./public-empty-state";
 
 interface HomeStandingsLeadersProps {
@@ -219,6 +220,11 @@ export async function StandingsLeadersInner({
           )}
         </CardContent>
       </Card>
+
+      {/* Multi-category leaderboard */}
+      <div className="lg:col-span-12">
+        <MultiLeaderboardSection leaders={filteredLeaders} />
+      </div>
     </section>
   );
 }

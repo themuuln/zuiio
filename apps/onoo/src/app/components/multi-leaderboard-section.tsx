@@ -1,7 +1,7 @@
 import { ChevronRight, Eye, Hand, Shield, Swords, Trophy } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui";
-import type { LeaderRow } from "@/lib/shared";
+import type { LeaderRow } from "@/app/lib/shared";
 import { cn } from "@/lib/utils";
 import { LeaderCategoryStrip } from "./leader-category-strip";
 
