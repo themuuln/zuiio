@@ -139,6 +139,58 @@ export async function createDelivery(
     };
   }
 
+  // If external provider, dispatch via provider adapter
+  if (providerId) {
+    try {
+      const { data: provider } = await withDbCapture(
+        "deliveries: fetch provider config",
+        supabase
+          .from("delivery_providers")
+          .select("provider_type, api_key, api_secret")
+          .eq("id", providerId)
+          .single(),
+      );
+
+      if (provider && provider.provider_type !== "internal") {
+        const { getProvider } = await import("@/lib/delivery/providers");
+        const deliveryProvider = getProvider({
+          providerType: provider.provider_type,
+          apiKey: provider.api_key || undefined,
+          apiSecret: provider.api_secret || undefined,
+        });
+
+        const result = await deliveryProvider.createDelivery({
+          pickupAddress: "", // Will be filled from branch address
+          pickupContact: "Zer",
+          pickupPhone: "",
+          dropoffAddress: address || "",
+          dropoffContact: contactName,
+          dropoffPhone: contactPhone,
+          notes: notes || undefined,
+        });
+
+        // Update delivery record with external tracking info
+        await withDbCapture(
+          "deliveries: update external tracking",
+          supabase
+            .from("deliveries")
+            .update({
+              external_tracking_id: result.externalId,
+              external_tracking_url: result.trackingUrl,
+              delivery_fee: result.estimatedFee,
+              estimated_at: new Date(
+                Date.now() + result.estimatedMinutes * 60 * 1000,
+              ).toISOString(),
+            })
+            .eq("id", delivery.id),
+        );
+      }
+    } catch (e) {
+      capture(e, { context: "deliveries: external provider dispatch" });
+      // Don't fail — delivery created in DB even if external dispatch fails
+    }
+  }
+
   // Insert initial status history
   const { error: historyError } = await withDbCapture(
     "deliveries: insert initial status history",
