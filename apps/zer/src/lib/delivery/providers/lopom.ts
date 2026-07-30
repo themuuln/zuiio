@@ -1,4 +1,5 @@
 import { capture } from "@zuiio/capture";
+import { createHash, createHmac } from "crypto";
 import type {
   CreateDeliveryParams,
   CreateDeliveryResult,
@@ -26,9 +27,40 @@ const LALAMOVE_STATUS_MAP: Record<string, CreateDeliveryResult["status"]> = {
  */
 export function createLopomProvider(
   apiKey: string,
-  _apiSecret: string,
+  apiSecret: string,
 ): DeliveryProvider {
-  const authHeader = `Bearer ${apiKey}`;
+  /**
+   * Lalamove uses HMAC-SHA256 signature for auth.
+   * Signature = HMAC-SHA256(apiSecret, timestamp + "\n" + method + "\n" + path + "\n" + body + "\n")
+   */
+  function signRequest(method: string, path: string, body: string, timestamp: string): string {
+    const raw = `${timestamp}\n${method}\n${path}\n${body}\n`;
+    return createHmac("sha256", apiSecret).update(raw).digest("hex");
+  }
+
+  async function apiFetch<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const timestamp = Date.now().toString();
+    const bodyStr = body ? JSON.stringify(body) : "";
+    const signature = signRequest(method, path, bodyStr, timestamp);
+    const auth = `hmac ${apiKey}:${timestamp}:${signature}`;
+
+    const response = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: auth,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      capture(errorBody, { context: `lopom: ${method} ${path}` });
+      throw new Error(`${method} ${path} failed: ${response.status}`);
+    }
+
+    return response.json() as Promise<T>;
+  }
 
   return {
     id: "lopom",
@@ -39,61 +71,30 @@ export function createLopomProvider(
     ): Promise<CreateDeliveryResult> {
       try {
         // 1. Get quotation
-        const quotationResponse = await fetch(`${BASE_URL}/v3/quotations`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: authHeader,
-          },
-          body: JSON.stringify({
-            serviceType: params.vehicleType ?? "MOTORCYCLE",
-            stops: [
-              {
-                address: params.pickupAddress,
-                contact: {
-                  name: params.pickupContact,
-                  phone: params.pickupPhone,
-                },
-              },
-              {
-                address: params.dropoffAddress,
-                contact: {
-                  name: params.dropoffContact,
-                  phone: params.dropoffPhone,
-                },
-              },
-            ],
-          }),
+        const quotation = await apiFetch<{
+          quotationId: string;
+          price: { amount: number };
+          duration: { value: number };
+          stops: unknown[];
+        }>("POST", "/v3/quotations", {
+          serviceType: params.vehicleType ?? "MOTORCYCLE",
+          stops: [
+            {
+              address: params.pickupAddress,
+              contact: { name: params.pickupContact, phone: params.pickupPhone },
+            },
+            {
+              address: params.dropoffAddress,
+              contact: { name: params.dropoffContact, phone: params.dropoffPhone },
+            },
+          ],
         });
-
-        if (!quotationResponse.ok) {
-          const errorBody = await quotationResponse.text();
-          capture(errorBody, { context: "lopom: quotation error" });
-          throw new Error("Үнийн санал авахад алдаа гарлаа");
-        }
-
-        const quotation = await quotationResponse.json();
 
         // 2. Create order
-        const orderResponse = await fetch(`${BASE_URL}/v3/orders`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: authHeader,
-          },
-          body: JSON.stringify({
-            quotationId: quotation.quotationId,
-            stops: quotation.stops,
-          }),
+        const order = await apiFetch<{ orderId: string }>("POST", "/v3/orders", {
+          quotationId: quotation.quotationId,
+          stops: quotation.stops,
         });
-
-        if (!orderResponse.ok) {
-          const errorBody = await orderResponse.text();
-          capture(errorBody, { context: "lopom: order error" });
-          throw new Error("Захиалга үүсгэхэд алдаа гарлаа");
-        }
-
-        const order = await orderResponse.json();
 
         return {
           externalId: order.orderId,
@@ -110,21 +111,11 @@ export function createLopomProvider(
 
     async getStatus(externalId: string): Promise<ProviderStatus> {
       try {
-        const response = await fetch(
-          `${BASE_URL}/v3/orders/${externalId}/tracking`,
-          {
-            headers: { Authorization: authHeader },
-          },
-        );
-
-        if (!response.ok) {
-          capture(`Status fetch failed: ${response.status}`, {
-            context: "lopom: getStatus",
-          });
-          return { status: "pending" };
-        }
-
-        const data = await response.json();
+        const data = await apiFetch<{
+          status: string;
+          driver?: { name?: string; phone?: string };
+          eta?: { value?: number };
+        }>("GET", `/v3/orders/${externalId}/tracking`);
 
         return {
           status: LALAMOVE_STATUS_MAP[data.status] ?? "pending",
@@ -141,11 +132,8 @@ export function createLopomProvider(
 
     async cancelDelivery(externalId: string): Promise<boolean> {
       try {
-        const response = await fetch(`${BASE_URL}/v3/orders/${externalId}`, {
-          method: "DELETE",
-          headers: { Authorization: authHeader },
-        });
-        return response.ok;
+        await apiFetch("DELETE", `/v3/orders/${externalId}`);
+        return true;
       } catch (err) {
         capture(err, { context: "lopom: cancelDelivery" });
         return false;
