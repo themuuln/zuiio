@@ -17,7 +17,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { InfoRow } from "@/components/ui/info-row";
 import { OptimizedImage } from "@/components/ui/optimized-image";
-import { enhanceProductPhoto } from "@/lib/ai/image-enhancer";
 import { formatCurrency } from "@/lib/format";
 import { productKeys } from "@/lib/query/keys";
 import { useOptimisticDelete } from "@/lib/query/use-optimistic";
@@ -251,7 +250,8 @@ export function ProductDetailDrawer({
           onEnhanceImage={async () => {
             if (!product.image_url) return;
             try {
-              const result = await enhanceProductPhoto(product.image_url);
+              const { enhanceProductPhotoAction } = await import("@/app/(dashboard)/ai/enhance/actions");
+              const result = await enhanceProductPhotoAction(product.image_url);
               if (result.imageUrl) {
                 toast.success("Зураг сайжруулагдлаа!");
               }
