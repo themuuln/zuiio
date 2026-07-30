@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { capture } from "@zuiio/capture";
 import { useRouter } from "next/navigation";
+import { quotationKeys } from "@/lib/query/keys";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -75,7 +76,7 @@ export function QuotationDetailDrawer({
   const [actionPending, setActionPending] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["quotation-detail", quotationId],
+    queryKey: quotationKeys.detail(quotationId ?? ""),
     queryFn: async () => {
       if (!quotationId) return null;
       return fetchQuotation(quotationId);
@@ -90,7 +91,7 @@ export function QuotationDetailDrawer({
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["quotation-detail"] });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.all() });
       toast.success("Төлөв шинэчлэгдсэн.");
     },
     onError: (err: Error) => {
@@ -105,7 +106,7 @@ export function QuotationDetailDrawer({
       return result;
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["quotation-detail"] });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.all() });
       toast.success("Үнийн санал борлуулалт болж хувиргагдсан.");
       if ("saleId" in result) {
         router.push(`/sales`);

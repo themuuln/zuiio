@@ -196,7 +196,9 @@ export default function AcademyPaymentsLedgerPage() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Сурагч сонгох" />
+                            <SelectValue placeholder="Сурагч сонгох">
+                              {students?.find(s => s.id === field.value)?.canonical_name}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

@@ -12,6 +12,8 @@ interface ScoreFlipProps {
   value: number;
   /** Minimum number of digits (zero-padded). Default 2. */
   digits?: number;
+  /** Whether this is connected to a live game context. */
+  connected?: boolean;
   className?: string;
 }
 
@@ -146,7 +148,7 @@ function FlipDigit({
  * producing a cascading mechanical counter effect.
  * Respects prefers-reduced-motion — falls back to instant swap.
  */
-export function ScoreFlip({ value, digits = 2, className }: ScoreFlipProps) {
+export function ScoreFlip({ value, digits = 2, connected = false, className }: ScoreFlipProps) {
   const padded = String(Math.max(0, Math.floor(value))).padStart(digits, "0");
   const [displayChars, setDisplayChars] = useState<string[]>(() =>
     padded.split(""),
@@ -156,6 +158,48 @@ export function ScoreFlip({ value, digits = 2, className }: ScoreFlipProps) {
   );
   const prevRef = useRef(padded);
   const styleInjected = useRef(false);
+
+  // -----------------------------------------------------------------------
+  // Not connected to a live context — show blurred preview + Coming Soon
+  // -----------------------------------------------------------------------
+
+  if (!connected) {
+    const chars = padded.split("");
+    return (
+      <div
+        className={cn(
+          "relative inline-flex overflow-hidden rounded-xl",
+          className,
+        )}
+      >
+        <div className="blur-[2px]">
+          <span
+            className="inline-flex gap-0.5 font-display tabular-nums opacity-40"
+            aria-hidden="true"
+          >
+            {chars.map((char, i) => (
+              <span
+                key={i}
+                className="score-flip-digit"
+              >
+                <span className="score-flip-static bg-muted/50 text-foreground">
+                  {char}
+                </span>
+              </span>
+            ))}
+          </span>
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[1px]">
+          <div className="rounded-lg border bg-background px-4 py-2 text-center shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">
+              Тун удахгүй
+            </p>
+            <p className="text-xs text-muted-foreground/60">Coming Soon</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Inject styles once
   if (!styleInjected.current && typeof document !== "undefined") {

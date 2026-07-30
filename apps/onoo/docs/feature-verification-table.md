@@ -1,6 +1,6 @@
 # Onoo — Feature Verification Matrix
 
-> **Status as of:** 2026-07-26
+> **Status as of:** 2026-07-29 (full codebase audit: public pages, admin pages, components, hidden features)
 > **Methodology:** Verified against actual codebase (routes, tests, DB schema), Supabase live schema, and documented phase definitions in ROADMAP.md.
 > **Scoring:** ✅ = Full coverage | 🟡 = Partial/incomplete | ⬜ = Not done | ❌ = Missing/blocked
 
@@ -141,9 +141,41 @@
 
 | Feature | Implemented | Routes/Pages | DB Schema | Unit Tests | Integration Tests | E2E Tests | Error/ Loading | SEO/ Metadata | Prod Ready |
 |---|---|---|---|---|---|---|---|---|---|
-| Multi-child dashboard | ⬜ | — | — | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| Registration & consent management | ⬜ | — | — | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| Announcements & reminders | ✅ | admin/academy/announcements | ✅ academy_announcements | ⬜ | ⬜ | ⬜ | 🟡 | ⬜ | 🟡 |
+| Multi-child dashboard | ✅ | guardian, guardian/children/[id] | ✅ via guardian-data.ts (RPC cmd_list_my_children) | ⬜ | ⬜ | ⬜ | 🟡 | ⬜ | 🟡 |
+| Public academy enrollment (anonymous) | ✅ | academy/enroll | ✅ cmd_submit_registration + cmd_public_enroll RPCs | ⬜ | ⬜ | ⬜ | 🟡 | ⬜ | 🟡 |
+| Registration & consent management | 🟡 | guardian/children/[id] (consent UI visible) | ✅ via guardian-data.ts getChildConsent | ⬜ | ⬜ | ⬜ | 🟡 | ⬜ | 🟡 |
+| Announcements & reminders | ✅ | admin/academy/announcements, guardian (shows announcements) | ✅ academy_announcements | ⬜ | ⬜ | ⬜ | 🟡 | ⬜ | 🟡 |
+| Guardian self-serve payments | 🟡 | guardian/children/[id] (payment history visible) | ✅ academy_payment_ledger | ⬜ | ⬜ | ⬜ | 🟡 | ⬜ | 🟡 |
+
+---
+
+---
+
+## 📌 Undocumented Features (discovered during 2026-07-29 audit)
+
+These features exist in the codebase but are NOT listed in ROADMAP.md or any phase definition. They represent features built outside the documented planning system.
+
+### Phase 12: Built but Unplanned
+
+| Feature | Implemented | Routes | DB Schema | Data Source | Notes |
+|---|---|---|---|---|---|
+| **Public Academy Landing Page** | ✅ | `/academy` | ✅ academy_programs, trainers, locations | Real Supabase — data.ts + v_public_* views | Full responsive page with programs, trainers, locations, testimonials, CTA |
+| **E-Commerce Shop** | ✅ | `/shop`, `/shop/[slug]`, admin shop CRUD (products, bundles, orders, reviews) | ✅ shop_products, shop_bundles, shop_orders, shop_reviews, bundle_items, product_images | Real Supabase — qpay.ts, data-shop.ts | Full catalogue + product detail + QPay payments. Completely absent from ROADMAP |
+| **Player Comparison** | ✅ | `/players/compare`, `/api/stats/compare-players` | ✅ v_public_leaders, v_public_player_profiles | Real Supabase | Side-by-side radar charts + stat tables |
+| **Single-Player Multi-Season API** | ✅ | `/api/stats/compare` (API only) | ✅ via data.ts | Real Supabase | Season-over-season stat history |
+| **Head-to-Head Team Comparison** | ✅ | `/teams/vs/[teamA]/[teamB]` | ✅ via data.ts | Real Supabase | Full matchup history with client-side interactivity |
+| **Season Reports** | ✅ | `/reports/season/[competitionId]` | ✅ via data.ts | Real Supabase | Standings, leaders, champion, per-team stats, print/PDF |
+| **Tournament Detail Page** | 🟡 | `/tournaments/[id]` | ⚠️ 3 stub functions return empty arrays | Partial — sections never render | Bracket, group standings, classification rounds, leaders |
+| **Guardian Dashboard** | ✅ | `/guardian`, `/guardian/children/[id]` | ✅ guardian-data.ts with RPCs | Real Supabase | Multi-child dashboard: attendance, payments, consent, announcements |
+| **Team Head-to-Head Hub** | ❌ | `/teams/vs` | None — static hardcoded text | **Disconnected** — no data.ts import, hardcoded Mongolian text | Static hub page only; actual comparison pages work |
+| **Interactive Demo** | 🟡 (mock) | `/interactive-demo` | None | **Dev-only mock data** — 10 components with MOCK_* arrays | Not linked from nav, robots: noindex |
+
+### Duplicate/Redundant API Routes
+
+| Route | Notes |
+|---|---|
+| `/api/academy/enroll` (V1) and `/api/academy/enroll-v2` (V2) | V1 uses `cmd_public_enroll`, V2 uses `cmd_submit_registration`. `data-client.ts` exposes both. V2 appears newer. |
+| `/api/qpay/callback` (unified) and `/api/shop/qpay/callback` (shop-specific) | Both call same `cmd_confirm_shop_payment` RPC. Academy invoices use unified route. Shop-specific may be legacy. |
 
 ---
 
@@ -183,20 +215,25 @@
 
 | Metric | Value |
 |--------|-------|
-| Total features (ROADMAP) | ~100 |
-| Implemented ✅ | ~92 |
+| Total features (ROADMAP + undocumented) | ~115 |
+| ROADMAP features | ~100 |
+| Undocumented features found | ~15 |
+| Implemented ✅ | ~107 |
 | Not implemented ⬜ | ~6 |
+| Disconnected from Supabase 🔴 | 4 (clutch-stats, live-court, interactive-demo, /teams/vs hub) |
+| Partially connected 🟡 | 2 (tournaments/[id] with stubs, ScoreFlip not wired) |
+| Duplicate API routes | 2 (enroll V1/V2, qpay callback x2) |
 | Unit/Component tests | 122 files |
 | Integration tests | 21 files |
 | E2E tests | 7 files (27 tests) |
 | Core package tests | 12 files |
 | Bash integration script | 1 |
-| Public page routes | 27 |
+| Public page routes | 31 |
 | Admin page routes | 29 |
 | API route files | 80+ |
 | Database tables | 66 |
 | Failed (data rows) | 0 |
-| Pending (T-10c.1, T-10d.x, T-11.x) | 6 |
+| Pending (T-10c.1, T-10d.x) | 5 |
 
 ## Key Gaps
 
@@ -214,6 +251,14 @@
 ### 🔴 Still outstanding
 
 1. **Offline attendance** — T-10c.1 not started, critical for academy use case
-2. **Guardian self-service (Phase 11)** — largely unimplemented, only announcements done
-3. **Phase 10d items** — guardian OTP, verified QPay callbacks, multi-location scheduling, extended reporting not started
-4. **Tracker page metadata** — /tracker/[gameId] and /tracker/paper pages lack metadata exports
+2. **Clutch stats (data-limited)** — UI exists with Coming Soon blur overlay; needs close-game derivation from v_public_play_by_play
+3. **Live court animation (data-limited)** — UI exists with Coming Soon blur overlay; needs shot coordinates + player position data model
+4. **Shot location capture friction** — Tracker has capture UI but requires 5 taps/shot; shot-zone view v_public_shot_zones returns empty
+5. **Awards table empty (0 rows)** — Schema + admin grant flow exists but no regular data entry
+6. **Opponent notes empty (0 rows)** — Schema exists but no admin population UI
+7. **Phase 10d items** — guardian OTP, verified QPay callbacks, multi-location scheduling, extended reporting not started
+8. **ScoreFlip not wired to production** — CSS component exists but only used in interactive-demo; app uses separate FlipScore component
+9. **Tournament page stubs** — 3 stub functions return empty arrays; sections never render
+10. **/teams/vs hub page disconnected** — Static hardcoded text, no data.ts import
+11. **Tracker page metadata** — /tracker/[gameId] and /tracker/paper pages lack metadata exports
+12. **9 public pages missing loading/error boundaries** — graceful empty states exist but no dedicated loading.tsx/error.tsx

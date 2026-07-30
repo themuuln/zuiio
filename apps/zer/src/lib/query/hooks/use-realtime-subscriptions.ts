@@ -33,7 +33,7 @@ export function useRealtimeSubscriptions(orgId: string | null | undefined) {
     tables: [
       {
         table: "products",
-        queryKeys: [productKeys.lists(orgId!)],
+        queryKeys: [productKeys.lists(orgId!), ["shop_products"]],
         filter: `organization_id=eq.${orgId}`,
       },
       {

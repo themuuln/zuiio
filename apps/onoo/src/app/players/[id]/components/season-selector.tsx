@@ -45,6 +45,10 @@ export function SeasonSelector({
 
   const currentValue = currentCompetitionId ?? CAREER_VALUE;
 
+  const selectedCompetition = currentCompetitionId
+    ? competitions.find((c) => c.competition_id === currentCompetitionId)
+    : undefined;
+
   return (
     <Select value={currentValue} onValueChange={handleChange}>
       <SelectTrigger
@@ -54,7 +58,13 @@ export function SeasonSelector({
         )}
         aria-label={"Улирал сонгох"}
       >
-        <SelectValue placeholder={"Улирал сонгох"} />
+        <SelectValue placeholder={"Улирал сонгох"}>
+          {currentCompetitionId == null
+            ? "Карьер"
+            : selectedCompetition
+              ? `${selectedCompetition.season_name} — ${selectedCompetition.competition_name}`
+              : "Улирал сонгох"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={CAREER_VALUE}>{"Карьер"}</SelectItem>

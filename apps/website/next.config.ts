@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
+  reactCompiler: true,
+  images: {
+    unoptimized: true,
+  },
   experimental: {
     useTypeScriptCli: true,
     turbopackFileSystemCacheForBuild: true,

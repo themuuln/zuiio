@@ -1665,7 +1665,11 @@ export async function getHeadToHead(
 
 /**
  * Fetch tournament phases for a competition.
- * Returns an empty array — stub awaiting DB schema for tournament tables.
+ *
+ * INTENTIONAL STUB: Returns an empty array awaiting the tournament phase DB
+ * schema. Once the schema is built, this function will query the real tables
+ * and return TournamentPhase[]. The empty return is deliberate — the frontend
+ * shows a "Тун удахгүй / Coming Soon" blur overlay when this returns [].
  */
 export async function getTournamentPhases(
   _competitionId: string,
@@ -1675,7 +1679,11 @@ export async function getTournamentPhases(
 
 /**
  * Fetch tournament groups for a competition.
- * Returns an empty array — stub awaiting DB schema for tournament tables.
+ *
+ * INTENTIONAL STUB: Returns an empty array awaiting the tournament group DB
+ * schema. Once the schema is built, this function will query the real tables
+ * and return TournamentGroup[]. The empty return is deliberate — the frontend
+ * shows a "Тун удахгүй / Coming Soon" blur overlay when this returns [].
  */
 export async function getTournamentGroups(
   _competitionId: string,
@@ -1685,7 +1693,12 @@ export async function getTournamentGroups(
 
 /**
  * Fetch classification bracket rounds for a competition.
- * Returns an empty array — stub awaiting DB schema for classification tables.
+ *
+ * INTENTIONAL STUB: Returns an empty array awaiting the classification
+ * bracket DB schema. Once the schema is built, this function will query the
+ * real tables and return ClassificationRound[]. The empty return is deliberate
+ * — the frontend shows a "Тун удахгүй / Coming Soon" blur overlay when this
+ * returns [].
  */
 export async function getClassificationRounds(
   _competitionId: string,

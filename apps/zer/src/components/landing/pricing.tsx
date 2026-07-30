@@ -1,6 +1,33 @@
 "use client";
 
-import { Check } from "@phosphor-icons/react";
+import {
+  Buildings,
+  CalendarCheck,
+  Calculator,
+  ChartBar,
+  Check,
+  Code,
+  Envelope,
+  FileText,
+  Gear,
+  Gift,
+  Globe,
+  Headphones,
+  Package,
+  PuzzlePiece,
+  Receipt,
+  HardDrive,
+  Heart,
+  ShieldCheck,
+  ShoppingCart,
+  Sliders,
+  Sparkle,
+  Truck,
+  User,
+  Tag,
+  Users,
+  Warehouse,
+} from "@phosphor-icons/react";
 // NOTE: Prices shown are illustrative. Payment integration (card/gateway) is
 // required before this section can be used for live subscriptions.
 
@@ -9,6 +36,40 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const featureConfig: Record<string, { icon: React.ElementType; ai?: boolean }> = {
+  "1 эзэмшигч": { icon: User },
+  "200 хүртэлх бараа": { icon: Package },
+  "Борлуулалт ба POS касс": { icon: ShoppingCart },
+  "Зарлагын бүртгэл": { icon: Receipt },
+  "Үндсэн тайлан": { icon: ChartBar },
+  "И-мэйл дэмжлэг": { icon: Envelope },
+  "5,000 хүртэлх бараа": { icon: Package },
+  "Харилцагчийн бүртгэл": { icon: Users },
+  "Бүх төрлийн тайлан": { icon: ChartBar },
+  "Олон агуулах": { icon: Warehouse },
+  "Худалдан авалт ба нийлүүлэгч": { icon: Truck },
+  "Онлайн дэлгүүр": { icon: Globe },
+  "Баримт бичиг": { icon: FileText },
+  "Хямдрал ба урамшуулал": { icon: Tag },
+  "Бэлгийн сонголт": { icon: Gift },
+  "Лояльти программ": { icon: Heart },
+  "AI Telegram туслах": { icon: Sparkle, ai: true },
+  "Автомат өдрийн тайлан": { icon: CalendarCheck, ai: true },
+  "Тэргүүлэх дэмжлэг": { icon: Headphones },
+  "Барааны тоо хязгааргүй": { icon: Package },
+  "Бүрэн боломж — бүх модуль": { icon: PuzzlePiece },
+  "Олон салбар": { icon: Buildings },
+  "Нягтлан бодох бүртгэл": { icon: Calculator },
+  "Үйлдвэрлэлийн удирдлага (BOM)": { icon: Gear },
+  "Хүний нөөц ба цалин": { icon: Users },
+  "API холболт": { icon: Code },
+  "24/7 тэргүүлэх дэмжлэг": { icon: Headphones },
+  "Тохиролцсон хязгаар": { icon: Sliders },
+  "Тусгай интеграц": { icon: PuzzlePiece },
+  "Тусгай сервер": { icon: HardDrive },
+  "Dedicated support SLA": { icon: ShieldCheck },
+};
 
 const plans = [
   {
@@ -41,6 +102,10 @@ const plans = [
       "Олон агуулах",
       "Худалдан авалт ба нийлүүлэгч",
       "Онлайн дэлгүүр",
+      "Баримт бичиг",
+      "Хямдрал ба урамшуулал",
+      "Бэлгийн сонголт",
+      "Лояльти программ",
       "AI Telegram туслах",
       "Автомат өдрийн тайлан",
       "Тэргүүлэх дэмжлэг",
@@ -68,7 +133,7 @@ const plans = [
   },
   {
     name: "Аж ахуйн",
-    monthlyPrice: "from ₮8M/yr",
+    monthlyPrice: "Тохиролцсон",
     yearlyPrice: "₮8 сая/жил",
     description: "Томоохон байгууллага, групп компаниудад",
     features: [
@@ -183,17 +248,38 @@ export function Pricing() {
                     ₮165,833/сар
                   </p>
                 )}
+                {plan.highlighted && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <Badge
+                      variant="secondary"
+                      className="gap-1.5 text-[11px] font-normal"
+                    >
+                      <Check weight="bold" className="size-3 text-primary" />
+                      Борлуулалт + Нягтлан + Агуулах — нэгдмэл систем
+                    </Badge>
+                  </div>
+                )}
               </div>
 
               <ul className="mb-8 flex-1 space-y-3.5">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-3 text-sm">
-                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <Check weight="bold" className="size-3 text-primary" />
-                    </span>
-                    {feature}
-                  </li>
-                ))}
+                {plan.features.map((feature) => {
+                  const cfg = featureConfig[feature] ?? {};
+                  const Icon = cfg.icon ?? Check;
+                  return (
+                    <li key={feature} className="flex items-center gap-3 text-sm">
+                      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <Icon weight="bold" className="size-3 text-primary" />
+                      </span>
+                      <span>{feature}</span>
+                      {cfg.ai && (
+                        <Sparkle
+                          weight="fill"
+                          className="size-3 shrink-0 text-amber-500"
+                        />
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
 
               <Button
@@ -201,8 +287,22 @@ export function Pricing() {
                 asChild
                 className="w-full"
               >
-                <Link href="/login">
-                  {plan.monthlyPrice === "₮0" ? "Үнэгүй эхлэх" : "Эхлэх"}
+                <Link
+                  href={
+                    plan.name === "Аж ахуйн"
+                      ? "/contact"
+                      : plan.monthlyPrice === "₮0"
+                        ? "/login"
+                        : "/register?trial=standard"
+                  }
+                >
+                  {plan.name === "Аж ахуйн"
+                    ? "Холбогдох"
+                    : plan.monthlyPrice === "₮0"
+                      ? "Үнэгүй эхлэх"
+                      : plan.highlighted
+                        ? "14 өдөр үнэгүй турших"
+                        : "Эхлэх"}
                 </Link>
               </Button>
             </div>

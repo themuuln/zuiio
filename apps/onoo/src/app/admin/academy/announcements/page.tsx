@@ -188,7 +188,9 @@ export default function AcademyAnnouncementsPage() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Бүх хөтөлбөр" />
+                            <SelectValue placeholder="Бүх хөтөлбөр">
+                              {programs?.find(p => p.id === field.value)?.name}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

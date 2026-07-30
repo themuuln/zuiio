@@ -210,7 +210,9 @@ export default function CompetitionsPage() {
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Улирал сонгох" />
+                          <SelectValue placeholder="Улирал сонгох">
+                            {seasons?.find((s) => s.id === field.value)?.name}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

@@ -179,7 +179,9 @@ export default function LeaguesPage() {
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Спорт сонгох" />
+                          <SelectValue placeholder="Спорт сонгох">
+                            {sports?.find(s => s.id === field.value)?.name_en}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

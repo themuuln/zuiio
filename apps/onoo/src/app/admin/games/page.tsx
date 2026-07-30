@@ -220,7 +220,9 @@ export default function AdminGamesPage() {
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Уралдаан сонгох" />
+                            <SelectValue placeholder="Уралдаан сонгох">
+                              {competitions?.find(c => c.id === field.value)?.name}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -248,7 +250,9 @@ export default function AdminGamesPage() {
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Эхлэх баг сонгох" />
+                            <SelectValue placeholder="Эхлэх баг сонгох">
+                              {teamSeasons?.find(ts => ts.id === field.value)?.teams?.name}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -276,7 +280,9 @@ export default function AdminGamesPage() {
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Зочин баг сонгох" />
+                            <SelectValue placeholder="Зочин баг сонгох">
+                              {teamSeasons?.find(ts => ts.id === field.value)?.teams?.name}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -303,7 +309,9 @@ export default function AdminGamesPage() {
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Талбай сонгох" />
+                            <SelectValue placeholder="Талбай сонгох">
+                              {venues?.find(v => v.id === field.value)?.name}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

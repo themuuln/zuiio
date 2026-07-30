@@ -12,7 +12,10 @@ export interface BayCardContextValue {
   mechanics: BayCardMechanic[];
   onStatusChange: (woId: string, status: string) => void;
   onRemoveFromBay?: (woId: string) => void;
-  onOpenDetail: (woId: string) => void;
+  onOpenDetail: (
+    woId: string,
+    initialAction?: "add-service" | "add-part",
+  ) => void;
   onRemoveHelper?: (woId: string, mechanicId: string) => void;
   onAssignMechanic?: (woId: string, mechanicId: string) => Promise<void>;
   onRemoveMechanic?: (woId: string) => Promise<void>;
@@ -21,10 +24,6 @@ export interface BayCardContextValue {
     woId: string,
     orderedMechanicIds: string[],
   ) => Promise<void>;
-  onPauseTimer?: (woId: string) => void;
-  onAddNote?: (woId: string) => void;
-  onQuickAddService?: (woId: string) => void;
-  onQuickAddParts?: (woId: string) => void;
 }
 
 const BayCardCtx = createContext<BayCardContextValue | null>(null);

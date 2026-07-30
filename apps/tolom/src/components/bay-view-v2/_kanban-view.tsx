@@ -46,11 +46,7 @@ export function KanbanDropColumn({
 
 // ── AvailableQueueColumn (droppable queue / waiting list) ──────
 
-function AvailableQueueColumn({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function AvailableQueueColumn({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({
     id: "waiting-queue",
   });
@@ -88,10 +84,6 @@ interface KanbanViewProps {
     wo: BayViewWorkOrder & { vehicle: Vehicle | null },
   ) => void;
   onRemoveHelper: (woId: string, mechId: string) => Promise<void>;
-  onPauseTimer?: (woId: string) => void;
-  onAddNote?: (woId: string) => void;
-  onQuickAddService?: (woId: string) => void;
-  onQuickAddParts?: (woId: string) => void;
   orgId?: string | null;
   t: (key: string) => string;
 }
@@ -108,10 +100,6 @@ export const KanbanView = React.memo(function KanbanView({
   onNoEmptyBays,
   onQueueItemClick,
   onRemoveHelper,
-  onPauseTimer,
-  onAddNote,
-  onQuickAddService,
-  onQuickAddParts,
   orgId,
   t,
 }: KanbanViewProps) {
@@ -223,10 +211,6 @@ export const KanbanView = React.memo(function KanbanView({
                       onRemoveFromBay={onRemoveFromBay}
                       onOpenDetail={onOpenDetail}
                       onRemoveHelper={onRemoveHelper}
-                      onPauseTimer={onPauseTimer}
-                      onAddNote={onAddNote}
-                      onQuickAddService={onQuickAddService}
-                      onQuickAddParts={onQuickAddParts}
                       orgId={orgId}
                     />
                   </ErrorSection>

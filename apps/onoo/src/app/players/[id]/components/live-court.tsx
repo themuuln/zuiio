@@ -54,10 +54,53 @@ const LIVE_COURT_STYLES = `
  *
  * Shows a pulsing basketball dot when live, and optionally
  * displays the last shot with a ripple animation.
+ * When not live, renders a blurred preview with a Coming Soon overlay.
  * Pure SVG + CSS — no dependencies.
  */
 export function LiveCourt({ isLive, lastShot, className }: LiveCourtProps) {
-  if (!isLive && !lastShot) return null;
+  if (!isLive && !lastShot) {
+    return (
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-xl",
+          className,
+        )}
+      >
+        <div className="blur-[2px]">
+          <svg
+            viewBox="0 0 600 550"
+            className="w-full opacity-15"
+            aria-hidden="true"
+          >
+            <g
+              stroke="var(--color-muted-foreground)"
+              fill="none"
+              strokeWidth={1.5}
+            >
+              <rect x={20} y={20} width={560} height={510} rx={4} />
+              <rect x={170} y={20} width={260} height={190} rx={2} />
+              <circle cx={300} cy={210} r={60} />
+              <path d="M 80 20 L 80 160 Q 80 420 300 460 Q 520 420 520 160 L 520 20" />
+              <circle
+                cx={300}
+                cy={60}
+                r={8}
+                fill="var(--color-muted-foreground)"
+              />
+            </g>
+          </svg>
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[1px]">
+          <div className="rounded-lg border bg-background px-4 py-2 text-center shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">
+              Тун удахгүй
+            </p>
+            <p className="text-xs text-muted-foreground/60">Coming Soon</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Inject styles
   if (typeof document !== "undefined") {

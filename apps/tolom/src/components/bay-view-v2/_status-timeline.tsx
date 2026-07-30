@@ -336,7 +336,7 @@ export function StatusTimeline(props: StatusTimelineProps) {
           ) : null}
 
           {hasServiceHistory ? (
-            <div className="flex flex-col gap-3 border-t border-border/60 pt-3">
+            <div className="flex flex-col gap-3 border-t border-border/60 pt-3 px-3">
               <div className="flex items-center justify-between gap-2">
                 <Typography.Text className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {t("serviceHistory")}

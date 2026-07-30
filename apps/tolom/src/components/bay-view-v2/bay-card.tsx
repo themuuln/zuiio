@@ -69,10 +69,6 @@ export const BayCard = React.memo(function BayCard({
   onOpenDetail,
   onAssignClick,
   onRemoveHelper,
-  onPauseTimer,
-  onAddNote,
-  onQuickAddService,
-  onQuickAddParts,
   orgId,
   mechanics = [],
   onAssignMechanic,
@@ -150,10 +146,6 @@ export const BayCard = React.memo(function BayCard({
       onRemoveMechanic,
       onAddHelper,
       onReorderMechanics,
-      onPauseTimer,
-      onAddNote,
-      onQuickAddService,
-      onQuickAddParts,
     }),
     [
       wo?.id,
@@ -169,10 +161,6 @@ export const BayCard = React.memo(function BayCard({
       onRemoveMechanic,
       onAddHelper,
       onReorderMechanics,
-      onPauseTimer,
-      onAddNote,
-      onQuickAddService,
-      onQuickAddParts,
     ],
   );
 

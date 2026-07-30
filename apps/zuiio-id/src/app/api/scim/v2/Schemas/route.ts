@@ -138,6 +138,9 @@ export async function GET() {
   };
 
   return NextResponse.json(schemas, {
-    headers: { "Content-Type": "application/scim+json" },
+    headers: {
+      "Content-Type": "application/scim+json",
+      "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+    },
   });
 }

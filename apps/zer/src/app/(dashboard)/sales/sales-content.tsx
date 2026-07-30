@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { capture } from "@zuiio/capture";
 import { useSearchParams } from "next/navigation";
+import { saleKeys } from "@/lib/query/keys";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
@@ -176,7 +177,7 @@ export function SalesContent({
 
   // ── Sale detail fetching — errors are shown inline via PageShell ──
   const { data: selectedSale } = useQuery({
-    queryKey: ["sale-detail", selectedSaleId],
+    queryKey: saleKeys.detail(selectedSaleId ?? ""),
     queryFn: async () => {
       if (!selectedSaleId) return null;
       try {

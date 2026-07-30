@@ -4899,7 +4899,7 @@ export type Database = {
         | {
             Args: {
               p_branch_id: string
-              p_contact_id: string
+              p_contact_id: string | null
               p_items: Json
               p_movements: Json
               p_org_id: string
@@ -4914,7 +4914,7 @@ export type Database = {
         | {
             Args: {
               p_branch_id: string
-              p_contact_id: string
+              p_contact_id: string | null
               p_currency_code?: string
               p_currency_symbol?: string
               p_exchange_rate?: number

@@ -151,7 +151,9 @@ export default function AwardsPage() {
                 <Label>Тэмцээн</Label>
                 <Select value={competitionId} onValueChange={setCompetitionId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Тэмцээн сонгох" />
+                    <SelectValue placeholder="Тэмцээн сонгох">
+                      {competitions?.find(c => c.id === competitionId)?.name}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {(competitions ?? []).map((c) => (

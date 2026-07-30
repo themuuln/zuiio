@@ -57,6 +57,7 @@ catalog:
   tailwind-merge: ^3.6.0
   zod: ^4.4.3
   '@shadcn/react': ^0.2.1
+  '@next/bundle-analyzer': ^16.2.12
 
 allowBuilds:
   '@google/genai': true

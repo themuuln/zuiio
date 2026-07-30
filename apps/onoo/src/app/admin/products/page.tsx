@@ -299,7 +299,9 @@ export default function AdminProductsPage() {
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Баг сонгох..." />
+                          <SelectValue placeholder="Баг сонгох...">
+                            {teams?.find(t => t.id === field.value)?.name}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

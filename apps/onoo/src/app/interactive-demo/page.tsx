@@ -11,6 +11,9 @@ export const metadata: Metadata = {
  * Demo page for verifying all 10 interactive UI components.
  * Not linked from navigation — accessed directly at /interactive-demo.
  */
+// ISR — demo content is static, revalidate daily
+export const revalidate = 86400;
+
 export default function InteractiveDemoPage() {
   return (
     <main className="mx-auto w-full max-w-7xl space-y-12 px-4 py-8 sm:px-6 lg:px-8">

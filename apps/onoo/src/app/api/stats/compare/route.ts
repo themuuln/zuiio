@@ -31,11 +31,11 @@ export async function GET(request: NextRequest) {
       .order("team_seasons.season.starts_on", { ascending: false });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
-    // Transform data for comparison
-    const seasons = stats.map((stat) => {
+  // Transform data for comparison
+  const seasons = stats.map((stat) => {
       const ts = stat.team_seasons as {
         season?: { name?: string; starts_on?: string };
         league?: { name?: string };
@@ -71,7 +71,14 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ type: "player", data: seasons });
+    return NextResponse.json(
+      { type: "player", data: seasons },
+      {
+        headers: {
+          "Cache-Control": "s-maxage=300, stale-while-revalidate=3600",
+        },
+      },
+    );
   }
 
   if (teamId) {
@@ -92,10 +99,10 @@ export async function GET(request: NextRequest) {
       .order("games.competitions.season.starts_on", { ascending: false });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
-    // Group by season
+  // Group by season
     const seasonMap = new Map<
       string,
       {
@@ -147,7 +154,14 @@ export async function GET(request: NextRequest) {
         s.games > 0 ? ((s.ptsFor - s.ptsAgainst) / s.games).toFixed(1) : "0.0",
     }));
 
-    return NextResponse.json({ type: "team", data: seasons });
+    return NextResponse.json(
+      { type: "team", data: seasons },
+      {
+        headers: {
+          "Cache-Control": "s-maxage=300, stale-while-revalidate=3600",
+        },
+      },
+    );
   }
 
   return NextResponse.json({ error: "Invalid request" }, { status: 400 });

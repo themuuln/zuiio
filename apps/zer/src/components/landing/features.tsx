@@ -33,10 +33,67 @@ const companyTypes = [
 
 type OrgType = (typeof companyTypes)[number]["value"];
 
+const categoryConfig: Record<
+  string,
+  { label: string; className: string }
+> = {
+  inventory: {
+    label: "Бараа материал",
+    className:
+      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  },
+  sales: {
+    label: "Борлуулалт",
+    className:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  },
+  purchases: {
+    label: "Худалдан авалт",
+    className:
+      "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
+  },
+  finance: {
+    label: "Санхүү",
+    className:
+      "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
+  },
+  analytics: {
+    label: "Аналитик",
+    className:
+      "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  },
+  crm: {
+    label: "Харилцагч",
+    className:
+      "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+  },
+  manufacturing: {
+    label: "Үйлдвэрлэл",
+    className:
+      "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  },
+  hr: {
+    label: "Хүний нөөц",
+    className:
+      "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
+  },
+  online: {
+    label: "Онлайн",
+    className:
+      "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
+  },
+  ai: {
+    label: "Хиймэл оюун ухаан",
+    className:
+      "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-400",
+  },
+};
+
 const features = [
   {
     icon: Package,
     title: "Бараа материалын бүртгэл",
+    category: "inventory",
     description:
       "Бүтээгдэхүүн, ангилал, нэгжийн бүртгэл. Олон агуулах, үлдэгдэл хөдөлгөөн, тохируулга, дахин захиалга, үнийн түүх, баркод.",
     why: "Бараа материалаа бүрэн хянаж, тооллого автоматжуулж, бодит үлдэгдлийг мэдэж, дуусах дөхсөн бараагаа дахин захиалаарай.",
@@ -51,6 +108,7 @@ const features = [
   {
     icon: CurrencyDollar,
     title: "Борлуулалт ба касс",
+    category: "sales",
     description:
       "POS касс, борлуулалтын баримт, буцаалт, нэхэмжлэх. Карт, бэлэн, шилжүүлэг — бүх төлбөрийн хэлбэр.",
     why: "Худалдагч нар хурдан POS ашиглаж, баримт хэвлэж, төлбөр хүлээн авна. Борлуулалт бүр автомат бүртгэгдэнэ.",
@@ -59,6 +117,7 @@ const features = [
   {
     icon: Trolley,
     title: "Худалдан авалт",
+    category: "purchases",
     description:
       "Нийлүүлэгчээс бараа авах захиалга, баримт бүртгэл. Нийлүүлэгчийн мэдээлэл, түүх, үнийн харьцуулалт.",
     why: "Худалдан авалтаа бүртгэж, нийлүүлэгчидтэй хийсэн бүх гүйлгээг нэг дор хянаж, өр төлбөрөө хянаарай.",
@@ -74,6 +133,7 @@ const features = [
   {
     icon: CreditCard,
     title: "Зарлагын бүртгэл",
+    category: "finance",
     description:
       "Зарлагын төрөл, дүн, огноогоор бүртгэх. Сарын зарлагын тайлан, өмнөх саруудтай харьцуулалт.",
     why: "Зарлагаа ангилж, хянаж, сар бүр тайлан гаргаж, зардлаа бууруулах боломжийг олж харна.",
@@ -90,6 +150,7 @@ const features = [
   {
     icon: Calculator,
     title: "Нягтлан бодох бүртгэл",
+    category: "finance",
     description:
       "Ерөнхий журнал, дансны тэнцэл, санхүүгийн тайлан. Автомат бичилт, татварын тайлангийн бэлтгэл.",
     why: "Санхүүгийн бүртгэлээ нэгдсэн системд хөтлөж, журнал, тэнцлэгээ хялбархан гаргаж авна.",
@@ -98,6 +159,7 @@ const features = [
   {
     icon: FileText,
     title: "Баримт бичиг",
+    category: "finance",
     description:
       "Нэхэмжлэх, үнийн санал, хямдрал, комисс. Баримт бүрийг үүсгэж, хэвлэж, имэйлээр илгээх.",
     why: "Бүх төрлийн баримт бичгээ нэг системээс үүсгэж, харилцагчдад илгээж, төлөв байдлыг хянаарай.",
@@ -106,6 +168,7 @@ const features = [
   {
     icon: ChartBar,
     title: "Тайлан ба шинжилгээ",
+    category: "analytics",
     description:
       "Борлуулалт, зарлага, ашиг, үлдэгдлийн тайлан. График, диаграммаар харах, PDF экспорт, харьцуулалт.",
     why: "Бизнесийн гол үзүүлэлтүүдийг харж, борлуулалтын чиг хандлага, ашиг орлогоо дүн шинжилгээ хийгээд шийдвэр гарга.",
@@ -122,6 +185,7 @@ const features = [
   {
     icon: Users,
     title: "Харилцагчийн менежмент",
+    category: "crm",
     description:
       "Харилцагч, нийлүүлэгчийн дэлгэрэнгүй мэдээлэл, түүх, өглөг/авлагын хяналт, үнийн санал.",
     why: "Харилцагчдын өглөг авлагыг бодит цаг хугацаанд хянаж, үлдэгдэл, төлбөрийн хугацааг санаж яв.",
@@ -130,6 +194,7 @@ const features = [
   {
     icon: Warehouse,
     title: "Агуулах ба салбар",
+    category: "inventory",
     description:
       "Олон агуулах, салбар хооронд үлдэгдэл хөдөлгөөн, тохируулга. Салбар бүр өөрийн үнийн бодлоготой.",
     why: "Олон салбар, агуулахтай бол үлдэгдлээ төвлөрүүлэн хянаж, салбар хооронд бараа шилжүүлэх.",
@@ -138,6 +203,7 @@ const features = [
   {
     icon: Clock,
     title: "Үйлдвэрлэлийн удирдлага",
+    category: "manufacturing",
     description:
       "BOM (материалын жагсаалт), үйлдвэрлэлийн захиалга, чанарын хяналт, зардал тооцоо, материалын хяналт.",
     why: "Үйлдвэрлэлийн процессоо бүрэн дижитал болгож, материалын зарцуулалт, чанар, зардлаа хянаарай.",
@@ -146,6 +212,7 @@ const features = [
   {
     icon: IdentificationBadge,
     title: "Хүний нөөц ба цалин",
+    category: "hr",
     description:
       "Ажилтны бүртгэл, цалингийн тооцоо, комисс, урамшуулал. Ажилтан бүрийн цалингийн түүх.",
     why: "Ажилтнуудын мэдээлэл, цалинг нэгдсэн системд хөтөлж, цалингийн хуудас автомат гаргах.",
@@ -154,6 +221,7 @@ const features = [
   {
     icon: Storefront,
     title: "Онлайн дэлгүүр",
+    category: "online",
     description:
       "Өөрийн брэндинг онлайн дэлгүүр, сагс, захиалга, төлбөрийн баримт. Үйлчлүүлэгчид өөрсдөө захиалах.",
     why: "Өөрийн брэндинг дэлгүүрээ нээж, үйлчлүүлэгчид тань цаг хугацаанаас үл хамааран захиалга өгөх боломжтой.",
@@ -162,6 +230,7 @@ const features = [
   {
     icon: Robot,
     title: "AI Туслах — Telegram бот",
+    category: "ai",
     description:
       "Борлуулалт, үлдэгдэл, зарлага, ашгийн талаар байгалийн хэлээр асуулт асуугаад Telegram-аас шууд хариу авах. AI таны өгөгдөлд тулгуурлан хариулна.",
     why: "Хаана ч байсан Telegram нээгээд 'Өчигдөр хэдэн төгрөгийн борлуулалт хийв?' гэх мэт асуултаа асуугаад хариу авна.",
@@ -178,6 +247,7 @@ const features = [
   {
     icon: Sparkle,
     title: "Автомат өдрийн тайлан",
+    category: "ai",
     description:
       "Өдөр бүрийн эцэст борлуулалт, зарлага, гол үзүүлэлтүүдийн AI-генерилсэн дүгнэлт Telegram-д ирнэ. Гараар тайлан гаргах шаардлагагүй.",
     why: "Ажлын өдөр дуусмагц борлуулалт, зардлын хураангуйг Telegram-аар хүлээн авч, бизнесийн үр дүнгээ мэдэж байх.",
@@ -194,6 +264,7 @@ const features = [
   {
     icon: MagicWand,
     title: "Ухаалаг ангилал ба дүн шинжилгээ",
+    category: "ai",
     description:
       "Зарлагын тодорхойлолтыг AI автоматаар ангилж, тохирох зарлагын төрөлд оруулна. Байгалийн хэлээр асуулт асуугаад тайлан гаргуулах.",
     why: "Зарлага бүртгэхэд төрлийг гараар сонгохгүй, AI өөрөө тааруулж ангилна. Мөн 'Аль бараа хамгийн их борлогдож байна?' гэж асуугаад хариу авах.",
@@ -272,9 +343,25 @@ export function Features() {
                 <HeroIcon className="size-8 shrink-0 text-primary" />
               </div>
               <div>
-                <h3 className="mb-2 text-xl font-semibold">
-                  {heroFeature.title}
-                </h3>
+                <div className="mb-2 flex items-center gap-2">
+                  {heroFeature.category &&
+                    (() => {
+                      const cfg = categoryConfig[heroFeature.category];
+                      return cfg ? (
+                        <span
+                          className={cn(
+                            "rounded-full px-2.5 py-0.5 text-[11px] font-medium leading-none",
+                            cfg.className,
+                          )}
+                        >
+                          {cfg.label}
+                        </span>
+                      ) : null;
+                    })()}
+                  <h3 className="text-xl font-semibold">
+                    {heroFeature.title}
+                  </h3>
+                </div>
                 <p className="mb-3 text-sm leading-relaxed text-muted-foreground md:text-base">
                   {heroFeature.description}
                 </p>
@@ -301,7 +388,23 @@ export function Features() {
                   <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
                     <Icon className="size-5" />
                   </div>
-                  <h3 className="mb-2 font-semibold">{feature.title}</h3>
+                  <div className="mb-3 flex items-center gap-2">
+                    <h3 className="font-semibold">{feature.title}</h3>
+                    {feature.category &&
+                      (() => {
+                        const cfg = categoryConfig[feature.category];
+                        return cfg ? (
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-[10px] font-medium leading-none",
+                              cfg.className,
+                            )}
+                          >
+                            {cfg.label}
+                          </span>
+                        ) : null;
+                      })()}
+                  </div>
                   <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
                     {feature.description}
                   </p>

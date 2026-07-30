@@ -4,6 +4,7 @@ import { ArrowFatDown } from "@phosphor-icons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { capture, withDbCapture } from "@zuiio/capture";
 import { useState } from "react";
+import { productKeys, purchaseKeys } from "@/lib/query/keys";
 import { toast } from "sonner";
 import {
   receivePurchaseOrderItems,
@@ -149,7 +150,7 @@ export function PurchaseDetailDrawer({
   >({});
 
   const { data, isLoading } = useQuery({
-    queryKey: ["purchase-order-detail", purchaseOrderId],
+    queryKey: purchaseKeys.detail(purchaseOrderId ?? ""),
     queryFn: async () => {
       if (!purchaseOrderId) return null;
       return fetchPurchaseOrder(purchaseOrderId);
@@ -168,7 +169,7 @@ export function PurchaseDetailDrawer({
     } else {
       toast.success("Төлөв шинэчлэгдлээ.");
       queryClient.invalidateQueries({
-        queryKey: ["purchase-order-detail"],
+        queryKey: purchaseKeys.all(),
       });
     }
   }
@@ -204,10 +205,13 @@ export function PurchaseDetailDrawer({
         setReceiveMode(false);
         setReceiveQuantities({});
         queryClient.invalidateQueries({
-          queryKey: ["purchase-order-detail"],
+          queryKey: purchaseKeys.all(),
         });
         queryClient.invalidateQueries({
-          queryKey: ["purchase-orders"],
+          queryKey: productKeys.all(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["shop_products"],
         });
       }
     } catch (err) {

@@ -1,9 +1,11 @@
 "use client";
 
 import { Plus, Trash } from "@phosphor-icons/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { productKeys } from "@/lib/query/keys";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -40,6 +42,7 @@ export function AdjustmentCreateForm({
   products: ProductOption[];
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [rows, setRows] = useState<AdjustmentRow[]>([]);
   const [notes, setNotes] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
@@ -113,8 +116,11 @@ export function AdjustmentCreateForm({
     }
 
     toast.success("Тохируулга амжилттай хадгалагдлаа.");
+    queryClient.invalidateQueries({ queryKey: productKeys.all() });
+    queryClient.invalidateQueries({ queryKey: ["shop_products"] });
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
     router.push("/inventory/adjustments");
-  }, [rows, notes, router]);
+  }, [rows, notes, queryClient, router]);
 
   const totalImpact = rows.reduce(
     (sum, r) => sum + (r.newStock ?? 0) - (r.product.current_stock ?? 0),

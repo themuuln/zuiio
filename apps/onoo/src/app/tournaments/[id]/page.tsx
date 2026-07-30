@@ -198,24 +198,101 @@ export default async function TournamentPage({
       )}
 
       {/* Group Standings */}
-      {phases.length > 0 && groups.length > 0 && (
-        <section aria-labelledby="tournament-groups">
-          <h2
-            id="tournament-groups"
-            className="mb-4 font-display text-2xl font-semibold"
-          >
-            Хэсгийн байрлал
-          </h2>
+      <section aria-labelledby="tournament-groups">
+        <h2
+          id="tournament-groups"
+          className="mb-4 font-display text-2xl font-semibold"
+        >
+          Хэсгийн байрлал
+        </h2>
+        {phases.length > 0 && groups.length > 0 ? (
           <GroupStandings groups={groups} />
-        </section>
-      )}
+        ) : (
+          <div className="relative">
+            <div className="blur-[3px] pointer-events-none">
+              <div className="grid gap-6 md:grid-cols-2">
+                {["А", "Б"].map((name) => (
+                  <div key={name}>
+                    <h3 className="font-semibold mb-2">Хэсэг {name}</h3>
+                    <div className="rounded-lg border">
+                      <div className="flex items-center gap-2 border-b px-4 py-2 text-xs font-medium text-muted-foreground">
+                        <span className="flex-1">Баг</span>
+                        <span className="w-12 text-center">Я</span>
+                        <span className="w-12 text-center">Х</span>
+                        <span className="w-12 text-center">О</span>
+                        <span className="w-12 text-center">А</span>
+                      </div>
+                      <div className="p-4 text-sm text-muted-foreground/60 flex items-center justify-center py-8">
+                        —
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[1px]">
+              <div className="rounded-lg border bg-background px-4 py-2 text-center shadow-sm">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Тун удахгүй
+                </p>
+                <p className="text-xs text-muted-foreground/60">Coming Soon</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* Classification Bracket */}
-      {phases.length > 0 && classificationRounds.length > 0 && (
-        <section aria-labelledby="tournament-classification">
+      <section aria-labelledby="tournament-classification">
+        {phases.length > 0 && classificationRounds.length > 0 ? (
           <ClassificationBracket rounds={classificationRounds} />
-        </section>
-      )}
+        ) : (
+          <div className="relative">
+            <div className="blur-[3px] pointer-events-none">
+              <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+                <div className="flex flex-col space-y-1.5 p-6 pb-3">
+                  <h3 className="font-semibold leading-none tracking-tight">
+                    Классификацийн шат
+                  </h3>
+                </div>
+                <div className="p-6 pt-2">
+                  <div className="space-y-4">
+                    {["Хагас шигшээ", "Шигшээ"].map((round) => (
+                      <div key={round}>
+                        <h4 className="text-sm text-muted-foreground mb-2">
+                          {round}
+                        </h4>
+                        <div className="space-y-2">
+                          {[1, 2].map((i) => (
+                            <div
+                              key={i}
+                              className="flex items-center justify-between text-sm p-2 rounded border"
+                            >
+                              <span>Баг A</span>
+                              <span className="font-mono font-bold mx-3">
+                                ? – ?
+                              </span>
+                              <span>Баг Б</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[1px]">
+              <div className="rounded-lg border bg-background px-4 py-2 text-center shadow-sm">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Тун удахгүй
+                </p>
+                <p className="text-xs text-muted-foreground/60">Coming Soon</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
       {/* Empty state */}
       {standings.length === 0 && leaders.length === 0 && (
         <PublicEmptyState

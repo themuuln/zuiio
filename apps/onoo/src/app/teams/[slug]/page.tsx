@@ -28,6 +28,9 @@ import { ViewBeacon } from "@/components/view-beacon";
 import { RosterGrid } from "./components/roster-grid";
 import { TeamHeader } from "./components/team-header";
 
+// ISR — team data changes after games
+export const revalidate = 60;
+
 interface TeamPageProps {
   params: Promise<{ slug: string }>;
 }

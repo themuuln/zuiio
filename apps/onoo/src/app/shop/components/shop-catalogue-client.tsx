@@ -76,8 +76,8 @@ export function ShopCatalogueClient({ products }: ShopCatalogueClientProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Search + filter bar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Search + filter bar — sticky */}
+      <div className="sticky top-4 z-10 flex flex-col gap-4 bg-background/95 pb-4 pt-2 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between">
         {/* Search + Sort row */}
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
           <div className="relative w-full sm:w-56">

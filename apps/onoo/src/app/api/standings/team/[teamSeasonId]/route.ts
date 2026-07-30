@@ -10,5 +10,9 @@ export async function GET(
   if (!data) {
     return NextResponse.json({ error: "Team not found" }, { status: 404 });
   }
-  return NextResponse.json(data);
+  return NextResponse.json(data, {
+    headers: {
+      "Cache-Control": "s-maxage=60, stale-while-revalidate=600",
+    },
+  });
 }

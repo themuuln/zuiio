@@ -166,7 +166,9 @@ export default function AcademyWaitlistsPage() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Сурагч сонгох" />
+                            <SelectValue placeholder="Сурагч сонгох">
+                            {students?.find(s => s.id === field.value)?.canonical_name}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -195,7 +197,9 @@ export default function AcademyWaitlistsPage() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Хөтөлбөр сонгох" />
+                            <SelectValue placeholder="Хөтөлбөр сонгох">
+                            {programs?.find(p => p.id === field.value)?.name}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

@@ -111,7 +111,7 @@ function DrawerViewport({
     <DrawerPrimitive.Viewport
       data-slot="drawer-viewport"
       className={cn(
-        "fixed inset-0 z-[70] flex overflow-hidden p-0 pointer-events-none",
+        "fixed inset-0 z-[70] flex overflow-hidden p-0",
         direction === "bottom"
           ? "items-end justify-center"
           : "items-stretch justify-end",

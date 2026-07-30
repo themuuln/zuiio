@@ -320,7 +320,9 @@ export default function IdentityDisputesPage() {
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Тоглогч сонгох..." />
+                          <SelectValue placeholder="Тоглогч сонгох...">
+                            {(players as PlayerRow[])?.find(p => p.id === field.value)?.canonical_name}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -348,7 +350,9 @@ export default function IdentityDisputesPage() {
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Тэмцээн сонгох..." />
+                          <SelectValue placeholder="Тэмцээн сонгох...">
+                            {(competitions as CompetitionRow[])?.find(c => c.id === field.value)?.name}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

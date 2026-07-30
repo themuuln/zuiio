@@ -1,4 +1,4 @@
-import { Clock, Lock } from "lucide-react";
+import { Clock } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -48,7 +48,7 @@ export function ClutchStats({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative">
         {available ? (
           <div className="grid grid-cols-3 gap-3 sm:gap-6">
             <div className="flex flex-col gap-1">
@@ -79,17 +79,45 @@ export function ClutchStats({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-            <Lock
-              className="size-8 text-muted-foreground/40"
-              aria-hidden="true"
-            />
-            <p className="max-w-sm text-sm text-muted-foreground">
-              {note ??
-                (isEn
-                  ? "Clutch stats will be available when play-by-play data is integrated."
-                  : "Шийдвэрлэх үеийн статистик нь тоглолтын бичлэгийн өгөгдөл нэмэгдсэний дараа боломжтой болно.")}
-            </p>
+          <div className="relative">
+            {/* Blurred preview of the stat grid */}
+            <div className="blur-[3px] pointer-events-none">
+              <div className="grid grid-cols-3 gap-3 sm:gap-6">
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {isEn ? "Close-Game PPG" : "Ойр тоглолтын оноо"}
+                  </span>
+                  <span className="text-base sm:text-xl font-bold tabular-nums">
+                    —
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {isEn ? "Record" : "Бүртгэл"}
+                  </span>
+                  <span className="text-base sm:text-xl font-bold tabular-nums">
+                    —
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {isEn ? "Win %" : "Ялалтын %"}
+                  </span>
+                  <span className="text-base sm:text-xl font-bold tabular-nums">
+                    —
+                  </span>
+                </div>
+              </div>
+            </div>
+            {/* Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[1px]">
+              <div className="rounded-lg border bg-background px-4 py-2 text-center shadow-sm">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Тун удахгүй
+                </p>
+                <p className="text-xs text-muted-foreground/60">Coming Soon</p>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

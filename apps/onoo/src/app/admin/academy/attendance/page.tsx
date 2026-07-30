@@ -157,7 +157,9 @@ export default function AcademyAttendancePage() {
               onValueChange={(v) => setSelectedProgram(v)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Бүх хөтөлбөр" />
+                <SelectValue placeholder="Бүх хөтөлбөр">
+                {programs?.find(p => p.id === selectedProgram)?.name}
+              </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {programs.map((p) => (

@@ -3,6 +3,7 @@
 import { ShareNetwork } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { capture } from "@zuiio/capture";
+import { invoiceKeys } from "@/lib/query/keys";
 import { useEffect, useRef, useState } from "react";
 import {
   createInvoiceShareLink,
@@ -88,7 +89,7 @@ export function InvoiceDetailDrawer({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["invoice-detail", invoiceId],
+    queryKey: invoiceKeys.detail(invoiceId ?? ""),
     queryFn: async () => {
       if (!invoiceId) return null;
       return fetchInvoice(invoiceId);

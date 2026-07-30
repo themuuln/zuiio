@@ -31,9 +31,10 @@ import type { WorkOrderDetail } from "@/lib/types/composite";
 import type { MechanicRef } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
 import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
-import { CustomerPickerModal } from "./_customer-picker-modal";
+import { CustomerPickerDrawer } from "./_customer-picker-drawer";
 import { DrawerCelebration } from "./_drawer-celebration";
 import { DrawerContentPanel } from "./_drawer-content-panel";
+import { DrawerFooter } from "./_drawer-footer";
 import { DrawerHeaderSection } from "./_drawer-header";
 import { DrawerSkeleton } from "./_drawer-loading";
 import { DrawerNestedForms } from "./_drawer-nested-forms";
@@ -186,7 +187,6 @@ export function WorkOrderDetailDrawer({
 
   const {
     saving,
-    isConfirming,
     serviceSearch,
     setServiceSearch,
     showAddService,
@@ -524,20 +524,11 @@ export function WorkOrderDetailDrawer({
         <DrawerHeaderSection
           wo={wo}
           loading={isLoading && !wo}
-          mechanics={mechanics}
-          helpers={(wo?.helpers ?? []) as unknown as MechanicRef[]}
-          orgId={orgId ?? ""}
-          workOrderId={workOrderId ?? ""}
-          saving={saving}
-          isAddingService={isConfirming}
           isFullScreen={isFullScreen}
-          onAssignMechanic={assignMechanic}
-          onHelpersChange={handleHelpersChange}
           onToggleFullScreen={handleToggleFullScreen}
           onClose={handleClose}
           showBack={showPostServiceForm}
           onBack={handleCancelPostService}
-          onShowCustomerPicker={handleShowCustomerPicker}
           t={t}
         />
 
@@ -559,39 +550,50 @@ export function WorkOrderDetailDrawer({
           ) : !wo ? (
             <DrawerSkeletonLayout isFullScreen={isFullScreen} />
           ) : (
-            <DrawerContentPanel
-              wo={wo}
-              orgId={orgId ?? ""}
-              workOrderId={workOrderId ?? ""}
-              catalog={catalog}
-              partsCatalog={partsCatalog}
-              isFullScreen={isFullScreen}
-              onAddServiceOpenChange={handleServiceDrawerOpenChange}
-              onEditServicePriceSave={handleServicePriceSave}
-              onEditServiceQtySave={handleServiceQtySave}
-              onAddPartOpenChange={handlePartDrawerOpenChange}
-              onEditPartPriceSave={handlePartPriceSave}
-              onEditPartQtySave={handlePartQtySave}
-              lastAddedServiceId={lastAddedServiceId}
-              lastAddedPartId={lastAddedPartId}
-              onNotesUpdated={handleNotesUpdated}
-              nuatEnabled={wo.nuat_enabled ?? false}
-              onNuatToggle={handleNuatToggle}
-              taxRate={orgSettings?.default_tax_rate ?? 0}
-              saving={saving}
-              confirmStatus={confirmStatus}
-              statusNotes={statusNotes}
-              creatingInvoice={creatingInvoice}
-              canCancel={canCancel}
-              canInvoice={canInvoice}
-              invoicePublicToken={invoicePublicToken}
-              onChangeStatus={changeStatus}
-              onConfirmCancel={handleConfirmCancel}
-              onStatusNotesChange={setStatusNotes}
-              onMarkReady={handleMarkReady}
-              onComplete={handleDirectComplete}
-              onCreateInvoice={generateInvoice}
-            />
+            <>
+              <DrawerContentPanel
+                wo={wo}
+                orgId={orgId ?? ""}
+                workOrderId={workOrderId ?? ""}
+                catalog={catalog}
+                partsCatalog={partsCatalog}
+                isFullScreen={isFullScreen}
+                onAddServiceOpenChange={handleServiceDrawerOpenChange}
+                onEditServicePriceSave={handleServicePriceSave}
+                onEditServiceQtySave={handleServiceQtySave}
+                onAddPartOpenChange={handlePartDrawerOpenChange}
+                onEditPartPriceSave={handlePartPriceSave}
+                onEditPartQtySave={handlePartQtySave}
+                lastAddedServiceId={lastAddedServiceId}
+                lastAddedPartId={lastAddedPartId}
+                onNotesUpdated={handleNotesUpdated}
+                mechanics={mechanics}
+                helpers={(wo?.helpers ?? []) as unknown as MechanicRef[]}
+                onAssignMechanic={assignMechanic}
+                onHelpersChange={handleHelpersChange}
+                onShowCustomerPicker={handleShowCustomerPicker}
+              />
+              <DrawerFooter
+                wo={wo}
+                taxRate={orgSettings?.default_tax_rate ?? 0}
+                nuatEnabled={wo.nuat_enabled ?? false}
+                onNuatToggle={handleNuatToggle}
+                invoicePublicToken={invoicePublicToken}
+                saving={saving}
+                confirmStatus={confirmStatus}
+                statusNotes={statusNotes}
+                creatingInvoice={creatingInvoice}
+                canCancel={canCancel}
+                canInvoice={canInvoice}
+                onChangeStatus={changeStatus}
+                onConfirmCancel={handleConfirmCancel}
+                onStatusNotesChange={setStatusNotes}
+                onMarkReady={handleMarkReady}
+                onComplete={handleDirectComplete}
+                onCreateInvoice={generateInvoice}
+                t={t}
+              />
+            </>
           )}
         </div>
 
@@ -678,17 +680,15 @@ export function WorkOrderDetailDrawer({
           onReadyFormClose={handleReadyFormClose}
           onReadyForPickupSubmit={handleReadyForPickupSubmit}
         />
-      </DetailDrawer>
 
-      {/* Customer picker modal — outside parent drawer to avoid nested dialog focus conflicts */}
-      {showCustomerPicker && orgId && (
-        <CustomerPickerModal
-          orgId={orgId}
+        {/* Customer picker drawer — nested inside parent DrawerRoot */}
+        <CustomerPickerDrawer
+          orgId={orgId ?? ""}
           open={showCustomerPicker}
           onOpenChange={setShowCustomerPicker}
           onSelect={handleCustomerSelect}
         />
-      )}
+      </DetailDrawer>
 
       {/* Variant selection dialog */}
       {pendingVariantItem && (

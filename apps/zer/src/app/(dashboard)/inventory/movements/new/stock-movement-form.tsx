@@ -180,6 +180,7 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: movementKeys.all() });
       queryClient.invalidateQueries({ queryKey: productKeys.all() });
+      queryClient.invalidateQueries({ queryKey: ["shop_products"] });
     },
   });
 

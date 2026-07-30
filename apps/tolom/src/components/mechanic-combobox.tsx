@@ -199,7 +199,7 @@ export function MechanicCombobox({
     <>
       <div className={cn("flex flex-col", className)}>
         {/* Search */}
-        <div className="shrink-0">
+        <div className="shrink-0 px-3">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/40" />
             <Input

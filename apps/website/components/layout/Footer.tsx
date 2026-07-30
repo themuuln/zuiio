@@ -120,9 +120,15 @@ export async function Footer() {
           </div>
         </div>
         <div className="mt-12 flex flex-col items-center gap-4 border-t border-border pt-6 text-sm text-muted-foreground md:flex-row md:justify-between">
-          <p>
-            &copy; {new Date().getFullYear()} Zuiio. {t("copyright")}
-          </p>
+          <div>
+            <p>
+              &copy; {new Date().getFullYear()} Zui Innovation LLC.
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Unit 4, Building 30, Peace Avenue, 6th Khoroo, Bayangol District, Ulaanbaatar, Mongolia
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Phone: 88650115</p>
+          </div>
           <div className="flex items-center gap-4">
             <span className="text-xs">{t("built-for")}</span>
           </div>

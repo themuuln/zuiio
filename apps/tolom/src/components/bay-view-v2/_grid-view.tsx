@@ -13,10 +13,6 @@ interface GridViewProps {
   onOpenDetail: (woId: string) => void;
   onAssignClick: (bayNumber: number) => void;
   onRemoveHelper: (woId: string, mechId: string) => Promise<void>;
-  onPauseTimer?: (woId: string) => void;
-  onAddNote?: (woId: string) => void;
-  onQuickAddService?: (woId: string) => void;
-  onQuickAddParts?: (woId: string) => void;
   orgId?: string | null;
   /** Available mechanics for quick assign */
   mechanics?: {
@@ -45,10 +41,6 @@ export const GridView = React.memo(function GridView({
   onOpenDetail,
   onAssignClick,
   onRemoveHelper,
-  onPauseTimer,
-  onAddNote,
-  onQuickAddService,
-  onQuickAddParts,
   orgId,
   mechanics = [],
   onAssignMechanic,
@@ -69,10 +61,6 @@ export const GridView = React.memo(function GridView({
             onOpenDetail={onOpenDetail}
             onAssignClick={onAssignClick}
             onRemoveHelper={onRemoveHelper}
-            onPauseTimer={onPauseTimer}
-            onAddNote={onAddNote}
-            onQuickAddService={onQuickAddService}
-            onQuickAddParts={onQuickAddParts}
             orgId={orgId}
             mechanics={mechanics}
             onAssignMechanic={onAssignMechanic}

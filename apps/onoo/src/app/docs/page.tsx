@@ -1,6 +1,9 @@
 import { ArrowRight, Eye, Layout, ListChecks, Route } from "lucide-react";
 import Link from "next/link";
 
+// ISR — docs are static content, revalidate daily
+export const revalidate = 86400;
+
 const DOCS_CARDS = [
   {
     href: "/docs/vision",

@@ -487,6 +487,7 @@ export function SaleForm({
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: saleKeys.all() });
       queryClient.invalidateQueries({ queryKey: productKeys.all() });
+      queryClient.invalidateQueries({ queryKey: ["shop_products"] });
     },
   });
 
