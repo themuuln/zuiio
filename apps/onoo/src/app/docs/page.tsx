@@ -1,8 +1,6 @@
+import { cacheLife } from "next";
 import { ArrowRight, Eye, Layout, ListChecks, Route } from "lucide-react";
 import Link from "next/link";
-
-// ISR — docs are static content, revalidate daily
-export const revalidate = 86400;
 
 const DOCS_CARDS = [
   {
@@ -42,7 +40,9 @@ const DOCS_CARDS = [
   },
 ];
 
-export default function DocsIndexPage() {
+export default async function DocsIndexPage() {
+  "use cache";
+  cacheLife("reference");
   return (
     <div>
       <div className="mb-10">

@@ -1,5 +1,4 @@
 import { ArrowLeft } from "lucide-react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -9,16 +8,8 @@ import {
 } from "@/app/lib/data";
 import { PerGameTable } from "./components/per-game-table";
 import { TeamStatsSummary } from "./components/team-stats-summary";
-
-// Lazy-load recharts-heavy chart components
-const EfficiencyChart = dynamic(
-  () => import("./components/efficiency-chart").then((m) => ({ default: m.EfficiencyChart })),
-  { ssr: false },
-);
-const FourFactorsChart = dynamic(
-  () => import("./components/four-factors-chart").then((m) => ({ default: m.FourFactorsChart })),
-  { ssr: false },
-);
+import { EfficiencyChartWrapper as EfficiencyChart } from "./components/efficiency-chart-wrapper";
+import { FourFactorsChartWrapper as FourFactorsChart } from "./components/four-factors-chart-wrapper";
 
 interface PageProps {
   params: Promise<{ slug: string }>;

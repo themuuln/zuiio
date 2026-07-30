@@ -10,8 +10,7 @@ export const metadata = {
   description: "Onoo брэндийн бүтээгдэхүүн худалдан авах",
 };
 
-// ISR — products change infrequently, background revalidate every 5 min
-export const revalidate = 300;
+// Cached via getShopProducts() which already uses "use cache" + cacheLife("standard")
 
 export default async function ShopPage() {
   const products = await getShopProducts();

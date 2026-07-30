@@ -1,6 +1,5 @@
 import { Download, Flag, MapPin, Radio, Trophy } from "lucide-react";
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShareStatCardButton } from "@/app/components/share-stat-card-button";
@@ -28,9 +27,7 @@ import { PublicEmptyState } from "../../components/public-empty-state";
 import { ScoreBoard } from "../../components/score-board";
 import {
   type BoxScoreRow,
-  type GameSummaryRow,
-  type PeriodScoreRow,
-  type ScoringCheckpointRow,
+
   formatGameTime,
   formatMinutes,
   getBoxScore,
@@ -43,12 +40,10 @@ import { LiveGameCenter } from "./components/live-game-center";
 import { LiveStream } from "./components/live-stream";
 import { RecapHeader } from "./components/recap-header";
 import { PlayerHighlights, TopPerformers } from "./components/top-performers";
-
-// Lazy-load recharts-heavy component to reduce initial JS bundle
-const ScoreWorm = dynamic(
-  () => import("./components/score-worm").then((m) => ({ default: m.ScoreWorm })),
-  { ssr: false },
-);
+import { ScoreWormWrapper as ScoreWorm } from "./components/score-worm-wrapper";
+import { SectionHeader } from "./components/section-header";
+import { GameAtAGlance } from "./components/game-at-a-glance";
+import { PeriodBarChart } from "./components/period-bar-chart";
 
 interface GamePageProps {
   params: Promise<{ id: string }>;
@@ -208,7 +203,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
           <div className="mt-8 grid grid-cols-1 items-center gap-4 sm:grid-cols-3 sm:gap-8">
             <Link
               href={`/teams/${game.home_team_slug}`}
-              className="flex min-w-0 flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring sm:flex-row sm:text-left"
+              className="flex min-w-0 flex-col items-center gap-3 rounded-xl text-center transition-[background-color] hover:bg-[color-mix(in_oklch,var(--color-sidebar)_95%,var(--color-primary)_5%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring sm:flex-row sm:text-left"
             >
               <TeamLogo
                 logoUrl={game.home_team_logo_url}
@@ -244,11 +239,31 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                   {game.current_period}-р үе
                 </p>
               ) : null}
+              {isFinal && periodScores.length > 0 ? (
+                <div className="mt-4 flex items-center justify-center gap-1.5">
+                  {periodScores.map((ps) => (
+                    <div
+                      key={ps.period}
+                      className="flex flex-col items-center gap-0.5 rounded-md border border-sidebar-border/40 px-2 py-1"
+                    >
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                        {ps.period <= 4 ? `Q${ps.period}` : `OT${ps.period - 4}`}
+                      </span>
+                      <span className="text-sm font-bold tabular-nums leading-none">
+                        {ps.home_points}
+                      </span>
+                      <span className="text-sm font-bold tabular-nums leading-none text-sidebar-foreground/70">
+                        {ps.away_points}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             <Link
               href={`/teams/${game.away_team_slug}`}
-              className="flex min-w-0 flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring sm:flex-row-reverse sm:text-right"
+              className="flex min-w-0 flex-col items-center gap-3 rounded-xl text-center transition-[background-color] hover:bg-[color-mix(in_oklch,var(--color-sidebar)_95%,var(--color-warning)_5%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring sm:flex-row-reverse sm:text-right"
             >
               <TeamLogo
                 logoUrl={game.away_team_logo_url}
@@ -300,6 +315,24 @@ export default async function GameDetailPage({ params }: GamePageProps) {
           </section>
         ) : null}
 
+        {isFinal && homeTeamStats ? (
+          <section aria-labelledby="at-a-glance-heading">
+            <SectionHeader
+              label="Тоглоомын тойм"
+              title="Үндсэн үзүүлэлтүүд"
+              description="Тоглоомын гол статистик үзүүлэлтүүд"
+            />
+            <div className="mt-4">
+              <GameAtAGlance
+                homeTeamStats={homeTeamStats}
+                awayTeamStats={awayTeamStats}
+                leadChanges={leadChanges}
+                timesTied={summary?.times_tied ?? 0}
+              />
+            </div>
+          </section>
+        ) : null}
+
         <PlayerHighlights
           rows={boxScore}
           homeTeamSeasonId={game.home_team_season_id}
@@ -317,17 +350,10 @@ export default async function GameDetailPage({ params }: GamePageProps) {
             aria-labelledby="team-comparison-heading"
             className="flex flex-col gap-4"
           >
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Тоон зураг
-              </p>
-              <h2
-                id="team-comparison-heading"
-                className="mt-1 text-2xl font-bold tracking-tight"
-              >
-                Багийн харьцуулалт
-              </h2>
-            </div>
+            <SectionHeader
+              label="Тоон зураг"
+              title="Багийн харьцуулалт"
+            />
             <Card className="shadow-none">
               <CardContent className="flex flex-col gap-5 pt-6">
                 <TeamComparison
@@ -408,14 +434,10 @@ export default async function GameDetailPage({ params }: GamePageProps) {
 
         {isFinal && summary ? (
           <section aria-labelledby="game-flow-heading">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Тоглоомын анализ
-              </p>
-              <h2 id="game-flow-heading" className="mt-1 text-2xl font-bold tracking-tight">
-                Тоглоомын урсгал
-              </h2>
-            </div>
+            <SectionHeader
+              label="Тоглоомын анализ"
+              title="Тоглоомын урсгал"
+            />
             <Card className="mt-4 shadow-none">
               <CardContent className="pt-6">
                 <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3 lg:grid-cols-4">
@@ -516,16 +538,22 @@ export default async function GameDetailPage({ params }: GamePageProps) {
         ) : null}
 
         {isFinal && periodScores.length > 0 ? (
-          <section aria-labelledby="periods-heading">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Үеийн дүн
-              </p>
-              <h2 id="periods-heading" className="mt-1 text-2xl font-bold tracking-tight">
-                Үеүүд
-              </h2>
-            </div>
-            <Card className="mt-4 shadow-none">
+          <section aria-labelledby="periods-heading" className="flex flex-col gap-4">
+            <SectionHeader
+              label="Үеийн дүн"
+              title="Үеүүд"
+              description="Үе бүрийн дүнг харьцуулах"
+            />
+            <Card className="shadow-none">
+              <CardContent className="pt-6">
+                <PeriodBarChart
+                  periodScores={periodScores}
+                  homeTeamName={game.home_team_name}
+                  awayTeamName={game.away_team_name}
+                />
+              </CardContent>
+            </Card>
+            <Card className="shadow-none">
               <CardContent className="overflow-x-auto p-0">
                 <Table>
                   <TableHeader>
@@ -553,15 +581,12 @@ export default async function GameDetailPage({ params }: GamePageProps) {
         ) : null}
 
         {isFinal && scoringCheckpoints.length > 0 ? (
-          <section aria-labelledby="checkpoints-heading">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Тоглоомын үе шат
-              </p>
-              <h2 id="checkpoints-heading" className="mt-1 text-2xl font-bold tracking-tight">
-                5 минутын үзүүлэлт
-              </h2>
-            </div>
+          <section aria-labelledby="checkpoints-heading" className="flex flex-col gap-4">
+            <SectionHeader
+              label="Тоглоомын үе шат"
+              title="5 минутын үзүүлэлт"
+              description="Тоглоомын 5 минут тутамд хэний оноо"
+            />
             <Card className="mt-4 shadow-none">
               <CardContent className="overflow-x-auto p-0">
                 <Table>
@@ -770,17 +795,10 @@ function BoxScoreSection({ rows }: BoxScoreSectionProps) {
   const teams = Array.from(new Set(rows.map((row) => row.team_name)));
   return (
     <section aria-labelledby="boxscore-heading" className="flex flex-col gap-4">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Бүрэн бүртгэл
-        </p>
-        <h2
-          id="boxscore-heading"
-          className="mt-1 text-2xl font-bold tracking-tight"
-        >
-          Box score
-        </h2>
-      </div>
+      <SectionHeader
+        label="Бүрэн бүртгэл"
+        title="Box score"
+      />
       {teams.map((teamName) => {
         const teamRows = rows
           .filter((row) => row.team_name === teamName)

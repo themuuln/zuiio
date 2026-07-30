@@ -3,8 +3,6 @@ import type { LeaderRow } from "../lib/data";
 import { getLeaders } from "../lib/data";
 import { AwardCards } from "./components/award-card";
 
-// ISR — award data changes after games
-export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Наградууд — Оноо",

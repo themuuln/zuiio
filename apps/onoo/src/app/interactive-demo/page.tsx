@@ -1,3 +1,4 @@
+import { cacheLife } from "next";
 import type { Metadata } from "next";
 import { InteractiveDemo } from "./components/interactive-demo";
 import { TestGlitchTip } from "./components/test-glitchtip";
@@ -11,10 +12,10 @@ export const metadata: Metadata = {
  * Demo page for verifying all 10 interactive UI components.
  * Not linked from navigation — accessed directly at /interactive-demo.
  */
-// ISR — demo content is static, revalidate daily
-export const revalidate = 86400;
-
-export default function InteractiveDemoPage() {
+// ISR via cacheComponents — demo content is static
+export default async function InteractiveDemoPage() {
+  "use cache";
+  cacheLife("reference");
   return (
     <main className="mx-auto w-full max-w-7xl space-y-12 px-4 py-8 sm:px-6 lg:px-8">
       <header>

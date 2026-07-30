@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 
-interface EfficiencyChartProps {
+export interface EfficiencyChartProps {
   games: TeamAdvancedStatsPerGame[];
   className?: string;
 }

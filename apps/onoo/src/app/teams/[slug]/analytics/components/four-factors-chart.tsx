@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 
-interface FourFactorsChartProps {
+export interface FourFactorsChartProps {
   aggregates: TeamSeasonAggregates;
   /** Optional — without league average we just show team bars */
   leagueAverages?: {

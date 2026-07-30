@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/table";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { ErrorReportActions } from "./_components/error-report-actions";
-export const dynamic = "force-dynamic";
 
 export default async function OpsConsolePage() {
   // Use service-role client to bypass RLS for admin telemetry
