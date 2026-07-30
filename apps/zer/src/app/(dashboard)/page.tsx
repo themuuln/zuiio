@@ -1,7 +1,8 @@
-import { Coin, Package, ShoppingCart } from "@phosphor-icons/react/dist/ssr";
+import { Coin, Package, ShoppingCart, Truck } from "@phosphor-icons/react/dist/ssr";
 import { Suspense } from "react";
 import { HeroActionCard } from "@/components/dashboard/dashboard-cards";
 import { getDashboardContext } from "@/lib/dashboard-context";
+import { DeliveryStats } from "./_sections/delivery-stats";
 import { LowStockWrapper } from "./_sections/low-stock-wrapper";
 import { MonthlyTrendSection } from "./_sections/monthly-trend-section";
 import { QuickShortcuts } from "./_sections/quick-shortcuts";
@@ -52,7 +53,7 @@ export default async function DashboardPage() {
 }
 
 async function DashboardContent() {
-  const { organizationId, branchId, isBranchScoped } =
+  const { organizationId, branchId, isBranchScoped, org } =
     await getDashboardContext();
 
   return (
@@ -138,6 +139,16 @@ async function DashboardContent() {
                 isBranchScoped={isBranchScoped}
               />
             </Suspense>
+
+            {org.has_delivery_tracking && (
+              <Suspense
+                fallback={
+                  <div className="h-20 animate-pulse rounded-xl bg-muted" />
+                }
+              >
+                <DeliveryStats orgId={organizationId} />
+              </Suspense>
+            )}
           </div>
         </div>
       </div>
