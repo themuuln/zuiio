@@ -1,7 +1,7 @@
 import { withDbCapture } from "@zuiio/capture";
 import { Suspense } from "react";
-import type { ProviderRow } from "./actions";
 import { requireAppContext } from "@/lib/erp";
+import type { ProviderRow } from "./actions";
 import { ProvidersContent } from "./providers-content";
 
 function PageSkeleton() {
@@ -20,14 +20,12 @@ async function DataFetcher() {
       .order("name", { ascending: true }),
   );
 
-  const providerRows: ProviderRow[] = (providers ?? []).map(
-    (p) => ({
-      ...p,
-      is_active: p.is_active ?? true,
-      config: p.config as Record<string, unknown> | null,
-      created_at: p.created_at ?? new Date().toISOString(),
-    }),
-  );
+  const providerRows: ProviderRow[] = (providers ?? []).map((p) => ({
+    ...p,
+    is_active: p.is_active ?? true,
+    config: p.config as Record<string, unknown> | null,
+    created_at: p.created_at ?? new Date().toISOString(),
+  }));
 
   return <ProvidersContent providers={providerRows} />;
 }

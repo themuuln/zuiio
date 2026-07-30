@@ -26,7 +26,7 @@ const LALAMOVE_STATUS_MAP: Record<string, CreateDeliveryResult["status"]> = {
  */
 export function createLopomProvider(
   apiKey: string,
-  apiSecret: string,
+  _apiSecret: string,
 ): DeliveryProvider {
   const authHeader = `Bearer ${apiKey}`;
 
@@ -39,35 +39,32 @@ export function createLopomProvider(
     ): Promise<CreateDeliveryResult> {
       try {
         // 1. Get quotation
-        const quotationResponse = await fetch(
-          `${BASE_URL}/v3/quotations`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: authHeader,
-            },
-            body: JSON.stringify({
-              serviceType: params.vehicleType ?? "MOTORCYCLE",
-              stops: [
-                {
-                  address: params.pickupAddress,
-                  contact: {
-                    name: params.pickupContact,
-                    phone: params.pickupPhone,
-                  },
-                },
-                {
-                  address: params.dropoffAddress,
-                  contact: {
-                    name: params.dropoffContact,
-                    phone: params.dropoffPhone,
-                  },
-                },
-              ],
-            }),
+        const quotationResponse = await fetch(`${BASE_URL}/v3/quotations`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader,
           },
-        );
+          body: JSON.stringify({
+            serviceType: params.vehicleType ?? "MOTORCYCLE",
+            stops: [
+              {
+                address: params.pickupAddress,
+                contact: {
+                  name: params.pickupContact,
+                  phone: params.pickupPhone,
+                },
+              },
+              {
+                address: params.dropoffAddress,
+                contact: {
+                  name: params.dropoffContact,
+                  phone: params.dropoffPhone,
+                },
+              },
+            ],
+          }),
+        });
 
         if (!quotationResponse.ok) {
           const errorBody = await quotationResponse.text();
@@ -111,9 +108,7 @@ export function createLopomProvider(
       }
     },
 
-    async getStatus(
-      externalId: string,
-    ): Promise<ProviderStatus> {
+    async getStatus(externalId: string): Promise<ProviderStatus> {
       try {
         const response = await fetch(
           `${BASE_URL}/v3/orders/${externalId}/tracking`,
@@ -146,13 +141,10 @@ export function createLopomProvider(
 
     async cancelDelivery(externalId: string): Promise<boolean> {
       try {
-        const response = await fetch(
-          `${BASE_URL}/v3/orders/${externalId}`,
-          {
-            method: "DELETE",
-            headers: { Authorization: authHeader },
-          },
-        );
+        const response = await fetch(`${BASE_URL}/v3/orders/${externalId}`, {
+          method: "DELETE",
+          headers: { Authorization: authHeader },
+        });
         return response.ok;
       } catch (err) {
         capture(err, { context: "lopom: cancelDelivery" });

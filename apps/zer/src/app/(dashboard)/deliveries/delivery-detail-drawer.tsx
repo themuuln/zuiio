@@ -10,10 +10,10 @@ import {
   User,
   XCircle,
 } from "@phosphor-icons/react/dist/ssr";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { toast } from "sonner";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Хүлээгдэж буй",
@@ -276,9 +276,7 @@ export function DeliveryDetailDrawer({
               <MapPin className="size-4" />
               Хаяг
             </span>
-            <span className="block font-medium">
-              {delivery.address ?? "-"}
-            </span>
+            <span className="block font-medium">{delivery.address ?? "-"}</span>
             {delivery.address_note && (
               <span className="block mt-1 text-xs text-muted-foreground">
                 Тэмдэглэл: {delivery.address_note}
@@ -387,7 +385,9 @@ export function DeliveryDetailDrawer({
                 <Clock className="size-4" />
                 Хүсэлт гаргасан
               </span>
-              <span className="font-medium">{formatDate(delivery.requested_at)}</span>
+              <span className="font-medium">
+                {formatDate(delivery.requested_at)}
+              </span>
             </div>
           )}
           {delivery.estimated_at && (
@@ -396,19 +396,25 @@ export function DeliveryDetailDrawer({
                 <Clock className="size-4" />
                 Тооцоолсон
               </span>
-              <span className="font-medium">{formatDate(delivery.estimated_at)}</span>
+              <span className="font-medium">
+                {formatDate(delivery.estimated_at)}
+              </span>
             </div>
           )}
           {delivery.picked_up_at && (
             <div className="flex items-center justify-between px-4 py-3 text-sm">
               <span className="text-muted-foreground">Авсан</span>
-              <span className="font-medium">{formatDate(delivery.picked_up_at)}</span>
+              <span className="font-medium">
+                {formatDate(delivery.picked_up_at)}
+              </span>
             </div>
           )}
           {delivery.delivered_at && (
             <div className="flex items-center justify-between px-4 py-3 text-sm">
               <span className="text-muted-foreground">Хүргэгдсэн</span>
-              <span className="font-medium">{formatDate(delivery.delivered_at)}</span>
+              <span className="font-medium">
+                {formatDate(delivery.delivered_at)}
+              </span>
             </div>
           )}
         </div>

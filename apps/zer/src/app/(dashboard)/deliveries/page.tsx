@@ -8,7 +8,10 @@ import { DeliveriesContent } from "./deliveries-content";
 
 function PageSkeleton() {
   return (
-    <PageShell title="Хүргэлт" description="Захиалгын хүргэлтийн бүртгэл, хяналт">
+    <PageShell
+      title="Хүргэлт"
+      description="Захиалгын хүргэлтийн бүртгэл, хяналт"
+    >
       <div className="h-96 animate-pulse rounded-xl bg-muted" />
     </PageShell>
   );

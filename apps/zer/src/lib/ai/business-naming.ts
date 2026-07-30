@@ -10,8 +10,7 @@ export async function suggestStoreNames(params: {
   try {
     const result = await chatCompletion({
       apiKey: process.env.DEEPSEEK_API_KEY ?? "",
-      systemPrompt:
-        "Та Монгол бизнесийн нэр санал болгодог мэргэжилтэн.",
+      systemPrompt: "Та Монгол бизнесийн нэр санал болгодог мэргэжилтэн.",
       messages: [
         {
           role: "user",

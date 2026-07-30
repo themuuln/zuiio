@@ -2,10 +2,10 @@ import "server-only";
 
 import { capture } from "@zuiio/capture";
 import {
-  getProvider,
   type CreateDeliveryParams,
   type CreateDeliveryResult,
   type DeliveryProvider,
+  getProvider,
   type ProviderConfig,
 } from "./providers";
 

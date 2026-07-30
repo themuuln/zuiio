@@ -261,14 +261,18 @@ export async function updateDeliveryStatus(
   };
 
   const allowed = validTransitions[delivery.status];
-  if (!allowed || !allowed.includes(status)) {
+  if (!allowed?.includes(status)) {
     return {
       error: `"${delivery.status}" статусаас "${status}" руу шилжүүлэх боломжгүй.`,
     };
   }
 
   // Build update payload — set timestamps on terminal/signpost transitions
-  const updatePayload: { status: string; delivered_at?: string | null; picked_up_at?: string | null } = { status };
+  const updatePayload: {
+    status: string;
+    delivered_at?: string | null;
+    picked_up_at?: string | null;
+  } = { status };
   if (status === "delivered") {
     updatePayload.delivered_at = new Date().toISOString();
   }
@@ -349,8 +353,7 @@ export async function assignDelivery(deliveryId: string, assignedTo: string) {
 
   if (delivery.status !== "pending") {
     return {
-      error:
-        "Зөвхөн 'pending' статустай хүргэлтийг курьерт оноох боломжтой.",
+      error: "Зөвхөн 'pending' статустай хүргэлтийг курьерт оноох боломжтой.",
     };
   }
 
@@ -448,8 +451,9 @@ export async function listDeliveries(
     status: d.status as string,
     assigned_to: (d.assigned_to as string | null) ?? null,
     assigned_name:
-      ((d.profiles as { full_name: string | null } | null)
-        ?.full_name as string | null) ?? null,
+      ((d.profiles as { full_name: string | null } | null)?.full_name as
+        | string
+        | null) ?? null,
     delivery_fee: d.delivery_fee as number,
     notes: (d.notes as string | null) ?? null,
     requested_at: (d.requested_at as string | null) ?? null,
@@ -457,12 +461,14 @@ export async function listDeliveries(
     delivered_at: (d.delivered_at as string | null) ?? null,
     created_at: (d.created_at as string | null) ?? null,
     sale_total:
-      ((d.sales as { total_amount: number } | null)
-        ?.total_amount as number | null) ?? null,
+      ((d.sales as { total_amount: number } | null)?.total_amount as
+        | number
+        | null) ?? null,
     sale_contact_name:
       (
-        (d.sales as { contacts: { name: string } | null } | null)
-          ?.contacts as { name: string } | null
+        (d.sales as { contacts: { name: string } | null } | null)?.contacts as {
+          name: string;
+        } | null
       )?.name ?? null,
   }));
 }
@@ -522,8 +528,9 @@ export async function getDeliveryDetail(
     status: delivery.status as string,
     assigned_to: (delivery.assigned_to as string | null) ?? null,
     assigned_name:
-      ((delivery.profiles as { full_name: string | null } | null)
-        ?.full_name as string | null) ?? null,
+      ((delivery.profiles as { full_name: string | null } | null)?.full_name as
+        | string
+        | null) ?? null,
     delivery_fee: delivery.delivery_fee as number,
     notes: (delivery.notes as string | null) ?? null,
     courier_notes: (delivery.courier_notes as string | null) ?? null,
@@ -536,14 +543,17 @@ export async function getDeliveryDetail(
     picked_up_at: (delivery.picked_up_at as string | null) ?? null,
     delivered_at: (delivery.delivered_at as string | null) ?? null,
     zone_name:
-      ((delivery.delivery_zones as { name: string } | null)
-        ?.name as string | null) ?? null,
+      ((delivery.delivery_zones as { name: string } | null)?.name as
+        | string
+        | null) ?? null,
     provider_name:
-      ((delivery.delivery_providers as { name: string } | null)
-        ?.name as string | null) ?? null,
+      ((delivery.delivery_providers as { name: string } | null)?.name as
+        | string
+        | null) ?? null,
     sale_total:
-      ((delivery.sales as { total_amount: number } | null)
-        ?.total_amount as number | null) ?? null,
+      ((delivery.sales as { total_amount: number } | null)?.total_amount as
+        | number
+        | null) ?? null,
     sale_contact_name:
       (
         (delivery.sales as { contacts: { name: string } | null } | null)
@@ -553,8 +563,9 @@ export async function getDeliveryDetail(
       status: h.status as string,
       changed_by: (h.changed_by as string | null) ?? null,
       changed_name:
-        ((h.profiles as { full_name: string | null } | null)
-          ?.full_name as string | null) ?? null,
+        ((h.profiles as { full_name: string | null } | null)?.full_name as
+          | string
+          | null) ?? null,
       notes: (h.notes as string | null) ?? null,
       created_at: (h.created_at as string | null) ?? null,
     })),

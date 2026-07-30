@@ -1,9 +1,15 @@
 import { capture } from "@zuiio/capture";
-import type { DeliveryProvider } from "./types";
 import { internalProvider } from "./internal";
 import { createLopomProvider } from "./lopom";
+import type { DeliveryProvider } from "./types";
 
-export type { CreateDeliveryParams, CreateDeliveryResult, DeliveryProvider, ProviderStatus, VehicleType } from "./types";
+export type {
+  CreateDeliveryParams,
+  CreateDeliveryResult,
+  DeliveryProvider,
+  ProviderStatus,
+  VehicleType,
+} from "./types";
 export { internalProvider };
 
 export interface ProviderConfig {

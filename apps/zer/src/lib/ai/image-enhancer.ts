@@ -21,19 +21,16 @@ export async function removeBackground(
 
 export async function enhanceProductPhoto(
   imageUrl: string,
-  style?: string,
+  _style?: string,
 ): Promise<{ imageUrl?: string; error?: string }> {
   try {
     fal.config({ credentials: process.env.FAL_API_KEY });
 
-    const result = await fal.run(
-      "fal-ai/image-apps-v2/product-photography",
-      {
-        input: {
-          product_image_url: imageUrl,
-        },
+    const result = await fal.run("fal-ai/image-apps-v2/product-photography", {
+      input: {
+        product_image_url: imageUrl,
       },
-    );
+    });
 
     return { imageUrl: result.data.images[0].url };
   } catch (e) {

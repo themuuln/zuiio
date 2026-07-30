@@ -135,9 +135,7 @@ function ProviderForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor={`${formId}-api_secret`}>
-            API нууц үг
-          </FieldLabel>
+          <FieldLabel htmlFor={`${formId}-api_secret`}>API нууц үг</FieldLabel>
           <Input
             id={`${formId}-api_secret`}
             name="api_secret"
@@ -159,11 +157,7 @@ function ProviderForm({
 // ProvidersContent
 // ---------------------------------------------------------------------------
 
-export function ProvidersContent({
-  providers,
-}: {
-  providers: ProviderRow[];
-}) {
+export function ProvidersContent({ providers }: { providers: ProviderRow[] }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState<ProviderRow | null>(
     null,
@@ -244,8 +238,8 @@ export function ProvidersContent({
             <AlertDialogHeader>
               <AlertDialogTitle>Провайдер устгах</AlertDialogTitle>
               <AlertDialogDescription>
-                Та "{row.name}" хүргэлтийн провайдерыг устгахдаа итгэлтэй
-                байна уу? Энэ үйлдлийг буцаах боломжгүй.
+                Та "{row.name}" хүргэлтийн провайдерыг устгахдаа итгэлтэй байна
+                уу? Энэ үйлдлийг буцаах боломжгүй.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
