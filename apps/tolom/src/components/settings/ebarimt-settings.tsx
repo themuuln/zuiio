@@ -10,16 +10,10 @@
 
 "use client";
 
-import {
-  CheckCircle2,
-  Loader2,
-  Plug,
-  PlugZap,
-  Save,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle2, Loader2, Plug2, Save, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -36,14 +30,15 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
-import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import {
   readEbarimtSettings,
   testCurrentEbarimtConnection,
   updateEbarimtSettings,
 } from "@/lib/actions/ebarimt-settings";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 
 // ── Schema ───────────────────────────────────────────────────
 
@@ -164,15 +159,41 @@ export function EbarimtSettings({ orgId }: EbarimtSettingsProps) {
   if (loading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>E-Barimt Integration</CardTitle>
-          <CardDescription>
-            Mongolian electronic tax receipt (Э-Баримт) settings
-          </CardDescription>
+        <CardHeader className="gap-2 pb-4">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-5 rounded" />
+            <Skeleton className="h-6 w-48" />
+          </div>
+          <Skeleton className="h-4 w-full max-w-lg" />
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="flex flex-col gap-6">
+            {/* Toggle skeleton */}
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+              <Skeleton className="h-6 w-10 rounded-full" />
+            </div>
+            {/* Field skeletons */}
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            {/* Buttons skeleton */}
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-36 rounded-md" />
+              <Skeleton className="h-10 w-32 rounded-md" />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -185,7 +206,7 @@ export function EbarimtSettings({ orgId }: EbarimtSettingsProps) {
     <Card>
       <CardHeader className="gap-2 pb-4">
         <div className="flex items-center gap-2">
-          <Plug className="h-5 w-5 text-muted-foreground" />
+          <Plug2 className="h-5 w-5 text-muted-foreground" />
           <CardTitle>E-Barimt Integration</CardTitle>
         </div>
         <CardDescription>
@@ -229,10 +250,12 @@ export function EbarimtSettings({ orgId }: EbarimtSettingsProps) {
                 disabled={!enabled}
                 {...form.register("apiKey")}
               />
+              <FieldDescription>
+                Your e-barimt API key for authenticating requests to the tax
+                authority&apos;s system
+              </FieldDescription>
               {form.formState.errors.apiKey && (
-                <FieldError>
-                  {form.formState.errors.apiKey.message}
-                </FieldError>
+                <FieldError>{form.formState.errors.apiKey.message}</FieldError>
               )}
             </FieldContent>
           </Field>
@@ -247,6 +270,10 @@ export function EbarimtSettings({ orgId }: EbarimtSettingsProps) {
                 disabled={!enabled}
                 {...form.register("merchantId")}
               />
+              <FieldDescription>
+                Your registered merchant identifier assigned by the tax
+                authority for your business
+              </FieldDescription>
               {form.formState.errors.merchantId && (
                 <FieldError>
                   {form.formState.errors.merchantId.message}
@@ -266,8 +293,7 @@ export function EbarimtSettings({ orgId }: EbarimtSettingsProps) {
                 {...form.register("endpoint")}
               />
               <FieldDescription>
-                The e-barimt API endpoint URL (defaults to{" "}
-                {DEFAULT_ENDPOINT})
+                The e-barimt API endpoint URL (defaults to {DEFAULT_ENDPOINT})
               </FieldDescription>
               {form.formState.errors.endpoint && (
                 <FieldError>
@@ -279,36 +305,39 @@ export function EbarimtSettings({ orgId }: EbarimtSettingsProps) {
 
           {/* ── Connection Status ─────────────────────────────── */}
           {connectionStatus.type !== "idle" && (
-            <div
-              className={`flex items-start gap-2 rounded-lg border p-3 ${
-                connectionStatus.type === "success"
-                  ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950"
-                  : connectionStatus.type === "failure"
-                    ? "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950"
-                    : "border-muted bg-muted/50"
-              }`}
-            >
-              {connectionStatus.type === "testing" ? (
-                <Loader2 className="mt-0.5 h-4 w-4 animate-spin text-muted-foreground" />
-              ) : connectionStatus.type === "success" ? (
-                <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" />
-              ) : (
-                <XCircle className="mt-0.5 h-4 w-4 text-red-600" />
-              )}
-              <div>
-                <Typography.Small>
-                  {connectionStatus.type === "testing"
-                    ? "Testing connection..."
-                    : connectionStatus.type === "success"
-                      ? "Connection Successful"
-                      : "Connection Failed"}
-                </Typography.Small>
-                {connectionStatus.type !== "testing" && (
-                  <Typography.Muted className="mt-0.5">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                {connectionStatus.type === "testing" && (
+                  <Badge
+                    variant="secondary"
+                    className="gap-1.5 px-3 py-1 text-sm"
+                  >
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Testing connection...
+                  </Badge>
+                )}
+                {connectionStatus.type === "success" && (
+                  <Badge className="gap-1.5 border-emerald-200 bg-emerald-50 px-3 py-1 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Connection Successful
+                  </Badge>
+                )}
+                {connectionStatus.type === "failure" && (
+                  <Badge
+                    variant="destructive"
+                    className="gap-1.5 px-3 py-1 text-sm"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    Connection Failed
+                  </Badge>
+                )}
+              </div>
+              {connectionStatus.type !== "testing" &&
+                connectionStatus.message && (
+                  <Typography.Muted className="text-sm">
                     {connectionStatus.message}
                   </Typography.Muted>
                 )}
-              </div>
             </div>
           )}
 
@@ -336,7 +365,7 @@ export function EbarimtSettings({ orgId }: EbarimtSettingsProps) {
               {connectionStatus.type === "testing" ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <PlugZap className="mr-2 h-4 w-4" />
+                <Plug2 className="mr-2 h-4 w-4" />
               )}
               Test Connection
             </Button>

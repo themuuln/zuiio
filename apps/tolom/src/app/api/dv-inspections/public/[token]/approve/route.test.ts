@@ -36,9 +36,9 @@ describe("dv-inspections/public/[token]/approve POST", () => {
   }
 
   const mockSupabaseFind = (overrides: Record<string, unknown> = {}) => {
-    let updateCallCount = 0;
+    let _updateCallCount = 0;
     return {
-      from: vi.fn((table: string) => ({
+      from: vi.fn((_table: string) => ({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
             single: vi.fn().mockResolvedValue({
@@ -53,7 +53,7 @@ describe("dv-inspections/public/[token]/approve POST", () => {
         })),
         update: vi.fn(() => ({
           eq: vi.fn(() => {
-            updateCallCount++;
+            _updateCallCount++;
             return Promise.resolve({ error: null });
           }),
         })),
@@ -72,7 +72,10 @@ describe("dv-inspections/public/[token]/approve POST", () => {
     });
 
     const response = await (POST as any)({
-      request: makeRequest({ item_ids: ["i-1", "i-2", "i-3", "i-4"], approved: true }),
+      request: makeRequest({
+        item_ids: ["i-1", "i-2", "i-3", "i-4"],
+        approved: true,
+      }),
       supabase,
     });
     const body = await response.json();
@@ -170,7 +173,7 @@ describe("dv-inspections/public/[token]/approve POST", () => {
   });
 
   it("sets customer_viewed_at on first view", async () => {
-    let updateCalls: Array<{ table: string; data: unknown; id: string }> = [];
+    const updateCalls: Array<{ table: string; data: unknown; id: string }> = [];
     const supabase = {
       from: vi.fn((table: string) => ({
         select: vi.fn(() => ({
@@ -206,14 +209,18 @@ describe("dv-inspections/public/[token]/approve POST", () => {
 
     // Should have set customer_viewed_at
     const firstUpdate = updateCalls.find(
-      (u) => u.table === "digital_vehicle_inspections" && u.data && typeof u.data === "object" && "customer_viewed_at" in (u.data as Record<string, unknown>),
+      (u) =>
+        u.table === "digital_vehicle_inspections" &&
+        u.data &&
+        typeof u.data === "object" &&
+        "customer_viewed_at" in (u.data as Record<string, unknown>),
     );
     expect(firstUpdate).toBeDefined();
   });
 
   it("does not re-set customer_viewed_at if already viewed", async () => {
     const supabase = {
-      from: vi.fn((table: string) => ({
+      from: vi.fn((_table: string) => ({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
             single: vi.fn().mockResolvedValue({

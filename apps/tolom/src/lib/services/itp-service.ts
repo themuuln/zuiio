@@ -3,13 +3,8 @@ import { revalidateTag } from "next/cache";
 import { logAuditAfter } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
-import type {
-  Database,
-  VehicleWithItp,
-  VehicleItpHistory,
-} from "@/lib/types";
+import type { Database, VehicleItpHistory, VehicleWithItp } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
 
 // ── Types ────────────────────────────────────────────────────
@@ -96,27 +91,34 @@ type VehicleWithCustomerRow = Pick<
   | "itp_notes"
   | "itp_reminder_sent_at"
 > & {
-  customer?: { first_name: string | null; last_name: string | null; phone: string | null } | null;
+  customer?: {
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+  } | null;
 };
 
 type VehicleItpRow = Pick<
   VehicleWithItp,
-  "itp_expiry_date" | "itp_last_passed_date" | "itp_notes" | "itp_reminder_sent_at"
+  | "itp_expiry_date"
+  | "itp_last_passed_date"
+  | "itp_notes"
+  | "itp_reminder_sent_at"
 >;
 
 /**
  * Cast enriched vehicle query results to the expected type.
  * Required because ITP fields aren't in auto-generated Supabase types yet.
  */
-function castVehicleRows(raw: unknown): VehicleWithCustomerRow[] {
+function _castVehicleRows(raw: unknown): VehicleWithCustomerRow[] {
   return (raw ?? []) as VehicleWithCustomerRow[];
 }
 
-function castVehicleRow(raw: unknown): VehicleWithCustomerRow | null {
+function _castVehicleRow(raw: unknown): VehicleWithCustomerRow | null {
   return (raw ?? null) as VehicleWithCustomerRow | null;
 }
 
-function castVehicleItpRow(raw: unknown): VehicleItpRow | null {
+function _castVehicleItpRow(raw: unknown): VehicleItpRow | null {
   return (raw ?? null) as VehicleItpRow | null;
 }
 
@@ -139,9 +141,7 @@ function computeItpStatus(
   return "valid";
 }
 
-function computeDaysUntilExpiry(
-  itpExpiryDate: string | null,
-): number | null {
+function computeDaysUntilExpiry(itpExpiryDate: string | null): number | null {
   if (!itpExpiryDate) return null;
 
   const expiry = new Date(itpExpiryDate);
@@ -271,7 +271,7 @@ export async function getExpiringItpRecords(
   const futureDate = new Date(today);
   futureDate.setDate(futureDate.getDate() + EXPIRING_SOON_DAYS);
 
-  const todayStr = today.toISOString().split("T")[0];
+  const _todayStr = today.toISOString().split("T")[0];
   const futureStr = futureDate.toISOString().split("T")[0];
 
   let query = db
@@ -357,7 +357,13 @@ export async function recordItpInspection(
   userId: string,
   params: ItpInspectionParams,
 ): Promise<ItpRecordResult> {
-  const { vehicle_id, itp_expiry_date, itp_last_passed_date, itp_notes, branch_id } = params;
+  const {
+    vehicle_id,
+    itp_expiry_date,
+    itp_last_passed_date,
+    itp_notes,
+    branch_id,
+  } = params;
 
   // Validation
   if (!vehicle_id?.trim()) {
@@ -365,12 +371,12 @@ export async function recordItpInspection(
   }
 
   const expiryDate = new Date(itp_expiry_date);
-  if (isNaN(expiryDate.getTime())) {
+  if (Number.isNaN(expiryDate.getTime())) {
     throw new ValidationError("Valid ITP expiry date is required");
   }
 
   const passedDate = new Date(itp_last_passed_date);
-  if (isNaN(passedDate.getTime())) {
+  if (Number.isNaN(passedDate.getTime())) {
     throw new ValidationError("Valid ITP last passed date is required");
   }
 
@@ -379,12 +385,12 @@ export async function recordItpInspection(
   }
 
   // Get the previous state for the audit log
-  const { data: prevVehicle } = await db
+  const { data: prevVehicle } = (await db
     .from("vehicles")
     .select("itp_expiry_date, itp_last_passed_date, itp_notes")
     .eq("id", vehicle_id)
     .eq("organization_id", orgId)
-    .single() as unknown as { data: VehicleItpRow | null; error: unknown };
+    .single()) as unknown as { data: VehicleItpRow | null; error: unknown };
 
   const prevData = prevVehicle;
 
@@ -463,13 +469,15 @@ export async function updateItpRecord(
   userId: string,
   params: ItpRecordInput,
 ): Promise<ItpRecordResult> {
-  const oldData = await db
+  const oldData = (await db
     .from("vehicles")
-    .select("itp_expiry_date, itp_last_passed_date, itp_notes, itp_reminder_sent_at")
+    .select(
+      "itp_expiry_date, itp_last_passed_date, itp_notes, itp_reminder_sent_at",
+    )
     .eq("id", vehicleId)
     .eq("organization_id", orgId)
     .single()
-    .then((r) => r.data) as unknown as {
+    .then((r) => r.data)) as unknown as {
     itp_expiry_date: string | null;
     itp_last_passed_date: string | null;
     itp_notes: string | null;
@@ -631,10 +639,21 @@ export async function getItpHistory(
 ): Promise<VehicleItpHistory[]> {
   const itpHistoryBuilder = db.from("vehicle_itp_history") as unknown as {
     select: (cols: string) => {
-      eq: (col: string, val: string) => {
-        eq: (col: string, val: string) => {
-          order: (col: string, opts: { ascending: boolean }) => {
-            limit: (n: number) => Promise<{ data: VehicleItpHistory[] | null; error: unknown }>;
+      eq: (
+        col: string,
+        val: string,
+      ) => {
+        eq: (
+          col: string,
+          val: string,
+        ) => {
+          order: (
+            col: string,
+            opts: { ascending: boolean },
+          ) => {
+            limit: (
+              n: number,
+            ) => Promise<{ data: VehicleItpHistory[] | null; error: unknown }>;
           };
         };
       };
@@ -670,7 +689,7 @@ export async function getVehiclesNeedingReminder(
   const futureDate = new Date(today);
   futureDate.setDate(futureDate.getDate() + EXPIRING_SOON_DAYS);
 
-  const todayStr = today.toISOString().split("T")[0];
+  const _todayStr = today.toISOString().split("T")[0];
   const futureStr = futureDate.toISOString().split("T")[0];
 
   // Only vehicles where:
@@ -709,7 +728,9 @@ export async function getVehiclesNeedingReminder(
     throw error;
   }
 
-  const rows = data as unknown as (VehicleWithCustomerRow & { itp_reminder_sent_at: string | null })[];
+  const rows = data as unknown as (VehicleWithCustomerRow & {
+    itp_reminder_sent_at: string | null;
+  })[];
   const records = rows.map(enrichVehicleWithItp);
 
   // Filter to only those that haven't had a reminder sent for this expiry cycle
@@ -722,7 +743,7 @@ export async function getVehiclesNeedingReminder(
 
     // If reminder was sent before the last expiry date change, re-send
     const reminderDate = new Date(vehicle.itp_reminder_sent_at);
-    const expiryDate = new Date(r.itp_expiry_date);
+    const _expiryDate = new Date(r.itp_expiry_date);
 
     // Only re-send if the expiry was updated after the last reminder
     // (meaning the reminder was for a different cycle)

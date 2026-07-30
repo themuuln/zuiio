@@ -5,6 +5,7 @@ import { authRateLimiter } from "@/lib/rate-limit";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { withDbCapture } from "@/lib/supabase/query";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -25,6 +26,11 @@ export interface PortalCustomer {
  * Authenticates a portal request using either:
  * 1. Authorization: Bearer <portal_token> header (token-based)
  * 2. Supabase auth session (customer logged in via email)
+ *
+ * Token-based auth uses service_role client to bypass RLS
+ * (anonymous users can't query customers table directly).
+ * Session-based auth uses the new "customer_user_id = auth.uid()"
+ * RLS policies added in 20260731000003 migration.
  */
 export async function authenticatePortalRequest(
   request: Request,
@@ -33,13 +39,15 @@ export async function authenticatePortalRequest(
   const tokenMatch = auth.match(/^Bearer\s+(.+)$/i);
 
   if (tokenMatch) {
-    const supabase = await createClient();
+    // Token-based auth: use service_role to bypass RLS
+    // (anonymous users can't query customers table)
+    const serviceRole = await createServiceRoleClient();
     const { data, error } = await withDbCapture(
       "portalAuth_byToken",
-      supabase
+      serviceRole
         .from("customers")
         .select(
-          "id, organization_id, first_name, last_name, phone, email, portal_token, customer_user_id",
+          "id, organization_id, first_name, last_name, phone, email, portal_token, total_visits, last_visit_at",
         )
         .eq("portal_token", tokenMatch[1])
         .is("deleted_at", null)
@@ -49,6 +57,8 @@ export async function authenticatePortalRequest(
     return data as PortalCustomer | null;
   }
 
+  // Session-based auth: customer logged in via Supabase Auth
+  // RLS policy "Customers can view own record" handles scoping
   const supabase = await createClient();
   const {
     data: { user },
@@ -59,7 +69,7 @@ export async function authenticatePortalRequest(
       supabase
         .from("customers")
         .select(
-          "id, organization_id, first_name, last_name, phone, email, portal_token",
+          "id, organization_id, first_name, last_name, phone, email, portal_token, total_visits, last_visit_at",
         )
         .eq("customer_user_id", user.id)
         .is("deleted_at", null)
@@ -84,6 +94,11 @@ type PortalRouteHandler = (ctx: PortalHandlerContext) => Promise<NextResponse>;
 /**
  * Route handler wrapper for customer portal endpoints.
  * Authenticates via portal token or Supabase session before calling handler.
+ *
+ * For token-based auth, the supabase client passed to handlers is the regular
+ * SSR client (anonymous). Handlers should scope queries using the customer's
+ * organization_id from the auth result, NOT rely on get_user_organization_id()
+ * which requires organization_users membership.
  */
 export function createPortalRouteHandler(handler: PortalRouteHandler) {
   return async (

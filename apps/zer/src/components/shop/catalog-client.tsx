@@ -80,22 +80,24 @@ const ProductGrid = memo(function ProductGrid({
   return (
     <div
       className={cn(
-        "gap-5",
         viewMode === "list"
-          ? "flex flex-col"
-          : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5",
+          ? "flex flex-col gap-1.5"
+          : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5",
       )}
     >
       {products.map((product) => (
         <div
           key={product.id}
-          style={{ contentVisibility: "auto", containIntrinsicSize: "0 280px" }}
+          style={{
+            contentVisibility: "auto",
+            containIntrinsicSize: viewMode === "list" ? "0 56px" : "0 280px",
+          }}
         >
           <ProductCard
             product={product}
             variant={
               viewMode === "list"
-                ? "card"
+                ? "list"
                 : selectionMode === "grid"
                   ? "tile"
                   : "card"
@@ -322,8 +324,8 @@ export function CatalogClient({
 
   return (
     <div className="lg:flex lg:items-start lg:gap-5">
-      {/* Desktop category sidebar */}
-      <aside className="sticky top-0 hidden w-56 shrink-0 self-start lg:block">
+      {/* Desktop category sidebar — fixed so it never moves */}
+      <aside className="fixed top-[52px] bottom-0 hidden w-56 overflow-y-auto border-r border-border/60 bg-background lg:block">
         <div className="flex flex-col gap-1 pt-4">
           <p className="px-2 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Ангилал
@@ -358,9 +360,9 @@ export function CatalogClient({
         </div>
       </aside>
       {/* Left pane: search + categories + product grid */}
-      <div className="flex min-w-0 flex-1 flex-col gap-4 pb-20 lg:pb-6">
+      <div className="flex min-w-0 flex-1 flex-col gap-4 pb-20 lg:pb-6 lg:pl-60">
         {/* Unified search + barcode input */}
-        <div className="sticky top-0 z-20 bg-background pb-2 pt-4">
+        <div className="sticky top-[52px] z-20 bg-background pb-2 pt-4">
           <div className="relative flex items-center gap-2">
             <div className="relative flex-1">
               <MagnifyingGlass className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

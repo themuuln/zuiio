@@ -66,7 +66,7 @@ export const ProductCard = memo(function ProductCard({
   cartQuantity = 0,
 }: {
   product: ProductCardProduct;
-  variant?: "card" | "tile";
+  variant?: "card" | "tile" | "list";
   cartQuantity?: number;
 }) {
   const { addItem, updateQuantity, removeItem } = useCart();
@@ -205,6 +205,7 @@ export const ProductCard = memo(function ProductCard({
   };
 
   const isTile = variant === "tile";
+  const isList = variant === "list";
   const previewImage = selectedVariant?.image_url ?? product.image_url;
 
   return (
@@ -214,184 +215,301 @@ export const ProductCard = memo(function ProductCard({
 
       <Card
         className={cn(
-          "group flex flex-col gap-0 overflow-hidden py-0 transition-all",
+          "overflow-hidden transition-all",
           isOutOfStock && "opacity-60",
           justAdded &&
             "ring-2 ring-primary/40 scale-[1.015] transition-transform",
+          isList
+            ? "flex flex-row items-center gap-3 px-3 py-2"
+            : "group flex flex-col gap-0 py-0",
         )}
       >
-        {/* Image */}
-        <div
-          className={cn(
-            "relative flex items-center justify-center overflow-hidden bg-muted/30",
-            isOutOfStock && "bg-muted/10",
-            isTile ? "aspect-[4/3]" : "aspect-square",
-          )}
-        >
-          {product.image_url ? (
-            <OptimizedImage
-              src={product.image_url}
-              alt={product.name}
-              className={cn(
-                "h-full w-full object-cover transition-opacity duration-300",
-                !isTile && "group-hover:scale-105",
-                isOutOfStock && "opacity-50",
+        {isList ? (
+          <>
+            {/* Thumbnail */}
+            <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-muted/30">
+              {product.image_url ? (
+                <OptimizedImage
+                  src={product.image_url}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span
+                  className="flex h-full w-full items-center justify-center text-sm font-bold text-muted-foreground/30"
+                  aria-hidden="true"
+                >
+                  {product.name.charAt(0)}
+                </span>
               )}
-            />
-          ) : (
-            <span
-              className={cn(
-                "font-bold text-muted-foreground/30",
-                isTile ? "text-5xl" : "text-3xl",
-              )}
-              aria-hidden="true"
-            >
-              {product.name.charAt(0)}
-            </span>
-          )}
-
-          {/* Out of stock badge */}
-          {isOutOfStock && (
-            <Badge
-              variant="outline"
-              className="absolute left-2 top-2 border-destructive/40 text-destructive"
-            >
-              Дууссан
-            </Badge>
-          )}
-
-          {/* Stock indicator */}
-          {trackStock && !isOutOfStock && (
-            <span className="absolute left-2 top-2 z-10">
-              <StockChip stock={stock} unit={unit} />
-            </span>
-          )}
-
-          {/* Cart quantity badge */}
-          {!isOutOfStock && cartQuantity > 0 && (
-            <Badge className="absolute right-2 top-2 gap-1 bg-primary px-2 py-0.5 text-[11px] text-primary-foreground shadow-sm">
-              <ShoppingCart className="size-3" weight="fill" />
-              {cartQuantity}
-            </Badge>
-          )}
-
-          {/* Just-added check overlay */}
-          {justAdded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 backdrop-blur-[1px] animate-in fade-in-0 duration-200">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg animate-in zoom-in-50 duration-300">
-                <Check className="size-5" weight="bold" />
-              </div>
-            </div>
-          )}
-        </div>
-
-        <CardContent
-          className={cn(
-            "flex flex-1 flex-col gap-1.5",
-            isTile ? "px-3 pb-3 pt-2" : "px-3 py-3",
-          )}
-        >
-          {/* Name */}
-          <h3
-            className={cn(
-              "line-clamp-2 font-medium leading-tight",
-              isTile ? "text-sm" : "text-sm",
-            )}
-          >
-            {product.name}
-          </h3>
-
-          {isTile ? (
-            <>
-              {/* Simplified tile: price + stock */}
-              <p className="text-lg font-bold tabular-nums tracking-tight">
-                {price.toLocaleString()}₮
-              </p>
-            </>
-          ) : (
-            <>
-              {/* Brand */}
-              {product.brand_name && (
-                <div className="flex items-center gap-1.5">
-                  {product.brand_logo_url ? (
-                    <OptimizedImage
-                      src={product.brand_logo_url}
-                      alt={`${product.brand_name} брэндийн лого`}
-                      width={16}
-                      height={16}
-                      className="size-4 rounded object-contain"
-                    />
-                  ) : null}
-                  <span className="text-[11px] text-muted-foreground">
-                    {product.brand_name}
+              {isOutOfStock && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
+                  <span className="text-[10px] font-semibold text-destructive">
+                    Дууссан
                   </span>
                 </div>
               )}
-              <p className="text-base font-bold tabular-nums tracking-tight">
-                {price.toLocaleString()}₮
-              </p>
-            </>
-          )}
+            </div>
 
-          {inCart && !hasVariants ? (
+            {/* Info */}
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-sm font-medium text-foreground">
+                {product.name}
+              </h3>
+              <div className="flex items-center gap-1.5 text-[11px] leading-tight">
+                <span className="font-semibold tabular-nums text-foreground">
+                  {price.toLocaleString()}₮
+                </span>
+                {product.brand_name && (
+                  <span className="text-muted-foreground/50">·</span>
+                )}
+                {product.brand_name && (
+                  <span className="truncate text-muted-foreground/60">
+                    {product.brand_name}
+                  </span>
+                )}
+                {trackStock && !isOutOfStock && (
+                  <>
+                    <span className="text-muted-foreground/30">·</span>
+                    <span className="tabular-nums text-muted-foreground/60">
+                      {stock} {unit}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            {inCart && !hasVariants ? (
+              <div className="flex shrink-0 items-center gap-0">
+                <button
+                  type="button"
+                  aria-label="Хасах"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDecrement();
+                  }}
+                  className="flex size-7 items-center justify-center rounded text-foreground/60 transition-colors hover:bg-primary/10 hover:text-foreground active:scale-95"
+                >
+                  <Minus className="size-3" weight="bold" />
+                </button>
+                <span className="min-w-5 text-center text-xs font-bold tabular-nums text-foreground/80">
+                  {cartQuantity}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Нэмэх"
+                  disabled={atMaxStock}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleIncrement();
+                  }}
+                  className={cn(
+                    "flex size-7 items-center justify-center rounded transition-colors active:scale-95",
+                    atMaxStock
+                      ? "cursor-not-allowed text-muted-foreground/40"
+                      : "text-primary hover:bg-primary/10",
+                  )}
+                >
+                  <Plus className="size-3" weight="bold" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                className={cn(
+                  "h-7 shrink-0 gap-1 px-2 text-[11px] font-semibold",
+                  justAdded && "bg-primary hover:bg-primary",
+                  hasVariants &&
+                    "border border-dashed border-border bg-muted/40 text-foreground disabled:opacity-100",
+                )}
+                disabled={isOutOfStock}
+                onPointerEnter={prefetchVariants}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart();
+                }}
+              >
+                {addButtonContent}
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Image */}
             <div
               className={cn(
-                "mt-auto flex h-[44px] items-center justify-between gap-1 rounded-md border border-primary/30 bg-primary/5 px-1.5",
-                isOutOfStock && "opacity-50",
+                "relative flex items-center justify-center overflow-hidden bg-muted/30",
+                isOutOfStock && "bg-muted/10",
+                isTile ? "aspect-[4/3]" : "aspect-square",
               )}
             >
-              <button
-                type="button"
-                aria-label="Хасах"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDecrement();
-                }}
-                className="flex size-9 shrink-0 items-center justify-center rounded-md text-lg font-bold text-foreground/70 transition-colors hover:bg-primary/10 hover:text-foreground active:scale-95"
-              >
-                <Minus className="size-4" weight="bold" />
-              </button>
-              <span className="min-w-6 text-center text-sm font-bold tabular-nums">
-                {cartQuantity}
-              </span>
-              <button
-                type="button"
-                aria-label="Нэмэх"
-                disabled={atMaxStock}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleIncrement();
-                }}
+              {product.image_url ? (
+                <OptimizedImage
+                  src={product.image_url}
+                  alt={product.name}
+                  className={cn(
+                    "h-full w-full object-cover transition-opacity duration-300",
+                    !isTile && "group-hover:scale-105",
+                    isOutOfStock && "opacity-50",
+                  )}
+                />
+              ) : (
+                <span
+                  className={cn(
+                    "font-bold text-muted-foreground/30",
+                    isTile ? "text-5xl" : "text-3xl",
+                  )}
+                  aria-hidden="true"
+                >
+                  {product.name.charAt(0)}
+                </span>
+              )}
+
+              {/* Out of stock badge */}
+              {isOutOfStock && (
+                <Badge
+                  variant="outline"
+                  className="absolute left-2 top-2 border-destructive/40 text-destructive"
+                >
+                  Дууссан
+                </Badge>
+              )}
+
+              {/* Stock indicator */}
+              {trackStock && !isOutOfStock && (
+                <span className="absolute left-2 top-2 z-10">
+                  <StockChip stock={stock} unit={unit} />
+                </span>
+              )}
+
+              {/* Cart quantity badge */}
+              {!isOutOfStock && cartQuantity > 0 && (
+                <Badge className="absolute right-2 top-2 gap-1 bg-primary px-2 py-0.5 text-[11px] text-primary-foreground shadow-sm">
+                  <ShoppingCart className="size-3" weight="fill" />
+                  {cartQuantity}
+                </Badge>
+              )}
+
+              {/* Just-added check overlay */}
+              {justAdded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-primary/10 backdrop-blur-[1px] animate-in fade-in-0 duration-200">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg animate-in zoom-in-50 duration-300">
+                    <Check className="size-5" weight="bold" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <CardContent
+              className={cn(
+                "flex flex-1 flex-col gap-1.5",
+                isTile ? "px-3 pb-3 pt-2" : "px-3 py-3",
+              )}
+            >
+              {/* Name */}
+              <h3
                 className={cn(
-                  "flex size-9 shrink-0 items-center justify-center rounded-md text-lg font-bold transition-colors hover:bg-primary/10 active:scale-95",
-                  atMaxStock
-                    ? "cursor-not-allowed text-muted-foreground/40"
-                    : "text-primary",
+                  "line-clamp-2 font-medium leading-tight",
+                  isTile ? "text-sm" : "text-sm",
                 )}
               >
-                <Plus className="size-4" weight="bold" />
-              </button>
-            </div>
-          ) : (
-            <Button
-              size="sm"
-              className={cn(
-                "mt-auto h-[44px] w-full gap-2 text-sm font-semibold transition-all",
-                justAdded && "bg-primary hover:bg-primary",
-                hasVariants &&
-                  "border border-dashed border-border bg-muted/40 text-foreground disabled:opacity-100",
+                {product.name}
+              </h3>
+
+              {isTile ? (
+                <>
+                  {/* Simplified tile: price + stock */}
+                  <p className="text-lg font-bold tabular-nums tracking-tight">
+                    {price.toLocaleString()}₮
+                  </p>
+                </>
+              ) : (
+                <>
+                  {/* Brand */}
+                  {product.brand_name && (
+                    <div className="flex items-center gap-1.5">
+                      {product.brand_logo_url ? (
+                        <OptimizedImage
+                          src={product.brand_logo_url}
+                          alt={`${product.brand_name} брэндийн лого`}
+                          width={16}
+                          height={16}
+                          className="size-4 rounded object-contain"
+                        />
+                      ) : null}
+                      <span className="text-[11px] text-muted-foreground">
+                        {product.brand_name}
+                      </span>
+                    </div>
+                  )}
+                  <p className="text-base font-bold tabular-nums tracking-tight">
+                    {price.toLocaleString()}₮
+                  </p>
+                </>
               )}
-              disabled={isOutOfStock}
-              onPointerEnter={prefetchVariants}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAddToCart();
-              }}
-            >
-              {addButtonContent}
-            </Button>
-          )}
-        </CardContent>
+
+              {inCart && !hasVariants ? (
+                <div
+                  className={cn(
+                    "mt-auto flex h-[44px] items-center justify-between gap-1 rounded-md border border-primary/30 bg-primary/5 px-1.5",
+                    isOutOfStock && "opacity-50",
+                  )}
+                >
+                  <button
+                    type="button"
+                    aria-label="Хасах"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDecrement();
+                    }}
+                    className="flex size-9 shrink-0 items-center justify-center rounded-md text-lg font-bold text-foreground/70 transition-colors hover:bg-primary/10 hover:text-foreground active:scale-95"
+                  >
+                    <Minus className="size-4" weight="bold" />
+                  </button>
+                  <span className="min-w-6 text-center text-sm font-bold tabular-nums">
+                    {cartQuantity}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Нэмэх"
+                    disabled={atMaxStock}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleIncrement();
+                    }}
+                    className={cn(
+                      "flex size-9 shrink-0 items-center justify-center rounded-md text-lg font-bold transition-colors hover:bg-primary/10 active:scale-95",
+                      atMaxStock
+                        ? "cursor-not-allowed text-muted-foreground/40"
+                        : "text-primary",
+                    )}
+                  >
+                    <Plus className="size-4" weight="bold" />
+                  </button>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  className={cn(
+                    "mt-auto h-[44px] w-full gap-2 text-sm font-semibold transition-all",
+                    justAdded && "bg-primary hover:bg-primary",
+                    hasVariants &&
+                      "border border-dashed border-border bg-muted/40 text-foreground disabled:opacity-100",
+                  )}
+                  disabled={isOutOfStock}
+                  onPointerEnter={prefetchVariants}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart();
+                  }}
+                >
+                  {addButtonContent}
+                </Button>
+              )}
+            </CardContent>
+          </>
+        )}
       </Card>
 
       {/* Variant Selection Drawer */}

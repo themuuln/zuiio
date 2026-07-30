@@ -23,6 +23,11 @@ const NAV_ITEMS = [
   { href: "/portal", labelKey: "portal.dashboard", icon: Wrench },
   { href: "/portal/vehicles", labelKey: "portal.vehicles", icon: Car },
   {
+    href: "/portal/inspections",
+    labelKey: "portal.inspections",
+    icon: ClipboardList,
+  },
+  {
     href: "/portal/work-orders",
     labelKey: "portal.workOrders",
     icon: ClipboardList,

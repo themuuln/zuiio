@@ -18,7 +18,6 @@ on:
           - ""
           - zer
           - tolom
-          - onoo
           - website
           - agent-gateway
           - zuiio-id
@@ -33,7 +32,6 @@ jobs:
     outputs:
       zer: ${{ steps.filter.outputs.zer }}
       tolom: ${{ steps.filter.outputs.tolom }}
-      onoo: ${{ steps.filter.outputs.onoo }}
       website: ${{ steps.filter.outputs.website }}
       agent-gateway: ${{ steps.filter.outputs['agent-gateway'] }}
       zuiio-id: ${{ steps.filter.outputs['zuiio-id'] }}
@@ -48,8 +46,6 @@ jobs:
               - 'apps/zer/**'
             tolom:
               - 'apps/tolom/**'
-            onoo:
-              - 'apps/onoo/**'
             website:
               - 'apps/website/**'
             agent-gateway:
@@ -79,7 +75,6 @@ jobs:
           sparse-checkout: |
             apps/zer
             apps/tolom
-            apps/onoo
             apps/website
             apps/agent-gateway
             apps/zuiio-id
@@ -112,7 +107,6 @@ jobs:
           SHARED: ${{ needs.detect-changes.outputs.shared }}
           ZER: ${{ needs.detect-changes.outputs.zer }}
           TOLOM: ${{ needs.detect-changes.outputs.tolom }}
-          ONOO: ${{ needs.detect-changes.outputs.onoo }}
           WEBSITE: ${{ needs.detect-changes.outputs.website }}
           AGENT_GW: ${{ needs.detect-changes.outputs['agent-gateway'] }}
           ZUIIO_ID: ${{ needs.detect-changes.outputs['zuiio-id'] }}
@@ -130,10 +124,6 @@ jobs:
           #   echo "🔍 Typechecking tolom..."
           #   pnpm --filter tolom exec tsc --noEmit 2>&1 || FAILED="$FAILED tolom"
           # fi
-          if [ "$ONOO" = "true" ] || [ "$SHARED" = "true" ]; then
-            echo "🔍 Typechecking onoo..."
-            pnpm --filter onoo exec tsc --noEmit 2>&1 || FAILED="$FAILED onoo"
-          fi
           if [ "$WEBSITE" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking website..."
             pnpm --filter website exec tsc --noEmit 2>&1 || FAILED="$FAILED website"
@@ -186,22 +176,6 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_TOLOM }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_TOLOM }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_TOLOM }}
-
-  deploy-onoo:
-    needs: [detect-changes, typecheck]
-    if: |
-      always() && !cancelled() &&
-      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'onoo' || needs.detect-changes.outputs.onoo == 'true' || needs.detect-changes.outputs.shared == 'true')
-    uses: ./.github/workflows/_deploy-vercel.yml
-    with:
-      app: onoo
-      turbo-filter: onoo
-      author-email: "zerone.offical@gmail.com"
-    secrets:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_ONOO }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_ONOO }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ONOO }}
 
   deploy-website:
     needs: [detect-changes, typecheck]

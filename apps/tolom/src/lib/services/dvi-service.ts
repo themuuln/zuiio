@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { logAuditAfter } from "@/lib/audit";
@@ -29,16 +29,9 @@ export type DVIItemCategory =
   | "tires"
   | "other";
 
-export type DVIItemCondition =
-  | "good"
-  | "fair"
-  | "poor"
-  | "needs_replacement";
+export type DVIItemCondition = "good" | "fair" | "poor" | "needs_replacement";
 
-export type DVIItemSeverity =
-  | "minor"
-  | "major"
-  | "critical";
+export type DVIItemSeverity = "minor" | "major" | "critical";
 
 export interface DVIInspection {
   id: string;
@@ -291,7 +284,7 @@ export async function updateInspection(
   db: SupabaseClient<Database>,
   inspectionId: string,
   orgId: string,
-  userId: string,
+  _userId: string,
   params: {
     status?: string;
     odometer?: number | null;
@@ -497,7 +490,10 @@ export async function removeInspectionItem(
     throw new NotFoundError(`DV Inspection not found: ${inspectionId}`);
   }
 
-  const q = itemsQuery(db).delete().eq("id", itemId).eq("inspection_id", inspectionId);
+  const q = itemsQuery(db)
+    .delete()
+    .eq("id", itemId)
+    .eq("inspection_id", inspectionId);
   const { error } = await execQuery(q);
 
   if (error) {
@@ -568,13 +564,8 @@ export async function submitCustomerApproval(
   const hash = crypto.createHash("sha256").update(token).digest("hex");
 
   // Find the inspection by token hash
-  const { data: inspection, error: inspError } = await execQuery<
-    DVIInspection
-  >(
-    inspectionsQuery(db)
-      .select("id")
-      .eq("customer_token_hash", hash)
-      .single(),
+  const { data: inspection, error: inspError } = await execQuery<DVIInspection>(
+    inspectionsQuery(db).select("id").eq("customer_token_hash", hash).single(),
   );
 
   if (inspError || !inspection) {
@@ -596,7 +587,11 @@ export async function submitCustomerApproval(
   // Count item approvals to determine overall status
   const { data: items, error: countError } = await execQuery<
     { customer_approved: boolean | null }[]
-  >(itemsQuery(db).select("customer_approved").eq("inspection_id", inspection.id));
+  >(
+    itemsQuery(db)
+      .select("customer_approved")
+      .eq("inspection_id", inspection.id),
+  );
 
   if (countError) {
     reportServerError("submitCustomerApproval:count", countError);

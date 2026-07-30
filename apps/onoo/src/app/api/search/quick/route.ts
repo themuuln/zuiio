@@ -1,9 +1,0 @@
-import { NextResponse } from "next/server";
-import { searchPlayersAndTeams } from "../../../lib/data";
-
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const q = searchParams.get("q") ?? "";
-  const results = await searchPlayersAndTeams(q);
-  return NextResponse.json(results);
-}

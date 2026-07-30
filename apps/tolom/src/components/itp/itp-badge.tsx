@@ -20,7 +20,16 @@ const itpBadgeVariants = cva("", {
 
 const statusColors: Record<
   NonNullable<VariantProps<typeof itpBadgeVariants>["status"]>,
-  { variant: "default" | "secondary" | "destructive" | "outline" | "ghost" | "link"; label: string }
+  {
+    variant:
+      | "default"
+      | "secondary"
+      | "destructive"
+      | "outline"
+      | "ghost"
+      | "link";
+    label: string;
+  }
 > = {
   valid: { variant: "default", label: "Valid" },
   expiring_soon: { variant: "secondary", label: "Expiring Soon" },
@@ -70,15 +79,21 @@ export function ItpBadge({
       variant={color.variant}
       className={cn(
         "cursor-pointer transition-colors",
-        itpStatus === "valid" && "bg-emerald-600 text-white hover:bg-emerald-700",
-        itpStatus === "expiring_soon" && "bg-amber-500 text-white hover:bg-amber-600",
+        itpStatus === "valid" &&
+          "bg-emerald-600 text-white hover:bg-emerald-700",
+        itpStatus === "expiring_soon" &&
+          "bg-amber-500 text-white hover:bg-amber-600",
         itpStatus === "expired" && "",
         itpStatus === "unknown" && "",
         onDetailsClick && "cursor-pointer",
         className,
       )}
       onClick={onDetailsClick}
-      title={daysUntilExpiry != null ? `${daysUntilExpiry} days until expiry` : "No expiry date set"}
+      title={
+        daysUntilExpiry != null
+          ? `${daysUntilExpiry} days until expiry`
+          : "No expiry date set"
+      }
       {...props}
     >
       {displayLabel}

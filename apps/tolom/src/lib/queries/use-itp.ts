@@ -40,7 +40,11 @@ export interface ItpHistoryItem {
   previous_status: string | null;
   new_status: string | null;
   notes: string | null;
-  action_type: "record_inspection" | "update_expiry" | "reminder_sent" | "system_update";
+  action_type:
+    | "record_inspection"
+    | "update_expiry"
+    | "reminder_sent"
+    | "system_update";
   created_at: string;
 }
 
@@ -219,10 +223,7 @@ export function useUpdateItpRecord(orgId: string | undefined) {
  * Send ITP reminder for a vehicle.
  */
 export function useSendItpReminder(orgId: string | undefined) {
-  return useOrgMutation<
-    { sent: boolean },
-    string
-  >({
+  return useOrgMutation<{ sent: boolean }, string>({
     endpoint: (vehicleId) =>
       `/api/organizations/${orgId}/itp/${vehicleId}/reminder`,
     method: "POST",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Import, Loader2, Package } from "lucide-react";
+import { Package, Search, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -93,9 +93,7 @@ export function GlobalPartsSearch({
         toast.success(t("importSuccess", { name: part.name }));
         onImported?.();
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Import failed",
-        );
+        toast.error(err instanceof Error ? err.message : "Import failed");
       } finally {
         setImportingIds((prev) => {
           const next = new Set(prev);
@@ -107,8 +105,10 @@ export function GlobalPartsSearch({
     [orgId, onImported, t],
   );
 
-  const showSearchPrompt = !query.trim() && !searching && !error && results.length === 0;
-  const showNoResults = query.trim() && !searching && !error && results.length === 0;
+  const showSearchPrompt =
+    !query.trim() && !searching && !error && results.length === 0;
+  const showNoResults =
+    query.trim() && !searching && !error && results.length === 0;
 
   return (
     <div className="flex flex-col gap-3">
@@ -119,26 +119,40 @@ export function GlobalPartsSearch({
         debounceMs={300}
       />
 
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {searching && results.length === 0 && (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <div className="size-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
         </div>
       )}
 
       {showSearchPrompt && (
-        <Typography.Muted className="py-4 text-center">
-          {t("searchPrompt")}
-        </Typography.Muted>
+        <div className="flex flex-col items-center gap-3 py-8 text-center">
+          <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+            <Search
+              className="size-6 text-muted-foreground/60"
+              aria-hidden="true"
+            />
+          </div>
+          <div>
+            <Typography.Muted>{t("searchPrompt")}</Typography.Muted>
+          </div>
+        </div>
       )}
 
       {showNoResults && (
-        <Typography.Muted className="py-4 text-center">
-          {t("noResults")}
-        </Typography.Muted>
+        <div className="flex flex-col items-center gap-3 py-8 text-center">
+          <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+            <Package
+              className="size-6 text-muted-foreground/60"
+              aria-hidden="true"
+            />
+          </div>
+          <div>
+            <Typography.Muted>{t("noResults")}</Typography.Muted>
+          </div>
+        </div>
       )}
 
       {results.length > 0 && (
@@ -149,24 +163,41 @@ export function GlobalPartsSearch({
           {results.map((part) => (
             <Item key={part.id}>
               <ItemContent>
-                <div className="flex items-center gap-2">
-                  <Package className="size-4 shrink-0 text-muted-foreground" />
-                  <ItemTitle>{part.name}</ItemTitle>
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                  {part.part_number && (
-                    <Badge variant="outline" className="text-xs">
-                      {part.part_number}
-                    </Badge>
-                  )}
-                  <Badge variant="secondary" className="text-xs">
-                    {part.category}
-                  </Badge>
-                  {part.name_mn && (
-                    <Typography.Muted className="text-xs">
-                      {part.name_mn}
-                    </Typography.Muted>
-                  )}
+                <div className="flex items-start gap-3">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <Package
+                      className="size-5 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <ItemTitle>{part.name}</ItemTitle>
+                    </div>
+                    <div className="mt-0.5">
+                      <Badge
+                        variant="outline"
+                        className="border-primary/30 bg-primary/5 text-xs font-semibold text-primary"
+                      >
+                        {part.category}
+                      </Badge>
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      {part.part_number && (
+                        <Badge
+                          variant="secondary"
+                          className="text-xs font-mono"
+                        >
+                          {part.part_number}
+                        </Badge>
+                      )}
+                      {part.name_mn && (
+                        <Typography.Muted className="text-xs">
+                          {part.name_mn}
+                        </Typography.Muted>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </ItemContent>
               <ItemActions>
@@ -178,12 +209,12 @@ export function GlobalPartsSearch({
                 >
                   {importingIds.has(part.id) ? (
                     <>
-                      <Loader2 className="size-3.5 animate-spin" />
+                      <div className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                       {t("importing")}
                     </>
                   ) : (
                     <>
-                      <Import className="size-3.5" />
+                      <Upload className="size-3.5" />
                       {t("import")}
                     </>
                   )}

@@ -179,8 +179,7 @@ export function useCreateDVInspection(orgId: string | undefined) {
  */
 export function useUpdateDVInspection(orgId: string | undefined) {
   return useOrgMutation<DVInspection, UpdateDVInspectionInput>({
-    endpoint: (vars) =>
-      `/api/organizations/${orgId}/dv-inspections/${vars.id}`,
+    endpoint: (vars) => `/api/organizations/${orgId}/dv-inspections/${vars.id}`,
     method: "PATCH",
     queryKey: dviKeys.all(orgId ?? ""),
     bodyFn: ({ id: _id, ...payload }) => payload,
@@ -211,8 +210,7 @@ export function useUpdateDVIItem(orgId: string | undefined) {
       `/api/organizations/${orgId}/dv-inspections/${vars.inspection_id}/items/${vars.item_id}`,
     method: "PATCH",
     queryKey: dviKeys.all(orgId ?? ""),
-    bodyFn: ({ inspection_id: _id, item_id: _itemId, ...payload }) =>
-      payload,
+    bodyFn: ({ inspection_id: _id, item_id: _itemId, ...payload }) => payload,
     successMessage: "DVI item updated",
   });
 }
