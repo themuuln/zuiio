@@ -58,6 +58,7 @@ catalog:
   zod: ^4.4.3
   '@shadcn/react': ^0.2.1
   '@next/bundle-analyzer': ^16.2.12
+  '@fal-ai/client': ^1.10.1
 
 allowBuilds:
   '@google/genai': true

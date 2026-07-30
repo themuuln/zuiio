@@ -589,7 +589,7 @@ export default function SponsorsPage() {
                 onValueChange={setPlacementCompetition}
               >
                 <SelectTrigger id="placement-competition">
-                  <SelectValue placeholder="Тэмцээн сонгох" />
+                  <SelectValue placeholder="Тэмцээн сонгох">{competitions.find((c) => c.id === placementCompetition)?.name}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {competitions.map((c) => (

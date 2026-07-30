@@ -126,7 +126,11 @@ export default function TeamsPage() {
           <>
             <Select value={leagueFilter} onValueChange={setLeagueFilter}>
               <SelectTrigger className="w-[200px]" aria-label="Лиг сонгох">
-                <SelectValue placeholder="Бүх лиг" />
+                <SelectValue placeholder="Бүх лиг">
+                  {leagueFilter === 'all'
+                    ? 'Бүх лиг'
+                    : (leagues.find((l) => l.id === leagueFilter)?.name ?? leagueFilter)}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Бүх лиг</SelectItem>

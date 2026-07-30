@@ -157,7 +157,12 @@ export function HandoffDialog({
                   placeholder={
                     loadingRecipients ? "Ачаалж байна..." : "Бүртгэгч сонгох"
                   }
-                />
+                >
+                  {
+                    recipients.find((r) => r.user_id === selectedUserId)
+                      ?.full_name
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {recipients.map((r) => (

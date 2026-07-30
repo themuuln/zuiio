@@ -469,6 +469,21 @@ export const catalogVariantKeys = {
     [...catalogVariantKeys.all(orgId), "items", entityType, entityId] as const,
 };
 
+export const itpKeys = {
+  all: (orgId: string) =>
+    ["organizations", orgId, "itp"] as const,
+  list: (orgId: string, status?: string) =>
+    [...itpKeys.all(orgId), "list", status ?? "all"] as const,
+  expiring: (orgId: string, branchId?: string) =>
+    [...itpKeys.all(orgId), "expiring", branchId ?? "all"] as const,
+  stats: (orgId: string, branchId?: string) =>
+    [...itpKeys.all(orgId), "stats", branchId ?? "all"] as const,
+  detail: (orgId: string, vehicleId: string) =>
+    [...itpKeys.all(orgId), "detail", vehicleId] as const,
+  history: (orgId: string, vehicleId: string) =>
+    [...itpKeys.all(orgId), "history", vehicleId] as const,
+};
+
 export const cashRegisterKeys = {
   all: (orgId: string) => ["organizations", orgId, "cash-register"] as const,
   current: (orgId: string, branchId?: string | null) =>
@@ -481,4 +496,13 @@ export const cashRegisterKeys = {
       "list",
       stableStringify(filters ?? {}),
     ] as const,
+};
+
+export const dviKeys = {
+  all: (orgId: string) =>
+    ["organizations", orgId, "dv-inspections"] as const,
+  list: (orgId: string, status?: string) =>
+    [...dviKeys.all(orgId), "list", status ?? "all"] as const,
+  detail: (orgId: string, id: string) =>
+    [...dviKeys.all(orgId), "detail", id] as const,
 };

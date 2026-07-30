@@ -1,20 +1,39 @@
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
-export const GET = createSimpleRouteHandler(
-  async ({ supabase }) => {
-    const { data, error } = await supabase
-      .from("global_services_catalog")
-      .select(
-        "id, name, name_mn, category, description, estimated_duration_minutes, interval_months, interval_km, is_active",
-      )
-      .eq("is_active", true)
-      .order("category")
-      .order("name");
+import { reportServerError } from "@/lib/sentry-report-server";
+import {
+  searchGlobalServices,
+  type GlobalServiceSearchFilters,
+} from "@/lib/services/global-catalog-service";
 
-    if (error) {
-      return apiError("QUERY_ERROR", error.message, 500);
+export const GET = createSimpleRouteHandler(
+  async ({ request, supabase }) => {
+    const { searchParams } = request.nextUrl;
+    const query = searchParams.get("q") ?? undefined;
+    const category = searchParams.get("category") ?? undefined;
+    const limit = searchParams.get("limit")
+      ? parseInt(searchParams.get("limit")!, 10)
+      : undefined;
+    const offset = searchParams.get("offset")
+      ? parseInt(searchParams.get("offset")!, 10)
+      : undefined;
+
+    const filters: GlobalServiceSearchFilters = {};
+    if (category) filters.category = category;
+    if (limit && !isNaN(limit) && limit > 0) filters.limit = limit;
+    if (offset && !isNaN(offset) && offset >= 0) filters.offset = offset;
+
+    try {
+      const data = await searchGlobalServices(supabase, query, filters);
+      return ok(data);
+    } catch (error) {
+      reportServerError("[Global Catalog API] Service query error:", error);
+      return apiError(
+        "QUERY_ERROR",
+        error instanceof Error ? error.message : "Query failed",
+        500,
+      );
     }
-    return ok(data);
   },
   { requireAuth: false },
 );

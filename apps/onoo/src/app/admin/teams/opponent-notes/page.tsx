@@ -289,7 +289,7 @@ export default function OpponentNotesPage() {
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Баг сонгох" />
+                          <SelectValue placeholder="Баг сонгох">{teamSeasons.find(ts => ts.id === field.value)?.teams?.name}</SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -313,7 +313,7 @@ export default function OpponentNotesPage() {
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Өрсөлдөгч сонгох" />
+                          <SelectValue placeholder="Өрсөлдөгч сонгох">{opponentTeamSeasons.find(ts => ts.id === field.value)?.teams?.name}</SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

@@ -50,10 +50,22 @@ export const FEATURES: FeatureDef[] = [
     description: "Худалдан авалтын бүртгэл",
   },
   { key: "returns", label: "Буцаалт", description: "Буцаалтын бүртгэл" },
-  { key: "deliveries", label: "Хүргэлт", description: "Хүргэлтийн удирдлага, хяналт" },
+  {
+    key: "deliveries",
+    label: "Хүргэлт",
+    description: "Хүргэлтийн удирдлага, хяналт",
+  },
   { key: "coupons", label: "Купон", description: "Купоны систем, хөнгөлөлт" },
-  { key: "gift_cards", label: "Бэлгийн карт", description: "Бэлгийн картын систем" },
-  { key: "promotions", label: "Урамшуулал", description: "Урамшууллын тохиргоо" },
+  {
+    key: "gift_cards",
+    label: "Бэлгийн карт",
+    description: "Бэлгийн картын систем",
+  },
+  {
+    key: "promotions",
+    label: "Урамшуулал",
+    description: "Урамшууллын тохиргоо",
+  },
   {
     key: "invoices",
     label: "Нэхэмжлэх",

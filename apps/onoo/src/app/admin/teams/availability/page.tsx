@@ -223,7 +223,9 @@ export default function AvailabilityPage() {
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Баг сонгох" />
+                          <SelectValue placeholder="Баг сонгох">
+                            {teamSeasons.find(ts => ts.id === field.value)?.teams?.name}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -247,7 +249,9 @@ export default function AvailabilityPage() {
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Тоглогч сонгох" />
+                          <SelectValue placeholder="Тоглогч сонгох">
+                            {players.find(p => p.id === field.value)?.canonical_name}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

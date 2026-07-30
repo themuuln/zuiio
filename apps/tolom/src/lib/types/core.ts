@@ -131,6 +131,40 @@ type PartsCarsUpdate = TablesUpdate<"parts_cars">;
 type PartsCarParts = Tables<"parts_car_parts">;
 type PartsCarPartsInsert = TablesInsert<"parts_car_parts">;
 type PartsCarPartsUpdate = TablesUpdate<"parts_car_parts">;
+
+// ── ITP Tracking Types ──────────────────────────────────────
+
+/**
+ * ITP (техникийн үзлэг) history record.
+ * Manual type — vehicle_itp_history table added by 20260730000000 migration.
+ */
+export interface VehicleItpHistory {
+  id: string;
+  organization_id: string;
+  vehicle_id: string;
+  branch_id: string | null;
+  user_id: string | null;
+  previous_expiry_date: string | null;
+  new_expiry_date: string | null;
+  previous_status: string | null;
+  new_status: string | null;
+  notes: string | null;
+  action_type: "record_inspection" | "update_expiry" | "reminder_sent" | "system_update";
+  created_at: string;
+}
+
+/**
+ * Extended vehicle type with ITP fields added by migration.
+ */
+export interface VehicleWithItp extends Vehicle {
+  itp_expiry_date: string | null;
+  itp_last_passed_date: string | null;
+  itp_reminder_sent_at: string | null;
+  itp_notes: string | null;
+}
+
+export type ItpActionType = VehicleItpHistory["action_type"];
+
 type InvoiceStatus = Enums<"invoice_status">;
 type CustomerType = Customer["type"];
 type FuelType = Vehicle["fuel_type"];

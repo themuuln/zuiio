@@ -553,6 +553,9 @@ const ALLOWED_FEATURE_SETTINGS = new Set([
   "has_receipt_drawer",
   "has_track_stock",
   "has_delivery_tracking",
+  "has_coupons",
+  "has_gift_cards",
+  "has_promotions",
 ]);
 
 export async function updateOrgFeatureSetting(

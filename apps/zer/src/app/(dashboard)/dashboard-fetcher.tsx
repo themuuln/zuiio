@@ -121,6 +121,9 @@ export async function DashboardFetcher({
             hasEmailReports,
             hasAuditLog,
             hasDeliveryTracking: org.has_delivery_tracking !== false,
+            hasCoupons: org.has_coupons !== false,
+            hasGiftCards: org.has_gift_cards !== false,
+            hasPromotions: org.has_promotions !== false,
             hasCheckoutCustomer: posSettings?.has_checkout_customer !== false,
             hasCheckoutQuickAmounts:
               posSettings?.has_checkout_quick_amounts !== false,

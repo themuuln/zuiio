@@ -100,7 +100,9 @@ export default function SeasonsPage() {
         headerExtras={
           <Select value={selectedLeagueId} onValueChange={setSelectedLeagueId}>
             <SelectTrigger className="w-full max-w-sm">
-              <SelectValue placeholder="Лиг сонгох" />
+              <SelectValue placeholder="Лиг сонгох">
+                {leagues.find((l) => l.id === selectedLeagueId)?.name}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {leagues.map((l) => (

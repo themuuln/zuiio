@@ -224,11 +224,14 @@ export function TeamDrawer({ team, open, onClose }: TeamDrawerProps) {
   const _streakType = getMovementType(team?.streak ?? null);
 
   return (
-    <Drawer open={open} onOpenChange={(next) => !next && onClose()}>
+    <Drawer
+      open={open}
+      onOpenChange={(next) => !next && onClose()}
+    >
       <DrawerContent
         className="w-full sm:max-w-md"
-        contentClassName="overflow-y-auto"
         showCloseButton
+        backdropClassName="pointer-events-none"
       >
         <div className="flex flex-col gap-5 p-5 pt-6">
           {/* Section 1: Team identity bar */}

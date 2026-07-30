@@ -71,6 +71,9 @@ interface OrgRow {
   has_audit_log: boolean | null;
   has_hr: boolean | null;
   has_delivery_tracking: boolean | null;
+  has_coupons: boolean | null;
+  has_gift_cards: boolean | null;
+  has_promotions: boolean | null;
 }
 
 interface PosRow {
@@ -142,7 +145,7 @@ export function SettingsContent() {
             supabase
               .from("organizations")
               .select(
-                "name, slug, company_type, currency, brand_config, has_suppliers, has_inventory, has_customer_credit, has_multi_branch, has_variants, has_brands, has_categories, has_email_reports, has_audit_log, has_delivery_tracking, has_hr",
+                "name, slug, company_type, currency, brand_config, has_suppliers, has_inventory, has_customer_credit, has_multi_branch, has_variants, has_brands, has_categories, has_email_reports, has_audit_log, has_delivery_tracking, has_hr, has_coupons, has_gift_cards, has_promotions",
               )
               .eq("id", organizationId)
               .single(),
@@ -508,6 +511,9 @@ export function SettingsContent() {
           has_audit_log: org?.has_audit_log !== false,
           has_hr: org?.has_hr === true,
           has_delivery_tracking: org?.has_delivery_tracking === true,
+          has_coupons: org?.has_coupons !== false,
+          has_gift_cards: org?.has_gift_cards !== false,
+          has_promotions: org?.has_promotions !== false,
         }}
       />
 

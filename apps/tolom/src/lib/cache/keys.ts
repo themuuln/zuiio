@@ -92,6 +92,14 @@ export const cacheTags = {
   cashRegisterSessions: (orgId: string) => `cash-register-sessions:${orgId}`,
   cashRegisterSession: (id: string) => `cash-register-session:${id}`,
 
+  // ITP Tracking
+  itp: (orgId: string) => `itp:${orgId}`,
+  itpVehicle: (orgId: string, vehicleId: string) => `itp:${orgId}:${vehicleId}`,
+
+  // DVI (Digital Vehicle Inspection)
+  dvi: (orgId: string) => `dvi:${orgId}`,
+  dviInspection: (orgId: string, id: string) => `dvi:${orgId}:${id}`,
+
   // Catalog Variants
   variantGroups: (orgId: string) => `variant-groups:${orgId}`,
   variantOptions: (orgId: string) => `variant-options:${orgId}`,
@@ -148,4 +156,12 @@ export const cacheDurations = {
   // Cash Register
   cashRegisterSessions: 30, // 30 seconds (frequently changing during open session)
   cashRegisterSession: 10, // 10 seconds (real-time balance updates)
+
+  // ITP Tracking
+  itp: 120, // 2 minutes
+  itpStats: 300, // 5 minutes
+
+  // DVI (Digital Vehicle Inspection)
+  dvi: 120, // 2 minutes
+  dviStats: 300, // 5 minutes
 } as const;

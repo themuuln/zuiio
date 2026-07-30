@@ -24,21 +24,12 @@ import { CheckoutPromotions } from "@/components/shop/checkout-promotions";
 import { CustomerPicker } from "@/components/shop/customer-picker";
 import { StaffPicker } from "@/components/shop/staff-picker";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   type CurrencyOption,
   CurrencySelector,
@@ -51,9 +42,18 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { productKeys, saleKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
@@ -169,7 +169,7 @@ export function CheckoutForm({
   const [customerOpen, setCustomerOpen] = useState(false);
   const [orderExpanded, setOrderExpanded] = useState(true);
 
-// Delivery state
+  // Delivery state
   const [deliveryEnabled, setDeliveryEnabled] = useState(false);
   const [deliveryContactName, setDeliveryContactName] = useState("");
   const [deliveryContactPhone, setDeliveryContactPhone] = useState("");
@@ -217,7 +217,7 @@ export function CheckoutForm({
     deliveryContactPhone,
   ]);
 
-// Coupon/discount state
+  // Coupon/discount state
   const [discountAmount, setDiscountAmount] = useState(0);
   const [couponId, setCouponId] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState<string | null>(null);
@@ -278,7 +278,11 @@ export function CheckoutForm({
   const isFormValid =
     items.length > 0 && !!paymentMethod && paidAmount >= effectiveTotal;
 
-  const handleDiscountApplied = (amount: number, cId: string, cCode: string) => {
+  const handleDiscountApplied = (
+    amount: number,
+    cId: string,
+    cCode: string,
+  ) => {
     setDiscountAmount(amount);
     setCouponId(cId);
     setCouponCode(cCode);
@@ -299,9 +303,7 @@ export function CheckoutForm({
     setGiftCardId(cardId);
     // Update paid amount default to match after gift card deduction
     setPaidAmountStr(
-      String(
-        totalAmount - discountAmount - promotionDiscountAmount - amount,
-      ),
+      String(totalAmount - discountAmount - promotionDiscountAmount - amount),
     );
   };
 
@@ -606,12 +608,36 @@ export function CheckoutForm({
         name="exchange_rate"
         value={selectedCurrency.exchange_rate}
       />
-      <input type="hidden" name="delivery_address" ref={deliveryAddressInputRef} />
-      <input type="hidden" name="delivery_contact_name" ref={deliveryContactNameInputRef} />
-      <input type="hidden" name="delivery_contact_phone" ref={deliveryContactPhoneInputRef} />
-      <input type="hidden" name="delivery_address_note" ref={deliveryAddressNoteInputRef} />
-      <input type="hidden" name="delivery_zone_id" ref={deliveryZoneIdInputRef} />
-      <input type="hidden" name="delivery_requested_at" ref={deliveryRequestedAtInputRef} />
+      <input
+        type="hidden"
+        name="delivery_address"
+        ref={deliveryAddressInputRef}
+      />
+      <input
+        type="hidden"
+        name="delivery_contact_name"
+        ref={deliveryContactNameInputRef}
+      />
+      <input
+        type="hidden"
+        name="delivery_contact_phone"
+        ref={deliveryContactPhoneInputRef}
+      />
+      <input
+        type="hidden"
+        name="delivery_address_note"
+        ref={deliveryAddressNoteInputRef}
+      />
+      <input
+        type="hidden"
+        name="delivery_zone_id"
+        ref={deliveryZoneIdInputRef}
+      />
+      <input
+        type="hidden"
+        name="delivery_requested_at"
+        ref={deliveryRequestedAtInputRef}
+      />
       <div className="rounded-xl border border-border bg-card">
         {/* Total row — always visible */}
         <button
@@ -858,7 +884,11 @@ export function CheckoutForm({
         <>
           <input type="hidden" name="coupon_id" value={couponId} />
           <input type="hidden" name="coupon_code" value={couponCode ?? ""} />
-          <input type="hidden" name="discount_amount" value={String(discountAmount)} />
+          <input
+            type="hidden"
+            name="discount_amount"
+            value={String(discountAmount)}
+          />
         </>
       )}
 
@@ -866,7 +896,11 @@ export function CheckoutForm({
       {giftCardId && (
         <>
           <input type="hidden" name="gift_card_id" value={giftCardId} />
-          <input type="hidden" name="gift_card_amount" value={String(giftCardAmount)} />
+          <input
+            type="hidden"
+            name="gift_card_amount"
+            value={String(giftCardAmount)}
+          />
         </>
       )}
 
@@ -933,10 +967,7 @@ export function CheckoutForm({
       )}
       {/* === DELIVERY (collapsible, gated on hasDeliveryTracking) === */}
       {hasDeliveryTracking && (
-        <Collapsible
-          open={deliveryEnabled}
-          onOpenChange={setDeliveryEnabled}
-        >
+        <Collapsible open={deliveryEnabled} onOpenChange={setDeliveryEnabled}>
           <CollapsibleTrigger>
             <button
               type="button"
@@ -970,7 +1001,10 @@ export function CheckoutForm({
                     setDeliveryEnabled(checked === true)
                   }
                 />
-                <Label htmlFor="delivery-toggle" className="text-sm font-medium">
+                <Label
+                  htmlFor="delivery-toggle"
+                  className="text-sm font-medium"
+                >
                   Хүргэлттэй
                 </Label>
               </div>
@@ -1029,11 +1063,13 @@ export function CheckoutForm({
                       <SelectValue placeholder="Бүс сонгох" />
                     </SelectTrigger>
                     <SelectContent>
-                      {deliveryZones.map((zone: { id: string; name: string }) => (
-                        <SelectItem key={zone.id} value={zone.id}>
-                          {zone.name}
-                        </SelectItem>
-                      ))}
+                      {deliveryZones.map(
+                        (zone: { id: string; name: string }) => (
+                          <SelectItem key={zone.id} value={zone.id}>
+                            {zone.name}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

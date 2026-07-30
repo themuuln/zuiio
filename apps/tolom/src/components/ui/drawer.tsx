@@ -130,10 +130,12 @@ function DrawerIndentBackground({
   return (
     <DrawerPrimitive.IndentBackground
       data-slot="drawer-indent-bg"
-      className={cn(
-        "absolute inset-0 rounded-[var(--drawer-radius,inherit)] bg-[var(--drawer-indent-bg,var(--color-bg))] transition-[background-color,transform,opacity] duration-300 data-nested-drawer-open:bg-[var(--drawer-indent-bg)] data-nested-drawer-open:scale-[calc(1-0.05*var(--nested-drawers))] data-nested-drawer-open:opacity-90",
-        className,
-      )}
+      className={(state) =>
+        cn(
+          "absolute inset-0 rounded-[var(--drawer-radius,inherit)] bg-[var(--drawer-indent-bg,var(--color-bg))] transition-[background-color,transform,opacity] duration-300 data-nested-drawer-open:bg-[var(--drawer-indent-bg)] data-nested-drawer-open:scale-[calc(1-0.05*var(--nested-drawers))] data-nested-drawer-open:opacity-90",
+          typeof className === "function" ? className(state) : className,
+        )
+      }
       {...props}
     />
   );
@@ -144,10 +146,12 @@ function DrawerIndent({ className, ...props }: DrawerPrimitive.Indent.Props) {
   return (
     <DrawerPrimitive.Indent
       data-slot="drawer-indent"
-      className={cn(
-        "pointer-events-auto relative flex h-full min-w-[20rem] flex-col bg-popover shadow-2xl",
-        className,
-      )}
+      className={(state) =>
+        cn(
+          "pointer-events-auto relative flex h-full min-w-[20rem] flex-col bg-popover shadow-2xl",
+          typeof className === "function" ? className(state) : className,
+        )
+      }
       {...props}
     />
   );

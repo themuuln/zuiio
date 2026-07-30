@@ -25,6 +25,9 @@ type OrgSettings = {
   has_audit_log: boolean;
   has_hr: boolean;
   has_delivery_tracking: boolean;
+  has_coupons: boolean;
+  has_gift_cards: boolean;
+  has_promotions: boolean;
 };
 
 const SETTINGS: {
@@ -88,6 +91,21 @@ const SETTINGS: {
     key: "has_delivery_tracking",
     label: "Хүргэлтийн удирдлага",
     description: "Захиалгын хүргэлт бүртгэх, статус хянах, бүсчилсэн үнэ тогтоох",
+  },
+  {
+    key: "has_coupons",
+    label: "Купоны систем",
+    description: "Хямдралын купон үүсгэх, түгээх",
+  },
+  {
+    key: "has_gift_cards",
+    label: "Бэлгийн карт",
+    description: "Бэлгийн картын дэлгүүр, солилт",
+  },
+  {
+    key: "has_promotions",
+    label: "Урамшуулал",
+    description: "Автомат урамшуулал (1+1, босго хямдрал, багц, үнэгүй хүргэлт)",
   },
 ];
 

@@ -132,7 +132,7 @@ export default function RosterPage() {
                 onValueChange={setSelectedTeamSeasonId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Баг сонгох" />
+                  <SelectValue placeholder="Баг сонгох">{teamSeasons.find(ts => ts.id === selectedTeamSeasonId)?.teams?.name}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {teamSeasons.map((ts) => (

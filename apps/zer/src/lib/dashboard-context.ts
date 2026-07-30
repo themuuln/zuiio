@@ -36,7 +36,7 @@ export const getDashboardContext = cache(async () => {
          name, brand_config, company_type, onboarding_completed, enabled_features,
          has_suppliers, has_inventory, has_customer_credit, has_multi_branch,
          has_variants, has_brands, has_categories, has_email_reports, has_audit_log,
-         has_delivery_tracking
+         has_delivery_tracking, has_coupons, has_gift_cards, has_promotions
        )`,
     )
     .eq("id", userId)
@@ -71,6 +71,9 @@ export const getDashboardContext = cache(async () => {
     has_email_reports: boolean;
     has_audit_log: boolean;
     has_delivery_tracking: boolean;
+    has_coupons: boolean;
+    has_gift_cards: boolean;
+    has_promotions: boolean;
   };
 
   if (!org.onboarding_completed) {

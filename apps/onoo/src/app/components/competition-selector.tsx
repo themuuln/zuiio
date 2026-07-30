@@ -40,13 +40,20 @@ export function CompetitionSelector({
       ? currentId
       : competitions[0].id;
 
+  const selectedCompetition = competitions.find((c) => c.id === validId);
+  const displayValue = selectedCompetition
+    ? selectedCompetition.season
+      ? `${selectedCompetition.name} · ${selectedCompetition.season}`
+      : selectedCompetition.name
+    : validId;
+
   return (
     <div className="flex items-center gap-2">
       <CalendarDays className="size-4 shrink-0 text-muted-foreground" />
       <span className="text-sm text-muted-foreground">Улирал</span>
       <Select value={validId} onValueChange={handleValueChange}>
         <SelectTrigger className="w-[160px] sm:w-[200px]">
-          <SelectValue />
+          <SelectValue>{displayValue}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {competitions.map((comp) => (
