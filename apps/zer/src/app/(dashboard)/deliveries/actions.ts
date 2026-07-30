@@ -323,6 +323,11 @@ export async function updateDeliveryStatus(
     ),
   );
 
+  // Fire-and-forget notification
+  import("@/lib/notification").then(({ notifyDeliveryStatus }) =>
+    notifyDeliveryStatus(organizationId, delivery.contact_name, status),
+  );
+
   revalidateEntities(["deliveries"]);
   return { success: true as const, error: undefined };
 }

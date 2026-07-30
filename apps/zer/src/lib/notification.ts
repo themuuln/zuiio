@@ -3,7 +3,7 @@ import { capture } from "@zuiio/capture";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
-type EventType = "low_stock" | "daily_summary" | "new_sale";
+type EventType = "low_stock" | "daily_summary" | "new_sale" | "delivery_status";
 
 interface SendResult {
   success: boolean;
@@ -147,6 +147,34 @@ export async function checkLowStockAndNotify(
         `Нөөцөө нөхөх шаардлагатай байна.`,
     );
   }
+}
+
+/**
+ * Send a delivery status notification via Telegram.
+ */
+export async function notifyDeliveryStatus(
+  orgId: string,
+  contactName: string,
+  deliveryStatus: string,
+): Promise<void> {
+  const statusLabels: Record<string, string> = {
+    assigned: "📦 Хүргэлт даалгагдла",
+    picked_up: "🚚 Хүргэлт гарлаа",
+    in_transit: "🔄 Хүргэлт замдаа байна",
+    delivered: "✅ Хүргэлт амжилттай",
+    cancelled: "❌ Хүргэлт цуцалсан",
+    failed: "❌ Хүргэлт амжилтгүй",
+  };
+
+  const label = statusLabels[deliveryStatus];
+  if (!label) return;
+
+  await sendTelegramNotification(
+    orgId,
+    "delivery_status",
+    label,
+    `*${contactName}*-ийн хүргэлт\n\nТөлөв: ${label}`,
+  );
 }
 
 export type { EventType, SendResult };
