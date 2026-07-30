@@ -7,6 +7,8 @@ import { findOrCreateContact } from "@/lib/contact-utils";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 import type { CartItemData } from "@/lib/types";
+import type { Database } from "@/lib/supabase/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getString } from "@/lib/validation";
 
 export async function createShopSale(
@@ -61,6 +63,40 @@ export async function createShopSale(
       const currencyCode = getString(formData, "currency_code") || "MNT";
       const currencySymbol = getString(formData, "currency_symbol") || "₮";
       const exchangeRate = Number(formData.get("exchange_rate") ?? 1.0);
+
+      // Parse coupon fields
+      const couponCode = getString(formData, "coupon_code");
+      const discountAmount = Number(formData.get("discount_amount") ?? 0);
+
+      // Parse gift card fields
+      const giftCardId = getString(formData, "gift_card_id");
+      const giftCardAmount = Number(formData.get("gift_card_amount") ?? 0);
+
+      // Parse promotion discount
+      const promotionDiscountAmount = Number(
+        formData.get("promotion_discount_amount") ?? 0,
+      );
+
+      // Server-side coupon validation (safety net)
+      let validatedDiscount = 0;
+      let couponId: string | null = null;
+      if (couponCode) {
+        const validation = await validateCouponInternal(
+          supabase,
+          organizationId,
+          couponCode,
+          totalAmount,
+        );
+        if (validation.valid) {
+          validatedDiscount = validation.discount_amount;
+          couponId = validation.coupon_id;
+        }
+      }
+
+      const discountedTotal = Math.max(
+        0,
+        totalAmount - validatedDiscount - promotionDiscountAmount,
+      );
 
       const customerName = getString(formData, "customer_name");
       const customerPhone = customerName
@@ -130,7 +166,7 @@ export async function createShopSale(
           p_branch_id: branchId,
           p_user_id: userId,
           p_contact_id: contactId,
-          p_total_amount: totalAmount,
+          p_total_amount: discountedTotal,
           p_paid_amount: paidAmount,
           p_payment_method: paymentMethod,
           p_salesperson_id: salespersonId,
@@ -195,6 +231,112 @@ export async function createShopSale(
         capture(e, { context: "createShopSale: fire-and-forget invoice" });
       });
 
+      // Record coupon usage and update used_count (fire-and-forget)
+      // Note: coupons/coupon_usage tables exist in DB but not yet in generated supabase types.
+      // Cast through unknown because table names are not in Database['public']['Tables'].
+      if (couponId && couponCode) {
+        (async () => {
+          const couponDb = supabase as unknown as {
+            from(table: 'coupon_usage'): {
+              insert(data: Record<string, unknown>): Promise<{ error: unknown }>;
+            };
+            from(table: 'coupons'): {
+              select(columns: string): {
+                eq(col: string, val: string): {
+                  maybeSingle(): Promise<{ data: Record<string, unknown> | null; error: unknown }>;
+                };
+              };
+              update(data: Record<string, unknown>): {
+                eq(col: string, val: string): Promise<{ error: unknown }>;
+              };
+            };
+          };
+
+          const { error: usageError } = await couponDb
+            .from("coupon_usage")
+            .insert({
+              coupon_id: couponId,
+              organization_id: organizationId,
+              contact_id: contactId,
+              sale_id: saleId,
+            });
+          if (usageError) {
+            capture(usageError instanceof Error ? usageError : new Error(String(usageError)), {
+              context: "createShopSale: coupon_usage insert",
+            });
+          }
+
+          // Read current used_count and increment
+          const { data: currentCoupon } = await couponDb
+            .from("coupons")
+            .select("used_count")
+            .eq("id", couponId)
+            .maybeSingle();
+          const currentCount =
+            currentCoupon &&
+            typeof currentCoupon === "object" &&
+            "used_count" in currentCoupon
+              ? Number(currentCoupon.used_count)
+              : 0;
+
+          const { error: updateError } = await couponDb
+            .from("coupons")
+            .update({ used_count: currentCount + 1 })
+            .eq("id", couponId);
+          if (updateError) {
+            capture(updateError instanceof Error ? updateError : new Error(String(updateError)), {
+              context: "createShopSale: coupon used_count update",
+            });
+          }
+        })().catch((e) => {
+          capture(e, { context: "createShopSale: fire-and-forget coupon" });
+        });
+      }
+
+      // Gift card redemption
+      if (giftCardId && giftCardAmount > 0) {
+        (async () => {
+          const gcDb = supabase as unknown as {
+            rpc(fn: "redeem_gift_card", params: Record<string, unknown>): Promise<{
+              data: unknown;
+              error: unknown;
+            }>;
+          };
+
+          const { data: redeemResult, error: redeemError } = await gcDb.rpc(
+            "redeem_gift_card",
+            {
+              p_gift_card_id: giftCardId,
+              p_organization_id: organizationId,
+              p_amount: giftCardAmount,
+              p_sale_id: saleId,
+              p_user_id: userId,
+            },
+          );
+
+          if (redeemError) {
+            capture(redeemError instanceof Error ? redeemError : new Error(String(redeemError)), {
+              context: "createShopSale: redeem_gift_card",
+            });
+          } else if (
+            redeemResult &&
+            typeof redeemResult === "object" &&
+            "success" in (redeemResult as Record<string, unknown>) &&
+            !(redeemResult as Record<string, unknown>).success
+          ) {
+            const errMsg =
+              typeof (redeemResult as Record<string, unknown>).error === "string"
+                ? ((redeemResult as Record<string, unknown>).error as string)
+                : "Бэлгийн карт ашиглахад алдаа гарлаа.";
+            capture(new Error(errMsg), {
+              context: "createShopSale: redeem_gift_card",
+            });
+          }
+        })().catch((e) => {
+          capture(e, { context: "createShopSale: fire-and-forget gift card" });
+        });
+      }
+
       revalidateEntity("shop");
       revalidateEntityTag("sales", organizationId);
       revalidateEntityTag("products", organizationId);
@@ -208,6 +350,305 @@ export async function createShopSale(
       return { saleId };
     },
   );
+}
+
+/**
+ * Internal coupon validation helper (used by createShopSale for server-side re-validation).
+ * Coupons table exists in DB but not yet in generated supabase types.
+ */
+async function validateCouponInternal(
+  supabase: SupabaseClient<Database>,
+  organizationId: string,
+  code: string,
+  cartTotal: number,
+  contactId?: string | null,
+): Promise<{
+  valid: boolean;
+  discount_amount: number;
+  coupon_id: string;
+  error?: string;
+}> {
+  // coupons table exists in DB but not in generated types
+  const couponDb = supabase as unknown as {
+    from(table: "coupons"): {
+      select(columns: string, opts?: { count?: "exact"; head?: boolean }): {
+        eq(col: string, val: string): {
+          eq(col2: string, val2: string): {
+            maybeSingle(): Promise<{
+              data: Record<string, unknown> | null;
+              error: unknown;
+            }>;
+          };
+        };
+      };
+    };
+  };
+
+  const { data: coupon, error } = await couponDb
+    .from("coupons")
+    .select("*")
+    .eq("code", code)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+
+  if (error) {
+    capture(error instanceof Error ? error : new Error(String(error)), {
+      context: "validateCouponInternal: fetch",
+    });
+    return {
+      valid: false,
+      discount_amount: 0,
+      coupon_id: "",
+      error: "Купоны код шалгахад алдаа гарлаа.",
+    };
+  }
+
+  if (!coupon) {
+    return {
+      valid: false,
+      discount_amount: 0,
+      coupon_id: "",
+      error: "Купон олдсонгүй.",
+    };
+  }
+
+  const c = coupon as unknown as {
+    id: string;
+    is_active: boolean;
+    valid_from: string | null;
+    valid_until: string | null;
+    usage_limit: number | null;
+    used_count: number;
+    per_customer_limit: number | null;
+    min_purchase_amount: number;
+    discount_type: string;
+    discount_value: number;
+    max_discount_amount: number | null;
+    applies_to: string;
+  };
+
+  if (!c.is_active) {
+    return {
+      valid: false,
+      discount_amount: 0,
+      coupon_id: c.id,
+      error: "Купон идэвхгүй байна.",
+    };
+  }
+
+  // Check valid dates
+  const now = new Date().toISOString();
+  if (c.valid_from && now < c.valid_from) {
+    return {
+      valid: false,
+      discount_amount: 0,
+      coupon_id: c.id,
+      error: "Купоны хугацаа эхлээгүй байна.",
+    };
+  }
+  if (c.valid_until && now > c.valid_until) {
+    return {
+      valid: false,
+      discount_amount: 0,
+      coupon_id: c.id,
+      error: "Купоны хугацаа дууссан.",
+    };
+  }
+
+  // Check usage limit
+  if (c.usage_limit !== null && c.used_count >= c.usage_limit) {
+    return {
+      valid: false,
+      discount_amount: 0,
+      coupon_id: c.id,
+      error: "Купоны ашиглах хязгаар дууссан.",
+    };
+  }
+
+  // Check per-customer limit (only if contactId provided)
+  if (contactId && c.per_customer_limit !== null) {
+    const usageDb = supabase as unknown as {
+      from(table: "coupon_usage"): {
+        select(columns: string, opts?: { count?: "exact"; head?: boolean }): {
+          eq(col: string, val: string): {
+            eq(col2: string, val2: string): Promise<{ count: number | null; error: unknown }>;
+          };
+        };
+      };
+    };
+
+    const { count, error: countError } = await usageDb
+      .from("coupon_usage")
+      .select("*", { count: "exact", head: true })
+      .eq("coupon_id", c.id)
+      .eq("contact_id", contactId);
+
+    if (!countError && count !== null && count >= c.per_customer_limit) {
+      return {
+        valid: false,
+        discount_amount: 0,
+        coupon_id: c.id,
+        error: "Та энэ купоныг аль хэдийн ашигласан.",
+      };
+    }
+  }
+
+  // Check min purchase amount
+  if (cartTotal < c.min_purchase_amount) {
+    return {
+      valid: false,
+      discount_amount: 0,
+      coupon_id: c.id,
+      error: `Хамгийн бага худалдан авалт: ${Math.round(c.min_purchase_amount).toLocaleString()}₮`,
+    };
+  }
+
+  // Calculate discount amount
+  let discountAmount: number;
+  if (c.discount_type === "percentage") {
+    discountAmount = Math.round(cartTotal * (c.discount_value / 100) * 100) / 100;
+    if (c.max_discount_amount !== null) {
+      discountAmount = Math.min(discountAmount, c.max_discount_amount);
+    }
+  } else {
+    // fixed_amount — cannot exceed cart total
+    discountAmount = Math.min(c.discount_value, cartTotal);
+  }
+
+  return {
+    valid: true,
+    discount_amount: discountAmount,
+    coupon_id: c.id,
+  };
+}
+
+/**
+ * Validates a coupon code for the current organization.
+ * Used by the checkout coupon input component.
+ */
+export async function validateCouponCode(
+  code: string,
+  cartTotal: number,
+  contactId?: string,
+): Promise<{
+  valid: boolean;
+  discount_amount: number;
+  coupon_id: string;
+  error?: string;
+}> {
+  const { supabase, organizationId } = await requireAppContext();
+
+  return validateCouponInternal(supabase, organizationId, code, cartTotal, contactId);
+}
+
+/**
+ * Validates a gift card code for the current organization.
+ * Returns the card's current balance and the max redeemable amount for this cart.
+ * Used by the checkout gift card input component.
+ */
+export async function validateGiftCardCode(
+  code: string,
+  cartTotal: number,
+): Promise<{
+  valid: boolean;
+  gift_card_id: string;
+  current_balance: number;
+  redeemable_amount: number;
+  error?: string;
+}> {
+  const { supabase, organizationId } = await requireAppContext();
+
+  // Gift cards table exists in DB but not in generated types
+  const gcDb = supabase as unknown as {
+    from(table: "gift_cards"): {
+      select(columns: string): {
+        eq(col: string, val: string): {
+          eq(col2: string, val2: string): {
+            maybeSingle(): Promise<{
+              data: Record<string, unknown> | null;
+              error: unknown;
+            }>;
+          };
+        };
+      };
+    };
+  };
+
+  const { data: card, error } = await gcDb
+    .from("gift_cards")
+    .select("*")
+    .eq("code", code)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+
+  if (error) {
+    capture(error instanceof Error ? error : new Error(String(error)), {
+      context: "validateGiftCardCode: fetch",
+    });
+    return {
+      valid: false,
+      gift_card_id: "",
+      current_balance: 0,
+      redeemable_amount: 0,
+      error: "Бэлгийн карт шалгахад алдаа гарлаа.",
+    };
+  }
+
+  if (!card) {
+    return {
+      valid: false,
+      gift_card_id: "",
+      current_balance: 0,
+      redeemable_amount: 0,
+      error: "Бэлгийн карт олдсонгүй.",
+    };
+  }
+
+  const c = card as unknown as {
+    id: string;
+    is_active: boolean;
+    expires_at: string | null;
+    current_balance: number;
+  };
+
+  if (!c.is_active) {
+    return {
+      valid: false,
+      gift_card_id: c.id,
+      current_balance: 0,
+      redeemable_amount: 0,
+      error: "Бэлгийн карт идэвхгүй байна.",
+    };
+  }
+
+  if (c.expires_at && new Date().toISOString() > c.expires_at) {
+    return {
+      valid: false,
+      gift_card_id: c.id,
+      current_balance: 0,
+      redeemable_amount: 0,
+      error: "Бэлгийн картын хугацаа дууссан.",
+    };
+  }
+
+  if (c.current_balance <= 0) {
+    return {
+      valid: false,
+      gift_card_id: c.id,
+      current_balance: 0,
+      redeemable_amount: 0,
+      error: "Бэлгийн картын үлдэгдэл дууссан.",
+    };
+  }
+
+  const redeemableAmount = Math.min(c.current_balance, cartTotal);
+
+  return {
+    valid: true,
+    gift_card_id: c.id,
+    current_balance: c.current_balance,
+    redeemable_amount: redeemableAmount,
+  };
 }
 
 /**

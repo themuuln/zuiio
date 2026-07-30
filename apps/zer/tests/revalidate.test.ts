@@ -13,10 +13,12 @@ mockMod("next/cache", {
 mockMod("server-only", {});
 
 // Dynamic import AFTER mock.module so the import sees our spies.
-let revalidateEntity: (entity: string) => void;
-let revalidateEntities: (entities: string[]) => void;
-let revalidateEntityTag: (entity: string, orgId?: string) => void;
-let ENTITY_PATHS: Record<string, readonly string[]>;
+import type { EntityKey } from "@/lib/revalidate";
+
+let revalidateEntity: (entity: EntityKey) => void;
+let revalidateEntities: (entities: EntityKey[]) => void;
+let revalidateEntityTag: (entity: EntityKey, orgId?: string) => void;
+let ENTITY_PATHS: Record<EntityKey, readonly string[]>;
 
 test.before(async () => {
   const mod = await import("@/lib/revalidate");
@@ -36,7 +38,7 @@ test("revalidateEntity('sales') calls revalidatePath for '/' and '/sales'", () =
   revalidateEntity("sales");
 
   const paths = revalidatePathSpy.mock.calls.map(
-    (c: { arguments: [string] }) => c.arguments[0],
+    (c: { arguments: unknown[] }) => String(c.arguments[0]),
   );
   assert.deepEqual(paths, ["/", "/sales"]);
 });
@@ -45,7 +47,7 @@ test("revalidateEntity('inventory') calls revalidatePath for 3 paths", () => {
   revalidateEntity("inventory");
 
   const paths = revalidatePathSpy.mock.calls.map(
-    (c: { arguments: [string] }) => c.arguments[0],
+    (c: { arguments: unknown[] }) => String(c.arguments[0]),
   );
   assert.deepEqual(paths, ["/inventory", "/inventory/movements", "/products"]);
   assert.equal(paths.length, 3);
@@ -55,7 +57,7 @@ test("revalidateEntity('categories') calls revalidatePath for 1 path", () => {
   revalidateEntity("categories");
 
   const paths = revalidatePathSpy.mock.calls.map(
-    (c: { arguments: [string] }) => c.arguments[0],
+    (c: { arguments: unknown[] }) => String(c.arguments[0]),
   );
   assert.deepEqual(paths, ["/inventory/categories"]);
   assert.equal(paths.length, 1);
@@ -65,7 +67,7 @@ test("revalidateEntities(['sales', 'products']) calls revalidatePath for all com
   revalidateEntities(["sales", "products"]);
 
   const paths = revalidatePathSpy.mock.calls.map(
-    (c: { arguments: [string] }) => c.arguments[0],
+    (c: { arguments: unknown[] }) => String(c.arguments[0]),
   );
   // sales: ["/", "/sales"], products: ["/products", "/inventory"]
   assert.deepEqual(paths, ["/", "/sales", "/products", "/inventory"]);
@@ -97,6 +99,7 @@ test("ENTITY_PATHS has all expected entity keys", () => {
     "branches",
     "categories",
     "commissions",
+    "coupons",
     "customers",
     "discounts",
     "expenses",

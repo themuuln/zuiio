@@ -36,6 +36,11 @@ type OrgProfileData = {
     logo_url: string | null;
     banner_url: string | null;
     business_hours: Record<string, string> | null;
+    ga_measurement_id: string | null;
+    meta_description: string | null;
+    meta_pixel_id: string | null;
+    meta_title: string | null;
+    og_image_url: string | null;
     policies: string | null;
     social_links: Record<string, string> | null;
   } | null;
@@ -77,20 +82,43 @@ export async function generateMetadata({
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const { data: org } = await supabase
     .from("organizations")
-    .select("name, slug")
+    .select("name, slug, public_profile:organization_public_profiles(*) ")
     .eq("slug", slug)
     .single();
 
-  if (!data) {
+  if (!org) {
     return { title: "Байгууллага" };
   }
 
+  const profile = org.public_profile as {
+    meta_title?: string | null;
+    meta_description?: string | null;
+    og_image_url?: string | null;
+    logo_url?: string | null;
+  } | null;
+
+  const title = profile?.meta_title || org.name;
+  const description =
+    profile?.meta_description || `${org.name}-ийн нийтийн хуудас`;
+  const images = profile?.og_image_url
+    ? [{ url: profile.og_image_url, width: 1200, height: 630 }]
+    : profile?.logo_url
+      ? [{ url: profile.logo_url, width: 1200, height: 630 }]
+      : [];
+
   return {
-    title: `${data.name}`,
-    description: `${data.name}-ийн нийтийн хуудас`,
+    title,
+    description,
     robots: { index: true, follow: true },
+    openGraph: {
+      title,
+      description,
+      images,
+      type: "website",
+      url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn"}/${org.slug}`,
+    },
   };
 }
 

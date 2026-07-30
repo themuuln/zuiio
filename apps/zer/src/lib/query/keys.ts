@@ -88,6 +88,24 @@ export const discountKeys = {
   detail: (id: string) => ["discounts", "detail", id] as const,
 };
 
+export const couponKeys = {
+  all: () => ["coupons"] as const,
+  lists: (orgId: string) => ["coupons", "list", orgId] as const,
+  detail: (id: string) => ["coupons", "detail", id] as const,
+};
+
+export const promotionKeys = {
+  all: () => ["promotions"] as const,
+  lists: (orgId: string) => ["promotions", "list", orgId] as const,
+  detail: (id: string) => ["promotions", "detail", id] as const,
+};
+
+export const giftCardKeys = {
+  all: () => ["gift_cards"] as const,
+  lists: (orgId: string) => ["gift_cards", "list", orgId] as const,
+  detail: (id: string) => ["gift_cards", "detail", id] as const,
+};
+
 export const quotationKeys = {
   all: () => ["quotations"] as const,
   lists: (orgId: string) => ["quotations", "list", orgId] as const,
