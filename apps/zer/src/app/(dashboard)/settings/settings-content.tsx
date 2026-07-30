@@ -5,6 +5,7 @@ import {
   GearSix,
   MapPinArea,
   TelegramLogo,
+  Truck,
   WarningCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -551,14 +552,20 @@ export function SettingsContent() {
               Хүргэлтийн бүсүүд
             </CardTitle>
             <CardDescription>
-              Хүргэлтийн үнийн бүс, санхүүжилт, тохиргоо
+              Хүргэлтийн үнийн бүс, тохиргоо
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex gap-2">
             <Button asChild variant="outline">
               <Link href="/settings/delivery-zones">
                 <MapPinArea className="size-4" />
                 Бүсүүд удирдах
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/settings/delivery-providers">
+                <Truck className="size-4" />
+                Үйлчилгээ
               </Link>
             </Button>
           </CardContent>
