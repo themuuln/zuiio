@@ -120,7 +120,7 @@ class AnalyticsExportService {
       }
     }
 
-    final csvData = const ListToCsvConverter().convert(rows);
+    final csvData = const CsvEncoder().convert(rows);
     await _saveAndShare(csvData, 'analytics_report.csv');
   }
 
@@ -260,9 +260,9 @@ class AnalyticsExportService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/analytics_report.pdf');
     await file.writeAsBytes(await pdf.save());
-    await Share.shareXFiles([
-      XFile(file.path),
-    ], subject: 'Tamga Analytics Report');
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(file.path)], subject: 'Tamga Analytics Report'),
+    );
   }
 
   // ── Helpers ─────────────────────────────────────────────────────
@@ -272,9 +272,9 @@ class AnalyticsExportService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$fileName');
     await file.writeAsString(csvData);
-    await Share.shareXFiles([
-      XFile(file.path),
-    ], subject: 'Tamga Analytics Report');
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(file.path)], subject: 'Tamga Analytics Report'),
+    );
   }
 
   /// PDF дотор хүснэгт үүсгэх.

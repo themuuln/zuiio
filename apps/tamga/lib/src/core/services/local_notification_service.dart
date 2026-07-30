@@ -61,7 +61,7 @@ class LocalNotificationService {
       );
 
       await _plugin.initialize(
-        initSettings,
+        settings: initSettings,
         onDidReceiveNotificationResponse: _handleNotificationResponse,
       );
 
@@ -129,10 +129,10 @@ class LocalNotificationService {
       );
 
       await _plugin.show(
-        DateTime.now().millisecondsSinceEpoch ~/ 1000, // unique id
-        title,
-        body,
-        _notificationDetails(type),
+        id: DateTime.now().millisecondsSinceEpoch ~/ 1000, // unique id
+        title: title,
+        body: body,
+        notificationDetails: _notificationDetails(type),
         payload: payload.toPayloadString(),
       );
 
@@ -196,14 +196,12 @@ class LocalNotificationService {
       }
 
       await _plugin.zonedSchedule(
-        id,
-        title,
-        body,
-        tzScheduledDate,
-        _notificationDetails(type),
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tzScheduledDate,
+        notificationDetails: _notificationDetails(type),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload.toPayloadString(),
       );
 
@@ -231,7 +229,7 @@ class LocalNotificationService {
     if (!_initialized) return const Result.ok(null);
 
     try {
-      await _plugin.cancel(id);
+      await _plugin.cancel(id: id);
       debugPrint('[LocalNotificationService] Cancelled notification: $id');
       return const Result.ok(null);
     } catch (e) {
@@ -257,7 +255,7 @@ class LocalNotificationService {
             request.payload!,
           );
           if (payload.type == type) {
-            await _plugin.cancel(request.id);
+            await _plugin.cancel(id: request.id);
           }
         }
       }
