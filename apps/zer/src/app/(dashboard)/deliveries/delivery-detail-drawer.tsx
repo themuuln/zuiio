@@ -2,15 +2,18 @@
 
 import {
   ArrowRight,
+  CheckCircle,
   Clock,
   MapPin,
   Phone,
   Truck,
   User,
+  XCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@/components/ui/badge";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { toast } from "sonner";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Хүлээгдэж буй",
@@ -97,6 +100,138 @@ export function DeliveryDetailDrawer({
             {STATUS_LABELS[delivery.status] ?? delivery.status}
           </Badge>
         </div>
+
+        {/* Status Actions */}
+        {delivery.status === "pending" && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const { updateDeliveryStatus } = await import("./actions");
+                  const result = await updateDeliveryStatus(
+                    delivery.id,
+                    "assigned",
+                    "Курьер даалгасан",
+                  );
+                  if ("error" in result) {
+                    toast.error(result.error);
+                  } else {
+                    toast.success("Даалгасан");
+                  }
+                } catch {
+                  toast.error("Алдаа гарлаа");
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              <User className="size-3.5" />
+              Даалгах
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const { updateDeliveryStatus } = await import("./actions");
+                  const result = await updateDeliveryStatus(
+                    delivery.id,
+                    "cancelled",
+                    "Цуцалсан",
+                  );
+                  if ("error" in result) {
+                    toast.error(result.error);
+                  } else {
+                    toast.success("Хүргэлт цуцалсан");
+                  }
+                } catch {
+                  toast.error("Алдаа гарлаа");
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <XCircle className="size-3.5" />
+              Цуцлах
+            </button>
+          </div>
+        )}
+        {delivery.status === "assigned" && (
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const { updateDeliveryStatus } = await import("./actions");
+                const result = await updateDeliveryStatus(
+                  delivery.id,
+                  "picked_up",
+                  "Хүргэлтийг авсан",
+                );
+                if ("error" in result) {
+                  toast.error(result.error);
+                } else {
+                  toast.success("Авсан");
+                }
+              } catch {
+                toast.error("Алдаа гарлаа");
+              }
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600 transition-colors"
+          >
+            <CheckCircle className="size-3.5" />
+            Авсан
+          </button>
+        )}
+        {delivery.status === "picked_up" && (
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const { updateDeliveryStatus } = await import("./actions");
+                const result = await updateDeliveryStatus(
+                  delivery.id,
+                  "in_transit",
+                  "Хүргэлт замдаа гарсан",
+                );
+                if ("error" in result) {
+                  toast.error(result.error);
+                } else {
+                  toast.success("Замдаа");
+                }
+              } catch {
+                toast.error("Алдаа гарлаа");
+              }
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600 transition-colors"
+          >
+            <ArrowRight className="size-3.5" />
+            Замдаа гаргах
+          </button>
+        )}
+        {delivery.status === "in_transit" && (
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const { updateDeliveryStatus } = await import("./actions");
+                const result = await updateDeliveryStatus(
+                  delivery.id,
+                  "delivered",
+                  "Амжилттай хүргэгдсэн",
+                );
+                if ("error" in result) {
+                  toast.error(result.error);
+                } else {
+                  toast.success("Хүргэгдсэн!");
+                }
+              } catch {
+                toast.error("Алдаа гарлаа");
+              }
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-600 transition-colors"
+          >
+            <CheckCircle className="size-3.5" />
+            Хүргэгдсэн
+          </button>
+        )}
 
         {/* Delivery fee card */}
         <div className="rounded-xl border border-border/80 bg-muted/40 p-4">
