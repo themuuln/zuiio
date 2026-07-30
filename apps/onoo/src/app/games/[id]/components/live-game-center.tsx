@@ -4,8 +4,8 @@ import { sortEvents } from "@onoo/core/events";
 import { describeEvent, formatClock } from "@onoo/core/format";
 import { deriveBoxScore } from "@onoo/core/stats";
 import type { GameRoster, SportConfig, StatEvent } from "@onoo/core/types";
+import { Flag, Radio } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ScoreBoard } from "@/components/score-board";
 import {
   Table,
   TableBody,
@@ -123,15 +123,6 @@ export function LiveGameCenter({
 
   return (
     <div className="space-y-4">
-      {/* Score Header */}
-      <ScoreBoard
-        homeScore={homeTeamStats?.pts ?? 0}
-        awayScore={awayTeamStats?.pts ?? 0}
-        homeLabel="Эхний"
-        awayLabel="Зочин"
-        className="rounded-lg bg-primary p-4 text-primary-foreground"
-      />
-
       {/* Tabs */}
       <div
         className="flex border-b"
@@ -169,9 +160,19 @@ export function LiveGameCenter({
             className="space-y-2"
           >
             {sortedEvents.length === 0 ? (
-              <p className="py-8 text-center text-muted-foreground">
-                Үйлдэл байхгүй байна
-              </p>
+              <div className="flex flex-col items-center gap-2 py-12 text-center">
+                <Radio
+                  className="size-8 text-muted-foreground/40"
+                  aria-hidden="true"
+                />
+                <p className="text-sm font-medium text-muted-foreground">
+                  Шууд тэмдэглэл эхлээгүй байна
+                </p>
+                <p className="text-xs text-muted-foreground/60 max-w-64">
+                  Тэмдэглэгч тоглолтыг бүртгэж эхэлмэгц үйлдлүүд шууд гарч ирнэ.
+                  Хуудсыг автоматаар шинэчилнэ.
+                </p>
+              </div>
             ) : (
               [...sortedEvents].reverse().map((event) => (
                 <div
@@ -195,19 +196,36 @@ export function LiveGameCenter({
             aria-labelledby={`tab-${activeTab}`}
             className="overflow-x-auto"
           >
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Тоглогч</TableHead>
-                  <TableHead className="text-right">Оноо</TableHead>
-                  <TableHead className="text-right">Оролт</TableHead>
-                  <TableHead className="text-right">Давсан</TableHead>
-                  <TableHead className="text-right">Олгосон</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(activeTab === "home" ? homePlayerStats : awayPlayerStats).map(
-                  (player) => (
+            {(activeTab === "home" ? homePlayerStats : awayPlayerStats)
+              .length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-12 text-center">
+                <Flag
+                  className="size-8 text-muted-foreground/40"
+                  aria-hidden="true"
+                />
+                <p className="text-sm font-medium text-muted-foreground">
+                  Тоглогчдын мэдээлэл хараахан бүртгэгдээгүй
+                </p>
+                <p className="text-xs text-muted-foreground/60">
+                  Үйлдэл бүртгэгдсэний дараа автоматаар гарч ирнэ.
+                </p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Тоглогч</TableHead>
+                    <TableHead className="text-right">Оноо</TableHead>
+                    <TableHead className="text-right">Оролт</TableHead>
+                    <TableHead className="text-right">Давсан</TableHead>
+                    <TableHead className="text-right">Олгосон</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(activeTab === "home"
+                    ? homePlayerStats
+                    : awayPlayerStats
+                  ).map((player) => (
                     <TableRow key={player.playerId}>
                       <TableCell className="font-medium">
                         {resolvePlayerName(player.playerId)}
@@ -225,10 +243,10 @@ export function LiveGameCenter({
                         {player.ast}
                       </TableCell>
                     </TableRow>
-                  ),
-                )}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         )}
       </div>
