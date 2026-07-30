@@ -129,3 +129,21 @@ export async function generatePosterCore(params: GeneratePosterParams): Promise<
     return { error: `Постер үүсгэхэд алдаа гарлаа: ${message}` };
   }
 }
+
+/**
+ * Generate a product image from a text description.
+ * Uses Fal.ai Flux Pro text-to-image.
+ */
+export async function generateProductImage(prompt: string): Promise<{ imageUrl?: string; error?: string }> {
+  try {
+    fal.config({ credentials: process.env.FAL_API_KEY });
+    const result = await fal.run("fal-ai/flux-pro/v1.1", {
+      input: { prompt, image_size: { width: 1024, height: 1024 }, num_images: 1 },
+    });
+    const url = result.data?.images?.[0]?.url;
+    return url ? { imageUrl: url } : { error: "Зураг үүсгэхэд алдаа гарлаа." };
+  } catch (e) {
+    capture(e, { context: "generateProductImage" });
+    return { error: "Зураг үүсгэхэд алдаа гарлаа." };
+  }
+}
