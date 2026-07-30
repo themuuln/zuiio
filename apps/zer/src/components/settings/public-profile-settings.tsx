@@ -63,6 +63,11 @@ type PublicProfile = {
   logo_url: string | null;
   banner_url: string | null;
   business_hours: Record<string, string> | null;
+  ga_measurement_id: string | null;
+  meta_description: string | null;
+  meta_pixel_id: string | null;
+  meta_title: string | null;
+  og_image_url: string | null;
   policies: string | null;
   social_links: Record<string, string> | null;
 };
@@ -451,6 +456,72 @@ export function PublicProfileSettings({
               rows={3}
               defaultValue={initialProfile?.description ?? ""}
             />
+          </div>
+
+          <Separator />
+
+          {/* Analytics & SEO */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Аналитик & SEO</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="ga_measurement_id"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Google Analytics ID
+                </label>
+                <Input
+                  id="ga_measurement_id"
+                  name="ga_measurement_id"
+                  placeholder="G-XXXXXXXXXX"
+                  defaultValue={initialProfile?.ga_measurement_id ?? ""}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="meta_pixel_id"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Meta Pixel ID
+                </label>
+                <Input
+                  id="meta_pixel_id"
+                  name="meta_pixel_id"
+                  placeholder="1234567890"
+                  defaultValue={initialProfile?.meta_pixel_id ?? ""}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="meta_title"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                SEO гарчиг
+              </label>
+              <Input
+                id="meta_title"
+                name="meta_title"
+                placeholder="Хайлтын системд харагдах гарчиг"
+                defaultValue={initialProfile?.meta_title ?? ""}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="meta_description"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                SEO тайлбар
+              </label>
+              <Textarea
+                id="meta_description"
+                name="meta_description"
+                placeholder="Хайлтын системд харагдах тайлбар"
+                rows={3}
+                defaultValue={initialProfile?.meta_description ?? ""}
+              />
+            </div>
           </div>
 
           <Separator />

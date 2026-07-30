@@ -18,6 +18,9 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createShopSale } from "@/app/(dashboard)/shop/actions";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
+import { CheckoutCoupon } from "@/components/shop/checkout-coupon";
+import { CheckoutGiftCard } from "@/components/shop/checkout-gift-card";
+import { CheckoutPromotions } from "@/components/shop/checkout-promotions";
 import { CustomerPicker } from "@/components/shop/customer-picker";
 import { StaffPicker } from "@/components/shop/staff-picker";
 import { Button } from "@/components/ui/button";
@@ -166,7 +169,7 @@ export function CheckoutForm({
   const [customerOpen, setCustomerOpen] = useState(false);
   const [orderExpanded, setOrderExpanded] = useState(true);
 
-  // Delivery state
+// Delivery state
   const [deliveryEnabled, setDeliveryEnabled] = useState(false);
   const [deliveryContactName, setDeliveryContactName] = useState("");
   const [deliveryContactPhone, setDeliveryContactPhone] = useState("");
@@ -214,6 +217,23 @@ export function CheckoutForm({
     deliveryContactPhone,
   ]);
 
+// Coupon/discount state
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [couponId, setCouponId] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+
+  // Gift card state
+  const [giftCardAmount, setGiftCardAmount] = useState(0);
+  const [giftCardId, setGiftCardId] = useState<string | null>(null);
+
+  // Promotion discount from evaluateCartPromotions
+  const [promotionDiscountAmount, setPromotionDiscountAmount] = useState(0);
+
+  // Effective total after all discounts
+  const afterDiscount = totalAmount - discountAmount;
+  const afterPromotions = afterDiscount - promotionDiscountAmount;
+  const effectiveTotal = afterPromotions - giftCardAmount;
+
   // Payment state — paid amount defaults to the full total so the common
   // exact-payment sale is a single Enter press.
   const [paymentMethod, setPaymentMethod] = useState("card");
@@ -252,11 +272,51 @@ export function CheckoutForm({
   const formRef = useRef<HTMLFormElement>(null);
 
   const paidAmount = Number(paidAmountStr) || 0;
-  const change = paidAmount > totalAmount ? paidAmount - totalAmount : 0;
-  const isExactAmount = paidAmount === totalAmount;
+  const change = paidAmount > effectiveTotal ? paidAmount - effectiveTotal : 0;
+  const isExactAmount = paidAmount === effectiveTotal;
 
   const isFormValid =
-    items.length > 0 && !!paymentMethod && paidAmount >= totalAmount;
+    items.length > 0 && !!paymentMethod && paidAmount >= effectiveTotal;
+
+  const handleDiscountApplied = (amount: number, cId: string, cCode: string) => {
+    setDiscountAmount(amount);
+    setCouponId(cId);
+    setCouponCode(cCode);
+    // Update paid amount default to match the discounted total
+    setPaidAmountStr(
+      String(totalAmount - amount - promotionDiscountAmount - giftCardAmount),
+    );
+  };
+
+  const handleDiscountRemoved = () => {
+    setDiscountAmount(0);
+    setCouponId(null);
+    setCouponCode(null);
+  };
+
+  const handleGiftCardApplied = (amount: number, cardId: string) => {
+    setGiftCardAmount(amount);
+    setGiftCardId(cardId);
+    // Update paid amount default to match after gift card deduction
+    setPaidAmountStr(
+      String(
+        totalAmount - discountAmount - promotionDiscountAmount - amount,
+      ),
+    );
+  };
+
+  const handleGiftCardRemoved = () => {
+    setGiftCardAmount(0);
+    setGiftCardId(null);
+  };
+
+  const handlePromotionsEvaluated = (totalDiscount: number) => {
+    setPromotionDiscountAmount(totalDiscount);
+    // Update paid amount default to match after promotion deduction
+    setPaidAmountStr(
+      String(totalAmount - discountAmount - totalDiscount - giftCardAmount),
+    );
+  };
 
   const handleSelectContact = (contact: Contact | null) => {
     setSelectedContactId(contact?.id ?? null);
@@ -295,6 +355,7 @@ export function CheckoutForm({
         formData.set("customer_phone", customerPhone);
       }
     }
+<<<<<<< HEAD
 
     if (deliveryEnabled) {
       formData.set("delivery_address", deliveryAddress);
@@ -307,6 +368,20 @@ export function CheckoutForm({
       if (deliveryRequestedAt) {
         formData.set("delivery_requested_at", deliveryRequestedAt);
       }
+=======
+    // Coupon fields
+    if (couponId) {
+      formData.set("coupon_id", couponId);
+      formData.set("coupon_code", couponCode ?? "");
+      formData.set("discount_amount", String(discountAmount));
+    }
+    // Promotion field
+    if (promotionDiscountAmount > 0) {
+      formData.set(
+        "promotion_discount_amount",
+        String(promotionDiscountAmount),
+      );
+>>>>>>> remotes/origin/feat/zer-ecommerce-promotions
     }
   };
 
@@ -472,9 +547,9 @@ export function CheckoutForm({
     onStateChange?.({
       isFormValid,
       isPending: mutation.isPending,
-      totalAmount,
+      totalAmount: effectiveTotal,
     });
-  }, [isFormValid, mutation.isPending, totalAmount, onStateChange]);
+  }, [isFormValid, mutation.isPending, effectiveTotal, onStateChange]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -549,12 +624,27 @@ export function CheckoutForm({
         >
           <div className="flex flex-col items-start gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">
-              Нийт дүн
+              {discountAmount > 0 || promotionDiscountAmount > 0
+                ? "Төлөх дүн"
+                : "Нийт дүн"}
             </span>
-            <span className="text-2xl font-bold tabular-nums">
-              {totalAmount.toLocaleString()}
-              {selectedCurrency.symbol}
-            </span>
+            {discountAmount > 0 || promotionDiscountAmount > 0 ? (
+              <>
+                <span className="text-xs text-muted-foreground/60 line-through">
+                  {totalAmount.toLocaleString()}
+                  {selectedCurrency.symbol}
+                </span>
+                <span className="text-2xl font-bold tabular-nums">
+                  {effectiveTotal.toLocaleString()}
+                  {selectedCurrency.symbol}
+                </span>
+              </>
+            ) : (
+              <span className="text-2xl font-bold tabular-nums">
+                {totalAmount.toLocaleString()}
+                {selectedCurrency.symbol}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>
@@ -696,7 +786,7 @@ export function CheckoutForm({
             {/* Exact amount button */}
             <button
               type="button"
-              onClick={() => setPaidAmountStr(String(totalAmount))}
+              onClick={() => setPaidAmountStr(String(effectiveTotal))}
               className={cn(
                 "rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
                 isExactAmount
@@ -729,7 +819,7 @@ export function CheckoutForm({
         )}
 
         {/* Change display */}
-        {paidAmount > totalAmount && (
+        {paidAmount > effectiveTotal && (
           <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3 dark:bg-emerald-950/20">
             <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
               Өөрчлөлт
@@ -741,6 +831,55 @@ export function CheckoutForm({
           </div>
         )}
       </div>
+
+      {/* === COUPON === */}
+      <CheckoutCoupon
+        cartTotal={totalAmount}
+        onDiscountApplied={handleDiscountApplied}
+        onDiscountRemoved={handleDiscountRemoved}
+        contactId={selectedContactId}
+      />
+
+      {/* === GIFT CARD === */}
+      <CheckoutGiftCard
+        cartTotal={afterDiscount}
+        onGiftCardApplied={handleGiftCardApplied}
+        onGiftCardRemoved={handleGiftCardRemoved}
+      />
+
+      {/* === PROMOTIONS === */}
+      <CheckoutPromotions
+        items={items}
+        subtotal={totalAmount}
+        onPromotionsEvaluated={handlePromotionsEvaluated}
+      />
+
+      {/* Hidden coupon fields */}
+      {couponId && (
+        <>
+          <input type="hidden" name="coupon_id" value={couponId} />
+          <input type="hidden" name="coupon_code" value={couponCode ?? ""} />
+          <input type="hidden" name="discount_amount" value={String(discountAmount)} />
+        </>
+      )}
+
+      {/* Hidden gift card fields */}
+      {giftCardId && (
+        <>
+          <input type="hidden" name="gift_card_id" value={giftCardId} />
+          <input type="hidden" name="gift_card_amount" value={String(giftCardAmount)} />
+        </>
+      )}
+
+      {/* Hidden promotion field */}
+      {promotionDiscountAmount > 0 && (
+        <input
+          type="hidden"
+          name="promotion_discount_amount"
+          value={String(promotionDiscountAmount)}
+        />
+      )}
+
       {/* === CUSTOMER (collapsible, hidden for orgs without checkout CRM) === */}
       {hasCheckoutCustomer && (
         <Collapsible open={customerOpen} onOpenChange={setCustomerOpen}>

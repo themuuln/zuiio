@@ -70,6 +70,11 @@ export async function updatePublicProfile(
   const logoUrl = (formData.get("logo_url") as string) || null;
   const bannerUrl = (formData.get("banner_url") as string) || null;
   const policies = (formData.get("policies") as string) || null;
+  const gaMeasurementId = (formData.get("ga_measurement_id") as string) || null;
+  const metaPixelId = (formData.get("meta_pixel_id") as string) || null;
+  const metaTitle = (formData.get("meta_title") as string) || null;
+  const metaDescription = (formData.get("meta_description") as string) || null;
+  const ogImageUrl = (formData.get("og_image_url") as string) || null;
 
   // Parse business hours from form (JSON string sent by client)
   let businessHours: Record<string, string> | null = null;
@@ -111,6 +116,11 @@ export async function updatePublicProfile(
     logo_url: logoUrl,
     banner_url: bannerUrl,
     policies,
+    ga_measurement_id: gaMeasurementId,
+    meta_pixel_id: metaPixelId,
+    meta_title: metaTitle,
+    meta_description: metaDescription,
+    og_image_url: ogImageUrl,
     business_hours:
       Object.keys(businessHours ?? {}).length > 0 ? businessHours : null,
     social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
