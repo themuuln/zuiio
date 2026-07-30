@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
     },
     optimizePackageImports: [
       "@phosphor-icons/react",
+      "@fal-ai/client",
       "lucide-react",
       "recharts",
       "date-fns",
