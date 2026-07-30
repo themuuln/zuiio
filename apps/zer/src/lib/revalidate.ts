@@ -15,13 +15,10 @@ export const ENTITY_PATHS = {
   returns: ["/", "/returns"],
   invoices: ["/invoices"],
   quotations: ["/", "/quotations"],
-<<<<<<< HEAD
   deliveries: ["/", "/deliveries"],
-=======
   coupons: ["/", "/coupons"],
   promotions: ["/", "/promotions"],
   gift_cards: ["/", "/gift-cards", "/shop"],
->>>>>>> remotes/origin/feat/zer-ecommerce-promotions
   discounts: ["/", "/discounts"],
   products: ["/products", "/inventory"],
   inventory: ["/inventory", "/inventory/movements", "/products"],

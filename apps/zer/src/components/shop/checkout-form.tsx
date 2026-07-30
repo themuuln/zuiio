@@ -355,7 +355,6 @@ export function CheckoutForm({
         formData.set("customer_phone", customerPhone);
       }
     }
-<<<<<<< HEAD
 
     if (deliveryEnabled) {
       formData.set("delivery_address", deliveryAddress);
@@ -368,7 +367,8 @@ export function CheckoutForm({
       if (deliveryRequestedAt) {
         formData.set("delivery_requested_at", deliveryRequestedAt);
       }
-=======
+    }
+
     // Coupon fields
     if (couponId) {
       formData.set("coupon_id", couponId);
@@ -381,7 +381,6 @@ export function CheckoutForm({
         "promotion_discount_amount",
         String(promotionDiscountAmount),
       );
->>>>>>> remotes/origin/feat/zer-ecommerce-promotions
     }
   };
 
