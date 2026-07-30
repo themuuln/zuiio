@@ -19,8 +19,8 @@ export function DocsMobileNav() {
   const router = useRouter();
 
   const flatNavItems = DOCS_NAV.flatMap((g) => g.items);
-  const currentLabel = flatNavItems.find((i) => i.href === pathname)?.label;
-  const selectValue = pathname;
+  const currentLabel =
+    flatNavItems.find((i) => i.href === pathname)?.label ?? "";
 
   return (
     <div className="rounded-xl border bg-card p-4 shadow-sm lg:hidden">
@@ -30,7 +30,7 @@ export function DocsMobileNav() {
           Хэсгээс сонгож шууд шилжинэ.
         </p>
       </div>
-      <Select value={pathname} onValueChange={(value) => router.push(value)}>
+      <Select value={pathname} onValueChange={(v) => v && router.push(v)}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Хэсэг сонгох">{currentLabel}</SelectValue>
         </SelectTrigger>

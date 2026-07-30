@@ -14,7 +14,7 @@ describe("loadFont", () => {
     expect(result).toBeNull();
   });
 
-  it("returns null when CSS response lacks woff2 URL", async () => {
+  it("returns null when CSS response lacks font URL", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response("@font-face { font-family: 'Barlow'; }", {
         status: 200,
@@ -27,8 +27,8 @@ describe("loadFont", () => {
   });
 
   it("returns an ArrayBuffer from a valid Google Fonts CSS response", async () => {
-    // Simulate real Google Fonts CSS with a woff2 URL
-    const cssResponse = `@font-face { font-family: 'Barlow'; src: url(https://fonts.gstatic.com/s/barlow/v12/abc.woff2) format('woff2'); }`;
+    // Simulate real Google Fonts CSS with a ttf URL
+    const cssResponse = `@font-face { font-family: 'Barlow'; src: url(https://fonts.gstatic.com/s/barlow/v12/abc.ttf) format('ttf'); }`;
 
     const fontData = new Uint8Array([0, 1, 2, 3]).buffer;
 
@@ -49,20 +49,23 @@ describe("loadFont", () => {
           headers: { "Content-Type": "text/css" },
         });
       }
-      // Second call: woff2 download
-      expect(url).toBe("https://fonts.gstatic.com/s/barlow/v12/abc.woff2");
+      // Second call: ttf download
+      expect(url).toBe("https://fonts.gstatic.com/s/barlow/v12/abc.ttf");
       return new Response(fontData, {
         status: 200,
-        headers: { "Content-Type": "font/woff2" },
+        headers: { "Content-Type": "font/ttf" },
       });
     });
 
     const result = await loadFont("Barlow", 400);
     expect(result).toBeInstanceOf(ArrayBuffer);
-    expect(new Uint8Array(result!)).toEqual(new Uint8Array([0, 1, 2, 3]));
+    expect(result).toBeDefined();
+    expect(new Uint8Array(result as ArrayBuffer)).toEqual(
+      new Uint8Array([0, 1, 2, 3]),
+    );
   });
 
-  it("sends a Chrome user-agent header", async () => {
+  it("sends a Googlebot user-agent header", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response("", { status: 200 }),
     );
@@ -89,8 +92,8 @@ describe("loadFonts", () => {
       _callCount++;
 
       if (url.includes("fonts.googleapis.com/css2")) {
-        // Return CSS with a valid woff2 URL for each font request
-        const dummyCss = `@font-face { src: url(https://fonts.gstatic.com/test.woff2) format('woff2'); }`;
+        // Return CSS with a valid ttf URL for each font request
+        const dummyCss = `@font-face { src: url(https://fonts.gstatic.com/test.ttf) format('ttf'); }`;
         return new Response(dummyCss, {
           status: 200,
           headers: { "Content-Type": "text/css" },
@@ -99,7 +102,7 @@ describe("loadFonts", () => {
       if (url.includes("fonts.gstatic.com")) {
         return new Response(fontData, {
           status: 200,
-          headers: { "Content-Type": "font/woff2" },
+          headers: { "Content-Type": "font/ttf" },
         });
       }
       return new Response("", { status: 404 });

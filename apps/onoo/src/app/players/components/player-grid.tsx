@@ -136,7 +136,10 @@ export function PlayerGrid({
         </div>
 
         {/* Team filter */}
-        <Select value={teamFilter} onValueChange={setTeamFilter}>
+        <Select
+          value={teamFilter}
+          onValueChange={(v) => v !== null && setTeamFilter(v)}
+        >
           <SelectTrigger className="h-9 w-[160px]" aria-label="Багаар шүүх">
             <SelectValue placeholder="Бүх баг" />
           </SelectTrigger>
@@ -153,7 +156,10 @@ export function PlayerGrid({
         </Select>
 
         {/* Position filter */}
-        <Select value={positionFilter} onValueChange={setPositionFilter}>
+        <Select
+          value={positionFilter}
+          onValueChange={(v) => v !== null && setPositionFilter(v)}
+        >
           <SelectTrigger className="h-9 w-[140px]" aria-label="Байрлалаар шүүх">
             <SelectValue placeholder="Бүх байрлал" />
           </SelectTrigger>
@@ -364,11 +370,10 @@ export function PlayerGrid({
 
 interface PlayerCardProps {
   player: PlayerDirectoryRow;
-  rank?: number;
   className?: string;
 }
 
-function PlayerCard({ player, rank, className }: PlayerCardProps) {
+function PlayerCard({ player, className }: PlayerCardProps) {
   return (
     <Link
       href={`/players/${player.player_id}`}

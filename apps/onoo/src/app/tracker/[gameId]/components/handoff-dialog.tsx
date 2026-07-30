@@ -149,7 +149,7 @@ export function HandoffDialog({
             <Label htmlFor="recipient">Хүлээн авагч</Label>
             <Select
               value={selectedUserId}
-              onValueChange={setSelectedUserId}
+              onValueChange={(v) => v && setSelectedUserId(v)}
               disabled={loadingRecipients || loading}
             >
               <SelectTrigger id="recipient">

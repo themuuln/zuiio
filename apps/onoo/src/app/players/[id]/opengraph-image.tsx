@@ -16,13 +16,13 @@ async function loadFont(
       {
         headers: {
           "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
         },
       },
     ).then((r) => r.text());
 
     const match = css.match(
-      /url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.woff2)\)/,
+      /url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.ttf)\)/,
     );
     if (!match?.[1]) return null;
     return fetch(match[1]).then((r) => r.arrayBuffer());
@@ -174,10 +174,9 @@ export default async function Image({
               marginTop: 40,
             }}
           >
-            {statParts.map((part, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: static stat labels
+            {statParts.map((part) => (
               <div
-                key={i}
+                key={part}
                 style={{
                   display: "flex",
                   flexDirection: "column",
