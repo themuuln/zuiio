@@ -42,7 +42,7 @@
     "khosuud":       { "vercel": "zerone",   "supabase_ref": "rjzrnuddfjwbmxacclga" },
     "zatly":         { "vercel": "zerone",   "supabase_ref": "ijeuxmgktfqtukpmnenh" },
     "zunch":         { "vercel": "zerone",   "supabase_ref": "jzmnaovcbwjitxfjxxcu" },
-    "tamga":         { "vercel": "zerone" },
+    "tamga":         { "vercel": "zerone", "supabase_ref": "xwgcdqpunsuuxbyqbqik" },
     "tamga-web":     { "vercel": "zerone" },
     "tumurch":       { "vercel": "zerone" },
     "tumurch-rn":    { "vercel": "zerone" },
