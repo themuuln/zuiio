@@ -13,50 +13,58 @@ extension GetIsarFeedScheduleCollection on Isar {
   IsarCollection<IsarFeedSchedule> get isarFeedSchedules => this.collection();
 }
 
-const IsarFeedScheduleSchema = CollectionSchema(
+final IsarFeedScheduleSchema = CollectionSchema(
   name: r'IsarFeedSchedule',
-  id: -6288161536783665924,
+  id: int.parse('-6288161536783665924'),
   properties: {
     r'createdAt': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'endDate': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'endDate',
       type: IsarType.dateTime,
     ),
     r'feedType': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'feedType',
       type: IsarType.byte,
       enumMap: _IsarFeedSchedulefeedTypeEnumValueMap,
     ),
     r'frequency': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'frequency',
       type: IsarType.string,
     ),
-    r'horseId': PropertySchema(id: 5, name: r'horseId', type: IsarType.string),
-    r'notes': PropertySchema(id: 6, name: r'notes', type: IsarType.string),
+    r'horseId': PropertySchema(
+      id: int.parse('5'),
+      name: r'horseId',
+      type: IsarType.string,
+    ),
+    r'notes': PropertySchema(
+      id: int.parse('6'),
+      name: r'notes',
+      type: IsarType.string,
+    ),
     r'quantityKg': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'quantityKg',
       type: IsarType.double,
     ),
     r'startDate': PropertySchema(
-      id: 8,
+      id: int.parse('8'),
       name: r'startDate',
       type: IsarType.dateTime,
     ),
     r'updatedAt': PropertySchema(
-      id: 9,
+      id: int.parse('9'),
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -68,7 +76,7 @@ const IsarFeedScheduleSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -81,7 +89,7 @@ const IsarFeedScheduleSchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: -4681125749579367450,
+      id: int.parse('-4681125749579367450'),
       name: r'horseId',
       unique: false,
       replace: false,

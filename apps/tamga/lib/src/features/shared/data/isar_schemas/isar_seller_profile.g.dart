@@ -13,58 +13,62 @@ extension GetIsarSellerProfileCollection on Isar {
   IsarCollection<IsarSellerProfile> get isarSellerProfiles => this.collection();
 }
 
-const IsarSellerProfileSchema = CollectionSchema(
+final IsarSellerProfileSchema = CollectionSchema(
   name: r'IsarSellerProfile',
-  id: 926639826832267622,
+  id: int.parse('926639826832267622'),
   properties: {
     r'averageRating': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'averageRating',
       type: IsarType.double,
     ),
-    r'bio': PropertySchema(id: 1, name: r'bio', type: IsarType.string),
+    r'bio': PropertySchema(
+      id: int.parse('1'),
+      name: r'bio',
+      type: IsarType.string,
+    ),
     r'displayName': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'displayName',
       type: IsarType.string,
     ),
     r'domainId': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'locationLabel': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'locationLabel',
       type: IsarType.string,
     ),
     r'ratingCount': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'ratingCount',
       type: IsarType.long,
     ),
     r'responseNote': PropertySchema(
-      id: 6,
+      id: int.parse('6'),
       name: r'responseNote',
       type: IsarType.string,
     ),
     r'reviews': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'reviews',
       type: IsarType.stringList,
     ),
     r'stableName': PropertySchema(
-      id: 8,
+      id: int.parse('8'),
       name: r'stableName',
       type: IsarType.string,
     ),
     r'verificationLabel': PropertySchema(
-      id: 9,
+      id: int.parse('9'),
       name: r'verificationLabel',
       type: IsarType.string,
     ),
     r'verificationStatus': PropertySchema(
-      id: 10,
+      id: int.parse('10'),
       name: r'verificationStatus',
       type: IsarType.byte,
       enumMap: _IsarSellerProfileverificationStatusEnumValueMap,
@@ -77,7 +81,7 @@ const IsarSellerProfileSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,

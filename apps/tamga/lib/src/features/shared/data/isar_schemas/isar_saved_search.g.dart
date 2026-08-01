@@ -13,32 +13,40 @@ extension GetIsarSavedSearchCollection on Isar {
   IsarCollection<IsarSavedSearch> get isarSavedSearchs => this.collection();
 }
 
-const IsarSavedSearchSchema = CollectionSchema(
+final IsarSavedSearchSchema = CollectionSchema(
   name: r'IsarSavedSearch',
-  id: 2003316174135386799,
+  id: int.parse('2003316174135386799'),
   properties: {
     r'createdAt': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'filtersJson': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'filtersJson',
       type: IsarType.string,
     ),
     r'lastNotifiedAt': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'lastNotifiedAt',
       type: IsarType.dateTime,
     ),
-    r'name': PropertySchema(id: 4, name: r'name', type: IsarType.string),
-    r'userId': PropertySchema(id: 5, name: r'userId', type: IsarType.string),
+    r'name': PropertySchema(
+      id: int.parse('4'),
+      name: r'name',
+      type: IsarType.string,
+    ),
+    r'userId': PropertySchema(
+      id: int.parse('5'),
+      name: r'userId',
+      type: IsarType.string,
+    ),
   },
   estimateSize: _isarSavedSearchEstimateSize,
   serialize: _isarSavedSearchSerialize,
@@ -47,7 +55,7 @@ const IsarSavedSearchSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -60,7 +68,7 @@ const IsarSavedSearchSchema = CollectionSchema(
       ],
     ),
     r'userId': IndexSchema(
-      id: -2005826577402374815,
+      id: int.parse('-2005826577402374815'),
       name: r'userId',
       unique: false,
       replace: false,

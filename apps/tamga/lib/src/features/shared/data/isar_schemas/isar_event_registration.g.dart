@@ -14,37 +14,53 @@ extension GetIsarEventRegistrationCollection on Isar {
       this.collection();
 }
 
-const IsarEventRegistrationSchema = CollectionSchema(
+final IsarEventRegistrationSchema = CollectionSchema(
   name: r'IsarEventRegistration',
-  id: -7523228194847149828,
+  id: int.parse('-7523228194847149828'),
   properties: {
     r'createdAt': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'eventId': PropertySchema(id: 2, name: r'eventId', type: IsarType.string),
-    r'horseId': PropertySchema(id: 3, name: r'horseId', type: IsarType.string),
-    r'notes': PropertySchema(id: 4, name: r'notes', type: IsarType.string),
-    r'ownerId': PropertySchema(id: 5, name: r'ownerId', type: IsarType.string),
+    r'eventId': PropertySchema(
+      id: int.parse('2'),
+      name: r'eventId',
+      type: IsarType.string,
+    ),
+    r'horseId': PropertySchema(
+      id: int.parse('3'),
+      name: r'horseId',
+      type: IsarType.string,
+    ),
+    r'notes': PropertySchema(
+      id: int.parse('4'),
+      name: r'notes',
+      type: IsarType.string,
+    ),
+    r'ownerId': PropertySchema(
+      id: int.parse('5'),
+      name: r'ownerId',
+      type: IsarType.string,
+    ),
     r'registeredAt': PropertySchema(
-      id: 6,
+      id: int.parse('6'),
       name: r'registeredAt',
       type: IsarType.dateTime,
     ),
     r'status': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'status',
       type: IsarType.byte,
       enumMap: _IsarEventRegistrationstatusEnumValueMap,
     ),
     r'updatedAt': PropertySchema(
-      id: 8,
+      id: int.parse('8'),
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -56,7 +72,7 @@ const IsarEventRegistrationSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -69,7 +85,7 @@ const IsarEventRegistrationSchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: -4681125749579367450,
+      id: int.parse('-4681125749579367450'),
       name: r'horseId',
       unique: false,
       replace: false,

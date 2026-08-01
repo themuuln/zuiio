@@ -19,4 +19,15 @@ enum LostHorseStatus {
   final String label;
 }
 
+/// Owner-selected closure reason for a recovery report.
+enum LostHorseResolutionType {
+  reunited('Эзэндээ буцсан'),
+  withdrawn('Хайхаа больсон'),
+  duplicate('Давхардсан зар'),
+  expired('Хугацаа дууссан');
+
+  const LostHorseResolutionType(this.label);
+  final String label;
+}
+
 enum GeofenceAlertType { entered, exited }

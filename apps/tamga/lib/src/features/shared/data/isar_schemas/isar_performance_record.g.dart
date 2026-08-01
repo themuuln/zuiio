@@ -14,36 +14,56 @@ extension GetIsarPerformanceRecordCollection on Isar {
       this.collection();
 }
 
-const IsarPerformanceRecordSchema = CollectionSchema(
+final IsarPerformanceRecordSchema = CollectionSchema(
   name: r'IsarPerformanceRecord',
-  id: 809997122381393280,
+  id: int.parse('809997122381393280'),
   properties: {
     r'createdAt': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'date': PropertySchema(id: 1, name: r'date', type: IsarType.dateTime),
+    r'date': PropertySchema(
+      id: int.parse('1'),
+      name: r'date',
+      type: IsarType.dateTime,
+    ),
     r'domainId': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'horseId': PropertySchema(id: 3, name: r'horseId', type: IsarType.string),
+    r'horseId': PropertySchema(
+      id: int.parse('3'),
+      name: r'horseId',
+      type: IsarType.string,
+    ),
     r'metric': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'metric',
       type: IsarType.byte,
       enumMap: _IsarPerformanceRecordmetricEnumValueMap,
     ),
-    r'notes': PropertySchema(id: 5, name: r'notes', type: IsarType.string),
-    r'unit': PropertySchema(id: 6, name: r'unit', type: IsarType.string),
+    r'notes': PropertySchema(
+      id: int.parse('5'),
+      name: r'notes',
+      type: IsarType.string,
+    ),
+    r'unit': PropertySchema(
+      id: int.parse('6'),
+      name: r'unit',
+      type: IsarType.string,
+    ),
     r'updatedAt': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
-    r'value': PropertySchema(id: 8, name: r'value', type: IsarType.double),
+    r'value': PropertySchema(
+      id: int.parse('8'),
+      name: r'value',
+      type: IsarType.double,
+    ),
   },
   estimateSize: _isarPerformanceRecordEstimateSize,
   serialize: _isarPerformanceRecordSerialize,
@@ -52,7 +72,7 @@ const IsarPerformanceRecordSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -65,7 +85,7 @@ const IsarPerformanceRecordSchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: -4681125749579367450,
+      id: int.parse('-4681125749579367450'),
       name: r'horseId',
       unique: false,
       replace: false,

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../map/presentation/active_reports_screen.dart';
 import '../../map/presentation/map_screen.dart';
+import '../../map/presentation/lost_horse_alert_preferences_screen.dart';
 import '../../map/presentation/report_lost_horse_screen.dart';
 
 /// Эрэл хайгуул — хаяж морь хайх, бүртгүүлэх хуудас.
@@ -49,6 +50,15 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
             pinned: true,
             floating: true,
             actions: [
+              IconButton(
+                tooltip: 'Мэдэгдэл / Alerts',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const LostHorseAlertPreferencesScreen(),
+                  ),
+                ),
+                icon: const Icon(Icons.notifications_none_outlined),
+              ),
               IconButton(
                 tooltip: 'Premium нэмэх',
                 onPressed: () => _showTierSheet(context),

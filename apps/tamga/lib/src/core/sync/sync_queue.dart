@@ -22,6 +22,9 @@ class SyncQueueItem {
     this.status = SyncItemStatus.pending,
     this.lastAttemptAt,
     this.movedAt,
+    this.queueId,
+    this.accountId,
+    this.nextAttemptAt,
   });
 
   final String entityType; // 'horse', 'health', 'event' ...
@@ -34,6 +37,14 @@ class SyncQueueItem {
   final DateTime? lastAttemptAt;
 
   /// Dead letter queue-д шилжүүлсэн огноо. [null] бол идэвхтэй queue-д байна.
+  /// Stable id for row-addressed completion and concurrent enqueue safety.
+  final String? queueId;
+  final String? accountId;
+  final DateTime? nextAttemptAt;
+
+  String get stableQueueId =>
+      queueId ??
+      '$entityType:$entityId:${action.name}:${timestamp.toIso8601String()}';
   final DateTime? movedAt;
 
   bool get isDeadLetter => movedAt != null;
@@ -43,6 +54,9 @@ class SyncQueueItem {
     SyncItemStatus? status,
     Object? lastAttemptAt = _sentinel,
     Object? movedAt = _sentinel,
+    Object? queueId = _sentinel,
+    Object? accountId = _sentinel,
+    Object? nextAttemptAt = _sentinel,
   }) {
     return SyncQueueItem(
       entityType: entityType,
@@ -56,6 +70,11 @@ class SyncQueueItem {
           ? this.lastAttemptAt
           : lastAttemptAt as DateTime?,
       movedAt: movedAt == _sentinel ? this.movedAt : movedAt as DateTime?,
+      queueId: queueId == _sentinel ? this.queueId : queueId as String?,
+      accountId: accountId == _sentinel ? this.accountId : accountId as String?,
+      nextAttemptAt: nextAttemptAt == _sentinel
+          ? this.nextAttemptAt
+          : nextAttemptAt as DateTime?,
     );
   }
 
@@ -76,6 +95,11 @@ class SyncQueueItem {
       movedAt: json['movedAt'] != null
           ? DateTime.parse(json['movedAt'] as String)
           : null,
+      queueId: json['queueId'] as String?,
+      accountId: json['accountId'] as String?,
+      nextAttemptAt: json['nextAttemptAt'] != null
+          ? DateTime.parse(json['nextAttemptAt'] as String)
+          : null,
     );
   }
 
@@ -90,6 +114,9 @@ class SyncQueueItem {
       'status': status.name,
       'lastAttemptAt': lastAttemptAt?.toIso8601String(),
       'movedAt': movedAt?.toIso8601String(),
+      'queueId': queueId,
+      'accountId': accountId,
+      'nextAttemptAt': nextAttemptAt?.toIso8601String(),
     };
   }
 }

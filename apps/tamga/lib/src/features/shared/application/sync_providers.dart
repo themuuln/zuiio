@@ -13,6 +13,7 @@ import '../../health/application/health_providers.dart';
 import '../../horses/application/co_ownership_providers.dart';
 import '../../horses/application/horses_providers.dart';
 import '../../map/application/map_providers.dart';
+import '../../map/data/supabase_lost_horse_repository.dart';
 import '../../market/application/market_providers.dart';
 import '../../payments/application/payment_providers.dart';
 import '../../profile/application/cloud_sync_coordinator.dart';
@@ -46,6 +47,7 @@ final cloudSyncCoordinatorProvider = FutureProvider<CloudSyncCoordinator>((
       profileSettingsRepositoryProvider.future,
     ),
     mapRepository: ref.watch(mapRepositoryProvider),
+    lostHorseRepository: SupabaseLostHorseRepository(),
     coOwnershipRepository: ref.watch(coOwnershipRepositoryProvider),
     documentRepository: ref.watch(documentRepositoryProvider),
     certificateRepository: ref.watch(certificateRepositoryProvider),

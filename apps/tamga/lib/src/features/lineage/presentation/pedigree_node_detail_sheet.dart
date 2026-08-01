@@ -162,7 +162,11 @@ class PedigreeNodeDetailSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGrid(BuildContext context, ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildStatsGrid(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
     final hasSpeed = node.speedIndex != null;
     final hasTamga = node.tamgaNo != null && node.tamgaNo!.isNotEmpty;
 

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../widgets/onboarding_bottom_actions.dart';
 
 /// Screen 4: Морь нэмэх — Horse profile form.
 ///
@@ -109,7 +110,6 @@ class _HorseEntryPageState extends State<HorseEntryPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-
               // Title
               Text(
                 'Морь нэмэх',
@@ -306,67 +306,17 @@ class _HorseEntryPageState extends State<HorseEntryPage> {
         ),
 
         // ── Bottom actions — back + continue ──
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              AppSpacing.lg,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  height: 48,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: widget.onBack,
-                        icon: Icon(Icons.chevron_left, color: tc.primary),
-                        style: IconButton.styleFrom(
-                          backgroundColor: tc.surfaceContainerLow,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: _canContinue ? _submit : null,
-                          child: const Text(
-                            'Үргэлжлүүлэх',
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                SizedBox(
-                  width: double.infinity,
-                  height: 44,
-                  child: TextButton(
-                    onPressed: widget.onSkip,
-                    child: Text(
-                      'Алгасах — дараа оруулна',
-                      style: TextStyle(
-                        fontSize: 17,
-                        color: tc.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        OnboardingBottomActions(
+          onBack: widget.onBack,
+          primaryLabel: 'Үргэлжлүүлэх',
+          onPrimary: _canContinue ? _submit : null,
+          secondaryLabel: 'Алгасах — дараа оруулна',
+          onSecondary: widget.onSkip,
         ),
-        ],
-      );
+      ],
+    );
   }
+
   void _showBreedPicker(BuildContext context) {
     final tc = TamgaColors.of(context);
     final breeds = [

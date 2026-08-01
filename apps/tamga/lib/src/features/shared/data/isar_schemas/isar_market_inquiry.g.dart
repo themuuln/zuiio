@@ -13,39 +13,43 @@ extension GetIsarMarketInquiryCollection on Isar {
   IsarCollection<IsarMarketInquiry> get isarMarketInquirys => this.collection();
 }
 
-const IsarMarketInquirySchema = CollectionSchema(
+final IsarMarketInquirySchema = CollectionSchema(
   name: r'IsarMarketInquiry',
-  id: -826948826644173561,
+  id: int.parse('-826948826644173561'),
   properties: {
-    r'buyerId': PropertySchema(id: 0, name: r'buyerId', type: IsarType.string),
+    r'buyerId': PropertySchema(
+      id: int.parse('0'),
+      name: r'buyerId',
+      type: IsarType.string,
+    ),
     r'createdAt': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'listingId': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'listingId',
       type: IsarType.string,
     ),
     r'sellerId': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'sellerId',
       type: IsarType.string,
     ),
     r'status': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'status',
       type: IsarType.byte,
       enumMap: _IsarMarketInquirystatusEnumValueMap,
     ),
     r'updatedAt': PropertySchema(
-      id: 6,
+      id: int.parse('6'),
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -57,7 +61,7 @@ const IsarMarketInquirySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,

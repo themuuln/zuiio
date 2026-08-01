@@ -13,40 +13,52 @@ extension GetIsarSellerRatingCollection on Isar {
   IsarCollection<IsarSellerRating> get isarSellerRatings => this.collection();
 }
 
-const IsarSellerRatingSchema = CollectionSchema(
+final IsarSellerRatingSchema = CollectionSchema(
   name: r'IsarSellerRating',
-  id: -7471720961247538377,
+  id: int.parse('-7471720961247538377'),
   properties: {
-    r'buyerId': PropertySchema(id: 0, name: r'buyerId', type: IsarType.string),
+    r'buyerId': PropertySchema(
+      id: int.parse('0'),
+      name: r'buyerId',
+      type: IsarType.string,
+    ),
     r'createdAt': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'listingId': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'listingId',
       type: IsarType.string,
     ),
-    r'rating': PropertySchema(id: 4, name: r'rating', type: IsarType.long),
+    r'rating': PropertySchema(
+      id: int.parse('4'),
+      name: r'rating',
+      type: IsarType.long,
+    ),
     r'responseAt': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'responseAt',
       type: IsarType.dateTime,
     ),
-    r'review': PropertySchema(id: 6, name: r'review', type: IsarType.string),
+    r'review': PropertySchema(
+      id: int.parse('6'),
+      name: r'review',
+      type: IsarType.string,
+    ),
     r'sellerId': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'sellerId',
       type: IsarType.string,
     ),
     r'sellerResponse': PropertySchema(
-      id: 8,
+      id: int.parse('8'),
       name: r'sellerResponse',
       type: IsarType.string,
     ),
@@ -58,7 +70,7 @@ const IsarSellerRatingSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -71,7 +83,7 @@ const IsarSellerRatingSchema = CollectionSchema(
       ],
     ),
     r'listingId': IndexSchema(
-      id: -7684668030872652461,
+      id: int.parse('-7684668030872652461'),
       name: r'listingId',
       unique: false,
       replace: false,
@@ -84,7 +96,7 @@ const IsarSellerRatingSchema = CollectionSchema(
       ],
     ),
     r'sellerId': IndexSchema(
-      id: -270845138789699514,
+      id: int.parse('-270845138789699514'),
       name: r'sellerId',
       unique: false,
       replace: false,
@@ -97,7 +109,7 @@ const IsarSellerRatingSchema = CollectionSchema(
       ],
     ),
     r'createdAt': IndexSchema(
-      id: -3433535483987302584,
+      id: int.parse('-3433535483987302584'),
       name: r'createdAt',
       unique: false,
       replace: false,

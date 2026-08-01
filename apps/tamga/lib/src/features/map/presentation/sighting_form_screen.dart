@@ -1,13 +1,12 @@
+import 'package:uuid/uuid.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../app/supabase_bootstrap.dart';
 import '../../../core/error/error_helpers.dart';
-import '../../../core/storage/cloud/media_storage_providers.dart';
-import '../../../core/storage/cloud/media_storage_service.dart';
+import '../../../app/supabase_bootstrap.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/map_providers.dart';
@@ -97,32 +96,11 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      // Step 1: Upload photo if present.
-      String? photoUrl;
-      if (_photo != null) {
-        final storage = ref.read(mediaStorageProvider);
-        final path =
-            'lost-horse-sightings/${widget.reportId}'
-            '/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-        final uploadResult = await storage.upload(
-          file: _photo!,
-          path: path,
-          category: MediaCategory.photo,
-        );
-
-        uploadResult.when(
-          onSuccess: (upload) => photoUrl = upload.url,
-          onFailure: (error) {
-            TamgaToast.showError(context, friendlyErrorMessage(error));
-          },
-        );
-      }
-
-      // Step 2: Build the sighting report.
       final now = DateTime.now();
+      final sightingId = const Uuid().v4();
       final sighting = SightingReport(
-        id: '',
+        id: sightingId,
+        clientId: sightingId,
         reportId: widget.reportId,
         reporterId: userId,
         lat: pos.latitude,
@@ -133,14 +111,12 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
         description: _descriptionController.text.trim().isNotEmpty
             ? _descriptionController.text.trim()
             : null,
-        photoUrl: photoUrl,
+        photoUrl: _photo?.path,
         isAnonymous: _isAnonymous,
         createdAt: now,
       );
 
-      // Step 3: Submit to backend.
       await ref.read(reportSightingProvider(sighting).future);
-
       if (!mounted) return;
       TamgaToast.showSuccess(context, 'Мэдээлэл амжилттай илгээгдлээ');
       Navigator.of(context).pop(true);

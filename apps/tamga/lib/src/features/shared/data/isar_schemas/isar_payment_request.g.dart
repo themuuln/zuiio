@@ -14,46 +14,62 @@ extension GetIsarPaymentRequestCollection on Isar {
       this.collection();
 }
 
-const IsarPaymentRequestSchema = CollectionSchema(
+final IsarPaymentRequestSchema = CollectionSchema(
   name: r'IsarPaymentRequest',
-  id: 7023437864283184583,
+  id: int.parse('7023437864283184583'),
   properties: {
     r'adminNotes': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'adminNotes',
       type: IsarType.string,
     ),
     r'amountMnt': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'amountMnt',
       type: IsarType.long,
     ),
-    r'code': PropertySchema(id: 2, name: r'code', type: IsarType.string),
+    r'code': PropertySchema(
+      id: int.parse('2'),
+      name: r'code',
+      type: IsarType.string,
+    ),
     r'createdAt': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'expiresAt': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'expiresAt',
       type: IsarType.dateTime,
     ),
     r'paymentType': PropertySchema(
-      id: 6,
+      id: int.parse('6'),
       name: r'paymentType',
       type: IsarType.string,
     ),
-    r'status': PropertySchema(id: 7, name: r'status', type: IsarType.string),
-    r'tier': PropertySchema(id: 8, name: r'tier', type: IsarType.string),
-    r'userId': PropertySchema(id: 9, name: r'userId', type: IsarType.string),
+    r'status': PropertySchema(
+      id: int.parse('7'),
+      name: r'status',
+      type: IsarType.string,
+    ),
+    r'tier': PropertySchema(
+      id: int.parse('8'),
+      name: r'tier',
+      type: IsarType.string,
+    ),
+    r'userId': PropertySchema(
+      id: int.parse('9'),
+      name: r'userId',
+      type: IsarType.string,
+    ),
     r'verifiedAt': PropertySchema(
-      id: 10,
+      id: int.parse('10'),
       name: r'verifiedAt',
       type: IsarType.dateTime,
     ),
@@ -65,7 +81,7 @@ const IsarPaymentRequestSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,

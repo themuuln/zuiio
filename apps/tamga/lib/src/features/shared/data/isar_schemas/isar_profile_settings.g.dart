@@ -14,27 +14,35 @@ extension GetIsarProfileSettingsCollection on Isar {
       this.collection();
 }
 
-const IsarProfileSettingsSchema = CollectionSchema(
+final IsarProfileSettingsSchema = CollectionSchema(
   name: r'IsarProfileSettings',
-  id: -3948342721376362034,
+  id: int.parse('-3948342721376362034'),
   properties: {
     r'autoSyncEnabled': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'autoSyncEnabled',
       type: IsarType.bool,
     ),
     r'domainId': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'lastSyncCheckAt': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'lastSyncCheckAt',
       type: IsarType.dateTime,
     ),
-    r'rank': PropertySchema(id: 3, name: r'rank', type: IsarType.string),
-    r'role': PropertySchema(id: 4, name: r'role', type: IsarType.string),
+    r'rank': PropertySchema(
+      id: int.parse('3'),
+      name: r'rank',
+      type: IsarType.string,
+    ),
+    r'role': PropertySchema(
+      id: int.parse('4'),
+      name: r'role',
+      type: IsarType.string,
+    ),
   },
   estimateSize: _isarProfileSettingsEstimateSize,
   serialize: _isarProfileSettingsSerialize,
@@ -43,7 +51,7 @@ const IsarProfileSettingsSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,

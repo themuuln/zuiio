@@ -14,47 +14,63 @@ extension GetIsarDocumentRecordCollection on Isar {
       this.collection();
 }
 
-const IsarDocumentRecordSchema = CollectionSchema(
+final IsarDocumentRecordSchema = CollectionSchema(
   name: r'IsarDocumentRecord',
-  id: 8607093812076751350,
+  id: int.parse('8607093812076751350'),
   properties: {
     r'createdAt': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'docType': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'docType',
       type: IsarType.byte,
       enumMap: _IsarDocumentRecorddocTypeEnumValueMap,
     ),
     r'domainId': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'fileSize': PropertySchema(id: 3, name: r'fileSize', type: IsarType.long),
-    r'horseId': PropertySchema(id: 4, name: r'horseId', type: IsarType.string),
+    r'fileSize': PropertySchema(
+      id: int.parse('3'),
+      name: r'fileSize',
+      type: IsarType.long,
+    ),
+    r'horseId': PropertySchema(
+      id: int.parse('4'),
+      name: r'horseId',
+      type: IsarType.string,
+    ),
     r'mimeType': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'mimeType',
       type: IsarType.string,
     ),
-    r'ownerId': PropertySchema(id: 6, name: r'ownerId', type: IsarType.string),
+    r'ownerId': PropertySchema(
+      id: int.parse('6'),
+      name: r'ownerId',
+      type: IsarType.string,
+    ),
     r'pendingSync': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'pendingSync',
       type: IsarType.bool,
     ),
     r'storagePath': PropertySchema(
-      id: 8,
+      id: int.parse('8'),
       name: r'storagePath',
       type: IsarType.string,
     ),
-    r'title': PropertySchema(id: 9, name: r'title', type: IsarType.string),
+    r'title': PropertySchema(
+      id: int.parse('9'),
+      name: r'title',
+      type: IsarType.string,
+    ),
     r'updatedAt': PropertySchema(
-      id: 10,
+      id: int.parse('10'),
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -66,7 +82,7 @@ const IsarDocumentRecordSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -79,7 +95,7 @@ const IsarDocumentRecordSchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: -4681125749579367450,
+      id: int.parse('-4681125749579367450'),
       name: r'horseId',
       unique: false,
       replace: false,

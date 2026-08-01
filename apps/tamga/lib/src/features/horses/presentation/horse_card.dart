@@ -75,14 +75,20 @@ class HorseCard extends ConsumerWidget {
                           data: (cert) => cert != null,
                           orElse: () => false,
                         ))
-                          Icon(Icons.verified, size: 16, color: tamgaColors.primary),
+                          Icon(
+                            Icons.verified,
+                            size: 16,
+                            color: tamgaColors.primary,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 2),
                     // Detail line
                     Text(
                       '${horse.gender.displayName} · ${horse.coat} · ${horse.birthYear}',
-                      style: TamgaTypography.callout(color: tamgaColors.mutedForeground),
+                      style: TamgaTypography.callout(
+                        color: tamgaColors.mutedForeground,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -99,12 +105,16 @@ class HorseCard extends ConsumerWidget {
                         ),
                         _CompactBadge(
                           label: 'Шагнал ${horse.awardCount}',
-                          color: tamgaColors.primaryContainer.withValues(alpha: 0.5),
+                          color: tamgaColors.primaryContainer.withValues(
+                            alpha: 0.5,
+                          ),
                           textColor: tamgaColors.onPrimaryContainer,
                         ),
                         _CompactBadge(
                           label: 'Үр төл ${horse.offspringCount}',
-                          color: tamgaColors.surfaceContainerHighest.withValues(alpha: 0.5),
+                          color: tamgaColors.surfaceContainerHighest.withValues(
+                            alpha: 0.5,
+                          ),
                           textColor: tamgaColors.onSurfaceVariant,
                         ),
                         if (horse.breedLineage != null)
@@ -142,7 +152,11 @@ class HorseCard extends ConsumerWidget {
                     }
                   }
                 },
-                icon: Icon(Icons.edit_outlined, size: 18, color: tamgaColors.mutedForeground),
+                icon: Icon(
+                  Icons.edit_outlined,
+                  size: 18,
+                  color: tamgaColors.mutedForeground,
+                ),
               ),
             ],
           ),
@@ -216,6 +230,7 @@ class HorseAvatar extends StatelessWidget {
     );
   }
 }
+
 /// Compact inline badge for horse cards.
 class _CompactBadge extends StatelessWidget {
   const _CompactBadge({

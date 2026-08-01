@@ -14,43 +14,47 @@ extension GetIsarMarketConversationCollection on Isar {
       this.collection();
 }
 
-const IsarMarketConversationSchema = CollectionSchema(
+final IsarMarketConversationSchema = CollectionSchema(
   name: r'IsarMarketConversation',
-  id: -1214558701692684506,
+  id: int.parse('-1214558701692684506'),
   properties: {
-    r'buyerId': PropertySchema(id: 0, name: r'buyerId', type: IsarType.string),
+    r'buyerId': PropertySchema(
+      id: int.parse('0'),
+      name: r'buyerId',
+      type: IsarType.string,
+    ),
     r'domainId': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'lastMessage': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'lastMessage',
       type: IsarType.string,
     ),
     r'lastMessageAt': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'lastMessageAt',
       type: IsarType.dateTime,
     ),
     r'listingId': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'listingId',
       type: IsarType.string,
     ),
     r'reportId': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'reportId',
       type: IsarType.string,
     ),
     r'sellerId': PropertySchema(
-      id: 6,
+      id: int.parse('6'),
       name: r'sellerId',
       type: IsarType.string,
     ),
     r'unreadCount': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'unreadCount',
       type: IsarType.long,
     ),
@@ -62,7 +66,7 @@ const IsarMarketConversationSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -75,7 +79,7 @@ const IsarMarketConversationSchema = CollectionSchema(
       ],
     ),
     r'listingId': IndexSchema(
-      id: -7684668030872652461,
+      id: int.parse('-7684668030872652461'),
       name: r'listingId',
       unique: false,
       replace: false,
@@ -88,7 +92,7 @@ const IsarMarketConversationSchema = CollectionSchema(
       ],
     ),
     r'reportId': IndexSchema(
-      id: 1732854644896652467,
+      id: int.parse('1732854644896652467'),
       name: r'reportId',
       unique: false,
       replace: false,
@@ -101,7 +105,7 @@ const IsarMarketConversationSchema = CollectionSchema(
       ],
     ),
     r'buyerId': IndexSchema(
-      id: 720979758479371927,
+      id: int.parse('720979758479371927'),
       name: r'buyerId',
       unique: false,
       replace: false,
@@ -114,7 +118,7 @@ const IsarMarketConversationSchema = CollectionSchema(
       ],
     ),
     r'sellerId': IndexSchema(
-      id: -270845138789699514,
+      id: int.parse('-270845138789699514'),
       name: r'sellerId',
       unique: false,
       replace: false,

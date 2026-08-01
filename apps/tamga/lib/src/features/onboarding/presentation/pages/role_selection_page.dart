@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../domain/onboarding_data.dart';
+import '../widgets/onboarding_bottom_actions.dart';
 
 /// Screen 2: Үүрэг сонгох — Role selection with watermark background icons.
 ///
@@ -89,21 +90,25 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                             role: UserRole.casual,
                             isSelected: _selectedRole == UserRole.casual,
                             watermarkIcon: Icons.pets,
-                            onTap: () => setState(() => _selectedRole = UserRole.casual),
+                            onTap: () =>
+                                setState(() => _selectedRole = UserRole.casual),
                           ),
                           const SizedBox(height: AppSpacing.md),
                           _RoleWatermarkCard(
                             role: UserRole.breeder,
                             isSelected: _selectedRole == UserRole.breeder,
                             watermarkIcon: Icons.sports_motorsports,
-                            onTap: () => setState(() => _selectedRole = UserRole.breeder),
+                            onTap: () => setState(
+                              () => _selectedRole = UserRole.breeder,
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.md),
                           _RoleWatermarkCard(
                             role: UserRole.stable,
                             isSelected: _selectedRole == UserRole.stable,
                             watermarkIcon: Icons.visibility,
-                            onTap: () => setState(() => _selectedRole = UserRole.stable),
+                            onTap: () =>
+                                setState(() => _selectedRole = UserRole.stable),
                           ),
                         ],
                       ),
@@ -114,43 +119,16 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
             ),
           ),
           // ── Bottom actions — back + continue ──
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.only(
-                bottom: AppSpacing.lg,
-                top: AppSpacing.sm,
-              ),
-              child: SizedBox(
-                height: 48,
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: widget.onBack,
-                      icon: Icon(Icons.chevron_left, color: tc.primary),
-                      style: IconButton.styleFrom(
-                        backgroundColor: tc.surfaceContainerLow,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: _canContinue
-                            ? () => widget.onContinue(_selectedRole!)
-                            : null,
-                        child: const Text(
-                          'Үргэлжлүүлэх',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          OnboardingBottomActions(
+            padding: const EdgeInsets.only(
+              bottom: AppSpacing.lg,
+              top: AppSpacing.sm,
             ),
+            onBack: widget.onBack,
+            primaryLabel: 'Үргэлжлүүлэх',
+            onPrimary: _canContinue
+                ? () => widget.onContinue(_selectedRole!)
+                : null,
           ),
         ],
       ),

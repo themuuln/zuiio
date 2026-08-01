@@ -21,6 +21,7 @@ import '../../features/shared/data/isar_schemas/isar_lineage_snapshot.dart';
 import '../../features/shared/data/isar_schemas/isar_lineage_tree_node.dart';
 import '../../features/shared/data/isar_schemas/isar_listing_report.dart';
 import '../../features/shared/data/isar_schemas/isar_lost_horse_report.dart';
+import '../../features/shared/data/isar_schemas/isar_lost_horse_media_draft.dart';
 import '../../features/shared/data/isar_schemas/isar_market_conversation.dart';
 import '../../features/shared/data/isar_schemas/isar_market_inquiry.dart';
 import '../../features/shared/data/isar_schemas/isar_market_listing.dart';
@@ -54,7 +55,7 @@ class IsarDatabase {
 
   static Isar? _instance;
 
-  static const _schemas = [
+  static final List<CollectionSchema<dynamic>> _schemas = [
     IsarHorseSchema,
     IsarHealthLogSchema,
     IsarEventSchema,
@@ -84,6 +85,7 @@ class IsarDatabase {
     IsarDocumentRecordSchema,
     IsarHorseLocationSchema,
     IsarLostHorseReportSchema,
+    IsarLostHorseMediaDraftSchema,
     IsarSearchAreaSchema,
     IsarGeofenceAlertSchema,
     IsarSellerPhoneVerificationSchema,

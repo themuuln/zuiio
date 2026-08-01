@@ -33,6 +33,10 @@ import '../../map/domain/geofence_alert.dart';
 import '../../map/domain/horse_location.dart';
 import '../../map/domain/lost_horse_report.dart';
 import '../../map/domain/search_area.dart';
+import '../../map/domain/map_enums.dart';
+import '../../map/domain/sighting_report.dart';
+import '../../map/data/lost_horse_repository.dart';
+import '../../map/data/supabase_lost_horse_repository.dart';
 import '../data/profile_settings_repository.dart';
 import '../domain/profile_settings.dart';
 
@@ -132,6 +136,7 @@ class CloudSyncCoordinator {
     required this.documentRepository,
     required this.certificateRepository,
     required this.paymentRepository,
+    this.lostHorseRepository,
   });
 
   final HorsesRepository horsesRepository;
@@ -146,6 +151,7 @@ class CloudSyncCoordinator {
   final CoOwnershipRepository coOwnershipRepository;
   final DocumentRepository documentRepository;
   final CertificateRepository certificateRepository;
+  final LostHorseRepository? lostHorseRepository;
   final PaymentRepository paymentRepository;
 
   /// Sync-ийн одоогийн төлөв.
@@ -369,6 +375,7 @@ class CloudSyncCoordinator {
         final result = await _pushItem(item);
         if (result.isSuccess) {
           pushed++;
+          await syncStorage.removeQueueItem(item.stableQueueId);
         } else {
           failed++;
         }
@@ -399,6 +406,12 @@ class CloudSyncCoordinator {
           return _pushEvent(item);
         case 'market':
           return _pushMarketListing(item);
+        case 'lost_horse_publish':
+          return _pushLostHorsePublish(item);
+        case 'lost_horse_resolution':
+          return _pushLostHorseResolution(item);
+        case 'lost_horse_sighting':
+          return _pushLostHorseSighting(item);
         case 'breeding':
           return _pushBreedingRecord(item);
         case 'lost_horse_report':
@@ -548,21 +561,95 @@ class CloudSyncCoordinator {
 
     if (item.action == SyncAction.create) {
       final report = LostHorseReport.fromJson(item.data);
-      final result = await mapRepository.reportLostHorse(report);
-      return result.map((_) => true);
-    }
-
-    // Update — only status changes are supported
-    final status = item.data['status'] as String?;
-    if (status != null) {
-      final result = await mapRepository.updateLostHorseStatus(
-        item.entityId,
-        status,
+      final drafts = await syncStorage.loadRecoveryMediaDrafts(report.id);
+      final pendingDrafts = drafts.where((draft) => !draft.uploaded).toList();
+      final mediaIds = drafts.map((draft) => draft.mediaId).toList();
+      final pendingMediaIds = pendingDrafts
+          .map((draft) => draft.mediaId)
+          .toList();
+      final created = await _remoteRecoveryRepository.createReport(
+        report,
+        localMediaPaths: pendingDrafts.map((draft) => draft.localPath).toList(),
+        mediaIds: pendingMediaIds,
       );
-      return result.map((_) => true);
+      if (created.isFailure) return created.map((_) => true);
+      if (pendingMediaIds.isNotEmpty) {
+        await syncStorage.markRecoveryMediaUploaded(
+          report.id,
+          mediaIds: pendingMediaIds,
+        );
+      }
+      final published = await _remoteRecoveryRepository.publishReport(
+        report.id,
+        expectedMediaIds: mediaIds,
+      );
+      if (published.isSuccess) {
+        await syncStorage.markRecoveryMediaUploaded(
+          report.id,
+          mediaIds: mediaIds,
+        );
+      }
+      return published.map((_) => true);
     }
 
-    return const Result.ok(true);
+    // Legacy queue rows may contain only a status; route them through the
+    // owner resolution RPC instead of writing lifecycle columns directly.
+    final resolutionType = LostHorseResolutionType.values.firstWhere(
+      (value) => value.name == item.data['resolution_type'],
+      orElse: () {
+        final status = item.data['status'] as String?;
+        return status == LostHorseStatus.found.name
+            ? LostHorseResolutionType.reunited
+            : LostHorseResolutionType.withdrawn;
+      },
+    );
+    final result = await _remoteRecoveryRepository.resolveReport(
+      reportId: item.entityId,
+      resolutionType: resolutionType,
+      note: item.data['resolution_note'] as String?,
+      verifiedSightingId: item.data['verified_sighting_id'] as String?,
+    );
+    return result.map((_) => true);
+  }
+
+  LostHorseRepository get _remoteRecoveryRepository =>
+      lostHorseRepository ?? SupabaseLostHorseRepository();
+
+  Future<Result<bool>> _pushLostHorsePublish(SyncQueueItem item) async {
+    final expectedMediaIds =
+        (item.data['expected_media_ids'] as List<dynamic>? ?? const [])
+            .whereType<String>()
+            .toList();
+    final result = await _remoteRecoveryRepository.publishReport(
+      item.entityId,
+      expectedMediaIds: expectedMediaIds,
+    );
+    return result.map((_) => true);
+  }
+
+  Future<Result<bool>> _pushLostHorseResolution(SyncQueueItem item) async {
+    final type = LostHorseResolutionType.values.firstWhere(
+      (value) => value.name == item.data['resolution_type'],
+      orElse: () => LostHorseResolutionType.withdrawn,
+    );
+    final result = await _remoteRecoveryRepository.resolveReport(
+      reportId: item.entityId,
+      resolutionType: type,
+      note: item.data['resolution_note'] as String?,
+      verifiedSightingId: item.data['verified_sighting_id'] as String?,
+    );
+    return result.map((_) => true);
+  }
+
+  Future<Result<bool>> _pushLostHorseSighting(SyncQueueItem item) async {
+    final sighting = SightingReport.fromJson(item.data);
+    final result = item.action == SyncAction.update
+        ? await _remoteRecoveryRepository.reviewSighting(
+            sightingId: item.entityId,
+            status: sighting.status,
+          )
+        : await _remoteRecoveryRepository.createSighting(sighting);
+    return result.map((_) => true);
   }
 
   Future<Result<bool>> _pushSearchArea(SyncQueueItem item) async {
@@ -852,7 +939,9 @@ class CloudSyncCoordinator {
       entityId: report.id,
       action: SyncAction.create,
       data: report.toJson(),
-      timestamp: DateTime.now(),
+      timestamp: report.createdAt,
+      accountId: report.ownerId,
+      queueId: 'lost_horse_report:${report.id}',
     );
     await syncStorage.enqueue(item);
   }

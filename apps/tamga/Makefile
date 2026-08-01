@@ -2,11 +2,15 @@
 #
 # Development, CI, and release commands.
 # Run `make help` to see available targets.
-.PHONY: help install test coverage analyze format format-check \
+.PHONY: help install generate test coverage analyze format format-check \
         check build-apk build-apk-universal build-aab \
         precommit setup-hooks clean \
         marionette-smoke marionette-uri marionette-register marionette-check \
         marionette-run marionette-stop \
+
+generate: ## Regenerate Dart code and normalize Isar schemas for web
+	dart run build_runner build --delete-conflicting-outputs
+	dart run tool/fix_isar_web_schemas.dart
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | sort | \
@@ -73,7 +77,7 @@ clean: ## Clean Flutter build artifacts
 
 # ── Marionette (AI-driven UI smoke tests) ─────────────────────────
 
-MARIONETTE ?= marionette
+MARIONETTE ?= $(if $(shell command -v marionette 2>/dev/null),$(shell command -v marionette),$(HOME)/.pub-cache/bin/marionette)
 
 marionette-smoke: ## Run smoke test against a running debug build. Usage: make marionette-smoke uri=ws://...
 ifndef uri
@@ -104,7 +108,7 @@ marionette-check: ## Full gate + smoke test (app must be running). Usage: make m
 	$(MAKE) marionette-smoke uri=$(uri)
 
 marionette-run: ## Run flutter app on port 8181 + auto-register for agent (override: PORT=8182)
-	scripts/marionette-run.sh
+	MARIONETTE="$(MARIONETTE)" scripts/marionette-run.sh
 marionette-stop: ## Stop the marionette-run flutter process (from /tmp/tamga-flutter.pid)
 	@PID=$$(cat /tmp/tamga-flutter.pid 2>/dev/null); \
 	if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \

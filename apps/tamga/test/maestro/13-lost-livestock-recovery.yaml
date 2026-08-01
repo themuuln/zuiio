@@ -1,0 +1,70 @@
+appId: com.tamga
+name: Lost livestock recovery
+
+tags:
+  - recovery
+  - offline
+  - smoke
+
+---
+- launchApp:
+    clearState: true
+
+# Finish onboarding without creating a horse so the recovery flow stays manual.
+- assertVisible: "Эхлэх"
+- tapOn: "Эхлэх"
+- tapOn:
+    text: ".*Уяач / Малчин.*"
+- tapOn: "Үргэлжлүүлэх"
+- tapOn:
+    text: ".*Төв.*"
+- tapOn: "Үргэлжлүүлэх"
+- tapOn:
+    text: ".*Алгасах.*"
+- tapOn:
+    text: ".*Алгасах.*"
+- tapOn: "Одоохондоо үгүй"
+- tapOn: "Дараа тохируулъя"
+
+# Open the free lost-livestock report wizard.
+- assertVisible: "Эрэл хайгуул"
+- tapOn: "Эрэл хайгуул"
+- assertVisible: "Алдсан морь"
+- tapOn: "Алдсан морь"
+- assertVisible: "Амьтнаа таних мэдээлэл"
+- tapOn: "Гараар оруулах / Manual entry"
+- tapOn: "Нэр / Name (optional)"
+- inputText: "Bor mori"
+- scrollUntilVisible:
+    element: "Таних дэлгэрэнгүй / Detailed identifier"
+    direction: DOWN
+- tapOn: "Таних дэлгэрэнгүй / Detailed identifier"
+- inputText: "Distinctive brown horse with a white mark"
+- hideKeyboard
+- tapOn: "Үргэлжлүүлэх / Continue"
+
+# Select a regional pin and enter coordinates manually when GPS is unavailable.
+- assertVisible: "Сүүлд үзэгдсэн газар"
+- tapOn: "Аймаг / Aimag"
+- tapOn: "Төв"
+- tapOn: "Сум / Sum"
+- inputText: "Зуунмод"
+- tapOn: "Баг / Bag (optional)"
+- inputText: "1-r bag"
+- tapOn: "Газрын нэр / Place name (optional)"
+- inputText: "Zuunmod zah"
+- scrollUntilVisible:
+    element: "Latitude"
+    direction: DOWN
+- tapOn: "Latitude"
+- inputText: "47.918"
+- tapOn: "Longitude"
+- inputText: "106.917"
+- hideKeyboard
+- tapOn: "Үргэлжлүүлэх / Continue"
+
+# The report is written locally first and remains private until sync.
+- assertVisible: "Шалгаж баталгаажуулах"
+- tapOn: "Зар хадгалах / Save report"
+- assertVisible:
+    text: ".*Синк хүлээгдэж байна.*"

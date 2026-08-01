@@ -32,6 +32,13 @@ class IsarSightingReport {
   late String status; // stored as string from SightingStatus.name
   late DateTime createdAt;
 
+  /// Account partition for offline cache and sync.
+  @Index()
+  String? accountId;
+  String? clientId;
+  DateTime? reviewedAt;
+  String? reviewedBy;
+
   factory IsarSightingReport.fromDomain(SightingReport report) {
     return IsarSightingReport()
       ..domainId = report.id
@@ -44,7 +51,11 @@ class IsarSightingReport {
       ..photoUrl = report.photoUrl
       ..isAnonymous = report.isAnonymous
       ..status = report.status.name
-      ..createdAt = report.createdAt;
+      ..createdAt = report.createdAt
+      ..accountId = report.reporterId
+      ..clientId = report.clientId
+      ..reviewedAt = report.reviewedAt
+      ..reviewedBy = report.reviewedBy;
   }
 
   SightingReport toDomain() {
@@ -62,6 +73,9 @@ class IsarSightingReport {
         (e) => e.name == status,
         orElse: () => SightingStatus.pending,
       ),
+      clientId: clientId,
+      reviewedAt: reviewedAt,
+      reviewedBy: reviewedBy,
       createdAt: createdAt,
     );
   }

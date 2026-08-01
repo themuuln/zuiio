@@ -1,3 +1,5 @@
+import 'package:isar/isar.dart';
+
 import '../../../app/supabase_bootstrap.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/error/result.dart';

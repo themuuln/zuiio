@@ -1,9 +1,13 @@
 import 'dart:async';
 
+import 'package:isar/isar.dart';
+
 import '../../../core/error/app_exception.dart';
 import '../../../core/error/result.dart';
 import '../../shared/data/isar_storage.dart';
 import '../../shared/data/isar_schemas/isar_sighting_report.dart';
+import '../../../core/sync/sync_queue.dart';
+import '../../shared/data/isar_schemas/isar_sync_queue_item.dart';
 import '../domain/sighting_report.dart';
 import 'sighting_repository.dart';
 
@@ -21,6 +25,19 @@ class LocalSightingRepository implements SightingRepository {
       final isarSighting = IsarSightingReport.fromDomain(sighting);
       await isar.writeTxn(() async {
         await _storage.sightingReports.put(isarSighting);
+        await _storage.syncQueueItems.put(
+          IsarSyncQueueItem.fromDomain(
+            SyncQueueItem(
+              entityType: 'lost_horse_sighting',
+              entityId: sighting.id,
+              action: SyncAction.create,
+              data: sighting.toJson(),
+              timestamp: sighting.createdAt,
+              accountId: sighting.reporterId,
+              queueId: 'lost_horse_sighting:${sighting.id}',
+            ),
+          ),
+        );
       });
       return Result.ok(sighting);
     } catch (e) {
@@ -79,10 +96,24 @@ class LocalSightingRepository implements SightingRepository {
             .filter()
             .domainIdEqualTo(id)
             .findFirst();
-        if (existing != null) {
-          existing.status = status;
-          await _storage.sightingReports.put(existing);
-        }
+        if (existing == null) return;
+        existing.status = status;
+        existing.reviewedAt = DateTime.now();
+        final sighting = existing.toDomain();
+        await _storage.sightingReports.put(existing);
+        await _storage.syncQueueItems.put(
+          IsarSyncQueueItem.fromDomain(
+            SyncQueueItem(
+              entityType: 'lost_horse_sighting',
+              entityId: id,
+              action: SyncAction.update,
+              data: sighting.toJson(),
+              timestamp: sighting.reviewedAt ?? DateTime.now(),
+              accountId: sighting.reporterId,
+              queueId: 'lost_horse_sighting_review:$id',
+            ),
+          ),
+        );
       });
       return const Result.ok(null);
     } catch (e) {

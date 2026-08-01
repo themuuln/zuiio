@@ -5,6 +5,7 @@
 /// the correct spelling 'Хөвсгөл' — but this list and the Supabase seed data
 /// must stay as 'Хамын' to match existing records.
 library;
+
 /// All 21 Mongolian aimags plus the capital Улаанбаатар (22 entries).
 ///
 /// Matches [RegionSelectionPage._regions] exactly (after the Баян-Өлгий and

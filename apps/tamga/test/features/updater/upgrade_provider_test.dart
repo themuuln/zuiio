@@ -89,9 +89,7 @@ void main() {
 
     test('initial state is AsyncData(null)', () {
       final container = ProviderContainer(
-        overrides: [
-          updateServiceProvider.overrideWithValue(mockService),
-        ],
+        overrides: [updateServiceProvider.overrideWithValue(mockService)],
       );
       addTearDown(container.dispose);
 
@@ -100,14 +98,12 @@ void main() {
     });
 
     test('check returns AppVersion when update is available', () async {
-      when(() => mockService.checkForUpdate()).thenAnswer(
-        (_) async => UpdateAvailable(testVersion),
-      );
+      when(
+        () => mockService.checkForUpdate(),
+      ).thenAnswer((_) async => UpdateAvailable(testVersion));
 
       final container = ProviderContainer(
-        overrides: [
-          updateServiceProvider.overrideWithValue(mockService),
-        ],
+        overrides: [updateServiceProvider.overrideWithValue(mockService)],
       );
       addTearDown(container.dispose);
 
@@ -119,14 +115,12 @@ void main() {
     });
 
     test('check returns null when already up to date', () async {
-      when(() => mockService.checkForUpdate()).thenAnswer(
-        (_) async => const UpToDate(),
-      );
+      when(
+        () => mockService.checkForUpdate(),
+      ).thenAnswer((_) async => const UpToDate());
 
       final container = ProviderContainer(
-        overrides: [
-          updateServiceProvider.overrideWithValue(mockService),
-        ],
+        overrides: [updateServiceProvider.overrideWithValue(mockService)],
       );
       addTearDown(container.dispose);
 
@@ -137,14 +131,12 @@ void main() {
     });
 
     test('check returns null and sets error on failure', () async {
-      when(() => mockService.checkForUpdate()).thenAnswer(
-        (_) async => const UpdateCheckFailed('Network error'),
-      );
+      when(
+        () => mockService.checkForUpdate(),
+      ).thenAnswer((_) async => const UpdateCheckFailed('Network error'));
 
       final container = ProviderContainer(
-        overrides: [
-          updateServiceProvider.overrideWithValue(mockService),
-        ],
+        overrides: [updateServiceProvider.overrideWithValue(mockService)],
       );
       addTearDown(container.dispose);
 
@@ -162,9 +154,7 @@ void main() {
       when(() => mockService.checkForUpdate()).thenThrow(Exception('Timeout'));
 
       final container = ProviderContainer(
-        overrides: [
-          updateServiceProvider.overrideWithValue(mockService),
-        ],
+        overrides: [updateServiceProvider.overrideWithValue(mockService)],
       );
       addTearDown(container.dispose);
 
@@ -176,14 +166,12 @@ void main() {
     });
 
     test('check sets inProgress to false after completion', () async {
-      when(() => mockService.checkForUpdate()).thenAnswer(
-        (_) async => const UpToDate(),
-      );
+      when(
+        () => mockService.checkForUpdate(),
+      ).thenAnswer((_) async => const UpToDate());
 
       final container = ProviderContainer(
-        overrides: [
-          updateServiceProvider.overrideWithValue(mockService),
-        ],
+        overrides: [updateServiceProvider.overrideWithValue(mockService)],
       );
       addTearDown(container.dispose);
 
@@ -199,9 +187,7 @@ void main() {
       ).thenAnswer((_) async => null);
 
       final container = ProviderContainer(
-        overrides: [
-          updateServiceProvider.overrideWithValue(mockService),
-        ],
+        overrides: [updateServiceProvider.overrideWithValue(mockService)],
       );
       addTearDown(container.dispose);
 
@@ -217,9 +203,7 @@ void main() {
       ).thenAnswer((_) async => 'Download failed');
 
       final container = ProviderContainer(
-        overrides: [
-          updateServiceProvider.overrideWithValue(mockService),
-        ],
+        overrides: [updateServiceProvider.overrideWithValue(mockService)],
       );
       addTearDown(container.dispose);
 
@@ -229,22 +213,23 @@ void main() {
       expect(container.read(updateErrorProvider), 'Download failed');
     });
 
-    test('downloadAndInstall sets inProgress to false after completion', () async {
-      when(
-        () => mockService.downloadAndInstall(testVersion),
-      ).thenAnswer((_) async => null);
+    test(
+      'downloadAndInstall sets inProgress to false after completion',
+      () async {
+        when(
+          () => mockService.downloadAndInstall(testVersion),
+        ).thenAnswer((_) async => null);
 
-      final container = ProviderContainer(
-        overrides: [
-          updateServiceProvider.overrideWithValue(mockService),
-        ],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [updateServiceProvider.overrideWithValue(mockService)],
+        );
+        addTearDown(container.dispose);
 
-      final notifier = container.read(upgradeActionProvider.notifier);
-      await notifier.downloadAndInstall(testVersion);
+        final notifier = container.read(upgradeActionProvider.notifier);
+        await notifier.downloadAndInstall(testVersion);
 
-      expect(container.read(updateInstallInProgressProvider), isFalse);
-    });
+        expect(container.read(updateInstallInProgressProvider), isFalse);
+      },
+    );
   });
 }

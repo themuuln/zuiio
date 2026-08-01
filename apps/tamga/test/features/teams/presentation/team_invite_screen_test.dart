@@ -46,10 +46,11 @@ class _MockTeamRepository implements TeamRepository {
 
   @override
   Future<Result<Team>> getTeam(String teamId) async {
-    if (team == null)
+    if (team == null) {
       return Result.fail(
         AppException(message: 'Not found', code: 'TEAM_NOT_FOUND'),
       );
+    }
     return Result.ok(team!);
   }
 

@@ -13,125 +13,153 @@ extension GetIsarHorseCollection on Isar {
   IsarCollection<IsarHorse> get isarHorses => this.collection();
 }
 
-const IsarHorseSchema = CollectionSchema(
+final IsarHorseSchema = CollectionSchema(
   name: r'IsarHorse',
-  id: 9042457938627109439,
+  id: int.parse('9042457938627109439'),
   properties: {
     r'awardCount': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'awardCount',
       type: IsarType.long,
     ),
     r'birthYear': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'birthYear',
       type: IsarType.long,
     ),
     r'breedLineageIndex': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'breedLineageIndex',
       type: IsarType.long,
     ),
-    r'coat': PropertySchema(id: 3, name: r'coat', type: IsarType.string),
+    r'coat': PropertySchema(
+      id: int.parse('3'),
+      name: r'coat',
+      type: IsarType.string,
+    ),
     r'coatColorIndex': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'coatColorIndex',
       type: IsarType.long,
     ),
     r'createdAt': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'damId': PropertySchema(id: 6, name: r'damId', type: IsarType.string),
+    r'damId': PropertySchema(
+      id: int.parse('6'),
+      name: r'damId',
+      type: IsarType.string,
+    ),
     r'domainId': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'gender': PropertySchema(
-      id: 8,
+      id: int.parse('8'),
       name: r'gender',
       type: IsarType.byte,
       enumMap: _IsarHorsegenderEnumValueMap,
     ),
     r'isOwnedByHousehold': PropertySchema(
-      id: 9,
+      id: int.parse('9'),
       name: r'isOwnedByHousehold',
       type: IsarType.bool,
     ),
     r'lineageRootId': PropertySchema(
-      id: 10,
+      id: int.parse('10'),
       name: r'lineageRootId',
       type: IsarType.string,
     ),
     r'markingsJson': PropertySchema(
-      id: 11,
+      id: int.parse('11'),
       name: r'markingsJson',
       type: IsarType.string,
     ),
     r'microchipId': PropertySchema(
-      id: 12,
+      id: int.parse('12'),
       name: r'microchipId',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(id: 13, name: r'name', type: IsarType.string),
-    r'notes': PropertySchema(id: 14, name: r'notes', type: IsarType.string),
+    r'name': PropertySchema(
+      id: int.parse('13'),
+      name: r'name',
+      type: IsarType.string,
+    ),
+    r'notes': PropertySchema(
+      id: int.parse('14'),
+      name: r'notes',
+      type: IsarType.string,
+    ),
     r'offspringCount': PropertySchema(
-      id: 15,
+      id: int.parse('15'),
       name: r'offspringCount',
       type: IsarType.long,
     ),
     r'ownerStampSvg': PropertySchema(
-      id: 16,
+      id: int.parse('16'),
       name: r'ownerStampSvg',
       type: IsarType.string,
     ),
     r'photoUrls': PropertySchema(
-      id: 17,
+      id: int.parse('17'),
       name: r'photoUrls',
       type: IsarType.stringList,
     ),
-    r'region': PropertySchema(id: 18, name: r'region', type: IsarType.string),
+    r'region': PropertySchema(
+      id: int.parse('18'),
+      name: r'region',
+      type: IsarType.string,
+    ),
     r'registrationDate': PropertySchema(
-      id: 19,
+      id: int.parse('19'),
       name: r'registrationDate',
       type: IsarType.dateTime,
     ),
     r'registrationNo': PropertySchema(
-      id: 20,
+      id: int.parse('20'),
       name: r'registrationNo',
       type: IsarType.string,
     ),
     r'relationLabel': PropertySchema(
-      id: 21,
+      id: int.parse('21'),
       name: r'relationLabel',
       type: IsarType.string,
     ),
-    r'sireId': PropertySchema(id: 22, name: r'sireId', type: IsarType.string),
+    r'sireId': PropertySchema(
+      id: int.parse('22'),
+      name: r'sireId',
+      type: IsarType.string,
+    ),
     r'stateVerified': PropertySchema(
-      id: 23,
+      id: int.parse('23'),
       name: r'stateVerified',
       type: IsarType.bool,
     ),
-    r'sum': PropertySchema(id: 24, name: r'sum', type: IsarType.string),
+    r'sum': PropertySchema(
+      id: int.parse('24'),
+      name: r'sum',
+      type: IsarType.string,
+    ),
     r'tamgaBrandClan': PropertySchema(
-      id: 25,
+      id: int.parse('25'),
       name: r'tamgaBrandClan',
       type: IsarType.string,
     ),
     r'tamgaBrandGeneration': PropertySchema(
-      id: 26,
+      id: int.parse('26'),
       name: r'tamgaBrandGeneration',
       type: IsarType.long,
     ),
     r'tamgaVerified': PropertySchema(
-      id: 27,
+      id: int.parse('27'),
       name: r'tamgaVerified',
       type: IsarType.bool,
     ),
     r'updatedAt': PropertySchema(
-      id: 28,
+      id: int.parse('28'),
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -143,7 +171,7 @@ const IsarHorseSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -156,7 +184,7 @@ const IsarHorseSchema = CollectionSchema(
       ],
     ),
     r'lineageRootId': IndexSchema(
-      id: 553091344210129649,
+      id: int.parse('553091344210129649'),
       name: r'lineageRootId',
       unique: false,
       replace: false,

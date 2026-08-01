@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/sighting_repository.dart';
 import '../data/supabase_sighting_repository.dart';
 import '../domain/sighting_report.dart';
+import 'map_providers.dart';
 
 /// Provider for the sighting repository.
 final sightingRepositoryProvider = Provider<SightingRepository>((ref) {
@@ -35,22 +36,22 @@ final reportSightingProvider =
       ref,
       sighting,
     ) async {
-      final repo = ref.watch(sightingRepositoryProvider);
-      final result = await repo.reportSighting(sighting);
-      SightingReport? saved;
-      result.when(onSuccess: (v) => saved = v, onFailure: (e) => throw e);
-      return saved!;
+      final repo = ref.watch(lostHorseRepositoryProvider);
+      final result = await repo.createSighting(sighting);
+      return result.getOrThrow();
     });
 
 /// Update sighting status (confirm/dismiss).
 final updateSightingStatusProvider =
     FutureProvider.family<void, Map<String, String>>((ref, params) async {
-      final repo = ref.watch(sightingRepositoryProvider);
-      final result = await repo.updateSightingStatus(
-        params['id']!,
-        params['status']!,
+      final status = SightingStatus.values.firstWhere(
+        (value) => value.name == params['status'],
+        orElse: () => SightingStatus.dismissed,
       );
-      result.when(onSuccess: (_) {}, onFailure: (e) => throw e);
+      await ref
+          .watch(lostHorseRepositoryProvider)
+          .reviewSighting(sightingId: params['id']!, status: status)
+          .then((result) => result.getOrThrow());
     });
 
 /// Delete a sighting.

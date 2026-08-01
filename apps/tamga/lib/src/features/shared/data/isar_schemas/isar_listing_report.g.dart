@@ -13,33 +13,37 @@ extension GetIsarListingReportCollection on Isar {
   IsarCollection<IsarListingReport> get isarListingReports => this.collection();
 }
 
-const IsarListingReportSchema = CollectionSchema(
+final IsarListingReportSchema = CollectionSchema(
   name: r'IsarListingReport',
-  id: 8314755600777089706,
+  id: int.parse('8314755600777089706'),
   properties: {
     r'createdAt': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'listingId': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'listingId',
       type: IsarType.string,
     ),
-    r'reason': PropertySchema(id: 3, name: r'reason', type: IsarType.string),
+    r'reason': PropertySchema(
+      id: int.parse('3'),
+      name: r'reason',
+      type: IsarType.string,
+    ),
     r'reporterId': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'reporterId',
       type: IsarType.string,
     ),
     r'status': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'status',
       type: IsarType.byte,
       enumMap: _IsarListingReportstatusEnumValueMap,
@@ -52,7 +56,7 @@ const IsarListingReportSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,

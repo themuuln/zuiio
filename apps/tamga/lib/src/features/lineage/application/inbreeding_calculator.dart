@@ -80,14 +80,15 @@ class InbreedingCalculator {
     final results = <List<String>>[];
 
     void traverse(String currentId, List<String> currentPath) {
+      // Every visited ancestor is a valid path endpoint. Recording only leaf
+      // ancestors misses shared parents such as half-sibling pairings.
+      if (currentPath.length > 1) {
+        results.add(List.of(currentPath));
+      }
       if (currentPath.length >= maxDepth) return;
 
       final parents = parentMap[currentId];
-      if (parents == null) {
-        // Leaf ancestor — record the path
-        results.add(List.of(currentPath));
-        return;
-      }
+      if (parents == null) return;
 
       if (parents.sireId != null) {
         currentPath.add(parents.sireId!);

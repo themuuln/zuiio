@@ -22,9 +22,6 @@ class ActiveReportsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Run expiry check when the screen is built.
-    ref.watch(checkAndExpireReportsProvider);
-
     final filter = ref.watch(lostHorseFilterProvider);
     final reportsAsync = ref.watch(filteredActiveLostHorsesProvider);
     final currentPos = ref.watch(currentPositionProvider).valueOrNull;

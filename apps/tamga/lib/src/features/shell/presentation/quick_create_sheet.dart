@@ -331,54 +331,54 @@ class _CreateAction {
 List<_CreateAction> _allCreateActions(BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
   return [
-  _CreateAction(
-    label: l10n.horseNavTitle,
-    labelMn: 'Add Horse',
-    icon: PhosphorIconsRegular.horse,
-    color: Colors.blue,
-    onTap: () {
-      Navigator.push(
-        context,
-        ModalSheetRoute(
-          swipeDismissible: true,
-          swipeDismissSensitivity: const SwipeDismissSensitivity(
-            minFlingVelocityRatio: 2.0,
-            dismissalOffset: SheetOffset.proportionalToViewport(0.3),
+    _CreateAction(
+      label: l10n.horseNavTitle,
+      labelMn: 'Add Horse',
+      icon: PhosphorIconsRegular.horse,
+      color: Colors.blue,
+      onTap: () {
+        Navigator.push(
+          context,
+          ModalSheetRoute(
+            swipeDismissible: true,
+            swipeDismissSensitivity: const SwipeDismissSensitivity(
+              minFlingVelocityRatio: 2.0,
+              dismissalOffset: SheetOffset.proportionalToViewport(0.3),
+            ),
+            builder: (_) => const _HorseEditorSheetWrapper(),
           ),
-          builder: (_) => const _HorseEditorSheetWrapper(),
-        ),
-      );
-    },
-  ),
-  _CreateAction(
-    label: 'Зар',
-    labelMn: 'Market Listing',
-    icon: PhosphorIconsRegular.storefront,
-    color: Colors.orange,
-    onTap: () => context.push('/market/create'),
-  ),
-  _CreateAction(
-    label: l10n.lostHorseFinderTitle,
-    labelMn: 'Report Lost Horse',
-    icon: PhosphorIconsRegular.magnifyingGlassMinus,
-    color: Colors.red,
-    onTap: () => context.push('/lost-horse/report'),
-  ),
-  _CreateAction(
-    label: l10n.eventsFilterRace,
-    labelMn: 'Add Event',
-    icon: PhosphorIconsRegular.trophy,
-    color: Colors.amber,
-    onTap: () => context.push('/events'),
-  ),
-  _CreateAction(
-    label: l10n.paymentSubscriptionTitle,
-    labelMn: 'Payment',
-    icon: PhosphorIconsRegular.creditCard,
-    color: Colors.green,
-    onTap: () => context.push('/payment'),
-  ),
-];
+        );
+      },
+    ),
+    _CreateAction(
+      label: 'Зар',
+      labelMn: 'Market Listing',
+      icon: PhosphorIconsRegular.storefront,
+      color: Colors.orange,
+      onTap: () => context.push('/market/create'),
+    ),
+    _CreateAction(
+      label: l10n.lostHorseFinderTitle,
+      labelMn: 'Report Lost Horse',
+      icon: PhosphorIconsRegular.magnifyingGlassMinus,
+      color: Colors.red,
+      onTap: () => context.push('/lost-horse/report'),
+    ),
+    _CreateAction(
+      label: l10n.eventsFilterRace,
+      labelMn: 'Add Event',
+      icon: PhosphorIconsRegular.trophy,
+      color: Colors.amber,
+      onTap: () => context.push('/events'),
+    ),
+    _CreateAction(
+      label: l10n.paymentSubscriptionTitle,
+      labelMn: 'Payment',
+      icon: PhosphorIconsRegular.creditCard,
+      color: Colors.green,
+      onTap: () => context.push('/payment'),
+    ),
+  ];
 }
 
 /// HorseEditorSheet-ийг smooth_sheets дотор харуулах wrapper.

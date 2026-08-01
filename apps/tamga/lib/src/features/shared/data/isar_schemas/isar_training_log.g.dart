@@ -13,50 +13,66 @@ extension GetIsarTrainingLogCollection on Isar {
   IsarCollection<IsarTrainingLog> get isarTrainingLogs => this.collection();
 }
 
-const IsarTrainingLogSchema = CollectionSchema(
+final IsarTrainingLogSchema = CollectionSchema(
   name: r'IsarTrainingLog',
-  id: 584865345995831477,
+  id: int.parse('584865345995831477'),
   properties: {
     r'createdAt': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'date': PropertySchema(id: 1, name: r'date', type: IsarType.dateTime),
+    r'date': PropertySchema(
+      id: int.parse('1'),
+      name: r'date',
+      type: IsarType.dateTime,
+    ),
     r'distanceKm': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'distanceKm',
       type: IsarType.double,
     ),
     r'domainId': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'durationMinutes': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'durationMinutes',
       type: IsarType.long,
     ),
     r'handlerName': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'handlerName',
       type: IsarType.string,
     ),
-    r'horseId': PropertySchema(id: 6, name: r'horseId', type: IsarType.string),
-    r'notes': PropertySchema(id: 7, name: r'notes', type: IsarType.string),
+    r'horseId': PropertySchema(
+      id: int.parse('6'),
+      name: r'horseId',
+      type: IsarType.string,
+    ),
+    r'notes': PropertySchema(
+      id: int.parse('7'),
+      name: r'notes',
+      type: IsarType.string,
+    ),
     r'type': PropertySchema(
-      id: 8,
+      id: int.parse('8'),
       name: r'type',
       type: IsarType.byte,
       enumMap: _IsarTrainingLogtypeEnumValueMap,
     ),
     r'updatedAt': PropertySchema(
-      id: 9,
+      id: int.parse('9'),
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
-    r'weather': PropertySchema(id: 10, name: r'weather', type: IsarType.string),
+    r'weather': PropertySchema(
+      id: int.parse('10'),
+      name: r'weather',
+      type: IsarType.string,
+    ),
   },
   estimateSize: _isarTrainingLogEstimateSize,
   serialize: _isarTrainingLogSerialize,
@@ -65,7 +81,7 @@ const IsarTrainingLogSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -78,7 +94,7 @@ const IsarTrainingLogSchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: -4681125749579367450,
+      id: int.parse('-4681125749579367450'),
       name: r'horseId',
       unique: false,
       replace: false,

@@ -14,35 +14,47 @@ extension GetIsarCoOwnershipRecordCollection on Isar {
       this.collection();
 }
 
-const IsarCoOwnershipRecordSchema = CollectionSchema(
+final IsarCoOwnershipRecordSchema = CollectionSchema(
   name: r'IsarCoOwnershipRecord',
-  id: 8776570555907749345,
+  id: int.parse('8776570555907749345'),
   properties: {
     r'coOwnerName': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'coOwnerName',
       type: IsarType.string,
     ),
     r'createdAt': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'horseId': PropertySchema(id: 3, name: r'horseId', type: IsarType.string),
+    r'horseId': PropertySchema(
+      id: int.parse('3'),
+      name: r'horseId',
+      type: IsarType.string,
+    ),
     r'permissions': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'permissions',
       type: IsarType.stringList,
     ),
-    r'phone': PropertySchema(id: 5, name: r'phone', type: IsarType.string),
-    r'role': PropertySchema(id: 6, name: r'role', type: IsarType.string),
+    r'phone': PropertySchema(
+      id: int.parse('5'),
+      name: r'phone',
+      type: IsarType.string,
+    ),
+    r'role': PropertySchema(
+      id: int.parse('6'),
+      name: r'role',
+      type: IsarType.string,
+    ),
     r'updatedAt': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -54,7 +66,7 @@ const IsarCoOwnershipRecordSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -67,7 +79,7 @@ const IsarCoOwnershipRecordSchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: -4681125749579367450,
+      id: int.parse('-4681125749579367450'),
       name: r'horseId',
       unique: false,
       replace: false,

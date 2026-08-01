@@ -8,6 +8,8 @@ import '../data/location_service.dart';
 import '../data/map_repository.dart';
 import '../data/offline_tile_manager.dart';
 import '../data/supabase_map_repository.dart';
+import '../data/offline_first_lost_horse_repository.dart';
+import '../data/lost_horse_repository.dart';
 import '../data/tile_cache_manager.dart';
 import '../domain/herd_tracking_status.dart';
 import '../domain/map_enums.dart';
@@ -16,6 +18,11 @@ import '../domain/pasture_zone.dart';
 /// Repository provider — swap SupabaseMapRepository for LocalMapRepository when offline.
 final mapRepositoryProvider = Provider<MapRepository>((ref) {
   return SupabaseMapRepository();
+});
+
+/// Local-first repository for the horse/livestock recovery workflow.
+final lostHorseRepositoryProvider = Provider<LostHorseRepository>((ref) {
+  return OfflineFirstLostHorseRepository();
 });
 
 /// Current GPS position of the device.

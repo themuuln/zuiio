@@ -1,34 +1,20 @@
-import 'dart:async';
-import 'dart:io';
+import 'package:uuid/uuid.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../app/supabase_bootstrap.dart';
-import '../../../core/constants/horse_coat_colors.dart';
-import '../../../core/error/error_helpers.dart';
-import '../../../features/payments/data/payment_service.dart';
-import '../../../core/storage/cloud/media_storage_providers.dart';
-import '../../../core/storage/cloud/media_storage_router.dart';
-import '../../../core/storage/cloud/media_storage_service.dart';
-import '../../../core/theme/design_tokens.dart';
-import '../../../core/widgets/widgets.dart';
-import '../../../shared/domain/horse.dart';
-import '../../auth/application/auth_providers.dart';
 import '../../horses/application/horses_providers.dart';
-import '../../horses/domain/horse_record.dart';
-import '../application/expiry_service.dart';
-import '../application/location_providers.dart';
-import '../application/lost_horse_providers.dart';
 import '../application/map_providers.dart';
 import '../domain/animal_enums.dart';
 import '../domain/lost_horse_report.dart';
 import '../domain/mongolian_locations.dart';
+import '../domain/report_form_state.dart';
 
-/// Report a lost horse — form with real horse list, GPS location, search radius.
+/// Three-step, free, offline-first horse/livestock recovery report wizard.
 class ReportLostHorseScreen extends ConsumerStatefulWidget {
   const ReportLostHorseScreen({super.key});
 
@@ -39,1363 +25,579 @@ class ReportLostHorseScreen extends ConsumerStatefulWidget {
 
 class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _animalNameController = TextEditingController();
+  final _coatController = TextEditingController();
+  final _earMarkController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _bagController = TextEditingController();
-  final _locationNameController = TextEditingController();
-  final _lostCountController = TextEditingController(text: '1');
-  double _searchRadiusKm = 5.0;
-  Horse? _selectedHorse;
-  bool _isSubmitting = false;
-
-  // ── Location state ──
-  String? _selectedAimag;
-  String? _selectedSum;
-
-  // ── Animal info state ──
-  AnimalType? _selectedAnimalType;
-  List<AnimalAge> _selectedAges = [];
-  HorseGender? _selectedGender;
-  HorseBreed? _selectedBreed;
-  String? _selectedCoatColor;
-  bool _animalInfoValidated = false;
-  bool _locationValidated = false;
-
-  // ── Media state ──
+  final _placeController = TextEditingController();
+  final _latController = TextEditingController();
+  final _lngController = TextEditingController();
   final _picker = ImagePicker();
-  final List<File> _localPhotos = [];
-  bool _photosValidated = false;
 
-  // ── Tamga & Ear mark state ──
-  File? _tamgaFile;
-  final _earMarkController = TextEditingController();
-  static const int kMaxEarMarkLength = 500;
-
-  // ── Contact phone state ──
-  final _contactPhoneController = TextEditingController();
-
-  // ── Pricing tier state ──
-  LostHorsePricingTier _selectedPricingTier = LostHorsePricingTier.free;
-
-  @override
-  void initState() {
-    super.initState();
-    // Auto-fill contact phone from profile after first frame.
-    Future.microtask(() {
-      if (!mounted) return;
-      final authState = ref.read(authStateProvider).valueOrNull;
-      if (authState != null && authState.hasPhone) {
-        _contactPhoneController.text = authState.phone!;
-      }
-    });
-  }
+  int _step = 0;
+  String? _selectedHorseId;
+  AnimalType _animalType = AnimalType.horse;
+  String? _aimag;
+  String? _sum;
+  DateTime _lastSeenAt = DateTime.now();
+  final List<XFile> _photos = [];
+  bool _isSubmitting = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
+    _animalNameController.dispose();
+    _coatController.dispose();
+    _earMarkController.dispose();
     _descriptionController.dispose();
     _bagController.dispose();
-    _locationNameController.dispose();
-    _lostCountController.dispose();
-    _earMarkController.dispose();
-    _contactPhoneController.dispose();
+    _placeController.dispose();
+    _latController.dispose();
+    _lngController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
-    final horsesAsync = ref.watch(horsesProvider);
-    final currentPos = ref.watch(currentPositionProvider);
+    final scheme = Theme.of(context).colorScheme;
+    final horses = ref.watch(horsesProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Хаяж морь оруулах', style: TamgaTypography.headline()),
-        backgroundColor: colors.surface,
-        surfaceTintColor: Colors.transparent,
+        title: const Text('Мал хайх зар / Report a lost animal'),
+        leading: BackButton(onPressed: () => context.pop()),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(TamgaSpacing.lg),
-          children: [
-            // ── Horse selector ────────────────────────────────────
-            Text(
-              'Морь сонгох',
-              style: TamgaTypography.footnote(
-                weight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: TamgaSpacing.sm),
-            horsesAsync.when(
-              data: (horses) {
-                if (horses.isEmpty) {
-                  return TamgaCard(
-                    child: Text(
-                      'Морь байхгүй байна — эхлээд морь нэмнэ үү',
-                      style: TamgaTypography.body(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  );
-                }
-                return DropdownButtonFormField<Horse>(
-                  initialValue: _selectedHorse,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        TamgaSpacing.cornerRadiusSmall,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: TamgaSpacing.md,
-                      vertical: TamgaSpacing.md,
-                    ),
-                  ),
-                  items: horses
-                      .map(
-                        (h) => DropdownMenuItem(
-                          value: h,
-                          child: Text(h.displayName),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedHorse = v),
-                  validator: (v) => v == null ? 'Морь сонгоно уу' : null,
-                );
-              },
-              loading: () => const LoadingIndicator(size: 24),
-              error: (e, _) => Text(
-                friendlyErrorMessage(e),
-                style: TamgaTypography.body(color: colors.error),
-              ),
-            ),
-            const SizedBox(height: TamgaSpacing.xl),
-
-            // ── Аймаг / Сум / Баг / Газрын нэр ──────────────────
-            _buildLocationSection(colors),
-            const SizedBox(height: TamgaSpacing.xl),
-
-            // ── Малын мэдээлэл (Animal Info) ────────────────────
-            _buildAnimalInfoSection(colors),
-            const SizedBox(height: TamgaSpacing.xl),
-
-            // ── Тамга ба Им (Branding) ─────────────────────────
-            _buildTamgaSection(colors),
-            const SizedBox(height: TamgaSpacing.xl),
-
-            // ── Холбоо барих (Contact) ──────────────────────────
-            _buildContactSection(colors),
-            const SizedBox(height: TamgaSpacing.xl),
-
-            // ── Description ──────────────────────────────────────
-            Text(
-              'Тайлбар',
-              style: TamgaTypography.footnote(
-                weight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: TamgaSpacing.sm),
-            TextFormField(
-              controller: _descriptionController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Хаяж морийн талаарх мэдээлэл...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(
-                    TamgaSpacing.cornerRadiusSmall,
-                  ),
-                ),
-              ),
-              validator: (v) =>
-                  (v == null || v.length < 10) ? 'Дор хаяж 10 тэмдэгт' : null,
-            ),
-            const SizedBox(height: TamgaSpacing.xl),
-
-            // ── Search radius ────────────────────────────────────
-            Text(
-              'Хайх радиус: ${_searchRadiusKm.toStringAsFixed(0)} км',
-              style: TamgaTypography.footnote(
-                weight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-            Slider(
-              value: _searchRadiusKm,
-              min: 1,
-              max: 50,
-              divisions: 49,
-              activeColor: colors.primary,
-              onChanged: (v) => setState(() => _searchRadiusKm = v),
-            ),
-            const SizedBox(height: TamgaSpacing.xl),
-
-            // ── Last seen location ───────────────────────────────
-            currentPos.when(
-              data: (pos) {
-                final lat = pos?.latitude.toStringAsFixed(4) ?? '--';
-                final lng = pos?.longitude.toStringAsFixed(4) ?? '--';
-                return TamgaCard(
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: pos != null ? colors.primary : colors.error,
-                      ),
-                      const SizedBox(width: TamgaSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Сүүлд үзсэн байршил',
-                              style: TamgaTypography.body(),
-                            ),
-                            Text(
-                              pos != null
-                                  ? '$lat, $lng ( одоогийн байршил )'
-                                  : 'GPS идэвхигүй — байршил тодорхойгүй',
-                              style: TamgaTypography.caption1(
-                                color: colors.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              loading: () => const TamgaCard(
-                child: Row(
-                  children: [
-                    LoadingIndicator(size: 20),
-                    SizedBox(width: TamgaSpacing.md),
-                    Text('Байршил тодорхойлж байна...'),
-                  ],
-                ),
-              ),
-              error: (_, _) => TamgaCard(
-                child: Row(
-                  children: [
-                    Icon(Icons.location_off, color: colors.error),
-                    const SizedBox(width: TamgaSpacing.md),
-                    Text(
-                      'GPS алдаа',
-                      style: TamgaTypography.body(color: colors.error),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: TamgaSpacing.xxxl),
-
-            // ── Зураг (Media) ──────────────────────────────────────
-            _buildMediaSection(colors),
-            const SizedBox(height: TamgaSpacing.xxxl),
-
-            // ── Үнэ ба Нөхцөл (Pricing) ───────────────────────────
-            _buildPricingSection(colors),
-            const SizedBox(height: TamgaSpacing.xxxl),
-
-            // ── Submit ───────────────────────────────────────────
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitReport,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colors.error,
-                  foregroundColor: colors.onError,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      TamgaSpacing.cornerRadius,
-                    ),
-                  ),
-                ),
-                child: _isSubmitting
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: colors.onError,
-                        ),
-                      )
-                    : Text(
-                        'Хаяж морь зарлах',
-                        style: TamgaTypography.body(
-                          color: colors.onError,
-                          weight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Location Section ─────────────────────────────────────────────
-
-  Widget _buildLocationSection(TamgaColors colors) {
-    final sumsAsync = ref.watch(filteredSumsProvider(_selectedAimag));
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Section header ──
-        Text(
-          'Байршил',
-          style: TamgaTypography.headline(weight: FontWeight.w600),
-        ),
-        const SizedBox(height: TamgaSpacing.md),
-
-        // ── Аймаг ──
-        Text(
-          'Аймаг',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TamgaCombobox<String>(
-          items: kAimagList,
-          value: _selectedAimag,
-          onSelected: (v) {
-            setState(() {
-              _selectedAimag = v;
-              // Reset sum when aimag changes
-              _selectedSum = null;
-            });
-          },
-          itemBuilder: (item) =>
-              TamgaComboboxItem(value: item, child: Text(item)),
-          placeholder: 'Аймаг сонгоно уу',
-          showClear: true,
-        ),
-        if (_locationValidated && _selectedAimag == null)
-          Padding(
-            padding: const EdgeInsets.only(
-              top: TamgaSpacing.xs,
-              left: TamgaSpacing.sm,
-            ),
-            child: Text(
-              'Аймаг сонгоно уу',
-              style: TamgaTypography.caption1(color: colors.error),
-            ),
-          ),
-        const SizedBox(height: TamgaSpacing.lg),
-
-        // ── Сум ──
-        Text(
-          'Сум / Дүүрэг',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        sumsAsync.when(
-          data: (sums) {
-            if (_selectedAimag == null) {
-              return TamgaCombobox<String>(
-                items: const <String>[],
-                value: null,
-                onSelected: (_) {},
-                itemBuilder: (item) =>
-                    TamgaComboboxItem(value: item, child: Text(item)),
-                placeholder: 'Эхлээд аймаг сонгоно уу',
-                enabled: false,
-              );
-            }
-            return TamgaCombobox<String>(
-              items: sums,
-              value: _selectedSum,
-              onSelected: (v) => setState(() => _selectedSum = v),
-              itemBuilder: (item) =>
-                  TamgaComboboxItem(value: item, child: Text(item)),
-              placeholder: sums.isEmpty ? 'Сум олдсонгүй' : 'Сум сонгоно уу',
-              showClear: true,
-            );
-          },
-          loading: () => TamgaCombobox<String>(
-            items: const <String>[],
-            value: null,
-            onSelected: (_) {},
-            itemBuilder: (item) =>
-                TamgaComboboxItem(value: item, child: Text(item)),
-            placeholder: 'Ачаалж байна...',
-            enabled: false,
-          ),
-          error: (e, _) => Text(
-            friendlyErrorMessage(e),
-            style: TamgaTypography.body(color: colors.error),
-          ),
-        ),
-        if (_locationValidated &&
-            _selectedAimag != null &&
-            _selectedSum == null)
-          Padding(
-            padding: const EdgeInsets.only(
-              top: TamgaSpacing.xs,
-              left: TamgaSpacing.sm,
-            ),
-            child: Text(
-              'Сум сонгоно уу',
-              style: TamgaTypography.caption1(color: colors.error),
-            ),
-          ),
-        const SizedBox(height: TamgaSpacing.lg),
-
-        // ── Баг ──
-        Text(
-          'Баг',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TextFormField(
-          controller: _bagController,
-          decoration: InputDecoration(
-            hintText: 'Багын нэр...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                TamgaSpacing.cornerRadiusSmall,
-              ),
-            ),
-          ),
-          validator: _validateBagField,
-        ),
-        const SizedBox(height: TamgaSpacing.lg),
-
-        // ── Газрын нэр ──
-        Text(
-          'Газрын нэр',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TextFormField(
-          controller: _locationNameController,
-          decoration: InputDecoration(
-            hintText: 'Газрын тодорхой нэр...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                TamgaSpacing.cornerRadiusSmall,
-              ),
-            ),
-          ),
-          validator: _validateLocationNameField,
-        ),
-      ],
-    );
-  }
-
-  // ── Animal Info Section ─────────────────────────────────────────
-
-  Widget _buildAnimalInfoSection(TamgaColors colors) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Section header ──
-        Text(
-          'Малын мэдээлэл',
-          style: TamgaTypography.headline(weight: FontWeight.w600),
-        ),
-        const SizedBox(height: TamgaSpacing.md),
-
-        // ── Малын төрөл (Animal Type) ──
-        Text(
-          'Малын төрөл',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TamgaCombobox<AnimalType>(
-          items: AnimalType.values,
-          value: _selectedAnimalType,
-          onSelected: (v) => setState(() => _selectedAnimalType = v),
-          itemBuilder: (item) =>
-              TamgaComboboxItem(value: item, child: Text(item.displayName)),
-          itemToString: (item) => item.displayName,
-          placeholder: 'Төрөл сонгоно уу',
-        ),
-        if (_animalInfoValidated && _selectedAnimalType == null)
-          Padding(
-            padding: const EdgeInsets.only(
-              top: TamgaSpacing.xs,
-              left: TamgaSpacing.sm,
-            ),
-            child: Text(
-              'Малын төрөл сонгоно уу',
-              style: TamgaTypography.caption1(color: colors.error),
-            ),
-          ),
-        const SizedBox(height: TamgaSpacing.lg),
-
-        // ── Нас (Age Multi-select) ──
-        Text(
-          'Нас',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TamgaCombobox<AnimalAge>(
-          items: AnimalAge.values,
-          multiple: true,
-          values: _selectedAges,
-          onValuesChanged: (v) => setState(() => _selectedAges = v),
-          itemBuilder: (item) =>
-              TamgaComboboxItem(value: item, child: Text(item.displayName)),
-          itemToString: (item) => item.displayName,
-          placeholder: 'Нас сонгоно уу',
-        ),
-        const SizedBox(height: TamgaSpacing.lg),
-
-        // ── Хүйс (Gender) ──
-        Text(
-          'Хүйс',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TamgaCombobox<HorseGender>(
-          items: HorseGender.values,
-          value: _selectedGender,
-          onSelected: (v) => setState(() => _selectedGender = v),
-          itemBuilder: (item) =>
-              TamgaComboboxItem(value: item, child: Text(item.displayName)),
-          itemToString: (item) => item.displayName,
-          placeholder: 'Хүйс сонгоно уу',
-          showClear: true,
-        ),
-        const SizedBox(height: TamgaSpacing.lg),
-
-        // ── Үүлдэр (Breed) ──
-        Text(
-          'Үүлдэр',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TamgaCombobox<HorseBreed>(
-          items: HorseBreed.values,
-          value: _selectedBreed,
-          onSelected: (v) => setState(() => _selectedBreed = v),
-          itemBuilder: (item) =>
-              TamgaComboboxItem(value: item, child: Text(item.displayName)),
-          itemToString: (item) => item.displayName,
-          placeholder: 'Үүлдэр сонгоно уу',
-          showClear: true,
-        ),
-        const SizedBox(height: TamgaSpacing.lg),
-
-        // ── Зүс (Coat Color - searchable) ──
-        Text(
-          'Зүс',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TamgaCombobox<String>(
-          items: horseCoatColors,
-          value: _selectedCoatColor,
-          onSelected: (v) => setState(() => _selectedCoatColor = v),
-          itemBuilder: (item) =>
-              TamgaComboboxItem(value: item, child: Text(item)),
-          placeholder: 'Зүс сонгоно уу...',
-          searchable: true,
-          showClear: true,
-        ),
-        const SizedBox(height: TamgaSpacing.lg),
-
-        // ── Тоо (Count) ──
-        Text(
-          'Тоо',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TextFormField(
-          controller: _lostCountController,
-          keyboardType: TextInputType.number,
-          textInputAction: TextInputAction.done,
-          decoration: InputDecoration(
-            hintText: '1',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                TamgaSpacing.cornerRadiusSmall,
-              ),
-            ),
-          ),
-          validator: _validateLostCount,
-        ),
-      ],
-    );
-  }
-
-  // ── Media Section (Зураг) ───────────────────────────────────────
-
-  Widget _buildMediaSection(TamgaColors colors) {
-    final totalPhotos = _localPhotos.length;
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Section header ──
-        Text('Зураг', style: TamgaTypography.headline(weight: FontWeight.w600)),
-        const SizedBox(height: TamgaSpacing.md),
-
-        // ── Photo thumbnails grid ──
-        if (totalPhotos > 0)
-          SizedBox(
-            height: 100,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: totalPhotos,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(width: TamgaSpacing.sm),
-              itemBuilder: (context, index) {
-                return Stack(
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          TamgaSpacing.cornerRadiusSmall,
-                        ),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Image.file(_localPhotos[index], fit: BoxFit.cover),
-                    ),
-                    // ── Remove button ──
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: GestureDetector(
-                        onTap: () => _removePhoto(index),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: colors.error,
-                            shape: BoxShape.circle,
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: Icon(
-                            Icons.close,
-                            size: 14,
-                            color: colors.onError,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // ── Photo index badge ──
-                    Positioned(
-                      bottom: 4,
-                      right: 4,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface.withValues(
-                            alpha: 0.75,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        child: Text(
-                          '${index + 1}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-
-        if (totalPhotos > 0) const SizedBox(height: TamgaSpacing.md),
-
-        // ── Add photo buttons ──
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _pickFromGallery,
-                icon: const Icon(Icons.photo_library_outlined),
-                label: const Text('Галерээ'),
-              ),
-            ),
-            const SizedBox(width: TamgaSpacing.sm),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _pickFromCamera,
-                icon: const Icon(Icons.camera_alt_outlined),
-                label: const Text('Камер'),
-              ),
-            ),
-          ],
-        ),
-
-        // ── Photo count info ──
-        if (totalPhotos > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: TamgaSpacing.xs),
-            child: Text(
-              'Нийт $totalPhotos зураг',
-              style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
-            ),
-          ),
-
-        // ── Validation error ──
-        if (_photosValidated && totalPhotos == 0)
-          Padding(
-            padding: const EdgeInsets.only(top: TamgaSpacing.xs),
-            child: Text(
-              'Дор хаяж 1 зураг оруулна уу',
-              style: TamgaTypography.caption1(color: colors.error),
-            ),
-          ),
-      ],
-    );
-  }
-
-  // ── Pricing Section ──────────────────────────────────────────────
-
-  Widget _buildPricingSection(TamgaColors colors) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Section header ──
-        Text(
-          'Үнэ ба Нөхцөл',
-          style: TamgaTypography.headline(weight: FontWeight.w600),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        Text(
-          'Зарын төрөл сонгох — үнэ төлбөр нь тайлбар хэсэгт дурдсан данс руу шилжүүлнэ',
-          style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
-        ),
-        const SizedBox(height: TamgaSpacing.md),
-
-        // ── Tier selector cards ──
-        ...LostHorsePricingTier.values.map((tier) {
-          final isSelected = _selectedPricingTier == tier;
-          final isFree = tier == LostHorsePricingTier.free;
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: TamgaSpacing.sm),
-            child: InkWell(
-              onTap: () => setState(() => _selectedPricingTier = tier),
-              borderRadius: BorderRadius.circular(
-                TamgaSpacing.cornerRadiusSmall,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(
-                    TamgaSpacing.cornerRadiusSmall,
-                  ),
-                  border: Border.all(
-                    color: isSelected
-                        ? colors.primary
-                        : colors.surfaceContainerHighest,
-                    width: isSelected ? 2 : 1,
-                  ),
-                  color: isSelected
-                      ? colors.primary.withValues(alpha: 0.08)
-                      : colors.surface,
-                ),
-                padding: const EdgeInsets.all(TamgaSpacing.md),
-                child: Row(
-                  children: [
-                    // ── Radio indicator ──
-                    Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected
-                              ? colors.primary
-                              : colors.onSurfaceVariant,
-                          width: 2,
-                        ),
-                      ),
-                      child: isSelected
-                          ? Center(
-                              child: Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: colors.primary,
-                                ),
-                              ),
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: TamgaSpacing.md),
-
-                    // ── Tier info ──
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tier.displayName,
-                            style: TamgaTypography.body(
-                              weight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            isFree
-                                ? 'Хугацаагүй — үнэгүй'
-                                : '${tier.durationDays} хоног — ${tier.priceLabel}',
-                            style: TamgaTypography.caption1(
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // ── Price badge ──
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: TamgaSpacing.sm,
-                        vertical: TamgaSpacing.xs,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          TamgaSpacing.cornerRadiusSmall,
-                        ),
-                        color: isSelected
-                            ? colors.primary
-                            : colors.surfaceContainerHighest,
-                      ),
-                      child: Text(
-                        tier.priceLabel,
-                        style: TamgaTypography.caption1(
-                          weight: FontWeight.w700,
-                          color: isSelected
-                              ? colors.onPrimary
-                              : colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  // ── Photo picker methods ──────────────────────────────────────────
-
-  Future<void> _pickFromGallery() async {
-    final xFiles = await _picker.pickMultiImage(
-      maxWidth: 2048,
-      maxHeight: 2048,
-      imageQuality: 85,
-    );
-
-    if (xFiles.isNotEmpty) {
-      setState(() {
-        _localPhotos.addAll(xFiles.map((x) => File(x.path)));
-        _photosValidated = false;
-      });
-    }
-  }
-
-  Future<void> _pickFromCamera() async {
-    final xFile = await _picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 2048,
-      maxHeight: 2048,
-      imageQuality: 85,
-    );
-
-    if (xFile != null) {
-      setState(() {
-        _localPhotos.add(File(xFile.path));
-        _photosValidated = false;
-      });
-    }
-  }
-
-  void _removePhoto(int index) {
-    setState(() {
-      _localPhotos.removeAt(index);
-    });
-  }
-
-  // ── Tamga picker methods ─────────────────────────────────────────
-
-  Future<void> _pickTamga() async {
-    final xFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 2048,
-      maxHeight: 2048,
-      imageQuality: 85,
-    );
-
-    if (xFile != null) {
-      setState(() => _tamgaFile = File(xFile.path));
-    }
-  }
-
-  void _removeTamga() {
-    setState(() => _tamgaFile = null);
-  }
-
-  // ── Tamga & Ear Mark Section ──────────────────────────────────────
-
-  Widget _buildTamgaSection(TamgaColors colors) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Section header ──
-        Text(
-          'Тамга ба Им',
-          style: TamgaTypography.headline(weight: FontWeight.w600),
-        ),
-        const SizedBox(height: TamgaSpacing.md),
-
-        // ── Тамга зураг (Tamga photo) ──
-        Text(
-          'Тамганы зураг',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        if (_tamgaFile != null)
-          Stack(
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: Column(
             children: [
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(
-                    TamgaSpacing.cornerRadiusSmall,
-                  ),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.file(
-                  _tamgaFile!,
-                  fit: BoxFit.cover,
-                  width: 120,
-                  height: 120,
+              _StepHeader(step: _step, color: scheme.primary),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+                  children: [
+                    if (_errorMessage != null) ...[
+                      _ErrorBanner(message: _errorMessage!),
+                      const SizedBox(height: 16),
+                    ],
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      child: switch (_step) {
+                        0 => _buildIdentityStep(context, horses),
+                        1 => _buildLastSeenStep(context),
+                        _ => _buildReviewStep(context),
+                      },
+                    ),
+                  ],
                 ),
               ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: GestureDetector(
-                  onTap: _removeTamga,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: colors.error,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(Icons.close, size: 14, color: colors.onError),
-                  ),
-                ),
+              _BottomAction(
+                label: _step == 2
+                    ? 'Зар хадгалах / Save report'
+                    : 'Үргэлжлүүлэх / Continue',
+                isBusy: _isSubmitting,
+                onPressed: _isSubmitting ? null : _continue,
               ),
             ],
           ),
-        if (_tamgaFile == null)
-          OutlinedButton.icon(
-            onPressed: _pickTamga,
-            icon: const Icon(Icons.image_outlined),
-            label: const Text('Тамга зураг оруулах'),
-          ),
-        const SizedBox(height: TamgaSpacing.lg),
-
-        // ── Им (Ear mark) ──
-        Text(
-          'Им / Чихний им',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
         ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TextFormField(
-          controller: _earMarkController,
-          maxLines: 2,
-          maxLength: kMaxEarMarkLength,
-          decoration: InputDecoration(
-            hintText: 'Чихний имний тодорхойлолт...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                TamgaSpacing.cornerRadiusSmall,
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  // ── Contact Section ───────────────────────────────────────────────
-
-  Widget _buildContactSection(TamgaColors colors) {
+  Widget _buildIdentityStep(
+    BuildContext context,
+    AsyncValue<dynamic> horsesAsync,
+  ) {
     return Column(
+      key: const ValueKey('identity'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Section header ──
-        Text(
-          'Холбоо барих',
-          style: TamgaTypography.headline(weight: FontWeight.w600),
+        const _TitleBlock(
+          title: 'Амьтнаа таних мэдээлэл',
+          subtitle: 'Identify the horse or livestock',
         ),
-        const SizedBox(height: TamgaSpacing.md),
-
-        // ── Утас (Contact phone) ──
-        Text(
-          'Утасны дугаар',
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: TamgaSpacing.sm),
-        TextFormField(
-          controller: _contactPhoneController,
-          keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            hintText: 'Утасны дугаар...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                TamgaSpacing.cornerRadiusSmall,
-              ),
+        const SizedBox(height: 24),
+        _SectionLabel('Бүртгэлтэй морь / Registered horse'),
+        const SizedBox(height: 8),
+        horsesAsync.when(
+          data: (horses) => DropdownButtonFormField<String>(
+            initialValue: _selectedHorseId,
+            decoration: const InputDecoration(
+              hintText: 'Сонгохгүй бол гараар үргэлжлүүлнэ',
             ),
+            items: [
+              const DropdownMenuItem<String>(
+                value: null,
+                child: Text('Гараар оруулах / Manual entry'),
+              ),
+              ...horses.map<DropdownMenuItem<String>>(
+                (horse) => DropdownMenuItem<String>(
+                  value: horse.id,
+                  child: Text(horse.displayName),
+                ),
+              ),
+            ],
+            onChanged: (value) => setState(() => _selectedHorseId = value),
+          ),
+          loading: () => const LinearProgressIndicator(minHeight: 2),
+          error: (_, _) => const Text(
+            'Бүртгэлтэй морь одоогоор ачаалагдсангүй. Гараар үргэлжлүүлнэ үү.',
           ),
         ),
-        const SizedBox(height: TamgaSpacing.sm),
+        const SizedBox(height: 20),
+        _SectionLabel('Малын төрөл / Animal type'),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: AnimalType.values
+              .map(
+                (type) => ChoiceChip(
+                  label: Text(type.displayName),
+                  selected: _animalType == type,
+                  onSelected: (_) => setState(() => _animalType = type),
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+          controller: _animalNameController,
+          decoration: const InputDecoration(
+            labelText: 'Нэр / Name (optional)',
+            hintText: 'Жишээ: Хээр азарга',
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _coatController,
+          decoration: const InputDecoration(
+            labelText: 'Зүс / Coat color (optional)',
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _earMarkController,
+          maxLength: 120,
+          decoration: const InputDecoration(
+            labelText: 'Им, тамганы тайлбар / Ear mark or brand',
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _pickPhoto,
+          icon: const Icon(Icons.add_a_photo_outlined),
+          label: Text(
+            _photos.isEmpty
+                ? 'Таних зураг нэмэх / Add identifying photo'
+                : '${_photos.length} зураг сонгосон / photos selected',
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _descriptionController,
+          minLines: 4,
+          maxLines: 6,
+          maxLength: 500,
+          decoration: const InputDecoration(
+            labelText: 'Таних дэлгэрэнгүй / Detailed identifier',
+            hintText: 'Дор хаяж 20 тэмдэгт. / At least 20 characters.',
+          ),
+        ),
+        const SizedBox(height: 8),
         Text(
-          'Холбоо барих утасны дугаар. Профайлын утаснаас автоматаар бөглөгдөнө.',
-          style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
+          'Зар эхлээд таны төхөөрөмжид хадгалагдана. Сүлжээ орсны дараа эзэмшигчийн мэдээлэлтэйгээр синк хийнэ.',
+          style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
     );
   }
 
-  // ── Validation helpers ───────────────────────────────────────────
-
-  String? _validateBagField(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Баг оруулна уу';
-    }
-    if (value.length > kMaxLocationFieldLength) {
-      return 'Баг $kMaxLocationFieldLength тэмдэгтээс хэтрэхгүй';
-    }
-    return null;
-  }
-
-  String? _validateLocationNameField(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Газрын нэр оруулна уу';
-    }
-    if (value.length > kMaxLocationFieldLength) {
-      return 'Газрын нэр $kMaxLocationFieldLength тэмдэгтээс хэтрэхгүй';
-    }
-    return null;
-  }
-
-  String? _validateLostCount(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Тоо оруулна уу';
-    }
-    final count = int.tryParse(value.trim());
-    if (count == null || count < 1) {
-      return 'Тоо 1-ээс багагүй байна';
-    }
-    return null;
-  }
-
-  Future<void> _submitReport() async {
-    // ── Phone verification gate (VAL-VERIFY-001) ──────────────────
-    //
-    // If the user hasn't verified their phone number (no phone in auth
-    // profile), show a dialog that prevents submission and offers to
-    // navigate to the phone auth flow. After successful verification,
-    // the user returns and can re-tap submit — form state is preserved.
-    final authAsync = ref.read(authStateProvider);
-    final authState = authAsync.valueOrNull;
-    if (authState == null || !authState.hasPhone) {
-      final shouldVerify = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Утасны дугаар баталгаажуулах'),
-          content: const Text(
-            'Хаяж морь зарлахын тулд утасны дугаараа баталгаажуулна уу.',
+  Widget _buildLastSeenStep(BuildContext context) {
+    return Column(
+      key: const ValueKey('last-seen'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _TitleBlock(
+          title: 'Сүүлд үзэгдсэн газар',
+          subtitle: 'Choose the last-seen place and time',
+        ),
+        const SizedBox(height: 24),
+        DropdownButtonFormField<String>(
+          initialValue: _aimag,
+          decoration: const InputDecoration(labelText: 'Аймаг / Aimag'),
+          items: kAimagList
+              .map(
+                (value) => DropdownMenuItem(value: value, child: Text(value)),
+              )
+              .toList(),
+          onChanged: (value) => setState(() => _aimag = value),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          initialValue: _sum,
+          decoration: const InputDecoration(labelText: 'Сум / Sum'),
+          onChanged: (value) => _sum = value,
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _bagController,
+          decoration: const InputDecoration(labelText: 'Баг / Bag (optional)'),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _placeController,
+          decoration: const InputDecoration(
+            labelText: 'Газрын нэр / Place name (optional)',
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Дараа'),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _latController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(labelText: 'Latitude'),
+              ),
             ),
-            FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Баталгаажуулах'),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: _lngController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(labelText: 'Longitude'),
+              ),
             ),
           ],
         ),
-      );
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _useCurrentLocation,
+          icon: const Icon(Icons.my_location_outlined),
+          label: const Text('Одоогийн байршил ашиглах / Use current location'),
+        ),
+        const SizedBox(height: 20),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Сүүлд үзэгдсэн огноо / Last seen'),
+          subtitle: Text(_formatDate(_lastSeenAt)),
+          trailing: const Icon(Icons.calendar_today_outlined),
+          onTap: _pickDate,
+        ),
+        Text(
+          'Одоогийн GPS бол зөвхөн туслах хэрэгсэл. Байршлын pin-ийг та өөрөө баталгаажуулна.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
 
-      if (shouldVerify == true && mounted) {
-        // Navigate to the existing phone auth flow. After OTP
-        // verification the user ends up on the lineage screen and
-        // can tap back to the lost-horse tab to re-submit.
-        await context.push('/phone-login');
-        // Refresh auth state so next check picks up the new phone.
-        ref.invalidate(authStateProvider);
-      }
-      return; // Don't submit yet — user must re-tap after verifying.
-    }
+  Widget _buildReviewStep(BuildContext context) {
+    final photoLabel = _photos.isEmpty ? 'Зураггүй' : '${_photos.length} зураг';
+    return Column(
+      key: const ValueKey('review'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _TitleBlock(
+          title: 'Шалгаж баталгаажуулах',
+          subtitle: 'Review before saving offline',
+        ),
+        const SizedBox(height: 24),
+        _ReviewRow('Төрөл', _animalType.displayName),
+        _ReviewRow(
+          'Нэр',
+          _animalNameController.text.trim().isEmpty
+              ? 'Гараар таних мэдээлэл'
+              : _animalNameController.text.trim(),
+        ),
+        _ReviewRow('Байршил', '${_aimag ?? ''}, ${_sum ?? ''}'),
+        _ReviewRow('Сүүлд үзэгдсэн', _formatDate(_lastSeenAt)),
+        _ReviewRow('Таних зураг', photoLabel),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Text(
+            'Нууцлал: Зар сүлжээтэй болж амжилттай синк хийх хүртэл нийтэд харагдахгүй. Утасны дугаар энэ урсгалд шаардахгүй.',
+          ),
+        ),
+      ],
+    );
+  }
 
-    // Validate form fields (bag, location name, description, horse, count)
-    final formValid = _formKey.currentState!.validate();
-
-    // Validate aimag and sum selections
-    final aimagValid = _selectedAimag != null;
-    final sumValid = _selectedSum != null;
-
-    // Validate animal type selection (required)
-    final animalTypeValid = _selectedAnimalType != null;
-
-    // Validate at least 1 photo (VAL-VERIFY-002)
-    final photosValid = _localPhotos.isNotEmpty;
-
-    if (!formValid ||
-        !aimagValid ||
-        !sumValid ||
-        !animalTypeValid ||
-        !photosValid) {
-      setState(() {
-        _locationValidated = true;
-        _animalInfoValidated = true;
-        _photosValidated = true;
-      });
-      if (!photosValid) {
-        TamgaToast.showError(context, 'Дор хаяж 1 зураг оруулна уу');
-      } else if (!animalTypeValid) {
-        TamgaToast.showError(context, 'Малын төрөл сонгоно уу');
-      } else if (!aimagValid) {
-        TamgaToast.showError(context, 'Аймаг сонгоно уу');
-      } else if (!sumValid) {
-        TamgaToast.showError(context, 'Сум сонгоно уу');
-      }
+  Future<void> _continue() async {
+    setState(() => _errorMessage = null);
+    if (_step < 2) {
+      if (!_validateCurrentStep()) return;
+      setState(() => _step++);
       return;
     }
+    await _submit();
+  }
 
+  LostHorseReportDraft _buildDraft() {
+    return LostHorseReportDraft(
+      horseId: _selectedHorseId,
+      horseName: _animalNameController.text,
+      animalType: _animalType,
+      coatColor: _coatController.text,
+      earMarkDescription: _earMarkController.text,
+      identificationDescription: _descriptionController.text,
+      photoPaths: _photos.map((photo) => photo.path).toList(),
+      lastSeenLat: double.tryParse(_latController.text),
+      lastSeenLng: double.tryParse(_lngController.text),
+      lastSeenAt: _lastSeenAt,
+      locationAimag: _aimag,
+      locationSum: _sum,
+      locationBag: _bagController.text,
+      locationName: _placeController.text,
+    );
+  }
+
+  bool _validateCurrentStep() {
+    if (_step == 0) {
+      final errors = _buildDraft()
+          .validate()
+          .where((error) => error.contains('таних'))
+          .toList();
+      if (errors.isNotEmpty) {
+        setState(() => _errorMessage = errors.first);
+        return false;
+      }
+    }
+    if (_step == 1 && (_aimag == null || (_sum?.trim().isEmpty ?? true))) {
+      setState(
+        () => _errorMessage =
+            'Аймаг, сумыг сонгоно уу. / Select an aimag and sum.',
+      );
+      return false;
+    }
+    if (_step == 1 &&
+        (double.tryParse(_latController.text) == null ||
+            double.tryParse(_lngController.text) == null)) {
+      setState(
+        () => _errorMessage =
+            'Сүүлд үзэгдсэн pin-ээ сонгоно уу. / Choose a last-seen pin.',
+      );
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _submit() async {
     final userId = currentSupabaseUserId();
     if (userId == null) {
-      TamgaToast.showError(context, 'Нэвтэрсний дараа хаяж морь зарлана уу');
-      return;
-    }
-
-    final pos = ref.read(currentPositionProvider).value;
-    if (pos == null) {
-      TamgaToast.showError(
-        context,
-        'GPS байршил олдсонгүй. Байршлаа асаагаад дахин оролдоно уу',
+      setState(
+        () => _errorMessage =
+            'Нэвтэрсний дараа зар хадгална уу. / Sign in to save a report.',
       );
       return;
     }
-
-    setState(() => _isSubmitting = true);
-    final now = DateTime.now();
-
-    // ── Calculate expiry based on pricing tier ──
-    final expiresAt = _selectedPricingTier.durationDays != null
-        ? now.add(Duration(days: _selectedPricingTier.durationDays!))
-        : null;
-
+    final validationErrors = _buildDraft().validate();
+    if (validationErrors.isNotEmpty) {
+      setState(() => _errorMessage = validationErrors.first);
+      return;
+    }
     final report = LostHorseReport(
-      id: '',
-      horseId: _selectedHorse!.id,
+      id: const Uuid().v4(),
+      horseId: _selectedHorseId,
       ownerId: userId,
-      horseName: _selectedHorse!.displayName,
+      horseName: _animalNameController.text.trim().isEmpty
+          ? null
+          : _animalNameController.text.trim(),
       description: _descriptionController.text.trim(),
-      lastSeenLat: pos.latitude,
-      lastSeenLng: pos.longitude,
-      lastSeenAt: now,
-      searchRadiusKm: _searchRadiusKm,
-      createdAt: now,
-      updatedAt: now,
-      // ── Location fields ──
-      locationAimag: _selectedAimag,
-      locationSum: _selectedSum,
-      locationBag: _bagController.text.trim(),
-      locationName: _locationNameController.text.trim(),
-      // ── Animal info fields ──
-      animalType: _selectedAnimalType!,
-      ages: _selectedAges,
-      gender: _selectedGender,
-      breed: _selectedBreed,
-      coatColor: _selectedCoatColor,
-      lostCount: int.parse(_lostCountController.text.trim()),
-      // ── Tamga / Identification ──
-      earMarkDescription: _earMarkController.text.trim().isNotEmpty
-          ? _earMarkController.text.trim()
-          : null,
-      // ── Contact ──
-      contactPhone: _contactPhoneController.text.trim().isNotEmpty
-          ? _contactPhoneController.text.trim()
-          : null,
-      // ── Pricing ──
-      pricingTier: _selectedPricingTier,
-      expiresAt: expiresAt,
+      lastSeenLat: double.parse(_latController.text),
+      lastSeenLng: double.parse(_lngController.text),
+      lastSeenAt: _lastSeenAt,
+      locationAimag: _aimag,
+      locationSum: _sum?.trim(),
+      locationBag: _bagController.text.trim().isEmpty
+          ? null
+          : _bagController.text.trim(),
+      locationName: _placeController.text.trim().isEmpty
+          ? null
+          : _placeController.text.trim(),
+      animalType: _animalType,
+      coatColor: _coatController.text.trim().isEmpty
+          ? null
+          : _coatController.text.trim(),
+      earMarkDescription: _earMarkController.text.trim().isEmpty
+          ? null
+          : _earMarkController.text.trim(),
+      photoUrls: _photos.map((photo) => photo.path).toList(),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      pricingTier: LostHorsePricingTier.free,
     );
 
-    try {
-      // Step 1: Create the report (gets back the saved report with ID)
-      final savedReport = await ref.read(
-        reportLostHorseProvider(report).future,
-      );
-      final reportId = savedReport.id;
-
-      // Step 2: Upload each photo to Supabase Storage
-      final storage = ref.read(mediaStorageProvider);
-      final photoUrls = <String>[];
-
-      for (var i = 0; i < _localPhotos.length; i++) {
-        final file = _localPhotos[i];
-        final path = MediaStorageRouter.lostHorsePhotoPath(reportId: reportId);
-
-        final uploadResult = await storage.upload(
-          file: file,
-          path: path,
-          category: MediaCategory.photo,
+    setState(() => _isSubmitting = true);
+    final result = await ref
+        .read(lostHorseRepositoryProvider)
+        .createReport(
+          report,
+          localMediaPaths: _photos.map((photo) => photo.path).toList(),
         );
-
-        uploadResult.when(
-          onSuccess: (upload) => photoUrls.add(upload.url),
-          onFailure: (error) {
-            // Continue uploading remaining photos even if one fails
-            TamgaToast.showError(context, friendlyErrorMessage(error));
-          },
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+    result.when(
+      onSuccess: (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Зар хадгалагдлаа. Синк хүлээгдэж байна.'),
+          ),
         );
-      }
-
-      // Step 3: Insert photo URLs into lost_horse_media table
-      if (photoUrls.isNotEmpty) {
-        final supabase = Supabase.instance.client;
-        final mediaRows = photoUrls
-            .map(
-              (url) => {
-                'report_id': reportId,
-                'url': url,
-                'media_type': 'photo',
-                'sort_order': photoUrls.indexOf(url),
-              },
-            )
-            .toList();
-
-        await supabase.from('lost_horse_media').insert(mediaRows);
-      }
-
-      // Step 4: Upload tamga photo if present
-      String? tamgaImageUrl;
-      if (_tamgaFile != null) {
-        final tamgaPath = MediaStorageRouter.lostHorseTamgaPath(
-          reportId: reportId,
-        );
-
-        final uploadResult = await storage.upload(
-          file: _tamgaFile!,
-          path: tamgaPath,
-          category: MediaCategory.photo,
-        );
-
-        uploadResult.when(
-          onSuccess: (upload) => tamgaImageUrl = upload.url,
-          onFailure: (error) {
-            TamgaToast.showError(context, friendlyErrorMessage(error));
-          },
-        );
-      }
-
-      // Step 5: Update report with tamgaImageUrl if uploaded
-      if (tamgaImageUrl != null) {
-        final supabase = Supabase.instance.client;
-        await supabase
-            .from('lost_horse_reports')
-            .update({'tamga_image_url': tamgaImageUrl})
-            .eq('id', reportId);
-      }
-
-      // Step 6: Handle pricing - generate payment code for paid tiers
-      if (_selectedPricingTier.isPaid) {
-        final paymentCode = PaymentService.generatePaymentCode();
-        final supabase = Supabase.instance.client;
-        await supabase.from('lost_horse_payments').insert({
-          'report_id': reportId,
-          'user_id': userId,
-          'amount_mnt': _selectedPricingTier.priceMnt,
-          'tier': _selectedPricingTier.name,
-          'days': _selectedPricingTier.durationDays,
-          'payment_code': paymentCode,
-          'status': 'pending',
-        });
-      }
-
-      // Step 7: Schedule renewal notification for paid reports
-      if (_selectedPricingTier.isPaid && expiresAt != null) {
-        final expiryService = ref.read(expiryServiceProvider);
-        // Use the saved report data for scheduling
-        final reportForScheduling = savedReport.copyWith(
-          pricingTier: _selectedPricingTier,
-          expiresAt: expiresAt,
-        );
-        // Fire-and-forget: don't block submission on notification scheduling
-        unawaited(
-          expiryService.scheduleRenewalNotification(reportForScheduling),
-        );
-      }
-
-      if (!mounted) return;
-      TamgaToast.showSuccess(context, 'Хаяж морийн зар нийтлэгдлээ');
-      Navigator.of(context).pop(true);
-    } catch (e) {
-      if (!mounted) return;
-      TamgaToast.showError(context, friendlyErrorMessage(e));
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+        context.pop();
+      },
+      onFailure: (error) => setState(() => _errorMessage = error.message),
+    );
   }
+
+  Future<void> _pickPhoto() async {
+    final photo = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (photo != null && mounted) setState(() => _photos.add(photo));
+  }
+
+  Future<void> _useCurrentLocation() async {
+    final position = ref.read(currentPositionProvider).valueOrNull;
+    if (position == null) {
+      setState(
+        () => _errorMessage = 'GPS олдсонгүй. Координатыг гараар оруулна уу.',
+      );
+      return;
+    }
+    _setPosition(position);
+  }
+
+  void _setPosition(Position position) {
+    _latController.text = position.latitude.toStringAsFixed(6);
+    _lngController.text = position.longitude.toStringAsFixed(6);
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime.now().subtract(const Duration(days: 3650)),
+      lastDate: DateTime.now().add(const Duration(minutes: 5)),
+      initialDate: _lastSeenAt,
+    );
+    if (picked != null) setState(() => _lastSeenAt = picked);
+  }
+
+  String _formatDate(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+}
+
+class _StepHeader extends StatelessWidget {
+  const _StepHeader({required this.step, required this.color});
+  final int step;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      child: Row(
+        children: List.generate(
+          3,
+          (index) => Expanded(
+            child: Container(
+              height: 4,
+              margin: EdgeInsets.only(right: index == 2 ? 0 : 6),
+              decoration: BoxDecoration(
+                color: index <= step ? color : color.withValues(alpha: .16),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TitleBlock extends StatelessWidget {
+  const _TitleBlock({required this.title, required this.subtitle});
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(title, style: Theme.of(context).textTheme.headlineSmall),
+      const SizedBox(height: 4),
+      Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
+    ],
+  );
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.label);
+  final String label;
+  @override
+  Widget build(BuildContext context) =>
+      Text(label, style: Theme.of(context).textTheme.labelLarge);
+}
+
+class _ReviewRow extends StatelessWidget {
+  const _ReviewRow(this.label, this.value);
+  final String label;
+  final String value;
+  @override
+  Widget build(BuildContext context) => ListTile(
+    contentPadding: EdgeInsets.zero,
+    title: Text(label, style: Theme.of(context).textTheme.labelMedium),
+    subtitle: Text(value),
+  );
+}
+
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.message});
+  final String message;
+  @override
+  Widget build(BuildContext context) => MaterialBanner(
+    content: Text(message),
+    leading: const Icon(Icons.info_outline),
+    actions: const [SizedBox.shrink()],
+  );
+}
+
+class _BottomAction extends StatelessWidget {
+  const _BottomAction({
+    required this.label,
+    required this.isBusy,
+    this.onPressed,
+  });
+  final String label;
+  final bool isBusy;
+  final VoidCallback? onPressed;
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Theme.of(context).scaffoldBackgroundColor,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      child: SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: FilledButton(
+          onPressed: onPressed,
+          child: isBusy ? const CircularProgressIndicator() : Text(label),
+        ),
+      ),
+    ),
+  );
 }

@@ -109,6 +109,8 @@ dependencies:
   # AI-agent driven UI testing (debug mode only)
   marionette_flutter: ^0.6.0
   web: ^1.1.1
+  smooth_sheets: ^1.0.3
+  phosphoricons_flutter: ^1.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

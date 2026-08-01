@@ -42,7 +42,10 @@ class MediaStorageRouter implements MediaStorageService {
   // ── Routing ───────────────────────────────────────────────────
 
   MediaStorageService _backend(MediaCategory category) => switch (category) {
-    MediaCategory.photo || MediaCategory.document => _supabase,
+    MediaCategory.photo ||
+    MediaCategory.recoveryPhoto ||
+    MediaCategory.recoverySightingPhoto ||
+    MediaCategory.document => _supabase,
     MediaCategory.video => _r2,
   };
 
@@ -154,26 +157,27 @@ class MediaStorageRouter implements MediaStorageService {
     return 'horse-photos/$userId/market/$uuid.$extension';
   }
 
-  /// Generate a storage path for a lost horse photo.
+  /// Generate a private path for a lost-horse report photo.
   ///
-  /// Pattern: `lost-horse-photos/{reportId}/{uuid}.jpg`
+  /// The owner id is the first path segment so Storage RLS can enforce
+  /// owner-only access.
   static String lostHorsePhotoPath({
     required String reportId,
+    required String userId,
     String extension = 'jpg',
   }) {
     final uuid = _uuid();
-    return 'lost-horse-photos/$reportId/$uuid.$extension';
+    return '$userId/$reportId/$uuid.$extension';
   }
 
-  /// Generate a storage path for a lost horse tamga (brand stamp) photo.
-  ///
-  /// Pattern: `lost-horse-tamgas/{reportId}/{uuid}.jpg`
+  /// Generate a private path for a lost-horse tamga photo.
   static String lostHorseTamgaPath({
     required String reportId,
+    required String userId,
     String extension = 'jpg',
   }) {
     final uuid = _uuid();
-    return 'lost-horse-tamgas/$reportId/$uuid.$extension';
+    return '$userId/$reportId/tamga-$uuid.$extension';
   }
 
   // ── Helpers ───────────────────────────────────────────────────

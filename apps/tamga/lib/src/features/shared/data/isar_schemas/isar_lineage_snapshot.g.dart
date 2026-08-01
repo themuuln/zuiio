@@ -14,38 +14,42 @@ extension GetIsarLineageSnapshotCollection on Isar {
       this.collection();
 }
 
-const IsarLineageSnapshotSchema = CollectionSchema(
+final IsarLineageSnapshotSchema = CollectionSchema(
   name: r'IsarLineageSnapshot',
-  id: 7534822217904641931,
+  id: int.parse('7534822217904641931'),
   properties: {
     r'cachedAt': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'cachedAt',
       type: IsarType.dateTime,
     ),
     r'relatedHorsesJson': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'relatedHorsesJson',
       type: IsarType.string,
     ),
-    r'rootId': PropertySchema(id: 2, name: r'rootId', type: IsarType.string),
+    r'rootId': PropertySchema(
+      id: int.parse('2'),
+      name: r'rootId',
+      type: IsarType.string,
+    ),
     r'timelineJson': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'timelineJson',
       type: IsarType.string,
     ),
     r'treeEdgesJson': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'treeEdgesJson',
       type: IsarType.string,
     ),
     r'treeNodesJson': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'treeNodesJson',
       type: IsarType.string,
     ),
     r'treeSummary': PropertySchema(
-      id: 6,
+      id: int.parse('6'),
       name: r'treeSummary',
       type: IsarType.string,
     ),
@@ -57,7 +61,7 @@ const IsarLineageSnapshotSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'rootId': IndexSchema(
-      id: 5087693435549841488,
+      id: int.parse('5087693435549841488'),
       name: r'rootId',
       unique: true,
       replace: true,

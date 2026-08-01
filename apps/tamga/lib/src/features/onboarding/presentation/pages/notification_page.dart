@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../widgets/onboarding_bottom_actions.dart';
 
 /// Screen 5: Мэдэгдэл — Notification permission priming.
 ///
@@ -139,68 +140,15 @@ class _NotificationPageState extends State<NotificationPage> {
         ),
 
         // ── Bottom actions — back + continue ──
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              AppSpacing.lg,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  height: 48,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: widget.onBack,
-                        icon: Icon(Icons.chevron_left, color: tc.primary),
-                        style: IconButton.styleFrom(
-                          backgroundColor: tc.surfaceContainerLow,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () async {
-                            await _requestPermission();
-                            widget.onStart();
-                          },
-                          child: Text(
-                            _permissionRequested
-                                ? 'Үргэлжлүүлэх'
-                                : 'Зөвшөөрөх',
-                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                SizedBox(
-                  width: double.infinity,
-                  height: 44,
-                  child: TextButton(
-                    onPressed: widget.onSkip,
-                    child: Text(
-                      'Одоохондоо үгүй',
-                      style: TextStyle(
-                        fontSize: 17,
-                        color: tc.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        OnboardingBottomActions(
+          onBack: widget.onBack,
+          primaryLabel: _permissionRequested ? 'Үргэлжлүүлэх' : 'Зөвшөөрөх',
+          onPrimary: () async {
+            await _requestPermission();
+            widget.onStart();
+          },
+          secondaryLabel: 'Одоохондоо үгүй',
+          onSecondary: widget.onSkip,
         ),
       ],
     );

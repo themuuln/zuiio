@@ -34,7 +34,9 @@ class PublicHorseProfileScreen extends ConsumerWidget {
               final url = 'https://tamga.mn/horse/${horse.id}';
               final text = 'Check out this horse on Tamga: $url';
               final subject = 'Tamga — ${horse.name}';
-              Share.share(text, subject: subject);
+              SharePlus.instance.share(
+                ShareParams(text: text, subject: subject),
+              );
             },
           ),
         ],

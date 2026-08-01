@@ -13,90 +13,118 @@ extension GetIsarEventCollection on Isar {
   IsarCollection<IsarEvent> get isarEvents => this.collection();
 }
 
-const IsarEventSchema = CollectionSchema(
+final IsarEventSchema = CollectionSchema(
   name: r'IsarEvent',
-  id: 5962100766301502855,
+  id: int.parse('5962100766301502855'),
   properties: {
-    r'address': PropertySchema(id: 0, name: r'address', type: IsarType.string),
+    r'address': PropertySchema(
+      id: int.parse('0'),
+      name: r'address',
+      type: IsarType.string,
+    ),
     r'createdAt': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'date': PropertySchema(id: 2, name: r'date', type: IsarType.dateTime),
+    r'date': PropertySchema(
+      id: int.parse('2'),
+      name: r'date',
+      type: IsarType.dateTime,
+    ),
     r'domainId': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'eventType': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'eventType',
       type: IsarType.byte,
       enumMap: _IsarEventeventTypeEnumValueMap,
     ),
-    r'horseId': PropertySchema(id: 5, name: r'horseId', type: IsarType.string),
+    r'horseId': PropertySchema(
+      id: int.parse('5'),
+      name: r'horseId',
+      type: IsarType.string,
+    ),
     r'horseName': PropertySchema(
-      id: 6,
+      id: int.parse('6'),
       name: r'horseName',
       type: IsarType.string,
     ),
     r'isFeatured': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'isFeatured',
       type: IsarType.bool,
     ),
     r'latitude': PropertySchema(
-      id: 8,
+      id: int.parse('8'),
       name: r'latitude',
       type: IsarType.double,
     ),
     r'location': PropertySchema(
-      id: 9,
+      id: int.parse('9'),
       name: r'location',
       type: IsarType.string,
     ),
     r'longitude': PropertySchema(
-      id: 10,
+      id: int.parse('10'),
       name: r'longitude',
       type: IsarType.double,
     ),
-    r'notes': PropertySchema(id: 11, name: r'notes', type: IsarType.string),
+    r'notes': PropertySchema(
+      id: int.parse('11'),
+      name: r'notes',
+      type: IsarType.string,
+    ),
     r'organizerEmail': PropertySchema(
-      id: 12,
+      id: int.parse('12'),
       name: r'organizerEmail',
       type: IsarType.string,
     ),
     r'organizerName': PropertySchema(
-      id: 13,
+      id: int.parse('13'),
       name: r'organizerName',
       type: IsarType.string,
     ),
     r'organizerPhone': PropertySchema(
-      id: 14,
+      id: int.parse('14'),
       name: r'organizerPhone',
       type: IsarType.string,
     ),
-    r'ownerId': PropertySchema(id: 15, name: r'ownerId', type: IsarType.string),
+    r'ownerId': PropertySchema(
+      id: int.parse('15'),
+      name: r'ownerId',
+      type: IsarType.string,
+    ),
     r'photoUrls': PropertySchema(
-      id: 16,
+      id: int.parse('16'),
       name: r'photoUrls',
       type: IsarType.stringList,
     ),
     r'prizeAmount': PropertySchema(
-      id: 17,
+      id: int.parse('17'),
       name: r'prizeAmount',
       type: IsarType.long,
     ),
     r'registrationEnabled': PropertySchema(
-      id: 18,
+      id: int.parse('18'),
       name: r'registrationEnabled',
       type: IsarType.bool,
     ),
-    r'result': PropertySchema(id: 19, name: r'result', type: IsarType.string),
-    r'title': PropertySchema(id: 20, name: r'title', type: IsarType.string),
+    r'result': PropertySchema(
+      id: int.parse('19'),
+      name: r'result',
+      type: IsarType.string,
+    ),
+    r'title': PropertySchema(
+      id: int.parse('20'),
+      name: r'title',
+      type: IsarType.string,
+    ),
     r'updatedAt': PropertySchema(
-      id: 21,
+      id: int.parse('21'),
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -108,7 +136,7 @@ const IsarEventSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -121,7 +149,7 @@ const IsarEventSchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: -4681125749579367450,
+      id: int.parse('-4681125749579367450'),
       name: r'horseId',
       unique: false,
       replace: false,
@@ -134,7 +162,7 @@ const IsarEventSchema = CollectionSchema(
       ],
     ),
     r'eventType': IndexSchema(
-      id: -3849237371187389498,
+      id: int.parse('-3849237371187389498'),
       name: r'eventType',
       unique: false,
       replace: false,
@@ -147,7 +175,7 @@ const IsarEventSchema = CollectionSchema(
       ],
     ),
     r'date': IndexSchema(
-      id: -7552997827385218417,
+      id: int.parse('-7552997827385218417'),
       name: r'date',
       unique: false,
       replace: false,

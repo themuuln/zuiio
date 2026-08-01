@@ -14,77 +14,105 @@ extension GetIsarLineageTreeNodeCollection on Isar {
       this.collection();
 }
 
-const IsarLineageTreeNodeSchema = CollectionSchema(
+final IsarLineageTreeNodeSchema = CollectionSchema(
   name: r'IsarLineageTreeNode',
-  id: -8511846605774595424,
+  id: int.parse('-8511846605774595424'),
   properties: {
     r'awardCount': PropertySchema(
-      id: 0,
+      id: int.parse('0'),
       name: r'awardCount',
       type: IsarType.long,
     ),
     r'birthYear': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'birthYear',
       type: IsarType.long,
     ),
     r'branchOrder': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'branchOrder',
       type: IsarType.long,
     ),
-    r'coat': PropertySchema(id: 3, name: r'coat', type: IsarType.string),
+    r'coat': PropertySchema(
+      id: int.parse('3'),
+      name: r'coat',
+      type: IsarType.string,
+    ),
     r'domainId': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'generation': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'generation',
       type: IsarType.long,
     ),
     r'hiddenBranchCount': PropertySchema(
-      id: 6,
+      id: int.parse('6'),
       name: r'hiddenBranchCount',
       type: IsarType.long,
     ),
     r'isOwnedByHousehold': PropertySchema(
-      id: 7,
+      id: int.parse('7'),
       name: r'isOwnedByHousehold',
       type: IsarType.bool,
     ),
-    r'isRoot': PropertySchema(id: 8, name: r'isRoot', type: IsarType.bool),
-    r'name': PropertySchema(id: 9, name: r'name', type: IsarType.string),
+    r'isRoot': PropertySchema(
+      id: int.parse('8'),
+      name: r'isRoot',
+      type: IsarType.bool,
+    ),
+    r'name': PropertySchema(
+      id: int.parse('9'),
+      name: r'name',
+      type: IsarType.string,
+    ),
     r'offspringCount': PropertySchema(
-      id: 10,
+      id: int.parse('10'),
       name: r'offspringCount',
       type: IsarType.long,
     ),
     r'photoUrl': PropertySchema(
-      id: 11,
+      id: int.parse('11'),
       name: r'photoUrl',
       type: IsarType.string,
     ),
-    r'region': PropertySchema(id: 12, name: r'region', type: IsarType.string),
+    r'region': PropertySchema(
+      id: int.parse('12'),
+      name: r'region',
+      type: IsarType.string,
+    ),
     r'relationLabel': PropertySchema(
-      id: 13,
+      id: int.parse('13'),
       name: r'relationLabel',
       type: IsarType.string,
     ),
-    r'rootId': PropertySchema(id: 14, name: r'rootId', type: IsarType.string),
-    r'sex': PropertySchema(id: 15, name: r'sex', type: IsarType.string),
+    r'rootId': PropertySchema(
+      id: int.parse('14'),
+      name: r'rootId',
+      type: IsarType.string,
+    ),
+    r'sex': PropertySchema(
+      id: int.parse('15'),
+      name: r'sex',
+      type: IsarType.string,
+    ),
     r'sortOrder': PropertySchema(
-      id: 16,
+      id: int.parse('16'),
       name: r'sortOrder',
       type: IsarType.long,
     ),
     r'speedIndex': PropertySchema(
-      id: 17,
+      id: int.parse('17'),
       name: r'speedIndex',
       type: IsarType.double,
     ),
-    r'tamgaNo': PropertySchema(id: 18, name: r'tamgaNo', type: IsarType.string),
+    r'tamgaNo': PropertySchema(
+      id: int.parse('18'),
+      name: r'tamgaNo',
+      type: IsarType.string,
+    ),
   },
   estimateSize: _isarLineageTreeNodeEstimateSize,
   serialize: _isarLineageTreeNodeSerialize,
@@ -93,7 +121,7 @@ const IsarLineageTreeNodeSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -106,7 +134,7 @@ const IsarLineageTreeNodeSchema = CollectionSchema(
       ],
     ),
     r'rootId': IndexSchema(
-      id: 5087693435549841488,
+      id: int.parse('5087693435549841488'),
       name: r'rootId',
       unique: false,
       replace: false,

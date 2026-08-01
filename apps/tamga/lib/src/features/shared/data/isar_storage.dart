@@ -23,6 +23,7 @@ import 'isar_schemas/isar_lineage_snapshot.dart';
 import 'isar_schemas/isar_lineage_tree_node.dart';
 import 'isar_schemas/isar_listing_report.dart';
 import 'isar_schemas/isar_lost_horse_report.dart';
+import 'isar_schemas/isar_lost_horse_media_draft.dart';
 import 'isar_schemas/isar_market_conversation.dart';
 import 'isar_schemas/isar_market_inquiry.dart';
 import 'isar_schemas/isar_market_listing.dart';
@@ -106,6 +107,8 @@ class IsarStorage {
       _db.isarHorseLocations;
   IsarCollection<IsarLostHorseReport> get lostHorseReports =>
       _db.isarLostHorseReports;
+  IsarCollection<IsarLostHorseMediaDraft> get lostHorseMediaDrafts =>
+      _db.isarLostHorseMediaDrafts;
   IsarCollection<IsarSearchArea> get searchAreas => _db.isarSearchAreas;
   IsarCollection<IsarGeofenceAlert> get geofenceAlerts =>
       _db.isarGeofenceAlerts;

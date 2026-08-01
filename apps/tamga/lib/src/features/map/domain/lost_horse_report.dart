@@ -32,6 +32,7 @@ class LostHorseReport {
     this.breed,
     this.coatColor,
     this.lostCount = 1,
+    this.sightingCount = 0,
     // ── New media fields ──
     this.photoUrls = const [],
     this.videoUrls = const [],
@@ -40,10 +41,24 @@ class LostHorseReport {
     this.earMarkDescription,
     // ── New contact fields ──
     this.contactPhone,
-    // ── New pricing fields ──
+    // ── Pricing ──
     this.pricingTier = LostHorsePricingTier.free,
     this.expiresAt,
     this.renewalRequested = false,
+    // ── Public sharing ──
+    this.publicShareToken,
+    this.publicTokenHash,
+    this.publicAccessEnabled = false,
+    this.publicLocationPrecision = 'sum',
+    this.publicContactMode = 'none',
+    // ── Resolution / review ──
+    this.resolutionType,
+    this.resolutionNote,
+    this.resolvedAt,
+    this.resolvedBy,
+    this.verifiedSightingId,
+    this.reviewedAt,
+    this.reviewedBy,
   });
 
   // ── Existing fields ──
@@ -96,6 +111,9 @@ class LostHorseReport {
   /// Тоо — how many animals lost.
   final int lostCount;
 
+  /// Number of sightings linked to this report.
+  final int sightingCount;
+
   // ── New: Media ──
 
   /// Multiple photo URLs from lost_horse_media table.
@@ -129,6 +147,32 @@ class LostHorseReport {
   /// Сунгах хүсэлт — user has requested renewal.
   final bool renewalRequested;
 
+  // ── Public sharing ──
+
+  /// Raw token retained locally for share-link generation; never serialized.
+  final String? publicShareToken;
+
+  /// SHA-256 token digest stored in Supabase; never exposed publicly.
+  final String? publicTokenHash;
+
+  /// Whether the redacted public report is currently available.
+  final bool publicAccessEnabled;
+
+  /// Public location precision: aimag, sum, or bag.
+  final String publicLocationPrecision;
+
+  /// Public contact mode: none or phone.
+  final String publicContactMode;
+
+  /// Why the report was closed. Null while active.
+  final LostHorseResolutionType? resolutionType;
+  final String? resolutionNote;
+  final DateTime? resolvedAt;
+  final String? resolvedBy;
+  final String? verifiedSightingId;
+  final DateTime? reviewedAt;
+  final String? reviewedBy;
+
   /// Distance in meters from this report's last seen location to [lat]/[lng].
   double distanceTo(double lat, double lng) {
     final distance = ll.Distance();
@@ -161,6 +205,7 @@ class LostHorseReport {
     HorseBreed? breed,
     String? coatColor,
     int? lostCount,
+    int? sightingCount,
     // ── Media ──
     List<String>? photoUrls,
     List<String>? videoUrls,
@@ -173,6 +218,19 @@ class LostHorseReport {
     LostHorsePricingTier? pricingTier,
     DateTime? expiresAt,
     bool? renewalRequested,
+    // ── Public sharing ──
+    String? publicShareToken,
+    String? publicTokenHash,
+    bool? publicAccessEnabled,
+    String? publicLocationPrecision,
+    String? publicContactMode,
+    LostHorseResolutionType? resolutionType,
+    String? resolutionNote,
+    DateTime? resolvedAt,
+    String? resolvedBy,
+    String? verifiedSightingId,
+    DateTime? reviewedAt,
+    String? reviewedBy,
   }) {
     return LostHorseReport(
       id: id ?? this.id,
@@ -197,6 +255,7 @@ class LostHorseReport {
       gender: gender ?? this.gender,
       breed: breed ?? this.breed,
       coatColor: coatColor ?? this.coatColor,
+      sightingCount: sightingCount ?? this.sightingCount,
       lostCount: lostCount ?? this.lostCount,
       photoUrls: photoUrls ?? this.photoUrls,
       videoUrls: videoUrls ?? this.videoUrls,
@@ -206,6 +265,19 @@ class LostHorseReport {
       pricingTier: pricingTier ?? this.pricingTier,
       expiresAt: expiresAt ?? this.expiresAt,
       renewalRequested: renewalRequested ?? this.renewalRequested,
+      publicShareToken: publicShareToken ?? this.publicShareToken,
+      publicTokenHash: publicTokenHash ?? this.publicTokenHash,
+      publicAccessEnabled: publicAccessEnabled ?? this.publicAccessEnabled,
+      publicLocationPrecision:
+          publicLocationPrecision ?? this.publicLocationPrecision,
+      publicContactMode: publicContactMode ?? this.publicContactMode,
+      resolutionType: resolutionType ?? this.resolutionType,
+      resolutionNote: resolutionNote ?? this.resolutionNote,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+      resolvedBy: resolvedBy ?? this.resolvedBy,
+      verifiedSightingId: verifiedSightingId ?? this.verifiedSightingId,
+      reviewedAt: reviewedAt ?? this.reviewedAt,
+      reviewedBy: reviewedBy ?? this.reviewedBy,
     );
   }
 
@@ -233,6 +305,7 @@ class LostHorseReport {
     'animal_ages': ages.map((e) => e.name).toList(),
     'gender': gender?.name,
     'breed': breed?.name,
+    'sighting_count': sightingCount,
     'coat_color': coatColor,
     'lost_count': lostCount,
     // ── Media ──
@@ -247,6 +320,18 @@ class LostHorseReport {
     'pricing_tier': pricingTier.name,
     'expires_at': expiresAt?.toIso8601String(),
     'renewal_requested': renewalRequested,
+    // ── Public sharing ──
+    'public_token_hash': publicTokenHash,
+    'public_access_enabled': publicAccessEnabled,
+    'public_location_precision': publicLocationPrecision,
+    'public_contact_mode': publicContactMode,
+    'resolution_type': resolutionType?.name,
+    'resolution_note': resolutionNote,
+    'resolved_at': resolvedAt?.toIso8601String(),
+    'resolved_by': resolvedBy,
+    'verified_sighting_id': verifiedSightingId,
+    'reviewed_at': reviewedAt?.toIso8601String(),
+    'reviewed_by': reviewedBy,
   };
 
   factory LostHorseReport.fromJson(Map<String, dynamic> json) {
@@ -299,6 +384,7 @@ class LostHorseReport {
               orElse: () => HorseBreed.mongol,
             )
           : null,
+      sightingCount: (json['sighting_count'] as num?)?.toInt() ?? 0,
       coatColor: json['coat_color'] as String?,
       lostCount: (json['lost_count'] as num?)?.toInt() ?? 1,
       // ── Media ──
@@ -318,6 +404,28 @@ class LostHorseReport {
           ? DateTime.parse(json['expires_at'] as String)
           : null,
       renewalRequested: json['renewal_requested'] as bool? ?? false,
+      // ── Public sharing ──
+      publicTokenHash: json['public_token_hash'] as String?,
+      publicAccessEnabled: json['public_access_enabled'] as bool? ?? false,
+      publicLocationPrecision:
+          json['public_location_precision'] as String? ?? 'sum',
+      publicContactMode: json['public_contact_mode'] as String? ?? 'none',
+      resolutionType: json['resolution_type'] != null
+          ? LostHorseResolutionType.values.firstWhere(
+              (e) => e.name == json['resolution_type'],
+              orElse: () => LostHorseResolutionType.withdrawn,
+            )
+          : null,
+      resolutionNote: json['resolution_note'] as String?,
+      resolvedAt: json['resolved_at'] != null
+          ? DateTime.parse(json['resolved_at'] as String)
+          : null,
+      resolvedBy: json['resolved_by'] as String?,
+      verifiedSightingId: json['verified_sighting_id'] as String?,
+      reviewedAt: json['reviewed_at'] != null
+          ? DateTime.parse(json['reviewed_at'] as String)
+          : null,
+      reviewedBy: json['reviewed_by'] as String?,
     );
   }
 }

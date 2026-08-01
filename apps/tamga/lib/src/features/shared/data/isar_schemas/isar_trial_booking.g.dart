@@ -13,39 +13,55 @@ extension GetIsarTrialBookingCollection on Isar {
   IsarCollection<IsarTrialBooking> get isarTrialBookings => this.collection();
 }
 
-const IsarTrialBookingSchema = CollectionSchema(
+final IsarTrialBookingSchema = CollectionSchema(
   name: r'IsarTrialBooking',
-  id: 2296828737237666454,
+  id: int.parse('2296828737237666454'),
   properties: {
-    r'buyerId': PropertySchema(id: 0, name: r'buyerId', type: IsarType.string),
+    r'buyerId': PropertySchema(
+      id: int.parse('0'),
+      name: r'buyerId',
+      type: IsarType.string,
+    ),
     r'domainId': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'listingId': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'listingId',
       type: IsarType.string,
     ),
-    r'notes': PropertySchema(id: 3, name: r'notes', type: IsarType.string),
+    r'notes': PropertySchema(
+      id: int.parse('3'),
+      name: r'notes',
+      type: IsarType.string,
+    ),
     r'requestedAt': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'requestedAt',
       type: IsarType.dateTime,
     ),
     r'respondedAt': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'respondedAt',
       type: IsarType.dateTime,
     ),
     r'sellerId': PropertySchema(
-      id: 6,
+      id: int.parse('6'),
       name: r'sellerId',
       type: IsarType.string,
     ),
-    r'slotId': PropertySchema(id: 7, name: r'slotId', type: IsarType.string),
-    r'status': PropertySchema(id: 8, name: r'status', type: IsarType.string),
+    r'slotId': PropertySchema(
+      id: int.parse('7'),
+      name: r'slotId',
+      type: IsarType.string,
+    ),
+    r'status': PropertySchema(
+      id: int.parse('8'),
+      name: r'status',
+      type: IsarType.string,
+    ),
   },
   estimateSize: _isarTrialBookingEstimateSize,
   serialize: _isarTrialBookingSerialize,
@@ -54,7 +70,7 @@ const IsarTrialBookingSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -67,7 +83,7 @@ const IsarTrialBookingSchema = CollectionSchema(
       ],
     ),
     r'listingId': IndexSchema(
-      id: -7684668030872652461,
+      id: int.parse('-7684668030872652461'),
       name: r'listingId',
       unique: false,
       replace: false,
@@ -80,7 +96,7 @@ const IsarTrialBookingSchema = CollectionSchema(
       ],
     ),
     r'slotId': IndexSchema(
-      id: -665048265905431799,
+      id: int.parse('-665048265905431799'),
       name: r'slotId',
       unique: false,
       replace: false,
@@ -93,7 +109,7 @@ const IsarTrialBookingSchema = CollectionSchema(
       ],
     ),
     r'buyerId': IndexSchema(
-      id: 720979758479371927,
+      id: int.parse('720979758479371927'),
       name: r'buyerId',
       unique: false,
       replace: false,
@@ -106,7 +122,7 @@ const IsarTrialBookingSchema = CollectionSchema(
       ],
     ),
     r'sellerId': IndexSchema(
-      id: -270845138789699514,
+      id: int.parse('-270845138789699514'),
       name: r'sellerId',
       unique: false,
       replace: false,

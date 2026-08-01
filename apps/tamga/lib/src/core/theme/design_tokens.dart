@@ -349,6 +349,128 @@ class TamgaColors extends ThemeExtension<TamgaColors> {
   }
 }
 
+// ── Brand Gradients ─────────────────────────────────────────────────────
+
+/// Brand gradient presets for Tamga.
+///
+/// Provides pre-composed [LinearGradient] values that express the brand's
+/// warm, earthy personality without dropping raw stops in widgets.
+///
+/// ## Usage
+/// ```dart
+/// Container(
+///   decoration: BoxDecoration(gradient: TamgaGradients.brandWarm),
+/// )
+/// ```
+abstract final class TamgaGradients {
+  TamgaGradients._();
+
+  /// Brand warm — primary orange (#F06A2E) to shifted coral (#E87045).
+  /// Use on hero sections, splash screens, featured cards.
+  static const brandWarm = LinearGradient(
+    colors: [Color(0xFFF06A2E), Color(0xFFE87045)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// Brand subtle — warm neutral to slightly lighter.
+  /// Use on card overlays, section backgrounds.
+  static const brandSubtle = LinearGradient(
+    colors: [Color(0xFFFDF6F3), Color(0xFFF1E6E2)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  /// Hero gradient — deep amber to rich dark orange.
+  /// Use on full-screen hero banners, splash screen.
+  static const hero = LinearGradient(
+    colors: [Color(0xFFF06A2E), Color(0xFFA14721)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  /// Dark surface — subtle warm gradient for dark mode surfaces.
+  static const darkSurface = LinearGradient(
+    colors: [Color(0xFF151211), Color(0xFF1E1A19)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+}
+
+// ── Motion ──────────────────────────────────────────────────────────────
+
+/// Motion tokens — branded animation constants.
+///
+/// A single source of truth for animation durations, easing curves, and
+/// spring parameters. Use instead of hardcoded values to ensure consistent
+/// micro-interactions across the app.
+///
+/// ## Usage
+/// ```dart
+/// AnimatedContainer(
+///   duration: TamgaMotion.durationNormal,
+///   curve: TamgaMotion.easingEnter,
+///   // ...
+/// )
+/// ```
+abstract final class TamgaMotion {
+  TamgaMotion._();
+
+  // ── Durations ──
+
+  /// Instant — 50ms. Barely perceptible color/opacity flicks.
+  static const durationInstant = Duration(milliseconds: 50);
+
+  /// Fast — 100ms. Micro-interactions, press feedback, toggles.
+  static const durationFast = Duration(milliseconds: 100);
+
+  /// Normal — 200ms. Standard transitions, accordion, list items.
+  static const durationNormal = Duration(milliseconds: 200);
+
+  /// Page — 350ms. Page-level transitions, dialogs, bottom sheets.
+  static const durationPage = Duration(milliseconds: 350);
+
+  /// Slow — 500ms. Emphasized transitions, hero animations.
+  static const durationSlow = Duration(milliseconds: 500);
+
+  // ── Easing Curves ──
+
+  /// Standard ease-in-out for general-purpose transitions.
+  static const easingStandard = Curves.easeInOut;
+
+  /// Enter — decelerated ease-out. Use when things appear.
+  static const easingEnter = Curves.easeOut;
+
+  /// Exit — accelerated ease-in. Use when things leave.
+  static const easingExit = Curves.easeIn;
+
+  /// Emphasized ease-in-out-cubic — steeper curve for hero / large changes.
+  static const easingEmphasized = Curves.easeInOutCubicEmphasized;
+
+  // ── Spring constants (for physics-based animations) ──
+
+  /// Stiffness for press feedback: 400.
+  static const double stiffnessPress = 400;
+
+  /// Damping for press feedback: 30 (overdamped, minimal bounce).
+  static const double dampingPress = 30;
+
+  /// Stiffness for page transitions: 200.
+  static const double stiffnessPage = 200;
+
+  /// Damping for page transitions: 20 (subtle overshoot).
+  static const double dampingPage = 20;
+
+  /// Stiffness for hero animations: 150.
+  static const double stiffnessHero = 150;
+
+  /// Damping for hero animations: 25.
+  static const double dampingHero = 25;
+
+  /// Default mass for spring simulations: 1.0.
+  static const double massDefault = 1.0;
+}
+
 // ── Spacing ─────────────────────────────────────────────────────────────
 abstract final class TamgaSpacing {
   static const double xs = AppSpacing.xs;

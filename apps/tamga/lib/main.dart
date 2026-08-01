@@ -55,6 +55,14 @@ void main() {
             isInteractiveWidget: (type) => type == shadcn.Button,
             // Collect logs for get_logs.
             logCollector: logCollector,
+            // Extract labels from custom shadcn buttons for text matching.
+            extractText: (element) {
+              final widget = element.widget;
+              if (widget is shadcn.Button && widget.child is Text) {
+                return (widget.child as Text).data;
+              }
+              return null;
+            },
           ),
         );
 

@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../app/supabase_bootstrap.dart';
 import '../../../core/error/error_helpers.dart';
@@ -10,9 +14,11 @@ import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../market/application/message_providers.dart';
 import '../../market/domain/market_conversation.dart';
-import '../application/expiry_service.dart';
 import '../application/lost_horse_providers.dart';
-import '../domain/animal_enums.dart';
+import '../application/sighting_providers.dart';
+import '../domain/sighting_report.dart';
+import 'sighting_form_screen.dart';
+import '../application/public_lost_horse_share_service.dart';
 import '../domain/lost_horse_report.dart';
 import '../domain/map_enums.dart';
 
@@ -32,10 +38,6 @@ class LostHorseDetailScreen extends ConsumerWidget {
     return '$days хоногийн өмнө';
   }
 
-  String _formatDate(DateTime dateTime) {
-    return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = TamgaColors.of(context);
@@ -46,6 +48,28 @@ class LostHorseDetailScreen extends ConsumerWidget {
         title: Text(report.horseName ?? '', style: TamgaTypography.headline()),
         backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,
+        actions: [
+          if (isOwner && report.publicAccessEnabled)
+            FutureBuilder<String?>(
+              future: PublicLostHorseShareService.tokenFor(report.id),
+              builder: (context, snapshot) {
+                final token = snapshot.data;
+                return IconButton(
+                  tooltip: 'Хуваалцах / Share',
+                  onPressed: token == null
+                      ? null
+                      : () => SharePlus.instance.share(
+                          ShareParams(
+                            text: PublicLostHorseShareService.buildUrl(token),
+                            subject:
+                                'Tamga — ${report.horseName ?? 'Lost horse'}',
+                          ),
+                        ),
+                  icon: const Icon(Icons.ios_share_outlined),
+                );
+              },
+            ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(TamgaSpacing.lg),
@@ -182,78 +206,6 @@ class LostHorseDetailScreen extends ConsumerWidget {
             const SizedBox(height: TamgaSpacing.lg),
           ],
 
-          // ── Үнийн түвшин (Pricing) ───────────────────────────────
-          Text(
-            'Үнийн түвшин',
-            style: TamgaTypography.footnote(
-              weight: FontWeight.w600,
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: TamgaSpacing.sm),
-          TamgaCard(
-            child: Row(
-              children: [
-                // ── Tier badge ──
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: TamgaSpacing.sm,
-                    vertical: TamgaSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      TamgaSpacing.cornerRadiusSmall,
-                    ),
-                    color: report.pricingTier == LostHorsePricingTier.vip
-                        ? colors.primary
-                        : report.pricingTier == LostHorsePricingTier.featured
-                        ? colors.secondary
-                        : colors.surfaceContainerHighest,
-                  ),
-                  child: Text(
-                    report.pricingTier.displayName,
-                    style: TamgaTypography.caption1(
-                      weight: FontWeight.w700,
-                      color: report.pricingTier.isPaid
-                          ? colors.onPrimary
-                          : colors.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: TamgaSpacing.md),
-
-                // ── Expiry info ──
-                Expanded(
-                  child: Text(
-                    report.expiresAt != null
-                        ? 'Дуусах: ${_formatDate(report.expiresAt!)}'
-                        : 'Хугацаагүй',
-                    style: TamgaTypography.body(color: colors.onSurfaceVariant),
-                  ),
-                ),
-
-                // ── Price label ──
-                Text(
-                  report.pricingTier.priceLabel,
-                  style: TamgaTypography.body(
-                    weight: FontWeight.w600,
-                    color: colors.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: TamgaSpacing.lg),
-
-          // ── Renewal (Сунгах) ─────────────────────────────────────
-          if (report.pricingTier.isPaid && isOwner) ...[
-            if (report.status == LostHorseStatus.expired)
-              _buildRenewalBanner(context, ref, colors, isExpired: true)
-            else if (ExpiryService.isNearingExpiry(report))
-              _buildRenewalBanner(context, ref, colors, isExpired: false),
-            const SizedBox(height: TamgaSpacing.lg),
-          ],
-
           // ── Photo Gallery ──────────────────────────────────────
           if (report.photoUrls.isNotEmpty) ...[
             Text(
@@ -379,6 +331,10 @@ class LostHorseDetailScreen extends ConsumerWidget {
             const SizedBox(height: TamgaSpacing.lg),
           ],
 
+          // ── Community sightings ────────────────────────────────
+          _buildSightingsSection(context, ref, colors, isOwner),
+          const SizedBox(height: TamgaSpacing.lg),
+
           // ── Info rows ──────────────────────────────────────────
           TamgaInfoRow(
             label: 'Хайх радиус',
@@ -492,15 +448,24 @@ class LostHorseDetailScreen extends ConsumerWidget {
               ),
             ),
           ] else if (report.status == LostHorseStatus.active) ...[
-            // Non-owner sees "Чатлах" button
+            // Community members can report a sighting before opening chat.
             SizedBox(
               width: double.infinity,
               height: 48,
               child: ElevatedButton.icon(
-                onPressed: () => _startOrOpenChat(context, ref),
-                icon: const Icon(Icons.chat_outlined, size: 20),
+                onPressed: () async {
+                  final submitted = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => SightingFormScreen(reportId: report.id),
+                    ),
+                  );
+                  if (submitted == true) {
+                    ref.invalidate(sightingsStreamProvider(report.id));
+                  }
+                },
+                icon: const Icon(Icons.visibility_outlined, size: 20),
                 label: Text(
-                  'Чатлах',
+                  'Олсон мэдээлэх',
                   style: TamgaTypography.body(
                     color: colors.onPrimary,
                     weight: FontWeight.w600,
@@ -514,6 +479,19 @@ class LostHorseDetailScreen extends ConsumerWidget {
                       TamgaSpacing.cornerRadius,
                     ),
                   ),
+                ),
+              ),
+            ),
+            const SizedBox(height: TamgaSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: () => _startOrOpenChat(context, ref),
+                icon: const Icon(Icons.chat_outlined, size: 20),
+                label: Text(
+                  'Чатлах',
+                  style: TamgaTypography.body(color: colors.primary),
                 ),
               ),
             ),
@@ -548,6 +526,164 @@ class LostHorseDetailScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildSightingsSection(
+    BuildContext context,
+    WidgetRef ref,
+    TamgaColors colors,
+    bool isOwner,
+  ) {
+    final sightings = ref.watch(sightingsStreamProvider(report.id));
+    return sightings.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Олсон мэдээлэл (${items.length})',
+              style: TamgaTypography.title3(weight: FontWeight.w600),
+            ),
+            const SizedBox(height: TamgaSpacing.sm),
+            TamgaCard(
+              child: Column(
+                children: [
+                  for (var index = 0; index < items.length; index++) ...[
+                    _buildSightingRow(
+                      context,
+                      ref,
+                      colors,
+                      items[index],
+                      isOwner,
+                    ),
+                    if (index < items.length - 1)
+                      const Divider(height: TamgaSpacing.lg),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSightingRow(
+    BuildContext context,
+    WidgetRef ref,
+    TamgaColors colors,
+    SightingReport sighting,
+    bool isOwner,
+  ) {
+    final statusColor = switch (sighting.status) {
+      SightingStatus.confirmed => colors.primary,
+      SightingStatus.dismissed => colors.error,
+      SightingStatus.pending => colors.onSurfaceVariant,
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.visibility_outlined, color: statusColor, size: 22),
+            const SizedBox(width: TamgaSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    sighting.locationName ?? 'Байршил тэмдэглэсэн',
+                    style: TamgaTypography.body(weight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${_timeAgo(sighting.createdAt)} · ${sighting.status.label}',
+                    style: TamgaTypography.footnote(color: statusColor),
+                  ),
+                  if (sighting.description != null) ...[
+                    const SizedBox(height: TamgaSpacing.xs),
+                    Text(
+                      sighting.description!,
+                      style: TamgaTypography.body(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (sighting.photoUrl != null) ...[
+          const SizedBox(height: TamgaSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadiusSmall),
+            child: _buildSightingPhoto(sighting.photoUrl!),
+          ),
+        ],
+        if (isOwner && sighting.status == SightingStatus.pending) ...[
+          const SizedBox(height: TamgaSpacing.sm),
+          Wrap(
+            spacing: TamgaSpacing.sm,
+            children: [
+              TextButton(
+                onPressed: () => _reviewSighting(
+                  context,
+                  ref,
+                  sighting,
+                  SightingStatus.confirmed,
+                ),
+                child: const Text('Батлах'),
+              ),
+              TextButton(
+                onPressed: () => _reviewSighting(
+                  context,
+                  ref,
+                  sighting,
+                  SightingStatus.dismissed,
+                ),
+                child: const Text('Үгүйсгэх'),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSightingPhoto(String path) {
+    final file = File(path);
+    final image = file.existsSync()
+        ? Image.file(file, fit: BoxFit.cover)
+        : CachedNetworkImage(imageUrl: path, fit: BoxFit.cover);
+    return SizedBox(width: double.infinity, height: 160, child: image);
+  }
+
+  Future<void> _reviewSighting(
+    BuildContext context,
+    WidgetRef ref,
+    SightingReport sighting,
+    SightingStatus status,
+  ) async {
+    try {
+      await ref.read(
+        updateSightingStatusProvider({
+          'id': sighting.id,
+          'status': status.name,
+        }).future,
+      );
+      ref.invalidate(sightingsStreamProvider(report.id));
+      if (context.mounted) {
+        TamgaToast.showSuccess(context, 'Олсон мэдээллийн статус шинэчлэгдлээ');
+      }
+    } catch (error) {
+      if (context.mounted) {
+        TamgaToast.showError(context, friendlyErrorMessage(error));
+      }
+    }
+  }
   // ── Chat helpers ────────────────────────────────────────────────
 
   /// Opens or creates a conversation for this lost horse report and navigates to it.
@@ -555,6 +691,7 @@ class LostHorseDetailScreen extends ConsumerWidget {
     final currentUserId = currentSupabaseUserId();
     if (currentUserId == null) {
       TamgaToast.showError(context, 'Нэвтрэх шаардлагатай');
+
       return;
     }
 
@@ -684,35 +821,43 @@ class LostHorseDetailScreen extends ConsumerWidget {
       children: report.photoUrls.map((url) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadiusSmall),
-          child: CachedNetworkImage(
-            imageUrl: url,
-            width: photoSize,
-            height: photoSize,
-            fit: BoxFit.cover,
-            placeholder: (_, _) => Container(
-              width: photoSize,
-              height: photoSize,
-              color: colors.surfaceContainerHighest,
-              child: const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            ),
-            errorWidget: (_, _, _) => Container(
-              width: photoSize,
-              height: photoSize,
-              color: colors.surfaceContainerHighest,
-              child: Icon(
-                Icons.broken_image_outlined,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-          ),
+          child: _buildRecoveryPhoto(url, photoSize, colors),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildRecoveryPhoto(String url, double size, TamgaColors colors) {
+    final file = File(url);
+    if (file.existsSync()) {
+      return Image.file(file, width: size, height: size, fit: BoxFit.cover);
+    }
+    return CachedNetworkImage(
+      imageUrl: url,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      placeholder: (_, _) => Container(
+        width: size,
+        height: size,
+        color: colors.surfaceContainerHighest,
+        child: const Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ),
+      errorWidget: (_, _, _) => Container(
+        width: size,
+        height: size,
+        color: colors.surfaceContainerHighest,
+        child: Icon(
+          Icons.broken_image_outlined,
+          color: colors.onSurfaceVariant,
+        ),
+      ),
     );
   }
 
@@ -817,118 +962,19 @@ class LostHorseDetailScreen extends ConsumerWidget {
           'status': status,
         }).future,
       );
+      // Trigger the queued report-closed notification while the owner session
+      // is still available. Delivery remains retryable if the function fails.
+      try {
+        await Supabase.instance.client.functions.invoke(
+          'lost-horse-alert-dispatch',
+          body: {'report_id': report.id},
+        );
+      } catch (error) {
+        debugPrint('Lost-horse closure alert deferred: $error');
+      }
+
       if (!context.mounted) return;
       TamgaToast.showSuccess(context, successMessage);
-      Navigator.of(context).pop(true);
-    } catch (e) {
-      if (!context.mounted) return;
-      TamgaToast.showError(context, friendlyErrorMessage(e));
-    }
-  }
-
-  /// Builds the renewal prompt banner for near-expiry or expired reports.
-  Widget _buildRenewalBanner(
-    BuildContext context,
-    WidgetRef ref,
-    TamgaColors colors, {
-    required bool isExpired,
-  }) {
-    final title = isExpired ? 'Зар дууссан' : kRenewalPromptTitle;
-    final message = isExpired
-        ? 'Таны "${report.horseName ?? 'хаяж морины'}" зар дууссан. '
-              'Дахин идэвхжүүлэхийн тулд сунгах уу?'
-        : kRenewalPromptBody;
-    final buttonLabel = isExpired ? 'Дахин идэвхжүүлэх' : 'Сунгах';
-
-    return Container(
-      padding: const EdgeInsets.all(TamgaSpacing.md),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadiusSmall),
-        color: isExpired
-            ? colors.error.withValues(alpha: 0.1)
-            : colors.secondary.withValues(alpha: 0.1),
-        border: Border.all(
-          color: isExpired ? colors.error : colors.secondary,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isExpired ? Icons.timer_off_outlined : Icons.timer_outlined,
-            color: isExpired ? colors.error : colors.secondary,
-            size: 24,
-          ),
-          const SizedBox(width: TamgaSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TamgaTypography.footnote(
-                    weight: FontWeight.w700,
-                    color: isExpired ? colors.error : colors.secondary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  message,
-                  style: TamgaTypography.caption1(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: TamgaSpacing.md),
-          SizedBox(
-            height: 36,
-            child: ElevatedButton(
-              onPressed: () => _renewReport(context, ref),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isExpired ? colors.error : colors.secondary,
-                foregroundColor: colors.onPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: TamgaSpacing.md,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    TamgaSpacing.cornerRadiusSmall,
-                  ),
-                ),
-              ),
-              child: Text(
-                buttonLabel,
-                style: TamgaTypography.caption1(weight: FontWeight.w600),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Renews the lost horse report, extending its expiry by the tier duration.
-  Future<void> _renewReport(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => TamgaConfirmDialog(
-        title: 'Зар сунгах уу?',
-        message:
-            '${report.horseName ?? 'Хаяж морины'} зарыг '
-            '${report.pricingTier.durationDays} хоногоор сунгах уу?',
-        confirmLabel: 'Тийм, сунгах',
-        isDestructive: false,
-      ),
-    );
-
-    if (confirmed != true || !context.mounted) return;
-
-    try {
-      await ref.read(renewLostHorseReportProvider(report).future);
-      if (!context.mounted) return;
-      TamgaToast.showSuccess(context, 'Зар амжилттай сунгагдлаа');
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!context.mounted) return;

@@ -71,8 +71,8 @@ class TamgaBottomAction extends StatelessWidget {
         child: GestureDetector(
           onTap: isDisabled ? null : onTap,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
+            duration: TamgaMotion.durationNormal,
+            curve: TamgaMotion.easingStandard,
             width: double.infinity,
             height: 50,
             decoration: BoxDecoration(
