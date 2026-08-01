@@ -4,13 +4,18 @@
 # activity. This workflow pings every known project's REST API once daily to
 # generate legitimate activity and prevent auto-pausing.
 #
+# NOTE: The PostgREST root endpoint (GET /rest/v1/) now requires a SECRET key,
+# so we ping a real table instead: GET /rest/v1/profiles?select=id&limit=1.
+# This executes a real database query with the anon/publishable key and is the
+# request shape that counts as "user database activity".
+#
 # ── Setup ─────────────────────────────────────────────────────────────────
 # 1. Go to GitHub repo → Settings → Secrets and variables → Actions
 # 2. Add a repository secret named SUPABASE_PROJECTS with this shape:
 #
 #    [
-#      {"ref":"krrkhozadforrydffegg","anon_key":"eyJ..."},
-#      {"ref":"fhzuolncswccxkcqzclg","anon_key":"eyJ..."},
+#      {"ref":"krrkhozadforrydffegg","anon_key":"sb_publishable_..."},
+#      {"ref":"fhzuolncswccxkcqzclg","anon_key":"sb_publishable_..."},
 #      ...
 #    ]
 #
@@ -20,17 +25,18 @@
 #
 # 3. Commit this file. The workflow runs daily at 06:00 UTC.
 #
-# ── Ref map ────────────────────────────────────────────────────────────────
+# ── Ref map (alive projects only, verified 2026-08-01) ────────────────────
 # krrkhozadforrydffegg  — zer / zer-app / agent-gateway
-# fhzuolncswccxkcqzclg  — tolom
-# kycpnpoaowcvxrauodgi  — zill
-# rjzrnuddfjwbmxacclga  — khosuud
-# gtacoxsmlkkofeqcvlqw  — zerbu
-# oxnvbgdlhrgzzuyrnebf  — tumurch
-# ijeuxmgktfqtukpmnenh  — zatly
+# fhzuolncswccxkcqzclg  — tolom / tolom-mobile
 # dgoqhlcqhpabbthamtrj  — tamga
-# jzmnaovcbwjitxfjxxcu  — zunch
-# ragiqcisavdryiqckrrb  — card (no committed env yet)
+# iyhujghadlymroihxyiy  — onoo
+#
+# Deleted projects (removed from the secret, keep out of new entries):
+# kycpnpoaowcvxrauodgi (zill), rjzrnuddfjwbmxacclga (khosuud),
+# gtacoxsmlkkofeqcvlqw (zerbu), oxnvbgdlhrgzzuyrnebf (tumurch),
+# ijeuxmgktfqtukpmnenh (zatly), jzmnaovcbwjitxfjxxcu (zunch),
+# ragiqcisavdryiqckrrb (card), qjezndzwgoqmsduvzfqa (zuiio-id),
+# cvqwdscitkpwlwnpajjd (zim) — all NXDOMAIN as of 2026-08-01.
 # --------------------------------------------------------------------------
 
 name: Keep Supabase Projects Awake
@@ -41,6 +47,9 @@ on:
     - cron: '0 6 * * *'
   # Allow manual trigger from the Actions tab
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   ping:
@@ -53,7 +62,7 @@ jobs:
           if [ -z "$PROJECTS_JSON" ]; then
             echo "::error::SUPABASE_PROJECTS secret is not set."
             echo "::error::Go to Settings → Secrets and variables → Actions and add it."
-            echo "::error::Format: [{\"ref\":\"xxx\",\"anon_key\":\"eyJ...\"},...]"
+            echo "::error::Format: [{\"ref\":\"xxx\",\"anon_key\":\"sb_publishable_...\"},...]"
             exit 1
           fi
 
@@ -68,29 +77,18 @@ jobs:
             KEY=$(echo "$project" | jq -r '.anon_key')
             TOTAL=$((TOTAL + 1))
 
-            # Hit the REST API profiles table — built-in Supabase Auth table,
-            # returns 200 with a valid anon key and generates DB activity.
-            # No Authorization header needed; apikey is sufficient.
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-              "https://${REF}.supabase.co/rest/v1/profiles" \
-              -H "apikey: ${KEY}" \
-              --connect-timeout 10 \
-              --max-time 15 \
-              2>/dev/null) || HTTP_CODE="000"
+            # Real DB query with the anon/publishable key (apikey header only —
+            # publishable keys are not JWTs and must not go in Authorization).
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://${REF}.supabase.co/rest/v1/profiles?select=id&limit=1" \
+              -H "apikey: ${KEY}")
 
-            if [ "$HTTP_CODE" = "200" ]; then
-              echo "✓ ${REF} — awake (HTTP 200)"
-            elif [ "$HTTP_CODE" = "000" ]; then
-              echo "✗ ${REF} — unreachable (DNS failure — project likely paused)"
-              FAILED=$((FAILED + 1))
-            elif [ "$HTTP_CODE" = "401" ]; then
-              echo "✗ ${REF} — HTTP 401 (wrong anon key)"
-              FAILED=$((FAILED + 1))
+            if [ "$STATUS" = "200" ]; then
+              echo "OK ${REF} — awake (HTTP 200)"
             else
-              echo "✗ ${REF} — HTTP ${HTTP_CODE}"
+              echo "FAIL ${REF} — HTTP ${STATUS}"
               FAILED=$((FAILED + 1))
             fi
-
           done < /tmp/supabase-projects.txt
 
           echo "---"
