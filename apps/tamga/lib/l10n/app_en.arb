@@ -643,5 +643,22 @@
 
   "lineageFitToScreen": "Fit to screen",
   "lineageBadgeHousehold": "Household",
-  "lineageBadgeExternal": "External"
+  "lineageBadgeExternal": "External",
+
+  "marketLostReportConflictTitle": "Horse has an active lost report",
+  "marketLostReportConflictBody": "This horse has an active public recovery report. Check the report before deciding to buy or sell.",
+  "marketLostReportView": "View lost report",
+  "marketLostReportBlockedTitle": "Cannot list this horse",
+  "marketLostReportBlockedBody": "This horse has an active recovery report. The listing cannot be published until the report is resolved and closed.",
+  "marketProvenanceTitle": "Horse documents & identity",
+  "marketTamgaClan": "Tamga (clan)",
+  "marketTamgaGeneration": "Tamga (generation)",
+  "marketRegistrationNo": "Registration no.",
+  "marketMicrochipId": "Microchip ID",
+  "marketCoatColor": "Coat color",
+  "marketBreedLineage": "Breed lineage",
+  "marketRegion": "Region",
+  "marketSum": "District (sum)",
+  "marketTamgaVerified": "Tamga verified",
+  "marketStateVerified": "State registered"
 }

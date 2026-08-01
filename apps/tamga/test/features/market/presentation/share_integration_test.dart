@@ -92,9 +92,9 @@ void main() {
 
       // Verify Share.share() is called instead of Clipboard
       expect(
-        source.contains('Share.share('),
+        source.contains('SharePlus.instance.share(ShareParams('),
         isTrue,
-        reason: 'ListingDetailScreen should call Share.share()',
+        reason: 'ListingDetailScreen should call SharePlus.instance.share()',
       );
 
       // Verify URL format
@@ -163,9 +163,10 @@ void main() {
 
         // Verify Share.share() is called
         expect(
-          source.contains('Share.share('),
+          source.contains('SharePlus.instance.share('),
           isTrue,
-          reason: 'PublicHorseProfileScreen should call Share.share()',
+          reason:
+              'PublicHorseProfileScreen should call SharePlus.instance.share()',
         );
 
         // Verify URL format for horse

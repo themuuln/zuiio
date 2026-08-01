@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'package:tamga/l10n/generated/app_localizations.dart';
+
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../core/storage/cloud/media_storage_providers.dart';
@@ -15,6 +17,10 @@ import '../../../core/storage/cloud/media_storage_service.dart';
 import '../../../core/storage/cloud/media_storage_router.dart';
 import '../../../core/sync/connection_status.dart';
 import '../../../app/supabase_bootstrap.dart';
+import '../../map/application/lost_horse_providers.dart';
+import '../../map/domain/lost_horse_report.dart';
+import '../../map/domain/map_enums.dart';
+import '../../map/presentation/lost_horse_detail_screen.dart';
 import '../../shared/presentation/offline_save_feedback.dart';
 import '../../horses/domain/horse_record.dart';
 import '../application/market_providers.dart';
@@ -388,6 +394,12 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
             onChanged: (value) => setState(() => _selectedHorseId = value),
             validator: (value) => value == null ? 'Морь сонгоно уу' : null,
           ),
+          if (_activeReportForSelectedHorse(horses) != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _LostReportWarningBanner(
+              report: _activeReportForSelectedHorse(horses)!,
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
 
           // ── Listing type ──────────────────────────────────
@@ -877,10 +889,49 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
   // ── Submit ────────────────────────────────────────────────────
 
+  /// Active public recovery report for the currently selected horse, if any.
+  LostHorseReport? _activeReportForSelectedHorse(List<HorseRecord> horses) {
+    final selectedId = _selectedHorseId;
+    if (selectedId == null) return null;
+    final activeReports = ref.read(activeLostHorsesProvider);
+    if (activeReports case AsyncData(value: final reports)) {
+      return reports
+          .where(
+            (r) =>
+                r.horseId == selectedId && r.status == LostHorseStatus.active,
+          )
+          .firstOrNull;
+    }
+    return null;
+  }
+
   Future<void> _submitListing() async {
     final price = int.tryParse(_priceController.text.trim());
     if (price == null || price <= 0) return;
     if (_selectedHorseId == null) return;
+
+    // Lost-report guard: refuse to list a horse that is publicly reported lost.
+    // Server triggers enforce this too; the client check gives a friendly message.
+    LostHorseReport? conflict;
+    try {
+      final reports = await ref.read(activeLostHorsesProvider.future);
+      conflict = _selectedHorseId == null
+          ? null
+          : reports
+                .where(
+                  (r) =>
+                      r.horseId == _selectedHorseId &&
+                      r.status == LostHorseStatus.active,
+                )
+                .firstOrNull;
+    } catch (_) {
+      conflict = null; // offline/error — the server guard still enforces
+    }
+    if (conflict != null) {
+      if (!mounted) return;
+      await _showLostReportBlockedDialog(conflict);
+      return;
+    }
 
     // Upload any remaining local photos
     final allUrls = await _uploadPhotos();
@@ -978,6 +1029,80 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     return value.toString().replaceAllMapped(
       RegExp(r'\B(?=(\d{3})+(?!\d))'),
       (match) => ',',
+    );
+  }
+
+  /// Blocks submission with a bilingual explanation when the selected horse
+  /// has an active public recovery report.
+  Future<void> _showLostReportBlockedDialog(LostHorseReport report) async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded),
+        title: Text(l10n.marketLostReportBlockedTitle),
+        content: Text(l10n.marketLostReportBlockedBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.generalCancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => LostHorseDetailScreen(report: report),
+                ),
+              );
+            },
+            child: Text(l10n.marketLostReportView),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Lost-report warning banner (shown under the horse picker)
+// ══════════════════════════════════════════════════════════════════
+
+/// Inline warning shown in the create form when the selected horse has an
+/// active public recovery report; submission is blocked in that case.
+class _LostReportWarningBanner extends StatelessWidget {
+  const _LostReportWarningBanner({required this.report});
+
+  final LostHorseReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            size: 18,
+            color: theme.colorScheme.onErrorContainer,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              l10n.marketLostReportConflictBody,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onErrorContainer,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

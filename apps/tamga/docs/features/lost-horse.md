@@ -61,15 +61,16 @@ Lost horse функц дээр тусламж үзүүлэх боломжийг 
 
 ## Үлдсэн сайжруулалт
 
-| Priority | Ажил | Тайлбар |
-|---|---|---|
-| P1 | Contact handoff | Зарын эзэмшигчтэй утсаар эсвэл in-app message-ээр холбогдох flow нэмэх |
-| P1 | Paid rescue checkout | Report submit-ийн дараа publish/broadcast/boost сонголт болон payment flow нэмэх |
-| P1 | Broadcast job + audit | Төлбөр амжилттай бол radius notification job үүсгэж, илгээсэн тоо/хугацааг хадгалах |
-| P1 | Manual last-seen pin | GPS current location биш, хамгийн сүүлд харсан цэгийг map дээр сонгох |
-| P2 | Photo attachment | Report дээр horse photo болон нэмэлт зураг хавсаргах |
-| P2 | Push radius alerts | Төлбөртэй broadcast болон хэрэглэгчийн search/geofence бүсэд шинэ зар орвол urgent notification илгээх |
-| P3 | Offline draft queue | Сүлжээгүй үед зар draft үүсгээд sync queue-р илгээх |
+| Priority | Ажил | Тайлбар | Төлөв |
+|---|---|---|---|
+| P1 | Contact handoff | Зарын эзэмшигчтэй утсаар эсвэл in-app message-ээр холбогдох flow нэмэх | ✅ In-app chat + consented phone (recovery P0) |
+| P1 | Paid rescue checkout | Report submit-ийн дараа publish/broadcast/boost сонголт болон payment flow нэмэх | ⏳ Зориуд хойшлуулсан — free recovery core (P0 шийдвэр) |
+| P1 | Broadcast job + audit | Төлбөр амжилттай бол radius notification job үүсгэж, илгээсэн тоо/хугацааг хадгалах | ✅ Subscription/outbox/alert-dispatch Edge Function (P0) |
+| P1 | Manual last-seen pin | GPS current location биш, хамгийн сүүлд харсан цэгийг map дээр сонгох | ✅ Recovery wizard last-seen step (P0) |
+| P2 | Photo attachment | Report дээр horse photo болон нэмэлт зураг хавсаргах | ✅ Private buckets + staged media (P0) |
+| P2 | Push radius alerts | Төлбөртэй broadcast болон хэрэглэгчийн search/geofence бүсэд шинэ зар орвол urgent notification илгээх | ⏳ At-least-once dispatch pipeline зөвхөн (P0) — FCM/SMS хүргэлт дараа |
+| P3 | Offline draft queue | Сүлжээгүй үед зар draft үүсгээд sync queue-р илгээх | ✅ Durable sync queue + retry (P0) |
+| Phase 3 | Marketplace connection | Зах зээл ⇄ эрэл хайгуул холболт — lost/stolen listing guard, provenance | ✅ 2026-08-01: `lost_report_conflict` server guard + flag/clear triggers, listing badge/banner, create-listing block, provenance rows |
 
 ## Verification
 

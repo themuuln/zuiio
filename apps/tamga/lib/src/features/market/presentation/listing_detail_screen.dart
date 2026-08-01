@@ -3,10 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:tamga/l10n/generated/app_localizations.dart';
+
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/sync/connection_status.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../map/application/lost_horse_providers.dart';
+import '../../map/domain/lost_horse_report.dart';
+import '../../map/domain/map_enums.dart';
+import '../../map/presentation/lost_horse_detail_screen.dart';
 import '../../shared/application/sync_providers.dart';
+import '../../horses/domain/horse_record.dart' show Horse;
 import '../application/contract_providers.dart';
 import '../application/market_providers.dart';
 import '../application/message_providers.dart';
@@ -37,6 +44,9 @@ class ListingDetailScreen extends ConsumerWidget {
     final item = listingsMap[listingId];
     final safety = ref.watch(marketSafetySummaryProvider(listingId));
     final theme = Theme.of(context);
+    // Belt-and-braces: the server flag plus a live check for an active public
+    // report on the listed horse (covers stale cached flags).
+    final activeReports = ref.watch(activeLostHorsesProvider);
 
     return catalog.when(
       data: (data) {
@@ -46,6 +56,21 @@ class ListingDetailScreen extends ConsumerWidget {
 
         final listing = item.listing;
         final horse = item.horse;
+        final conflictReport = activeReports.when(
+          data: (reports) => horse == null
+              ? null
+              : reports
+                    .where(
+                      (r) =>
+                          r.horseId == horse.id &&
+                          r.status == LostHorseStatus.active,
+                    )
+                    .firstOrNull,
+          loading: () => null,
+          error: (_, _) => null,
+        );
+        final showConflict =
+            listing.lostReportConflict || conflictReport != null;
         final certificateAsync = horse != null
             ? ref.watch(digitalCertificateProvider(horse.id))
             : null;
@@ -84,6 +109,11 @@ class ListingDetailScreen extends ConsumerWidget {
                 ),
                 sliver: SliverList.list(
                   children: [
+                    // Эрэл хайгуулын зөрчил — safety banner first
+                    if (showConflict)
+                      _LostReportConflictBanner(report: conflictReport),
+                    if (showConflict) const SizedBox(height: AppSpacing.md),
+
                     // Үндсэн мэдээлэл
                     Card(
                       child: Padding(
@@ -132,13 +162,50 @@ class ListingDetailScreen extends ConsumerWidget {
                     // Морийн мэдээлэл
                     if (horse != null) ...[
                       Card(
-                        child: ListTile(
-                          title: Text('Horse evidence: ${horse.name}'),
-                          subtitle: Text(
-                            '${horse.relationLabel} • ${horse.coat} • ${horse.birthYear}\n'
-                            'Шагнал ${horse.awardCount} • Үр төл ${horse.offspringCount} • ${horse.notes}',
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSpacing.xl),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Horse evidence: ${horse.name}',
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                '${horse.relationLabel} • ${horse.coat} • ${horse.birthYear}\n'
+                                'Шагнал ${horse.awardCount} • Үр төл ${horse.offspringCount} • ${horse.notes}',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              if (horse.tamgaVerified ||
+                                  horse.stateVerified) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                Wrap(
+                                  spacing: AppSpacing.sm,
+                                  runSpacing: AppSpacing.sm,
+                                  children: [
+                                    if (horse.tamgaVerified)
+                                      _ProvenanceBadge(
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.marketTamgaVerified,
+                                        icon: Icons.branding_watermark,
+                                      ),
+                                    if (horse.stateVerified)
+                                      _ProvenanceBadge(
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.marketStateVerified,
+                                        icon: Icons.verified_user_outlined,
+                                      ),
+                                  ],
+                                ),
+                              ],
+                              ..._provenanceRows(context, horse),
+                            ],
                           ),
-                          isThreeLine: true,
                         ),
                       ),
                       if (certificateAsync != null)
@@ -388,7 +455,7 @@ class ListingDetailScreen extends ConsumerWidget {
     final url = 'https://tamga.mn/market/${listing.id}';
     final text = 'Check out this horse on Tamga: $url';
     final subject = 'Tamga — ${listing.title}';
-    await Share.share(text, subject: subject);
+    await SharePlus.instance.share(ShareParams(text: text, subject: subject));
   }
 
   Future<void> _generateContract(
@@ -1360,4 +1427,166 @@ class _RatingBadge extends StatelessWidget {
       ],
     );
   }
+}
+
+// ── Lost-report conflict banner ─────────────────────────────────────
+
+/// Warning banner shown when the listed horse has an active recovery report.
+///
+/// The server flags listings via `lost_report_conflict`; this banner also
+/// renders when a live active report is found for the horse (belt-and-braces).
+class _LostReportConflictBanner extends ConsumerWidget {
+  const _LostReportConflictBanner({required this.report});
+
+  /// The active report, when known from the live recovery feed.
+  final LostHorseReport? report;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return Card(
+      color: theme.colorScheme.errorContainer,
+      child: Padding(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: theme.colorScheme.onErrorContainer,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.marketLostReportConflictTitle,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.onErrorContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    l10n.marketLostReportConflictBody,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                  ),
+                  if (report != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    TextButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              LostHorseDetailScreen(report: report!),
+                        ),
+                      ),
+                      icon: const Icon(Icons.open_in_new, size: 16),
+                      label: Text(l10n.marketLostReportView),
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.colorScheme.onErrorContainer,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Provenance badges and rows ─────────────────────────────────────
+
+/// Small verified badge chip (tamga / state registration).
+class _ProvenanceBadge extends StatelessWidget {
+  const _ProvenanceBadge({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Chip(
+      avatar: Icon(icon, size: 16),
+      label: Text(label),
+      visualDensity: VisualDensity.compact,
+      backgroundColor: theme.colorScheme.secondaryContainer,
+      labelStyle: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.onSecondaryContainer,
+      ),
+    );
+  }
+}
+
+/// Identity/document rows shown on the horse card when the data exists.
+List<Widget> _provenanceRows(BuildContext context, Horse horse) {
+  final theme = Theme.of(context);
+  final l10n = AppLocalizations.of(context)!;
+
+  final rows = <(String, String)>[
+    if (horse.tamgaBrandClan != null && horse.tamgaBrandClan!.isNotEmpty)
+      (l10n.marketTamgaClan, horse.tamgaBrandClan!),
+    if (horse.tamgaBrandGeneration != null)
+      (l10n.marketTamgaGeneration, '${horse.tamgaBrandGeneration}'),
+    if (horse.registrationNo != null && horse.registrationNo!.isNotEmpty)
+      (l10n.marketRegistrationNo, horse.registrationNo!),
+    if (horse.microchipId != null && horse.microchipId!.isNotEmpty)
+      (l10n.marketMicrochipId, horse.microchipId!),
+    if (horse.coatColor != null)
+      (l10n.marketCoatColor, horse.coatColor!.displayName),
+    if (horse.breedLineage != null)
+      (l10n.marketBreedLineage, horse.breedLineage!.displayName),
+    if (horse.region != null && horse.region!.isNotEmpty)
+      (l10n.marketRegion, horse.region!),
+    if (horse.sum != null && horse.sum!.isNotEmpty)
+      (l10n.marketSum, horse.sum!),
+  ];
+  if (rows.isEmpty) return const [];
+
+  return [
+    const SizedBox(height: AppSpacing.md),
+    Text(
+      l10n.marketProvenanceTitle,
+      style: theme.textTheme.labelLarge?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    ),
+    const SizedBox(height: AppSpacing.xs),
+    ...rows.map(
+      (row) => Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 2,
+              child: Text(
+                row.$1,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Text(
+                row.$2,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  ];
 }

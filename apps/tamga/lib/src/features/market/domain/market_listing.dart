@@ -147,6 +147,7 @@ class MarketListing with _$MarketListing {
     DateTime? sellerBadgeExpiresAt,
     double? commissionRate,
     int? commissionAmount,
+    @Default(false) bool lostReportConflict,
   }) = _MarketListing;
 
   factory MarketListing.fromJson(Map<String, dynamic> json) {
@@ -188,6 +189,7 @@ class MarketListing with _$MarketListing {
           : null,
       commissionRate: (json['commissionRate'] as num?)?.toDouble(),
       commissionAmount: json['commissionAmount'] as int?,
+      lostReportConflict: json['lostReportConflict'] as bool? ?? false,
     );
   }
 
@@ -220,6 +222,7 @@ class MarketListing with _$MarketListing {
       'sellerBadgeExpiresAt': sellerBadgeExpiresAt?.toIso8601String(),
       'commissionRate': commissionRate,
       'commissionAmount': commissionAmount,
+      'lostReportConflict': lostReportConflict,
     };
   }
 
@@ -297,6 +300,7 @@ class MarketListing with _$MarketListing {
       updatedAt:
           DateTime.tryParse(row['updated_at'] as String? ?? '') ??
           DateTime.now(),
+      lostReportConflict: row['lost_report_conflict'] as bool? ?? false,
     );
   }
 
@@ -324,6 +328,7 @@ class MarketListing with _$MarketListing {
       'seller_badge_expires_at': sellerBadgeExpiresAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
+      'lost_report_conflict': lostReportConflict,
     };
   }
 }

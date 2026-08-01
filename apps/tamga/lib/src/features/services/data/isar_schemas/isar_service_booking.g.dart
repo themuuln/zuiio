@@ -14,75 +14,87 @@ extension GetIsarServiceBookingCollection on Isar {
       this.collection();
 }
 
-const IsarServiceBookingSchema = CollectionSchema(
+final IsarServiceBookingSchema = CollectionSchema(
   name: r'IsarServiceBooking',
-  id: 6554383272419625858,
+  id: int.parse('6554383272419625858'),
   properties: {
-    r'address': PropertySchema(id: 0, name: r'address', type: IsarType.string),
+    r'address': PropertySchema(
+      id: int.parse('0'),
+      name: r'address',
+      type: IsarType.string,
+    ),
     r'bookingDate': PropertySchema(
-      id: 1,
+      id: int.parse('1'),
       name: r'bookingDate',
       type: IsarType.dateTime,
     ),
     r'createdAt': PropertySchema(
-      id: 2,
+      id: int.parse('2'),
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: 3,
+      id: int.parse('3'),
       name: r'domainId',
       type: IsarType.string,
     ),
     r'horseIds': PropertySchema(
-      id: 4,
+      id: int.parse('4'),
       name: r'horseIds',
       type: IsarType.stringList,
     ),
     r'locationAimag': PropertySchema(
-      id: 5,
+      id: int.parse('5'),
       name: r'locationAimag',
       type: IsarType.string,
     ),
     r'locationSum': PropertySchema(
-      id: 6,
+      id: int.parse('6'),
       name: r'locationSum',
       type: IsarType.string,
     ),
-    r'notes': PropertySchema(id: 7, name: r'notes', type: IsarType.string),
+    r'notes': PropertySchema(
+      id: int.parse('7'),
+      name: r'notes',
+      type: IsarType.string,
+    ),
     r'providerId': PropertySchema(
-      id: 8,
+      id: int.parse('8'),
       name: r'providerId',
       type: IsarType.string,
     ),
     r'providerType': PropertySchema(
-      id: 9,
+      id: int.parse('9'),
       name: r'providerType',
       type: IsarType.byte,
       enumMap: _IsarServiceBookingproviderTypeEnumValueMap,
     ),
     r'serviceType': PropertySchema(
-      id: 10,
+      id: int.parse('10'),
       name: r'serviceType',
       type: IsarType.string,
     ),
     r'status': PropertySchema(
-      id: 11,
+      id: int.parse('11'),
       name: r'status',
       type: IsarType.byte,
       enumMap: _IsarServiceBookingstatusEnumValueMap,
     ),
     r'totalAmount': PropertySchema(
-      id: 12,
+      id: int.parse('12'),
       name: r'totalAmount',
       type: IsarType.long,
     ),
     r'updatedAt': PropertySchema(
-      id: 13,
+      id: int.parse('13'),
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
-    r'userId': PropertySchema(id: 14, name: r'userId', type: IsarType.string),
+    r'userId': PropertySchema(
+      id: int.parse('14'),
+      name: r'userId',
+      type: IsarType.string,
+    ),
   },
   estimateSize: _isarServiceBookingEstimateSize,
   serialize: _isarServiceBookingSerialize,
@@ -91,7 +103,7 @@ const IsarServiceBookingSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: -9138809277110658179,
+      id: int.parse('-9138809277110658179'),
       name: r'domainId',
       unique: true,
       replace: true,
@@ -104,7 +116,7 @@ const IsarServiceBookingSchema = CollectionSchema(
       ],
     ),
     r'userId': IndexSchema(
-      id: -2005826577402374815,
+      id: int.parse('-2005826577402374815'),
       name: r'userId',
       unique: false,
       replace: false,
@@ -117,7 +129,7 @@ const IsarServiceBookingSchema = CollectionSchema(
       ],
     ),
     r'createdAt': IndexSchema(
-      id: -3433535483987302584,
+      id: int.parse('-3433535483987302584'),
       name: r'createdAt',
       unique: false,
       replace: false,

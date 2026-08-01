@@ -50,9 +50,11 @@ class ContractActions {
   /// Гэрээг системийн share sheet ашиглан хуваалцах.
   Future<void> shareContract(MarketContract contract) async {
     final text = contract.toPlainText();
-    await Share.share(
-      text,
-      subject: 'Худалдааны гэрээ / Bill of Sale - ${contract.horseName}',
+    await SharePlus.instance.share(
+      ShareParams(
+        text: text,
+        subject: 'Худалдааны гэрээ / Bill of Sale - ${contract.horseName}',
+      ),
     );
   }
 

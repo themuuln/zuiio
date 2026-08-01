@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:tamga/l10n/generated/app_localizations.dart';
+
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/tamga_badge.dart';
 import '../../../../core/widgets/tamga_status_chip.dart';
@@ -18,6 +20,17 @@ class ListingBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Lost-report conflict is a safety signal — highest priority.
+    if (listing.lostReportConflict) {
+      return _BadgeChip(
+        label: AppLocalizations.of(context)!.marketLostReportConflictTitle,
+        bgColor: theme.colorScheme.errorContainer,
+        fgColor: theme.colorScheme.onErrorContainer,
+        icon: Icons.warning_amber_rounded,
+        compact: compact,
+      );
+    }
 
     // Determine badge to show (VIP > Boost > Verified)
     if (listing.isVip) {
@@ -113,7 +126,8 @@ class ListingBadgeOverlay extends StatelessWidget {
     if (!listing.isVip &&
         !listing.isBoosted &&
         !listing.hasSellerBadge &&
-        !listing.isSellerVerified) {
+        !listing.isSellerVerified &&
+        !listing.lostReportConflict) {
       return const SizedBox.shrink();
     }
 
@@ -123,6 +137,19 @@ class ListingBadgeOverlay extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          if (listing.lostReportConflict)
+            _BadgeChip(
+              label: AppLocalizations.of(
+                context,
+              )!.marketLostReportConflictTitle,
+              bgColor: theme.colorScheme.errorContainer,
+              fgColor: theme.colorScheme.onErrorContainer,
+              icon: Icons.warning_amber_rounded,
+              compact: true,
+            ),
+          if (listing.lostReportConflict &&
+              (listing.isVip || listing.isBoosted))
+            const SizedBox(height: AppSpacing.xs),
           if (listing.isVip)
             _BadgeChip(
               label: listing.vipLevel.label,

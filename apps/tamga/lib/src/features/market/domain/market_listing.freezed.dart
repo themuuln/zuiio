@@ -45,6 +45,7 @@ mixin _$MarketListing {
   DateTime? get sellerBadgeExpiresAt => throw _privateConstructorUsedError;
   double? get commissionRate => throw _privateConstructorUsedError;
   int? get commissionAmount => throw _privateConstructorUsedError;
+  bool get lostReportConflict => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $MarketListingCopyWith<MarketListing> get copyWith =>
@@ -86,6 +87,7 @@ abstract class $MarketListingCopyWith<$Res> {
     DateTime? sellerBadgeExpiresAt,
     double? commissionRate,
     int? commissionAmount,
+    bool lostReportConflict,
   });
 }
 
@@ -129,6 +131,7 @@ class _$MarketListingCopyWithImpl<$Res, $Val extends MarketListing>
     Object? sellerBadgeExpiresAt = freezed,
     Object? commissionRate = freezed,
     Object? commissionAmount = freezed,
+    Object? lostReportConflict = null,
   }) {
     return _then(
       _value.copyWith(
@@ -240,6 +243,10 @@ class _$MarketListingCopyWithImpl<$Res, $Val extends MarketListing>
                 ? _value.commissionAmount
                 : commissionAmount // ignore: cast_nullable_to_non_nullable
                       as int?,
+            lostReportConflict: null == lostReportConflict
+                ? _value.lostReportConflict
+                : lostReportConflict // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -283,6 +290,7 @@ abstract class _$$MarketListingImplCopyWith<$Res>
     DateTime? sellerBadgeExpiresAt,
     double? commissionRate,
     int? commissionAmount,
+    bool lostReportConflict,
   });
 }
 
@@ -325,6 +333,7 @@ class __$$MarketListingImplCopyWithImpl<$Res>
     Object? sellerBadgeExpiresAt = freezed,
     Object? commissionRate = freezed,
     Object? commissionAmount = freezed,
+    Object? lostReportConflict = null,
   }) {
     return _then(
       _$MarketListingImpl(
@@ -436,6 +445,10 @@ class __$$MarketListingImplCopyWithImpl<$Res>
             ? _value.commissionAmount
             : commissionAmount // ignore: cast_nullable_to_non_nullable
                   as int?,
+        lostReportConflict: null == lostReportConflict
+            ? _value.lostReportConflict
+            : lostReportConflict // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -472,6 +485,7 @@ class _$MarketListingImpl extends _MarketListing {
     this.sellerBadgeExpiresAt,
     this.commissionRate,
     this.commissionAmount,
+    this.lostReportConflict = false,
   }) : _disciplineTags = disciplineTags,
        _documentTags = documentTags,
        _mediaUrls = mediaUrls,
@@ -564,10 +578,13 @@ class _$MarketListingImpl extends _MarketListing {
   final double? commissionRate;
   @override
   final int? commissionAmount;
+  @override
+  @JsonKey()
+  final bool lostReportConflict;
 
   @override
   String toString() {
-    return 'MarketListing(id: $id, horseId: $horseId, sellerId: $sellerId, title: $title, description: $description, priceAmount: $priceAmount, currency: $currency, saleType: $saleType, status: $status, locationLabel: $locationLabel, disciplineTags: $disciplineTags, documentTags: $documentTags, mediaUrls: $mediaUrls, isSellerVerified: $isSellerVerified, createdAt: $createdAt, updatedAt: $updatedAt, viewsCount: $viewsCount, isFavorite: $isFavorite, isFeatured: $isFeatured, boostLevel: $boostLevel, boostExpiresAt: $boostExpiresAt, vipLevel: $vipLevel, vipExpiresAt: $vipExpiresAt, sellerBadge: $sellerBadge, sellerBadgeExpiresAt: $sellerBadgeExpiresAt, commissionRate: $commissionRate, commissionAmount: $commissionAmount)';
+    return 'MarketListing(id: $id, horseId: $horseId, sellerId: $sellerId, title: $title, description: $description, priceAmount: $priceAmount, currency: $currency, saleType: $saleType, status: $status, locationLabel: $locationLabel, disciplineTags: $disciplineTags, documentTags: $documentTags, mediaUrls: $mediaUrls, isSellerVerified: $isSellerVerified, createdAt: $createdAt, updatedAt: $updatedAt, viewsCount: $viewsCount, isFavorite: $isFavorite, isFeatured: $isFeatured, boostLevel: $boostLevel, boostExpiresAt: $boostExpiresAt, vipLevel: $vipLevel, vipExpiresAt: $vipExpiresAt, sellerBadge: $sellerBadge, sellerBadgeExpiresAt: $sellerBadgeExpiresAt, commissionRate: $commissionRate, commissionAmount: $commissionAmount, lostReportConflict: $lostReportConflict)';
   }
 
   @override
@@ -630,7 +647,9 @@ class _$MarketListingImpl extends _MarketListing {
             (identical(other.commissionRate, commissionRate) ||
                 other.commissionRate == commissionRate) &&
             (identical(other.commissionAmount, commissionAmount) ||
-                other.commissionAmount == commissionAmount));
+                other.commissionAmount == commissionAmount) &&
+            (identical(other.lostReportConflict, lostReportConflict) ||
+                other.lostReportConflict == lostReportConflict));
   }
 
   @override
@@ -663,6 +682,7 @@ class _$MarketListingImpl extends _MarketListing {
     sellerBadgeExpiresAt,
     commissionRate,
     commissionAmount,
+    lostReportConflict,
   ]);
 
   @JsonKey(ignore: true)
@@ -701,6 +721,7 @@ abstract class _MarketListing extends MarketListing {
     final DateTime? sellerBadgeExpiresAt,
     final double? commissionRate,
     final int? commissionAmount,
+    final bool lostReportConflict,
   }) = _$MarketListingImpl;
   const _MarketListing._() : super._();
 
@@ -759,6 +780,8 @@ abstract class _MarketListing extends MarketListing {
   double? get commissionRate;
   @override
   int? get commissionAmount;
+  @override
+  bool get lostReportConflict;
   @override
   @JsonKey(ignore: true)
   _$$MarketListingImplCopyWith<_$MarketListingImpl> get copyWith =>
