@@ -6,6 +6,23 @@
 -- ownership verification, transfer tracking, and QR codes.
 -- ============================================================
 
+-- ── 0. Reconcile the legacy 002 schema ──────────────────────
+-- 002 created digital_certificates with owner_user_id/issued_at/is_active/
+-- verification; the app and this migration use owner_id/issue_date/status/
+-- qr_code. Drop the legacy-shaped table (app code never wrote it) so the
+-- production DDL below applies on fresh databases.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'digital_certificates'
+      AND column_name = 'owner_user_id'
+  ) THEN
+    DROP TABLE public.digital_certificates CASCADE;
+  END IF;
+END
+$$;
+
 -- ── 1. Create digital_certificates table ─────────────────────
 CREATE TABLE IF NOT EXISTS digital_certificates (
   id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,

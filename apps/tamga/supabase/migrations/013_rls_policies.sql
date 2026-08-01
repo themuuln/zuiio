@@ -90,17 +90,17 @@ ALTER TABLE geofence_alerts ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Geofence alerts select for owner" ON geofence_alerts
   FOR SELECT USING (
-    geofence_id IN (SELECT id FROM search_areas WHERE owner_id = auth.uid())
+    geofence_id IN (SELECT id FROM search_areas WHERE created_by = auth.uid())
   );
 
 CREATE POLICY "Geofence alerts insert by owner" ON geofence_alerts
   FOR INSERT WITH CHECK (
-    geofence_id IN (SELECT id FROM search_areas WHERE owner_id = auth.uid())
+    geofence_id IN (SELECT id FROM search_areas WHERE created_by = auth.uid())
   );
 
 CREATE POLICY "Geofence alerts update by owner" ON geofence_alerts
   FOR UPDATE USING (
-    geofence_id IN (SELECT id FROM search_areas WHERE owner_id = auth.uid())
+    geofence_id IN (SELECT id FROM search_areas WHERE created_by = auth.uid())
   );
 
 -- ── User devices: owner CRUD ──

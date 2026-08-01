@@ -24,19 +24,13 @@ CREATE INDEX IF NOT EXISTS idx_breeding_records_expected_foaling
   WHERE status = 'Хээлтсэн';
 
 -- ── 4. Update RLS policies ────────────────────────────────────
--- Ensure users can update the new foal fields
+-- Ensure users can update the new foal fields.
+-- (breeding_records has owner_id; the legacy herd_label/herds join referenced
+-- a herds table that no migration creates — use the owner directly.)
 CREATE POLICY "Users can update breeding records"
   ON breeding_records FOR UPDATE
-  USING (
-    herd_label IN (
-      SELECT herd_label FROM herds WHERE owner_id = auth.uid()
-    )
-  )
-  WITH CHECK (
-    herd_label IN (
-      SELECT herd_label FROM herds WHERE owner_id = auth.uid()
-    )
-  );
+  USING (owner_id = auth.uid())
+  WITH CHECK (owner_id = auth.uid());
 
 -- ── 5. Add comments for documentation ─────────────────────────
 COMMENT ON COLUMN breeding_records.actual_foaling_date IS 'Actual date when the foal was born (null until foaled)';

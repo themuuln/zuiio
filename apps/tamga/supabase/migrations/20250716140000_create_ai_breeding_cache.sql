@@ -12,10 +12,11 @@ CREATE TABLE ai_breeding_cache (
   UNIQUE(sire_id, dam_id)
 );
 
--- Fast lookup for cache hits: same sire+dam, not yet expired.
-CREATE INDEX idx_breeding_cache_lookup
-  ON ai_breeding_cache(sire_id, dam_id)
-  WHERE expires_at > now();
+-- Fast lookup for cache hits: same sire+dam.
+-- (A WHERE expires_at > now() predicate is illegal — now() is VOLATILE — so
+-- the expiry filter stays in the query; the index narrows on sire+dam.)
+CREATE INDEX IF NOT EXISTS idx_breeding_cache_lookup
+  ON ai_breeding_cache(sire_id, dam_id);
 
 -- ── RLS ──────────────────────────────────────────────────────────────────
 ALTER TABLE ai_breeding_cache ENABLE ROW LEVEL SECURITY;

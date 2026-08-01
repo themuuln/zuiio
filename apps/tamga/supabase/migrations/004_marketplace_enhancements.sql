@@ -14,6 +14,13 @@
 ALTER TABLE market_listings
   DROP CONSTRAINT IF EXISTS market_listings_status_check;
 
+-- The SELECT policy on market_listings and the cross-table price_history
+-- policy both reference status; Postgres refuses ALTER TYPE while a policy
+-- depends on the column. Drop them here; the market_listings policy is
+-- recreated in section 7 and the price_history policy below it.
+DROP POLICY IF EXISTS "Market listings select published for all" ON market_listings;
+DROP POLICY IF EXISTS "Price history readable with listing" ON price_history;
+
 ALTER TABLE market_listings
   ALTER COLUMN status TYPE TEXT;
 
@@ -70,11 +77,20 @@ CREATE INDEX IF NOT EXISTS idx_market_active_location
 
 -- ── 7. Update RLS policy for new statuses ──────────────────────
 --    Anyone can read active + pending; only seller can read their own.
-DROP POLICY IF EXISTS "Market listings select published for all" ON market_listings;
-
 CREATE POLICY "Market listings select active or own"
   ON market_listings FOR SELECT
   USING (
     status IN ('active', 'pending_verification')
     OR seller_id = auth.uid()
+  );
+
+-- Price history follows the new listing visibility (was 'published').
+CREATE POLICY "Price history readable with listing"
+  ON price_history FOR SELECT
+  USING (
+    listing_id IN (
+      SELECT id FROM market_listings
+      WHERE status IN ('active', 'pending_verification')
+        OR seller_id = auth.uid()
+    )
   );
