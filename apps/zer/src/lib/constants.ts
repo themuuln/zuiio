@@ -132,6 +132,12 @@ export const FEATURES: FeatureDef[] = [
     "feature.promotions.description",
   ),
   localizedFeature(
+    "reviews",
+    "feature.reviews.label",
+    "feature.reviews.description",
+  ),
+  localizedFeature("blog", "feature.blog.label", "feature.blog.description"),
+  localizedFeature(
     "invoices",
     "feature.invoices.label",
     "feature.invoices.description",

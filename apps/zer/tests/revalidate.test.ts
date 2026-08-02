@@ -95,6 +95,7 @@ test("ENTITY_PATHS has all expected entity keys", () => {
   const keys = Object.keys(ENTITY_PATHS);
   const expected = [
     "accounting",
+    "blog",
     "branding",
     "branches",
     "categories",
@@ -115,6 +116,7 @@ test("ENTITY_PATHS has all expected entity keys", () => {
     "quality",
     "quotations",
     "returns",
+    "reviews",
     "roles",
     "sales",
     "settings",

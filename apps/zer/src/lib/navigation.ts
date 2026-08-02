@@ -1,8 +1,10 @@
 import {
   ArrowCounterClockwise,
+  Article,
   Buildings,
   Calculator,
   ChartBar,
+  ChatCircleText,
   CheckCircle,
   ClipboardText,
   Clock,
@@ -101,6 +103,8 @@ export const navGroups: NavGroup[] = [
     navItem("nav.coupons", "/coupons", Tag, "coupons"),
     navItem("nav.giftCards", "/gift-cards", Gift, "gift_cards"),
     navItem("nav.promotions", "/promotions", Megaphone, "promotions"),
+    navItem("nav.reviews", "/reviews", ChatCircleText, "reviews"),
+    navItem("nav.blog", "/blog", Article, "blog"),
   ]),
   navGroup("nav.group.analytics", [
     navItem("nav.reports", "/reports", ChartBar, "reports"),

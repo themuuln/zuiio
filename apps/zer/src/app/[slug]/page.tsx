@@ -378,12 +378,18 @@ async function OrgProfileDataFetcher({
           )}
 
           {/* CTA */}
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center gap-3 pt-4">
             <Link
               href={`/${slug}/products`}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Бүтээгдэхүүний каталог үзэх →
+            </Link>
+            <Link
+              href={`/${slug}/blog`}
+              className="inline-flex items-center gap-2 rounded-lg border px-6 py-3 text-sm font-medium transition-colors hover:border-primary/30 hover:text-primary"
+            >
+              Блог үзэх
             </Link>
           </div>
         </div>

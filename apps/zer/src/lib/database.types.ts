@@ -301,6 +301,66 @@ export type Database = {
           },
         ];
       };
+      blog_posts: {
+        Row: {
+          content: string;
+          cover_image_url: string | null;
+          created_at: string | null;
+          created_by: string | null;
+          excerpt: string | null;
+          id: string;
+          is_published: boolean;
+          organization_id: string;
+          published_at: string | null;
+          slug: string;
+          title: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          content: string;
+          cover_image_url?: string | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          excerpt?: string | null;
+          id?: string;
+          is_published?: boolean;
+          organization_id: string;
+          published_at?: string | null;
+          slug: string;
+          title: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          content?: string;
+          cover_image_url?: string | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          excerpt?: string | null;
+          id?: string;
+          is_published?: boolean;
+          organization_id?: string;
+          published_at?: string | null;
+          slug?: string;
+          title?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "blog_posts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       bom_items: {
         Row: {
           bom_id: string;
@@ -4888,6 +4948,77 @@ export type Database = {
           },
         ];
       };
+      reviews: {
+        Row: {
+          comment: string;
+          contact_id: string | null;
+          created_at: string | null;
+          customer_name: string;
+          id: string;
+          moderated_at: string | null;
+          moderated_by: string | null;
+          organization_id: string;
+          product_id: string;
+          rating: number;
+          status: string;
+        };
+        Insert: {
+          comment: string;
+          contact_id?: string | null;
+          created_at?: string | null;
+          customer_name: string;
+          id?: string;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          organization_id: string;
+          product_id: string;
+          rating: number;
+          status?: string;
+        };
+        Update: {
+          comment?: string;
+          contact_id?: string | null;
+          created_at?: string | null;
+          customer_name?: string;
+          id?: string;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          organization_id?: string;
+          product_id?: string;
+          rating?: number;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reviews_contact_id_fkey";
+            columns: ["contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reviews_moderated_by_fkey";
+            columns: ["moderated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reviews_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       role_permissions: {
         Row: {
           created_at: string | null;
@@ -5741,6 +5872,11 @@ export type Database = {
           amount: number;
         }[];
       };
+      get_public_blog_post: {
+        Args: { p_post_slug: string; p_slug: string };
+        Returns: Json;
+      };
+      get_public_blog_posts: { Args: { p_slug: string }; Returns: Json };
       get_public_categories: { Args: { p_slug: string }; Returns: Json };
       get_public_invoice: { Args: { p_token: string }; Returns: Json };
       get_public_product: {
@@ -5761,6 +5897,10 @@ export type Database = {
           };
       get_public_receipt: { Args: { p_token: string }; Returns: Json };
       get_public_report_data: { Args: { p_token: string }; Returns: Json };
+      get_public_reviews: {
+        Args: { p_product_id: string; p_slug: string };
+        Returns: Json;
+      };
       get_trial_balance: {
         Args: {
           p_as_of_date?: string;
@@ -5988,6 +6128,16 @@ export type Database = {
         Returns: Json;
       };
       soundex: { Args: { "": string }; Returns: string };
+      submit_product_review: {
+        Args: {
+          p_comment: string;
+          p_customer_name: string;
+          p_product_id: string;
+          p_rating: number;
+          p_slug: string;
+        };
+        Returns: Json;
+      };
       text_soundex: { Args: { "": string }; Returns: string };
       unschedule_daily_report_cron: { Args: never; Returns: string };
       user_has_branch_access: {
@@ -6110,7 +6260,15 @@ export type Database = {
         | "promotions.create"
         | "promotions.read"
         | "promotions.update"
-        | "promotions.delete";
+        | "promotions.delete"
+        | "reviews.create"
+        | "reviews.read"
+        | "reviews.update"
+        | "reviews.delete"
+        | "blog.create"
+        | "blog.read"
+        | "blog.update"
+        | "blog.delete";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -6348,6 +6506,14 @@ export const Constants = {
         "promotions.read",
         "promotions.update",
         "promotions.delete",
+        "reviews.create",
+        "reviews.read",
+        "reviews.update",
+        "reviews.delete",
+        "blog.create",
+        "blog.read",
+        "blog.update",
+        "blog.delete",
       ],
     },
   },

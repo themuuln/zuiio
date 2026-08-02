@@ -14,6 +14,8 @@ export type AuditAction =
   | "payment_received"
   | "activated"
   | "deactivated"
+  | "published"
+  | "unpublished"
   | "assigned";
 
 export type EntityType =
@@ -36,6 +38,8 @@ export type EntityType =
   | "coupon"
   | "gift_card"
   | "promotion"
+  | "review"
+  | "blog_post"
   | "loyalty_setting"
   | "loyalty_reward"
   | "delivery"

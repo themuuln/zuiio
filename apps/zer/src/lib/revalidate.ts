@@ -19,6 +19,8 @@ export const ENTITY_PATHS = {
   coupons: ["/", "/coupons"],
   promotions: ["/", "/promotions"],
   gift_cards: ["/", "/gift-cards", "/shop"],
+  reviews: ["/", "/reviews"],
+  blog: ["/", "/blog"],
   discounts: ["/", "/discounts"],
   products: ["/products", "/inventory"],
   inventory: ["/inventory", "/inventory/movements", "/products"],

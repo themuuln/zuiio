@@ -135,6 +135,16 @@ export const PERMISSION_GROUPS: {
     permissions: APP_PERMISSIONS.filter((p) => p.startsWith("gift_cards.")),
   },
   {
+    label: "Сэтгэгдэл",
+    key: "reviews",
+    permissions: APP_PERMISSIONS.filter((p) => p.startsWith("reviews.")),
+  },
+  {
+    label: "Блог",
+    key: "blog",
+    permissions: APP_PERMISSIONS.filter((p) => p.startsWith("blog.")),
+  },
+  {
     label: "Үйлдвэрлэл",
     key: "manufacturing",
     permissions: APP_PERMISSIONS.filter((p) =>
@@ -252,6 +262,14 @@ export const PERMISSION_LABELS: Record<AppPermission, string> = {
   "gift_cards.read": "Бэлгийн карт харах",
   "gift_cards.update": "Бэлгийн карт засах",
   "gift_cards.delete": "Бэлгийн карт устгах",
+  "reviews.create": "Сэтгэгдэл үүсгэх",
+  "reviews.read": "Сэтгэгдэл харах",
+  "reviews.update": "Сэтгэгдэл батлах/шийдвэрлэх",
+  "reviews.delete": "Сэтгэгдэл устгах",
+  "blog.create": "Блог нийтлэл үүсгэх",
+  "blog.read": "Блог нийтлэл харах",
+  "blog.update": "Блог нийтлэл засах",
+  "blog.delete": "Блог нийтлэл устгах",
   "boms.create": "BOM үүсгэх",
   "boms.read": "BOM харах",
   "boms.update": "BOM засах",

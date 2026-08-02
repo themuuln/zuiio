@@ -10,6 +10,7 @@ import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { ProductReviews } from "@/components/shop/product-reviews";
 import { Badge } from "@/components/ui/badge";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { getCompanyTypeLabel } from "@/lib/constants";
@@ -313,6 +314,9 @@ async function ProductDetailDataFetcher({
             </dl>
           </div>
         </div>
+
+        {/* Reviews */}
+        <ProductReviews slug={slug} productId={id} />
 
         {/* Footer */}
         <div className="border-t border-border/60 bg-card/30 py-6 text-center text-xs text-muted-foreground">
