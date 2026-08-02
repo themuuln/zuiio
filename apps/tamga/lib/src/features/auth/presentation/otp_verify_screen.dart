@@ -8,6 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/widgets.dart';
 import '../application/auth_providers.dart';
 
 /// OTP баталгаажуулах хуудас.
@@ -82,7 +85,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
 
       if (mounted) {
         // Амжилттай — эхлэх хуудас руу шилжүүлнэ.
-        context.go('/lineage');
+        context.go('/home');
       }
     } catch (e) {
       setState(() => _errorMessage = e.toString());
@@ -132,7 +135,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: TamgaSpacing.xxxl),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: Column(
@@ -144,47 +147,45 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                     size: 64,
                     color: theme.colorScheme.primary,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: TamgaSpacing.lg),
 
                   // ── Title ──
                   Text(
                     'Баталгаажуулах код илгээлээ',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TamgaTypography.title1(weight: FontWeight.w700),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: TamgaSpacing.sm),
 
                   // ── Subtitle ──
                   Text(
                     '$maskedPhone руу 6 оронтой код илгээлээ',
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    style: TamgaTypography.body(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: TamgaSpacing.xxxl),
 
                   // ── Error message ──
                   if (_errorMessage != null)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: TamgaSpacing.lg),
                       child: Card(
                         color: theme.colorScheme.errorContainer,
                         child: Padding(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(TamgaSpacing.md),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.error_outline,
                                 color: theme.colorScheme.onErrorContainer,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: TamgaSpacing.sm),
                               Expanded(
                                 child: Text(
                                   _errorMessage!,
-                                  style: TextStyle(
+                                  style: TamgaTypography.body(
                                     color: theme.colorScheme.onErrorContainer,
                                   ),
                                 ),
@@ -201,15 +202,17 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                     children: List.generate(6, (index) {
                       return Container(
                         width: 48,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: TamgaSpacing.xs,
+                        ),
                         child: TextFormField(
                           controller: _otpControllers[index],
                           focusNode: _focusNodes[index],
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           maxLength: 1,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
+                          style: TamgaTypography.title1(
+                            weight: FontWeight.w700,
                           ),
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
@@ -217,10 +220,12 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                           decoration: InputDecoration(
                             counterText: '',
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                TamgaSpacing.cornerRadiusSmall,
+                              ),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
+                              vertical: TamgaSpacing.md,
                             ),
                           ),
                           onChanged: (value) {
@@ -239,7 +244,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                       );
                     }),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: TamgaSpacing.xxl),
 
                   // ── Verify button ──
                   FilledButton(
@@ -250,20 +255,19 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                       minimumSize: const Size.fromHeight(48),
                     ),
                     child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                        ? LoadingIndicator(
+                            size: 20,
+                            color: theme.colorScheme.onPrimary,
                           )
                         : const Text('Баталгаажуулах'),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: TamgaSpacing.lg),
 
                   // ── Resend code ──
                   if (_resendSeconds > 0)
                     Text(
                       'Дахин илгээх: $_resendSecondsс',
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      style: TamgaTypography.body(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     )
@@ -272,7 +276,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                       onPressed: _handleResend,
                       child: const Text('Дахин код илгээх'),
                     ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: TamgaSpacing.lg),
 
                   // ── Change number ──
                   TextButton(

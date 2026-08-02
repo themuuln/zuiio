@@ -87,12 +87,11 @@ void main() {
     group('when user is authenticated', () {
       const auth = AuthState.authenticated(userId: 'user-1');
 
-      test('redirects /login to /lineage', () {
-        expect(authGuardRedirect(auth, '/login'), '/lineage');
+      test('redirects /login to /home', () {
+        expect(authGuardRedirect(auth, '/login'), '/home');
       });
-
-      test('redirects /register to /lineage', () {
-        expect(authGuardRedirect(auth, '/register'), '/lineage');
+      test('redirects /register to /home', () {
+        expect(authGuardRedirect(auth, '/register'), '/home');
       });
 
       test('allows /lineage (stays)', () {
@@ -148,12 +147,12 @@ void main() {
         expect(authGuardRedirect(anon, '/profile'), isNull);
       });
 
-      test('redirects /login to /lineage', () {
-        expect(authGuardRedirect(anon, '/login'), '/lineage');
+      test('redirects /login to /home', () {
+        expect(authGuardRedirect(anon, '/login'), '/home');
       });
 
-      test('redirects /register to /lineage', () {
-        expect(authGuardRedirect(anon, '/register'), '/lineage');
+      test('redirects /register to /home', () {
+        expect(authGuardRedirect(anon, '/register'), '/home');
       });
     });
 

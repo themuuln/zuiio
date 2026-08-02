@@ -127,7 +127,7 @@ void main() {
 
       // Stat cards should show total horses
       expect(find.text('Нийт морьд'), findsOneWidget);
-      expect(find.text('Вакцинжуулалт'), findsOneWidget);
+      expect(find.text('Вакцинжуулалтын хувь'), findsOneWidget);
       expect(find.text('Нийт орлого'), findsOneWidget);
       expect(find.text('Нийт зарлага'), findsOneWidget);
     });
@@ -174,6 +174,13 @@ void main() {
     });
 
     testWidgets('renders gender pie chart section', (tester) async {
+      // The pie chart sits below the fold of the _HerdTab ListView, which
+      // builds children lazily — give the test a tall viewport so the
+      // section is actually laid out.
+      tester.view.physicalSize = const Size(800, 3200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       final herd = HerdAnalytics(
         horses: [
           Horse(
@@ -324,25 +331,35 @@ void main() {
     // ══════════════════════════════════════════════════════════
     // VAL-ANALYTICS-006: Export to CSV works
     // ══════════════════════════════════════════════════════════
-    testWidgets('CSV export button is tappable', (tester) async {
+    testWidgets('CSV export button triggers the export flow', (tester) async {
       await tester.pumpWidget(createAnalyticsScreen());
       await tester.pump();
 
-      // CSV export button should exist
-      final csvButton = find.byIcon(Icons.file_download_outlined);
-      expect(csvButton, findsOneWidget);
+      // The button must be live, not decorative: tapping it runs the export
+      // flow. In the test environment the platform export channels are
+      // unavailable, so the flow surfaces its error toast.
+      await tester.tap(find.byIcon(Icons.file_download_outlined));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('CSV амжилттай экспортлогдлоо').evaluate().isNotEmpty ||
+            find.text('CSV экспортлоход алдаа гарлаа').evaluate().isNotEmpty,
+        isTrue,
+      );
     });
 
-    // ══════════════════════════════════════════════════════════
-    // VAL-ANALYTICS-007: Export to PDF works
-    // ══════════════════════════════════════════════════════════
-    testWidgets('PDF export button is tappable', (tester) async {
+    testWidgets('PDF export button triggers the export flow', (tester) async {
       await tester.pumpWidget(createAnalyticsScreen());
       await tester.pump();
 
-      // PDF export button should exist
-      final pdfButton = find.byIcon(Icons.picture_as_pdf_outlined);
-      expect(pdfButton, findsOneWidget);
+      await tester.tap(find.byIcon(Icons.picture_as_pdf_outlined));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('PDF амжилттай экспортлогдлоо').evaluate().isNotEmpty ||
+            find.text('PDF экспортлоход алдаа гарлаа').evaluate().isNotEmpty,
+        isTrue,
+      );
     });
 
     testWidgets('empty state shows zeros in stat cards', (tester) async {

@@ -246,115 +246,112 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        children: [
-          // ── Event type badge ──
-          _EventTypeBadge(event: widget.event),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── Event type badge ──
+              _EventTypeBadge(event: widget.event),
 
-          const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
 
-          // ── Date & Location ──
-          _EventInfoSection(event: widget.event),
+              // ── Date & Location ──
+              _EventInfoSection(event: widget.event),
 
-          const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
 
-          // ── Result (if completed) ──
-          if (widget.event.result != null &&
-              widget.event.result!.isNotEmpty) ...[
-            _ResultSection(event: widget.event),
-            const SizedBox(height: AppSpacing.lg),
-          ],
+              // ── Result (if completed) ──
+              if (widget.event.result != null &&
+                  widget.event.result!.isNotEmpty) ...[
+                _ResultSection(event: widget.event),
+                const SizedBox(height: AppSpacing.lg),
+              ],
 
-          // ── Organizer info ──
-          if (widget.event.organizerName != null ||
-              widget.event.organizerPhone != null ||
-              widget.event.organizerEmail != null) ...[
-            _OrganizerSection(event: widget.event),
-            const SizedBox(height: AppSpacing.lg),
-          ],
+              // ── Organizer info ──
+              if (widget.event.organizerName != null ||
+                  widget.event.organizerPhone != null ||
+                  widget.event.organizerEmail != null) ...[
+                _OrganizerSection(event: widget.event),
+                const SizedBox(height: AppSpacing.lg),
+              ],
 
-          // ── Reminder button (Сануулах) ──
-          if (widget.event.date != null &&
-              widget.event.date!.isAfter(DateTime.now())) ...[
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _scheduleReminder,
-                icon: const Icon(Icons.notifications_outlined),
-                label: const Text('Сануулах'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
+              // ── Reminder button (Сануулах) ──
+              if (widget.event.date != null &&
+                  widget.event.date!.isAfter(DateTime.now())) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _scheduleReminder,
+                    icon: const Icon(Icons.notifications_outlined),
+                    label: const Text('Сануулах'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+
+              // ── Notes ──
+              if (widget.event.notes != null &&
+                  widget.event.notes!.isNotEmpty) ...[
+                _NotesSection(event: widget.event),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+
+              // ── Map preview ──
+              if (widget.event.latitude != null &&
+                  widget.event.longitude != null) ...[
+                EventMapPreview(
+                  latitude: widget.event.latitude,
+                  longitude: widget.event.longitude,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                NavigateToLocationButton(
+                  latitude: widget.event.latitude,
+                  longitude: widget.event.longitude,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+
+              // ── Registered horses section ──
+              registrationsAsync.when(
+                data: (registrations) {
+                  final activeRegs = registrations
+                      .where((r) => r.status != RegistrationStatus.cancelled)
+                      .toList();
+
+                  return _RegisteredHorsesSection(
+                    registrations: activeRegs,
+                    horseNames: horseNames,
+                    currentUserId: userId,
+                    onCancel: _cancelRegistration,
+                  );
+                },
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: LoadingIndicator(size: 24),
+                ),
+                error: (err, _) => TamgaErrorWidget(
+                  message: 'Бүртгэлүүдийг ачаалахад алдаа гарлаа',
+                  onRetry: () => ref.invalidate(
+                    eventRegistrationsProvider(widget.event.id),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
 
-          // ── Notes ──
-          if (widget.event.notes != null && widget.event.notes!.isNotEmpty) ...[
-            _NotesSection(event: widget.event),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-
-          // ── Map preview ──
-          if (widget.event.latitude != null &&
-              widget.event.longitude != null) ...[
-            EventMapPreview(
-              latitude: widget.event.latitude,
-              longitude: widget.event.longitude,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            NavigateToLocationButton(
-              latitude: widget.event.latitude,
-              longitude: widget.event.longitude,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-
-          // ── Registered horses section ──
-          registrationsAsync.when(
-            data: (registrations) {
-              final activeRegs = registrations
-                  .where((r) => r.status != RegistrationStatus.cancelled)
-                  .toList();
-
-              return _RegisteredHorsesSection(
-                registrations: activeRegs,
-                horseNames: horseNames,
-                currentUserId: userId,
-                onCancel: _cancelRegistration,
-              );
-            },
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.lg),
-              child: LoadingIndicator(size: 24),
-            ),
-            error: (err, _) => TamgaErrorWidget(
-              message: 'Бүртгэлүүдийг ачаалахад алдаа гарлаа',
-              onRetry: () =>
-                  ref.invalidate(eventRegistrationsProvider(widget.event.id)),
-            ),
+              const SizedBox(height: AppSpacing.xl),
+            ],
           ),
-
-          const SizedBox(height: AppSpacing.xl),
-        ],
+        ),
       ),
       bottomNavigationBar: widget.event.registrationEnabled
-          ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                ),
-                child: FilledButton.icon(
-                  onPressed: _showRegisterHorseSheet,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Морь бүртгүүлэх'),
-                ),
-              ),
+          ? TamgaBottomAction(
+              label: 'Морь бүртгүүлэх',
+              icon: Icons.add,
+              onTap: _showRegisterHorseSheet,
             )
           : null,
     );
@@ -444,7 +441,7 @@ class _EventInfoSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
+    return TamgaCard(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -553,7 +550,7 @@ class _ResultSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
+    return TamgaCard(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -737,7 +734,7 @@ class _OrganizerSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
+    return TamgaCard(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -829,7 +826,7 @@ class _NotesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
+    return TamgaCard(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -873,7 +870,7 @@ class _RegisteredHorsesSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
+    return TamgaCard(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(

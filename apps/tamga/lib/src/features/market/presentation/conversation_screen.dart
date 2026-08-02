@@ -163,6 +163,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         title: Text(effectiveTitle),
         actions: [
           PopupMenuButton<String>(
+            tooltip: 'Нэмэлт үйлдэл',
             onSelected: (value) {
               switch (value) {
                 case 'listing':

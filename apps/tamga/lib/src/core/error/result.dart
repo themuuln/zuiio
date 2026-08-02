@@ -77,6 +77,11 @@ sealed class Result<T> {
     try {
       return Result.ok(await fn());
     } catch (e, stack) {
+      // Domain errors are already AppException-ээр илэрхийлэгдсэн —
+      // code/message/details-ийг хадгалж, шууд дамжуулна.
+      if (e is AppException) {
+        return Result.fail(e);
+      }
       return Result.fail(
         AppException(
           message: e.toString(),

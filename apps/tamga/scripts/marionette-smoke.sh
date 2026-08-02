@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run the Tamga onboarding smoke flow against a running debug build.
+# Run the Tamga onboarding or already-onboarded Home smoke flow.
 set -euo pipefail
 
 NAME="${NAME:-tamga}"
@@ -8,7 +8,7 @@ SCREENSHOT="${SCREENSHOT:-/tmp/tamga-marionette-smoke.png}"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/marionette-smoke.sh --uri <ws://.../ws> [--name <instance>]
+Usage: scripts/marionette-smoke.sh --uri <http(s)://... or ws(s)://.../ws> [--name <instance>]
 
 Environment:
   MARIONETTE   Override the Marionette CLI path.
@@ -47,11 +47,21 @@ if [ -z "$URI" ]; then
 fi
 
 case "$URI" in
+  http://*) URI="ws://${URI#http://}" ;;
+  https://*) URI="wss://${URI#https://}" ;;
+esac
+URI="${URI%,}"
+URI="${URI%/}"
+case "$URI" in
   ws://*|wss://*) ;;
   *)
-    echo "ERROR: Marionette URI must start with ws:// or wss://" >&2
+    echo "ERROR: Marionette URI must start with http(s):// or ws(s)://" >&2
     exit 2
     ;;
+esac
+case "$URI" in
+  */ws) ;;
+  *) URI="${URI}/ws" ;;
 esac
 
 resolve_marionette() {
@@ -98,26 +108,27 @@ if [ "$element_count" -lt 3 ]; then
   exit 1
 fi
 
-case "$elements" in
-  *Эхлэх*) ;;
-  *)
-    echo "ERROR: Onboarding start button (Эхлэх) was not found." >&2
-    exit 1
-    ;;
-esac
+if [[ "$elements" == *"Эхлэх"* ]]; then
+  "$MARIONETTE_BIN" tap -i "$NAME" --text "Эхлэх"
+  sleep 1
 
-"$MARIONETTE_BIN" tap -i "$NAME" --text "Эхлэх"
-sleep 1
-
-role_elements="$($MARIONETTE_BIN get-interactive-elements -i "$NAME")"
-printf '%s\n' "$role_elements"
-case "$role_elements" in
-  *Үргэлжлүүлэх*) ;;
-  *)
-    echo "ERROR: Role-selection screen did not expose Үргэлжлүүлэх." >&2
-    exit 1
-    ;;
-esac
+  role_elements="$($MARIONETTE_BIN get-interactive-elements -i "$NAME")"
+  printf '%s\n' "$role_elements"
+  case "$role_elements" in
+    *Үргэлжлүүлэх*) ;;
+    *)
+      echo "ERROR: Role-selection screen did not expose Үргэлжлүүлэх." >&2
+      exit 1
+      ;;
+  esac
+elif [[ "$elements" == *"Сайн байна уу"* &&
+  "$elements" == *"Хайх"* &&
+  "$elements" == *"Профайл"* ]]; then
+  echo "Detected already-onboarded home screen."
+else
+  echo "ERROR: Marionette did not expose onboarding or the Tamga home header." >&2
+  exit 1
+fi
 
 mkdir -p "$(dirname "$SCREENSHOT")"
 "$MARIONETTE_BIN" take-screenshots -i "$NAME" --output "$SCREENSHOT" --no-open

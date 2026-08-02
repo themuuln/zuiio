@@ -129,7 +129,7 @@ void main() {
                 ? (jsonDecode(raw) as Map)['isCompleted'] as bool? ?? false
                 : false
           : false;
-      final initialRoute = isOnboardingCompleted ? '/lineage' : '/onboarding';
+      final initialRoute = isOnboardingCompleted ? '/home' : '/onboarding';
 
       // ── Global error boundary ──
       crashReporter = FirebaseCrashReporter();

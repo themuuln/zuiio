@@ -64,7 +64,7 @@ Use `Result` type from `lib/src/core/error/result.dart` with `AppException`. No 
 ## Commands
 
 ```bash
-flutter run                                                        # Dev server
+./dev.sh                                                          # Dev server with local .env
 flutter build apk                                                  # Build APK
 flutter test                                                       # All tests
 flutter test test/features/horses/                                 # Feature-specific
@@ -72,12 +72,65 @@ dart analyze --fatal-infos                                          # Lint (stri
 dart format --set-exit-if-changed .                                # Format check
 dart run build_runner build --delete-conflicting-outputs           # Isar schema gen (required after model changes)
 make check                                                         # Full gate: format-check + analyze + test
+make integration-test [device=<udid>]                              # On-device integration tests (flutter drive)
+make maestro-smoke [device=iPhone-17]                              # Maestro smoke flow
+make maestro-onboarding [device=iPhone-17]                         # Maestro onboarding flow
+make maestro-check [device=iPhone-17]                              # Full gate + all Maestro flows
 make setup-hooks                                                   # Install pre-commit hooks
 ```
+
+### Local Supabase Configuration
+
+The Flutter app loads Supabase configuration from `.env` at runtime. Do not
+use `--dart-define` for normal local development.
+
+Required variables:
+
+```dotenv
+EXPO_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-or-anon-key>
+```
+
+`SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are also accepted. Run
+`./dev.sh` to temporarily bundle `.env` as a Flutter asset before launching.
+The app can launch offline without `.env`, but Supabase-backed features will be
+disabled.
+
+Only the publishable/anon key belongs in the app. Never put a Supabase
+secret/service-role key in `.env`, Flutter assets, client code, or commits.
 
 Pre-commit hooks run on every commit via `.githooks`: `dart format --check` → `dart analyze --fatal-infos` → `flutter test` on changed files.
 
 Flutter version pinned via `subosito/flutter-action` using `flutter-version-file: pubspec.yaml`.
+
+## Testing — Required for Every New Feature
+
+Every feature MUST ship with automated tests, layered by what the change touches. This is a gate, not a suggestion.
+
+### The 4-layer test contract
+
+| Change touches | Required tests | Where | Pattern to follow |
+|---|---|---|---|
+| Domain logic (models, enums, calculators) | Unit tests — pure Dart, no widgets | `test/features/<name>/domain/` | `dart-add-unit-test` skill, `test/shared/domain/horse_test.dart` |
+| Providers / notifiers / repositories | Provider tests via `ProviderContainer` + mocktail | `test/features/<name>/application/`, `.../data/` | `tamga-riverpod-testing` skill, `test/features/auth/auth_state_notifier_test.dart` |
+| Widgets / screens | Widget tests via `ProviderScope` + mocktail | `test/features/<name>/presentation/` | `flutter-add-widget-test` skill, `test/features/auth/presentation/login_screen_test.dart` |
+| User-visible end-to-end flow | Maestro flow (black-box) + optional `integration_test/` | `test/maestro/<feature>.yaml`, `integration_test/` | existing flows in `test/maestro/` |
+
+### Rules of engagement
+
+1. **Run `make check` before declaring done** — format + analyze + full randomized test suite must be green (or pre-existing failures only, verified as pre-existing).
+2. **Write tests while building**, not after — every new file under `lib/` should land with its matching `_test.dart`.
+3. **Follow existing conventions** — `mocktail` (not mockito), `ProviderContainer`/`ProviderScope`, `Result<T>` error paths, AAA structure, behavior-named tests. Read `test/README.md` and `skill://tamga-riverpod-testing` first.
+4. **UI-visible features get a Maestro flow** — if a user can navigate to it, add `test/maestro/<feature>.yaml` and register it in the table below.
+5. **Use the installed Flutter testing skills** (project-level, `.agents/skills/`): `dart-add-unit-test`, `flutter-add-widget-test`, `flutter-add-integration-test`.
+6. **Integration tests** run via `flutter drive` on a device (`make integration-test`) — use for critical paths that need the real app tree; don't overuse (slow, needs a booted simulator).
+7. **Isar/model changes** → run `dart run build_runner build --delete-conflicting-outputs` and regenerate test mocks.
+
+### Known issue — onboarding completion (2026-08-01)
+
+The onboarding wizard cannot be completed end-to-end in the current build: `NotificationPage.onSkip/onStart` both call `_finishOnboarding()` → `complete()` which saves `isCompleted: true` but never navigates (no `ref.listen`/`context.go` after completion), and the sync page (page 7) is unreachable because neither notification action calls `_goToNextPage()`. Tapping "Одоохондоо үгүй" leaves the user stuck on the Мэдэгдэл page.
+
+**Consequence for tests:** do NOT author Maestro/integration flows that tap past the notification page — `onboarding.yaml` intentionally stops at region selection. Fixing the app requires adding navigation after `complete()` (destination: `/login` for unauthenticated users) — ask before changing this (auth-adjacent).
 
 ## Permission Boundaries
 
@@ -114,6 +167,11 @@ Deeper docs in `docs/` — load only when relevant:
 - `docs/features/` — per-feature deep dives (business rules, user flows)
 - `docs/design.md` — brand and visual direction
 - `docs/product.md` — product vision and roadmap
+- `test/README.md` — test guide: conventions, mocks, Isar setup, integration tests, Maestro flows
+
+**Testing skills** (load before writing tests):
+- `skill://tamga-riverpod-testing` — Tamga Riverpod test conventions (ProviderContainer / ProviderScope / mocktail)
+- `skill://dart-add-unit-test`, `skill://flutter-add-widget-test`, `skill://flutter-add-integration-test` — official Flutter testing skills (project-level in `.agents/skills/`)
 
 **Package APIs change across versions. Always use current docs, never training data.**
 
@@ -129,7 +187,7 @@ The marionette MCP server is registered in `apps/tamga/.omp/mcp.json` (project-l
 ```json
 "marionette": {
   "type": "stdio",
-  "command": "/Users/themuuln/.pub-cache/bin/marionette_mcp",
+  "command": "marionette_mcp",
   "args": [],
   "env": {}
 }
@@ -137,8 +195,9 @@ The marionette MCP server is registered in `apps/tamga/.omp/mcp.json` (project-l
 
 This gives the AI agent tools to inspect and interact with the running Flutter app — tap, scroll, type, screenshot, get-logs.
 
-> `~/.pub-cache/bin` MUST be on `$PATH` for the `marionette` and `marionette_mcp` binaries.
-> This is already set in `~/.zshrc` (line 308), but may need adding in other shells.
+The Marionette CLI and MCP binary must be available on `$PATH`. The global
+`tmario`/`tmattach` commands prepend `$HOME/.pub-cache/bin` in `.zshrc`; a
+new shell or `source ~/.zshrc` is required after setup.
 
 ### CLI Usage (for scripts and manual testing)
 
@@ -155,6 +214,20 @@ marionette press-back-button -i <name>         # Navigate back
 marionette hot-reload -i <name>                # Hot reload
 ```
 
+### Automatic local commands
+
+```bash
+flutter run [flutter options]                 # In apps/tamga: auto-registers Marionette
+tmario [device] [flutter run options]         # Explicit equivalent
+tmattach [http://.../ | ws://.../ws]          # Attach without stopping an existing app
+make marionette-attach                        # Use the published URI file
+```
+
+Inside `apps/tamga`, the global `flutter run` alias delegates to the Marionette
+runner. It loads `.env`, uses `--no-dds`, forwards Flutter run arguments, waits
+for the binding, and writes `/tmp/tamga-marionette-tamga.uri`. Outside Tamga,
+the existing DTD-enabled Flutter alias is preserved.
+
 ### Automated Smoke Test
 
 Run the smoke test against a running debug build:
@@ -169,12 +242,12 @@ scripts/marionette-smoke.sh -u ws://127.0.0.1:XXXXX/XX/ws
 ```
 
 The smoke test:
-1. Registers the app instance
-2. Calls `get-interactive-elements` — fails if < 3 elements
-3. Taps the onboarding "Үргэлжлүүлэх" FilledButton — fails if no tap target
-4. Verifies navigation to the role selection screen (checks for "Таны үргэлжлүүлэх" title)
-5. Captures a log snapshot
-6. Unregisters the instance
+1. Registers the app instance and accepts either an onboarding screen or an already-onboarded Home screen.
+2. Calls `get-interactive-elements` — fails if fewer than 3 lines are returned.
+3. On onboarding, taps "Эхлэх" and verifies "Үргэлжлүүлэх".
+4. On Home, verifies the greeting plus "Хайх" and "Профайл" header controls.
+5. Captures a screenshot and log snapshot.
+6. Unregisters the temporary instance.
 
 ### Workflow — Zero-touch (Agent manages everything)
 
@@ -183,39 +256,45 @@ The smoke test:
 > "Run the app and test the onboarding flow"
 
 The agent internally:
-1. Starts `flutter run` via `hub start` with `ready.log: "ws://"`
-2. Waits for the VM service URI to appear in the output
-3. Extracts the `ws://.../ws` URI
-4. Registers with marionette: `marionette register tamga <uri>`
-5. Lists elements, taps, scrolls, screenshots — whatever you asked
-6. Stops `flutter run` when done
+1. Starts `flutter run` (or detects an already-running Tamga process).
+2. Reads `/tmp/tamga-marionette-tamga.uri` or runs `make marionette-uri`.
+3. Immediately calls Marionette MCP `connect` with that URI — never asks the user to paste it.
+4. Verifies interactive elements, takes a screenshot, and reads logs.
+5. Performs the requested interaction.
 
-No terminal windows, no commands, no URI copying. One sentence.
+No URI copying or `tmattach` step is required for the normal Tamga workflow.
 
 ### Workflow — One-command (User runs, agent discovers)
 
-If you prefer running the app yourself, `make marionette-run` wraps
-`flutter run` and auto-registers for agent discovery:
-
 ```bash
-make marionette-run    # Foreground, interactive (hot reload works)
+cd ~/coding/zuiio/apps/tamga
+flutter run
 ```
 
-Then tell the agent:
-> "Test the app — list elements, tap Удам угшил, check the lineage screen"
+The agent automatically reads the published URI and connects Marionette on the
+next testing/tool turn. Use `tmario` only when you want an explicit Tamga
+launcher outside the normal `flutter run` flow.
 
-### Workflow — Manual (just flutter run)
+### Workflow — Manual attach
 
 ```bash
-flutter run    # Copy the URI from output
+tmattach http://127.0.0.1:XXXXX/TOKEN/
 ```
 
-Tell the agent:
-> "Connect to marionette at ws://127.0.0.1:56207/TjyRME2F608=/ws, list elements..."
+Use `tmattach` only for a Flutter process that was started outside the Tamga
+wrapper or when reconnecting after the URI file was removed.
 
 ### Creating Regression Tests
 
-For permanent smoke tests, add Maestro `.yaml` flows under `test/maestro/` (if the Flutter app is being tested on device) or extend `scripts/marionette-smoke.sh` with app-specific navigation flows.
+**Every new user-visible feature gets a Maestro flow** (deterministic, black-box, runs in CI). Add `test/maestro/<feature>.yaml`:
+
+1. Model it on `test/maestro/smoke.yaml` / `onboarding.yaml` (same `appId: com.tamga`, `launchApp` + `clearState`).
+2. Follow the [Flutter Semantics Note](#flutter-semantics-note) — use `.*regex.*` for combined text nodes, plain text for buttons.
+3. For custom-painted/icon-only widgets, add `Semantics(label: 'my_widget', child: ...)` wrappers so flows can target them by `id`.
+4. Add the flow to the table above and (optionally) to `make maestro-check`.
+5. For critical multi-step flows needing the real app tree, add a Dart test under `integration_test/` instead (see `onboarding_flow_test.dart` + `test_driver/integration_test.dart`, run via `make integration-test`).
+
+Marionette remains the ad-hoc exploration tool — use it during development to discover semantics/texts and validate flows before committing them as Maestro.
 
 ## Maestro — Black-Box UI Regression Testing
 
@@ -237,7 +316,10 @@ Flows live in `test/maestro/`:
 | Flow | File | What it tests |
 |------|------|------|
 | Smoke | `smoke.yaml` | App launches, title/cards/social proof visible |
-| Onboarding | `onboarding.yaml` | Full flow: landing → role selection → option visibility |
+| Onboarding | `onboarding.yaml` | Landing → role selection → option visibility → advances to region |
+| Lost livestock recovery | `13-lost-livestock-recovery.yaml` | Recovery wizard end-to-end (offline-first) |
+
+> ⚠️ `13-lost-livestock-recovery.yaml` currently taps past the notification page and fails on the current build due to the [onboarding completion bug](#known-issue--onboarding-completion-2026-08-01) — fix the app before relying on it as a gate.
 
 ### Usage
 
@@ -253,7 +335,14 @@ make maestro-onboarding device="iPhone-17"
 
 # Full gate: format + analyze + test + Maestro smoke + onboarding
 make maestro-check device="iPhone-17"
+
+# On-device integration tests (flutter drive)
+make integration-test device=<udid>
 ```
+
+### CI
+
+Maestro flows run in `.github/workflows/maestro.yml` (macOS runner, iOS simulator) — triggered manually (`workflow_dispatch`) or on PRs touching `lib/**` / `test/maestro/**`. Note: `android/` is Expo/React Native during the Flutter→Expo migration, so the Flutter app only builds for iOS here.
 
 ### Flutter Semantics Note
 
@@ -290,7 +379,9 @@ Then target them in flows:
 
 | Tool | Role | When |
 |------|------|------|
-| **Marionette** | AI-agent exploration & debug | During dev, ad-hoc smoke tests |
-| **Maestro** | Deterministic regression gate | CI/CD, every PR, release verification |
+| **Unit/Widget tests** (`flutter test`) | Logic + component regression | Every feature, every PR — `make check` |
+| **Integration tests** (`integration_test/`) | Real app tree on device | Critical flows, `make integration-test` |
+| **Marionette** | AI-agent exploration & debug | During dev, ad-hoc smoke tests, discovering semantics for flows |
+| **Maestro** | Deterministic black-box UI gate | CI/CD, every PR, release verification |
 
-Use Marionette to explore and debug. Use Maestro to guarantee nothing regresses.
+Use Marionette to explore and debug. Use Maestro to guarantee nothing regresses. Use `flutter test` for everything below the UI layer.

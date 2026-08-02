@@ -89,5 +89,84 @@ void main() {
       expect(updated.permissions, ['read', 'write_events']);
       expect(original.coOwnerName, 'Test Owner');
     });
+
+    test('copyWith updates remaining fields independently', () {
+      final original = CoOwnershipRecord(
+        id: 'test-id',
+        horseId: 'horse-1',
+        coOwnerName: 'Test Owner',
+        phone: '99123456',
+        role: 'Туслах уяач',
+        permissions: ['read'],
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 2),
+      );
+
+      final updated = original.copyWith(
+        horseId: 'horse-2',
+        phone: '88990011',
+        role: 'Эзэмшигч',
+        updatedAt: DateTime(2026, 2, 1),
+      );
+
+      expect(updated.horseId, 'horse-2');
+      expect(updated.phone, '88990011');
+      expect(updated.role, 'Эзэмшигч');
+      expect(updated.updatedAt, DateTime(2026, 2, 1));
+      expect(updated.id, original.id);
+      expect(updated.coOwnerName, original.coOwnerName);
+      expect(updated.permissions, original.permissions);
+      expect(updated.createdAt, original.createdAt);
+    });
+  });
+
+  group('CoOwnershipRecord serialization', () {
+    test('toJson includes all fields', () {
+      final record = CoOwnershipRecord(
+        id: 'test-id',
+        horseId: 'horse-1',
+        coOwnerName: 'Test Owner',
+        phone: '99123456',
+        role: 'Туслах уяач',
+        permissions: ['read', 'write_events'],
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 2),
+      );
+
+      final json = record.toJson();
+
+      expect(json['id'], 'test-id');
+      expect(json['horseId'], 'horse-1');
+      expect(json['coOwnerName'], 'Test Owner');
+      expect(json['phone'], '99123456');
+      expect(json['role'], 'Туслах уяач');
+      expect(json['permissions'], ['read', 'write_events']);
+      expect(json['createdAt'], DateTime(2026, 1, 1).toIso8601String());
+      expect(json['updatedAt'], DateTime(2026, 1, 2).toIso8601String());
+    });
+
+    test('fromJson restores every field (roundtrip)', () {
+      final original = CoOwnershipRecord(
+        id: 'test-id',
+        horseId: 'horse-1',
+        coOwnerName: 'Test Owner',
+        phone: '99123456',
+        role: 'Туслах уяач',
+        permissions: ['read', 'write_events'],
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 2),
+      );
+
+      final restored = CoOwnershipRecord.fromJson(original.toJson());
+
+      expect(restored.id, original.id);
+      expect(restored.horseId, original.horseId);
+      expect(restored.coOwnerName, original.coOwnerName);
+      expect(restored.phone, original.phone);
+      expect(restored.role, original.role);
+      expect(restored.permissions, original.permissions);
+      expect(restored.createdAt, original.createdAt);
+      expect(restored.updatedAt, original.updatedAt);
+    });
   });
 }

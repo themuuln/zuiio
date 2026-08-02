@@ -69,7 +69,7 @@ void main() {
       );
 
       await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(TamgaLoadingView), findsOneWidget);
 
       completer.complete([]);
     });
@@ -236,15 +236,15 @@ void main() {
     });
 
     // ════════════════════════════════════════════════════════════════
-    // FAB
+    // ── Bottom action ────────────────────────────────────────────────
     // ════════════════════════════════════════════════════════════════
-    testWidgets('shows FAB to add new training log', (tester) async {
+    testWidgets('shows bottom action to add new training log', (tester) async {
       await tester.pumpWidget(
         createTrainingScreen(horseId: 'horse-1', logs: []),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byType(TamgaBottomAction), findsOneWidget);
     });
 
     // ════════════════════════════════════════════════════════════════

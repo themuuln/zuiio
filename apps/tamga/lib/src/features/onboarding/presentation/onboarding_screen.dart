@@ -27,7 +27,16 @@ import 'pages/welcome_page.dart';
 ///
 /// Step dots replace progress bar (matches approved Stitch design).
 class OnboardingScreen extends ConsumerStatefulWidget {
-  const OnboardingScreen({super.key});
+  const OnboardingScreen({super.key, this.onCompleted});
+
+  /// Invoked once onboarding has been persisted as completed.
+  ///
+  /// Production wires this to navigate to the completed-user entry route
+  /// (see app_router.dart). Nullable on purpose: the widget-test harness
+  /// pumps the screen inside a plain MaterialApp without a GoRouter, where
+  /// an unconditional `context.go` would throw — with a null callback the
+  /// screen simply finishes without navigating.
+  final VoidCallback? onCompleted;
 
   @override
   ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -42,6 +51,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String? _selectedRegion;
   String? _selectedRank;
   bool _horseEntrySkipped = false;
+  bool _notificationsEnabled = false;
   bool _celebrating = false;
 
   // Horse entry data
@@ -68,8 +78,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_currentPage < _pageCount - 1) {
       _pageController.animateToPage(
         _currentPage + 1,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : TamgaMotion.durationNormal,
+        curve: TamgaMotion.easingEnter,
       );
     }
   }
@@ -78,15 +90,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_currentPage > 0) {
       _pageController.animateToPage(
         _currentPage - 1,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : TamgaMotion.durationNormal,
+        curve: TamgaMotion.easingExit,
       );
     }
   }
 
   void _onHorseEntrySuccess() {
     setState(() => _celebrating = true);
-    Future.delayed(const Duration(milliseconds: 1200), () {
+    final delay = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : TamgaMotion.durationSlow;
+    Future.delayed(delay, () {
       if (mounted) {
         setState(() => _celebrating = false);
         _goToNextPage();
@@ -108,6 +125,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       notificationsEnabled: notificationsEnabled,
     );
     await ref.read(onboardingProvider.notifier).complete(data);
+
+    // Navigate away only when onboarding was actually persisted as completed
+    // (complete() can fail into AsyncError). The route decision lives in the
+    // caller-provided seam so this screen never depends on GoRouter.
+    final isCompleted =
+        ref.read(onboardingProvider).valueOrNull?.isCompleted ?? false;
+    if (isCompleted && mounted) {
+      widget.onCompleted?.call();
+    }
   }
 
   @override
@@ -199,17 +225,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       // Screen 6: Notifications — permission priming
                       NotificationPage(
                         onBack: _goToPreviousPage,
-                        onStart: () =>
-                            _finishOnboarding(notificationsEnabled: true),
-                        onSkip: () => _finishOnboarding(),
+                        onStart: () {
+                          _notificationsEnabled = true;
+                          _goToNextPage();
+                        },
+                        onSkip: _goToNextPage,
                       ),
 
                       // Screen 7: Sync — cloud sync setup
                       SyncSetupPage(
                         onBack: _goToPreviousPage,
-                        onStart: () =>
-                            _finishOnboarding(notificationsEnabled: true),
-                        onLater: () => _finishOnboarding(),
+                        onStart: () => _finishOnboarding(
+                          notificationsEnabled: _notificationsEnabled,
+                        ),
+                        onLater: () => _finishOnboarding(
+                          notificationsEnabled: _notificationsEnabled,
+                        ),
                       ),
                     ],
                   ),
@@ -239,13 +270,14 @@ class _StepDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = TamgaColors.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(pageCount, (index) {
         final isActive = index == currentPage;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          margin: const EdgeInsets.symmetric(horizontal: 6),
+          duration: reduceMotion ? Duration.zero : TamgaMotion.durationNormal,
+          margin: const EdgeInsets.symmetric(horizontal: TamgaSpacing.xs),
           width: isActive ? 10 : 8,
           height: isActive ? 10 : 8,
           decoration: BoxDecoration(
@@ -279,9 +311,12 @@ class _CelebrationOverlayState extends State<_CelebrationOverlay>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: TamgaMotion.durationSlow,
     );
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: TamgaMotion.easingEnter,
+    );
     _controller.forward();
   }
 
@@ -305,7 +340,9 @@ class _CelebrationOverlayState extends State<_CelebrationOverlay>
               // Success check with scale animation
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 500),
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : TamgaMotion.durationSlow,
                 curve: Curves.elasticOut,
                 builder: (context, scale, child) {
                   return Transform.scale(scale: scale, child: child);

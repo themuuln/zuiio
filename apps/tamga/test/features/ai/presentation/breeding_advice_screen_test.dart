@@ -94,6 +94,19 @@ BreedingAdvice createMockAdvice({
   );
 }
 
+// ── Helpers ─────────────────────────────────────────────────────────────
+
+/// Bounded settle: waits for animations with an explicit timeout so a stuck
+/// animation (e.g. an indeterminate spinner left on screen by a delayed
+/// async step) fails fast instead of hanging the test.
+Future<void> settle(WidgetTester tester) {
+  return tester.pumpAndSettle(
+    const Duration(milliseconds: 100),
+    EnginePhase.sendSemanticsUpdate,
+    const Duration(seconds: 5),
+  );
+}
+
 // ── Helper: select dropdown item ───────────────────────────────────────
 
 Future<void> selectDropdownItem(
@@ -104,9 +117,9 @@ Future<void> selectDropdownItem(
   await tester.tap(
     find.byType(DropdownButtonFormField<String>).at(dropdownIndex),
   );
-  await tester.pumpAndSettle();
+  await settle(tester);
   await tester.tap(find.text(itemText).last);
-  await tester.pumpAndSettle();
+  await settle(tester);
 }
 
 // ── Widget Builder ──────────────────────────────────────────────────────
@@ -319,7 +332,14 @@ void main() {
 
       // Tap analyze
       await tester.tap(find.text('Анализ хийх'));
-      await tester.pumpAndSettle();
+
+      // Deterministic wait: the quota and advice futures both complete on
+      // microtasks, so drain them with explicit pumps, then settle with a
+      // bounded timeout (the loading overlay shows an indeterminate spinner,
+      // so an unbounded settle could hang if the chain ever stalls).
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      await settle(tester);
 
       // Verify results are displayed
       verify(

@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../app/supabase_bootstrap.dart';
+import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/widgets.dart';
 import '../../horses/application/horses_providers.dart';
 import '../application/map_providers.dart';
 import '../domain/animal_enums.dart';
@@ -60,48 +62,68 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final colors = TamgaColors.of(context);
     final horses = ref.watch(horsesProvider);
 
     return Scaffold(
+      backgroundColor: colors.surface,
       appBar: AppBar(
-        title: const Text('Мал хайх зар / Report a lost animal'),
         leading: BackButton(onPressed: () => context.pop()),
+        titleSpacing: 0,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Мал хайх зар', style: TamgaTypography.headline()),
+            Text(
+              'Report a lost animal',
+              style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
+            ),
+          ],
+        ),
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
       ),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _StepHeader(step: _step, color: scheme.primary),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
-                  children: [
-                    if (_errorMessage != null) ...[
-                      _ErrorBanner(message: _errorMessage!),
-                      const SizedBox(height: 16),
-                    ],
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 180),
-                      child: switch (_step) {
-                        0 => _buildIdentityStep(context, horses),
-                        1 => _buildLastSeenStep(context),
-                        _ => _buildReviewStep(context),
-                      },
-                    ),
-                  ],
+      body: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            _StepHeader(step: _step, color: colors.primary),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  TamgaSpacing.xl,
+                  TamgaSpacing.sm,
+                  TamgaSpacing.xl,
+                  TamgaSpacing.xl,
                 ),
+                children: [
+                  if (_errorMessage != null) ...[
+                    _ErrorBanner(message: _errorMessage!),
+                    const SizedBox(height: TamgaSpacing.md),
+                  ],
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: switch (_step) {
+                      0 => _buildIdentityStep(context, horses),
+                      1 => _buildLastSeenStep(context),
+                      _ => _buildReviewStep(context),
+                    },
+                  ),
+                ],
               ),
-              _BottomAction(
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: TamgaSpacing.sm),
+              child: _BottomAction(
                 label: _step == 2
                     ? 'Зар хадгалах / Save report'
                     : 'Үргэлжлүүлэх / Continue',
                 isBusy: _isSubmitting,
                 onPressed: _isSubmitting ? null : _continue,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -150,18 +172,28 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
         const SizedBox(height: 20),
         _SectionLabel('Малын төрөл / Animal type'),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: AnimalType.values
-              .map(
-                (type) => ChoiceChip(
-                  label: Text(type.displayName),
-                  selected: _animalType == type,
-                  onSelected: (_) => setState(() => _animalType = type),
-                ),
-              )
-              .toList(),
+        SizedBox(
+          height: 44,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (var index = 0; index < AnimalType.values.length; index++)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      right: index == AnimalType.values.length - 1 ? 0 : 6,
+                    ),
+                    child: TamgaChoicePill(
+                      label: AnimalType.values[index].displayName,
+                      selected: _animalType == AnimalType.values[index],
+                      onTap: () => setState(
+                        () => _animalType = AnimalType.values[index],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 20),
         TextFormField(
@@ -506,24 +538,66 @@ class _StepHeader extends StatelessWidget {
   final int step;
   final Color color;
 
+  static const _labels = ['Таних мэдээлэл', 'Сүүлд үзэгдсэн газар', 'Шалгах'];
+
   @override
   Widget build(BuildContext context) {
+    final colors = TamgaColors.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-      child: Row(
-        children: List.generate(
-          3,
-          (index) => Expanded(
-            child: Container(
-              height: 4,
-              margin: EdgeInsets.only(right: index == 2 ? 0 : 6),
-              decoration: BoxDecoration(
-                color: index <= step ? color : color.withValues(alpha: .16),
-                borderRadius: BorderRadius.circular(4),
+      padding: const EdgeInsets.fromLTRB(
+        TamgaSpacing.xl,
+        TamgaSpacing.md,
+        TamgaSpacing.xl,
+        TamgaSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: List.generate(
+              _labels.length,
+              (index) => Expanded(
+                child: Container(
+                  height: 5,
+                  margin: EdgeInsets.only(
+                    right: index == _labels.length - 1 ? 0 : TamgaSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: index <= step ? color : color.withValues(alpha: .16),
+                    borderRadius: BorderRadius.circular(
+                      TamgaSpacing.cornerRadiusPill,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+          const SizedBox(height: TamgaSpacing.sm),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                'Алхам ${step + 1} / ${_labels.length}',
+                style: TamgaTypography.caption1(
+                  color: colors.onSurfaceVariant,
+                  weight: FontWeight.w600,
+                ),
+              ),
+              Flexible(
+                child: Text(
+                  _labels[step],
+                  textAlign: TextAlign.end,
+                  style: TamgaTypography.caption1(
+                    color: colors.onSurface,
+                    weight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -585,19 +659,46 @@ class _BottomAction extends StatelessWidget {
   final String label;
   final bool isBusy;
   final VoidCallback? onPressed;
+
   @override
-  Widget build(BuildContext context) => Material(
-    color: Theme.of(context).scaffoldBackgroundColor,
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-      child: SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: FilledButton(
-          onPressed: onPressed,
-          child: isBusy ? const CircularProgressIndicator() : Text(label),
+  Widget build(BuildContext context) {
+    final colors = TamgaColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLowest,
+        border: Border(
+          top: BorderSide(color: colors.outlineVariant.withValues(alpha: .6)),
         ),
       ),
-    ),
-  );
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          TamgaSpacing.xl,
+          TamgaSpacing.md,
+          TamgaSpacing.xl,
+          TamgaSpacing.md,
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: FilledButton(
+            onPressed: onPressed,
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  TamgaSpacing.cornerRadiusSmall,
+                ),
+              ),
+            ),
+            child: isBusy
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(label),
+          ),
+        ),
+      ),
+    );
+  }
 }

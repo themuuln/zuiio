@@ -1,0 +1,52 @@
+appId: com.tamga
+name: Redesign priority navigation
+
+tags:
+  - redesign
+  - regression
+  - navigation
+
+---
+- launchApp:
+    clearState: true
+
+# Complete the onboarding path without creating a horse.
+- assertVisible: "Эхлэх"
+- tapOn: "Эхлэх"
+- tapOn:
+    text: ".*Уяач / Малчин.*"
+- tapOn: "Үргэлжлүүлэх"
+- tapOn:
+    text: ".*Төв.*"
+- tapOn: "Үргэлжлүүлэх"
+- tapOn:
+    text: ".*Алгасах.*"
+- tapOn:
+    text: ".*Алгасах.*"
+- tapOn: "Одоохондоо үгүй"
+- tapOn: "Дараа тохируулъя"
+
+# Daily command center is the stable post-onboarding destination.
+- assertVisible: ".*Сайн байна уу.*"
+
+# Exercise every redesigned first-class destination.
+- tapOn:
+    text: ".*Морьд.*"
+- assertVisible:
+    text: ".*Морьд.*"
+- tapOn:
+    text: ".*Угшил.*"
+- assertVisible:
+    text: ".*Угшил.*"
+- tapOn:
+    text: ".*Зах.*"
+- assertVisible:
+    text: ".*Зах.*"
+- tapOn:
+    text: ".*Арчилгаа.*"
+- assertVisible:
+    text: ".*Арчилгаа.*"
+- tapOn:
+    text: ".*Нүүр.*"
+- assertVisible:
+    text: ".*Сайн байна уу.*"

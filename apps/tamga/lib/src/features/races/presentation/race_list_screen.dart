@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/race_providers.dart';
 import '../domain/race.dart';
@@ -42,23 +43,29 @@ class _RaceListScreenState extends ConsumerState<RaceListScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Уралдаан'),
-        bottom: TabBar(
-          controller: _tabController,
-          onTap: (_) => HapticFeedback.selectionClick(),
-          isScrollable: false,
-          tabs: const [
-            Tab(text: 'Удахгүй'),
-            Tab(text: 'Дууссан'),
-          ],
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          TamgaSliverHeader(
+            title: 'Уралдаан',
+            subtitle: 'Улс, бүс, орон нутгийн уралдаан',
+            pinned: true,
+            bottom: TabBar(
+              controller: _tabController,
+              onTap: (_) => HapticFeedback.selectionClick(),
+              isScrollable: false,
+              tabs: const [
+                Tab(text: 'Удахгүй'),
+                Tab(text: 'Дууссан'),
+              ],
+            ),
+          ),
+        ],
+        body: _RaceListBody(
+          tabController: _tabController,
+          activeFilter: _activeFilter,
+          onFilterChanged: (f) => setState(() => _activeFilter = f),
+          onRaceTap: (race) => _navigateToDetail(context, race),
         ),
-      ),
-      body: _RaceListBody(
-        tabController: _tabController,
-        activeFilter: _activeFilter,
-        onFilterChanged: (f) => setState(() => _activeFilter = f),
-        onRaceTap: (race) => _navigateToDetail(context, race),
       ),
     );
   }
@@ -102,7 +109,7 @@ class _RaceListBody extends ConsumerWidget {
     final racesAsync = ref.watch(racesProvider);
 
     return racesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: LoadingIndicator(size: 28)),
       error: (error, stack) => TamgaErrorWidget(
         message: 'Уралдаан ачаалахад алдаа гарлаа',
         onRetry: () => ref.invalidate(racesProvider),
@@ -161,11 +168,10 @@ class _RaceListBody extends ConsumerWidget {
                   final isSelected = option == activeFilter;
                   final label = option?.displayName ?? 'Бүгд';
 
-                  return FilterChip(
-                    label: Text(label),
+                  return TamgaChoicePill(
+                    label: label,
                     selected: isSelected,
-                    onSelected: (_) =>
-                        onFilterChanged(isSelected ? null : option),
+                    onTap: () => onFilterChanged(isSelected ? null : option),
                   );
                 },
               ),
@@ -263,39 +269,39 @@ class _RaceCard extends StatelessWidget {
         ? '${race.date!.year}-${race.date!.month.toString().padLeft(2, '0')}-${race.date!.day.toString().padLeft(2, '0')}'
         : 'Огноо тодорхойгүй';
 
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Row(
-            children: [
-              // ── Left icon ──
-              CircleAvatar(
-                backgroundColor: colorScheme.secondaryContainer,
-                child: Icon(
-                  Icons.emoji_events_outlined,
-                  color: colorScheme.onSecondaryContainer,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
+    return TamgaCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Row(
+        children: [
+          // ── Left icon ──
+          CircleAvatar(
+            backgroundColor: colorScheme.secondaryContainer,
+            child: Icon(
+              Icons.emoji_events_outlined,
+              color: colorScheme.onSecondaryContainer,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
 
-              // ── Race info ──
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          // ── Race info ──
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  race.name,
+                  style: TamgaTypography.body(weight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.xs,
                   children: [
-                    Text(
-                      race.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.calendar_today_outlined,
@@ -309,15 +315,20 @@ class _RaceCard extends StatelessWidget {
                             color: colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        if (race.location != null) ...[
-                          const SizedBox(width: AppSpacing.md),
+                      ],
+                    ),
+                    if (race.location != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           Icon(
                             Icons.place_outlined,
                             size: 14,
                             color: colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
-                          Flexible(
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 180),
                             child: Text(
                               race.location!,
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -328,19 +339,18 @@ class _RaceCard extends StatelessWidget {
                             ),
                           ),
                         ],
-                      ],
-                    ),
+                      ),
                   ],
                 ),
-              ),
-
-              // ── Status chip ──
-              _StatusChip(status: race.status),
-              const SizedBox(width: AppSpacing.sm),
-              Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-            ],
+              ],
+            ),
           ),
-        ),
+
+          // ── Status chip ──
+          _StatusChip(status: race.status),
+          const SizedBox(width: AppSpacing.sm),
+          Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+        ],
       ),
     );
   }

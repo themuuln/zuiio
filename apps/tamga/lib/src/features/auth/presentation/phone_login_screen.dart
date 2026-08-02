@@ -5,6 +5,9 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/widgets.dart';
 import '../application/auth_providers.dart';
 import 'auth_error_messages.dart';
 
@@ -60,7 +63,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: TamgaSpacing.xxxl),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: Form(
@@ -74,47 +77,45 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                       size: 64,
                       color: theme.colorScheme.primary,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: TamgaSpacing.lg),
 
                     // ── Title ──
                     Text(
                       'Утасны дугаараа оруулна уу',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: TamgaTypography.title1(weight: FontWeight.w700),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: TamgaSpacing.sm),
 
                     // ── Subtitle ──
                     Text(
                       'Баталгаажуулах код (OTP) илгээнэ',
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      style: TamgaTypography.body(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: TamgaSpacing.xxxl),
 
                     // ── Error message ──
                     if (_errorMessage != null)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.only(bottom: TamgaSpacing.lg),
                         child: Card(
                           color: theme.colorScheme.errorContainer,
                           child: Padding(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(TamgaSpacing.md),
                             child: Row(
                               children: [
                                 Icon(
                                   Icons.error_outline,
                                   color: theme.colorScheme.onErrorContainer,
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: TamgaSpacing.sm),
                                 Expanded(
                                   child: Text(
                                     _errorMessage!,
-                                    style: TextStyle(
+                                    style: TamgaTypography.body(
                                       color: theme.colorScheme.onErrorContainer,
                                     ),
                                   ),
@@ -134,8 +135,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                         hintText: '99123456',
                         prefixIcon: const Icon(Icons.phone_outlined),
                         prefixText: '+976 ',
-                        prefixStyle: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        prefixStyle: TamgaTypography.body(
+                          weight: FontWeight.w600,
                           color: theme.colorScheme.onSurface,
                         ),
                         border: const OutlineInputBorder(),
@@ -156,7 +157,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                       onFieldSubmitted: (_) => _handleSendOtp(),
                       textInputAction: TextInputAction.done,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: TamgaSpacing.xxl),
 
                     // ── Send OTP button ──
                     FilledButton(
@@ -165,14 +166,13 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                         minimumSize: const Size.fromHeight(48),
                       ),
                       child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                          ? LoadingIndicator(
+                              size: 20,
+                              color: theme.colorScheme.onPrimary,
                             )
                           : const Text('Код илгээх'),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: TamgaSpacing.lg),
 
                     // ── Back to email login ──
                     TextButton(

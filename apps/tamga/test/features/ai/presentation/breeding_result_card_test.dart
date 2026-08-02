@@ -139,10 +139,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Эрүүл мэндийн тэмдэглэл'), findsOneWidget);
-      expect(
-        find.textContaining('Both horses show good overall health'),
-        findsOneWidget,
-      );
+      // The card renders advice.healthNotes verbatim inside the section card.
+      expect(find.text('Test notes.'), findsOneWidget);
     });
 
     // ════════════════════════════════════════════════════════════════
@@ -192,8 +190,8 @@ void main() {
         breedingWindow: '',
         overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: [
-          'Consider line-breeding with caution'
-              'Use unrelated sire for better diversity',
+          'Consider line-breeding with caution',
+          'Use unrelated sire for better diversity',
         ],
         mongolianBreedNotes: '',
         commonAncestors: const [],
@@ -233,8 +231,22 @@ void main() {
       await tester.pumpWidget(createCard(advice));
       await tester.pumpAndSettle();
 
-      // LinearProgressIndicator should be present
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      // The card renders two progress bars: the compatibility gauge and the
+      // risk score bar. Scope the assertion to the risk section and verify
+      // the displayed value (riskScore/100 = 78/100).
+      final riskCard = find.ancestor(
+        of: find.text('Цус ойртолтын эрсдэл'),
+        matching: find.byType(Card),
+      );
+      final riskProgress = find.descendant(
+        of: riskCard,
+        matching: find.byType(LinearProgressIndicator),
+      );
+      expect(riskProgress, findsOneWidget);
+      expect(
+        tester.widget<LinearProgressIndicator>(riskProgress).value,
+        closeTo(0.78, 0.0001),
+      );
     });
   });
 }

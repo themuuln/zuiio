@@ -83,9 +83,11 @@ class _TamgaTappableState extends State<TamgaTappable> {
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final duration = reduceMotion ? Duration.zero : TamgaMotion.durationFast;
     Widget child = AnimatedOpacity(
       opacity: _pressed ? widget.pressedOpacity : 1.0,
-      duration: TamgaMotion.durationFast,
+      duration: duration,
       curve: TamgaMotion.easingEnter,
       child: widget.child,
     );
@@ -93,7 +95,7 @@ class _TamgaTappableState extends State<TamgaTappable> {
     if (widget.scaleOnPress) {
       child = AnimatedScale(
         scale: _pressed ? widget.pressedScale : 1.0,
-        duration: TamgaMotion.durationFast,
+        duration: duration,
         curve: TamgaMotion.easingEnter,
         child: child,
       );

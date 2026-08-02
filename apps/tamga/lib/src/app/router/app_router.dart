@@ -56,11 +56,14 @@ import '../../features/services/presentation/booking_screen.dart';
 import '../../features/services/presentation/vet_connect_screen.dart';
 import '../../features/services/presentation/provider_dashboard_screen.dart';
 import '../../features/stable/presentation/stable_screen.dart';
+import '../../features/care/presentation/care_screen.dart';
+import '../../features/home/presentation/home_screen.dart';
+import '../../features/horses/presentation/horses_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
 
 /// Override this in main.dart's ProviderScope to set the correct initial
 /// route based on onboarding state read before runApp.
-final initialRouteProvider = Provider<String>((ref) => '/lineage');
+final initialRouteProvider = Provider<String>((ref) => '/home');
 
 /// A listenable that triggers GoRouter redirect re-evaluation.
 ///
@@ -81,24 +84,23 @@ const _publicRoutes = <String>{
 
 /// GoRouter redirect guard logic.
 ///
-/// Returns a redirect path or `null` if no redirect is needed.
 /// - Loading state: no redirect (splash screen is shown)
 /// - Unauthenticated: redirect protected routes to `/login`
-/// - Authenticated: redirect `/login` and `/register` to `/lineage`
+/// - Authenticated: redirect `/login` and `/register` to `/home`
 @visibleForTesting
 String? authGuardRedirect(AuthState? authState, String location) {
   // During loading state, allow all navigation (splash screen handles UI)
   if (authState == null || authState.isLoading) return null;
 
-  // Unauthenticated users: redirect all non-public routes to /login
+  // Unauthenticated users: redirect all non-public routes to /login.
   if (authState.isUnauthenticated) {
     if (!_publicRoutes.contains(location)) return '/login';
     return null;
   }
 
-  // Authenticated users (including anonymous): redirect auth screens to /lineage
+  // Authenticated users (including anonymous): redirect auth screens to /home.
   if (authState.isAuthenticated) {
-    if (location == '/login' || location == '/register') return '/lineage';
+    if (location == '/login' || location == '/register') return '/home';
     return null;
   }
   return null;
@@ -143,7 +145,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/onboarding',
-        builder: (ctx, state) => const OnboardingScreen(),
+        // Once onboarding is persisted as completed, leave the wizard and
+        // enter the completed-user entry route directly — no app relaunch
+        // needed (matches the cold-start initialRoute in main.dart).
+        builder: (ctx, state) =>
+            OnboardingScreen(onCompleted: () => ctx.go('/home')),
       ),
 
       // ── Нэвтрэх / Бүртгүүлэх (shell-гүй) ──
@@ -263,12 +269,109 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (ctx, state) => const ProviderDashboardScreen(),
       ),
 
+      // ── Контекстээс нээгдэх туслах хэсгүүд ──
+      GoRoute(
+        path: '/lost-horse',
+        builder: (ctx, state) => const LostHorseFinderScreen(),
+        routes: [
+          GoRoute(
+            path: 'report',
+            builder: (ctx, state) => const ReportLostHorseScreen(),
+          ),
+          GoRoute(
+            path: 'active',
+            builder: (ctx, state) => const ActiveReportsScreen(),
+          ),
+        ],
+      ),
+
+      GoRoute(path: '/events', builder: (ctx, state) => const EventsScreen()),
+      GoRoute(
+        path: '/profile',
+        builder: (ctx, state) => const ProfileScreen(),
+        routes: [
+          GoRoute(path: 'inbox', builder: (ctx, state) => const InboxScreen()),
+          GoRoute(
+            path: 'notifications',
+            builder: (ctx, state) => const NotificationPreferencesScreen(),
+          ),
+          GoRoute(
+            path: 'sync-queue',
+            builder: (ctx, state) => const SyncQueueScreen(),
+          ),
+          GoRoute(
+            path: 'sync-settings',
+            builder: (ctx, state) => const SyncSettingsScreen(),
+          ),
+          GoRoute(
+            path: 'sync-conflicts',
+            builder: (ctx, state) => const ConflictResolutionScreen(),
+          ),
+          GoRoute(
+            path: 'moderation',
+            builder: (ctx, state) => const ModerationQueueScreen(),
+          ),
+          GoRoute(
+            path: 'verification',
+            builder: (ctx, state) => const SellerVerificationScreen(),
+          ),
+          GoRoute(
+            path: 'saved-searches',
+            builder: (ctx, state) => const SavedSearchesScreen(),
+          ),
+          GoRoute(
+            path: 'partner-dashboard',
+            builder: (ctx, state) => const PartnerDashboardScreen(),
+          ),
+          GoRoute(
+            path: 'analytics',
+            builder: (ctx, state) => const AnalyticsScreen(),
+          ),
+          GoRoute(
+            path: 'stable',
+            builder: (ctx, state) => const StableProfileScreen(),
+          ),
+          GoRoute(
+            path: 'invitations',
+            builder: (ctx, state) => const PendingInvitationsScreen(),
+          ),
+          GoRoute(
+            path: 'team',
+            builder: (ctx, state) => const TeamManagementScreen(),
+          ),
+        ],
+      ),
+
       // ── Гол хуудсууд (StatefulShellRoute — 5 tab) ──
       StatefulShellRoute.indexedStack(
         builder: (ctx, state, navigationShell) {
           return AppShell(navigationShell: navigationShell);
         },
         branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (ctx, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/horses',
+                builder: (ctx, state) => const HorsesScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/care',
+                builder: (ctx, state) => const CareScreen(),
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -283,7 +386,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -337,103 +439,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: ':listingId',
-                    builder: (ctx, state) {
-                      return ListingDetailScreen(
-                        listingId: state.pathParameters['listingId']!,
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/events',
-                builder: (ctx, state) => const EventsScreen(),
-              ),
-            ],
-          ),
-
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/lost-horse',
-                builder: (ctx, state) => const LostHorseFinderScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'report',
-                    builder: (ctx, state) => const ReportLostHorseScreen(),
-                  ),
-                  GoRoute(
-                    path: 'active',
-                    builder: (ctx, state) => const ActiveReportsScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/profile',
-                builder: (ctx, state) => const ProfileScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'inbox',
-                    builder: (ctx, state) => const InboxScreen(),
-                  ),
-                  GoRoute(
-                    path: 'notifications',
-                    builder: (ctx, state) =>
-                        const NotificationPreferencesScreen(),
-                  ),
-                  GoRoute(
-                    path: 'sync-queue',
-                    builder: (ctx, state) => const SyncQueueScreen(),
-                  ),
-                  GoRoute(
-                    path: 'sync-settings',
-                    builder: (ctx, state) => const SyncSettingsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'sync-conflicts',
-                    builder: (ctx, state) => const ConflictResolutionScreen(),
-                  ),
-                  GoRoute(
-                    path: 'moderation',
-                    builder: (ctx, state) => const ModerationQueueScreen(),
-                  ),
-                  GoRoute(
-                    path: 'verification',
-                    builder: (ctx, state) => const SellerVerificationScreen(),
-                  ),
-                  GoRoute(
-                    path: 'saved-searches',
-                    builder: (ctx, state) => const SavedSearchesScreen(),
-                  ),
-                  GoRoute(
-                    path: 'partner-dashboard',
-                    builder: (ctx, state) => const PartnerDashboardScreen(),
-                  ),
-                  GoRoute(
-                    path: 'analytics',
-                    builder: (ctx, state) => const AnalyticsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'stable',
-                    builder: (ctx, state) => const StableProfileScreen(),
-                  ),
-                  GoRoute(
-                    path: 'invitations',
-                    builder: (ctx, state) => const PendingInvitationsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'team',
-                    builder: (ctx, state) => const TeamManagementScreen(),
+                    builder: (ctx, state) => ListingDetailScreen(
+                      listingId: state.pathParameters['listingId']!,
+                    ),
                   ),
                 ],
               ),

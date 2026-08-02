@@ -132,7 +132,15 @@ class CsvImportService {
 
     for (final line in dataLines) {
       final row = _parseRow(line);
+      // _parseRow never returns null — invalid rows carry isValid: false.
+      // They stay in `rows` (the UI renders per-row error states) but count
+      // as invalid, never as valid.
       if (row == null) {
+        invalidCount++;
+        continue;
+      }
+      if (!row.isValid) {
+        rows.add(row);
         invalidCount++;
         continue;
       }

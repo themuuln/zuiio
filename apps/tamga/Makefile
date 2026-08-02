@@ -6,7 +6,7 @@
         check build-apk build-apk-universal build-aab \
         precommit setup-hooks clean \
         marionette-smoke marionette-uri marionette-register marionette-check \
-        marionette-run marionette-stop \
+        marionette-run marionette-attach marionette-stop integration-test \
 
 generate: ## Regenerate Dart code and normalize Isar schemas for web
 	dart run build_runner build --delete-conflicting-outputs
@@ -78,21 +78,18 @@ clean: ## Clean Flutter build artifacts
 # ── Marionette (AI-driven UI smoke tests) ─────────────────────────
 
 MARIONETTE ?= $(if $(shell command -v marionette 2>/dev/null),$(shell command -v marionette),$(HOME)/.pub-cache/bin/marionette)
+MARIONETTE_NAME ?= $(if $(NAME),$(NAME),tamga)
+MARIONETTE_PORT ?= $(if $(PORT),$(PORT),8181)
+MARIONETTE_DEVICE ?= $(DEVICE)
 
-marionette-smoke: ## Run smoke test against a running debug build. Usage: make marionette-smoke uri=ws://...
-ifndef uri
-	@echo "ERROR: Missing uri=ws://... — pass the VM service URI from 'flutter run' output"
-	@echo ""
-	@echo "  $$(MAKE) marionette-smoke uri=ws://127.0.0.1:64102/XXXX/ws"
-	@exit 1
-endif
-	scripts/marionette-smoke.sh -u $(uri)
+marionette-smoke: ## Run smoke test against a running debug build (uses published URI when uri= is omitted)
+	@URI="$(uri)"; \
+	if [ -z "$$URI" ]; then URI="$$(cat "/tmp/tamga-marionette-$(MARIONETTE_NAME).uri" 2>/dev/null || true)"; fi; \
+	scripts/marionette-smoke.sh -u "$$URI"
 
-marionette-uri: ## Print the VM service URI from a running flutter process (Apple platforms)
-	@echo "Reading VM service URI from the Flutter process..."
-	@# Extract ws:// URI from flutter run output in log files or process info
-	@ps aux | grep -i "flutter.*run" | grep -v grep | awk '{print $$2}' | head -1 | xargs -I{} lsof -p {} -i TCP -s TCP:LISTEN -nP 2>/dev/null | grep LISTEN | awk '{print $$9}' | head -1 | xargs -I{} echo "http://{}:$$(echo {} | cut -d: -f2)/"
-	@echo "  (Copy the full URI from 'flutter run' output instead — port alone is insufficient)"
+marionette-uri: ## Print the published VM service URI from marionette-run
+	@URI_FILE="/tmp/tamga-marionette-$(MARIONETTE_NAME).uri"; \
+	if [ -s "$$URI_FILE" ]; then cat "$$URI_FILE"; else echo "ERROR: $$URI_FILE not found; run tmario first." >&2; exit 1; fi
 
 marionette-register: ## Register app and list elements. Usage: make marionette-register uri=ws://... name=tamga
 ifndef uri
@@ -101,20 +98,22 @@ ifndef uri
 endif
 	$(MARIONETTE) register $(name) $(uri) && $(MARIONETTE) get-interactive-elements -i $(name)
 
-marionette-check: ## Full gate + smoke test (app must be running). Usage: make marionette-check uri=ws://...
+marionette-check: ## Full gate + smoke test (app must be running; uses published URI when uri= is omitted)
 	$(MAKE) format-check
 	$(MAKE) analyze-strict
 	$(MAKE) test-random
 	$(MAKE) marionette-smoke uri=$(uri)
 
-marionette-run: ## Run flutter app on port 8181 + auto-register for agent (override: PORT=8182)
-	MARIONETTE="$(MARIONETTE)" scripts/marionette-run.sh
+marionette-run: ## Run Flutter with env + auto-register Marionette (override: DEVICE=... PORT=... NAME=...)
+	MARIONETTE="$(MARIONETTE)" NAME="$(MARIONETTE_NAME)" PORT="$(MARIONETTE_PORT)" DEVICE="$(MARIONETTE_DEVICE)" scripts/marionette-run.sh
+marionette-attach: ## Attach Marionette to an existing Flutter VM service (optional: uri=http://... name=tamga)
+	MARIONETTE="$(MARIONETTE)" NAME="$(MARIONETTE_NAME)" URI="$(uri)" scripts/marionette-attach.sh
 marionette-stop: ## Stop the marionette-run flutter process (from /tmp/tamga-flutter.pid)
 	@PID=$$(cat /tmp/tamga-flutter.pid 2>/dev/null); \
 	if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
-		$(MARIONETTE) unregister tamga 2>/dev/null || true; \
+		$(MARIONETTE) unregister "$(MARIONETTE_NAME)" 2>/dev/null || true; \
 		kill "$$PID" 2>/dev/null && echo "✓ Stopped (PID $$PID)" || echo "Could not stop PID $$PID"; \
-		rm -f /tmp/tamga-flutter.pid; \
+		rm -f /tmp/tamga-flutter.pid "/tmp/tamga-marionette-$(MARIONETTE_NAME).uri"; \
 	else \
 		echo "(no running tamga flutter process found)"; \
 	fi
@@ -122,6 +121,18 @@ marionette-stop: ## Stop the marionette-run flutter process (from /tmp/tamga-flu
 # ── Maestro (black-box UI regression testing) ──────────────────────
 
 MAESTRO ?= maestro
+
+# ── Integration tests (integration_test/) ──────────────────────
+# Run on a device/emulator via flutter drive. The app must be
+# buildable for the target (iOS simulator currently — android/ is
+# Expo/React Native during the Flutter→Expo migration).
+
+integration-test: ## Run integration tests. Usage: make integration-test [device=<udid>]
+ifdef device
+	flutter drive --driver=test_driver/integration_test.dart --target=integration_test/onboarding_flow_test.dart -d $(device)
+else
+	flutter drive --driver=test_driver/integration_test.dart --target=integration_test/onboarding_flow_test.dart
+endif
 
 maestro-smoke: ## Run Maestro smoke test. Usage: make maestro-smoke [device=iPhone-17]
 ifdef device
@@ -137,6 +148,14 @@ else
 	$(MAESTRO) test test/maestro/onboarding.yaml
 endif
 
+maestro-redesign: ## Run Tamga priority redesign navigation flow. Usage: make maestro-redesign [device=iPhone-17]
+ifdef device
+	$(MAESTRO) test --device "$(device)" test/maestro/14-redesign-priority-navigation.yaml
+else
+	$(MAESTRO) test test/maestro/14-redesign-priority-navigation.yaml
+endif
+
+
 maestro-check: ## Full gate + Maestro tests. Usage: make maestro-check [device=iPhone-17]
 	$(MAKE) format-check
 	$(MAKE) analyze-strict
@@ -144,7 +163,9 @@ maestro-check: ## Full gate + Maestro tests. Usage: make maestro-check [device=i
 ifdef device
 	$(MAKE) maestro-smoke device=$(device)
 	$(MAKE) maestro-onboarding device=$(device)
+	$(MAKE) maestro-redesign device=$(device)
 else
 	$(MAKE) maestro-smoke
 	$(MAKE) maestro-onboarding
+	$(MAKE) maestro-redesign
 endif

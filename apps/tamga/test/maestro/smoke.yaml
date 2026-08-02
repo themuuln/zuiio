@@ -1,0 +1,35 @@
+appId: com.tamga
+name: Smoke
+
+tags:
+  - smoke
+  - launch
+
+---
+# Tamga smoke test: app launches, brand/title/cards/social proof visible.
+# Note: Flutter concatenates visible text into combined accessibility nodes,
+# so use .*regex.* patterns for text; buttons are individually targetable.
+
+- launchApp:
+    clearState: true
+
+# Primary CTA (individually targetable button)
+- assertVisible: "Эхлэх"
+
+# Brand title + tagline (combined node → regex)
+- assertVisible:
+    text: ".*Тамга.*"
+- assertVisible:
+    text: ".*Морины тань цорын ганц үнэн эх сурвалж.*"
+
+# Feature cards
+- assertVisible:
+    text: ".*Удам угшил.*"
+- assertVisible:
+    text: ".*Эрүүл мэнд.*"
+- assertVisible:
+    text: ".*Зах зээл.*"
+
+# Social proof
+- assertVisible:
+    text: ".*монгол адуучин итгэж байна.*"

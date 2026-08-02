@@ -293,14 +293,8 @@ class LocalCertificateRepository implements CertificateRepository {
   // ── Private helpers ────────────────────────────────────────
 
   String _generateId() {
-    return 'cert-${DateTime.now().millisecondsSinceEpoch.toRadixString(36)}-${_randomSuffix()}';
-  }
-
-  String _randomSuffix() {
-    return DateTime.now().microsecondsSinceEpoch
-        .toRadixString(36)
-        .padRight(6, '0')
-        .substring(0, 6);
+    final timestamp = DateTime.now().microsecondsSinceEpoch;
+    return 'cert-${timestamp.toRadixString(36)}';
   }
 
   /// Prepare data for sync queue in Supabase-compatible format.

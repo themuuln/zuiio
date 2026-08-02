@@ -104,51 +104,49 @@ void main() {
     });
 
     test('upcomingDueItems detects vaccination due within 30 days', () {
-      // If recent vaccination was June 1, 2025, due date is June 1, 2026
-      // Current date is June 18, 2026, so it's 17 days overdue... hmm
-      // Actually the due date is +1 year = June 1, 2026, and today is June 18, 2026
-      // So daysUntilDue = June 1, 2026 - June 18, 2026 = -17 (already past due)
-      // Our check is daysUntilDue >= 0 && daysUntilDue <= 30
-      // So this would not be included since it's in the past
-      //
-      // Let me create a scenario where the vaccination is due soon
+      // The implementation computes due dates relative to DateTime.now()
+      // (vaccination due = last vaccination date + 1 year) and includes items
+      // with 0 <= daysUntilDue <= 30. Build inputs relative to now so the
+      // window check stays deterministic regardless of when the test runs.
+      final now = DateTime.now();
+      // horse1: due 10 days from now (inside the 30-day window)
+      final horse1Due = now.add(const Duration(days: 10));
+      // horse2: due 200 days from now (outside the 30-day window)
+      final horse2Due = now.add(const Duration(days: 200));
+
       final nearExpiryLogs = [
         HealthLog(
           id: '10',
           horseId: 'horse1',
           logType: LogType.vaccination,
-          date: DateTime(2025, 7, 1),
+          date: DateTime(horse1Due.year - 1, horse1Due.month, horse1Due.day),
           notes: 'Vaccination',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
+          createdAt: now,
+          updatedAt: now,
         ),
         HealthLog(
           id: '11',
           horseId: 'horse2',
           logType: LogType.vaccination,
-          date: DateTime(2025, 12, 20),
+          date: DateTime(horse2Due.year - 1, horse2Due.month, horse2Due.day),
           notes: 'Vaccination',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
+          createdAt: now,
+          updatedAt: now,
         ),
       ];
-      // horse1 vaccination on July 1, 2025, due July 1, 2026
-      // That's 13 days from today (June 18, 2026)
-      // horse2 vaccination on Dec 20, 2025, due Dec 20, 2026
-      // That's 185 days from today... too far
       final analytics = HealthAnalytics(
         healthLogs: nearExpiryLogs,
         totalHorses: 2,
       );
 
-      // horse1 should be in upcoming due items (13 days until due)
+      // horse1 should be in upcoming due items (due within 30 days)
       final horse1Items = analytics.upcomingDueItems.where(
         (i) => i.horseId == 'horse1',
       );
       expect(horse1Items.isNotEmpty, true);
       expect(horse1Items.first.logType, LogType.vaccination);
 
-      // horse2 should not be in upcoming due items (185 days away)
+      // horse2 should not be in upcoming due items (due far in the future)
       final horse2Items = analytics.upcomingDueItems.where(
         (i) => i.horseId == 'horse2',
       );

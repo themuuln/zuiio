@@ -6,6 +6,8 @@ import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/features/shared/data/pagination/pagination_state.dart';
 import 'package:tamga/src/features/horses/application/horses_providers.dart';
 import 'package:tamga/src/features/horses/domain/horse_record.dart';
+import 'package:tamga/src/features/market/application/market_providers.dart';
+import 'package:tamga/src/features/horses/presentation/horse_empty_states.dart';
 import 'package:tamga/src/features/horses/presentation/horses_screen.dart';
 
 /// Creates a PaginationNotifier that immediately starts in an error state.
@@ -36,6 +38,41 @@ class _LoadingHorsesNotifier extends PaginationNotifier<HorseRecord> {
       hasMore: true,
     );
   }
+}
+
+/// Creates a pagination notifier with a loaded, finite page.
+class _LoadedHorsesNotifier extends PaginationNotifier<HorseRecord> {
+  _LoadedHorsesNotifier(List<HorseRecord> items)
+    : super(fetchPage: (_, _) async => items, pageSize: 20) {
+    state = PaginationState<HorseRecord>(
+      items: items,
+      isLoading: false,
+      hasMore: false,
+      currentPage: 1,
+    );
+  }
+}
+
+HorseRecord _horse({
+  required String id,
+  required String name,
+  required bool household,
+  required String coat,
+  required int birthYear,
+  String? region,
+}) {
+  final now = DateTime(2026, 8, 1);
+  return HorseRecord(
+    id: id,
+    name: name,
+    gender: HorseGender.mare,
+    coat: coat,
+    birthYear: birthYear,
+    region: region,
+    isOwnedByHousehold: household,
+    createdAt: now,
+    updatedAt: now,
+  );
 }
 
 void main() {
@@ -90,6 +127,92 @@ void main() {
 
       // Verify retry button is displayed
       expect(find.text('Дахин оролдох'), findsOneWidget);
+    });
+
+    testWidgets('shows summary, search, and horse rows for loaded data', (
+      tester,
+    ) async {
+      final horses = [
+        _horse(
+          id: 'horse-1',
+          name: 'Хан Хүлэг',
+          household: true,
+          coat: 'Хээр',
+          birthYear: 2019,
+          region: 'Төв',
+        ),
+        _horse(
+          id: 'horse-2',
+          name: 'Цагаан Салхи',
+          household: false,
+          coat: 'Цагаан',
+          birthYear: 2021,
+          region: 'Архангай',
+        ),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            paginatedHorsesProvider.overrideWith(
+              (ref) => _LoadedHorsesNotifier(horses),
+            ),
+            horsesProvider.overrideWith((ref) async => horses),
+            digitalCertificateProvider.overrideWith(
+              (ref, horseId) async => null,
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            home: Scaffold(body: const HorsesScreen()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Таны сүрэг'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('Хан Хүлэг'), findsOneWidget);
+      expect(find.text('Цагаан Салхи'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Төв');
+      await tester.pump();
+
+      expect(find.text('Хан Хүлэг'), findsOneWidget);
+      expect(find.text('Цагаан Салхи'), findsNothing);
+
+      await tester.enterText(find.byType(TextField), '');
+      await tester.pump();
+
+      final externalFilter = find.byKey(
+        const ValueKey('horse_filter_external'),
+      );
+      expect(externalFilter, findsOneWidget);
+      expect(tester.getSize(externalFilter).height, greaterThanOrEqualTo(44));
+
+      await tester.tap(externalFilter);
+      await tester.pump();
+
+      expect(find.text('Хан Хүлэг'), findsNothing);
+      expect(find.text('Цагаан Салхи'), findsOneWidget);
+    });
+
+    testWidgets('empty state uses the screen add-horse callback', (
+      tester,
+    ) async {
+      var didTap = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: EmptyHorsesState(onAddHorse: () => didTap = true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Морь нэмэх'));
+
+      expect(didTap, isTrue);
     });
   });
 }

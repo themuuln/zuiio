@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/race_providers.dart';
 import '../domain/race.dart';
@@ -17,6 +18,7 @@ class RaceResultsEditorScreen extends ConsumerStatefulWidget {
   const RaceResultsEditorScreen({
     required this.race,
     required this.entries,
+    this.horseNames = const <String, String>{},
     super.key,
   });
 
@@ -25,6 +27,9 @@ class RaceResultsEditorScreen extends ConsumerStatefulWidget {
 
   /// Бүртгэгдсэн моридын жагсаалт (scratched биш).
   final List<RaceEntry> entries;
+
+  /// Морины ID → нэр хөрвүүлэгч (харуулахад).
+  final Map<String, String> horseNames;
 
   @override
   ConsumerState<RaceResultsEditorScreen> createState() =>
@@ -137,82 +142,84 @@ class _RaceResultsEditorScreenState
           ),
         ],
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        children: [
-          // ── Race info header ──
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.race.name,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Race info header ──
+            TamgaCard(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.race.name,
+                      style: TamgaTypography.body(weight: FontWeight.w600),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    '${widget.race.type.displayName} · ${widget.race.status.displayName}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      '${widget.race.type.displayName} · ${widget.race.status.displayName}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
 
-          // ── Instructions ──
-          Text(
-            'Морь тус бүрийн үр дүн, байр, шагналыг оруулна уу.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+            // ── Instructions ──
+            Text(
+              'Морь тус бүрийн үр дүн, байр, шагналыг оруулна уу.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
 
-          // ── Entry result forms ──
-          ...widget.entries.map((entry) {
-            final edit = _edits[entry.id]!;
-            return _EntryResultCard(
-              entry: entry,
-              result: edit.result,
-              placement: edit.placement,
-              prize: edit.prize,
-              onResultChanged: (v) {
-                setState(() {
-                  _edits[entry.id] = (
-                    result: v,
-                    placement: _edits[entry.id]!.placement,
-                    prize: _edits[entry.id]!.prize,
-                  );
-                });
-              },
-              onPlacementChanged: (v) {
-                setState(() {
-                  _edits[entry.id] = (
-                    result: _edits[entry.id]!.result,
-                    placement: v,
-                    prize: _edits[entry.id]!.prize,
-                  );
-                });
-              },
-              onPrizeChanged: (v) {
-                setState(() {
-                  _edits[entry.id] = (
-                    result: _edits[entry.id]!.result,
-                    placement: _edits[entry.id]!.placement,
-                    prize: v,
-                  );
-                });
-              },
-            );
-          }),
-        ],
+            // ── Entry result forms ──
+            ...widget.entries.map((entry) {
+              final edit = _edits[entry.id]!;
+              return _EntryResultCard(
+                entry: entry,
+                horseName: widget.horseNames[entry.horseId] ?? entry.horseId,
+                result: edit.result,
+                placement: edit.placement,
+                prize: edit.prize,
+                onResultChanged: (v) {
+                  setState(() {
+                    _edits[entry.id] = (
+                      result: v,
+                      placement: _edits[entry.id]!.placement,
+                      prize: _edits[entry.id]!.prize,
+                    );
+                  });
+                },
+                onPlacementChanged: (v) {
+                  setState(() {
+                    _edits[entry.id] = (
+                      result: _edits[entry.id]!.result,
+                      placement: v,
+                      prize: _edits[entry.id]!.prize,
+                    );
+                  });
+                },
+                onPrizeChanged: (v) {
+                  setState(() {
+                    _edits[entry.id] = (
+                      result: _edits[entry.id]!.result,
+                      placement: _edits[entry.id]!.placement,
+                      prize: v,
+                    );
+                  });
+                },
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
@@ -223,6 +230,7 @@ class _RaceResultsEditorScreenState
 class _EntryResultCard extends StatelessWidget {
   const _EntryResultCard({
     required this.entry,
+    required this.horseName,
     required this.result,
     required this.placement,
     required this.prize,
@@ -232,6 +240,7 @@ class _EntryResultCard extends StatelessWidget {
   });
 
   final RaceEntry entry;
+  final String horseName;
   final String result;
   final String placement;
   final String prize;
@@ -244,7 +253,7 @@ class _EntryResultCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
+    return TamgaCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -269,10 +278,12 @@ class _EntryResultCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Морь: ${entry.horseId}',
+                        'Морь: $horseName',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       if (entry.jockeyName != null &&
                           entry.jockeyName!.isNotEmpty)

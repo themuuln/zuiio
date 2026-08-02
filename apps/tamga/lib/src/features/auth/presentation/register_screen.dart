@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/widgets.dart';
 import '../application/auth_providers.dart';
 import '../domain/auth_state.dart';
 import 'auth_error_messages.dart';
@@ -68,7 +70,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (mounted) {
         final authState = ref.read(authStateProvider).valueOrNull;
         if (authState?.isAuthenticated ?? false) {
-          context.go('/lineage');
+          context.go('/home');
         }
       }
     } catch (e) {
@@ -83,12 +85,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   /// Текст нь `message\n\ntranslation` форматтай байх ба
   /// эхний мөрийг Монгол, хоёр дахь мөрийг Англи хэлээр харуулна.
   Widget _buildBilingualErrorText(String text, ThemeData theme) {
+    final onErrorContainer = theme.colorScheme.onErrorContainer;
     final parts = text.split('\n');
     if (parts.length < 2) {
-      return Text(
-        text,
-        style: TextStyle(color: theme.colorScheme.onErrorContainer),
-      );
+      return Text(text, style: TamgaTypography.body(color: onErrorContainer));
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,17 +96,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       children: [
         Text(
           parts[0],
-          style: TextStyle(
-            color: theme.colorScheme.onErrorContainer,
-            fontWeight: FontWeight.w600,
+          style: TamgaTypography.body(
+            weight: FontWeight.w600,
+            color: onErrorContainer,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: TamgaSpacing.xs),
         Text(
           parts.sublist(1).join('\n'),
-          style: TextStyle(
-            color: theme.colorScheme.onErrorContainer.withValues(alpha: 0.85),
-            fontSize: 13,
+          style: TamgaTypography.footnote(
+            color: onErrorContainer.withValues(alpha: 0.85),
           ),
         ),
       ],
@@ -121,7 +120,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ref.listen<AsyncValue<AuthState>>(authStateProvider, (prev, next) {
       final state = next.valueOrNull;
       if (state?.isAuthenticated ?? false) {
-        context.go('/lineage');
+        context.go('/home');
       }
     });
 
@@ -130,7 +129,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: TamgaSpacing.xxxl),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: Form(
@@ -140,23 +139,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   children: [
                     // Тэмдэг
                     Text('🐎', style: TextStyle(fontSize: 48)),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: TamgaSpacing.lg),
                     Text(
                       'Шинээр бүртгүүлэх',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: TamgaTypography.title1(weight: FontWeight.w700),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: TamgaSpacing.xxl),
 
                     // Алдааны мессеж
                     if (_errorMessage != null)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.only(bottom: TamgaSpacing.lg),
                         child: Card(
                           color: theme.colorScheme.errorContainer,
                           child: Padding(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(TamgaSpacing.md),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -167,7 +164,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     color: theme.colorScheme.onErrorContainer,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: TamgaSpacing.sm),
                                 Expanded(
                                   child: _buildBilingualErrorText(
                                     _errorMessage!,
@@ -197,7 +194,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               border: OutlineInputBorder(),
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: TamgaSpacing.lg),
 
                           // Имэйл талбар
                           TextFormField(
@@ -223,7 +220,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: TamgaSpacing.lg),
 
                           // Нууц үг талбар
                           TextFormField(
@@ -247,7 +244,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: TamgaSpacing.lg),
 
                           // Нууц үг баталгаажуулах
                           TextFormField(
@@ -272,7 +269,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: TamgaSpacing.xxl),
 
                     // Бүртгүүлэх товч
                     FilledButton(
@@ -281,14 +278,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         minimumSize: const Size.fromHeight(48),
                       ),
                       child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                          ? LoadingIndicator(
+                              size: 20,
+                              color: theme.colorScheme.onPrimary,
                             )
                           : const Text('Бүртгүүлэх'),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: TamgaSpacing.lg),
 
                     // Нэвтрэх холбоос
                     TextButton(

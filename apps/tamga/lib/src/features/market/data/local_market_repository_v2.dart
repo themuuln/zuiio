@@ -553,7 +553,7 @@ class LocalMarketRepositoryV2
     try {
       final now = DateTime.now();
       final report = ListingReport(
-        id: 'report-${now.millisecondsSinceEpoch}',
+        id: 'report-${now.microsecondsSinceEpoch}',
         listingId: listingId,
         reporterId: reporterId,
         reason: reason,

@@ -19,11 +19,31 @@ class SkeletonLoader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ShimmerEffect(
-      child: ListView.separated(
-        padding: padding ?? TamgaSpacing.screenPadding,
-        itemCount: items,
-        separatorBuilder: (_, _) => SizedBox(height: spacing),
-        itemBuilder: itemBuilder,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final listPadding = padding ?? TamgaSpacing.screenPadding;
+          if (constraints.hasBoundedHeight) {
+            return ListView.separated(
+              padding: listPadding,
+              itemCount: items,
+              separatorBuilder: (_, _) => SizedBox(height: spacing),
+              itemBuilder: itemBuilder,
+            );
+          }
+
+          return Padding(
+            padding: listPadding,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var index = 0; index < items; index++) ...[
+                  itemBuilder(context, index),
+                  if (index < items - 1) SizedBox(height: spacing),
+                ],
+              ],
+            ),
+          );
+        },
       ),
     );
   }

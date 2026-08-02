@@ -11,6 +11,7 @@ import '../../../app/supabase_bootstrap.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/storage/cloud/media_storage_service.dart';
 import '../../../core/storage/cloud/supabase_media_storage.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../shared/domain/event.dart';
 import 'widgets/event_location_picker.dart';
@@ -221,8 +222,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Event засах' : 'Event нэмэх'),
+        title: Text(_isEditing ? 'Арга хэмжээ засах' : 'Арга хэмжээ нэмэх'),
         leading: IconButton(
+          tooltip: 'Буцах',
           onPressed: () => Navigator.of(ctx).pop(),
           icon: const Icon(Icons.arrow_back_ios_new),
         ),
@@ -234,10 +236,10 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
           children: [
             // ── Header ──
             Text(
-              _isEditing ? 'Event мэдээлэл засах' : 'Шинэ event-ийн мэдээлэл',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              _isEditing
+                  ? 'Арга хэмжээний мэдээлэл засах'
+                  : 'Шинэ арга хэмжээний мэдээлэл',
+              style: TamgaTypography.title3(weight: FontWeight.w600),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
@@ -252,7 +254,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             DropdownButtonFormField<EventType>(
               initialValue: _selectedType,
               decoration: const InputDecoration(
-                labelText: 'Event төрөл *',
+                labelText: 'Төрөл *',
                 hintText: 'Төрөл сонгоно уу',
               ),
               items: kEventTypes
@@ -272,7 +274,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               },
               validator: (val) {
                 if (val == null) {
-                  return 'Event төрөл заавал сонгоно уу';
+                  return 'Төрөл заавал сонгоно уу';
                 }
                 return null;
               },
@@ -346,7 +348,10 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             const SizedBox(height: AppSpacing.lg),
 
             // ─── Organizer fields ──
-            Text('Зохион байгуулагч', style: theme.textTheme.titleMedium),
+            Text(
+              'Зохион байгуулагч',
+              style: TamgaTypography.title3(weight: FontWeight.w600),
+            ),
             const SizedBox(height: AppSpacing.sm),
 
             TextFormField(
@@ -444,7 +449,10 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             const SizedBox(height: AppSpacing.lg),
 
             // ── Photos ──
-            Text('Зургууд', style: theme.textTheme.titleMedium),
+            Text(
+              'Зургууд',
+              style: TamgaTypography.title3(weight: FontWeight.w600),
+            ),
             const SizedBox(height: AppSpacing.sm),
 
             // Photo grid
@@ -501,18 +509,27 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                         Positioned(
                           top: 4,
                           right: 4,
-                          child: GestureDetector(
-                            onTap: () => _removePhoto(index),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.error,
-                                shape: BoxShape.circle,
-                              ),
-                              padding: const EdgeInsets.all(AppSpacing.xs),
-                              child: Icon(
-                                Icons.close,
-                                size: 14,
-                                color: theme.colorScheme.onError,
+                          child: Semantics(
+                            button: true,
+                            label: 'Зураг устгах',
+                            child: Tooltip(
+                              message: 'Зураг устгах',
+                              child: GestureDetector(
+                                onTap: () => _removePhoto(index),
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.error,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: const EdgeInsets.all(AppSpacing.xs),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: theme.colorScheme.onError,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -550,6 +567,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       onPressed: () => _pickImage(ImageSource.gallery),
                       icon: const Icon(Icons.photo_library_outlined),
                       label: const Text('Галерээ'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44),
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -558,6 +578,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       onPressed: () => _pickImage(ImageSource.camera),
                       icon: const Icon(Icons.camera_alt_outlined),
                       label: const Text('Камер'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44),
+                      ),
                     ),
                   ),
                 ],
@@ -581,6 +604,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: _isSaving ? null : () => Navigator.of(ctx).pop(),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
                     child: const Text('Цуцлах'),
                   ),
                 ),
@@ -588,6 +614,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                 Expanded(
                   child: FilledButton(
                     onPressed: _isSaving || _isUploading ? null : _save,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
                     child: _isSaving
                         ? const SizedBox(
                             height: 20,

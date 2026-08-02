@@ -228,6 +228,7 @@ class _ZoneTile extends StatelessWidget {
               style: TamgaTypography.footnote(),
             ),
             PopupMenuButton<String>(
+              tooltip: 'Нэмэлт үйлдэл',
               onSelected: (value) {
                 if (value == 'edit') onEdit();
                 if (value == 'delete') onDelete();

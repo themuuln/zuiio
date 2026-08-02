@@ -38,3 +38,10 @@ final paginatedHealthLogsProvider =
       Future.microtask(() => notifier.loadInitial());
       return notifier;
     });
+
+/// All health records for the current owner, used by the care overview.
+final healthLogsProvider = FutureProvider<List<HealthLog>>((ref) async {
+  final repository = await ref.watch(healthRepositoryProvider.future);
+  final result = await repository.fetchAll();
+  return result.getOrThrow();
+});

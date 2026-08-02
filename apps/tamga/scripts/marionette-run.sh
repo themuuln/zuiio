@@ -11,6 +11,8 @@ DEVICE="${DEVICE:-}"
 LOG_FILE="${LOG_FILE:-/tmp/tamga-flutter.log}"
 PID_FILE="${PID_FILE:-/tmp/tamga-flutter.pid}"
 STARTUP_TIMEOUT="${STARTUP_TIMEOUT:-60}"
+READINESS_TIMEOUT="${READINESS_TIMEOUT:-30}"
+URI_FILE="${URI_FILE:-/tmp/tamga-marionette-${NAME}.uri}"
 
 usage() {
   cat <<'EOF'
@@ -24,9 +26,14 @@ Environment:
   LOG_FILE         Flutter log path (default: /tmp/tamga-flutter.log).
   PID_FILE         PID file (default: /tmp/tamga-flutter.pid).
   STARTUP_TIMEOUT  VM service wait timeout in seconds (default: 60).
+  READINESS_TIMEOUT Marionette binding wait timeout in seconds (default: 30).
+  URI_FILE         Published VM URI file (default: /tmp/tamga-marionette-tamga.uri).
+
+Any additional arguments are forwarded to `flutter run`.
 EOF
 }
 
+FLUTTER_EXTRA_ARGS=()
 if [ "$#" -gt 0 ]; then
   case "$1" in
     -h|--help)
@@ -34,9 +41,7 @@ if [ "$#" -gt 0 ]; then
       exit 0
       ;;
     *)
-      echo "ERROR: Unknown argument: $1" >&2
-      usage >&2
-      exit 2
+      FLUTTER_EXTRA_ARGS=("$@")
       ;;
   esac
 fi
@@ -60,7 +65,7 @@ resolve_marionette() {
 
 extract_uri() {
   local raw
-  raw="$(sed -nE '/VM service|vmservice|listening/s/.*((wss?|https?):\/\/[^ ]+).*/\1/p' "$LOG_FILE" | sed -n '1p')"
+  raw="$(sed -nE '/[Vv][Mm] [Ss]ervice|[Vv][Mm]service|[Ll]istening/s/.*((wss?|https?):\/\/[^ ]+).*/\1/p' "$LOG_FILE" | sed -n '1p')"
   [ -n "$raw" ] || return 1
   raw="${raw%,}"
   raw="${raw%/}"
@@ -88,7 +93,7 @@ cleanup() {
     kill "$FLUTTER_PID" 2>/dev/null || true
     wait "$FLUTTER_PID" 2>/dev/null || true
   fi
-  rm -f "$PID_FILE"
+  rm -f "$PID_FILE" "$URI_FILE"
   exit "$status"
 }
 trap cleanup EXIT INT TERM
@@ -103,13 +108,16 @@ if [ -f "$PID_FILE" ]; then
 fi
 
 : > "$LOG_FILE"
-flutter_args=(run --debug --host-vmservice-port "$PORT")
+flutter_args=(--debug --no-dds --host-vmservice-port "$PORT")
 if [ -n "$DEVICE" ]; then
   flutter_args+=(--device-id "$DEVICE")
 fi
+if [ "${#FLUTTER_EXTRA_ARGS[@]}" -gt 0 ]; then
+  flutter_args+=("${FLUTTER_EXTRA_ARGS[@]}")
+fi
 
 echo "Starting Tamga debug build (log: $LOG_FILE)"
-flutter "${flutter_args[@]}" >"$LOG_FILE" 2>&1 &
+bash "$ROOT_DIR/dev.sh" "${flutter_args[@]}" >"$LOG_FILE" 2>&1 &
 FLUTTER_PID=$!
 printf '%s\n' "$FLUTTER_PID" > "$PID_FILE"
 
@@ -138,7 +146,21 @@ echo "Registering $NAME at $uri"
 "$MARIONETTE_BIN" unregister "$NAME" >/dev/null 2>&1 || true
 "$MARIONETTE_BIN" register "$NAME" "$uri"
 REGISTERED=true
-"$MARIONETTE_BIN" get-interactive-elements -i "$NAME"
-echo "Marionette is ready. Press Ctrl-C to stop Tamga."
+elements=""
+attempts=$((READINESS_TIMEOUT * 2))
+for ((attempt = 0; attempt < attempts; attempt++)); do
+  if elements="$("$MARIONETTE_BIN" get-interactive-elements -i "$NAME" 2>/dev/null)" && [ -n "$elements" ]; then
+    break
+  fi
+  sleep 0.5
+done
+if [ -z "$elements" ]; then
+  echo "ERROR: Marionette did not expose UI elements within ${READINESS_TIMEOUT}s." >&2
+  exit 1
+fi
+printf '%s\n' "$uri" >| "$URI_FILE"
+printf '%s\n' "$elements"
+element_count="$(printf '%s\n' "$elements" | awk 'NF { count++ } END { print count + 0 }')"
+echo "Marionette is ready: name=$NAME uri=$uri interactive_lines=$element_count"
 
 wait "$FLUTTER_PID"

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../payments/presentation/widgets/paywall_widget.dart';
 import '../../payments/domain/payment_request.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/features/feature_gate.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../shared/domain/horse.dart';
@@ -23,7 +24,15 @@ class LineageHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final baseTheme = Theme.of(context);
+    final systemTextTheme = AppTypography.textTheme().apply(
+      bodyColor: baseTheme.colorScheme.onSurface,
+      displayColor: baseTheme.colorScheme.onSurface,
+    );
+    final theme = baseTheme.copyWith(
+      textTheme: systemTextTheme,
+      primaryTextTheme: systemTextTheme,
+    );
     final roots = ref.watch(lineageRootsProvider);
     final selectedSnapshot = ref.watch(lineageSnapshotProvider);
     final selectedRootId = ref.watch(selectedLineageRootIdProvider);
@@ -32,94 +41,251 @@ class LineageHomeScreen extends ConsumerWidget {
     final treeLayout = ref.watch(pedigreeLayoutProvider);
     final selectedNode = ref.watch(selectedPedigreeNodeProvider);
 
-    return CustomScrollView(
-      slivers: [
-        // ── Minimal header ──
-        SliverAppBar(
-          title: const Text('Угшил'),
-          actions: [
-            IconButton(
-              onPressed: () => context.go('/lineage/coi'),
-              icon: const Icon(Icons.calculate_outlined, size: 20),
-              tooltip: 'Цус ойртолтын тооцоолуур',
-            ),
-          ],
-        ),
-
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            0,
-            AppSpacing.lg,
-            AppSpacing.xxl,
+    return Theme(
+      data: theme,
+      child: CustomScrollView(
+        slivers: [
+          // ── Minimal header ──
+          TamgaSliverHeader(
+            title: 'Угшил',
+            subtitle: 'Удам угсаа ба холбоо',
+            actions: [
+              IconButton(
+                onPressed: () => context.go('/lineage/coi'),
+                icon: const Icon(Icons.calculate_outlined, size: 20),
+                tooltip: 'Цус ойртолтын тооцоолуур',
+              ),
+            ],
           ),
-          sliver: SliverList.list(
-            children: [
-              // ── Root selector ──
-              StaggeredFadeIn(
-                index: 0,
-                child: roots.when(
-                  data: (items) {
-                    if (items.isEmpty) return const SizedBox.shrink();
-                    return SizedBox(
-                      height: AppSpacing.xxxxl,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: items.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(width: AppSpacing.sm),
-                        itemBuilder: (ctx, index) {
-                          final root = items[index];
-                          final isSelected = root.id == selectedRootId;
-                          return GestureDetector(
-                            onTap: () {
-                              ref
-                                  .read(selectedPedigreeNodeIdProvider.notifier)
-                                  .state = root
-                                  .id;
-                              ref.read(lineageHomeViewProvider.notifier).state =
-                                  LineageHomeView.tree;
-                              ref
-                                  .read(selectedLineageRootIdProvider.notifier)
-                                  .state = root
-                                  .id;
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.lg,
-                                vertical: AppSpacing.sm,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.surfaceContainerHighest
-                                          .withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                root.name,
-                                style: theme.textTheme.labelLarge?.copyWith(
-                                  color: isSelected
-                                      ? theme.colorScheme.onPrimary
-                                      : theme.colorScheme.onSurface,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                ),
-                              ),
+
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.xxl,
+            ),
+            sliver: SliverList.list(
+              children: [
+                // ── Root selector ──
+                StaggeredFadeIn(
+                  index: 0,
+                  child: roots.when(
+                    data: (items) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Удам угсааны шугам',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
                             ),
-                          );
-                        },
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          SizedBox(
+                            height: AppSpacing.xxxxl,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: items.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(width: AppSpacing.sm),
+                              itemBuilder: (ctx, index) {
+                                final root = items[index];
+                                final isSelected = root.id == selectedRootId;
+                                return GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    ref
+                                            .read(
+                                              selectedPedigreeNodeIdProvider
+                                                  .notifier,
+                                            )
+                                            .state =
+                                        root.id;
+                                    ref
+                                        .read(lineageHomeViewProvider.notifier)
+                                        .state = LineageHomeView
+                                        .tree;
+                                    ref
+                                            .read(
+                                              selectedLineageRootIdProvider
+                                                  .notifier,
+                                            )
+                                            .state =
+                                        root.id;
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.md,
+                                      vertical: AppSpacing.sm,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? theme.colorScheme.primaryContainer
+                                          : theme
+                                                .colorScheme
+                                                .surfaceContainerLowest,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? theme.colorScheme.primary
+                                                  .withValues(alpha: 0.45)
+                                            : theme.colorScheme.outlineVariant
+                                                  .withValues(alpha: 0.7),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.account_tree_rounded,
+                                          size: 16,
+                                          color: isSelected
+                                              ? theme
+                                                    .colorScheme
+                                                    .onPrimaryContainer
+                                              : theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                        ),
+                                        const SizedBox(width: AppSpacing.sm),
+                                        Text(
+                                          root.name,
+                                          style: theme.textTheme.labelLarge
+                                              ?.copyWith(
+                                                color: isSelected
+                                                    ? theme
+                                                          .colorScheme
+                                                          .onPrimaryContainer
+                                                    : theme
+                                                          .colorScheme
+                                                          .onSurface,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                      child: SkeletonLoader(
+                        items: 3,
+                        itemBuilder: _rootChipSkeletonBuilder,
                       ),
-                    );
-                  },
-                  loading: () => const Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                    child: SkeletonLoader(
-                      items: 3,
-                      itemBuilder: _rootChipSkeletonBuilder,
                     ),
+                    error: (error, _) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.xxl,
+                      ),
+                      child: TamgaErrorWidget(
+                        message: 'Удам угсааны мэдээлэл ачаалахад алдаа гарлаа',
+                        onRetry: () => ref.invalidate(lineageRootsProvider),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // ── View tabs (minimal) ──
+                StaggeredFadeIn(
+                  index: 1,
+                  child: _MinimalViewTabs(
+                    selected: homeView,
+                    onSelect: (view) {
+                      ref.read(lineageHomeViewProvider.notifier).state = view;
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.xl),
+
+                // ── Featured events section ──
+                _FeaturedEventsSection(),
+
+                const SizedBox(height: AppSpacing.xxl),
+
+                // ── Active content ──
+                selectedSnapshot.when(
+                  data: (snapshot) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      StaggeredFadeIn(
+                        index: 0,
+                        child: _RootOverview(snapshot: snapshot),
+                      ),
+
+                      const SizedBox(height: AppSpacing.xxl),
+
+                      // ── Depth selector (for tree view) ──
+                      if (homeView == LineageHomeView.tree) ...[
+                        StaggeredFadeIn(
+                          index: 4,
+                          child: _DepthSelector(
+                            selectedDepth: treeDepth,
+                            onDepthSelected: (depth) {
+                              ref
+                                      .read(lineageTreeDepthProvider.notifier)
+                                      .state =
+                                  depth;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
+
+                      // ── Content ──
+                      StaggeredFadeIn(
+                        index: 5,
+                        child: _ActiveContent(
+                          snapshot: snapshot,
+                          selectedView: homeView,
+                          treeLayout: treeLayout,
+                          selectedNode: selectedNode,
+                          selectedNodeId: selectedNode?.id ?? selectedRootId,
+                          onNodeTap: (node) {
+                            ref
+                                .read(selectedPedigreeNodeIdProvider.notifier)
+                                .state = node
+                                .id;
+                          },
+                          treeDepth: treeDepth,
+                          onLoadMoreAncestors:
+                              treeDepth != LineageTreeDepth.full
+                              ? () {
+                                  ref
+                                      .read(lineageTreeDepthProvider.notifier)
+                                      .state = _nextDepth(
+                                    treeDepth,
+                                  );
+                                }
+                              : null,
+                          onLoadMoreDescendants:
+                              treeDepth != LineageTreeDepth.full
+                              ? () {
+                                  ref
+                                      .read(lineageTreeDepthProvider.notifier)
+                                      .state = _nextDepth(
+                                    treeDepth,
+                                  );
+                                }
+                              : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                  loading: () => const SkeletonLoader(
+                    items: 3,
+                    itemBuilder: _snapshotSkeletonBuilder,
                   ),
                   error: (error, _) => Padding(
                     padding: const EdgeInsets.symmetric(
@@ -127,152 +293,15 @@ class LineageHomeScreen extends ConsumerWidget {
                     ),
                     child: TamgaErrorWidget(
                       message: 'Удам угсааны мэдээлэл ачаалахад алдаа гарлаа',
-                      onRetry: () => ref.invalidate(lineageRootsProvider),
+                      onRetry: () => ref.invalidate(lineageSnapshotProvider),
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: AppSpacing.lg),
-
-              // ── View tabs (minimal) ──
-              StaggeredFadeIn(
-                index: 1,
-                child: _MinimalViewTabs(
-                  selected: homeView,
-                  onSelect: (view) {
-                    ref.read(lineageHomeViewProvider.notifier).state = view;
-                  },
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.xl),
-
-              // ── Featured events section ──
-              _FeaturedEventsSection(),
-
-              const SizedBox(height: AppSpacing.xxl),
-
-              // ── Active content ──
-              selectedSnapshot.when(
-                data: (snapshot) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Root info (clean, no card) ──
-                    StaggeredFadeIn(
-                      index: 0,
-                      child: Text(
-                        snapshot.root.name,
-                        style: theme.textTheme.headlineSmall,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    StaggeredFadeIn(
-                      index: 1,
-                      child: Text(
-                        '${snapshot.root.coat} • ${snapshot.root.birthYear}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // ── Stats row ──
-                    StaggeredFadeIn(
-                      index: 2,
-                      child: _StatsRow(
-                        offspring: snapshot.root.offspringCount,
-                        awards: snapshot.root.awardCount,
-                        nodes: snapshot.treeNodes.length,
-                      ),
-                    ),
-
-                    if (snapshot.root.notes.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.lg),
-                      StaggeredFadeIn(
-                        index: 3,
-                        child: Text(
-                          snapshot.root.notes,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: AppSpacing.xxl),
-
-                    // ── Depth selector (for tree view) ──
-                    if (homeView == LineageHomeView.tree) ...[
-                      StaggeredFadeIn(
-                        index: 4,
-                        child: _DepthSelector(
-                          selectedDepth: treeDepth,
-                          onDepthSelected: (depth) {
-                            ref.read(lineageTreeDepthProvider.notifier).state =
-                                depth;
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-
-                    // ── Content ──
-                    StaggeredFadeIn(
-                      index: 5,
-                      child: _ActiveContent(
-                        snapshot: snapshot,
-                        selectedView: homeView,
-                        treeLayout: treeLayout,
-                        selectedNode: selectedNode,
-                        selectedNodeId: selectedNode?.id ?? selectedRootId,
-                        onNodeTap: (node) {
-                          ref
-                                  .read(selectedPedigreeNodeIdProvider.notifier)
-                                  .state =
-                              node.id;
-                        },
-                        treeDepth: treeDepth,
-                        onLoadMoreAncestors: treeDepth != LineageTreeDepth.full
-                            ? () {
-                                ref
-                                    .read(lineageTreeDepthProvider.notifier)
-                                    .state = _nextDepth(
-                                  treeDepth,
-                                );
-                              }
-                            : null,
-                        onLoadMoreDescendants:
-                            treeDepth != LineageTreeDepth.full
-                            ? () {
-                                ref
-                                    .read(lineageTreeDepthProvider.notifier)
-                                    .state = _nextDepth(
-                                  treeDepth,
-                                );
-                              }
-                            : null,
-                      ),
-                    ),
-                  ],
-                ),
-                loading: () => const SkeletonLoader(
-                  items: 3,
-                  itemBuilder: _snapshotSkeletonBuilder,
-                ),
-                error: (error, _) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-                  child: TamgaErrorWidget(
-                    message: 'Удам угсааны мэдээлэл ачаалахад алдаа гарлаа',
-                    onRetry: () => ref.invalidate(lineageSnapshotProvider),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -288,43 +317,181 @@ class _MinimalViewTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Row(
-      children: [
-        for (final view in LineageHomeView.values) ...[
-          if (view != LineageHomeView.values.first) ...[
-            const SizedBox(width: AppSpacing.xs),
-            Container(
-              width: 3,
-              height: 3,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.outlineVariant,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-          ],
-          GestureDetector(
-            onTap: () => onSelect(view),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              child: Text(
-                view.label,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: selected == view
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontWeight: selected == view
-                      ? FontWeight.w600
-                      : FontWeight.w400,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
+      ),
+      child: Row(
+        children: [
+          for (final view in LineageHomeView.values)
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: selected == view,
+                label: _viewLabel(view),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onSelect(view),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                      vertical: AppSpacing.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected == view
+                          ? theme.colorScheme.primaryContainer
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _viewIcon(view),
+                          size: 16,
+                          color: selected == view
+                              ? theme.colorScheme.onPrimaryContainer
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.center,
+                            child: Text(
+                              _viewLabel(view),
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: selected == view
+                                    ? theme.colorScheme.onPrimaryContainer
+                                    : theme.colorScheme.onSurfaceVariant,
+                                fontWeight: selected == view
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+String _viewLabel(LineageHomeView view) {
+  return switch (view) {
+    LineageHomeView.tree => 'Мод',
+    LineageHomeView.list => 'Жагсаалт',
+    LineageHomeView.timeline => 'Цагийн шугам',
+  };
+}
+
+IconData _viewIcon(LineageHomeView view) {
+  return switch (view) {
+    LineageHomeView.tree => Icons.account_tree_rounded,
+    LineageHomeView.list => Icons.view_list_rounded,
+    LineageHomeView.timeline => Icons.timeline_rounded,
+  };
+}
+
+// ── Selected root overview ──
+class _RootOverview extends StatelessWidget {
+  const _RootOverview({required this.snapshot});
+
+  final LineageSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final root = snapshot.root;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.account_tree_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      root.name,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      '${root.coat} • ${root.birthYear}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (root.notes.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              root.notes,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          Divider(
+            height: 1,
+            thickness: 0.5,
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _StatsRow(
+            offspring: root.offspringCount,
+            awards: root.awardCount,
+            nodes: snapshot.treeNodes.length,
           ),
         ],
-      ],
+      ),
     );
   }
 }
@@ -343,37 +510,62 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.labelMedium?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-
     return Row(
       children: [
-        _Stat(label: 'Үр төл', value: offspring, style: style),
-        const SizedBox(width: AppSpacing.lg),
-        _Stat(label: 'Шагнал', value: awards, style: style),
-        const SizedBox(width: AppSpacing.lg),
-        _Stat(label: 'Node', value: nodes, style: style),
+        Expanded(
+          child: _Stat(label: 'Үр төл', value: offspring),
+        ),
+        const _StatDivider(),
+        Expanded(
+          child: _Stat(label: 'Шагнал', value: awards),
+        ),
+        const _StatDivider(),
+        Expanded(
+          child: _Stat(label: 'Зангилаа', value: nodes),
+        ),
       ],
     );
   }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({required this.label, required this.value, required this.style});
-
-  final String label;
-  final int value;
-  final TextStyle? style;
+class _StatDivider extends StatelessWidget {
+  const _StatDivider();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Container(
+      width: 1,
+      height: 32,
+      color: Theme.of(context).colorScheme.outlineVariant,
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({required this.label, required this.value});
+
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
       children: [
-        Text('$value', style: style?.copyWith(fontWeight: FontWeight.w600)),
-        const SizedBox(width: AppSpacing.xs),
-        Text(label, style: style),
+        Text(
+          '$value',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          label,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
       ],
     );
   }
@@ -395,75 +587,96 @@ class _DepthSelector extends ConsumerWidget {
     final limits = ref.watch(tierLimitsProvider);
     final maxGen = limits.maxPedigreeGenerations;
 
-    return SizedBox(
-      height: AppSpacing.xxxl,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: LineageTreeDepth.values.length,
-        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
-        itemBuilder: (ctx, index) {
-          final depth = LineageTreeDepth.values[index];
-          final isSelected = depth == selectedDepth;
-          final isLocked = _isDepthLocked(depth, maxGen);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Харах үе',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        SizedBox(
+          height: AppSpacing.xxxxl,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: LineageTreeDepth.values.length,
+            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+            itemBuilder: (ctx, index) {
+              final depth = LineageTreeDepth.values[index];
+              final isSelected = depth == selectedDepth;
+              final isLocked = _isDepthLocked(depth, maxGen);
 
-          return GestureDetector(
-            onTap: () {
-              if (isLocked) {
-                PaywallWidget.show(
-                  context,
-                  denied: GateDenied(
-                    reason:
-                        'Үнэгүй түвшинд ${maxGen ?? "бүгд"} үе хүртэл харах боломжтой.',
-                    requiredTier: SubscriptionTier.pro,
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (isLocked) {
+                    PaywallWidget.show(
+                      context,
+                      denied: GateDenied(
+                        reason:
+                            'Үнэгүй түвшинд ${maxGen ?? "бүгд"} үе хүртэл харах боломжтой.',
+                        requiredTier: SubscriptionTier.pro,
+                      ),
+                    );
+                    return;
+                  }
+                  onDepthSelected(depth);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
                   ),
-                );
-                return;
-              }
-              onDepthSelected(depth);
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? theme.colorScheme.primaryContainer
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outlineVariant,
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    depth.label,
-                    style: theme.textTheme.labelMedium?.copyWith(
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? theme.colorScheme.primaryContainer
+                        : theme.colorScheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
                       color: isSelected
-                          ? theme.colorScheme.onPrimaryContainer
-                          : theme.colorScheme.onSurfaceVariant,
+                          ? theme.colorScheme.primary.withValues(alpha: 0.45)
+                          : theme.colorScheme.outlineVariant.withValues(
+                              alpha: 0.7,
+                            ),
                     ),
                   ),
-                  if (isLocked) ...[
-                    const SizedBox(width: AppSpacing.xs),
-                    Icon(
-                      Icons.lock_outline,
-                      size: 12,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        depth.label,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: isSelected
+                              ? theme.colorScheme.onPrimaryContainer
+                              : theme.colorScheme.onSurfaceVariant,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+                      if (isLocked) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        Icon(
+                          Icons.lock_outline,
+                          size: 12,
+                          color: isSelected
+                              ? theme.colorScheme.onPrimaryContainer
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

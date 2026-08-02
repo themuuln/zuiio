@@ -36,7 +36,7 @@ class SyncQueueScreen extends ConsumerWidget {
         title: const Text('Синк дараалал'),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 4),
+            padding: const EdgeInsets.only(right: AppSpacing.xs),
             child: SyncIndicator(size: 12),
           ),
           // ── Sync Now button ──
@@ -45,11 +45,7 @@ class SyncQueueScreen extends ConsumerWidget {
             child: syncState.isSyncing
                 ? const Padding(
                     padding: EdgeInsets.all(AppSpacing.md),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
+                    child: LoadingIndicator(size: 20),
                   )
                 : TextButton.icon(
                     onPressed: () => _triggerSync(ref),
@@ -251,10 +247,7 @@ class _SyncStatusCard extends StatelessWidget {
               child: isSyncing
                   ? Padding(
                       padding: const EdgeInsets.all(AppSpacing.sm),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: statusColor,
-                      ),
+                      child: LoadingIndicator(size: 22, color: statusColor),
                     )
                   : Icon(statusIcon, color: statusColor, size: 22),
             ),
@@ -545,11 +538,10 @@ class _DeadLetterItemCard extends ConsumerWidget {
                       padding: const EdgeInsets.only(top: AppSpacing.xs),
                       child: Text(
                         'Оролдсон: ${item.retryCount} удаа',
-                        style: theme.textTheme.bodySmall?.copyWith(
+                        style: TamgaTypography.caption2(
                           color: theme.colorScheme.onErrorContainer.withValues(
                             alpha: 0.7,
                           ),
-                          fontSize: 11,
                         ),
                       ),
                     ),
@@ -653,10 +645,9 @@ class _ActionChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: theme.textTheme.labelSmall?.copyWith(
+        style: TamgaTypography.caption2(
           color: chipColor,
-          fontWeight: FontWeight.w600,
-          fontSize: 10,
+          weight: FontWeight.w600,
         ),
       ),
     );
@@ -679,31 +670,7 @@ class _EmptySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-      child: Column(
-        children: [
-          Icon(icon, size: 40, color: theme.colorScheme.outlineVariant),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            message,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
+    return InlineEmptyState(icon: icon, title: message, description: subtitle);
   }
 }
 
@@ -717,7 +684,7 @@ class _LoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.all(AppSpacing.xxl),
-      child: Center(child: CircularProgressIndicator()),
+      child: Center(child: LoadingIndicator(size: 24)),
     );
   }
 }
@@ -732,18 +699,16 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = TamgaColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         children: [
-          Icon(Icons.error_outline, size: 40, color: theme.colorScheme.error),
+          Icon(Icons.error_outline, size: 40, color: colors.error),
           const SizedBox(height: AppSpacing.sm),
           Text(
             message,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: TamgaTypography.body(color: colors.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.md),

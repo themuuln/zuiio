@@ -71,7 +71,7 @@ void main() {
       );
 
       await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(TamgaLoadingView), findsOneWidget);
 
       completer.complete([]);
     });
@@ -196,15 +196,15 @@ void main() {
     });
 
     // ════════════════════════════════════════════════════════════════
-    // FAB
+    // ── Bottom action ────────────────────────────────────────────────
     // ════════════════════════════════════════════════════════════════
-    testWidgets('shows FAB to add new measurement', (tester) async {
+    testWidgets('shows bottom action to add new measurement', (tester) async {
       await tester.pumpWidget(
         createPerformanceScreen(horseId: 'horse-1', records: []),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byType(TamgaBottomAction), findsOneWidget);
     });
 
     // ════════════════════════════════════════════════════════════════

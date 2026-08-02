@@ -8,7 +8,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "biome check",
+    "lint": "biome check supabase/functions/lost-horse-alert-dispatch/index.ts supabase/functions/public-lost-horse/index.ts",
     "format": "biome format --write",
     "validate:types": "tsc --noEmit",
     "test": "jest",

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/app_colors.dart';
 import '../../../app/app_config.dart';
 import '../../../core/features/feature_flags.dart';
 import '../../../core/features/feature_flags_providers.dart';
@@ -1344,7 +1345,7 @@ class _SyncStatusSection extends ConsumerWidget {
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: LoadingIndicator(size: 16),
                   )
                 : const Icon(Icons.sync, size: 18),
             label: Text(
@@ -1404,13 +1405,13 @@ class _SyncStatusSection extends ConsumerWidget {
                       Icon(
                         Icons.hourglass_empty,
                         size: 14,
-                        color: Colors.amber.shade700,
+                        color: AppColors.warning,
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         '${syncState.pendingCount} синк хүлээгдэж байна',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.amber.shade700,
+                          color: AppColors.warning,
                         ),
                       ),
                     ],
@@ -1449,7 +1450,7 @@ class _SyncStatusSection extends ConsumerWidget {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: LoadingIndicator(size: 16),
                         )
                       : const Icon(Icons.sync, size: 18),
                   label: Text(

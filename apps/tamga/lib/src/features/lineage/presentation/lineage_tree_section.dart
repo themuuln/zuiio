@@ -55,94 +55,97 @@ class LineageTreeSection extends StatelessWidget {
 
     return Column(
       children: [
-        Card(
+        Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+            ),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Модон хэлбэр', style: theme.textTheme.titleLarge),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Pinch zoom, pan, node selection бүхий visual pedigree prototype.',
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                const Wrap(
-                  spacing: AppSpacing.md,
-                  runSpacing: AppSpacing.md,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _LegendBadge(label: 'Өрхийн', isHousehold: true),
-                    _LegendBadge(label: 'Гаднах', isHousehold: false),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.fullscreen_rounded, size: 18),
-                        label: const Text('Дэлгэц дүүргэх'),
-                        onPressed: treeLayout == null
-                            ? null
-                            : () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => FullScreenTreePage(
-                                      layout: treeLayout!,
-                                      selectedNodeId: selectedNodeId,
-                                      onNodeTap: onNodeTap,
-                                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Удмын мод', style: theme.textTheme.titleLarge),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            'Хуруугаараа томруулж, чирж байрлуулаад, зангилааг сонгоно.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    IconButton(
+                      onPressed: treeLayout == null
+                          ? null
+                          : () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => FullScreenTreePage(
+                                    layout: treeLayout!,
+                                    selectedNodeId: selectedNodeId,
+                                    onNodeTap: onNodeTap,
                                   ),
-                                );
-                              },
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    // ── Load more ancestors prompt ──
-                    if (treeLayout != null && hasMoreAncestors)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: _LoadMorePrompt(
-                          label: 'Өвөг дээдэс / Show more ancestors',
-                          onTap: onLoadMoreAncestors,
-                        ),
-                      ),
-
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final viewportHeight = MediaQuery.of(
-                          context,
-                        ).size.height;
-                        final targetHeight = (viewportHeight * 0.55).clamp(
-                          380.0,
-                          700.0,
-                        );
-                        return SizedBox(
-                          height: targetHeight,
-                          child: treeLayout == null
-                              ? const Center(child: CircularProgressIndicator())
-                              : PedigreeTreeView(
-                                  layout: treeLayout!,
-                                  selectedNodeId: selectedNodeId,
-                                  onNodeTap: onNodeTap,
                                 ),
-                        );
-                      },
+                              );
+                            },
+                      icon: const Icon(Icons.fullscreen_rounded, size: 20),
+                      tooltip: 'Бүтэн дэлгэцээр харах',
+                      visualDensity: VisualDensity.compact,
                     ),
-
-                    // ── Load more descendants prompt ──
-                    if (treeLayout != null && hasMoreDescendants)
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.sm),
-                        child: _LoadMorePrompt(
-                          label: 'Үр удам / Show more descendants',
-                          onTap: onLoadMoreDescendants,
-                        ),
-                      ),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.lg),
+                // ── Load more ancestors prompt ──
+                if (treeLayout != null && hasMoreAncestors)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _LoadMorePrompt(
+                      label: 'Өвөг дээдсийг харах',
+                      onTap: onLoadMoreAncestors,
+                    ),
+                  ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final viewportHeight = MediaQuery.of(context).size.height;
+                    final targetHeight = (viewportHeight * 0.55).clamp(
+                      380.0,
+                      700.0,
+                    );
+                    return SizedBox(
+                      height: targetHeight,
+                      child: treeLayout == null
+                          ? const Center(child: CircularProgressIndicator())
+                          : PedigreeTreeView(
+                              layout: treeLayout!,
+                              selectedNodeId: selectedNodeId,
+                              onNodeTap: onNodeTap,
+                            ),
+                    );
+                  },
+                ),
+                // ── Load more descendants prompt ──
+                if (treeLayout != null && hasMoreDescendants)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.sm),
+                    child: _LoadMorePrompt(
+                      label: 'Үр удмыг харах',
+                      onTap: onLoadMoreDescendants,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -165,38 +168,6 @@ class LineageTreeSection extends StatelessWidget {
               : const SizedBox.shrink(),
         ),
       ],
-    );
-  }
-}
-
-/// Тэмдэг (legend) badge.
-class _LegendBadge extends StatelessWidget {
-  const _LegendBadge({required this.label, required this.isHousehold});
-
-  final String label;
-  final bool isHousehold;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: isHousehold
-            ? colorScheme.tertiaryContainer
-            : colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(
-          context,
-        ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-      ),
     );
   }
 }
@@ -255,7 +226,14 @@ class SelectedNodeCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.65),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
@@ -278,13 +256,14 @@ class SelectedNodeCard extends StatelessWidget {
                         : _isMare
                         ? colorScheme.tertiaryContainer
                         : colorScheme.surfaceContainerHighest,
-                    child: Text(
+                    child: Icon(
                       _isStallion
-                          ? '🐎'
+                          ? Icons.male
                           : _isMare
-                          ? '🐴'
-                          : node.name.characters.first,
-                      style: const TextStyle(fontSize: 20),
+                          ? Icons.female
+                          : Icons.pets_outlined,
+                      color: colorScheme.primary,
+                      size: 22,
                     ),
                   ),
                 const SizedBox(width: AppSpacing.md),
@@ -294,8 +273,8 @@ class SelectedNodeCard extends StatelessWidget {
                     children: [
                       Text(
                         node.name,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -374,9 +353,14 @@ class _OwnedBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: isOwnedByHousehold
-            ? colorScheme.primaryContainer
-            : colorScheme.surfaceContainerHighest,
+            ? colorScheme.primaryContainer.withValues(alpha: 0.72)
+            : colorScheme.surface,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: isOwnedByHousehold
+              ? colorScheme.primary.withValues(alpha: 0.35)
+              : colorScheme.outlineVariant.withValues(alpha: 0.65),
+        ),
       ),
       child: Text(
         isOwnedByHousehold ? 'Өрхийн' : 'Гаднах',
@@ -409,8 +393,11 @@ class _StatChip extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+          ),
         ),
         child: Column(
           children: [
@@ -452,8 +439,11 @@ class _InfoChip extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+        ),
       ),
       child: Text(
         '$label: $value',

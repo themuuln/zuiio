@@ -45,7 +45,7 @@ class LocalLineageRepository implements LineageRepository {
       birthYear: 2012,
       offspringCount: 18,
       awardCount: 7,
-      notes: 'Өрхийн гол азарганы шугам. Tree view-ийн үндсэн root.',
+      notes: 'Өрхийн гол азарганы шугам. Удмын модны үндсэн язгуур.',
     ),
     LineageRoot(
       id: 'tsagaan-salkhi',
@@ -54,7 +54,7 @@ class LocalLineageRepository implements LineageRepository {
       birthYear: 2016,
       offspringCount: 9,
       awardCount: 4,
-      notes: 'Гаднах удамтай холбогдсон хоёрдогч root.',
+      notes: 'Гаднах удамтай холбогдсон хоёрдогч язгуур.',
     ),
   ];
 

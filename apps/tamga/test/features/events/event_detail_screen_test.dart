@@ -474,8 +474,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Content may be off-screen; drag the ListView down to reveal notes.
-      await tester.drag(find.byType(ListView).first, const Offset(0, -400));
+      // Content may be off-screen; scroll the detail view to reveal notes.
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -400));
       await tester.pumpAndSettle();
 
       expect(find.text('Тэмдэглэл'), findsWidgets);
@@ -640,7 +640,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Tap the "Сануулах" button
+        // Keep the action visible before tapping it in the scrollable detail view.
+        await tester.ensureVisible(find.text('Сануулах'));
         await tester.tap(find.text('Сануулах'));
         await tester.pumpAndSettle();
 

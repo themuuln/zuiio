@@ -124,7 +124,9 @@ class HorseDetailScreen extends ConsumerWidget {
                   horse.name,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: horse.photoUrls.isNotEmpty
+                        ? Colors.white
+                        : tamgaColors.onPrimaryContainer,
                     letterSpacing: -0.3,
                   ),
                 ),
@@ -141,6 +143,8 @@ class HorseDetailScreen extends ConsumerWidget {
                   ),
                   child: TabBar(
                     isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 10),
                     onTap: (_) => HapticFeedback.selectionClick(),
                     indicatorColor: tamgaColors.primary,
                     indicatorWeight: 2.5,

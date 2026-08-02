@@ -16,7 +16,12 @@ import 'package:tamga/src/features/market/data/market_repository.dart';
 import 'package:tamga/src/features/breeding/data/breeding_repository.dart';
 import 'package:tamga/src/features/profile/data/profile_settings_repository.dart';
 import 'package:tamga/src/features/map/data/map_repository.dart';
+import 'package:tamga/src/features/map/data/lost_horse_repository.dart';
+import 'package:tamga/src/features/map/domain/lost_horse_report.dart';
+import 'package:tamga/src/features/map/domain/map_enums.dart';
+import 'package:tamga/src/features/map/domain/sighting_report.dart';
 import 'package:tamga/src/features/shared/data/isar_sync_storage.dart';
+import 'package:tamga/src/features/shared/data/isar_schemas/isar_lost_horse_media_draft.dart';
 
 // ── Mock classes ─────────────────────────────────────────────────────────
 
@@ -47,9 +52,32 @@ class MockCertificateRepository extends Mock implements CertificateRepository {}
 
 class MockPaymentRepository extends Mock implements PaymentRepository {}
 
+class MockLostHorseRepository extends Mock implements LostHorseRepository {}
+
 // ── Fallback value registration ─────────────────────────────────────────
 
 void _registerFallbackValues() {
+  registerFallbackValue(
+    LostHorseReport(
+      id: 'fallback-report',
+      ownerId: 'fallback-owner',
+      lastSeenLat: 47.9,
+      lastSeenLng: 106.9,
+      lastSeenAt: DateTime(2026),
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    ),
+  );
+  registerFallbackValue(
+    SightingReport(
+      id: 'fallback-sighting',
+      reportId: 'fallback-report',
+      reporterId: 'fallback-reporter',
+      lat: 47.9,
+      lng: 106.9,
+      createdAt: DateTime(2026),
+    ),
+  );
   registerFallbackValue(
     CoOwnershipRecord(
       id: 'fallback-id',
@@ -83,6 +111,7 @@ CloudSyncCoordinator createTestCoordinator({
   DocumentRepository? documentRepository,
   CertificateRepository? certificateRepository,
   PaymentRepository? paymentRepository,
+  LostHorseRepository? lostHorseRepository,
 }) {
   return CloudSyncCoordinator(
     horsesRepository: horsesRepository ?? MockHorsesRepository(),
@@ -99,6 +128,7 @@ CloudSyncCoordinator createTestCoordinator({
     documentRepository: documentRepository ?? MockDocumentRepository(),
     certificateRepository: certificateRepository ?? MockCertificateRepository(),
     paymentRepository: paymentRepository ?? MockPaymentRepository(),
+    lostHorseRepository: lostHorseRepository,
   );
 }
 
@@ -444,6 +474,345 @@ void main() {
         expect(result.error.code, 'SUPABASE_NOT_CONFIGURED');
       },
     );
+
+    // ── Lost horse recovery ──────────────────────────────────────
+
+    LostHorseReport buildRecoveryReport() {
+      return LostHorseReport(
+        id: 'r-recovery',
+        ownerId: 'o1',
+        lastSeenLat: 47.9,
+        lastSeenLng: 106.9,
+        lastSeenAt: DateTime(2026, 6, 1),
+        createdAt: DateTime(2026, 6, 1),
+        updatedAt: DateTime(2026, 6, 1),
+      );
+    }
+
+    test(
+      '_pushLostHorseReport create uploads staged media then publishes',
+      () async {
+        final lostHorseRepo = MockLostHorseRepository();
+        final syncStorage = MockIsarSyncStorage();
+        final coordinator = createTestCoordinator(
+          lostHorseRepository: lostHorseRepo,
+          syncStorage: syncStorage,
+        );
+        final report = buildRecoveryReport();
+        final item = SyncQueueItem(
+          entityType: 'lost_horse_report',
+          entityId: report.id,
+          action: SyncAction.create,
+          data: report.toJson(),
+          timestamp: report.createdAt,
+          accountId: report.ownerId,
+          queueId: 'lost_horse_report:${report.id}',
+        );
+
+        final draft = IsarLostHorseMediaDraft()
+          ..mediaId = 'm1'
+          ..reportId = report.id
+          ..accountId = report.ownerId
+          ..localPath = '/tmp/photo.jpg'
+          ..mediaType = 'photo'
+          ..storagePath = 'o1/r-recovery/0.jpg'
+          ..sortOrder = 0
+          ..createdAt = report.createdAt
+          ..uploaded = false;
+
+        when(
+          () => syncStorage.loadRecoveryMediaDrafts(report.id),
+        ).thenAnswer((_) async => [draft]);
+        when(
+          () => lostHorseRepo.createReport(
+            any(),
+            localMediaPaths: ['/tmp/photo.jpg'],
+            mediaIds: ['m1'],
+          ),
+        ).thenAnswer((_) async => Result.ok(report));
+        when(
+          () =>
+              lostHorseRepo.publishReport(report.id, expectedMediaIds: ['m1']),
+        ).thenAnswer((_) async => Result.ok(report));
+        when(
+          () => syncStorage.markRecoveryMediaUploaded(
+            report.id,
+            mediaIds: ['m1'],
+          ),
+        ).thenAnswer((_) async {});
+
+        final result = await coordinator.testPushItem(item);
+
+        expect(result.isSuccess, isTrue);
+        verify(
+          () => lostHorseRepo.createReport(
+            any(),
+            localMediaPaths: ['/tmp/photo.jpg'],
+            mediaIds: ['m1'],
+          ),
+        ).called(1);
+        verify(
+          () =>
+              lostHorseRepo.publishReport(report.id, expectedMediaIds: ['m1']),
+        ).called(1);
+        // Media marked uploaded after the create and again after publish.
+        verify(
+          () => syncStorage.markRecoveryMediaUploaded(
+            report.id,
+            mediaIds: ['m1'],
+          ),
+        ).called(2);
+      },
+    );
+
+    test('_pushLostHorseReport create without media skips uploads', () async {
+      final lostHorseRepo = MockLostHorseRepository();
+      final syncStorage = MockIsarSyncStorage();
+      final coordinator = createTestCoordinator(
+        lostHorseRepository: lostHorseRepo,
+        syncStorage: syncStorage,
+      );
+      final report = buildRecoveryReport();
+      final item = SyncQueueItem(
+        entityType: 'lost_horse_report',
+        entityId: report.id,
+        action: SyncAction.create,
+        data: report.toJson(),
+        timestamp: report.createdAt,
+        accountId: report.ownerId,
+        queueId: 'lost_horse_report:${report.id}',
+      );
+
+      when(
+        () => syncStorage.loadRecoveryMediaDrafts(report.id),
+      ).thenAnswer((_) async => <IsarLostHorseMediaDraft>[]);
+      when(
+        () => lostHorseRepo.createReport(
+          any(),
+          localMediaPaths: [],
+          mediaIds: [],
+        ),
+      ).thenAnswer((_) async => Result.ok(report));
+      when(
+        () => lostHorseRepo.publishReport(report.id, expectedMediaIds: []),
+      ).thenAnswer((_) async => Result.ok(report));
+      when(
+        () => syncStorage.markRecoveryMediaUploaded(report.id, mediaIds: []),
+      ).thenAnswer((_) async {});
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+      // Media marked uploaded once — after publish only (no pending drafts).
+      verify(
+        () => syncStorage.markRecoveryMediaUploaded(report.id, mediaIds: []),
+      ).called(1);
+    });
+
+    test(
+      '_pushLostHorseReport routes legacy status rows to resolution',
+      () async {
+        final lostHorseRepo = MockLostHorseRepository();
+        final coordinator = createTestCoordinator(
+          lostHorseRepository: lostHorseRepo,
+        );
+        final item = SyncQueueItem(
+          entityType: 'lost_horse_report',
+          entityId: 'r-legacy',
+          action: SyncAction.update,
+          data: {'status': 'found', 'resolution_note': 'Эзэндээ буцаж ирсэн'},
+          timestamp: DateTime(2026, 6, 1),
+          accountId: 'o1',
+          queueId: 'lost_horse_report:r-legacy',
+        );
+
+        when(
+          () => lostHorseRepo.resolveReport(
+            reportId: 'r-legacy',
+            resolutionType: LostHorseResolutionType.reunited,
+            note: 'Эзэндээ буцаж ирсэн',
+            verifiedSightingId: null,
+          ),
+        ).thenAnswer((_) async => Result.ok(buildRecoveryReport()));
+
+        final result = await coordinator.testPushItem(item);
+
+        expect(result.isSuccess, isTrue);
+        verify(
+          () => lostHorseRepo.resolveReport(
+            reportId: 'r-legacy',
+            resolutionType: LostHorseResolutionType.reunited,
+            note: 'Эзэндээ буцаж ирсэн',
+            verifiedSightingId: null,
+          ),
+        ).called(1);
+      },
+    );
+
+    test('_pushLostHorseReport returns ok for delete action', () async {
+      final coordinator = createTestCoordinator();
+      final item = SyncQueueItem(
+        entityType: 'lost_horse_report',
+        entityId: 'r-del',
+        action: SyncAction.delete,
+        data: {},
+        timestamp: DateTime(2026, 6, 1),
+      );
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+    });
+
+    test('_pushLostHorsePublish forwards expected media ids', () async {
+      final lostHorseRepo = MockLostHorseRepository();
+      final coordinator = createTestCoordinator(
+        lostHorseRepository: lostHorseRepo,
+      );
+      final item = SyncQueueItem(
+        entityType: 'lost_horse_publish',
+        entityId: 'r-publish',
+        action: SyncAction.update,
+        data: {
+          'expected_media_ids': ['m1', 'm2'],
+        },
+        timestamp: DateTime(2026, 6, 1),
+        accountId: 'o1',
+        queueId: 'lost_horse_publish:r-publish',
+      );
+
+      when(
+        () => lostHorseRepo.publishReport(
+          'r-publish',
+          expectedMediaIds: ['m1', 'm2'],
+        ),
+      ).thenAnswer((_) async => Result.ok(buildRecoveryReport()));
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+      verify(
+        () => lostHorseRepo.publishReport(
+          'r-publish',
+          expectedMediaIds: ['m1', 'm2'],
+        ),
+      ).called(1);
+    });
+
+    test('_pushLostHorseResolution resolves with typed resolution', () async {
+      final lostHorseRepo = MockLostHorseRepository();
+      final coordinator = createTestCoordinator(
+        lostHorseRepository: lostHorseRepo,
+      );
+      final item = SyncQueueItem(
+        entityType: 'lost_horse_resolution',
+        entityId: 'r-resolve',
+        action: SyncAction.update,
+        data: {
+          'resolution_type': 'withdrawn',
+          'resolution_note': 'Хайхаа больсон',
+        },
+        timestamp: DateTime(2026, 6, 1),
+        accountId: 'o1',
+        queueId: 'lost_horse_resolution:r-resolve',
+      );
+
+      when(
+        () => lostHorseRepo.resolveReport(
+          reportId: 'r-resolve',
+          resolutionType: LostHorseResolutionType.withdrawn,
+          note: 'Хайхаа больсон',
+          verifiedSightingId: null,
+        ),
+      ).thenAnswer((_) async => Result.ok(buildRecoveryReport()));
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+      verify(
+        () => lostHorseRepo.resolveReport(
+          reportId: 'r-resolve',
+          resolutionType: LostHorseResolutionType.withdrawn,
+          note: 'Хайхаа больсон',
+          verifiedSightingId: null,
+        ),
+      ).called(1);
+    });
+
+    test('_pushLostHorseSighting creates a new sighting', () async {
+      final lostHorseRepo = MockLostHorseRepository();
+      final coordinator = createTestCoordinator(
+        lostHorseRepository: lostHorseRepo,
+      );
+      final sighting = SightingReport(
+        id: 's1',
+        reportId: 'r1',
+        reporterId: 'u1',
+        lat: 47.9,
+        lng: 106.9,
+        createdAt: DateTime(2026, 6, 1),
+      );
+      final item = SyncQueueItem(
+        entityType: 'lost_horse_sighting',
+        entityId: sighting.id,
+        action: SyncAction.create,
+        data: sighting.toJson(),
+        timestamp: sighting.createdAt,
+        accountId: sighting.reporterId,
+        queueId: 'lost_horse_sighting:${sighting.id}',
+      );
+
+      when(
+        () => lostHorseRepo.createSighting(any()),
+      ).thenAnswer((_) async => Result.ok(sighting));
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+      verify(() => lostHorseRepo.createSighting(any())).called(1);
+    });
+
+    test('_pushLostHorseSighting update reviews the sighting', () async {
+      final lostHorseRepo = MockLostHorseRepository();
+      final coordinator = createTestCoordinator(
+        lostHorseRepository: lostHorseRepo,
+      );
+      final sighting = SightingReport(
+        id: 's2',
+        reportId: 'r1',
+        reporterId: 'u1',
+        lat: 47.9,
+        lng: 106.9,
+        status: SightingStatus.confirmed,
+        createdAt: DateTime(2026, 6, 1),
+      );
+      final item = SyncQueueItem(
+        entityType: 'lost_horse_sighting',
+        entityId: sighting.id,
+        action: SyncAction.update,
+        data: sighting.toJson(),
+        timestamp: sighting.createdAt,
+        accountId: sighting.reporterId,
+        queueId: 'lost_horse_sighting:${sighting.id}',
+      );
+
+      when(
+        () => lostHorseRepo.reviewSighting(
+          sightingId: sighting.id,
+          status: SightingStatus.confirmed,
+        ),
+      ).thenAnswer((_) async => Result.ok(sighting));
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+      verify(
+        () => lostHorseRepo.reviewSighting(
+          sightingId: sighting.id,
+          status: SightingStatus.confirmed,
+        ),
+      ).called(1);
+    });
   });
 
   group('Entity type dispatch completeness', () {

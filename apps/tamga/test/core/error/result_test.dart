@@ -136,6 +136,37 @@ void main() {
         () => Future.error(Exception('async boom')),
       );
       expect(result.isFailure, true);
+      expect(result.error.code, 'ASYNC_ERROR');
+    });
+
+    test(
+      'tryFuture preserves AppException code, message, and details',
+      () async {
+        final thrown = AppException(
+          message: 'Conversation not found: missing',
+          code: 'CONVERSATION_NOT_FOUND',
+          details: {'conversationId': 'missing'},
+        );
+
+        final result = await Result.tryFuture(() => Future.error(thrown));
+
+        expect(result.isFailure, true);
+        expect(result.error, same(thrown));
+        expect(result.error.code, 'CONVERSATION_NOT_FOUND');
+        expect(result.error.message, 'Conversation not found: missing');
+        expect(result.error.details, {'conversationId': 'missing'});
+      },
+    );
+
+    test('tryFuture wraps generic exceptions as ASYNC_ERROR', () async {
+      final result = await Result.tryFuture(
+        () async => throw StateError('generic boom'),
+      );
+
+      expect(result.isFailure, true);
+      expect(result.error.code, 'ASYNC_ERROR');
+      expect(result.error.message, contains('generic boom'));
+      expect(result.error.details, isNotNull);
     });
 
     test('when — calls onSuccess on Ok', () {

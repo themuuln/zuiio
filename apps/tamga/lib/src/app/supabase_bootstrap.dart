@@ -14,10 +14,10 @@ import 'app_config.dart';
 ///
 /// Expected OAuth callback URL format: `io.supabase.tamga://login-callback/`
 Future<void> initializeSupabaseIfConfigured() async {
+  await AppConfig.load();
   if (!AppConfig.isSupabaseConfigured) {
     return;
   }
-
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
     publishableKey: AppConfig.supabasePublishableKey,

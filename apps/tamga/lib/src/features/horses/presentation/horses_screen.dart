@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/widgets/widgets.dart';
 import '../../breeding/presentation/breeding_screen.dart';
 import '../../search/application/search_providers.dart';
 import '../../shared/presentation/sync_indicator.dart';
@@ -32,6 +31,7 @@ class HorsesScreen extends ConsumerWidget {
                   child: SyncIndicator(size: 12),
                 ),
                 PopupMenuButton<String>(
+                  tooltip: 'Нэмэлт үйлдэл',
                   onSelected: (v) {
                     if (v == 'import') {
                       Navigator.of(ctx).push(
@@ -76,7 +76,9 @@ class HorsesScreen extends ConsumerWidget {
                     child: KeyedSubtree(
                       key: ValueKey(tabController.index),
                       child: tabController.index == 0
-                          ? const HorsesRegistryTab()
+                          ? HorsesRegistryTab(
+                              onAddHorse: () => _addHorse(ctx, ref),
+                            )
                           : const BreedingScreen(),
                     ),
                   );
@@ -93,23 +95,12 @@ class HorsesScreen extends ConsumerWidget {
     final result = await Navigator.of(ctx).push<HorseRecord>(
       MaterialPageRoute(builder: (_) => const AddHorseScreen()),
     );
-    if (result != null) {
-      final repo = await ref.read(horsesRepositoryProvider.future);
-      final saveResult = await repo.saveHorse(result);
-      saveResult.when(
-        onSuccess: (_) {
-          ref.invalidate(horsesProvider);
-          ref.invalidate(searchCatalogProvider);
-        },
-        onFailure: (error) {
-          if (ctx.mounted) {
-            TamgaToast.showError(
-              ctx,
-              'Морь хадгалахад алдаа гарлаа: ${error.message}',
-            );
-          }
-        },
-      );
-    }
+    if (result == null) return;
+
+    // AddHorseScreen persists the record; refresh every registry projection
+    // after returning so the list and global search see it immediately.
+    ref.invalidate(horsesProvider);
+    ref.invalidate(paginatedHorsesProvider);
+    ref.invalidate(searchCatalogProvider);
   }
 }

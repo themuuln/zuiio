@@ -36,7 +36,7 @@ void main() {
       );
 
       // Verify the FAB label
-      expect(find.text('Хаяж морь бүртгэх'), findsOneWidget);
+      expect(find.text('Алга болсон морь бүртгэх'), findsOneWidget);
     });
 
     testWidgets('renders tab icons', (tester) async {
@@ -54,7 +54,7 @@ void main() {
       expect(find.byIcon(Icons.map_outlined), findsOneWidget);
     });
 
-    testWidgets('shows premium upgrade button in app bar', (tester) async {
+    testWidgets('shows compact secondary actions in app bar', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
@@ -64,8 +64,8 @@ void main() {
         ),
       );
 
-      // Verify premium icon button
-      expect(find.byIcon(Icons.workspace_premium_outlined), findsOneWidget);
+      expect(find.byTooltip('Мэдэгдэл / Alerts'), findsOneWidget);
+      expect(find.byTooltip('Нэмэлт үйлдэл'), findsOneWidget);
     });
   });
 }

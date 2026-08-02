@@ -1,0 +1,43 @@
+appId: com.tamga
+name: Onboarding
+
+tags:
+  - onboarding
+  - regression
+
+---
+# Full onboarding flow per AGENTS.md: landing → role selection → option visibility.
+# Verifies the wizard advances: welcome → role cards (all 3 options visible)
+# → select herder → region screen appears.
+#
+# NOTE: Covers only the first three wizard steps. The notification and sync
+# pages are reachable (notification advances to sync; only the sync page
+# completes onboarding). Completion navigates directly to the daily command
+# center (/home); the recovery flow exercises the full completion path.
+# Buttons are individually targetable; combined text nodes need .*regex.*.
+
+- launchApp:
+    clearState: true
+
+# ── Landing ──
+- assertVisible: "Эхлэх"
+- tapOn: "Эхлэх"
+
+# ── Role selection — title + all three options visible ──
+- assertVisible:
+    text: ".*Таны үүрэг.*"
+- assertVisible:
+    text: ".*Морь сонирхогч.*"
+- assertVisible:
+    text: ".*Уяач / Малчин.*"
+- assertVisible:
+    text: ".*Жүчээ / Бизнес.*"
+
+# Pick the herder role and continue to the next step
+- tapOn:
+    text: ".*Уяач / Малчин.*"
+- tapOn: "Үргэлжлүүлэх"
+
+# ── Wizard advanced: region selection appears ──
+- assertVisible:
+    text: ".*Аймаг сонгох.*"

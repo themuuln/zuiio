@@ -73,7 +73,6 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
   Widget build(BuildContext context) {
     if (!_isOffline) return const SizedBox.shrink();
 
-    final theme = Theme.of(context);
     final colors = TamgaColors.of(context);
     final syncState = ref.watch(syncStateProvider);
 
@@ -103,17 +102,16 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
                 children: [
                   Text(
                     'Offline — Локал өгөгдөл харуулж байна',
-                    style: theme.textTheme.bodySmall?.copyWith(
+                    style: TamgaTypography.caption1(
+                      weight: FontWeight.w600,
                       color: colors.primary,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   if (syncState.lastSyncTime != null)
                     Text(
                       _formatLastSyncTime(syncState.lastSyncTime!),
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      style: TamgaTypography.caption2(
                         color: colors.primary.withValues(alpha: 0.8),
-                        fontSize: 11,
                       ),
                     ),
                 ],

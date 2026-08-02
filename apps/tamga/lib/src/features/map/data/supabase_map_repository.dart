@@ -326,9 +326,27 @@ class SupabaseMapRepository
   @override
   Future<Result<List<GeofenceAlert>>> getGeofenceAlerts(String userId) async {
     try {
+      // An alert is owned by the user who created the search area (geofence)
+      // it fired on. This mirrors the RLS policies
+      // (geofence_alerts.geofence_id -> search_areas.created_by) and the write
+      // path: GeofenceMonitor only persists alerts for the current user's own
+      // active areas, so scope the fetch instead of reading the latest 100
+      // alerts globally.
+      final areaRows = await _client
+          .from('search_areas')
+          .select('id')
+          .eq('created_by', userId);
+      final areaIds = (areaRows as List)
+          .map((r) => (r as Map<String, dynamic>)['id'] as String)
+          .toList();
+      if (areaIds.isEmpty) {
+        return const Result.ok(<GeofenceAlert>[]);
+      }
+
       final response = await _client
           .from('geofence_alerts')
           .select()
+          .inFilter('geofence_id', areaIds)
           .order('triggered_at', ascending: false)
           .limit(100);
       final alerts = (response as List)

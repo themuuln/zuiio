@@ -202,7 +202,10 @@ class PedigreeNodeCard extends StatelessWidget {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -241,30 +244,36 @@ class PedigreeNodeCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 SizedBox(
                   width: double.infinity,
-                  child: Row(
-                    children: [
-                      NodeBadge(
-                        label: node.isOwnedByHousehold ? 'Өрхийн' : 'Гаднах',
-                        color: node.isOwnedByHousehold
-                            ? colorScheme.tertiaryContainer
-                            : colorScheme.secondaryContainer,
-                      ),
-                      if (node.tamgaNo != null) ...[
-                        const SizedBox(width: AppSpacing.xs),
+                  child: FittedBox(
+                    alignment: Alignment.centerLeft,
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         NodeBadge(
-                          label: node.tamgaNo!,
-                          color: colorScheme.primaryContainer,
-                          textColor: colorScheme.onPrimaryContainer,
+                          label: node.isOwnedByHousehold ? 'Өрхийн' : 'Гаднах',
+                          color: node.isOwnedByHousehold
+                              ? colorScheme.tertiaryContainer
+                              : colorScheme.secondaryContainer,
                         ),
+                        if (node.tamgaNo != null) ...[
+                          const SizedBox(width: AppSpacing.xs),
+                          NodeBadge(
+                            label: node.tamgaNo!,
+                            color: colorScheme.primaryContainer,
+                            textColor: colorScheme.onPrimaryContainer,
+                          ),
+                        ],
+                        if (node.hiddenBranchCount > 0) ...[
+                          const SizedBox(width: AppSpacing.xs),
+                          NodeBadge(
+                            label: '+${node.hiddenBranchCount}',
+                            color: colorScheme.primary,
+                            textColor: colorScheme.onPrimary,
+                          ),
+                        ],
                       ],
-                      const Spacer(),
-                      if (node.hiddenBranchCount > 0)
-                        NodeBadge(
-                          label: '+${node.hiddenBranchCount}',
-                          color: colorScheme.primary,
-                          textColor: colorScheme.onPrimary,
-                        ),
-                    ],
+                    ),
                   ),
                 ),
               ],

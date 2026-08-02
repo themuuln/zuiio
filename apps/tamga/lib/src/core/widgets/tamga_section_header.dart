@@ -43,25 +43,44 @@ class TamgaSectionHeader extends StatelessWidget {
             TamgaSpacing.sm,
           ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title.toUpperCase(),
-            style:
-                titleStyle ??
-                TamgaTypography.footnote(
-                  weight: FontWeight.w600,
-                  color: colors.onSurfaceVariant,
-                ),
+          Expanded(
+            child: Text(
+              title.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  titleStyle ??
+                  TamgaTypography.footnote(
+                    weight: FontWeight.w600,
+                    color: colors.onSurfaceVariant,
+                  ),
+            ),
           ),
-          if (actionLabel != null && onAction != null)
-            GestureDetector(
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(width: TamgaSpacing.sm),
+            Semantics(
+              button: true,
+              label: actionLabel,
               onTap: onAction,
-              child: Text(
-                actionLabel!,
-                style: TamgaTypography.footnote(color: colors.primary),
+              child: TextButton(
+                onPressed: onAction,
+                style: TextButton.styleFrom(
+                  foregroundColor: colors.primary,
+                  minimumSize: const Size(44, 44),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: TamgaSpacing.sm,
+                  ),
+                  tapTargetSize: MaterialTapTargetSize.padded,
+                ),
+                child: Text(
+                  actionLabel!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
+          ],
         ],
       ),
     );

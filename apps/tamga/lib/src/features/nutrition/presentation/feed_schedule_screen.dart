@@ -51,6 +51,7 @@ class FeedScheduleScreen extends ConsumerWidget {
                 ref.invalidate(feedSchedulesProvider(horseId));
               });
         },
+        tooltip: 'Тэжээлийн хуваарь нэмэх',
         child: const Icon(Icons.add),
       ),
     );
@@ -126,7 +127,6 @@ class _FeedScheduleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final colors = TamgaColors.of(context);
     final isActive =
         schedule.endDate == null ||
@@ -139,102 +139,98 @@ class _FeedScheduleTile extends StatelessWidget {
         horizontal: AppSpacing.lg,
         vertical: 4,
       ),
-      child: Card(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              children: [
-                // ── Type icon ──
-                CircleAvatar(
-                  backgroundColor: colors.primaryContainer,
-                  radius: 20,
-                  child: Icon(
-                    _feedTypeIcon(schedule.feedType),
-                    color: colors.onPrimaryContainer,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
+      child: TamgaCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            // ── Type icon ──
+            CircleAvatar(
+              backgroundColor: colors.primaryContainer,
+              radius: 20,
+              child: Icon(
+                _feedTypeIcon(schedule.feedType),
+                color: colors.onPrimaryContainer,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
 
-                // ── Details ──
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            // ── Details ──
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            schedule.feedType.displayName,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isActive
-                                  ? colors.tertiary.withValues(alpha: 0.15)
-                                  : colors.surfaceContainerHigh,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.cornerRadiusSmall,
-                              ),
-                            ),
-                            child: Text(
-                              isActive ? 'Идэвхтэй' : 'Дууссан',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                                color: isActive
-                                    ? colors.tertiary
-                                    : colors.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${schedule.quantityKg.toStringAsFixed(1)} кг · ${schedule.frequency}',
-                        style: TextStyle(
-                          color: colors.onSurfaceVariant,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${_formatDate(schedule.startDate)}'
-                        '${schedule.endDate != null ? ' — ${_formatDate(schedule.endDate!)}' : ' · Үргэлжлэх'}',
-                        style: TextStyle(
-                          color: colors.onSurfaceVariant,
-                          fontSize: 11,
-                        ),
-                      ),
-                      if (schedule.notes.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          schedule.notes,
-                          style: TextStyle(
-                            color: colors.onSurfaceVariant,
-                            fontSize: 11,
+                      Flexible(
+                        child: Text(
+                          schedule.feedType.displayName,
+                          style: TamgaTypography.body(
+                            weight: FontWeight.w600,
+                            color: colors.onSurface,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ],
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? colors.tertiary.withValues(alpha: 0.15)
+                              : colors.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.cornerRadiusSmall,
+                          ),
+                        ),
+                        child: Text(
+                          isActive ? 'Идэвхтэй' : 'Дууссан',
+                          style: TamgaTypography.caption2(
+                            weight: FontWeight.w500,
+                            color: isActive
+                                ? colors.tertiary
+                                : colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                Icon(Icons.chevron_right, size: 18, color: colors.outline),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    '${schedule.quantityKg.toStringAsFixed(1)} кг · ${schedule.frequency}',
+                    style: TamgaTypography.caption1(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${_formatDate(schedule.startDate)}'
+                    '${schedule.endDate != null ? ' — ${_formatDate(schedule.endDate!)}' : ' · Үргэлжлэх'}',
+                    style: TamgaTypography.caption2(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                  if (schedule.notes.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      schedule.notes,
+                      style: TamgaTypography.caption2(
+                        color: colors.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
+            Icon(Icons.chevron_right, size: 18, color: colors.onSurfaceVariant),
+          ],
         ),
       ),
     );

@@ -162,11 +162,11 @@ void main() {
       );
     });
 
-    test('FilterChip used for time period selection', () {
+    test('TamgaChoicePill used for time period selection', () {
       expect(
-        source.contains('FilterChip'),
+        source.contains('TamgaChoicePill'),
         isTrue,
-        reason: 'Screen should use FilterChip for time period selection',
+        reason: 'Screen should use TamgaChoicePill for time period selection',
       );
     });
 

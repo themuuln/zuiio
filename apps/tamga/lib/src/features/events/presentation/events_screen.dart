@@ -69,75 +69,84 @@ class _EventsScreenState extends ConsumerState<EventsScreen>
     final eventsState = ref.watch(paginatedEventsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Арга хэмжээ'),
-        leading: IconButton(
-          onPressed: () => Navigator.of(ctx).pop(),
-          icon: const Icon(Icons.arrow_back_ios_new),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: SyncIndicator(size: 12),
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          onTap: (_) => HapticFeedback.selectionClick(),
-          isScrollable: false,
-          tabs: const [
-            Tab(text: 'Удахгүй'),
-            Tab(text: 'Дууссан'),
-          ],
-        ),
-      ),
-      body: eventsState.hasError
-          ? TamgaErrorWidget(
-              message: 'Ачаалахад алдаа гарлаа',
-              onRetry: () =>
-                  ref.read(paginatedEventsProvider.notifier).refresh(),
-            )
-          : eventsState.isEmpty
-          ? const EmptyState(
-              icon: Icons.event_busy_outlined,
-              title: 'Үйл явдал байхгүй байна',
-              description: 'Доорх + товчийг дарж үйл явдал нэмнэ үү.',
-            )
-          : eventsState.isLoading && eventsState.items.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
+      body: NestedScrollView(
+        headerSliverBuilder: (ctx, innerBoxIsScrolled) => [
+          TamgaSliverHeader(
+            title: 'Арга хэмжээ',
+            subtitle: 'Тэмцээн, уралдаан, худалдаа',
+            leading: IconButton(
+              tooltip: 'Буцах',
+              onPressed: () => Navigator.of(ctx).pop(),
+              icon: const Icon(Icons.arrow_back_ios_new),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.xs),
+                child: SyncIndicator(size: 12),
+              ),
+            ],
+            pinned: true,
+            bottom: TabBar(
               controller: _tabController,
-              children: [
-                _EventList(
-                  events: eventsState.items.where((e) => e.isUpcoming).toList(),
-                  activeFilter: _activeFilter,
-                  onFilterChanged: (f) => setState(() => _activeFilter = f),
-                  onEventTap: (e) => _viewEvent(ctx, e),
-                  onDeleteEvent: (e) => _deleteEvent(ctx, e),
-                  emptyMessage: 'Удахгүй үйл явдал байхгүй байна',
-                  state: eventsState,
-                  onRetryPage: () =>
-                      ref.read(paginatedEventsProvider.notifier).loadMore(),
-                ),
-                _EventList(
-                  events: eventsState.items
-                      .where((e) => !e.isUpcoming)
-                      .toList(),
-                  activeFilter: _activeFilter,
-                  onFilterChanged: (f) => setState(() => _activeFilter = f),
-                  onEventTap: (e) => _viewEvent(ctx, e),
-                  onDeleteEvent: (e) => _deleteEvent(ctx, e),
-                  emptyMessage: 'Дууссан үйл явдал байхгүй байна',
-                  state: eventsState,
-                  onRetryPage: () =>
-                      ref.read(paginatedEventsProvider.notifier).loadMore(),
-                ),
+              onTap: (_) => HapticFeedback.selectionClick(),
+              isScrollable: false,
+              tabs: const [
+                Tab(text: 'Удахгүй'),
+                Tab(text: 'Дууссан'),
               ],
             ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Үйл явдал нэмэх',
-        onPressed: () => _addEvent(ctx),
-        child: const Icon(Icons.add),
+          ),
+        ],
+        body: eventsState.hasError
+            ? TamgaErrorWidget(
+                message: 'Ачаалахад алдаа гарлаа',
+                onRetry: () =>
+                    ref.read(paginatedEventsProvider.notifier).refresh(),
+              )
+            : eventsState.isEmpty
+            ? const EmptyState(
+                icon: Icons.event_busy_outlined,
+                title: 'Үйл явдал байхгүй байна',
+                description: 'Шинэ үйл явдал нэмэх товчийг дарна уу.',
+              )
+            : eventsState.isLoading && eventsState.items.isEmpty
+            ? const Center(child: LoadingIndicator(size: 28))
+            : TabBarView(
+                controller: _tabController,
+                children: [
+                  _EventList(
+                    events: eventsState.items
+                        .where((e) => e.isUpcoming)
+                        .toList(),
+                    activeFilter: _activeFilter,
+                    onFilterChanged: (f) => setState(() => _activeFilter = f),
+                    onEventTap: (e) => _viewEvent(ctx, e),
+                    onDeleteEvent: (e) => _deleteEvent(ctx, e),
+                    emptyMessage: 'Удахгүй үйл явдал байхгүй байна',
+                    state: eventsState,
+                    onRetryPage: () =>
+                        ref.read(paginatedEventsProvider.notifier).loadMore(),
+                  ),
+                  _EventList(
+                    events: eventsState.items
+                        .where((e) => !e.isUpcoming)
+                        .toList(),
+                    activeFilter: _activeFilter,
+                    onFilterChanged: (f) => setState(() => _activeFilter = f),
+                    onEventTap: (e) => _viewEvent(ctx, e),
+                    onDeleteEvent: (e) => _deleteEvent(ctx, e),
+                    emptyMessage: 'Дууссан үйл явдал байхгүй байна',
+                    state: eventsState,
+                    onRetryPage: () =>
+                        ref.read(paginatedEventsProvider.notifier).loadMore(),
+                  ),
+                ],
+              ),
+      ),
+      bottomNavigationBar: TamgaBottomAction(
+        label: 'Үйл явдал нэмэх',
+        icon: Icons.add,
+        onTap: widget.horseId == null ? null : () => _addEvent(ctx),
       ),
     );
   }
@@ -289,7 +298,7 @@ class _EventList extends StatelessWidget {
       return EmptyState(
         icon: Icons.event_busy_outlined,
         title: emptyMessage,
-        description: 'Доорх + товчийг дарж үйл явдал нэмнэ үү.',
+        description: 'Шинэ үйл явдал нэмэх товчийг дарна уу.',
       );
     }
 
@@ -311,10 +320,10 @@ class _EventList extends StatelessWidget {
               final isSelected = option == activeFilter;
               final label = option?.displayName ?? 'Бүгд';
 
-              return FilterChip(
-                label: Text(label),
+              return TamgaChoicePill(
+                label: label,
                 selected: isSelected,
-                onSelected: (_) => onFilterChanged(isSelected ? null : option),
+                onTap: () => onFilterChanged(isSelected ? null : option),
               );
             },
           ),
@@ -327,7 +336,7 @@ class _EventList extends StatelessWidget {
                   icon: Icons.event_busy_outlined,
                   title:
                       '"${activeFilter?.displayName ?? ''}" төрлийн үйл явдал байхгүй байна',
-                  description: 'Доорх + товчийг дарж үйл явдал нэмнэ үү.',
+                  description: 'Шинэ үйл явдал нэмэх товчийг дарна уу.',
                 )
               : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(

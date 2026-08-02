@@ -20,10 +20,18 @@ class HorseCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext ctx, WidgetRef ref) {
-    final theme = Theme.of(ctx);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(ctx).colorScheme;
     final tamgaColors = TamgaColors.of(ctx);
     final certificateAsync = ref.watch(digitalCertificateProvider(horse.id));
+    final metadata = [
+      horse.gender.displayName,
+      if (horse.coat.trim().isNotEmpty) horse.coat,
+      if (horse.birthYear > 0) '${horse.birthYear}',
+    ].join(' · ');
+    final stats = [
+      if (horse.awardCount > 0) 'Шагнал ${horse.awardCount}',
+      if (horse.offspringCount > 0) 'Үр төл ${horse.offspringCount}',
+    ].join(' · ');
 
     return InkWell(
       onTap: () {
@@ -35,7 +43,10 @@ class HorseCard extends ConsumerWidget {
         decoration: BoxDecoration(
           color: tamgaColors.surfaceContainerLowest,
           border: Border(
-            bottom: BorderSide(color: tamgaColors.border, width: 0.5),
+            bottom: BorderSide(
+              color: tamgaColors.border,
+              width: AppSpacing.hairline,
+            ),
           ),
         ),
         child: Padding(
@@ -85,7 +96,7 @@ class HorseCard extends ConsumerWidget {
                     const SizedBox(height: 2),
                     // Detail line
                     Text(
-                      '${horse.gender.displayName} · ${horse.coat} · ${horse.birthYear}',
+                      metadata.isEmpty ? 'Мэдээлэл дутуу' : metadata,
                       style: TamgaTypography.callout(
                         color: tamgaColors.mutedForeground,
                       ),
@@ -93,35 +104,35 @@ class HorseCard extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    // Compact badges
+                    // Compact status and ownership signals
                     Wrap(
                       spacing: AppSpacing.xs,
                       runSpacing: AppSpacing.xs,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         _CompactBadge(
-                          label: horse.isOwnedByHousehold ? 'Өрх' : 'Гаднах',
+                          label: horse.isOwnedByHousehold ? 'Өрхийн' : 'Гаднах',
                           color: tamgaColors.primary.withValues(alpha: 0.1),
                           textColor: tamgaColors.primary,
                         ),
-                        _CompactBadge(
-                          label: 'Шагнал ${horse.awardCount}',
-                          color: tamgaColors.primaryContainer.withValues(
-                            alpha: 0.5,
+                        if (horse.tamgaVerified || horse.stateVerified)
+                          _CompactBadge(
+                            label: 'Баталгаатай',
+                            color: tamgaColors.secondaryContainer,
+                            textColor: tamgaColors.onSecondaryContainer,
                           ),
-                          textColor: tamgaColors.onPrimaryContainer,
-                        ),
-                        _CompactBadge(
-                          label: 'Үр төл ${horse.offspringCount}',
-                          color: tamgaColors.surfaceContainerHighest.withValues(
-                            alpha: 0.5,
-                          ),
-                          textColor: tamgaColors.onSurfaceVariant,
-                        ),
                         if (horse.breedLineage != null)
                           _CompactBadge(
                             label: horse.breedLineage!.displayName,
                             color: tamgaColors.tertiary.withValues(alpha: 0.1),
                             textColor: tamgaColors.tertiary,
+                          ),
+                        if (stats.isNotEmpty)
+                          Text(
+                            stats,
+                            style: TamgaTypography.caption1(
+                              color: tamgaColors.mutedForeground,
+                            ),
                           ),
                       ],
                     ),
@@ -173,6 +184,7 @@ class HorseAvatar extends StatelessWidget {
     required this.horse,
     required this.colorScheme,
   });
+
   final HorseRecord horse;
   final ColorScheme colorScheme;
 
@@ -183,29 +195,29 @@ class HorseAvatar extends StatelessWidget {
       return Hero(
         tag: 'horse-image-${horse.id}',
         child: CircleAvatar(
-          radius: 24,
+          radius: 26,
           backgroundColor: colorScheme.primaryContainer,
           child: ClipOval(
             child: CachedNetworkImage(
               imageUrl: horse.photoUrls.first,
-              width: 48,
-              height: 48,
+              width: 52,
+              height: 52,
               fit: BoxFit.cover,
               placeholder: (_, _) => Container(
-                width: 48,
-                height: 48,
+                width: 52,
+                height: 52,
                 color: colorScheme.primaryContainer,
                 child: Icon(
-                  Icons.pets,
+                  Icons.pets_outlined,
                   color: colorScheme.onPrimaryContainer.withValues(alpha: 0.4),
                 ),
               ),
               errorWidget: (_, _, _) => Container(
-                width: 48,
-                height: 48,
+                width: 52,
+                height: 52,
                 color: colorScheme.primaryContainer,
                 child: Icon(
-                  Icons.pets,
+                  Icons.pets_outlined,
                   color: colorScheme.onPrimaryContainer.withValues(alpha: 0.4),
                 ),
               ),
@@ -217,7 +229,7 @@ class HorseAvatar extends StatelessWidget {
 
     final initials = horse.name.isNotEmpty ? horse.name[0] : '?';
     return CircleAvatar(
-      radius: 24,
+      radius: 26,
       backgroundColor: colorScheme.primaryContainer,
       child: Text(
         initials,
@@ -246,18 +258,19 @@ class _CompactBadge extends StatelessWidget {
   @override
   Widget build(BuildContext ctx) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusSmall),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: TamgaTypography.caption1(
           color: textColor,
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.2,
+          weight: FontWeight.w600,
         ),
       ),
     );

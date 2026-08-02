@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/widgets.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../map/presentation/active_reports_screen.dart';
 import '../../map/presentation/map_screen.dart';
@@ -40,13 +41,12 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          SliverAppBar(
-            title: const Text('Эрэл хайгуул'),
+          TamgaSliverHeader(
+            title: 'Эрэл хайгуул',
+            subtitle: 'Олж, мэдээлж, хамгаалъя',
             pinned: true,
             floating: true,
             actions: [
@@ -59,10 +59,22 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
                 ),
                 icon: const Icon(Icons.notifications_none_outlined),
               ),
-              IconButton(
-                tooltip: 'Premium нэмэх',
-                onPressed: () => _showTierSheet(context),
-                icon: const Icon(Icons.workspace_premium_outlined),
+              PopupMenuButton<String>(
+                tooltip: 'Нэмэлт үйлдэл',
+                onSelected: (value) {
+                  if (value == 'premium') _showTierSheet(context);
+                  if (value == 'active') _tabController.animateTo(0);
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: 'active',
+                    child: Text('Идэвхтэй тайлангууд'),
+                  ),
+                  PopupMenuItem(
+                    value: 'premium',
+                    child: Text('Premium боломжууд'),
+                  ),
+                ],
               ),
             ],
             bottom: TabBar(
@@ -74,6 +86,7 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
               ],
             ),
           ),
+          const SliverToBoxAdapter(child: _FinderLead()),
         ],
         body: TabBarView(
           controller: _tabController,
@@ -84,10 +97,10 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const ReportLostHorseScreen()),
         ),
-        backgroundColor: theme.colorScheme.error,
-        foregroundColor: theme.colorScheme.onError,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         icon: const Icon(Icons.search_off, size: 20),
-        label: const Text('Хаяж морь бүртгэх'),
+        label: const Text('Алга болсон морь бүртгэх'),
       ),
     );
   }
@@ -127,6 +140,61 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
             ),
             const SizedBox(height: AppSpacing.md),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FinderLead extends StatelessWidget {
+  const _FinderLead();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.sm,
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.primaryContainer.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
+          border: Border.all(color: colors.primary.withValues(alpha: 0.24)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.visibility_outlined, color: colors.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ойр орчмын мэдээллийг шалгаарай',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Жагсаалт, газрын зураг, сэрэмжлүүлгийг нэг дороос хянаарай.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.onPrimaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
