@@ -1,13 +1,17 @@
 "use client";
 
+import { Printer } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { withDbCapture } from "@zuiio/capture";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { useI18n } from "@/lib/i18n/provider";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { saleKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
@@ -45,7 +49,12 @@ function StatusBadge({ status }: { status: string | null }) {
 
 export function SaleDetailContent() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const { organizationId } = useOrgSettings();
+  const { t } = useI18n();
+  // Fire window.print() at most once per page load when arriving with ?print=1
+  // (receipt-printer orgs navigate here straight after a sale).
+  const printTriggeredRef = useRef(false);
 
   const { data: sale, isLoading } = useQuery({
     queryKey: saleKeys.detail(id),
@@ -100,6 +109,15 @@ export function SaleDetailContent() {
   } | null;
   const salespersonName = salespersonProfile?.full_name ?? null;
 
+  // Auto-print once the sale data has loaded (receipt-printer orgs).
+  useEffect(() => {
+    if (searchParams.get("print") !== "1") return;
+    if (isLoading || !sale) return;
+    if (printTriggeredRef.current) return;
+    printTriggeredRef.current = true;
+    window.print();
+  }, [searchParams, isLoading, sale]);
+
   return (
     <PageShell
       title="Борлуулалтын дэлгэрэнгүй"
@@ -110,7 +128,27 @@ export function SaleDetailContent() {
             ? `#${sale.id.slice(0, 8).toUpperCase()} · ${formatDate(sale.sale_date)}`
             : ""
       }
+      actions={
+        sale && !isLoading ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => window.print()}
+          >
+            <Printer className="size-4" />
+            {t("print.receipt")}
+          </Button>
+        ) : undefined
+      }
     >
+      {/* Print only the receipt content — hide the app chrome when printing. */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          .print-area, .print-area * { visibility: visible; }
+          .print-area { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+      `}</style>
       {isLoading ? (
         <>
           <Card>
@@ -135,7 +173,7 @@ export function SaleDetailContent() {
           </Card>
         </>
       ) : sale ? (
-        <>
+        <div className="print-area">
           {/* Sale header info */}
           <Card>
             <CardHeader>
@@ -256,7 +294,7 @@ export function SaleDetailContent() {
               </table>
             </CardContent>
           </Card>
-        </>
+        </div>
       ) : (
         <div className="flex items-center justify-center py-20 text-muted-foreground">
           Борлуулалт олдсонгүй

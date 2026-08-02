@@ -43,14 +43,19 @@ test("revalidateEntity('sales') calls revalidatePath for '/' and '/sales'", () =
   assert.deepEqual(paths, ["/", "/sales"]);
 });
 
-test("revalidateEntity('inventory') calls revalidatePath for 3 paths", () => {
+test("revalidateEntity('inventory') calls revalidatePath for 4 paths", () => {
   revalidateEntity("inventory");
 
   const paths = revalidatePathSpy.mock.calls.map(
     (c: { arguments: unknown[] }) => String(c.arguments[0]),
   );
-  assert.deepEqual(paths, ["/inventory", "/inventory/movements", "/products"]);
-  assert.equal(paths.length, 3);
+  assert.deepEqual(paths, [
+    "/inventory",
+    "/inventory/movements",
+    "/inventory/transfers",
+    "/products",
+  ]);
+  assert.equal(paths.length, 4);
 });
 
 test("revalidateEntity('categories') calls revalidatePath for 1 path", () => {
@@ -102,8 +107,10 @@ test("ENTITY_PATHS has all expected entity keys", () => {
     "commissions",
     "coupons",
     "customers",
+    "dashboard",
     "deliveries",
     "discounts",
+    "embed",
     "expenses",
     "gift_cards",
     "hr",

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
+import { sendWebPush } from "@/lib/push";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -137,6 +138,25 @@ export async function sendTelegramNotification(
 }
 
 /**
+ * Send a web push notification to every subscription of an organization.
+ * Never throws — failures are captured and logged by sendWebPush.
+ */
+export async function notifyWebPushEvent(
+  supabase: SupabaseClient<Database>,
+  orgId: string,
+  eventType: EventType,
+  title: string,
+  body: string,
+  url?: string,
+): Promise<void> {
+  try {
+    await sendWebPush(supabase, orgId, { title, body, url, eventType });
+  } catch (err) {
+    capture(err, { context: "notification: web push event" });
+  }
+}
+
+/**
  * Check if a product has low stock and send notification if needed.
  */
 export async function checkLowStockAndNotify(
@@ -154,6 +174,15 @@ export async function checkLowStockAndNotify(
         `Үлдэгдэл: ${currentStock} ширхэг\n` +
         `Доод хязгаар: ${minStock} ширхэг\n\n` +
         `Нөөцөө нөхөх шаардлагатай байна.`,
+    );
+
+    await notifyWebPushEvent(
+      await createClient(),
+      orgId,
+      "low_stock",
+      "Бага нөөц",
+      `${productName}\nҮлдэгдэл: ${currentStock} ширхэг\nДоод хязгаар: ${minStock} ширхэг`,
+      "/products",
     );
   }
 }

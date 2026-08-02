@@ -8,6 +8,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
  * in every action file.
  */
 export const ENTITY_PATHS = {
+  dashboard: ["/"],
   sales: ["/", "/sales"],
   shop: ["/shop", "/shop/history"],
   expenses: ["/", "/expenses"],
@@ -24,7 +25,12 @@ export const ENTITY_PATHS = {
   webhooks: ["/", "/webhooks"],
   discounts: ["/", "/discounts"],
   products: ["/products", "/inventory"],
-  inventory: ["/inventory", "/inventory/movements", "/products"],
+  inventory: [
+    "/inventory",
+    "/inventory/movements",
+    "/inventory/transfers",
+    "/products",
+  ],
   categories: ["/inventory/categories"],
   customers: ["/customers", "/suppliers", "/sales/new"],
   suppliers: ["/customers", "/suppliers", "/sales/new"],
@@ -38,6 +44,7 @@ export const ENTITY_PATHS = {
   roles: ["/settings/roles"],
   production: ["/production", "/quality"],
   quality: ["/quality"],
+  embed: ["/settings/embed"],
 } as const;
 
 export type EntityKey = keyof typeof ENTITY_PATHS;

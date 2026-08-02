@@ -33,7 +33,8 @@ export const getDashboardContext = cache(async () => {
     .select(
       `full_name, organization_id, branch_id,
        organizations!inner(
-         name, brand_config, company_type, onboarding_completed, enabled_features,
+         name, brand_config, company_type, dashboard_template,
+         onboarding_completed, enabled_features,
          has_suppliers, has_inventory, has_customer_credit, has_multi_branch,
          has_variants, has_brands, has_categories, has_email_reports, has_audit_log,
          has_delivery_tracking, has_coupons, has_gift_cards, has_promotions
@@ -59,6 +60,7 @@ export const getDashboardContext = cache(async () => {
     name: string;
     brand_config: unknown;
     company_type: string;
+    dashboard_template: string;
     onboarding_completed: boolean;
     enabled_features: string[];
     has_suppliers: boolean;

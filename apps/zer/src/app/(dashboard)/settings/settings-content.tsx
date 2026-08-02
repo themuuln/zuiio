@@ -3,6 +3,7 @@
 import {
   Cube,
   GearSix,
+  Layout,
   MapPinArea,
   TelegramLogo,
   Truck,
@@ -12,7 +13,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
 import { capture, withDbCapture } from "@zuiio/capture";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { ThemeToggle } from "@/components/erp/theme-toggle";
 import type { RolePermission } from "@/components/roles/roles-client";
 import { BankAccountsSettings } from "@/components/settings/bank-accounts-settings";
@@ -24,12 +26,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type BrandConfig, DEFAULT_BRAND_CONFIG } from "@/lib/branding";
+import { DASHBOARD_TEMPLATES } from "@/lib/dashboard-templates";
+import { useI18n } from "@/lib/i18n";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
 import { BrandingDrawer } from "./branding-drawer";
+import { applyDashboardTemplate } from "./dashboard-template/actions";
 import { LeaveOrganizationDialog } from "./leave-org-dialog";
 import { LinkCodeDisplay } from "./link-code-display";
 import { NotificationSettings } from "./notification-settings";
@@ -58,6 +65,7 @@ interface OrgRow {
   name: string | null;
   slug: string | null;
   company_type: string | null;
+  dashboard_template: string | null;
   currency: string | null;
   brand_config: unknown;
   has_suppliers: boolean | null;
@@ -81,6 +89,7 @@ interface PosRow {
   has_checkout_quick_amounts: boolean | null;
   has_receipt_drawer: boolean | null;
   has_track_stock: boolean | null;
+  has_receipt_printer: boolean | null;
   shop_default_payment_method: string | null;
 }
 
@@ -108,6 +117,7 @@ interface SettingsData {
     has_checkout_quick_amounts: boolean;
     has_receipt_drawer: boolean;
     has_track_stock: boolean;
+    has_receipt_printer: boolean;
     shop_default_payment_method: string;
   };
   userId: string;
@@ -118,6 +128,72 @@ interface SettingsData {
   rolePermissions: RolePermission[];
   telegramLink: LinkedTelegramAccount | null;
   profile: { full_name: string | null } | null;
+}
+
+function DashboardTemplateCard({ current }: { current: string }) {
+  const { t } = useI18n();
+  const [state, formAction, isPending] = useActionState(
+    applyDashboardTemplate,
+    undefined,
+  );
+  const [selected, setSelected] = useState(current);
+  const [saved, setSaved] = useState(current);
+
+  useEffect(() => {
+    if (!state?.success) return;
+    setSaved(selected);
+    toast.success(t("dashboardTemplate.saved"));
+  }, [state, t, selected]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Layout className="size-5" />
+          {t("dashboardTemplate.title")}
+        </CardTitle>
+        <CardDescription>{t("dashboardTemplate.description")}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form action={formAction} className="space-y-4">
+          <RadioGroup
+            value={selected}
+            onValueChange={setSelected}
+            className="grid gap-2 sm:grid-cols-2"
+          >
+            {DASHBOARD_TEMPLATES.map((template) => (
+              <Label
+                key={template.id}
+                htmlFor={`dt-${template.id}`}
+                className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 text-sm has-[data-checked]:border-primary has-[data-checked]:bg-primary/5"
+              >
+                <RadioGroupItem
+                  value={template.id}
+                  id={`dt-${template.id}`}
+                  className="mt-0.5"
+                />
+                <span className="flex flex-col gap-0.5">
+                  <span className="font-medium">{t(template.labelKey)}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t(template.descriptionKey)}
+                  </span>
+                </span>
+              </Label>
+            ))}
+          </RadioGroup>
+          <input type="hidden" name="dashboard_template" value={selected} />
+          {state?.error ? (
+            <p className="text-sm text-destructive">{state.error}</p>
+          ) : null}
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isPending || selected === saved}>
+              {isPending ? "Хадгалж байна…" : t("common.save")}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function SettingsContent() {
@@ -146,7 +222,7 @@ export function SettingsContent() {
             supabase
               .from("organizations")
               .select(
-                "name, slug, company_type, currency, brand_config, has_suppliers, has_inventory, has_customer_credit, has_multi_branch, has_variants, has_brands, has_categories, has_email_reports, has_audit_log, has_delivery_tracking, has_hr, has_coupons, has_gift_cards, has_promotions",
+                "name, slug, company_type, dashboard_template, currency, brand_config, has_suppliers, has_inventory, has_customer_credit, has_multi_branch, has_variants, has_brands, has_categories, has_email_reports, has_audit_log, has_delivery_tracking, has_hr, has_coupons, has_gift_cards, has_promotions",
               )
               .eq("id", organizationId)
               .single(),
@@ -162,11 +238,11 @@ export function SettingsContent() {
           withDbCapture(
             "settings:overview:pos",
             supabase
-              .from("organizations")
+              .from("organizations" as never)
               .select(
-                "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, has_track_stock, shop_default_payment_method",
+                "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, has_track_stock, has_receipt_printer, shop_default_payment_method",
               )
-              .eq("id", organizationId)
+              .eq("id" as never, organizationId)
               .single(),
           ),
           withDbCapture(
@@ -199,6 +275,7 @@ export function SettingsContent() {
           posRow?.has_checkout_quick_amounts !== false,
         has_receipt_drawer: posRow?.has_receipt_drawer !== false,
         has_track_stock: posRow?.has_track_stock !== false,
+        has_receipt_printer: posRow?.has_receipt_printer === true,
         shop_default_payment_method:
           posRow?.shop_default_payment_method ?? "cash",
       };
@@ -374,6 +451,15 @@ export function SettingsContent() {
             <Skeleton className="h-8 w-48" />
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-56" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-24 w-full" />
+          </CardContent>
+        </Card>
       </SettingsShell>
     );
   }
@@ -520,6 +606,9 @@ export function SettingsContent() {
 
       {/* Shop / POS checkout settings */}
       <ShopPosSettings initial={posSettings} />
+
+      {/* Dashboard template preset */}
+      <DashboardTemplateCard current={org?.dashboard_template ?? "default"} />
       {/* Bank Accounts */}
       <Card>
         <CardContent className="pt-6">

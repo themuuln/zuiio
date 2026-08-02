@@ -51,11 +51,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/embed(.*?)",
+        // Embed pages must be frameable — the /embed/report iframe is
+        // rendered on third-party sites. X-Frame-Options: DENY would block
+        // that; CSP frame-ancestors * is the explicit allowlist equivalent.
+        source: "/embed/:path*",
         headers: [
           {
-            key: "X-Frame-Options",
-            value: "DENY",
+            key: "Content-Security-Policy",
+            value: "frame-ancestors *",
           },
         ],
       },

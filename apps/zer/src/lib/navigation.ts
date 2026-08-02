@@ -1,5 +1,6 @@
 import {
   ArrowCounterClockwise,
+  ArrowsLeftRight,
   Article,
   Buildings,
   Calculator,
@@ -22,6 +23,7 @@ import {
   Megaphone,
   Package,
   Percent,
+  Robot,
   Sparkle,
   Storefront,
   Tag,
@@ -93,6 +95,12 @@ export const navGroups: NavGroup[] = [
     navItem("nav.stockMovements", "/inventory/movements", MapPin, "_inventory"),
     navItem("nav.adjustments", "/inventory/adjustments", MapPin, "_inventory"),
     navItem("nav.restock", "/inventory/restock", Clock, "_inventory"),
+    navItem(
+      "nav.transfers",
+      "/inventory/transfers",
+      ArrowsLeftRight,
+      "_inventory",
+    ),
     navItem("nav.branches", "/settings/branches", Buildings, "_multi_branch"),
     navItem("nav.customers", "/customers", Users),
     navItem("nav.suppliers", "/suppliers", Buildings, "_suppliers"),
@@ -117,6 +125,7 @@ export const navGroups: NavGroup[] = [
     navItem("nav.aiEnhance", "/ai/enhance", ImageSquare),
     navItem("nav.aiLogo", "/ai/logo", ImageSquare),
     navItem("nav.aiNaming", "/ai/naming", Sparkle),
+    navItem("nav.aiAssistant", "/ai-assistant", Robot),
   ]),
   navGroup("nav.group.production", [
     navItem("nav.bom", "/bom", Cube, "boms"),

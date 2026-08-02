@@ -169,6 +169,14 @@ export function CheckoutForm({
   const [customerOpen, setCustomerOpen] = useState(false);
   const [orderExpanded, setOrderExpanded] = useState(true);
 
+  // Store account (public storefront buyer) state
+  const [storeAccount, setStoreAccount] = useState<{
+    id: string;
+    email: string;
+    display_name: string | null;
+    phone: string | null;
+  } | null>(null);
+
   // Delivery state
   const [deliveryEnabled, setDeliveryEnabled] = useState(false);
   const [deliveryContactName, setDeliveryContactName] = useState("");
@@ -214,6 +222,39 @@ export function CheckoutForm({
     deliveryContactName,
     deliveryContactPhone,
   ]);
+
+  // Load the signed-in store account (if any) and prefill customer fields.
+  // Only users with a store_accounts row are treated as buyers — staff
+  // sessions (org members) have no such row and are unaffected.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user?.id;
+      if (!userId) return;
+      const { data: account } = await supabase
+        .from("store_accounts" as never)
+        .select("id, email, display_name, phone")
+        .eq("id", userId)
+        .maybeSingle();
+      if (cancelled || !account) return;
+      const row = account as unknown as {
+        id: string;
+        email: string;
+        display_name: string | null;
+        phone: string | null;
+      };
+      setStoreAccount(row);
+      setCustomerName((prev) => prev || row.display_name || "");
+      setCustomerPhone((prev) => prev || row.phone || "");
+    })().catch((e) => {
+      capture(e, { context: "checkout: load store account" });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Coupon/discount state
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -369,6 +410,11 @@ export function CheckoutForm({
       }
     }
 
+    // Store account id — server re-validates it against auth.uid()
+    if (storeAccount) {
+      formData.set("store_account_id", storeAccount.id);
+    }
+
     // Coupon fields
     if (couponId) {
       formData.set("coupon_id", couponId);
@@ -386,7 +432,32 @@ export function CheckoutForm({
 
   // useMutation wrapping createShopSale with optimistic updates
   const mutation = useMutation({
-    mutationFn: async (formData: FormData) => {
+    mutationFn: async (
+      formData: FormData,
+    ): Promise<{ saleId: string; offline?: boolean }> => {
+      // Offline: queue the shop sale instead of submitting.
+      // Dynamic import: @/lib/offline-sync is being rewritten concurrently
+      // (queueOfflineAction API in flux) — static import would break the
+      // whole checkout if the export is missing mid-rewrite.
+      const isOffline =
+        typeof navigator !== "undefined" && navigator.onLine === false;
+      if (isOffline) {
+        try {
+          const { queueOfflineAction } = await import("@/lib/offline-sync");
+          const fields: Record<string, string> = {};
+          formData.forEach((value, key) => {
+            if (typeof value === "string") fields[key] = value;
+          });
+          const queuedId = await queueOfflineAction("shop_sale", fields, [
+            saleKeys.all() as unknown as string[],
+            productKeys.all() as unknown as string[],
+          ]);
+          return { saleId: queuedId, offline: true };
+        } catch (e) {
+          capture(e, { context: "checkout: queue offline shop sale" });
+          throw new Error("Оффлайн — захиалга нөөцлөхөд алдаа гарлаа.");
+        }
+      }
       const result = await createShopSale(undefined, formData);
       if ("error" in result) throw new Error(result.error);
       return result;
@@ -474,6 +545,12 @@ export function CheckoutForm({
       return { previousSales, previousProducts };
     },
     onSuccess: async (data, _vars, _context) => {
+      if (data?.offline) {
+        toast.success("Оффлайн — захиалга нөөцлөгдлөө");
+        clearCart();
+        onClose?.();
+        return;
+      }
       if (data?.saleId) {
         // Create delivery if delivery was enabled
         if (deliveryEnabled) {
@@ -909,6 +986,35 @@ export function CheckoutForm({
           name="promotion_discount_amount"
           value={String(promotionDiscountAmount)}
         />
+      )}
+
+      {/* === STORE ACCOUNT (public storefront buyer) === */}
+      {storeAccount && (
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <User className="size-4 shrink-0 text-muted-foreground" />
+            <span className="truncate text-sm font-medium">
+              Хэрэглэгч: {storeAccount.email}
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="xs"
+            onClick={async () => {
+              try {
+                await createClient().auth.signOut();
+              } catch (e) {
+                capture(e, { context: "checkout: store account logout" });
+              }
+              setStoreAccount(null);
+              setCustomerName("");
+              setCustomerPhone("");
+            }}
+          >
+            Гарах
+          </Button>
+        </div>
       )}
 
       {/* === CUSTOMER (collapsible, hidden for orgs without checkout CRM) === */}

@@ -19,7 +19,9 @@ export function QuickCreateSaleWrapper({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, sale_price, current_stock, unit, barcode, image_url")
+        .select(
+          "id, name, sale_price, current_stock, unit, barcode, image_url, has_variants",
+        )
         .eq("organization_id", organizationId)
         .is("deleted_at", null)
         .order("name");
@@ -34,6 +36,7 @@ export function QuickCreateSaleWrapper({
   return (
     <SalesCreateDrawer
       products={products}
+      hasReceiptPrinter={false}
       open={true}
       onOpenChangeAction={(open) => {
         if (!open) onClose();

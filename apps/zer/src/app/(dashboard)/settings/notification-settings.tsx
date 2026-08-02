@@ -1,14 +1,19 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EnvelopeSimple, TelegramLogo } from "@phosphor-icons/react";
+import {
+  BellSimple,
+  EnvelopeSimple,
+  TelegramLogo,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { capture } from "@zuiio/capture";
 import Link from "next/link";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { usePush } from "@/components/push/push-provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +27,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { useRegisterSave, useSettings } from "./settings-context";
 
@@ -233,6 +239,69 @@ async function saveEmailConfig(values: EmailValues, orgId: string) {
       .insert(payload);
     if (error) throw new Error(error.message);
   }
+}
+
+function WebPushSettingsCard() {
+  const { t } = useI18n();
+  const push = usePush();
+  const [busy, setBusy] = useState(false);
+
+  if (!push.supported) return null;
+
+  const handleToggle = async (checked: boolean) => {
+    setBusy(true);
+    try {
+      if (checked) {
+        const ok = await push.enable();
+        if (!ok) {
+          toast.error(t("push.permissionDenied"));
+        } else {
+          toast.success(t("push.enabled"));
+        }
+      } else {
+        await push.disable();
+        toast.success(t("push.disabled"));
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <BellSimple className="size-5" />
+          {t("push.title")}
+        </CardTitle>
+        <CardDescription>{t("push.description")}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <FieldGroup>
+            <div className="flex items-center justify-between">
+              <div>
+                <FieldLabel>{t("push.enableLabel")}</FieldLabel>
+                <p className="text-sm text-muted-foreground">
+                  {t("push.hint")}
+                </p>
+              </div>
+              <Switch
+                checked={push.enabled}
+                disabled={busy}
+                onCheckedChange={(checked) => void handleToggle(checked)}
+              />
+            </div>
+            {push.permission === "denied" && (
+              <p className="text-xs text-destructive">
+                {t("push.permissionDenied")}
+              </p>
+            )}
+          </FieldGroup>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function NotificationSettings({
@@ -624,6 +693,9 @@ export function NotificationSettings({
           </div>
         </CardContent>
       </Card>
+
+      {/* Web Push Notification Card */}
+      <WebPushSettingsCard />
     </>
   );
 }

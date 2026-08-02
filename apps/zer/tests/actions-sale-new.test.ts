@@ -60,9 +60,11 @@ mockMod("@/lib/invoicing", {
 
 const sendTelegramNotificationMock = mock.fn(() => {});
 const checkLowStockAndNotifyMock = mock.fn(() => {});
+const notifyWebPushEventMock = mock.fn(() => {});
 mockMod("@/lib/notification", {
   sendTelegramNotification: sendTelegramNotificationMock,
   checkLowStockAndNotify: checkLowStockAndNotifyMock,
+  notifyWebPushEvent: notifyWebPushEventMock,
 });
 
 const findOrCreateContactMock = mock.fn(async () => ({

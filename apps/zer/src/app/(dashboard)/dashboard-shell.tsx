@@ -8,6 +8,7 @@ import * as React from "react";
 import { useMemo, ViewTransition } from "react";
 import { QuickCreateDropdown } from "@/components/erp/quick-create-dropdown";
 import { NavUser } from "@/components/nav-user";
+import { PushProvider } from "@/components/push/push-provider";
 import {
   DrawerIndent,
   DrawerIndentBackground,
@@ -362,12 +363,47 @@ export function DashboardShell({
         : "?";
 
   const isShop = pathname.startsWith("/shop");
-  return (
-    <DrawerProvider>
-      <RealtimeSubscriptions orgId={organizationId} />
-      {isShop ? (
+  const shell = isShop ? (
+    <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+      <Sidebar collapsible="offcanvas" className="z-50">
+        <SidebarNav
+          logoUrl={logoUrl}
+          organizationName={organizationName}
+          userFullName={userFullName}
+          userEmail={userEmail}
+          initials={initials}
+          isBranchScoped={isBranchScoped}
+          hasMultiBranch={hasMultiBranch}
+          currentBranch={currentBranch}
+          selectedBranchId={selectedBranchId}
+          handleBranchChange={handleBranchChange}
+          branches={branches}
+          visibleGroups={visibleGroups}
+          pathname={pathname}
+        />
+      </Sidebar>
+      <div className="flex min-h-svh w-full flex-1 flex-col">
+        <OrgSettingsProvider value={orgSettingsValue}>
+          {children}
+        </OrgSettingsProvider>
+      </div>
+    </SidebarProvider>
+  ) : (
+    <>
+      <DrawerIndentBackground className="pointer-events-none fixed inset-0 z-10 bg-black/10 opacity-0 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:opacity-100 dark:bg-black/40" />
+      <DrawerIndent
+        className="relative z-0 min-h-dvh transition-[transform,border-radius] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:origin-[center_top] data-active:scale-[calc(0.97+0.03*var(--drawer-swipe-progress))] data-active:translate-y-[calc(0.5rem*(1-var(--drawer-swipe-progress)))] data-active:rounded-tl-2xl data-active:rounded-tr-2xl"
+        style={
+          {
+            "--indent-transition":
+              "calc(1 - clamp(0, calc(var(--drawer-swipe-progress) * 100000), 1))",
+            transitionDuration:
+              "calc(450ms * var(--indent-transition)), calc(350ms * var(--indent-transition))",
+          } as React.CSSProperties
+        }
+      >
         <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <Sidebar collapsible="offcanvas" className="z-50">
+          <Sidebar collapsible="icon">
             <SidebarNav
               logoUrl={logoUrl}
               organizationName={organizationName}
@@ -384,64 +420,31 @@ export function DashboardShell({
               pathname={pathname}
             />
           </Sidebar>
-          <div className="flex min-h-svh w-full flex-1 flex-col">
-            <OrgSettingsProvider value={orgSettingsValue}>
-              {children}
-            </OrgSettingsProvider>
-          </div>
-        </SidebarProvider>
-      ) : (
-        <>
-          <DrawerIndentBackground className="pointer-events-none fixed inset-0 z-10 bg-black/10 opacity-0 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:opacity-100 dark:bg-black/40" />
-          <DrawerIndent
-            className="relative z-0 min-h-dvh transition-[transform,border-radius] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:origin-[center_top] data-active:scale-[calc(0.97+0.03*var(--drawer-swipe-progress))] data-active:translate-y-[calc(0.5rem*(1-var(--drawer-swipe-progress)))] data-active:rounded-tl-2xl data-active:rounded-tr-2xl"
-            style={
-              {
-                "--indent-transition":
-                  "calc(1 - clamp(0, calc(var(--drawer-swipe-progress) * 100000), 1))",
-                transitionDuration:
-                  "calc(450ms * var(--indent-transition)), calc(350ms * var(--indent-transition))",
-              } as React.CSSProperties
-            }
-          >
-            <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
-              <Sidebar collapsible="icon">
-                <SidebarNav
-                  logoUrl={logoUrl}
-                  organizationName={organizationName}
-                  userFullName={userFullName}
-                  userEmail={userEmail}
-                  initials={initials}
-                  isBranchScoped={isBranchScoped}
-                  hasMultiBranch={hasMultiBranch}
-                  currentBranch={currentBranch}
-                  selectedBranchId={selectedBranchId}
-                  handleBranchChange={handleBranchChange}
-                  branches={branches}
-                  visibleGroups={visibleGroups}
-                  pathname={pathname}
-                />
-              </Sidebar>
 
-              <SidebarInset>
-                <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur-sm px-4">
-                  <SidebarTrigger className="-ml-1" />
-                  <div className="ml-auto">
-                    {organizationId && (
-                      <QuickCreateDropdown organizationId={organizationId} />
-                    )}
-                  </div>
-                </header>
-                <div className="flex flex-1 flex-col gap-4 overflow-auto p-4 md:p-6">
-                  <OrgSettingsProvider value={orgSettingsValue}>
-                    {children}
-                  </OrgSettingsProvider>
-                </div>
-              </SidebarInset>
-            </SidebarProvider>
-          </DrawerIndent>
-        </>
-      )}
+          <SidebarInset>
+            <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur-sm px-4">
+              <SidebarTrigger className="-ml-1" />
+              <div className="ml-auto">
+                {organizationId && (
+                  <QuickCreateDropdown organizationId={organizationId} />
+                )}
+              </div>
+            </header>
+            <div className="flex flex-1 flex-col gap-4 overflow-auto p-4 md:p-6">
+              <OrgSettingsProvider value={orgSettingsValue}>
+                {children}
+              </OrgSettingsProvider>
+            </div>
+          </SidebarInset>
+        </SidebarProvider>
+      </DrawerIndent>
+    </>
+  );
+
+  return (
+    <DrawerProvider>
+      <RealtimeSubscriptions orgId={organizationId} />
+      {organizationId ? <PushProvider>{shell}</PushProvider> : shell}
     </DrawerProvider>
   );
 }

@@ -18,6 +18,7 @@ export const PUBLIC_ROUTES = [
   "/update-password",
   "/organization/new",
   "/sso",
+  "/offline",
 ];
 
 export const COMPANY_TYPES = [

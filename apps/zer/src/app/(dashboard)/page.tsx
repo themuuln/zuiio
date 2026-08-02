@@ -2,6 +2,7 @@ import { Coin, Package, ShoppingCart } from "@phosphor-icons/react/dist/ssr";
 import { Suspense } from "react";
 import { HeroActionCard } from "@/components/dashboard/dashboard-cards";
 import { getDashboardContext } from "@/lib/dashboard-context";
+import { DEFAULT_TEMPLATE_ID, templateById } from "@/lib/dashboard-templates";
 import { DeliveryStats } from "./_sections/delivery-stats";
 import { LowStockWrapper } from "./_sections/low-stock-wrapper";
 import { MonthlyTrendSection } from "./_sections/monthly-trend-section";
@@ -56,11 +57,20 @@ async function DashboardContent() {
   const { organizationId, branchId, isBranchScoped, org } =
     await getDashboardContext();
 
+  const template = templateById(org.dashboard_template);
+  const sections = template.sections;
+  // The default template keeps the original dashboard layout untouched,
+  // including the always-visible low-stock toast.
+  const showLowStock =
+    template.id === DEFAULT_TEMPLATE_ID || sections.includes("low-stock");
+
   return (
     <>
-      <Suspense fallback={null}>
-        <LowStockWrapper orgId={organizationId} />
-      </Suspense>
+      {showLowStock && (
+        <Suspense fallback={null}>
+          <LowStockWrapper orgId={organizationId} />
+        </Suspense>
+      )}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="flex-1">
           <div className="flex flex-1 flex-col gap-6">
@@ -71,84 +81,93 @@ async function DashboardContent() {
             <HeroActions />
 
             {/* Today's Pulse — fetches KPIs */}
-            <Suspense
-              fallback={
-                <div>
-                  <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-                    Өнөөдрийн байдал
-                  </h2>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
-                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
-                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
-                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
-                  </div>
-                </div>
-              }
-            >
-              <TodayPulse
-                orgId={organizationId}
-                branchId={branchId}
-                isBranchScoped={isBranchScoped}
-              />
-            </Suspense>
-
-            {/* Quick Shortcuts — fetches aggregate counts */}
-            <Suspense
-              fallback={
-                <div>
-                  <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-                    Түргэн цэс
-                  </h2>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
-                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
-                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
-                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
-                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
-                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
-                  </div>
-                </div>
-              }
-            >
-              <QuickShortcuts orgId={organizationId} />
-            </Suspense>
-
-            {/* Recent Sales Table — fetches last 5 sales */}
-            <Suspense
-              fallback={
-                <div className="h-48 animate-pulse rounded-xl bg-muted" />
-              }
-            >
-              <RecentSales
-                orgId={organizationId}
-                branchId={branchId}
-                isBranchScoped={isBranchScoped}
-              />
-            </Suspense>
-
-            {/* Monthly Trend Chart — fetches 30-day trend */}
-            <Suspense
-              fallback={
-                <div className="h-80 animate-pulse rounded-xl bg-muted" />
-              }
-            >
-              <MonthlyTrendSection
-                orgId={organizationId}
-                branchId={branchId}
-                isBranchScoped={isBranchScoped}
-              />
-            </Suspense>
-
-            {org.has_delivery_tracking && (
+            {sections.includes("today-pulse") && (
               <Suspense
                 fallback={
-                  <div className="h-20 animate-pulse rounded-xl bg-muted" />
+                  <div>
+                    <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+                      Өнөөдрийн байдал
+                    </h2>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                      <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                      <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                      <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                    </div>
+                  </div>
                 }
               >
-                <DeliveryStats orgId={organizationId} />
+                <TodayPulse
+                  orgId={organizationId}
+                  branchId={branchId}
+                  isBranchScoped={isBranchScoped}
+                />
               </Suspense>
             )}
+
+            {/* Quick Shortcuts — fetches aggregate counts */}
+            {sections.includes("quick-shortcuts") && (
+              <Suspense
+                fallback={
+                  <div>
+                    <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+                      Түргэн цэс
+                    </h2>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                      <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                      <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                      <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                      <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                      <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                    </div>
+                  </div>
+                }
+              >
+                <QuickShortcuts orgId={organizationId} />
+              </Suspense>
+            )}
+
+            {/* Recent Sales Table — fetches last 5 sales */}
+            {sections.includes("recent-sales") && (
+              <Suspense
+                fallback={
+                  <div className="h-48 animate-pulse rounded-xl bg-muted" />
+                }
+              >
+                <RecentSales
+                  orgId={organizationId}
+                  branchId={branchId}
+                  isBranchScoped={isBranchScoped}
+                />
+              </Suspense>
+            )}
+
+            {/* Monthly Trend Chart — fetches 30-day trend */}
+            {sections.includes("monthly-trend") && (
+              <Suspense
+                fallback={
+                  <div className="h-80 animate-pulse rounded-xl bg-muted" />
+                }
+              >
+                <MonthlyTrendSection
+                  orgId={organizationId}
+                  branchId={branchId}
+                  isBranchScoped={isBranchScoped}
+                />
+              </Suspense>
+            )}
+
+            {sections.includes("delivery-stats") &&
+              org.has_delivery_tracking && (
+                <Suspense
+                  fallback={
+                    <div className="h-20 animate-pulse rounded-xl bg-muted" />
+                  }
+                >
+                  <DeliveryStats orgId={organizationId} />
+                </Suspense>
+              )}
           </div>
         </div>
       </div>

@@ -12,6 +12,7 @@ import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import {
   checkLowStockAndNotify,
+  notifyWebPushEvent,
   sendTelegramNotification,
 } from "@/lib/notification";
 import { revalidateEntities } from "@/lib/revalidate";
@@ -381,6 +382,15 @@ export async function createSale(
       `*${productNames}*\n\n` +
         `Нийт дүн: ${formatCurrency(totalAmount)}\n` +
         `Төлөв: Дууссан`,
+    );
+
+    notifyWebPushEvent(
+      supabase,
+      organizationId,
+      "new_sale",
+      "Шинэ борлуулалт",
+      `${productNames}\nНийт дүн: ${formatCurrency(totalAmount)}`,
+      "/sales",
     );
 
     // Check low stock for each unique product

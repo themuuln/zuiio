@@ -24,6 +24,7 @@ import {
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { OfflineIndicator } from "@/components/pos/offline-indicator";
 import {
   type SelectedVariant,
   VariantPicker,
@@ -46,6 +47,10 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
+import { useBarcodeScanner } from "@/lib/hooks/use-barcode-scanner";
+import { useI18n } from "@/lib/i18n/provider";
+import { useOffline } from "@/lib/offline/offline-provider";
+import { queueOfflineAction } from "@/lib/offline-sync";
 import { productKeys, saleKeys } from "@/lib/query/keys";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 import { cn } from "@/lib/utils";
@@ -64,6 +69,7 @@ type ProductOption = {
   unit: string | null;
   barcode: string | null;
   image_url: string | null;
+  has_variants: boolean;
 };
 
 const initialPaymentMethods = [
@@ -142,12 +148,15 @@ function SaleFormSection({
 
 export function SaleForm({
   products,
+  hasReceiptPrinter = false,
   onSuccess,
   onOpenDetail,
   onReopenForm,
   formId,
 }: {
   products: ProductOption[];
+  /** Org setting: navigate to the receipt with ?print=1 after a sale. */
+  hasReceiptPrinter?: boolean;
   onSuccess?: () => void;
   onOpenDetail?: (saleId: string) => void;
   onReopenForm?: () => void;
@@ -155,6 +164,9 @@ export function SaleForm({
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
+  const { isOnline, pendingCount, isReplaying, replay, refreshPendingCount } =
+    useOffline();
 
   const [keepOpen, setKeepOpen] = useState(false);
   const [barcodeScannerIndex, setBarcodeScannerIndex] = useState<number | null>(
@@ -304,23 +316,11 @@ export function SaleForm({
     [stockWarnings],
   );
 
-  const saleMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const result = await createSale(undefined, formData);
-      if (result?.error) throw new Error(result.error);
-      return result;
-    },
-    onMutate: async (formData) => {
-      await queryClient.cancelQueries({ queryKey: saleKeys.all() });
-      await queryClient.cancelQueries({ queryKey: productKeys.all() });
-
-      const salesSnapshot = queryClient.getQueriesData({
-        queryKey: saleKeys.all(),
-      });
-      const productsSnapshot = queryClient.getQueriesData({
-        queryKey: productKeys.all(),
-      });
-
+  // Shared optimistic-update logic: adds the sale to sales caches and
+  // decrements product stock locally. Used by the online mutation (onMutate,
+  // with snapshots for rollback) and by the offline queue path.
+  const applyOptimisticSale = useCallback(
+    (formData: FormData) => {
       // Parse items from form data for optimistic updates
       const itemsRaw = formData.get("items")?.toString() ?? "[]";
       let optimisticItems: {
@@ -401,6 +401,28 @@ export function SaleForm({
           return oldData;
         },
       );
+    },
+    [queryClient],
+  );
+
+  const saleMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const result = await createSale(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({ queryKey: saleKeys.all() });
+      await queryClient.cancelQueries({ queryKey: productKeys.all() });
+
+      const salesSnapshot = queryClient.getQueriesData({
+        queryKey: saleKeys.all(),
+      });
+      const productsSnapshot = queryClient.getQueriesData({
+        queryKey: productKeys.all(),
+      });
+
+      applyOptimisticSale(formData);
 
       return { salesSnapshot, productsSnapshot };
     },
@@ -462,6 +484,12 @@ export function SaleForm({
         ),
         { duration: 8000 },
       );
+
+      if (hasReceiptPrinter && saleId) {
+        // Receipt-printer shop: open the receipt view and auto-print it.
+        router.push(`/sales/${saleId}?print=1`);
+        return;
+      }
 
       if (keepOpen) {
         resetForm();
@@ -529,6 +557,36 @@ export function SaleForm({
     if (data.notes) {
       formData.append("notes", data.notes);
     }
+
+    if (!isOnline) {
+      // Offline — queue the sale for replay and update the cache locally.
+      const fields: Record<string, string> = {};
+      formData.forEach((value, key) => {
+        fields[key] = value.toString();
+      });
+      applyOptimisticSale(formData);
+      void queueOfflineAction("sale", fields, [
+        saleKeys.all(),
+        productKeys.all(),
+      ] as unknown as string[][])
+        .then(() => {
+          toast.success(t("offline.queue.saleQueued"));
+          void refreshPendingCount();
+          if (keepOpen) {
+            resetForm();
+          } else if (onSuccess) {
+            onSuccess();
+          } else {
+            router.push("/sales");
+          }
+        })
+        .catch((error) => {
+          capture(error, { context: "sale-form: queue offline" });
+          toast.error(t("offline.queue.error"));
+        });
+      return;
+    }
+
     saleMutation.mutate(formData);
   };
 
@@ -626,6 +684,69 @@ export function SaleForm({
     [products, setValue, append],
   );
 
+  // Wedge (USB/HID keyboard-emulation) scanner: find the product by barcode,
+  // bump an existing line or append a new one, and let variant products open
+  // the VariantPicker so the cashier picks the exact variant.
+  const handleWedgeScan = useCallback(
+    (code: string) => {
+      const barcode = code.trim();
+      if (!barcode) return;
+
+      const product = products.find(
+        (p) => p.barcode && p.barcode.toLowerCase() === barcode.toLowerCase(),
+      );
+
+      if (!product) {
+        toast.error(t("pos.barcode.notFound", { code: barcode }));
+        return;
+      }
+
+      if (Number(product.current_stock ?? 0) <= 0) {
+        toast.error(t("pos.barcode.outOfStock", { name: product.name }));
+        return;
+      }
+
+      // Variant product: add a row with the product selected so the
+      // VariantPicker opens for the exact variant instead of auto-adding.
+      if (product.has_variants) {
+        append({
+          product_id: product.id,
+          quantity: 1,
+          unit_price: product.sale_price ?? 0,
+          variant_id: undefined,
+        });
+        return;
+      }
+
+      // Plain product: bump an existing matching line, else append a new one.
+      const existingIndex = (watchedItems ?? []).findIndex(
+        (item) => item.product_id === product.id && !item.variant_id,
+      );
+      if (existingIndex >= 0) {
+        setValue(
+          `items.${existingIndex}.quantity`,
+          Number(watchedItems?.[existingIndex]?.quantity || 0) + 1,
+        );
+        return;
+      }
+
+      append({
+        product_id: product.id,
+        quantity: 1,
+        unit_price: product.sale_price ?? 0,
+        variant_id: undefined,
+      });
+    },
+    [products, watchedItems, append, setValue, t],
+  );
+
+  // Wedge scanner is paused while the camera overlay is open so a scan is
+  // never handled twice.
+  useBarcodeScanner({
+    onScan: handleWedgeScan,
+    enabled: barcodeScannerIndex === null,
+  });
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -634,7 +755,10 @@ export function SaleForm({
     >
       <ErrorBanner error={saleMutation.error} />
 
-      <SaleFormSection title="Бүтээгдэхүүний мөрүүд">
+      <SaleFormSection
+        title="Бүтээгдэхүүний мөрүүд"
+        description={t("pos.barcode.hint")}
+      >
         <div className="space-y-4">
           <div className="space-y-1">
             {fields.map((field, index) => {
@@ -1091,6 +1215,11 @@ export function SaleForm({
 
       {!formId && (
         <div className="flex items-center justify-end gap-4">
+          <OfflineIndicator
+            pendingCount={pendingCount}
+            onSync={() => void replay()}
+            isSyncing={isReplaying}
+          />
           <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
             <input
               type="checkbox"

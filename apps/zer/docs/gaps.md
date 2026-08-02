@@ -204,11 +204,11 @@ Storefront-ыг Zer-ийн dashboard-д холбох:
 
 ## 🔴 P0 — Critical Gaps
 
-### 1. Onboarding Wizard (Missing)
+### 1. Onboarding Wizard (Shipped 2026-08-03)
 
 **What competitors do:** Square: "Get up and running in minutes." Clover: "Set up and start taking payments same day." Shopify: "Start for free" → 3-step setup.
 
-**Current state:** No onboarding wizard. New users land on empty dashboard.
+**Current state:** ✅ Multi-step onboarding wizard (`/onboarding`): preset brand import, module selection, company-type category seeding, `onboarding_completed` flag; new orgs land there until configured.
 
 **Why it matters:** First impression = retention. If users don't set up within first session, they churn.
 
@@ -219,11 +219,11 @@ Storefront-ыг Zer-ийн dashboard-д холбох:
 
 ---
 
-### 2. Offline Mode (Incomplete)
+### 2. Offline Mode (Shipped 2026-08-03)
 
 **What competitors do:** Square's #1 feature is "keep selling without internet." Toast built their brand on "works during peak volume, even offline."
 
-**Current state:** Has `sw.js` (service worker) and `offline-sync.ts` but may not be complete.
+**Current state:** ✅ Offline-first POS: `public/sw.js` v4 (static cache-first, navigation stale-while-revalidate, `/rest/v1` + `/api` GET network-first-with-cache-fallback, `/offline` fallback page, push handler); `@zuiio/offline` IndexedDB mutation queue wired into the POS form + storefront checkout (`src/lib/offline-sync.ts` → `queueOfflineAction`/`replayQueuedActions`); `OfflineProvider` auto-replays on reconnect; TanStack Query cache persisted via `indexedDbPersister` (24h). Offline sales queue in the form, sync on reconnect, `OfflineIndicator` in the POS footer.
 
 **Why it matters:** Retailers at markets, pop-ups, and areas with bad internet need offline POS.
 
@@ -233,11 +233,11 @@ Storefront-ыг Zer-ийн dashboard-д холбох:
 
 ## 🟡 P1 — Competitive Gaps
 
-### 3. AI Assistant (Missing)
+### 3. AI Assistant (Shipped 2026-08-03)
 
 **What competitors do:** Datadog has Bits AI, Grafana has AI Assistant, Toast has Toast IQ, Looker has Gemini. Every top product in 2026 has AI.
 
-**Current state:** Has `@zuiio/ai-agent` package but unclear what it does.
+**Current state:** ✅ Dashboard AI chat at `/ai-assistant` ("AI туслах"): conversational Q&A powered by `@zuiio/ai-agent` `runWithTools` (DeepSeek, `DEEPSEEK_API_KEY`) with org-scoped tools (`createAllAgentTools` — inventory/sales queries scoped to `organization_id`), Mongolian answers, suggestion chips ("Бага нөөцтэй бараа?", "Өнөөдрийн борлуулалт?").
 
 **Opportunities:**
 - "Why is inventory low?"
@@ -265,11 +265,11 @@ Storefront-ыг Zer-ийн dashboard-д холбох:
 
 ---
 
-### 5. Real-Time Notifications (Incomplete)
+### 5. Real-Time Notifications (Shipped 2026-08-03)
 
 **What competitors do:** Square sends low-stock alerts. Toast sends real-time order notifications.
 
-**Current state:** Has notification system but unclear if real-time push works.
+**Current state:** ✅ Web push + Telegram + email: `push_subscriptions` table + VAPID web-push (`src/lib/push.ts`, `PushProvider`), settings toggle, delivery on `low_stock` + `new_sale` events via `notifyWebPushEvent`; Telegram channel existed (bot + per-org chat configs).
 
 **Action:** Push notifications via web-push + Telegram for: low stock, new order, payment received, unusual expense.
 
@@ -277,11 +277,11 @@ Storefront-ыг Zer-ийн dashboard-д холбох:
 
 ## 🟢 P2 — Differentiation Opportunities
 
-### 6. Dashboard Templates (Missing)
+### 6. Dashboard Templates (Shipped 2026-08-03)
 
 **What competitors do:** Grafana has 800+ dashboard templates. Datadog has integration-based auto-dashboards.
 
-**Current state:** Has dashboard with reports but no starter templates.
+**Current state:** ✅ Per-org dashboard template: `organizations.dashboard_template` (default/retail/financial/inventory), template picker in Settings, onboarding auto-selects by `company_type`, dashboard renders template-defined sections (today pulse, recent sales, monthly trend, delivery stats, low stock, quick shortcuts).
 
 **Action:** Pre-built dashboard templates:
 - "Retail Overview" (sales, inventory, top products)
@@ -290,27 +290,31 @@ Storefront-ыг Zer-ийн dashboard-д холбох:
 
 ---
 
-### 7. Hardware Integration (Missing)
+### 7. Hardware Integration (Partial 2026-08-03)
 
 **What competitors do:** Square sells dedicated hardware (Register, Terminal, Reader). Toast has Toast Go.
+
+**Current state:** ⚠️ Partial: USB/HID wedge barcode scanners supported in the POS (`useBarcodeScanner` — fast-buffer Enter-terminated scan → product lookup/add-to-cart, variant-aware), `has_receipt_printer` setting + auto-print of the receipt (with print-optimized CSS). No dedicated POS terminal, cash-drawer control, or ESC/POS driver yet.
 
 **Action:** Barcode scanner + receipt printer + cash drawer integration.
 
 ---
 
-### 8. Multi-Location Support (Missing)
+### 8. Multi-Location Support (Shipped 2026-08-03)
 
 **What competitors do:** Square supports "one location to one hundred." Shopify has unified inventory across stores.
 
-**Current state:** Has multi-currency but unclear on multi-location inventory.
+**Current state:** ✅ Cross-location stock transfers: `stock_transfers` + `stock_transfer_items` tables, atomic `approve_stock_transfer` RPC (FOR UPDATE locks, from→to `warehouse_products` move, `transfer` stock_movements, short-stock rejection), transfers UI under `/inventory/transfers` with per-warehouse stock cards; branches + warehouses existed before. Location-level reporting still thin (per-warehouse stock only).
 
 **Action:** Location switching, cross-location inventory transfers, location-level reporting.
 
 ---
 
-### 9. Embeddable Analytics (Missing)
+### 9. Embeddable Analytics (Shipped 2026-08-03)
 
 **What competitors do:** Looker's best feature is embedded analytics. Grafana dashboards can be embedded anywhere.
+
+**Current state:** ✅ Token-gated embed: `embed_tokens` (SHA-256-hashed tokens, expiry, revocation, org-scoped), settings UI at `/settings/embed` with iframe snippet builder, read-only report at `/embed/report?token=…` (today sales, 7-day trend, low stock, recent sales), `X-Frame-Options` replaced with `frame-ancestors *` on `/embed/*`.
 
 **Action:** Make Zer dashboards embeddable via iframe for: accountant portals, investor views, partner dashboards.
 
@@ -318,17 +322,19 @@ Storefront-ыг Zer-ийн dashboard-д холбох:
 
 ## Comparison Matrix
 
+> Refreshed 2026-08-03 — Zer column reflects the shipped state.
+
 | Feature | Zer | Square | Shopify | Looker |
 |---------|-----|--------|---------|--------|
-| Onboarding wizard | ❌ | ✅ | ✅ | ⚠️ |
-| Offline mode | ⚠️ Partial | ✅ Full | ✅ | ❌ |
-| AI assistant | ⚠️ Has package | ❌ | ❌ | ✅ Gemini |
-| Industry presets | ❌ | ✅ Mode selector | ❌ | ❌ |
-| Real-time alerts | ⚠️ Partial | ✅ | ✅ | ✅ |
-| Dashboard templates | ❌ | ✅ | ✅ | ✅ 800+ |
-| Hardware | ❌ | ✅ Full line | ✅ | ❌ |
-| Multi-location | ❌ | ✅ | ✅ | ❌ |
-| Embeddable | ❌ | ✅ | ✅ | ✅ Best |
+| Onboarding wizard | ✅ | ✅ | ✅ | ⚠️ |
+| Offline mode | ✅ (queue + SW) | ✅ Full | ✅ | ❌ |
+| AI assistant | ✅ (/ai-assistant) | ❌ | ❌ | ✅ Gemini |
+| Industry presets | ✅ (company-type) | ✅ Mode selector | ❌ | ❌ |
+| Real-time alerts | ✅ web-push+Telegram | ✅ | ✅ | ✅ |
+| Dashboard templates | ✅ | ✅ | ✅ | ✅ 800+ |
+| Hardware | ⚠️ barcode+printer | ✅ Full line | ✅ | ❌ |
+| Multi-location | ✅ transfers | ✅ | ✅ | ❌ |
+| Embeddable | ✅ token-gated | ✅ | ✅ | ✅ Best |
 
 ---
 
@@ -371,24 +377,26 @@ Odoo ($24.90-$61/user/mo) has partial Mongolian modules but the main e-barimt mo
 
 ---
 
+> **Status refresh 2026-08-03:** Offline-first, AI assistant, dashboard templates, hardware (partial), multi-location transfers, embeddable analytics, web-push alerts, consumer mobile app (`apps/zer-mobile`), storefront buyer accounts, and the public buyer checkout RPC (`submit_shop_order`) all shipped. Still missing: POS register (touch-optimized), QPay/SocialPay online payments, e-Barimt API integration, payroll extras, social-commerce selling.
+
 ## 🔴 New P0 Gaps (From Competitor Research)
 
 | Feature | Status | Competitor benchmark | Effort | Priority |
 |---------|--------|---------------------|--------|----------|
-| **POS module** | ❌ Missing | ALL 10+ Mongolian competitors have POS | 4-6 weeks | 🔴 Blocks retail SME segment |
+| **POS module** | ⚠️ Cash register + offline sales form; no touch POS register | ALL 10+ Mongolian competitors have POS | 4-6 weeks | 🔴 Blocks retail SME segment |
 | **QPay payment integration** | ❌ Missing | Todu, MASU, all local POS systems | 2-3 weeks | 🔴 Blocks storefront revenue |
-| **e-Barimt tax receipt** | ❌ Missing | All local competitors | 3-4 weeks | 🔴 Legal requirement |
-| **Payroll + HR module** | ❌ Missing | 1C, Workzone, Next ERP, Erkhet, Ultimate | 4-6 weeks | 🟢 Purchase trigger for SMEs |
-| **Consumer mobile app** | ❌ Missing | Todu (Android/iOS), MASU (mobile) | 4-6 weeks | 🟢 Table-stakes for modern POS |
+| **e-Barimt tax receipt** | ❌ Missing (ebarimt_id stored only) | All local competitors | 3-4 weeks | 🔴 Legal requirement |
+| **Payroll + HR module** | ✅ Shipped (payroll runs, items) | 1C, Workzone, Next ERP, Erkhet, Ultimate | — | 🟢 Purchase trigger for SMEs |
+| **Consumer mobile app** | ✅ Shipped (apps/zer-mobile, Expo) | Todu (Android/iOS), MASU (mobile) | — | 🟢 Table-stakes for modern POS |
 
 ## 🟡 Updated P1 Gaps
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| **Offline-first hardening** | 🟡 Partial → 🔴 P0 | Structural moat — no international/local competitor offers true offline-first for Mongolian market |
-| **Social commerce (Facebook/Telegram)** | ❌ Missing | 75%+ Mongolians on Facebook; Mongolian SMEs sell via Facebook posts |
-| **AI features (Mongolian-language)** | ❌ Missing | Odoo AI marketing in Mongolia (March 2026 event); trend is clear |
-| **Online storefront** | (already in storefront gap doc) | Already planned above — keep as priority |
+| **Offline-first hardening** | ✅ Shipped (2026-08-03) | IndexedDB mutation queue + SW v4 + query-cache persistence; sales queue offline and auto-replay on reconnect |
+| **Social commerce (Facebook/Telegram)** | ⚠️ Partial | Telegram + Messenger agent links/webhooks exist; no "sell via Facebook post" catalog-to-chat flow |
+| **AI features (Mongolian-language)** | ✅ Shipped | Dashboard Q&A assistant + poster/enhance/logo/naming generators |
+| **Online storefront** | ✅ Shipped | Catalog/product/blog + buyer accounts + public checkout RPC; web storefront cart/checkout UI still staff-side, consumer buying lives in apps/zer-mobile |
 
 ## Updated Comparison Matrix (vs Mongolian ERP)
 
@@ -396,13 +404,14 @@ Odoo ($24.90-$61/user/mo) has partial Mongolian modules but the main e-barimt mo
 |---------|-----|----------|---------------|------|-------------|
 | Inventory | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Sales/CRM | ✅ | ✅ | ✅ | ✅ | ✅ |
-| POS | ❌ Missing | ✅ | ✅ Masu POS | ✅ Web/Mobile | ✅ 1C Retail |
-| Payroll/HR | ❌ Missing | ✅ | ✅ | ❓ Unknown | ✅ |
-| e-Barimt | ❌ Missing | ✅ | ✅ | ✅ | ✅ |
+| POS | ⚠️ Cash register + offline sales form (no touch POS register) | ✅ | ✅ Masu POS | ✅ Web/Mobile | ✅ 1C Retail |
+| Payroll/HR | ✅ (payroll runs) | ✅ | ✅ | ❓ Unknown | ✅ |
+| e-Barimt | ⚠️ ebarimt_id stored only — no API | ✅ | ✅ | ✅ | ✅ |
 | QPay | ❌ Missing | ❓ Unknown | ✅ | ✅ | ❓ Unknown |
-| Offline-first | 🟡 Partial | ❌ | ✅ POS offline | ✅ POS offline | ❌ Desktop |
-| AI | ❌ | ❓ Unknown | ✅ Ultimate AI | ❓ Unknown | ❌ |
-| Mobile App | ❌ Missing | ❓ Unknown | ✅ Masu Mobile | ✅ Android/iOS | ❌ |
+| Offline-first | ✅ (queue + SW) | ❌ | ✅ POS offline | ✅ POS offline | ❌ Desktop |
+| AI | ✅ (/ai-assistant) | ❓ Unknown | ✅ Ultimate AI | ❓ Unknown | ❌ |
+| Mobile App | ✅ apps/zer-mobile (consumer) | ❓ Unknown | ✅ Masu Mobile | ✅ Android/iOS | ❌ |
+| Buyer accounts | ✅ store accounts + orders | — | — | — | — |
 | Pricing | MNT-market | Contact | Contact/Free start | Contact | Per-user RUB |
 | Modern UX | ✅ Best | ⚠️ Legacy | ⚠️ Legacy | ⚠️ Mixed | ❌ Legacy |
 

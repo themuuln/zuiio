@@ -33,6 +33,23 @@ export async function createShopSale(
         "shop.user_id": userId,
       });
 
+      // --- Phase 1.5: Store account link ---
+      // A signed-in buyer on the public storefront submits their own
+      // store_accounts.id. It MUST match the session user — never trust
+      // the client. Staff POS sales omit the field entirely.
+      const storeAccountId = getString(formData, "store_account_id") || null;
+      if (storeAccountId) {
+        const { data: claimsData } = await supabase.auth.getClaims();
+        const currentUserId = claimsData?.claims?.sub;
+        if (!currentUserId || currentUserId !== storeAccountId) {
+          return {
+            error:
+              "Хэрэглэгчийн бүртгэл баталгаажаагүй байна. Дахин нэвтэрнэ үү.",
+          };
+        }
+        span.setAttribute("shop.store_account_id", storeAccountId);
+      }
+
       // --- Phase 2: Parse ---
       const itemsRaw = formData.get("items");
       if (!itemsRaw) {
@@ -219,6 +236,24 @@ export async function createShopSale(
 
       const saleId = String(result.sale_id);
       span.setAttribute("shop.sale_id", saleId);
+
+      // The process_shop_sale RPC has no store_account_id parameter, so
+      // link the buyer afterwards via a scoped update (same request).
+      if (storeAccountId) {
+        const { error: storeLinkError } = await withDbCapture(
+          "createShopSale: link store account",
+          supabase
+            .from("sales")
+            .update({ store_account_id: storeAccountId } as never)
+            .eq("id", saleId),
+        );
+        if (storeLinkError) {
+          capture(storeLinkError, {
+            context: "createShopSale: link store account",
+            saleId,
+          });
+        }
+      }
 
       // --- Phase 5: Post-sale (fire-and-forget) ---
       createInvoiceFromSale(

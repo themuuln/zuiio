@@ -24,6 +24,7 @@ type ProductOption = {
   unit: string | null;
   barcode: string | null;
   image_url: string | null;
+  has_variants: boolean;
 };
 
 async function fetchSaleWithItems(
@@ -110,9 +111,12 @@ function isWithinWeek(dateStr: string): boolean {
 export function SalesContent({
   sales,
   products,
+  hasReceiptPrinter,
 }: {
   sales: SaleRow[];
   products: ProductOption[];
+  /** Org setting: auto-print the receipt after each sale. */
+  hasReceiptPrinter: boolean;
 }) {
   const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(
@@ -236,6 +240,7 @@ export function SalesContent({
                 />
                 <SalesCreateDrawer
                   products={products}
+                  hasReceiptPrinter={hasReceiptPrinter}
                   open={createOpen}
                   onOpenChangeAction={setCreateOpen}
                   onOpenDetailAction={(saleId) => {

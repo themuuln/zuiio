@@ -15,6 +15,7 @@ export type ProductItem = {
   unit: string | null;
   barcode: string | null;
   image_url: string | null;
+  has_variants: boolean;
 };
 
 export function ProductBrowserDrawer({
