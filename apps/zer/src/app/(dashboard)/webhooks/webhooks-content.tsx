@@ -159,13 +159,19 @@ export function WebhooksContent({
             aria-label="Идэвхтэй эсэх"
           />
         </span>
-        <Button variant="ghost" size="icon" onClick={() => setEditWebhook(row)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Засах"
+          onClick={() => setEditWebhook(row)}
+        >
           <NotePencil className="size-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
           className="text-destructive"
+          aria-label="Устгах"
           onClick={() => runDelete(row)}
         >
           <Trash className="size-4" />

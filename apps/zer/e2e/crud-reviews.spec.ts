@@ -25,6 +25,9 @@ test.describe("Reviews module", () => {
   test("moderation list shows a pending review and approves it", async ({
     page,
   }) => {
+    // Land on an origin page first so localStorage (Supabase session) is
+    // accessible inside page.evaluate — about:blank denies it.
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     const seeded = await seedReviewViaSession(page);
     if (!seeded.ok) {
       test.skip(true, seeded.error ?? "no public product to review");

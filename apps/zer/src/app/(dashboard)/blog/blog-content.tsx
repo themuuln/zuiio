@@ -141,6 +141,7 @@ export function BlogContent({ posts }: { posts: BlogRow[] }) {
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Засах"
           onClick={() => setEditPost(toEditData(row))}
         >
           <NotePencil className="size-4" />
@@ -149,6 +150,7 @@ export function BlogContent({ posts }: { posts: BlogRow[] }) {
           variant="ghost"
           size="icon"
           className="text-destructive"
+          aria-label="Устгах"
           onClick={() => runDelete(row)}
         >
           <Trash className="size-4" />

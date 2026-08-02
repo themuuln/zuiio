@@ -87,8 +87,7 @@ test.describe("Blog module", () => {
     await expect(editRow).toBeVisible({ timeout: 10_000 });
     await editRow
       .locator("xpath=ancestor::tr")
-      .getByRole("button", { name: "" })
-      .nth(1)
+      .getByRole("button", { name: "Засах" })
       .click();
     const editDrawer = page.locator("[data-drawer-popup]:visible").first();
     await expect(editDrawer).toBeVisible({ timeout: 10_000 });
@@ -107,8 +106,7 @@ test.describe("Blog module", () => {
     page.on("dialog", (dialog) => dialog.accept());
     await deleteRow
       .locator("xpath=ancestor::tr")
-      .getByRole("button", { name: "" })
-      .nth(2)
+      .getByRole("button", { name: "Устгах" })
       .click();
     await expect(
       page.locator("[data-sonner-toast]:visible").first(),
