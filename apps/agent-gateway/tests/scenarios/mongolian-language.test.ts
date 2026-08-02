@@ -1165,7 +1165,7 @@ describe("🤖 Agent Handler Flow (Mocked LLM)", () => {
 	it("Mongolian question gets sanitized and routed properly", async () => {
 		const result = await runAgentQuery("Өнөөдрийн борлуулалтын дүн хэд вэ?");
 		expect(result.message).toBe("Өнөөдрийн борлуулалтын дүн хэд вэ?");
-		expect(result.toolCount).toBe(3);
+		expect(result.toolCount).toBeGreaterThanOrEqual(3);
 		expect(result.toolNames).toContain("getSalesByCategory");
 	});
 

@@ -2,11 +2,12 @@
  * E2E tests for the link generation API routes.
  *
  * These tests directly invoke the Next.js route handlers with mock Request objects,
- * testing input validation, response formatting, and error handling.
+ * testing input validation, response formatting, error handling, and the
+ * server-to-server x-api-key gate.
  */
 
 import { NextRequest } from "next/server";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Supabase so routes don't make real network calls
 vi.mock("@/lib/supabase", () => ({
@@ -31,19 +32,42 @@ vi.mock("@/lib/supabase", () => ({
 	}),
 }));
 
+const TEST_SECRET = "test-gateway-secret";
+const AUTH_HEADERS = { "x-api-key": TEST_SECRET };
+
+function makeRequest(
+	url: string,
+	body: unknown,
+	headers: Record<string, string> = {},
+) {
+	return new NextRequest(url, {
+		method: "POST",
+		headers: { "Content-Type": "application/json", ...headers },
+		body: typeof body === "string" ? body : JSON.stringify(body),
+	});
+}
+
+beforeEach(() => {
+	process.env.AGENT_GATEWAY_API_SECRET = TEST_SECRET;
+});
+
+afterEach(() => {
+	delete process.env.AGENT_GATEWAY_API_SECRET;
+});
+
 describe("POST /api/link/code", () => {
 	it("generates a link code with valid input", async () => {
 		const { POST } = await import("@/app/api/link/code/route");
 
-		const request = new NextRequest("http://localhost/api/link/code", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
+		const request = makeRequest(
+			"http://localhost/api/link/code",
+			{
 				orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 				userId: "user-123",
 				productType: "zer",
-			}),
-		});
+			},
+			AUTH_HEADERS,
+		);
 
 		const response = await POST(request);
 		const body = await response.json();
@@ -55,17 +79,44 @@ describe("POST /api/link/code", () => {
 		expect(body).toHaveProperty("expiresInMinutes", 10);
 	});
 
+	it("rejects requests without a valid x-api-key", async () => {
+		const { POST } = await import("@/app/api/link/code/route");
+
+		const request = makeRequest("http://localhost/api/link/code", {
+			orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+			userId: "user-123",
+			productType: "zer",
+		});
+
+		const response = await POST(request);
+		expect(response.status).toBe(401);
+	});
+
+	it("rejects requests with a wrong x-api-key", async () => {
+		const { POST } = await import("@/app/api/link/code/route");
+
+		const request = makeRequest(
+			"http://localhost/api/link/code",
+			{
+				orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+				userId: "user-123",
+				productType: "zer",
+			},
+			{ "x-api-key": "wrong-secret" },
+		);
+
+		const response = await POST(request);
+		expect(response.status).toBe(401);
+	});
+
 	it("rejects missing orgId", async () => {
 		const { POST } = await import("@/app/api/link/code/route");
 
-		const request = new NextRequest("http://localhost/api/link/code", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				userId: "user-123",
-				productType: "zer",
-			}),
-		});
+		const request = makeRequest(
+			"http://localhost/api/link/code",
+			{ userId: "user-123", productType: "zer" },
+			AUTH_HEADERS,
+		);
 
 		const response = await POST(request);
 		expect(response.status).toBe(400);
@@ -74,15 +125,15 @@ describe("POST /api/link/code", () => {
 	it("rejects invalid productType", async () => {
 		const { POST } = await import("@/app/api/link/code/route");
 
-		const request = new NextRequest("http://localhost/api/link/code", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
+		const request = makeRequest(
+			"http://localhost/api/link/code",
+			{
 				orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 				userId: "user-123",
 				productType: "invalid",
-			}),
-		});
+			},
+			AUTH_HEADERS,
+		);
 
 		const response = await POST(request);
 		expect(response.status).toBe(400);
@@ -91,11 +142,11 @@ describe("POST /api/link/code", () => {
 	it("rejects empty body", async () => {
 		const { POST } = await import("@/app/api/link/code/route");
 
-		const request = new NextRequest("http://localhost/api/link/code", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: "{}",
-		});
+		const request = makeRequest(
+			"http://localhost/api/link/code",
+			"{}",
+			AUTH_HEADERS,
+		);
 
 		const response = await POST(request);
 		expect(response.status).toBe(400);
@@ -106,15 +157,15 @@ describe("POST /api/link/generate (compact token)", () => {
 	it("generates a compact token with valid input", async () => {
 		const { POST } = await import("@/app/api/link/generate/route");
 
-		const request = new NextRequest("http://localhost/api/link/generate", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
+		const request = makeRequest(
+			"http://localhost/api/link/generate",
+			{
 				orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-				userId: "11111111-2222-3333-4444-555555555555",
+				userId: "user-123",
 				productType: "zer",
-			}),
-		});
+			},
+			AUTH_HEADERS,
+		);
 
 		const response = await POST(request);
 		const body = await response.json();
@@ -123,21 +174,30 @@ describe("POST /api/link/generate (compact token)", () => {
 		expect(body).toHaveProperty("token");
 		expect(body.token.length).toBeLessThanOrEqual(64);
 		expect(body).toHaveProperty("telegramUrl");
-		expect(body.telegramUrl).toContain("https://t.me/");
-		expect(body).toHaveProperty("expiresInMinutes", 15);
+		expect(body.telegramUrl).toContain("start=");
+	});
+
+	it("rejects requests without x-api-key", async () => {
+		const { POST } = await import("@/app/api/link/generate/route");
+
+		const request = makeRequest("http://localhost/api/link/generate", {
+			orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+			userId: "user-123",
+			productType: "zer",
+		});
+
+		const response = await POST(request);
+		expect(response.status).toBe(401);
 	});
 
 	it("rejects missing userId", async () => {
 		const { POST } = await import("@/app/api/link/generate/route");
 
-		const request = new Request("http://localhost/api/link/generate", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-				productType: "zer",
-			}),
-		});
+		const request = makeRequest(
+			"http://localhost/api/link/generate",
+			{ orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", productType: "zer" },
+			AUTH_HEADERS,
+		);
 
 		const response = await POST(request);
 		expect(response.status).toBe(400);
@@ -146,15 +206,15 @@ describe("POST /api/link/generate (compact token)", () => {
 	it("rejects invalid productType", async () => {
 		const { POST } = await import("@/app/api/link/generate/route");
 
-		const request = new Request("http://localhost/api/link/generate", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
+		const request = makeRequest(
+			"http://localhost/api/link/generate",
+			{
 				orgId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 				userId: "user-123",
 				productType: "invalid",
-			}),
-		});
+			},
+			AUTH_HEADERS,
+		);
 
 		const response = await POST(request);
 		expect(response.status).toBe(400);

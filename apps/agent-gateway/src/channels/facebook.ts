@@ -166,23 +166,6 @@ export class FacebookChannel implements Channel {
 	}
 
 	/**
-	 * Send a confirmation prompt with Quick Replies.
-	 * Used for write tool confirmations on Messenger/Instagram.
-	 */
-	async sendConfirmation(
-		chatId: number | string,
-		text: string,
-		confirmId: string,
-	): Promise<void> {
-		await this.sendInlineKeyboard(chatId, text, [
-			[
-				{ text: "✅ Баталгаажуулах", callbackData: `confirm:${confirmId}` },
-				{ text: "❌ Цуцлах", callbackData: `reject:${confirmId}` },
-			],
-		]);
-	}
-
-	/**
 	 * Subscribe a page to webhook events.
 	 * Must be called after OAuth flow completes.
 	 */

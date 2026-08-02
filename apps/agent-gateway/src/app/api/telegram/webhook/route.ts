@@ -14,6 +14,7 @@ import type { ResolutionResult } from "@/gateway/types";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { debug } from "@/lib/debug";
 import { openAiConfig, openCodeGoConfig } from "@/lib/env";
+import { formatWriteResult } from "@/lib/format-result";
 import { redeemLinkCode } from "@/lib/link-code";
 import {
 	createServiceClient,
@@ -26,7 +27,6 @@ import { OpenCodeGoProvider } from "@/providers/opencode-go";
 import { AiGateway } from "@/providers/types";
 import { confirmAction, rejectAction } from "@/runtime/confirmation";
 import { transcribeVoice } from "@/stt/groq";
-
 export const dynamic = "force-dynamic";
 
 // ─── Lazy singletons ────────────────────────────────────────────────────────
@@ -916,6 +916,21 @@ export async function POST(request: Request): Promise<NextResponse> {
 				`✅ Баталгаажууллаа: ${staged.summary}`,
 			);
 			await tg.answerCallbackQuery(cq.id, "✅ Амжилттай.");
+			// Re-execute the staged action deterministically — never via LLM.
+			if (staged.execute) {
+				try {
+					const result = await staged.execute(staged.args);
+					await tg.sendMessage(chatId, formatWriteResult(result));
+				} catch (err) {
+					capture(err, {
+						context: "agent-gateway: confirm staged action",
+					});
+					await tg.sendMessage(
+						chatId,
+						"Уучлаарай, үйлдлийг гүйцэтгэхэд алдаа гарлаа. Дахин оролдоно уу.",
+					);
+				}
+			}
 		} else if (action === "reject") {
 			rejectAction(nonce);
 			await tg.editMessageText(chatId, messageId, "❌ Цуцаллаа.");

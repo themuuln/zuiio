@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { checkRateLimit, RATE_LIMITS } from "@/state/rate-limit";
+import { checkRateLimitSync, RATE_LIMITS } from "@/state/rate-limit";
 
-describe("checkRateLimit", () => {
+describe("checkRateLimitSync", () => {
 	it("allows first request", () => {
-		const result = checkRateLimit(`org-first-${Date.now()}`, 20);
+		const result = checkRateLimitSync(`org-first-${Date.now()}`, 20);
 		expect(result.allowed).toBe(true);
 		expect(result.remaining).toBe(19);
 	});
@@ -11,7 +11,7 @@ describe("checkRateLimit", () => {
 	it("allows requests up to the limit", () => {
 		const orgId = `org-lim-${Date.now()}`;
 		for (let i = 0; i < 20; i++) {
-			const result = checkRateLimit(orgId, 20);
+			const result = checkRateLimitSync(orgId, 20);
 			expect(result.allowed).toBe(true);
 		}
 	});
@@ -20,10 +20,10 @@ describe("checkRateLimit", () => {
 		const orgId = `org-block-${Date.now()}`;
 		// Exhaust the limit
 		for (let i = 0; i < 20; i++) {
-			checkRateLimit(orgId, 20);
+			checkRateLimitSync(orgId, 20);
 		}
 		// Next should be blocked
-		const result = checkRateLimit(orgId, 20);
+		const result = checkRateLimitSync(orgId, 20);
 		expect(result.allowed).toBe(false);
 		expect(result.remaining).toBe(0);
 		expect(result.resetInMs).toBeGreaterThan(0);
@@ -35,27 +35,27 @@ describe("checkRateLimit", () => {
 
 		// Exhaust org1
 		for (let i = 0; i < 20; i++) {
-			checkRateLimit(org1, 20);
+			checkRateLimitSync(org1, 20);
 		}
-		expect(checkRateLimit(org1, 20).allowed).toBe(false);
+		expect(checkRateLimitSync(org1, 20).allowed).toBe(false);
 
 		// org2 should still be allowed
-		expect(checkRateLimit(org2, 20).allowed).toBe(true);
+		expect(checkRateLimitSync(org2, 20).allowed).toBe(true);
 	});
 
 	it("returns correct remaining count", () => {
 		const orgId = `org-rem-${Date.now()}`;
-		const r1 = checkRateLimit(orgId, 10);
+		const r1 = checkRateLimitSync(orgId, 10);
 		expect(r1.remaining).toBe(9);
 
-		checkRateLimit(orgId, 10);
-		const r2 = checkRateLimit(orgId, 10);
+		checkRateLimitSync(orgId, 10);
+		const r2 = checkRateLimitSync(orgId, 10);
 		expect(r2.remaining).toBe(7); // we sent 3 now
 	});
 
 	it("uses default messagesPerMinute from RATE_LIMITS", () => {
 		const orgId = `org-default-${Date.now()}`;
-		const result = checkRateLimit(orgId, RATE_LIMITS.messagesPerMinute);
+		const result = checkRateLimitSync(orgId, RATE_LIMITS.messagesPerMinute);
 		expect(result.allowed).toBe(true);
 		expect(result.remaining).toBe(RATE_LIMITS.messagesPerMinute - 1);
 	});

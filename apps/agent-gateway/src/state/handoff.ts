@@ -8,6 +8,102 @@ import { capture } from "@zuiio/capture";
  * Manages escalation from AI agent to human and back.
  */
 
+/** Per-org handoff configuration (agent_handoff_config). */
+export interface HandoffConfig {
+	keywordTriggers: string[];
+	sentimentEnabled: boolean;
+	adminChatId: number | null;
+	autoHandoffAfterHours: boolean;
+}
+
+const DEFAULT_HANDOFF_CONFIG: HandoffConfig = {
+	keywordTriggers: [],
+	sentimentEnabled: true,
+	adminChatId: null,
+	autoHandoffAfterHours: true,
+};
+
+/**
+ * Load handoff config for an org (agent_handoff_config).
+ * Returns defaults when no row exists.
+ */
+export async function getHandoffConfig(
+	supabase: SupabaseClient,
+	orgId: string,
+): Promise<HandoffConfig> {
+	const { data, error } = await supabase
+		.from("agent_handoff_config")
+		.select(
+			"keyword_triggers, sentiment_enabled, admin_chat_id, auto_handoff_after_hours",
+		)
+		.eq("organization_id", orgId)
+		.maybeSingle();
+
+	if (error || !data) return DEFAULT_HANDOFF_CONFIG;
+
+	return {
+		keywordTriggers: Array.isArray(data.keyword_triggers)
+			? (data.keyword_triggers as string[])
+			: [],
+		sentimentEnabled: (data.sentiment_enabled as boolean) ?? true,
+		adminChatId: data.admin_chat_id as number | null,
+		autoHandoffAfterHours: (data.auto_handoff_after_hours as boolean) ?? true,
+	};
+}
+
+/** List pending (unhandled) handoffs for an org — powers the team inbox. */
+export async function listPendingHandoffs(
+	supabase: SupabaseClient,
+	orgId: string,
+	limit = 50,
+): Promise<HandoffEvent[]> {
+	const { data, error } = await supabase
+		.from("agent_handoff_events")
+		.select(
+			"id, organization_id, chat_id, user_id, status, reason, escalated_by, customer_query, admin_user_id, created_at",
+		)
+		.eq("organization_id", orgId)
+		.in("status", ["pending_human", "human_active"])
+		.order("created_at", { ascending: false })
+		.limit(limit);
+
+	if (error || !data) return [];
+
+	return (data as Record<string, unknown>[]).map((row) => ({
+		id: row.id as string,
+		organizationId: row.organization_id as string,
+		chatId: row.chat_id as number,
+		userId: row.user_id as number,
+		status: row.status as HandoffStatus,
+		reason: row.reason as string | null,
+		escalatedBy: row.escalated_by as string | null,
+		customerQuery: row.customer_query as string | null,
+		adminUserId: row.admin_user_id as number | null,
+		createdAt: row.created_at as string,
+	}));
+}
+
+/** Auto-resolve handoffs stuck in pending_human longer than the cutoff. */
+export async function resolveStaleHandoffs(
+	supabase: SupabaseClient,
+	cutoff: string,
+): Promise<number> {
+	const { data, error } = await supabase
+		.from("agent_handoff_events")
+		.update({ status: "human_resolved", updated_at: new Date().toISOString() })
+		.eq("status", "pending_human")
+		.lt("created_at", cutoff)
+		.select("id");
+
+	if (error) {
+		capture(error, { context: "agent-gateway: handoff stale sweep" });
+		return 0;
+	}
+	return (data ?? []).length;
+}
+
+// ── Original module below ───────────────────────────────────────────────────
+
 export type HandoffStatus =
 	| "bot"
 	| "pending_human"

@@ -29,9 +29,9 @@ describe("Tolom tool coverage", () => {
 		// getExpensesSummary, getAppointments, getMechanics, getSuppliers
 		// Write tools are consolidated into the dynamic writeData tool
 		expect(toolNames).toContain("writeData");
-		const writeData = tools.find((t) => t.name === "writeData")!;
+		const writeData = tools.find((t) => t.name === "writeData");
 		// writeData must advertise the datasets the legacy inline tools covered
-		expect(writeData.description).toContain("work_orders");
+		expect(writeData?.description).toContain("work_orders");
 		expect(writeData.description).toContain("invoices");
 		expect(writeData.description).toContain("appointments");
 		expect(writeData.description).toContain("customers");

@@ -3,6 +3,7 @@ import type { Channel } from "@/channels/types";
 import type { GatewayContext } from "@/gateway/types";
 import type { AiProvider } from "@/providers/types";
 import { interpretFlow, resumeFlow } from "./interpreter";
+import { buttonValueFromCallback } from "./nodes/ask-question";
 import {
 	createRun,
 	deleteWaitState,
@@ -133,7 +134,15 @@ export async function handleFlowCallback(
 	if (!flow) return null;
 
 	// Parse the callback data to extract the button value
-	const buttonValue = callbackData.split(":").pop() ?? callbackData;
+	const buttonValue = buttonValueFromCallback(callbackData);
+
+	// If waiting for a question response, persist the selected button as the
+	// answer before resuming — downstream nodes read it from run.fields.
+	const awaitingField = run.fields._awaitingField;
+	if (awaitingField) {
+		run.fields[awaitingField] = buttonValue;
+		run.fields._awaitingField = "";
+	}
 
 	const flowCtx: FlowContext = {
 		flow,

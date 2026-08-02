@@ -34,7 +34,9 @@ export async function handleAbTest(
 	const experimentId = node.id;
 	const existingAssignment = ctx.run.assignments[experimentId];
 
-	let selectedVariant;
+	let selectedVariant:
+		| { id: string; weight: number; message: string }
+		| undefined;
 	if (existingAssignment) {
 		selectedVariant = variants.find((v) => v.id === existingAssignment);
 	}
@@ -81,8 +83,13 @@ function assignVariant(
 		}
 	}
 
-	// Fallback to first variant
-	return variants[0]!;
+	// Fallback to first variant (guarded — variants.length > 0 above)
+	const first = variants[0];
+	if (!first) {
+		// Unreachable in practice: callers guard against empty variants.
+		return { id: "", weight: 0, message: "" };
+	}
+	return first;
 }
 
 /** Simple deterministic hash (djb2). Returns a non-negative integer. */

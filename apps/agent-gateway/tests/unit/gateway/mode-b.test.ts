@@ -7,6 +7,7 @@ describe("resolveOrgFromBotKey", () => {
 			from: vi.fn().mockReturnThis(),
 			select: vi.fn().mockReturnThis(),
 			eq: vi.fn().mockReturnThis(),
+			maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
 			single: vi.fn().mockResolvedValue({
 				data: {
 					organization_id: TEST_ORG_ID,
@@ -38,6 +39,7 @@ describe("resolveOrgFromBotKey", () => {
 			from: vi.fn().mockReturnThis(),
 			select: vi.fn().mockReturnThis(),
 			eq: vi.fn().mockReturnThis(),
+			maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
 			single: vi.fn().mockResolvedValue({
 				data: null,
 				error: { code: "PGRST116", message: "No rows" },
@@ -59,6 +61,7 @@ describe("resolveOrgFromBotKey", () => {
 			from: vi.fn().mockReturnThis(),
 			select: vi.fn().mockReturnThis(),
 			eq: vi.fn().mockReturnThis(),
+			maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
 			single: vi.fn().mockResolvedValue({
 				data: null,
 				error: { code: "PGRST116", message: "No rows" },
@@ -80,6 +83,7 @@ describe("resolveOrgFromBotKey", () => {
 			from: vi.fn().mockReturnThis(),
 			select: vi.fn().mockReturnThis(),
 			eq: vi.fn().mockReturnThis(),
+			maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
 			single: vi.fn().mockResolvedValue({
 				data: {
 					organization_id: TEST_ORG_ID,

@@ -3,13 +3,15 @@ import "server-only";
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { resolveStaleHandoffs } from "@/state/handoff";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/cron/cleanup-sessions
- * Deletes expired sessions (older than 24h) to keep the sessions table lean.
- * Run periodically (every 6 hours).
+ * Deletes expired sessions (older than 24h) and auto-resolves handoffs stuck
+ * in pending_human for more than 24h.
+ * Run periodically (daily via vercel.json crons).
  */
 export async function POST(request: Request) {
 	const authHeader = request.headers.get("authorization");
@@ -34,9 +36,13 @@ export async function POST(request: Request) {
 			);
 		}
 
+		// Auto-resolve stale pending handoffs (no human picked them up).
+		const staleResolved = await resolveStaleHandoffs(sb, cutoff);
+
 		return NextResponse.json({
 			status: "ok",
 			deleted: count ?? 0,
+			staleHandoffsResolved: staleResolved,
 			cutoff,
 		});
 	} catch (err) {

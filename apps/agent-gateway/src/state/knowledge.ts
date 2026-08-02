@@ -25,14 +25,19 @@ export async function searchKnowledge(
 	supabase: SupabaseClient,
 	orgId: string,
 	query: string,
-	options?: { limit?: number; embeddings?: number[] },
+	options?: {
+		limit?: number;
+		embeddings?: number[];
+		audience?: "internal" | "customer";
+	},
 ): Promise<KnowledgeChunk[]> {
 	const limit = options?.limit ?? 5;
 	const embedding = options?.embeddings;
+	const audience = options?.audience;
 
 	// Check Redis cache first
 	const redis = getRedis();
-	const cacheKey = `knowledge:${orgId}:${limit}:${embedding ? "vec" : "txt"}:${query}`;
+	const cacheKey = `knowledge:${orgId}:${audience ?? "all"}:${limit}:${embedding ? "vec" : "txt"}:${query}`;
 	if (redis) {
 		try {
 			const cached = await redis.get<KnowledgeChunk[]>(cacheKey);
@@ -51,6 +56,7 @@ export async function searchKnowledge(
 		query,
 		limit,
 		embedding,
+		audience,
 	);
 
 	// Populate cache (fire-and-forget — never block response)
@@ -68,6 +74,7 @@ async function runKnowledgeQuery(
 	query: string,
 	limit: number,
 	embedding: number[] | undefined,
+	audience?: "internal" | "customer",
 ): Promise<KnowledgeChunk[]> {
 	// Try pgvector similarity first
 	if (embedding && embedding.length === 1536) {
@@ -93,16 +100,24 @@ async function runKnowledgeQuery(
 		}
 	}
 
-	// Fallback: text-based ILIKE search
-	const { data } = await supabase
+	// Fallback: text-based ILIKE search, audience-filtered when an audience is
+	// supplied (visibility: internal|customer|both).
+	let queryBuilder = supabase
 		.from("agent_knowledge_sources")
 		.select("id, source_type, title, content")
 		.eq("organization_id", orgId)
 		.eq("is_active", true)
 		.or(
 			`title.ilike.%${escapeIlIKE(query)}%,content.ilike.%${escapeIlIKE(query)}%`,
-		)
-		.limit(limit);
+		);
+
+	if (audience) {
+		queryBuilder = queryBuilder.or(
+			`visibility.eq.${audience},visibility.eq.both`,
+		);
+	}
+
+	const { data } = await queryBuilder.limit(limit);
 
 	return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
 		id: row.id as string,

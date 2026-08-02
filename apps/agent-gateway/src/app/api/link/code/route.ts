@@ -1,9 +1,18 @@
 import { capture } from "@zuiio/capture";
 import { type NextRequest, NextResponse } from "next/server";
+import { isGatewayApiKeyValid } from "@/lib/api-auth";
 import { createLinkCode } from "@/lib/link-code";
 import { createServiceClient } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
+	// Server-to-server only: minted by authenticated Zer/Tolom settings pages.
+	if (!isGatewayApiKeyValid(request)) {
+		return NextResponse.json(
+			{ error: "Unauthorized — valid x-api-key required" },
+			{ status: 401 },
+		);
+	}
+
 	try {
 		const body = (await request.json()) as {
 			orgId: string;

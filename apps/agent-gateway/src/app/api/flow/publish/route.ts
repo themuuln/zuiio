@@ -83,11 +83,13 @@ export async function POST(request: Request) {
 
 		const nextVersion = (existing?.[0]?.version ?? 0) + 1;
 
-		// Deactivate previous versions for this org + channel
+		// Deactivate previous versions for this org + product_type + channel
+		// (product_type scoping prevents cross-product collisions)
 		await sb
 			.from("flow_versions")
 			.update({ is_active: false })
 			.eq("organization_id", body.orgId)
+			.eq("product_type", body.productType || "zatly")
 			.eq("is_active", true)
 			.or(`channel.is.null,channel.eq.${body.channel ?? ""}`);
 

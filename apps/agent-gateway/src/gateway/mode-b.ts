@@ -26,10 +26,22 @@ export async function resolveOrgFromBotKey(
 		return null;
 	}
 
+	// Resolve audience from channel_connections (default "customer" —
+	// custom bots are customer-facing unless explicitly configured internal).
+	const { data: conn } = await supabase
+		.from("channel_connections")
+		.select("audience")
+		.eq("bot_key", botKey)
+		.eq("is_active", true)
+		.maybeSingle();
+
+	const audience = (conn?.audience ?? "customer") as "internal" | "customer";
+
 	return {
 		orgId: data.organization_id,
 		userId: data.organization_id,
 		productType: data.product_type as "tolom" | "zer",
+		audience,
 		chatId: 0,
 		telegramUserId: 0,
 		channel: "telegram",

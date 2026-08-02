@@ -26,9 +26,41 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 	const code = searchParams.get("code");
 	const state = searchParams.get("state");
 
-	// Verify state
+	// Verify state: the param is base64url(JSON), the cookie is the raw JSON.
+	// Compare the embedded nonce, not the whole payload (string forms differ).
 	const stateCookie = request.cookies.get("fb_oauth_state")?.value;
-	if (!state || !stateCookie || state !== stateCookie) {
+	let stateData: { orgId: string; productType: string; state?: string } | null =
+		null;
+	try {
+		const parsed = state
+			? (JSON.parse(Buffer.from(state, "base64url").toString()) as {
+					orgId: string;
+					productType: string;
+					state?: string;
+				})
+			: null;
+		stateData = parsed;
+	} catch {
+		stateData = null;
+	}
+
+	if (
+		!stateData?.state ||
+		!stateCookie ||
+		!stateData.orgId ||
+		!stateData.productType
+	) {
+		return NextResponse.json({ error: "Invalid OAuth state" }, { status: 400 });
+	}
+	try {
+		const cookieData = JSON.parse(stateCookie) as { state?: string };
+		if (cookieData.state !== stateData.state) {
+			return NextResponse.json(
+				{ error: "Invalid OAuth state" },
+				{ status: 400 },
+			);
+		}
+	} catch {
 		return NextResponse.json({ error: "Invalid OAuth state" }, { status: 400 });
 	}
 
@@ -47,11 +79,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 	}
 
 	try {
-		// Parse state to get orgId and productType
-		const stateData = JSON.parse(
-			Buffer.from(state, "base64url").toString(),
-		) as { orgId: string; productType: string };
-
 		// Exchange code for user access token
 		const tokenUrl = new URL(
 			`https://graph.facebook.com/${FB_GRAPH_API_VERSION}/oauth/access_token`,
@@ -122,7 +149,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 		// Store pages in cookie for selection
 		const response = NextResponse.redirect(
 			new URL(
-				`/api/facebook/select?orgId=${stateData.orgId}&productType=${stateData.productType}`,
+				`/link/select?orgId=${stateData.orgId}&productType=${stateData.productType}`,
 				request.url,
 			),
 		);

@@ -1,5 +1,5 @@
-import { WhatsAppChannel } from "@zuiio/gateway-whatsapp";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { WhatsAppChannel } from "@/channels/whatsapp";
 
 const PHONE_ID = "phone-123";
 const ACCESS_TOKEN = "wa-token-abc";
@@ -83,37 +83,5 @@ describe("WhatsAppChannel", () => {
 		const custom = new WhatsAppChannel("custom-phone", "custom-token");
 		await custom.sendMessage("1", "test");
 		expect(fetchSpy.mock.calls[0]?.[0]).toContain("custom-phone");
-	});
-
-	it("configures webhook via configureWebhook", async () => {
-		process.env.WHATSAPP_APP_ID = "app-123";
-		fetchSpy.mockResolvedValue(new Response("", { status: 200 }));
-
-		await channel.configureWebhook(
-			"https://example.com/webhook",
-			"verify-token",
-		);
-
-		expect(fetchSpy).toHaveBeenCalledTimes(1);
-		const body = JSON.parse(fetchSpy.mock.calls[0]?.[1]?.body as string);
-		expect(body.object).toBe("whatsapp_business_account");
-		expect(body.callback_url).toBe("https://example.com/webhook");
-	});
-
-	it("configureWebhook throws without WHATSAPP_APP_ID", async () => {
-		delete process.env.WHATSAPP_APP_ID;
-
-		await expect(
-			channel.configureWebhook("https://example.com", "token"),
-		).rejects.toThrow("WHATSAPP_APP_ID");
-	});
-
-	it("configureWebhook throws on API error", async () => {
-		process.env.WHATSAPP_APP_ID = "app-123";
-		fetchSpy.mockResolvedValue(new Response("error", { status: 400 }));
-
-		await expect(
-			channel.configureWebhook("https://example.com", "token"),
-		).rejects.toThrow("webhook");
 	});
 });

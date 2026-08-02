@@ -1,14 +1,24 @@
 /** Supported messaging channels. */
-export type ChannelType = "telegram" | "messenger" | "instagram" | "whatsapp";
+export type ChannelType =
+	| "telegram"
+	| "messenger"
+	| "instagram"
+	| "whatsapp"
+	| "webchat";
 
 /** Supported product types. */
 export type ProductType = "tolom" | "zer" | "zatly";
+
+/** Trusted audience classification — resolved from DB, never from LLM output. */
+export type AgentAudience = "internal" | "customer";
 
 /** Resolved context for a gateway request. */
 export interface GatewayContext {
 	orgId: string;
 	userId: string;
 	productType: ProductType;
+	/** Trusted audience — internal (staff) or customer (public). */
+	audience: AgentAudience;
 	// Legacy Telegram fields (used by mode-a, mode-b, agent-handler, webhook)
 	chatId: number;
 	telegramUserId: number;

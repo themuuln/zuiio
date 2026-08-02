@@ -222,9 +222,6 @@ export interface MeasureExpr {
 	op: AggregateOp;
 	/** Output column name. Referenced by sort and derivation. Must be unique within the query. */
 	alias: string;
-	/** Conditional aggregation (FILTER clause). PostgREST doesn't support this natively —
-	 *  the engine compiles it as a WHERE subquery or post-filters in TypeScript. */
-	filter?: Filter[];
 }
 
 /** Filter condition. Maps to PostgREST query string parameters. */

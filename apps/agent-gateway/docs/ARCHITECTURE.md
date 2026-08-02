@@ -1,6 +1,6 @@
 # Architecture
 
-Agent Gateway is a multi-tenant AI agent that connects Telegram users to business data in Zer and Tolom. This document explains the system design, data flow, and key architectural decisions.
+Agent Gateway is a multi-tenant AI agent that connects users on Telegram, Facebook Messenger/Instagram, and WhatsApp to business data in Zer and Tolom. This document explains the system design, data flow, and key architectural decisions.
 
 ## System Overview
 
@@ -180,24 +180,44 @@ LLM decides to call tool
 ### Write Tools vs Read Tools
 
 - **Read tools** (e.g., `getDailySummary`, `searchCustomers`) execute immediately
-- **Write tools** (e.g., `createInvoice`, `updateWorkOrder`) go through the confirmation gate:
-  1. Tool returns a summary + staged action
-  2. Gateway sends inline keyboard (✅ Confirm / ❌ Reject)
-  3. User taps button → callback query
-  4. `confirmAction()` or `rejectAction()` called
-  5. If confirmed, tool re-executes with the staged args
+- **Write tools** (e.g., `createInvoice`, `updateWorkOrder`) are wrapped by `gateWriteTool()` in `src/runtime/write-gate.ts` and go through the confirmation gate:
+  1. Tool call is **staged** — the original `execute` closure is stored on the staged action along with its args, channel identity, and a human-readable summary (`summarizeWriteAction`)
+  2. The confirm/reject buttons are pushed on the channel **directly from the tool** (Telegram inline keyboard, Messenger/Instagram quick replies via `confirmButtons`)
+  3. User taps a button → `confirmAction()` / `rejectAction()` in `src/runtime/confirmation.ts`
+  4. On confirm, the **stored closure re-executes deterministically with the original args** — never via an LLM re-prompt
+  5. Write results are formatted for the channel by `formatWriteResult()` in `src/lib/format-result.ts`
+
+  Staged actions are in-memory with a 5-minute TTL; the confirm buttons carry a nonce bound to `(channelChatId, channelUserId)` so the 5-minute tool cache can safely serve multiple chats.
+
+## Adaptive Audience & Context
+
+Every request carries a **trusted audience** — `AgentAudience = "internal" | "customer"` — resolved from database configuration, never from the incoming message or LLM output:
+
+- **Mode A** (SSO-linked Telegram) → `internal`
+- **Mode B** (custom bot) → `customer` by default, read from `channel_connections.audience`
+- **Facebook/Instagram webhook** → `customer` (fail closed)
+- Unknown/unclassified connections → `customer`
+
+The audience gates both tools and knowledge:
+
+- `getProductTools()` returns an **empty tool set for `customer`** audiences (fail-closed — no internal business tools on public channels); the internal/customer split is keyed into the tool cache
+- `searchKnowledge()` filters `agent_knowledge_sources` by `visibility ∈ {internal, customer, both}` (`src/state/knowledge.ts`)
+- `loadAgentProfile()` (`src/state/agent-profile.ts`) loads the active `agent_context_profiles` row for `(organization_id, audience)` and returns null on any failure — safe fallback to the immutable core prompt
+
+The system prompt is composed in `src/gateway/agent-handler.ts` as **base → profile → knowledge → wizard**, all loaded in parallel with the session: the immutable gateway prompt first, then the org's profile (`formatProfileContext`), then retrieved knowledge, then any active wizard state. Org-provided content is treated as subordinate data — it can never override tenant isolation, authorization, tool selection, or safety rules. See [ADAPTIVE_AGENT_CONTEXT_PLAN.md](ADAPTIVE_AGENT_CONTEXT_PLAN.md) for the full design and remaining work.
 
 ## State Management
 
-All state is request-scoped and stored in Supabase (no Redis in current deployment).
+All state is request-scoped. Durable state lives in Supabase; when `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` are configured, Redis is used as a hot cache for sessions, knowledge search, and the org-name lookup (in-memory fallback otherwise).
 
 | State | Storage | TTL | Purpose |
 |---|---|---|---|
-| Session | `agent_sessions` | 24h | Conversation history per (org, chat, user) |
+| Session | `agent_sessions` | 24h | Conversation history per (org, channel, chat, user) |
 | Rate limit | In-memory Map | 60s sliding window | Per-org request throttling |
 | Budget | `agent_daily_spend` | Daily reset | Token spend tracking per org |
 | Audit | `agent_audit_log` | Permanent | Tool call logging |
 | Staged actions | In-memory Map | 5 min | Confirmation gate for write tools |
+| Handoffs | `agent_handoff_*` tables | Until resolved | Human handoff queue (see below) |
 
 ### Session Schema
 
@@ -211,6 +231,8 @@ interface SessionMessage {
 ```
 
 Sessions are capped at `MAX_SESSION_MESSAGES = 50` messages. Older messages are dropped on save.
+
+Sessions are keyed by **generic channel columns** — `(organization_id, channel, channel_chat_id, channel_user_id)` — with the legacy `telegram_chat_id`/`telegram_user_id` kept in sync for pre-007 consumers. `loadSession`/`saveSession`/`appendToSession` in `src/state/session.ts` take channel identity as parameters, so Telegram, Messenger, Instagram, and WhatsApp conversations are stored under the same table with a unique `channel` value.
 
 ### Rate Limiting
 
@@ -228,11 +250,29 @@ Per-org daily token spend with two thresholds:
 
 Usage is recorded atomically via PostgRPC's `increment_daily_spend` RPC function, falling back to upsert if the function doesn't exist.
 
+### Usage Analytics
+
+`/api/dashboard/usage?orgId=...&days=N` (`src/state/usage.ts`) returns an extended analytics payload per org:
+
+- Token/call totals, per-tool counts, daily breakdown, and estimated cost
+- **`responseTimeMs`** — p50/p95/p99 response-time percentiles plus per-tool averages (`toolAverages`) computed from `agent_audit_log` durations
+- **`conversationCount`** — distinct `agent_sessions` rows in the period
+- `handoffCount` / `handoffResolvedCount`
+
+## Human Handoff
+
+Handoffs are wired end-to-end (`src/state/handoff.ts`, `src/gateway/agent-handler.ts`):
+
+1. Before the LLM call, `checkHandoffTriggers()` tests the sanitized message against the org's configured keyword triggers and sentiment rules
+2. On trigger, `triggerHandoff()` inserts a `pending_human` event (`agent_handoffs`); if `admin_chat_id` is configured, the org admin receives a Telegram notification with the customer query
+3. Admins review/act via the dashboard inbox: `GET /api/dashboard/handoffs?orgId=...` lists pending handoffs, `POST /api/dashboard/handoffs/[id]/resolve` marks one resolved
+4. The daily `cleanup-sessions` cron auto-resolves handoffs stuck in `pending_human` for more than 24h (`resolveStaleHandoffs`)
+
 ## Security Model
 
 ### Org Isolation
 
-The gateway resolves `orgId` from the database (via `telegram_links` or `custom_bots`), never from LLM output. This is the core security invariant:
+The gateway resolves `orgId` from the database (via `telegram_links`, `custom_bots`, or `channel_connections`), never from LLM output. This is the core security invariant:
 
 ```
 Telegram user ──▶ Link table ──▶ orgId (trusted)
@@ -260,6 +300,16 @@ Two privilege levels:
 2. **Agent reader** (`createReaderClient`) — RLS enforced, read-only. Used by `runSQL` tool.
 
 Tolom has a separate Supabase project with its own service role key.
+
+### API Auth Layer
+
+Three independent gates protect the non-webhook surfaces:
+
+1. **Link APIs** (`/api/link/generate`, `/api/link/code`) — require `x-api-key: <AGENT_GATEWAY_API_SECRET>` verified by `isGatewayApiKeyValid()` in `src/lib/api-auth.ts`. The secret is shared with Zer/Tolom (they send the header from `zer/.../settings/telegram-link.tsx` and `tolom/.../api/telegram/link-token`). Fail-closed: unset secret ⇒ 401.
+2. **Dashboard** — `src/middleware.ts` gates `/dashboard/*` and `/api/dashboard/*` using an HMAC-SHA256 cookie of `DASHBOARD_SECRET` set by `POST /api/dashboard/login` (cleared by `/api/dashboard/logout`). Fail-closed: unset secret ⇒ 503.
+3. **Cron endpoints** (`/api/cron/*`, `/api/flow/publish`) — require `Authorization: Bearer <CRON_SECRET>` when the secret is set.
+
+The link page (`/link`) is also token-verified: `verifyCompactToken()` (HMAC, stateless) validates the `?token=` query parameter minted server-side by `/api/link/generate`; raw `orgId/userId/productType` params are no longer accepted. The Facebook OAuth start route (`/api/facebook/start`) uses the same compact-token verification.
 
 ## Deployment Architecture
 

@@ -1,23 +1,15 @@
-import type { Tool } from "@zuiio/ai-agent";
-import { runWithTools } from "@zuiio/ai-agent";
+import "server-only";
+
+import {
+	type LoopHistoryMessage,
+	runOpenAiCompatibleLoop,
+} from "./openai-compatible-loop";
 import type { AiProvider, GatewayTool, ToolContext } from "./types";
 
 /**
- * Converts a gateway tool (which takes context) into an @zuiio/ai-agent Tool
- * (which doesn't) by closing over the context.
- */
-function wrapTool(tool: GatewayTool, context: ToolContext): Tool {
-	return {
-		name: tool.name,
-		description: tool.description,
-		parameters: tool.parameters,
-		execute: (args: Record<string, unknown>) => tool.execute(args, context),
-	};
-}
-
-/**
  * OpenCodeGo provider (OpenAI-compatible endpoint).
- * Wraps the existing @zuiio/ai-agent runWithTools function.
+ * Primary provider — streams tokens via the shared OpenAI-compatible loop,
+ * so Telegram draft/edit streaming works on the primary path.
  */
 export class OpenCodeGoProvider implements AiProvider {
 	constructor(
@@ -36,50 +28,21 @@ export class OpenCodeGoProvider implements AiProvider {
 		context: ToolContext;
 		maxRounds?: number;
 		onToken?: (token: string) => void;
-		conversationHistory?: Array<{
-			role: string;
-			content: string | null;
-			tool_calls?: Array<{
-				id: string;
-				type: "function";
-				function: { name: string; arguments: string };
-			}>;
-			tool_call_id?: string;
-		}>;
+		conversationHistory?: LoopHistoryMessage[];
 	}): Promise<string> {
-		const {
-			system,
-			userMessage,
-			tools,
-			context,
-			maxRounds = 5,
-			conversationHistory,
-		} = params;
-
-		// Wrap gateway tools to close over context
-		const wrappedTools = tools.map((t) => wrapTool(t, context));
-
-		return runWithTools({
+		return runOpenAiCompatibleLoop({
 			apiKey: this.options.apiKey,
 			baseUrl: this.options.baseUrl ?? "https://opencode.ai/zen/go/v1",
-			model: this.options.model ?? "mimo-v2.5",
-			systemPrompt: system,
-			userMessage,
+			model: this.options.model ?? "deepseek-v4-flash",
+			system: params.system,
+			userMessage: params.userMessage,
 			images: params.images,
-			tools: wrappedTools,
-			maxRounds,
-			conversationHistory: conversationHistory as
-				| Array<{
-						role: "system" | "user" | "assistant" | "tool";
-						content: string | null;
-						tool_calls?: Array<{
-							id: string;
-							type: "function";
-							function: { name: string; arguments: string };
-						}>;
-						tool_call_id?: string;
-				  }>
-				| undefined,
+			tools: params.tools,
+			context: params.context,
+			maxRounds: params.maxRounds,
+			onToken: params.onToken,
+			conversationHistory: params.conversationHistory,
+			label: "OpenCodeGo",
 		});
 	}
 }

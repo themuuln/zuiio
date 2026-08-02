@@ -1,5 +1,7 @@
 # Agent Gateway Caching Optimizations
 
+> **Status:** ✅ Implemented
+
 ## Context
 The agent-gateway hits Supabase on every webhook request for org name, tool definitions, and knowledge search. Adding Redis + in-memory caching reduces latency and DB load.
 

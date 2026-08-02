@@ -18,12 +18,28 @@ export interface StagedAction {
 	summary: string;
 	pageId?: string;
 	pageAccessToken?: string;
+	/** Original tool execute — re-run on confirmation (never via LLM). */
+	execute?: (args: Record<string, unknown>) => Promise<unknown>;
 }
 
 // In-memory store for staged actions (replace with Redis in production)
 const stagedActions = new Map<string, StagedAction>();
 
 const nonceTimoutMs = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Build the standard confirm/reject button rows for any channel.
+ */
+export function confirmButtons(
+	nonce: string,
+): Array<Array<{ text: string; callbackData: string }>> {
+	return [
+		[
+			{ text: "✅ Тийм", callbackData: `confirm:${nonce}` },
+			{ text: "❌ Үгүй", callbackData: `reject:${nonce}` },
+		],
+	];
+}
 
 /**
  * Stage a write action for user confirmation.
@@ -38,6 +54,7 @@ export function stageAction(
 	summary: string,
 	pageId?: string,
 	pageAccessToken?: string,
+	execute?: (args: Record<string, unknown>) => Promise<unknown>,
 ): {
 	nonce: string;
 	buttons: Array<Array<{ text: string; callbackData: string }>>;
@@ -54,6 +71,7 @@ export function stageAction(
 		summary,
 		pageId,
 		pageAccessToken,
+		execute,
 	});
 
 	// Auto-expire

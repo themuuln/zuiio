@@ -10,7 +10,7 @@ export interface ValidationResult {
 	errors: ReadPlanValidationError[];
 }
 
-const MAX_QUERIES = 10;
+const MAX_QUERIES = 5;
 
 const VALID_FILTER_OPS: ReadPlanQuery["filters"] extends Array<infer F>
 	? F extends { op: infer O }

@@ -64,8 +64,14 @@ vi.mock("@/state/rate-limit", () => ({
 
 // Handoff
 const mockCheckHandoffTriggers = vi.fn();
+const mockGetHandoffConfig = vi.fn();
+const mockGetActiveHandoff = vi.fn();
+const mockTriggerHandoff = vi.fn();
 vi.mock("@/state/handoff", () => ({
 	checkHandoffTriggers: (...a: unknown[]) => mockCheckHandoffTriggers(...a),
+	getHandoffConfig: (...a: unknown[]) => mockGetHandoffConfig(...a),
+	getActiveHandoff: (...a: unknown[]) => mockGetActiveHandoff(...a),
+	triggerHandoff: (...a: unknown[]) => mockTriggerHandoff(...a),
 }));
 
 // Session
@@ -194,6 +200,13 @@ beforeEach(() => {
 
 	// No handoff triggers
 	mockCheckHandoffTriggers.mockReturnValue({ triggered: false, reason: "" });
+	mockGetHandoffConfig.mockResolvedValue({
+		keywordTriggers: [],
+		sentimentEnabled: true,
+		adminChatId: null,
+		autoHandoffAfterHours: true,
+	});
+	mockGetActiveHandoff.mockResolvedValue(null);
 
 	// Empty session
 	mockLoadSession.mockResolvedValue({ messages: [], tokenCount: 0 });

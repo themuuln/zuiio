@@ -55,8 +55,9 @@ export async function loadSession(
 		.from("agent_sessions")
 		.select("messages, token_count")
 		.eq("organization_id", orgId)
-		.eq("telegram_chat_id", channelChatId)
-		.eq("telegram_user_id", channelUserId)
+		.eq("channel", channel)
+		.eq("channel_chat_id", channelChatId)
+		.eq("channel_user_id", channelUserId)
 		.single();
 
 	if (error || !data) {
@@ -114,6 +115,10 @@ export async function saveSession(
 	const { error } = await supabase.from("agent_sessions").upsert(
 		{
 			organization_id: orgId,
+			channel,
+			channel_chat_id: channelChatId,
+			channel_user_id: channelUserId,
+			// Keep legacy columns in sync for pre-007 consumers and backfills
 			telegram_chat_id: channelChatId,
 			telegram_user_id: channelUserId,
 			messages: serialized,
@@ -122,7 +127,7 @@ export async function saveSession(
 			expires_at: expiresAt,
 		},
 		{
-			onConflict: "organization_id,telegram_chat_id,telegram_user_id",
+			onConflict: "organization_id,channel,channel_chat_id,channel_user_id",
 			ignoreDuplicates: false,
 		},
 	);

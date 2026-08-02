@@ -19,7 +19,7 @@ export async function handleAiReply(
 		};
 	},
 ): Promise<NodeResult> {
-	const { systemPrompt, contextSize, temperature } = node.data;
+	const { systemPrompt } = node.data;
 
 	if (!ctx.aiProvider) {
 		return {

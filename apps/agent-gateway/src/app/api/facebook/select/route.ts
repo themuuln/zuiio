@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { FacebookChannel } from "@/channels/facebook";
+import { encryptSecret } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase";
 
 const facebookChannel = new FacebookChannel();
@@ -77,7 +78,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					channel_chat_id: pageId,
 					page_id: pageId,
 					page_name: pageName,
-					page_access_token: selectedPage.access_token,
+					page_access_token: encryptSecret(selectedPage.access_token),
+					token_encrypted: true,
 					token_expires_at: new Date(
 						Date.now() + 60 * 24 * 60 * 60 * 1000,
 					).toISOString(), // 60 days
@@ -120,7 +122,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					channel_chat_id: pageId, // IG messages come through the same page
 					page_id: pageId,
 					page_name: `${pageName} (Instagram)`,
-					page_access_token: selectedPage.access_token,
+					page_access_token: encryptSecret(selectedPage.access_token),
+					token_encrypted: true,
 					token_expires_at: new Date(
 						Date.now() + 60 * 24 * 60 * 60 * 1000,
 					).toISOString(),

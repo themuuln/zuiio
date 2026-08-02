@@ -34,6 +34,10 @@
 				"notes": { "type": "text" },
 				"created_at": { "type": "timestamp", "time": true },
 				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"contact": { "dataset": "contacts", "join": "contact_id" },
+				"salesperson": { "dataset": "employees", "join": "salesperson_id" }
 			}
 		},
 		"sale_items": {
@@ -51,6 +55,10 @@
 				"commission_amount": { "type": "number", "measures": ["sum"] },
 				"created_at": { "type": "timestamp" },
 				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"sale": { "dataset": "sales", "join": "sale_id" },
+				"product": { "dataset": "products", "join": "product_id" }
 			}
 		},
 		"products": {
@@ -84,6 +92,9 @@
 				"published_at": { "type": "timestamp" },
 				"published_by": { "type": "uuid" },
 				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"category": { "dataset": "categories", "join": "category_id" }
 			}
 		},
 		"categories": {
@@ -183,6 +194,10 @@
 				"receipt_expires_at": { "type": "timestamp" },
 				"rotated_at": { "type": "timestamp" },
 				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"contact": { "dataset": "contacts", "join": "contact_id" },
+				"sale": { "dataset": "sales", "join": "sale_id" }
 			}
 		},
 		"invoice_items": {
@@ -200,6 +215,10 @@
 				"total_price": { "type": "number", "measures": ["sum", "avg"] },
 				"created_at": { "type": "timestamp" },
 				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"invoice": { "dataset": "invoices", "join": "invoice_id" },
+				"product": { "dataset": "products", "join": "product_id" }
 			}
 		},
 		"returns": {
@@ -225,6 +244,9 @@
 				"return_number": { "type": "string" },
 				"created_at": { "type": "timestamp", "time": true },
 				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"contact": { "dataset": "contacts", "join": "contact_id" }
 			}
 		},
 		"return_items": {
@@ -242,6 +264,10 @@
 				"reason": { "type": "text" },
 				"created_at": { "type": "timestamp" },
 				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"return": { "dataset": "returns", "join": "return_id" },
+				"product": { "dataset": "products", "join": "product_id" }
 			}
 		},
 		"purchase_orders": {
@@ -268,6 +294,9 @@
 				"notes": { "type": "text" },
 				"created_at": { "type": "timestamp", "time": true },
 				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"supplier": { "dataset": "contacts", "join": "supplier_id" }
 			}
 		},
 		"purchase_order_items": {
@@ -286,6 +315,13 @@
 				"total_cost": { "type": "number", "measures": ["sum", "avg"] },
 				"created_at": { "type": "timestamp" },
 				"deleted_at": { "type": "timestamp" }
+			},
+			"relations": {
+				"purchase_order": {
+					"dataset": "purchase_orders",
+					"join": "purchase_order_id"
+				},
+				"product": { "dataset": "products", "join": "product_id" }
 			}
 		},
 		"stock_movements": {
@@ -309,6 +345,10 @@
 				"notes": { "type": "text" },
 				"created_by": { "type": "uuid" },
 				"created_at": { "type": "timestamp", "time": true }
+			},
+			"relations": {
+				"product": { "dataset": "products", "join": "product_id" },
+				"warehouse": { "dataset": "warehouses", "join": "warehouse_id" }
 			}
 		},
 		"warehouses": {
@@ -367,6 +407,55 @@
 				"closed_at": { "type": "timestamp", "time": true },
 				"created_at": { "type": "timestamp" }
 			}
+		}
+	},
+	"metrics": {
+		"total_revenue": {
+			"displayName": "Нийт орлого",
+			"description": "Борлуулалтын нийт дүн (төлсөн, төлөөгүй бүгд)",
+			"query": "sales",
+			"measures": [{ "field": "total_amount", "op": "sum" }],
+			"timeField": "sale_date",
+			"filters": []
+		},
+		"total_expenses": {
+			"displayName": "Нийт зардал",
+			"description": "Өгөгдсөн хугацааны нийт зардлын дүн",
+			"query": "expenses",
+			"measures": [{ "field": "amount", "op": "sum" }],
+			"timeField": "expense_date",
+			"filters": []
+		},
+		"customer_count": {
+			"displayName": "Харилцагчийн тоо",
+			"description": "Байгууллагын бүртгэлтэй харилцагчдын тоо",
+			"query": "contacts",
+			"measures": [{ "field": "id", "op": "count" }],
+			"timeField": "created_at",
+			"filters": []
+		},
+		"sale_count": {
+			"displayName": "Борлуулалтын тоо",
+			"description": "Өгөгдсөн хугацаанд хийгдсэн борлуулалтын гүйлгээний тоо",
+			"query": "sales",
+			"measures": [{ "field": "id", "op": "count" }],
+			"timeField": "sale_date",
+			"filters": []
+		},
+		"invoice_total": {
+			"displayName": "Нэхэмжлэхийн нийт дүн",
+			"description": "Өгөгдсөн хугацаанд гаргасан нэхэмжлэхийн нийт дүн",
+			"query": "invoices",
+			"measures": [{ "field": "total_amount", "op": "sum" }],
+			"timeField": "issue_date",
+			"filters": []
+		},
+		"stock_on_hand": {
+			"displayName": "Барааны нийт нөөц",
+			"description": "Агуулах дахь бүх барааны нийт үлдэгдэл тоо",
+			"query": "products",
+			"measures": [{ "field": "current_stock", "op": "sum" }],
+			"filters": []
 		}
 	}
 }

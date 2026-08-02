@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ToolParam } from "@zuiio/ai-agent";
 import { capture } from "@zuiio/capture";
+import type { AgentAudience } from "@/gateway/types";
 
 /**
  * Context injected into every tool execution by the gateway layer.
@@ -10,6 +11,14 @@ export interface ToolContext {
 	orgId: string;
 	userId: string;
 	supabase: SupabaseClient;
+	/** Trusted audience — undefined means internal (backward compat). */
+	audience?: AgentAudience;
+	/** Channel identity for confirmation-gated writes (optional — legacy/test paths). */
+	channel?: string;
+	channelChatId?: string;
+	channelUserId?: string;
+	pageId?: string;
+	pageAccessToken?: string;
 }
 
 /**

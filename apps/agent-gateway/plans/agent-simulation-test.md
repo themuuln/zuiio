@@ -1,5 +1,7 @@
 # Agent Simulation Test Plan
 
+> **Status:** ✅ Implemented — `tests/e2e/agent-simulation.test.ts` (and `tests/e2e/manual-agent.test.ts`) exist.
+
 ## Context
 Create E2E test that simulates org-owner interactions, verifying tool selection, Mongolian output, no `<hr>`, and conciseness.
 

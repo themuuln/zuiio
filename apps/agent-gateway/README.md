@@ -1,6 +1,6 @@
 # Agent Gateway
 
-Multi-tenant AI agent gateway for Telegram. Connects Telegram bots to business data in [Zer](https://zer.mn) and [Tolom](https://tolom.mn) via LLM-powered tools with full org isolation, rate limiting, and budget controls.
+Multi-tenant AI agent gateway for Telegram, Facebook Messenger/Instagram, and WhatsApp. Connects chat channels to business data in [Zer](https://zer.mn) and [Tolom](https://tolom.mn) via LLM-powered tools with full org isolation, rate limiting, and budget controls.
 
 ## Features
 
@@ -24,7 +24,7 @@ pnpm install
 cp .env.example .env.local
 
 # Fill in your keys (see docs/ENVIRONMENT.md)
-# Required: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, DEEPSEEK_API_KEY, TELEGRAM_BOT_TOKEN
+# Required: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENCODE_API_KEY, TELEGRAM_BOT_TOKEN
 
 # Start development server
 pnpm dev
@@ -51,39 +51,55 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system design.
 
 ```
 src/
-├── app/api/telegram/webhook/   # Next.js webhook route (entry point)
-├── gateway/                    # Core gateway logic
-│   ├── agent-handler.ts        # Message processing pipeline
-│   ├── webhook-helpers.ts      # System prompts & tool definitions
-│   ├── mode-a.ts               # Shared bot org resolution
-│   ├── mode-b.ts               # Custom bot org resolution
-│   └── types.ts                # GatewayContext, LinkRecord
-├── channels/                   # Messaging adapters
-│   ├── telegram.ts             # Telegram Bot API wrapper
-│   └── types.ts                # Channel interface
-├── providers/                  # AI provider adapters
-│   ├── deepseek.ts             # DeepSeek via OpenCodeGo
-│   ├── gpt-mini.ts             # OpenAI GPT-4o-mini fallback
-│   └── types.ts                # AiProvider, GatewayTool, AiGateway
-├── state/                      # Request-scoped state management
-│   ├── session.ts              # Conversation memory (Supabase)
-│   ├── budget.ts               # Daily token spend tracking
-│   ├── rate-limit.ts           # Sliding-window rate limiter
-│   ├── audit.ts                # Tool call audit logging
-│   ├── security.ts             # Startup security checks
-│   └── async-job.ts            # Long-running query fallback
-├── lib/                        # Shared utilities
-│   ├── env.ts                  # Type-safe env access
-│   ├── supabase.ts             # Client factories (service, reader, Tolom)
-│   ├── tokens.ts               # HMAC-signed link tokens
-│   ├── link-code.ts            # One-time link code generation
-│   └── sanitize.ts             # Input sanitization & prompt injection defense
-├── runtime/                    # Runtime helpers
-│   └── confirmation.ts         # Write-action confirmation gate
-├── stt/                        # Speech-to-text
-│   └── groq.ts                 # Groq Whisper transcription
-├── bot-ux.ts                   # Bot profile & menu setup
-└── components/                 # UI components (link page)
+├── app/api/                     # Next.js route handlers
+│   ├── telegram/webhook/        # Telegram webhook (entry point)
+│   ├── facebook/webhook/        # Messenger + Instagram webhook (HMAC-validated)
+│   ├── whatsapp/webhook/        # WhatsApp Cloud API webhook
+│   ├── link/                    # /generate + /code (x-api-key protected)
+│   ├── dashboard/               # login/logout, usage, handoffs (DASHBOARD_SECRET)
+│   └── cron/                    # cleanup-sessions, resume-flows, briefing, reminders, drain-queue, re-embed
+├── gateway/                     # Core gateway logic
+│   ├── agent-handler.ts         # Message processing pipeline
+│   ├── webhook-helpers.ts       # System prompts, tool registry & cache
+│   ├── mode-a.ts                # Shared bot org resolution
+│   ├── mode-b.ts                # Custom bot org resolution
+│   └── types.ts                 # GatewayContext, AgentAudience, LinkRecord
+├── channels/                    # Messaging adapters
+│   ├── telegram.ts              # Telegram Bot API wrapper
+│   ├── facebook.ts              # Messenger/Instagram adapter
+│   ├── whatsapp.ts              # WhatsApp Cloud API adapter
+│   └── types.ts                 # Channel interface
+├── providers/                   # AI provider adapters
+│   ├── opencode-go.ts           # DeepSeek via OpenCodeGo (primary)
+│   ├── gpt-mini.ts              # OpenAI GPT-4o-mini fallback
+│   └── types.ts                 # AiProvider, GatewayTool, AiGateway, ToolContext
+├── state/                       # Request-scoped state management
+│   ├── session.ts               # Conversation memory (Supabase + Redis)
+│   ├── budget.ts                # Daily token spend tracking
+│   ├── rate-limit.ts            # Sliding-window rate limiter
+│   ├── audit.ts                 # Tool call audit logging
+│   ├── security.ts              # Startup security checks
+│   ├── agent-profile.ts         # Audience-scoped context profile loading
+│   ├── knowledge.ts             # Audience-filtered knowledge retrieval
+│   ├── handoff.ts               # Human handoff triggers + queue
+│   ├── usage.ts                 # Dashboard analytics (percentiles, tool averages)
+│   └── async-job.ts             # Long-running query fallback
+├── lib/                         # Shared utilities
+│   ├── env.ts                   # Type-safe env access
+│   ├── supabase.ts              # Client factories (service, reader, Tolom)
+│   ├── tokens.ts                # HMAC-signed link tokens
+│   ├── api-auth.ts              # x-api-key validation (AGENT_GATEWAY_API_SECRET)
+│   ├── link-code.ts             # One-time link code generation
+│   ├── format-result.ts         # Write-result formatting for channels
+│   └── sanitize.ts              # Input sanitization & prompt injection defense
+├── runtime/                     # Runtime helpers
+│   ├── confirmation.ts          # Staged-action confirm/reject store
+│   └── write-gate.ts            # Write-tool confirmation gate wrapper
+├── stt/                         # Speech-to-text
+│   └── groq.ts                  # Groq Whisper transcription
+├── middleware.ts                # Dashboard gate (DASHBOARD_SECRET)
+├── bot-ux.ts                    # Bot profile & menu setup
+└── components/                  # UI components (link page, page select)
 ```
 
 ## Environment Variables
@@ -92,9 +108,9 @@ src/
 |---|---|---|
 | `SUPABASE_URL` | ✅ | Supabase project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase service role key |
-| `DEEPSEEK_API_KEY` | ✅ | DeepSeek API key (via OpenCodeGo) |
-| `DEEPSEEK_BASE_URL` | ❌ | DeepSeek API base URL (default: `https://api.deepseek.com`) |
-| `DEEPSEEK_MODEL` | ❌ | Model name (default: `deepseek-chat`) |
+| `OPENCODE_API_KEY` | ✅ | OpenCodeGo API key (primary LLM provider) |
+| `OPENCODE_BASE_URL` | ❌ | OpenCodeGo base URL (default: `https://opencode.ai/zen/go/v1`) |
+| `OPENCODE_MODEL` | ❌ | Model name (default: `deepseek-v4-flash`) |
 | `OPENAI_API_KEY` | ❌ | OpenAI API key for fallback provider |
 | `OPENAI_FALLBACK_MODEL` | ❌ | Fallback model (default: `gpt-4o-mini`) |
 | `TELEGRAM_BOT_TOKEN` | ✅ | Telegram bot token from @BotFather |
@@ -102,9 +118,14 @@ src/
 | `TELEGRAM_WEBHOOK_SECRET` | ✅ | Secret token for webhook validation |
 | `TOKEN_SIGNING_SECRET` | ✅ | HMAC secret for link tokens (min 16 chars) |
 | `AGENT_GATEWAY_URL` | ✅ | Public URL for webhook registration |
+| `AGENT_GATEWAY_API_SECRET` | ✅ | Shared server-to-server secret (`x-api-key`) for `/api/link/*` (fail-closed) |
+| `DASHBOARD_SECRET` | ❌ | Gate for `/dashboard` + `/api/dashboard/*` (fail-closed when unset) |
+| `CRON_SECRET` | ❌ | Bearer auth for `/api/cron/*` and `/api/flow/publish` |
 | `GROQ_API_KEY` | ❌ | Groq API key for voice STT |
 | `TOLOM_SUPABASE_URL` | ❌ | Tolom's separate Supabase project URL |
 | `TOLOM_SUPABASE_SERVICE_ROLE_KEY` | ❌ | Tolom's service role key |
+| `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_ACCESS_TOKEN` / `WHATSAPP_VERIFY_TOKEN` | ❌ | WhatsApp Cloud API channel (disabled without) |
+| `META_TOKEN_ENCRYPTION_KEY` | ❌ | AES-256-GCM key for FB page tokens (planned) |
 
 See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for the full reference.
 

@@ -2,7 +2,21 @@
 
 ## Status
 
-Proposed implementation plan. No runtime or schema changes have been applied yet.
+**Implemented (runtime).** The gateway-side of this plan is wired and shipped; the product settings UI is not.
+
+What is implemented:
+
+- **Audience resolution** — `AgentAudience = "internal" | "customer"` in `src/gateway/types.ts`; resolved from trusted DB state only: Mode A → `internal`, Mode B → `channel_connections.audience` (default `customer`), Facebook/Instagram webhook → `customer`, unknown/failed classification → `customer` (fail closed).
+- **Tool gating** — `getProductTools()` in `src/gateway/webhook-helpers.ts` returns an empty tool set for `customer` audiences; the internal/customer split is part of the tool-cache key.
+- **Profile loading & prompt composition** — `loadAgentProfile()` in `src/state/agent-profile.ts` reads the active `agent_context_profiles` row for `(organization_id, audience)` and never throws; `src/gateway/agent-handler.ts` loads profile + knowledge + wizard state in parallel with the session and composes the system prompt as **base → profile → knowledge → wizard** (`formatProfileContext`).
+- **Knowledge visibility** — `searchKnowledge()` filters `agent_knowledge_sources` by `visibility ∈ {internal, customer, both}` when an audience is supplied (`src/state/knowledge.ts`).
+- **Migration** — `channel_connections` (with `audience` column) and `agent_context_profiles` are part of the applied migrations; sessions/audit log use generic `channel`/`channel_chat_id`/`channel_user_id` columns.
+
+What remains:
+
+- **Product settings UI (Zer/Tolom)** — no profile editor exists yet in either app; the `agent_context_profiles`/`agent_knowledge_sources` rows are currently managed via SQL/dashboard tooling only. This is Phase 4 of the plan below.
+- The gateway dashboard (`/dashboard`) is a usage-analytics + handoff inbox, **not** a profile editor.
+- Optional: connection-audience reclassification UI for orgs that want a Meta channel to behave as `internal`.
 
 ## Outcome
 
@@ -184,7 +198,7 @@ Both products should use the same profile validation contract where practical wh
 
 ## Implementation phases
 
-### Phase 1: Contracts and migrations
+### Phase 1: Contracts and migrations ✅ Implemented
 
 1. Define `AgentAudience`, context-profile validation, and knowledge visibility contracts.
 2. Create matching migrations in each product database.
@@ -192,7 +206,7 @@ Both products should use the same profile validation contract where practical wh
 4. Regenerate Supabase TypeScript types.
 5. Verify constraints and tenant access with direct database scenarios.
 
-### Phase 2: Gateway audience boundary
+### Phase 2: Gateway audience boundary ✅ Implemented
 
 1. Add audience to the trusted `GatewayContext`.
 2. Update Telegram, custom-bot, and Meta resolvers.
@@ -202,7 +216,7 @@ Both products should use the same profile validation contract where practical wh
 
 This phase must land before exposing configurable customer context on Meta channels.
 
-### Phase 3: Context loading and prompt composition
+### Phase 3: Context loading and prompt composition ✅ Implemented
 
 1. Implement `src/state/agent-profile.ts`.
 2. Add visibility-aware knowledge retrieval.
@@ -210,7 +224,7 @@ This phase must land before exposing configurable customer context on Meta chann
 4. Load the profile in `handleAgentMessage`.
 5. Preserve safe core behavior when the profile is absent, disabled, or unavailable.
 
-### Phase 4: SSO-protected management
+### Phase 4: SSO-protected management ⏳ Remaining (no editor UI in Zer/Tolom yet)
 
 1. Add guarded profile reads and mutations to Zer.
 2. Add the Zer Agent Context interface.
@@ -218,7 +232,7 @@ This phase must land before exposing configurable customer context on Meta chann
 4. Add the Tolom settings interface.
 5. Add knowledge visibility and connection-audience controls.
 
-### Phase 5: Verification and rollout
+### Phase 5: Verification and rollout 🟡 Partially done
 
 1. Run unit, integration, and channel-level scenarios.
 2. Verify cross-organization isolation.

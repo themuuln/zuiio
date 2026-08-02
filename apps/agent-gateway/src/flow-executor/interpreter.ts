@@ -79,14 +79,30 @@ export async function interpretFlow(
 				currentNodeId = findNextNode(flow, currentNodeId) ?? "";
 				break;
 
-			case "branch":
-				currentNodeId =
-					findBranchNode(flow, currentNodeId, result.action.edgeLabel) ?? "";
-				if (!currentNodeId) {
-					// No matching branch — try fallback to default next
-					currentNodeId = findNextNode(flow, currentNodeId) ?? "";
+			case "branch": {
+				const branchNodeId = currentNodeId;
+				const branchTarget = findBranchNode(
+					flow,
+					branchNodeId,
+					result.action.edgeLabel,
+				);
+				if (branchTarget) {
+					currentNodeId = branchTarget;
+				} else {
+					// No matching branch — fall back to the default edge (if any)
+					// instead of crashing or looping forever.
+					console.warn(
+						`[flow-executor] Branch edge "${result.action.edgeLabel}" missing from node ${branchNodeId} in flow ${flow.id} — falling back to default next node`,
+					);
+					currentNodeId = findNextNode(flow, branchNodeId) ?? "";
+					if (!currentNodeId) {
+						console.warn(
+							`[flow-executor] No fallback edge from node ${branchNodeId} in flow ${flow.id} — ending flow gracefully`,
+						);
+					}
 				}
 				break;
+			}
 
 			case "wait": {
 				run.status = result.action.waitType === "delay" ? "delayed" : "waiting";

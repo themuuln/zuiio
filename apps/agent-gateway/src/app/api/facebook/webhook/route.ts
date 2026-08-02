@@ -9,6 +9,8 @@ import type { MetaWebhookPayload } from "@/channels/types";
 import { handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
+import { decryptSecret } from "@/lib/crypto";
+import { formatWriteResult } from "@/lib/format-result";
 import {
 	createServiceClient,
 	getSupabaseForProduct,
@@ -80,17 +82,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 	const supabase = createServiceClient();
 
 	for (const entry of payload.entry) {
-		const pageId = entry.id;
+		const entryId = entry.id;
 
-		// Look up org from page_id
-		const { data: connection, error: lookupError } = await supabase
+		// Look up org from page_id (Messenger) or IG business account id (Instagram).
+		// A page can have TWO active rows (messenger + instagram) sharing page_id,
+		// so never use .single() here — pick the row matching the event's channel.
+		const { data: connections } = await supabase
 			.from("channel_connections")
 			.select("*")
-			.eq("page_id", pageId)
 			.eq("is_active", true)
-			.single();
+			.or(
+				`page_id.eq.${entryId},and(channel.eq.instagram,channel_user_id.eq.${entryId})`,
+			);
 
-		if (lookupError || !connection) {
+		if (!connections || connections.length === 0) {
 			// Unknown page — skip silently
 			continue;
 		}
@@ -102,7 +107,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			if (event.message?.is_echo) continue;
 
 			const senderId = event.sender.id;
-			const channel = connection.channel as "messenger" | "instagram";
+
+			// Instagram entries carry the IG business account id; Messenger entries
+			// carry the page id. Prefer the instagram row when entry.id matches the
+			// stored IG account id, otherwise use the messenger row.
+			const instagramConnection = connections.find(
+				(c) => c.channel === "instagram" && c.channel_user_id === entryId,
+			);
+			const messengerConnection = connections.find(
+				(c) => c.channel === "messenger" && c.page_id === entryId,
+			);
+			const connection = instagramConnection ?? messengerConnection;
+			if (!connection) continue;
+
+			const channel = instagramConnection ? "instagram" : "messenger";
+
+			// Tokens are stored encrypted (encryptSecret) — decrypt once per event.
+			const pageAccessToken = decryptSecret(connection.page_access_token ?? "");
+
+			// entryId is the correct Graph API recipient id for both channels:
+			// FB page id for Messenger events, IG business account id for Instagram.
+			// It also serves as the stable session-chat key per channel.
+			const pageId = entryId;
 
 			// Handle text messages
 			if (event.message?.text) {
@@ -111,7 +137,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					senderId,
 					channel,
 					text: event.message.text,
-					pageAccessToken: connection.page_access_token ?? "",
+					pageAccessToken,
 					orgId: connection.organization_id,
 					userId: connection.user_id ?? senderId,
 					productType: connection.product_type as "tolom" | "zer",
@@ -125,7 +151,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					senderId,
 					channel,
 					payload: event.postback.payload,
-					pageAccessToken: connection.page_access_token ?? "",
+					pageAccessToken,
 					orgId: connection.organization_id,
 					userId: connection.user_id ?? senderId,
 					productType: connection.product_type as "tolom" | "zer",
@@ -139,7 +165,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					senderId,
 					channel,
 					payload: event.message.quick_reply.payload,
-					pageAccessToken: connection.page_access_token ?? "",
+					pageAccessToken,
 					orgId: connection.organization_id,
 					userId: connection.user_id ?? senderId,
 					productType: connection.product_type as "tolom" | "zer",
@@ -206,17 +232,21 @@ async function handleMessage(
 	});
 
 	try {
-		// Check 24h messaging window
-		const { data: connection } = await supabase
-			.from("channel_connections")
-			.select("last_user_message_at")
-			.eq("page_id", ctx.pageId)
+		// Check 24h messaging window against the per-sender session, which is keyed
+		// by (org, channel, chat, user) — the old channel_connections lookup compared
+		// against channel_user_id (= page id) and could never match a sender PSID.
+		const { data: session } = await supabase
+			.from("agent_sessions")
+			.select("updated_at")
+			.eq("organization_id", ctx.orgId)
+			.eq("channel", ctx.channel)
+			.eq("channel_chat_id", ctx.pageId)
 			.eq("channel_user_id", ctx.senderId)
-			.single();
+			.maybeSingle();
 
-		if (connection?.last_user_message_at) {
+		if (session?.updated_at) {
 			const hoursSinceLastMessage =
-				(Date.now() - new Date(connection.last_user_message_at).getTime()) /
+				(Date.now() - new Date(session.updated_at as string).getTime()) /
 				(1000 * 60 * 60);
 
 			if (hoursSinceLastMessage > 24) {
@@ -238,6 +268,8 @@ async function handleMessage(
 			orgId: ctx.orgId,
 			userId: ctx.userId,
 			productType: ctx.productType,
+			// Public customer channels — fail closed to the customer tool set.
+			audience: "customer" as const,
 			chatId: 0,
 			telegramUserId: 0,
 			channel: ctx.channel,
@@ -303,11 +335,11 @@ async function handlePostback(
 		pageAccessToken: ctx.pageAccessToken,
 	});
 
-	// Handle confirmation postbacks
 	// Handle confirmation postbacks via the shared confirmation store
 	if (ctx.payload.startsWith("confirm:")) {
 		const confirmId = ctx.payload.replace("confirm:", "");
-		const staged = confirmAction(confirmId, ctx.senderId, ctx.userId);
+		// Staged actions key on (channelChatId=pageId, channelUserId=sender).
+		const staged = confirmAction(confirmId, ctx.pageId, ctx.senderId);
 		if (!staged) {
 			await channel.sendMessage(
 				ctx.senderId,
@@ -315,28 +347,23 @@ async function handlePostback(
 			);
 			return;
 		}
-		// Execute the staged action via agent pipeline
-		const response = await handleAgentMessage(
-			{
-				orgId: ctx.orgId,
-				userId: ctx.userId,
-				productType: ctx.productType,
-				chatId: 0,
-				telegramUserId: 0,
-				channel: ctx.channel,
-				channelChatId: ctx.pageId,
-				channelUserId: ctx.senderId,
-				pageId: ctx.pageId,
-				pageAccessToken: ctx.pageAccessToken,
-			},
-			`Баталгаажуулсан үйлдэл: ${staged.toolName} — ${staged.summary}`,
-			"private",
-			{
-				getSystemPrompt: systemPromptFor,
-				getTools: (toolCtx) => getProductTools(ctx.productType, toolCtx),
-			},
-		);
-		await channel.sendMessage(ctx.senderId, `✅ ${response}`);
+		// Re-execute the staged action deterministically — never via LLM re-prompt.
+		if (staged.execute) {
+			try {
+				const result = await staged.execute(staged.args);
+				await channel.sendMessage(ctx.senderId, formatWriteResult(result));
+			} catch (err) {
+				capture(err, {
+					context: "agent-gateway: confirm staged action (meta)",
+				});
+				await channel.sendMessage(
+					ctx.senderId,
+					"Уучлаарай, үйлдлийг гүйцэтгэхэд алдаа гарлаа. Дахин оролдоно уу.",
+				);
+			}
+		} else {
+			await channel.sendMessage(ctx.senderId, "✅ Амжилттай.");
+		}
 		return;
 	}
 

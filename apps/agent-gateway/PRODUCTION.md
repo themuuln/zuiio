@@ -1,19 +1,31 @@
 # Agent Gateway — Production Checklist
 
-## Deployment Status (2026-07-06)
+## Deployment Status (2026-08-02)
 
 - ✅ Deployed to Vercel production: `https://agent-gateway-delta.vercel.app`
 - ✅ Region: Singapore (`sin1`)
-- ✅ All 10 environment variables set on Vercel
+- ✅ Environment variables set on Vercel (see [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for the full list)
 - ✅ Telegram webhook registered with `@zuiio_bot`
 - ✅ SSO protection disabled (public webhook endpoint)
 - ✅ Core DB tables exist: `telegram_links`, `one_time_tokens`, `agent_sessions`
+- ✅ **Crons registered in `vercel.json`** (all protected by `CRON_SECRET` via `Authorization: Bearer`):
+  - `cleanup-sessions` — daily 03:00 UTC (expired sessions + stale handoff sweep)
+  - `resume-flows` — every 5 minutes
+  - `briefing` — daily 08:00 UTC
+  - `reminders` — every 5 minutes
+  - `drain-queue` — every 5 minutes
+  - `re-embed` — hourly
+- ✅ **Auth gates in place**:
+  - Link APIs (`/api/link/generate`, `/api/link/code`) require `x-api-key: <AGENT_GATEWAY_API_SECRET>` (shared with Zer/Tolom; fail-closed)
+  - Dashboard (`/dashboard/*`, `/api/dashboard/*`) gated by `DASHBOARD_SECRET` via middleware + `/api/dashboard/login`/`logout`
+  - Link page (`/link`) verifies `?token=` via HMAC `verifyCompactToken`
+- ✅ `/api/test/stream-draft` is dev-only (returns 404 outside `NODE_ENV=development`)
 - ⚠️ Zer migration not applied (pooler connection blocked — see MIGRATION.md)
 - ⚠️ OpenAI fallback disabled (no key) — DeepSeek OpenCodeGo primary
 
 ## Prerequisites
 
-- [x] Valid **DeepSeek API key** via OpenCodeGo (`DEEPSEEK_API_KEY` in `.env.local`)
+- [x] Valid **OpenCodeGo API key** (`OPENCODE_API_KEY` in `.env.local`)
 - [x] Production Telegram bot created via [@BotFather](https://t.me/BotFather) — `@zuiio_bot`
 - [x] Deployed to Vercel with `--archive=tgz` from monorepo root
 - [ ] OpenAI API key (optional — fallback provider disabled when absent)
@@ -27,13 +39,22 @@ TELEGRAM_WEBHOOK_SECRET=<random-32-char-string>
 TOKEN_SIGNING_SECRET=<random-32-char-string>
 
 # LLM Providers
-DEEPSEEK_API_KEY=sk-...
-DEEPSEEK_MODEL=deepseek-chat          # or deepseek-v4-flash
+OPENCODE_API_KEY=sk-...
 OPENAI_API_KEY=sk-...
 OPENAI_FALLBACK_MODEL=gpt-4o-mini
 
+# API Auth & Dashboard
+AGENT_GATEWAY_API_SECRET=<random-32-char-string>   # x-api-key for /api/link/* (shared with Zer/Tolom)
+DASHBOARD_SECRET=<random-32-char-string>           # /dashboard gate
+CRON_SECRET=<random-32-char-string>                # Bearer auth for /api/cron/*
+
 # Optional — Voice STT
 GROQ_API_KEY=gsk_...
+
+# Optional — WhatsApp Cloud API
+WHATSAPP_PHONE_NUMBER_ID=
+WHATSAPP_ACCESS_TOKEN=
+WHATSAPP_VERIFY_TOKEN=
 
 # Optional — Custom bot domain
 AGENT_GATEWAY_URL=https://gateway.yourdomain.com
@@ -54,6 +75,11 @@ Migrations:
 3. `003_agent_sessions.sql` — sessions, daily spend, audit log
 4. `004_custom_bots.sql` — enterprise bot registry
 5. `005_production_hardening.sql` — Telegram profile columns, RLS, indexes, spend RPC hardening
+6. `006_knowledge_handoff_briefing.sql` — knowledge sources, handoff config/events, briefing log
+7. `007_channel_connections.sql` — unified multi-channel connections + generic session/audit columns
+8. `008_rls_agent_knowledge_handoff.sql` — RLS for knowledge/handoff
+9. `009_agent_context_profiles.sql` — audience-scoped context profiles
+Plus timestamped migrations for `pending_updates`, SMS payment verification, and the flow executor.
 ## Deploy
 
 ### Vercel (recommended)
@@ -86,12 +112,20 @@ curl -s "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"
 # Send /start to your bot on Telegram
 
 # 3. Test linking
-# Open <GATEWAY_URL>/link?orgId=...&userId=...&productType=zer
+# Mint a token server-side (x-api-key required):
+curl -X POST <GATEWAY_URL>/api/link/generate \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $AGENT_GATEWAY_API_SECRET" \
+  -d '{"orgId":"...","userId":"...","productType":"zer"}'
+# Then open <GATEWAY_URL>/link?token=<minted-token> (token-verified, not raw params)
 
-# 4. Run security audit (logs on startup)
+# 4. Verify dashboard gate
+# Open <GATEWAY_URL>/dashboard → redirected to /dashboard/login (DASHBOARD_SECRET)
+
+# 5. Run security audit (logs on startup)
 # Check server logs for securityAudit() warnings
 
-# 5. Verify rate limiting
+# 6. Verify rate limiting
 # Send 25 messages rapidly — should get limited after 20
 ```
 
@@ -125,11 +159,12 @@ curl -s "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"
 ## Mode A vs Mode B
 
 | Feature | Mode A (Shared) | Mode B (Custom) |
-|---------|----------------|-----------------|
+|---------|-----------------|-----------------|
 | Bot | `@zuiio_bot` | Enterprise bot |
 | Linking | QR code `/start` | Pre-mapped via `custom_bots` table |
 | Webhook | `/api/telegram/webhook` | `/api/telegram/webhook/<botKey>` |
 | Multi-org | `/switch` command | N/A (one bot = one org) |
+| Audience | `internal` (SSO-linked staff) | `customer` by default (read from `channel_connections.audience`, explicitly configurable to `internal`) |
 
 ## Monitoring
 

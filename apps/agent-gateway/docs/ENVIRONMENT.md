@@ -29,6 +29,16 @@ These must be set for the application to start.
 | `TOKEN_SIGNING_SECRET` | HMAC secret for link tokens (min 16 chars) | `<random-32-byte-string>` |
 | `AGENT_GATEWAY_URL` | Public URL where webhook is accessible | `https://gateway.zuiio.com` |
 
+### API Auth & Dashboard
+
+These do not block startup; each gates its own surface and fails closed when unset.
+
+| Variable | Description | Example |
+|---|---|---|
+| `AGENT_GATEWAY_API_SECRET` | Shared server-to-server secret. Sent as `x-api-key` by Zer/Tolom to `/api/link/generate` and `/api/link/code`. Must match the value configured in Zer/Tolom. Fail-closed: both routes return 401 when unset. | `<random-32-byte-string>` |
+| `DASHBOARD_SECRET` | Gate for the ops dashboard: `/dashboard/login` sets an HMAC cookie, middleware protects `/dashboard/*` and `/api/dashboard/*`. Fail-closed: dashboard returns 503 when unset. | `<random-32-byte-string>` |
+| `CRON_SECRET` | Optional but recommended. All `/api/cron/*` endpoints (and `/api/flow/publish`) require `Authorization: Bearer <CRON_SECRET>` when set; skipped when unset. | `<random-32-byte-string>` |
+
 ## Optional Variables
 
 ### Fallback LLM Provider
@@ -66,6 +76,29 @@ These must be set for the application to start.
 | `NEXT_PUBLIC_FACEBOOK_APP_ID` | Facebook App ID | _(none)_ |
 | `FB_APP_SECRET` | Facebook App Secret | _(none)_ |
 | `FB_VERIFY_TOKEN` | Facebook webhook verify token | _(none)_ |
+| `META_TOKEN_ENCRYPTION_KEY` | AES-256-GCM key for encrypting Facebook page access tokens at rest (planned — not yet wired into code) | _(none)_ |
+
+### WhatsApp Cloud API
+
+| Variable | Description | Default |
+|---|---|---|
+| `WHATSAPP_PHONE_NUMBER_ID` | WhatsApp Cloud API phone number ID (channel disabled without it) | _(none — WhatsApp disabled)_ |
+| `WHATSAPP_ACCESS_TOKEN` | WhatsApp Cloud API access token (channel disabled without it) | _(none — WhatsApp disabled)_ |
+| `WHATSAPP_VERIFY_TOKEN` | WhatsApp webhook verify token for the `hub.verify_token` challenge | _(none)_ |
+
+### Redis (optional)
+
+| Variable | Description | Default |
+|---|---|---|
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL for session/knowledge/tool caching | _(none — in-memory fallback)_ |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token | _(none — in-memory fallback)_ |
+
+### Sentry & Debug
+
+| Variable | Description | Default |
+|---|---|---|
+| `SENTRY_DSN` | Sentry DSN for error capture | _(none — capture disabled)_ |
+| `DEBUG` | Set to `true` to enable structured debug logs | `false` |
 
 ### Node.js
 
@@ -78,6 +111,9 @@ These must be set for the application to start.
 - `TOKEN_SIGNING_SECRET` — In production, must be ≥16 characters and not a known default. The `securityAudit()` function checks for weak values at startup.
 - `TELEGRAM_WEBHOOK_SECRET` — Must match the `secret_token` sent in `setWebhook` calls. Prevents unauthorized webhook calls.
 - `SUPABASE_SERVICE_ROLE_KEY` — Bypasses Row Level Security. Never expose to client-side code.
+- `AGENT_GATEWAY_API_SECRET` — Server-to-server only. Never expose to client-side code; the `x-api-key` header is checked via `isGatewayApiKeyValid()` in `src/lib/api-auth.ts` (fail-closed).
+- `DASHBOARD_SECRET` — Gates `/dashboard` and `/api/dashboard/*` via middleware (HMAC-signed cookie from `/api/dashboard/login`). Fail-closed when unset.
+- `CRON_SECRET` — Required if you want Vercel cron endpoints to reject unauthenticated calls; verified as `Authorization: Bearer <secret>`.
 - All API keys should be stored in Vercel/Cloudflare environment variables, never committed to git.
 
 ## Validation

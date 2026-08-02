@@ -190,10 +190,13 @@ describe("⚠️  Empty / Zero Data Edge Cases", () => {
 
 	it("getDailySummary — no data returns 0s", async () => {
 		const { supabase } = emptyCtx();
-		const tools = getProductTools("tolom", { ...ctx, supabase });
+		// Unique org id per test so the 5-min tool cache cannot leak a
+		// previously built tool set (closed over another mock supabase).
+		const orgId = `${TEST_ORG_ID}-empty`;
+		const tools = getProductTools("tolom", { ...ctx, orgId, supabase });
 		const r = (await tools
 			.find((t) => t.name === "getDailySummary")
-			?.execute({}, ctx)) as any;
+			?.execute({}, { ...ctx, orgId, supabase })) as any;
 		expect(r.activeWorkOrders).toBe(0);
 		expect(r.monthlyInvoices).toBe(0);
 	});
@@ -210,9 +213,10 @@ describe("⚠️  Error Resilience", () => {
 	};
 
 	it("getDailySummary — DB error returns Mongolian error", async () => {
-		const r = await getProductTools("tolom", brokenCtx())
+		const orgId = `${TEST_ORG_ID}-broken`;
+		const r = await getProductTools("tolom", { ...brokenCtx(), orgId })
 			.find((t) => t.name === "getDailySummary")
-			?.execute({}, ctx);
+			?.execute({}, { ...brokenCtx(), orgId });
 		expect(r).toHaveProperty("error");
 		expect((r as any).error).toMatch(/[А-Яа-я]/); // Cyrillic error message
 	});
@@ -246,5 +250,3 @@ describe("🔧 Product Type Integrity", () => {
 		}
 	});
 });
-
-describe("📊 Data Validity", () => {});

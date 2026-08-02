@@ -114,11 +114,6 @@
 					"type": "string",
 					"pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
 					"description": "Output column name for the aggregated value. This is what appears in the result JSON and what sort fields reference. Example: \"total\", \"revenue\", \"order_count\"."
-				},
-				"filter": {
-					"type": "array",
-					"items": { "$ref": "#/$defs/filter" },
-					"description": "Conditional aggregation (FILTER clause). Only aggregate rows matching these filters. Example: only sum amounts where status='completed'. Note: PostgREST does not support FILTER clause natively — the engine compiles this as a subquery or post-filters in TypeScript."
 				}
 			}
 		},

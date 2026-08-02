@@ -1,10 +1,13 @@
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 import { WhatsAppChannel } from "@/channels/whatsapp";
+import { handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { resolveOrgFromBotKey } from "@/gateway/mode-b";
 import type { LinkRecord } from "@/gateway/types";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
+import { decryptSecret } from "@/lib/crypto";
+import { formatWriteResult } from "@/lib/format-result";
 import { sanitizeUserInput } from "@/lib/sanitize";
 import { createServiceClient } from "@/lib/supabase";
 import { confirmAction, rejectAction } from "@/runtime/confirmation";
@@ -102,6 +105,8 @@ export async function POST(request: Request) {
 			const messages = value.messages ?? [];
 
 			for (const msg of messages) {
+				// Per-message channel (env singleton by default; per-org in Mode B)
+				let channelForMsg: WhatsAppChannel = getWhatsApp();
 				try {
 					const text =
 						msg.text?.body ?? msg.interactive?.button_reply?.id ?? "";
@@ -113,9 +118,31 @@ export async function POST(request: Request) {
 					if (botKey) {
 						const resolved = await resolveOrgFromBotKey(sb, botKey);
 						if (!resolved) continue;
+						// Per-org WhatsApp credentials come from the connection row
+						// (token is at-rest encrypted) — fall back to env channel.
+						let channelForSend = getWhatsApp();
+						const { data: waConn } = await sb
+							.from("channel_connections")
+							.select("channel_user_id, page_access_token, token_encrypted")
+							.eq("bot_key", botKey)
+							.eq("channel", "whatsapp")
+							.eq("is_active", true)
+							.maybeSingle();
+						if (waConn?.channel_user_id) {
+							const token = waConn.token_encrypted
+								? decryptSecret(String(waConn.page_access_token ?? ""))
+								: String(waConn.page_access_token ?? "");
+							if (token) {
+								channelForSend = new WhatsAppChannel(
+									String(waConn.channel_user_id),
+									token,
+								);
+							}
+						}
 						ctx = {
 							context: {
 								...resolved,
+								channel: "whatsapp",
 								chatId: parseInt(msg.from, 10) || 0,
 								telegramUserId: parseInt(msg.from, 10) || 0,
 								channelChatId: String(parseInt(msg.from, 10) || 0),
@@ -132,6 +159,8 @@ export async function POST(request: Request) {
 								updated_at: new Date().toISOString(),
 							},
 						};
+						// Remember the per-org channel for this message's sends
+						channelForMsg = channelForSend;
 					} else {
 						const wa = getWhatsApp();
 						await wa.sendMessage(
@@ -146,7 +175,7 @@ export async function POST(request: Request) {
 					// Handle confirmation callbacks
 					if (text.startsWith("confirm:") || text.startsWith("reject:")) {
 						const isConfirm = text.startsWith("confirm:");
-						const nonce = text.split(":")[1]!;
+						const nonce = text.split(":")[1] ?? "";
 
 						if (isConfirm) {
 							const action = confirmAction(
@@ -154,22 +183,56 @@ export async function POST(request: Request) {
 								String(ctx.context.chatId),
 								String(ctx.context.telegramUserId),
 							);
+							const wa = channelForMsg;
 							if (action) {
-								const wa = getWhatsApp();
 								await wa.sendMessage(
 									msg.from,
 									`✅ Баталгаажлаа: ${action.summary}`,
 								);
+								// Re-execute the staged action deterministically.
+								if (action.execute) {
+									try {
+										const result = await action.execute(action.args);
+										await wa.sendMessage(msg.from, formatWriteResult(result));
+									} catch (err) {
+										capture(err, {
+											context:
+												"agent-gateway: confirm staged action (whatsapp)",
+										});
+										await wa.sendMessage(
+											msg.from,
+											"Уучлаарай, үйлдлийг гүйцэтгэхэд алдаа гарлаа. Дахин оролдоно уу.",
+										);
+									}
+								}
+							} else {
+								await wa.sendMessage(
+									msg.from,
+									"Энэ үйлдлийн хугацаа дууссан эсвэл буруу байна.",
+								);
 							}
 						} else {
 							rejectAction(nonce);
-							const wa = getWhatsApp();
+							const wa = channelForMsg;
 							await wa.sendMessage(msg.from, "❌ Цуцлагдлаа.");
 						}
 						continue;
 					}
 
-					// Process the message
+					// Try flow routing first — if a flow is active or triggered, handle it
+					const wa = channelForMsg;
+					const flowResult = await handleFlowMessage(
+						ctx.context,
+						sanitizeUserInput(text),
+						sb,
+						wa,
+					);
+
+					if (flowResult) {
+						continue; // Flow handled the message — next message
+					}
+
+					// No flow matched — fall through to the AI agent handler
 					const response = await handleAgentMessage(
 						ctx.context,
 						sanitizeUserInput(text),
@@ -181,7 +244,6 @@ export async function POST(request: Request) {
 						},
 					);
 
-					const wa = getWhatsApp();
 					await wa.sendMessage(msg.from, response);
 				} catch (err) {
 					capture(err, {

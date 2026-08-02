@@ -1,5 +1,7 @@
 # Optimization: Batch Queries, Prompt Reduction, Tool Description Shortening
 
+> **Status:** 🟡 Partially implemented — batch queries (Task 1) done (`Promise.all` on `parts_catalog` + `work_order_parts` in `webhook-helpers.ts`); prompt compression and tool-description shortening (Tasks 2–3) not verified.
+
 ## Context
 The agent-gateway has optimization opportunities in 3 areas (Task 4 — Redis Pipelines — was researched and found to have no actionable opportunities since Redis ops are single GET/SET calls, not batchable sequences). This plan addresses Tasks 1-3.
 

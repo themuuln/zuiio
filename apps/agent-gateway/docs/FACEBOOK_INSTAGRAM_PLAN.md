@@ -1,7 +1,7 @@
 # Facebook / Instagram / Messenger Integration Plan
 
-> **Status:** Planning — Code foundation in progress, Meta admin deferred pending Business Verification documents
-> **Last Updated:** 2026-07-07
+> **Status:** Phase 1 (Foundation) **implemented** and deployed. Phase 2 (Meta Admin) and Phase 3 (Production Hardening) unchanged — blocked on Meta Business Verification documents.
+> **Last Updated:** 2026-08-02
 > **Owner:** Agent Gateway team
 
 ---
@@ -66,7 +66,7 @@ Telegram ──────────┘           ├── Budget Check
 | Create Business Manager Portfolio | Day 0 | ✅ Can do now |
 | Submit Business Verification | Day 1-14 | ⏳ **Deferred** — waiting for English company certificate |
 | Add Messenger + Instagram products | Day 0 | ✅ Can do now |
-| Build webhook + OAuth (dev mode, 25 test users) | Day 1-7 | ✅ **In progress** |
+| Build webhook + OAuth (dev mode, 25 test users) | Day 1-7 | ✅ **Complete** (Phase 1 shipped) |
 | Submit App Review | Day 14+ | ⏳ Blocked on Business Verification |
 | App Review approval | Day 21-28 | ⏳ Blocked |
 | Switch to Advanced Access / Live | Day 28+ | ⏳ Blocked |
@@ -339,7 +339,7 @@ if (hoursSinceLastMessage > 24) {
 ### 4.3 Encryption
 
 Store `page_access_token` encrypted at rest:
-- Use AES-256-GCM with key from `FB_TOKEN_ENCRYPTION_KEY` env var
+- Use AES-256-GCM with key from `META_TOKEN_ENCRYPTION_KEY` env var
 - Encrypt on write, decrypt on read
 - Treat token like a password — never log it
 
@@ -389,19 +389,27 @@ function validateWebhookSignature(
 
 ## 6. Implementation Phases
 
-### Phase 1: Foundation (Can do now)
+### Phase 1: Foundation ✅ Implemented
 
-| Task | Files | Effort |
+| Task | Files | Status |
 |---|---|---|
-| DB migration: channel_connections table | `supabase/migrations/007_channel_connections.sql` | Medium |
-| Generalize GatewayContext types | `src/gateway/types.ts`, `src/channels/types.ts` | Medium |
-| Update session/audit for generic columns | `src/state/session.ts`, `src/state/audit.ts` | Medium |
-| Facebook channel adapter | `src/channels/facebook.ts` | Medium |
-| Webhook route + HMAC validation | `src/app/api/facebook/webhook/route.ts` | Medium |
-| OAuth flow | `src/app/api/facebook/connect/route.ts`, `callback/route.ts` | Medium |
-| Channel-aware confirmation gate | `src/runtime/confirmation.ts` | Low |
-| 24h window handling | `src/gateway/agent-handler.ts` | Low |
-| Tests | `tests/unit/facebook.test.ts`, `tests/integration/facebook-webhook.test.ts` | Medium |
+| DB migration: channel_connections table | `supabase/migrations/007_channel_connections.sql` | ✅ |
+| Generalize GatewayContext types | `src/gateway/types.ts`, `src/channels/types.ts` | ✅ |
+| Update session/audit for generic columns | `src/state/session.ts`, `src/state/audit.ts` | ✅ |
+| Facebook channel adapter | `src/channels/facebook.ts` | ✅ |
+| Webhook route + HMAC validation | `src/app/api/facebook/webhook/route.ts` | ✅ |
+| OAuth flow | `src/app/api/facebook/connect/route.ts`, `callback/route.ts`, `select/`, `start/` | ✅ |
+| Channel-aware confirmation gate | `src/runtime/confirmation.ts`, `src/runtime/write-gate.ts` | ✅ |
+| 24h window handling | `src/gateway/agent-handler.ts` | ✅ |
+| Tests | `tests/unit/plugins/gateway-facebook-channel.test.ts`, `tests/integration/audience-boundary.test.ts` and related | ✅ |
+
+**Implementation notes (deviations from the plan above):**
+
+- **Routing fix — dual-row page lookup:** a page can have TWO active `channel_connections` rows (one `messenger`, one `instagram`) sharing the same `page_id`. The webhook queries with `.or(page_id.eq.<entryId>, and(channel.eq.instagram, channel_user_id.eq.<entryId>))` **without `.single()`**, then picks the `instagram` row when `entry.id` matches the stored IG business-account id, otherwise the `messenger` row.
+- **State-cookie fix:** the OAuth `state` param is `base64url(JSON)` and the cookie holds the raw JSON; verification compares the embedded **nonce** between the two, not the whole payload (their string forms differ).
+- **Page selection UI:** after OAuth, the user is redirected to `/link/select` to pick which page to connect.
+- **Token-verified start flow:** `/api/facebook/start` requires a `token` verified by `verifyCompactToken()` (same HMAC compact link tokens as the Telegram link flow) instead of trusting raw `orgId`/`productType` params.
+- Messenger/Instagram events run through the agent pipeline with `audience: "customer"` (fail-closed customer tool set — see ADAPTIVE_AGENT_CONTEXT_PLAN.md).
 
 ### Phase 2: Meta Admin (Deferred)
 
@@ -433,7 +441,7 @@ FB_APP_SECRET=                # Facebook App Secret
 FB_VERIFY_TOKEN=              # Webhook verification token
 FB_GRAPH_API_VERSION=v25.0    # Graph API version
 FB_OAUTH_REDIRECT_URI=        # OAuth callback URL
-FB_TOKEN_ENCRYPTION_KEY=      # AES-256-GCM key for token encryption
+META_TOKEN_ENCRYPTION_KEY=    # AES-256-GCM key for token encryption (optional; not yet wired into code)
 ```
 
 ---

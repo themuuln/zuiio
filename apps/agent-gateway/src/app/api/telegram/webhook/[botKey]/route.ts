@@ -12,6 +12,7 @@ import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { createServiceClient } from "@/lib/supabase";
 import { confirmAction, rejectAction } from "@/runtime/confirmation";
 import { runAgentWithFallback } from "@/state/async-job";
+import { enqueueJob } from "@/state/job-queue";
 import { transcribeVoice } from "@/stt/groq";
 
 // ─── Lazy singleton ─────────────────────────────────────────────────────────
@@ -153,6 +154,7 @@ export async function POST(
 
 				agentInBackground = true;
 				runAgentWithFallback(agentPromise, {
+					enqueueDurable: () => enqueueJob(sb, ctx, transcribed, chatType),
 					onAsyncFallback: () => {
 						return userMessageId
 							? tg.setReaction(
@@ -217,6 +219,7 @@ export async function POST(
 		});
 
 		runAgentWithFallback(agentPromise, {
+			enqueueDurable: () => enqueueJob(sb, ctx, text, chatType),
 			onAsyncFallback: () => {
 				return userMessageId
 					? tg.setReaction(

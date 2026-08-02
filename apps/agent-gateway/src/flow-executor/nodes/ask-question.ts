@@ -24,6 +24,17 @@ export async function handleAskQuestion(
 		return { action: { type: "next" }, messages: [] };
 	}
 
+	// If this is a button callback, persist the selected option as the answer
+	// so downstream nodes (conditions, setField) can read it from the run fields.
+	if (ctx.callbackData) {
+		const callbackValue = buttonValueFromCallback(ctx.callbackData);
+		return {
+			action: { type: "next" },
+			messages: [],
+			fieldUpdates: { [saveToField]: callbackValue, _awaitingField: "" },
+		};
+	}
+
 	const interpolated = question.replace(
 		/\{\{(\w+)\}\}/g,
 		(_, key) => ctx.run.fields[key] ?? `{{${key}}}`,
@@ -47,6 +58,15 @@ export async function handleAskQuestion(
 		messages,
 		fieldUpdates: { _awaitingField: saveToField },
 	};
+}
+
+/**
+ * Extract the button value from a flow callback payload.
+ * Payload shape: "flow:{runId}:{value}" — Telegram strips the "flow:" prefix
+ * and runId before calling handleFlowCallback, so the value may arrive bare.
+ */
+export function buttonValueFromCallback(callbackData: string): string {
+	return callbackData.split(":").pop() ?? callbackData;
 }
 
 /**

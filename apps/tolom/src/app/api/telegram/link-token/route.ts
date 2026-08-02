@@ -26,11 +26,16 @@ export const POST = createSimpleRouteHandler(async ({ user, supabase }) => {
     productType: "tolom" as const,
   };
 
+  const gatewayHeaders = {
+    "Content-Type": "application/json",
+    "x-api-key": process.env.AGENT_GATEWAY_API_SECRET ?? "",
+  };
+
   // Generate deep link and link code in parallel
   const [generateResult, codeResult] = await Promise.allSettled([
     fetch(`${AGENT_GATEWAY_URL}/api/link/generate`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: gatewayHeaders,
       body: JSON.stringify(payload),
     }).then(async (res) => {
       const json = await res.json();
@@ -41,7 +46,7 @@ export const POST = createSimpleRouteHandler(async ({ user, supabase }) => {
     }),
     fetch(`${AGENT_GATEWAY_URL}/api/link/code`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: gatewayHeaders,
       body: JSON.stringify(payload),
     }).then(async (res) => {
       const json = await res.json();

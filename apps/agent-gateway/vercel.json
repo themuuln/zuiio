@@ -2,5 +2,35 @@
 	"installCommand": "cd ../.. && pnpm install",
 	"buildCommand": "cd ../.. && pnpm exec turbo run build --filter=agent-gateway",
 	"outputDirectory": ".next",
-	"regions": ["sin1"]
+	"regions": ["sin1"],
+	"crons": [
+		{
+			"path": "/api/cron/cleanup-sessions",
+			"schedule": "0 3 * * *"
+		},
+		{
+			"path": "/api/cron/resume-flows",
+			"schedule": "*/5 * * * *"
+		},
+		{
+			"path": "/api/cron/briefing",
+			"schedule": "0 8 * * *"
+		},
+		{
+			"path": "/api/cron/reminders",
+			"schedule": "*/5 * * * *"
+		},
+		{
+			"path": "/api/cron/drain-queue",
+			"schedule": "*/5 * * * *"
+		},
+		{
+			"path": "/api/cron/process-jobs",
+			"schedule": "*/5 * * * *"
+		},
+		{
+			"path": "/api/cron/re-embed",
+			"schedule": "0 * * * *"
+		}
+	]
 }

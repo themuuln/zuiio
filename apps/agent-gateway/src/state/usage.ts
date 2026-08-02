@@ -27,6 +27,60 @@ export interface UsageStats {
 		calls: number;
 	}>;
 	estimatedCost: number; // in USD, based on token usage
+	/** Response-time percentiles (ms) + per-tool averages from the audit log. */
+	responseTimeMs: {
+		p50: number;
+		p95: number;
+		p99: number;
+		toolAverages: Array<{ name: string; avgMs: number }>;
+	};
+	/** Distinct conversations (session rows) in the period. */
+	conversationCount: number;
+	/** Per-channel activity in the period (from the audit log channel column). */
+	byChannel: Array<{ channel: string; toolCalls: number; errors: number }>;
+	/** Tool error rate in the period (0-1). */
+	errorRate: number;
+}
+
+/** Nearest-rank percentile over a sorted array. */
+export function percentile(sorted: number[], p: number): number {
+	if (sorted.length === 0) return 0;
+	const idx = Math.floor(sorted.length * p);
+	const clamped = Math.min(idx, sorted.length - 1);
+	return sorted[clamped] ?? 0;
+}
+
+/** Filter out null durations and sort ascending. */
+export function computeSortedDurations(
+	durations: Array<{ duration_ms: number | null; tool_name: string }>,
+): number[] {
+	return (durations ?? [])
+		.filter(
+			(d): d is { duration_ms: number; tool_name: string } =>
+				d.duration_ms !== null && d.duration_ms !== undefined,
+		)
+		.map((d) => d.duration_ms)
+		.sort((a, b) => a - b);
+}
+
+/** Per-tool average duration, sorted by slowest, capped at 10. */
+export function computeToolAverages(
+	durations: Array<{ duration_ms: number; tool_name: string }>,
+): Array<{ name: string; avgMs: number }> {
+	const map = new Map<string, { sum: number; count: number }>();
+	for (const row of durations) {
+		const entry = map.get(row.tool_name) ?? { sum: 0, count: 0 };
+		entry.sum += row.duration_ms;
+		entry.count += 1;
+		map.set(row.tool_name, entry);
+	}
+	return Array.from(map.entries())
+		.map(([name, { sum, count }]) => ({
+			name,
+			avgMs: Math.round(sum / count),
+		}))
+		.sort((a, b) => b.avgMs - a.avgMs)
+		.slice(0, 10);
 }
 
 /**
@@ -64,14 +118,31 @@ export async function getUsageStats(
 		const totalTokens = dailyBreakdown.reduce((s, d) => s + d.tokens, 0);
 		const totalApiCalls = dailyBreakdown.reduce((s, d) => s + d.calls, 0);
 
-		// Tool calls
+		// Tool calls + response times from the audit log
 		const { data: tools } = await supabase
 			.from("agent_audit_log")
-			.select("tool_name")
+			.select("tool_name, duration_ms, channel, error")
 			.eq("organization_id", orgId)
 			.gte("created_at", start.toISOString());
 
 		const totalToolCalls = (tools ?? []).length;
+		const errorCount = (tools ?? []).filter(
+			(t) => (t as { error?: string | null }).error != null,
+		).length;
+
+		// Per-channel aggregation
+		const channelAgg = new Map<string, { toolCalls: number; errors: number }>();
+		for (const t of tools ?? []) {
+			const row = t as { channel?: string | null; error?: string | null };
+			const channel = row.channel ?? "unknown";
+			const agg = channelAgg.get(channel) ?? { toolCalls: 0, errors: 0 };
+			agg.toolCalls += 1;
+			if (row.error != null) agg.errors += 1;
+			channelAgg.set(channel, agg);
+		}
+		const byChannel = Array.from(channelAgg.entries())
+			.sort(([, a], [, b]) => b.toolCalls - a.toolCalls)
+			.map(([channel, agg]) => ({ channel, ...agg }));
 
 		const toolCounts = new Map<string, number>();
 		for (const t of tools ?? []) {
@@ -82,6 +153,18 @@ export async function getUsageStats(
 			.sort(([, a], [, b]) => b - a)
 			.slice(0, 10)
 			.map(([name, count]) => ({ name, count }));
+
+		const durations = (tools ?? []) as Array<{
+			duration_ms: number | null;
+			tool_name: string;
+		}>;
+		const sortedDurations = computeSortedDurations(durations);
+		const toolAverages = computeToolAverages(
+			durations.filter(
+				(d): d is { duration_ms: number; tool_name: string } =>
+					d.duration_ms !== null && d.duration_ms !== undefined,
+			),
+		);
 
 		// Handoff stats
 		const { data: handoffs } = await supabase
@@ -96,6 +179,13 @@ export async function getUsageStats(
 				(h as Record<string, string>).status,
 			),
 		).length;
+
+		// Distinct conversations in the period
+		const { count: conversationCount } = await supabase
+			.from("agent_sessions")
+			.select("*", { count: "exact", head: true })
+			.eq("organization_id", orgId)
+			.gte("updated_at", start.toISOString());
 
 		// Estimated cost
 		const estimatedCost = (totalTokens / 1_000_000) * providerCostPer1M;
@@ -112,6 +202,15 @@ export async function getUsageStats(
 			handoffResolvedCount,
 			dailyBreakdown,
 			estimatedCost: Math.round(estimatedCost * 10_000) / 10_000,
+			responseTimeMs: {
+				p50: percentile(sortedDurations, 0.5),
+				p95: percentile(sortedDurations, 0.95),
+				p99: percentile(sortedDurations, 0.99),
+				toolAverages,
+			},
+			conversationCount: conversationCount ?? 0,
+			byChannel,
+			errorRate: totalToolCalls > 0 ? errorCount / totalToolCalls : 0,
 		};
 	} catch (err) {
 		capture(err, {
@@ -131,6 +230,10 @@ export async function getUsageStats(
 			handoffResolvedCount: 0,
 			dailyBreakdown: [],
 			estimatedCost: 0,
+			responseTimeMs: { p50: 0, p95: 0, p99: 0, toolAverages: [] },
+			conversationCount: 0,
+			byChannel: [],
+			errorRate: 0,
 		};
 	}
 }

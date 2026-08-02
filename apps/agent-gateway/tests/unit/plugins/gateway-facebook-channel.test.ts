@@ -1,5 +1,5 @@
-import { FacebookChannel } from "@zuiio/gateway-facebook";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { FacebookChannel } from "@/channels/facebook";
 
 const PAGE_ID = "page-123";
 const PAGE_TOKEN = "page-token-abc";
@@ -115,15 +115,5 @@ describe("FacebookChannel", () => {
 		const result = await channel.getPageInfo(PAGE_ID, PAGE_TOKEN);
 
 		expect(result).toBeNull();
-	});
-
-	it("sendConfirmation sends inline keyboard with confirm/reject", async () => {
-		fetchSpy.mockResolvedValue(new Response("", { status: 200 }));
-
-		await channel.sendConfirmation("user-1", "Confirm?", "nonce-123");
-
-		expect(fetchSpy).toHaveBeenCalledTimes(1);
-		const body = JSON.parse(fetchSpy.mock.calls[0]?.[1]?.body as string);
-		expect(body.message.quick_replies).toHaveLength(2);
 	});
 });

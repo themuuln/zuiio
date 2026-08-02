@@ -15,6 +15,7 @@ import { LinkCodeDisplay } from "./link-code-display";
 
 const GATEWAY_URL = process.env.AGENT_GATEWAY_URL ?? "http://localhost:3999";
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME ?? "zuiio_bot";
+const GATEWAY_API_SECRET = process.env.AGENT_GATEWAY_API_SECRET ?? "";
 
 interface TelegramLinkProps {
   organizationId: string;
@@ -35,7 +36,10 @@ async function fetchLinkCode(
   try {
     const res = await fetch(`${GATEWAY_URL}/api/link/code`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": GATEWAY_API_SECRET,
+      },
       body: JSON.stringify({ orgId, userId, productType }),
     });
     if (!res.ok) return null;
@@ -46,6 +50,29 @@ async function fetchLinkCode(
     return null;
   } catch (e) {
     capture(e, { context: "telegram: fetch link code" });
+    return null;
+  }
+}
+
+async function fetchLinkToken(
+  orgId: string,
+  userId: string,
+  productType: string,
+): Promise<string | null> {
+  try {
+    const res = await fetch(`${GATEWAY_URL}/api/link/generate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": GATEWAY_API_SECRET,
+      },
+      body: JSON.stringify({ orgId, userId, productType }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { token?: string };
+    return data.token ?? null;
+  } catch (e) {
+    capture(e, { context: "telegram: fetch link token" });
     return null;
   }
 }
@@ -73,6 +100,9 @@ export async function TelegramLink({
   const linkCode = linkedAccount
     ? null
     : await fetchLinkCode(organizationId, userId, "zer");
+  const linkToken = linkedAccount
+    ? null
+    : await fetchLinkToken(organizationId, userId, "zer");
 
   let content: React.ReactNode;
 
@@ -108,11 +138,24 @@ export async function TelegramLink({
     );
   } else if (linkCode) {
     content = (
-      <LinkCodeDisplay
-        code={linkCode.formatted}
-        expiresInMinutes={10}
-        botUsername={BOT_USERNAME}
-      />
+      <div className="space-y-3">
+        <LinkCodeDisplay
+          code={linkCode.formatted}
+          expiresInMinutes={10}
+          botUsername={BOT_USERNAME}
+        />
+        {linkToken && (
+          <Button variant="outline" size="sm" asChild>
+            <a
+              href={`${GATEWAY_URL}/link?token=${encodeURIComponent(linkToken)}&channel=telegram`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              QR кодоор холбох
+            </a>
+          </Button>
+        )}
+      </div>
     );
   } else {
     content = (

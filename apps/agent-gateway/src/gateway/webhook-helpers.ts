@@ -8,6 +8,7 @@ import { createWriteDataTool } from "@/gateway/write-data-tool";
 import { getRedis } from "@/lib/redis";
 import { createServiceClient } from "@/lib/supabase";
 import type { GatewayTool, ToolContext } from "@/providers/types";
+import { gateWriteTool } from "@/runtime/write-gate";
 
 /**
  * Generate system prompt for a product type.
@@ -176,8 +177,10 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					]);
 
 					const activeWO = (workOrders.data ?? []).filter(
-						(wo: any) =>
-							!["delivered", "cancelled", "completed"].includes(wo.status),
+						(wo: Record<string, unknown>) =>
+							!["delivered", "cancelled", "completed"].includes(
+								String(wo.status),
+							),
 					);
 
 					return {
@@ -185,11 +188,13 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						activeWorkOrders: activeWO.length,
 						totalWorkOrders: (workOrders.data ?? []).length,
 						monthlyInvoices: (invoices.data ?? []).reduce(
-							(s: number, r: any) => s + (Number(r.total) || 0),
+							(s: number, r: Record<string, unknown>) =>
+								s + (Number(r.total) || 0),
 							0,
 						),
 						monthlyInvoicesPaid: (invoices.data ?? []).reduce(
-							(s: number, r: any) => s + (Number(r.amount_paid) || 0),
+							(s: number, r: Record<string, unknown>) =>
+								s + (Number(r.amount_paid) || 0),
 							0,
 						),
 						newCustomersThisMonth: (customers.data ?? []).length,
@@ -238,14 +243,25 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						id: wo.id,
 						status: wo.status,
 						total: Number(wo.total_amount) || 0,
-						plate: wo.plate_number ?? (wo.vehicles as any)?.plate_number ?? "—",
-						vehicle: [(wo.vehicles as any)?.make, (wo.vehicles as any)?.model]
+						plate:
+							wo.plate_number ??
+							(wo.vehicles as Record<string, unknown> | undefined)
+								?.plate_number ??
+							"—",
+						vehicle: [
+							(wo.vehicles as Record<string, unknown> | undefined)?.make,
+							(wo.vehicles as Record<string, unknown> | undefined)?.model,
+						]
 							.filter(Boolean)
 							.join(" "),
-						customerName: (wo.customers as any)?.full_name ?? "—",
-						phone: (wo.customers as any)?.phone ?? "—",
+						customerName:
+							(wo.customers as Record<string, unknown> | undefined)
+								?.full_name ?? "—",
+						phone:
+							(wo.customers as Record<string, unknown> | undefined)?.phone ??
+							"—",
 						description: wo.description ?? "—",
-						parts: (partsRes.data ?? []).map((p: any) => ({
+						parts: (partsRes.data ?? []).map((p: Record<string, unknown>) => ({
 							name: p.part_name,
 							qty: p.quantity,
 							price: Number(p.final_price) || 0,
@@ -434,19 +450,23 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					const paymentRows = paymentsRes.data ?? [];
 
 					const totalInvoiced = invoiceRows.reduce(
-						(s: number, r: any) => s + (Number(r.total) || 0),
+						(s: number, r: Record<string, unknown>) =>
+							s + (Number(r.total) || 0),
 						0,
 					);
 					const totalPaid = invoiceRows.reduce(
-						(s: number, r: any) => s + (Number(r.amount_paid) || 0),
+						(s: number, r: Record<string, unknown>) =>
+							s + (Number(r.amount_paid) || 0),
 						0,
 					);
 					const totalUnpaid = invoiceRows.reduce(
-						(s: number, r: any) => s + (Number(r.balance_due) || 0),
+						(s: number, r: Record<string, unknown>) =>
+							s + (Number(r.balance_due) || 0),
 						0,
 					);
 					const totalExpenses = expenseRows.reduce(
-						(s: number, r: any) => s + (Number(r.amount) || 0),
+						(s: number, r: Record<string, unknown>) =>
+							s + (Number(r.amount) || 0),
 						0,
 					);
 					const expensesByCategory: Record<string, number> = {};
@@ -804,621 +824,6 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 	];
 }
 
-// ─── Tolom Write Tools ─────────────────────────────────────────────────────
-
-function _tolomWriteTools(context: ToolContext): GatewayTool[] {
-	const { supabase, orgId } = context;
-	return [
-		{
-			name: "createWorkOrder",
-			description: "Шинэ ажлын захиалга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
-			parameters: [
-				{
-					name: "customerName",
-					type: "string",
-					description: "Харилцагчийн нэр",
-					required: true,
-				},
-				{
-					name: "customerPhone",
-					type: "string",
-					description: "Харилцагчийн утасны дугаар",
-					required: false,
-				},
-				{
-					name: "plateNumber",
-					type: "string",
-					description: "Улсын дугаар",
-					required: false,
-				},
-				{
-					name: "description",
-					type: "string",
-					description: "Ажлын тайлбар / юу хийх вэ",
-					required: true,
-				},
-				{
-					name: "totalAmount",
-					type: "number",
-					description: "Нийт дүн (₮)",
-					required: false,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const phone = (args.customerPhone as string) ?? "";
-					let customerId: string;
-
-					const { data: existing } = await supabase
-						.from("customers")
-						.select("id")
-						.eq("organization_id", orgId)
-						.eq("phone", phone)
-						.is("deleted_at", null)
-						.limit(1);
-
-					if (existing && existing.length > 0) {
-						customerId = (existing[0] as { id: string }).id;
-					} else {
-						const name = (args.customerName as string) ?? "—";
-						const [firstName, ...rest] = name.split(" ");
-						const { data: created, error: createErr } = await supabase
-							.from("customers")
-							.insert({
-								organization_id: orgId,
-								full_name: name,
-								first_name: firstName ?? name,
-								last_name: rest.join(" ") || undefined,
-								phone: phone || undefined,
-							})
-							.select("id")
-							.single();
-						if (createErr || !created) {
-							return { error: "Харилцагч үүсгэхэд алдаа гарлаа" };
-						}
-						customerId = (created as { id: string }).id;
-					}
-
-					const { data: wo, error } = await supabase
-						.from("work_orders")
-						.insert({
-							organization_id: orgId,
-							customer_id: customerId,
-							plate_number: (args.plateNumber as string) ?? undefined,
-							status: "received",
-							description: args.description as string,
-							total_amount: (args.totalAmount as number) ?? 0,
-						})
-						.select("id, status, total_amount")
-						.single();
-
-					if (error || !wo) {
-						return { error: "Ажлын захиалга үүсгэхэд алдаа гарлаа" };
-					}
-
-					const woData = wo as {
-						id: string;
-						status: string;
-						total_amount: number;
-					};
-					return {
-						success: true,
-						message: `Шинэ ажлын захиалга үүслээ: #${woData.id.split("-")[0]}`,
-						workOrderId: woData.id,
-						status: woData.status,
-						totalAmount: woData.total_amount,
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: createWorkOrder" });
-					return { error: "Ажлын захиалга үүсгэхэд алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "updateWorkOrderStatus",
-			description: "Төлөв өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
-			parameters: [
-				{
-					name: "workOrderId",
-					type: "string",
-					description: "Ажлын захиалгын ID",
-					required: true,
-				},
-				{
-					name: "newStatus",
-					type: "string",
-					description: "Шинэ төлөв",
-					required: true,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const validStatuses = [
-						"received",
-						"in_progress",
-						"completed",
-						"delivered",
-						"cancelled",
-					];
-					const newStatus = (args.newStatus as string).toLowerCase();
-					if (!validStatuses.includes(newStatus)) {
-						return {
-							error: `Хүчингүй төлөв: "${args.newStatus}". Боломжит: ${validStatuses.join(", ")}`,
-						};
-					}
-
-					const { data, error } = await supabase
-						.from("work_orders")
-						.update({ status: newStatus })
-						.eq("organization_id", orgId)
-						.eq("id", args.workOrderId as string)
-						.select("id, status")
-						.single();
-
-					if (error || !data) {
-						return { error: "Ажлын захиалга олдсонгүй эсвэл өөрчлөх эрхгүй" };
-					}
-
-					return {
-						success: true,
-						message: `Ажлын захиалга #${(args.workOrderId as string).split("-")[0]} төлөв "${newStatus}" болж өөрчлөгдлөө`,
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: updateWorkOrderStatus" });
-					return { error: "Төлөв өөрчлөхөд алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "createInvoice",
-			description: "Нэхэмжлэх үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
-			parameters: [
-				{
-					name: "customerId",
-					type: "string",
-					description: "Харилцагчийн ID (хайлтаас олох)",
-					required: true,
-				},
-				{
-					name: "total",
-					type: "number",
-					description: "Нийт дүн (₮)",
-					required: true,
-				},
-				{
-					name: "description",
-					type: "string",
-					description: "Нэхэмжлэхийн тайлбар",
-					required: false,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const { data, error } = await supabase
-						.from("invoices")
-						.insert({
-							organization_id: orgId,
-							customer_id: args.customerId as string,
-							total: Number(args.total),
-							amount_paid: 0,
-							description: (args.description as string) ?? undefined,
-							issued_at: new Date().toISOString(),
-						})
-						.select("id, total, amount_paid")
-						.single();
-
-					if (error || !data) {
-						return { error: "Нэхэмжлэх үүсгэхэд алдаа гарлаа" };
-					}
-
-					return {
-						success: true,
-						message: `Шинэ нэхэмжлэх үүслээ: #${(data as { id: string }).id.split("-")[0]}`,
-						invoiceId: (data as { id: string }).id,
-						total: (data as { total: number }).total,
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: createInvoice" });
-					return { error: "Нэхэмжлэх үүсгэхэд алдаа гарлаа" };
-				}
-			},
-		},
-		// ─── New CRU Tools ─────────────────────────────────────────────
-		{
-			name: "updateWorkOrderDetails",
-			description: "Дэлгэрэнгүй засах. БАТАЛГААЖУУЛАЛТЫН багаж.",
-			parameters: [
-				{
-					name: "workOrderId",
-					type: "string",
-					description: "Ажлын захиалгын ID",
-					required: true,
-				},
-				{
-					name: "description",
-					type: "string",
-					description: "Шинэ тайлбар",
-					required: false,
-				},
-				{
-					name: "notes",
-					type: "string",
-					description: "Шинэ тэмдэглээ",
-					required: false,
-				},
-				{
-					name: "totalAmount",
-					type: "number",
-					description: "Шинэ нийт дүн (₮)",
-					required: false,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const updates: Record<string, unknown> = {};
-					if (typeof args.description === "string")
-						updates.description = args.description;
-					if (typeof args.notes === "string") updates.notes = args.notes;
-					if (typeof args.totalAmount === "number")
-						updates.total_amount = args.totalAmount;
-
-					if (Object.keys(updates).length === 0) {
-						return { error: "Өөрчлөх зүйл байхгүй байна" };
-					}
-
-					const { data, error } = await supabase
-						.from("work_orders")
-						.update(updates)
-						.eq("organization_id", orgId)
-						.eq("id", args.workOrderId as string)
-						.select("id, description, notes, total_amount")
-						.single();
-
-					if (error || !data) {
-						return { error: "Ажлын захиалга олдсонгүй эсвэл өөрчлөх эрхгүй" };
-					}
-
-					return {
-						success: true,
-						message: `Ажлын захиалга #${(data as { id: string }).id.split("-")[0]} амжилттай шинэчлэгдлээ`,
-						updatedFields: Object.keys(updates),
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: updateWorkOrderDetails" });
-					return { error: "Ажлын захиалга шинэчлэхэд алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "recordPayment",
-			description: "Нэхэмжлэх дээр төлбөр бүртгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
-			parameters: [
-				{
-					name: "invoiceId",
-					type: "string",
-					description: "Нэхэмжлэхийн ID",
-					required: true,
-				},
-				{
-					name: "amount",
-					type: "number",
-					description: "Төлсөн дүн (₮)",
-					required: true,
-				},
-				{
-					name: "method",
-					type: "string",
-					description: "Төлбөрийн хэрэгсэл: cash, card, qpay, transfer",
-					required: false,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const amount = Number(args.amount);
-					if (amount <= 0) return { error: "Дүн 0-ээс их байх ёстой" };
-
-					const method = (args.method as string) ?? "cash";
-					const validMethods = ["cash", "card", "qpay", "transfer"];
-					if (!validMethods.includes(method)) {
-						return {
-							error: `Хүчингүй төлбөрийн хэрэгсэл: "${method}". Боломжит: ${validMethods.join(", ")}`,
-						};
-					}
-
-					// Get current invoice
-					const { data: invoice, error: invErr } = await supabase
-						.from("invoices")
-						.select("id, total, amount_paid, balance_due")
-						.eq("id", args.invoiceId as string)
-						.eq("organization_id", orgId)
-						.single();
-
-					if (invErr || !invoice) return { error: "Нэхэмжлэх олдсонгүй" };
-
-					const inv = invoice as {
-						id: string;
-						total: number;
-						amount_paid: number;
-						balance_due: number;
-					};
-
-					if (amount > inv.balance_due) {
-						return {
-							error: `Төлсөн дүн (${amount}₮) нэхэмжлэхийн үлдэгдэл (${inv.balance_due}₮)-ээс их байна`,
-						};
-					}
-
-					const newPaid = inv.amount_paid + amount;
-					const newBalance = inv.total - newPaid;
-					const newStatus = newBalance <= 0 ? "paid" : "partial";
-
-					const { error: updateErr } = await supabase
-						.from("invoices")
-						.update({
-							amount_paid: newPaid,
-							balance_due: newBalance,
-							status: newStatus,
-							paid_at: newBalance <= 0 ? new Date().toISOString() : null,
-						})
-						.eq("id", inv.id);
-
-					if (updateErr) return { error: "Төлбөр бүртгэхэд алдаа гарлаа" };
-
-					// Record payment entry
-					await supabase.from("invoice_payments").insert({
-						invoice_id: inv.id,
-						organization_id: orgId,
-						amount,
-						method,
-						paid_at: new Date().toISOString(),
-					});
-
-					return {
-						success: true,
-						message: `${amount}₮ төлбөр амжилттай бүртгэгдлээ (${method})`,
-						invoiceId: inv.id,
-						remainingBalance: newBalance,
-						newStatus,
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: recordPayment" });
-					return { error: "Төлбөр бүртгэхэд алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "createAppointment",
-			description: "Шинэ цаг захиалга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
-			parameters: [
-				{
-					name: "customerName",
-					type: "string",
-					description: "Харилцагчийн нэр",
-					required: true,
-				},
-				{
-					name: "customerPhone",
-					type: "string",
-					description: "Харилцагчийн утас",
-					required: false,
-				},
-				{
-					name: "scheduledAt",
-					type: "string",
-					description: "Цагийн уулзвар (YYYY-MM-DDTHH:MM)",
-					required: true,
-				},
-				{
-					name: "description",
-					type: "string",
-					description: "Захиалгын тайлбар",
-					required: false,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const phone = (args.customerPhone as string) ?? "";
-					let customerId: string;
-
-					// Find or create customer
-					const { data: existing } = await supabase
-						.from("customers")
-						.select("id")
-						.eq("organization_id", orgId)
-						.eq("phone", phone)
-						.is("deleted_at", null)
-						.limit(1);
-
-					if (existing && existing.length > 0) {
-						customerId = (existing[0] as { id: string }).id;
-					} else {
-						const name = (args.customerName as string) ?? "—";
-						const [firstName, ...rest] = name.split(" ");
-						const { data: created, error: createErr } = await supabase
-							.from("customers")
-							.insert({
-								organization_id: orgId,
-								full_name: name,
-								first_name: firstName ?? name,
-								last_name: rest.join(" ") || undefined,
-								phone: phone || undefined,
-							})
-							.select("id")
-							.single();
-						if (createErr || !created) {
-							return { error: "Харилцагч үүсгэхэд алдаа гарлаа" };
-						}
-						customerId = (created as { id: string }).id;
-					}
-
-					const { data: appt, error: apptErr } = await supabase
-						.from("appointments")
-						.insert({
-							organization_id: orgId,
-							customer_id: customerId,
-							scheduled_at: args.scheduledAt as string,
-							description: (args.description as string) ?? undefined,
-							status: "scheduled",
-						})
-						.select("id, scheduled_at, status")
-						.single();
-
-					if (apptErr || !appt) {
-						return { error: "Цаг захиалга үүсгэхэд алдаа гарлаа" };
-					}
-
-					return {
-						success: true,
-						message: `Цаг захиалга амжилттай үүслээ: ${(appt as { scheduled_at: string }).scheduled_at}`,
-						appointmentId: (appt as { id: string }).id,
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: createAppointment" });
-					return { error: "Цаг захиалга үүсгэхэд алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "sendInvoicePdf",
-			description: "Нэхэмжлэхийг PDF болгож илгээх. БАТАЛГААЖУУЛАЛТЫН багаж.",
-			parameters: [
-				{
-					name: "invoiceId",
-					type: "string",
-					description: "Нэхэмжлэхийн ID",
-					required: true,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const { data: invoice, error } = await supabase
-						.from("invoices")
-						.select(
-							"id, invoice_number, total, amount_paid, balance_due, status, customer_name, issued_at",
-						)
-						.eq("id", args.invoiceId as string)
-						.eq("organization_id", orgId)
-						.single();
-					if (error || !invoice) return { error: "Нэхэмжлэх олдсонгүй" };
-					// Return invoice data — the channel layer handles PDF generation
-					return {
-						success: true,
-						invoiceId: (invoice as Record<string, unknown>).id,
-						invoiceNumber: (invoice as Record<string, unknown>).invoice_number,
-						total: (invoice as Record<string, unknown>).total,
-						customerName: (invoice as Record<string, unknown>).customer_name,
-						message: "Нэхэмжлэхийн мэдээлэл бэлэн. PDF үүсгэх шаардлагатай.",
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: sendInvoicePdf" });
-					return { error: "Нэхэмжлэх илгээхэд алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "createReminder",
-			description: "Сануулга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
-			parameters: [
-				{
-					name: "message",
-					type: "string",
-					description: "Сануулгын агуулга",
-					required: true,
-				},
-				{
-					name: "remindAt",
-					type: "string",
-					description: "Хэзээ сануулах (YYYY-MM-DDTHH:MM)",
-					required: true,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const message = args.message as string;
-					const remindAt = args.remindAt as string;
-					const { error } = await supabase.from("notifications").insert({
-						organization_id: orgId,
-						type: "reminder",
-						title: "Сануулга",
-						message,
-						scheduled_for: remindAt,
-						is_read: false,
-					});
-					if (error)
-						return {
-							success: true,
-							message: `Сануулга тэмдэглэгдлээ: ${message} (${remindAt})`,
-						};
-					return {
-						success: true,
-						message: `Сануулга амжилттай үүслээ: ${message} (${remindAt})`,
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: createReminder" });
-					return { error: "Сануулга үүсгэхэд алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "bulkUpdateWorkOrderStatus",
-			description: "Олон захиалгын төлөв өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
-			parameters: [
-				{
-					name: "workOrderIds",
-					type: "string",
-					description: "IDs-уудын жагсаалт (тикийгээр таслалаар тусгаарласан)",
-					required: true,
-				},
-				{
-					name: "newStatus",
-					type: "string",
-					description:
-						"Шинэ төлөв: received, in_progress, completed, delivered, cancelled",
-					required: true,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const ids = (args.workOrderIds as string)
-						.split(",")
-						.map((s) => s.trim())
-						.filter(Boolean);
-					const validStatuses = [
-						"received",
-						"in_progress",
-						"completed",
-						"delivered",
-						"cancelled",
-					];
-					const newStatus = (args.newStatus as string).toLowerCase();
-					if (!validStatuses.includes(newStatus)) {
-						return {
-							error: `Хүчингүй төлөв: "${args.newStatus}". Боломжит: ${validStatuses.join(", ")}`,
-						};
-					}
-					if (ids.length === 0) return { error: "ID-ууд оруулна уу" };
-					const { data, error } = await supabase
-						.from("work_orders")
-						.update({ status: newStatus })
-						.eq("organization_id", orgId)
-						.in("id", ids)
-						.select("id, status");
-					if (error) return { error: "Олон захиалга шинэчлэхэд алдаа гарлаа" };
-					return {
-						success: true,
-						updated: (data ?? []).length,
-						newStatus,
-						ids,
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: bulkUpdateWorkOrderStatus" });
-					return { error: "Олон захиалга шинэчлэхэд алдаа гарлаа" };
-				}
-			},
-		},
-	];
-}
-
 // ─── Zer Write Tools ─────────────────────────────────────────────────────
 
 function zerWriteTools(context: ToolContext): GatewayTool[] {
@@ -1679,7 +1084,10 @@ export function getProductTools(
 ): GatewayTool[] {
 	// Zatly has no tools yet — return empty set
 	if (productType === "zatly") return [];
-	const cacheKey = `${productType}:${context.orgId}:${options?.readOnly ?? false}`;
+	// Customer audience gets NO internal business tools — fail closed.
+	if (context.audience === "customer") return [];
+	const audienceKey = context.audience ?? "internal";
+	const cacheKey = `${productType}:${context.orgId}:${audienceKey}:${options?.readOnly ?? false}`;
 	const cached = toolCache.get(cacheKey);
 
 	if (cached && cached.expires > Date.now()) {
@@ -1703,14 +1111,18 @@ export function getProductTools(
 				].filter((t): t is NonNullable<typeof t> => t !== null);
 	// Tolom and Zer both use the dynamic Write Engine (writeData) when their
 	// catalog exists; legacy inline write tools are kept alongside.
+	// ALL write tools pass through the confirmation gate: the action is staged
+	// and re-executed only after the user confirms (never via LLM re-prompt).
+	const gate = (t: GatewayTool | null): GatewayTool | null =>
+		t ? gateWriteTool(t, context) : null;
 	const writeTools =
 		productType === "tolom"
-			? [createWriteDataTool("tolom", context)].filter(
+			? [gate(createWriteDataTool("tolom", context))].filter(
 					(t): t is NonNullable<typeof t> => t !== null,
 				)
-			: [...zerWriteTools(context), createWriteDataTool("zer", context)].filter(
-					(t): t is NonNullable<typeof t> => t !== null,
-				);
+			: [...zerWriteTools(context), createWriteDataTool("zer", context)]
+					.map(gate)
+					.filter((t): t is NonNullable<typeof t> => t !== null);
 	const tools = options?.readOnly ? readTools : [...readTools, ...writeTools];
 
 	toolCache.set(cacheKey, { tools, expires: Date.now() + TOOL_CACHE_TTL_MS });

@@ -34,6 +34,8 @@ export async function resolveOrgFromChatUser(
 			orgId: data.organization_id,
 			userId: data.user_id ?? "",
 			productType: data.product_type,
+			// SSO-linked staff Telegram is always internal.
+			audience: "internal",
 			chatId: Number(data.telegram_chat_id),
 			telegramUserId: Number(data.telegram_user_id),
 			channel: "telegram",

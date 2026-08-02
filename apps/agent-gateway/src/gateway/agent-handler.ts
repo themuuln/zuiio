@@ -1,6 +1,8 @@
 import "server-only";
+import { capture } from "@zuiio/capture";
 import { after } from "next/server";
 
+import { TelegramChannel } from "@/channels/telegram";
 import type { GatewayContext } from "@/gateway/types";
 import { debug } from "@/lib/debug";
 import { openAiConfig, openCodeGoConfig, validateConfig } from "@/lib/env";
@@ -13,13 +15,21 @@ import {
 	type GatewayTool,
 	type ToolContext,
 } from "@/providers/types";
+import { formatProfileContext, loadAgentProfile } from "@/state/agent-profile";
 import { withAudit } from "@/state/audit";
 import {
 	checkDailyBudget,
 	REQUEST_LIMITS,
 	recordUsageAtomic,
 } from "@/state/budget";
-import { checkHandoffTriggers } from "@/state/handoff";
+import { scoreConfidence } from "@/state/confidence";
+import {
+	checkHandoffTriggers,
+	getActiveHandoff,
+	getHandoffConfig,
+	type HandoffConfig,
+	triggerHandoff,
+} from "@/state/handoff";
 import {
 	formatKnowledgeContext,
 	type KnowledgeChunk,
@@ -53,6 +63,56 @@ let _sb: ServiceClient | null = null;
 function getSb() {
 	if (!_sb) _sb = createServiceClient();
 	return _sb;
+}
+
+/**
+ * Escalate a conversation to a human: insert the handoff event, notify the org
+ * admin on Telegram when configured, and return the canned reply.
+ * Never throws — escalation failure must not break the user flow.
+ */
+async function escalateToHuman(
+	sb: ServiceClient,
+	ctx: GatewayContext,
+	handoffConfig: HandoffConfig | null,
+	reason: string,
+	escalatedBy: "keyword" | "intent" | "sentiment" | "agent",
+	customerQuery: string,
+	botResponse: string,
+): Promise<string> {
+	try {
+		const chatId = Number(ctx.channelChatId) || 0;
+		const userId = Number(ctx.channelUserId) || 0;
+		const event = await triggerHandoff(sb, {
+			orgId: ctx.orgId,
+			chatId,
+			userId,
+			reason,
+			escalatedBy,
+			customerQuery,
+			botResponse,
+			adminChatId: handoffConfig?.adminChatId ?? undefined,
+		});
+
+		const adminChatId = handoffConfig?.adminChatId;
+		if (adminChatId) {
+			try {
+				const tg = new TelegramChannel();
+				await tg.sendMessage(
+					adminChatId,
+					`🛎 <b>Шинэ хүсэлт</b>\n\n` +
+						`Шалтгаан: ${reason}\n` +
+						`Хэрэглэгч: ${customerQuery.slice(0, 200)}\n\n` +
+						`ID: ${event.id}`, // resolvable from the dashboard inbox
+				);
+			} catch (err) {
+				capture(err, { context: "agent-gateway: handoff admin notify" });
+			}
+		}
+	} catch (err) {
+		capture(err, { context: "agent-gateway: handoff trigger" });
+	}
+
+	return `🔄 Таны хүсэлтийг хүлээн авлаа. Ойрын хугацаанд манай ажилтан тантай холбогдох болно.\n\nШалтгаан: ${reason}`;
 }
 
 export interface AgentHandlerOptions {
@@ -93,6 +153,12 @@ export async function handleAgentMessage(
 		orgId: ctx.orgId,
 		userId: ctx.userId,
 		supabase: opts.dataClient ?? sb,
+		audience: ctx.audience ?? "internal",
+		channel: ctx.channel,
+		channelChatId: ctx.channelChatId,
+		channelUserId: ctx.channelUserId,
+		pageId: ctx.pageId,
+		pageAccessToken: ctx.pageAccessToken,
 	};
 
 	// Check budget
@@ -119,25 +185,63 @@ export async function handleAgentMessage(
 	const detectedLang = isCyrillic ? "mn" : "en";
 
 	// Check handoff triggers — if user wants a human, escalate immediately
+	const [handoffConfig, activeHandoff] = await Promise.all([
+		getHandoffConfig(sb, ctx.orgId).catch(() => null),
+		getActiveHandoff(sb, ctx.orgId, Number(ctx.channelChatId) || 0).catch(
+			() => null,
+		),
+	]);
 	const handoff = checkHandoffTriggers(sanitizedText, {
-		sentimentEnabled: true,
+		keywordTriggers: handoffConfig?.keywordTriggers ?? [],
+		sentimentEnabled: handoffConfig?.sentimentEnabled ?? true,
 	});
 	if (handoff.triggered) {
-		return `🔄 Таны хүсэлтийг хүлээн авлаа. Ойрын хугацаанд манай ажилтан тантай холбогдох болно.\n\nШалтгаан: ${handoff.reason}`;
+		// Already escalated — don't create duplicate events.
+		if (activeHandoff) {
+			return `🔄 Таны хүсэлтийг хүлээн авсан байна. Ойрын хугацаанд манай ажилтан тантай холбогдох болно.`;
+		}
+		return escalateToHuman(
+			sb,
+			ctx,
+			handoffConfig,
+			handoff.reason ?? "Handoff requested",
+			handoff.by ?? "keyword",
+			sanitizedText,
+			"",
+		);
 	}
 
-	// Select tools — single-pass: audit logging + result truncation combined
+	// Select tools — single-pass: audit logging + result truncation combined,
+	// plus a collector that remembers the last tool result for confidence scoring.
+	let lastToolName: string | undefined;
+	let lastToolResult: unknown;
 	const rawTools = opts.getTools(context);
-	const safeTools = rawTools.map((t) =>
-		withAudit(t, ctx.channel, ctx.channelChatId, ctx.channelUserId, {
-			truncate: true,
-		}),
-	);
+	const safeTools = rawTools.map((t) => {
+		const audited = withAudit(
+			t,
+			ctx.channel,
+			ctx.channelChatId,
+			ctx.channelUserId,
+			{
+				truncate: true,
+			},
+		);
+		return {
+			...audited,
+			execute: async (args: Record<string, unknown>, execCtx: ToolContext) => {
+				const result = await audited.execute(args, execCtx);
+				lastToolName = t.name;
+				lastToolResult = result;
+				return result;
+			},
+		};
+	});
 
-	// Load context in parallel — session, prompt, knowledge, and wizard are independent
+	// Load context in parallel — session, prompt, profile, knowledge, and wizard
+	// are independent
 	t = performance.now();
-	const [session, basePrompt, knowledgeChunks, wizardState] = await Promise.all(
-		[
+	const [session, basePrompt, profile, knowledgeChunks, wizardState] =
+		await Promise.all([
 			loadSession(
 				sb,
 				ctx.orgId,
@@ -146,8 +250,15 @@ export async function handleAgentMessage(
 				ctx.channel,
 			),
 			opts.getSystemPrompt(ctx.productType, ctx.orgId, chatType, detectedLang),
+			// Audience-scoped org profile (personality/instructions) — never throws.
+			loadAgentProfile(
+				context.supabase,
+				ctx.orgId,
+				ctx.audience ?? "internal",
+			).catch(() => null),
 			searchKnowledge(context.supabase, ctx.orgId, sanitizedText, {
 				limit: 3,
+				audience: ctx.audience ?? "internal",
 			}).catch(() => [] as KnowledgeChunk[]),
 			getWizardState(
 				sb,
@@ -156,16 +267,21 @@ export async function handleAgentMessage(
 				ctx.channelUserId,
 				ctx.channel,
 			),
-		],
-	);
+		]);
 	timings.sessionLoad = Math.round(performance.now() - t);
 	debug("agent", "session loaded", {
 		messageCount: session.messages.length,
 		tokenCount: session.tokenCount,
 	});
 
-	// Compose system prompt with knowledge and wizard context
+	// Compose system prompt: base → profile → knowledge → wizard
 	let systemPrompt = basePrompt;
+	if (profile) {
+		const profileContext = formatProfileContext(profile);
+		if (profileContext) {
+			systemPrompt += `\n\n${profileContext}`;
+		}
+	}
 	if (knowledgeChunks.length > 0) {
 		systemPrompt += formatKnowledgeContext(knowledgeChunks);
 	}
@@ -210,6 +326,54 @@ export async function handleAgentMessage(
 			ctx.channelUserId,
 			ctx.channel,
 		);
+	}
+
+	// Confidence scoring: only meaningful when the answer came from a tool.
+	// Low confidence → escalate to a human (if configured); medium confidence
+	// → caveat prefix only when the tool result itself looks incomplete/errored.
+	try {
+		if (!lastToolName) {
+			// Pure LLM chat — nothing to be confident about.
+			debug("agent", "confidence skipped (no tool call)");
+		} else {
+			const confidence = scoreConfidence({
+				toolName: lastToolName,
+				toolResult: lastToolResult,
+				llmResponse: response,
+			});
+			debug("agent", "confidence", {
+				level: confidence.level,
+				score: confidence.score,
+				tool: lastToolName,
+			});
+
+			const resultLooksIncomplete =
+				lastToolResult === undefined ||
+				lastToolResult === null ||
+				(typeof lastToolResult === "object" &&
+					"error" in (lastToolResult as Record<string, unknown>));
+
+			if (confidence.shouldEscalate) {
+				if (!activeHandoff && handoffConfig) {
+					const reply = await escalateToHuman(
+						sb,
+						ctx,
+						handoffConfig,
+						`Бага итгэлцэл: ${confidence.reasoning}`,
+						"agent",
+						sanitizedText,
+						response,
+					);
+					return confidence.displayPrefix + reply;
+				}
+				return confidence.displayPrefix + response;
+			}
+			if (confidence.displayPrefix && resultLooksIncomplete) {
+				return confidence.displayPrefix + response;
+			}
+		}
+	} catch (err) {
+		capture(err, { context: "agent-gateway: confidence scoring" });
 	}
 
 	// Post-processing: session summarization and trimming

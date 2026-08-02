@@ -7,16 +7,14 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/test/stream-draft?chatId=XXXXX
  *
- * Test endpoint for sendMessageDraft streaming.
- * Sends a draft that streams "Hello, this is a streaming test! 🚀" token by token.
- *
- * Usage:
- * 1. Message your bot with any text
- * 2. Note your chatId from the webhook logs
- * 3. Visit: https://your-domain.com/api/test/stream-draft?chatId=YOUR_CHAT_ID
- * 4. Watch the draft appear and stream in your Telegram chat
+ * DEV-ONLY endpoint for sendMessageDraft streaming.
+ * Returns 404 outside development to prevent messaging arbitrary chats.
  */
 export async function GET(request: Request) {
+	if (process.env.NODE_ENV !== "development") {
+		return NextResponse.json({ error: "Not found" }, { status: 404 });
+	}
+
 	const { searchParams } = new URL(request.url);
 	const chatId = searchParams.get("chatId");
 

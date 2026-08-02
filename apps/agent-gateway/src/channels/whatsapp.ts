@@ -111,38 +111,4 @@ export class WhatsAppChannel implements Channel {
 	): Promise<void> {
 		// WhatsApp doesn't support editing sent messages via Cloud API
 	}
-
-	/**
-	 * Register a webhook endpoint for WhatsApp.
-	 * @param url — public HTTPS URL for the webhook
-	 * @param verifyToken — token for webhook verification challenge
-	 */
-	async configureWebhook(url: string, verifyToken: string): Promise<void> {
-		const appId = process.env.WHATSAPP_APP_ID;
-		if (!appId) {
-			throw new Error("WHATSAPP_APP_ID is required for webhook configuration");
-		}
-
-		const res = await fetch(
-			`https://graph.facebook.com/v22.0/${appId}/subscriptions`,
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${this.accessToken}`,
-				},
-				body: JSON.stringify({
-					object: "whatsapp_business_account",
-					callback_url: url,
-					verify_token: verifyToken,
-					fields: ["messages", "message_template_status_update"],
-				}),
-			},
-		);
-
-		if (!res.ok) {
-			const err = await res.text();
-			throw new Error(`Failed to configure WhatsApp webhook: ${err}`);
-		}
-	}
 }
