@@ -35,9 +35,9 @@ void main() {
       const listingId = 'listing-789';
 
       final url = 'https://tamga.mn/market/$listingId';
-      final text = 'Check out this horse on Tamga: $url';
+      final text = 'Tamga дээрх энэ морийг үзээрэй: $url';
 
-      expect(text, contains('Check out this horse on Tamga:'));
+      expect(text, contains('Tamga дээрх энэ морийг үзээрэй:'));
       expect(text, contains('https://tamga.mn/market/listing-789'));
     });
 
@@ -45,9 +45,9 @@ void main() {
       const horseId = 'horse-012';
 
       final url = 'https://tamga.mn/horse/$horseId';
-      final text = 'Check out this horse on Tamga: $url';
+      final text = 'Tamga дээрх энэ морийг үзээрэй: $url';
 
-      expect(text, contains('Check out this horse on Tamga:'));
+      expect(text, contains('Tamga дээрх энэ морийг үзээрэй:'));
       expect(text, contains('https://tamga.mn/horse/horse-012'));
     });
 
@@ -106,9 +106,9 @@ void main() {
 
       // Verify share text (uses $url variable in string interpolation)
       expect(
-        source.contains("'Check out this horse on Tamga: \$url'"),
+        source.contains("'Tamga дээрх энэ морийг үзээрэй: \$url'"),
         isTrue,
-        reason: 'Share text should use "Check out this horse on Tamga: \$url"',
+        reason: 'Share text should use "Tamga дээрх энэ морийг үзээрэй: \$url"',
       );
 
       // Verify share subject
@@ -178,10 +178,10 @@ void main() {
 
         // Verify share text (uses $url variable in string interpolation)
         expect(
-          source.contains("'Check out this horse on Tamga: \$url'"),
+          source.contains("'Tamga дээрх энэ морийг үзээрэй: \$url'"),
           isTrue,
           reason:
-              'Share text should use "Check out this horse on Tamga: \$url"',
+              'Share text should use "Tamga дээрх энэ морийг үзээрэй: \$url"',
         );
 
         // Verify share subject

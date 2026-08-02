@@ -537,24 +537,9 @@ class LostHorseDetailScreen extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (error, _) => Padding(
         padding: const EdgeInsets.only(top: TamgaSpacing.sm),
-        child: TamgaCard(
-          child: Row(
-            children: [
-              Icon(Icons.error_outline, size: 20, color: colors.error),
-              const SizedBox(width: TamgaSpacing.sm),
-              Expanded(
-                child: Text(
-                  'Олсон мэдээлэл ачаалахад алдаа гарлаа',
-                  style: TamgaTypography.body(color: colors.onSurfaceVariant),
-                ),
-              ),
-              TextButton(
-                onPressed: () =>
-                    ref.invalidate(sightingsStreamProvider(report.id)),
-                child: const Text('Дахин оролдох'),
-              ),
-            ],
-          ),
+        child: TamgaErrorWidget(
+          message: 'Олсон мэдээлэл ачаалахад алдаа гарлаа',
+          onRetry: () => ref.invalidate(sightingsStreamProvider(report.id)),
         ),
       ),
       data: (items) {

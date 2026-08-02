@@ -206,7 +206,7 @@ class _HomeHeader extends StatelessWidget {
           ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: TamgaSpacing.xs),
-            child: SyncIndicator(size: 11),
+            child: SyncIndicator(size: 14),
           ),
           IconButton(
             onPressed: onSearch,

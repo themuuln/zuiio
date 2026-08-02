@@ -32,7 +32,7 @@ class PublicHorseProfileScreen extends ConsumerWidget {
             icon: const Icon(Icons.share_outlined),
             onPressed: () {
               final url = 'https://tamga.mn/horse/${horse.id}';
-              final text = 'Check out this horse on Tamga: $url';
+              final text = 'Tamga дээрх энэ морийг үзээрэй: $url';
               final subject = 'Tamga — ${horse.name}';
               SharePlus.instance.share(
                 ShareParams(text: text, subject: subject),

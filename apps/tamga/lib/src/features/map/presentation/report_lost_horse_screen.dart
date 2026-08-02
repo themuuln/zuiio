@@ -546,6 +546,7 @@ class _StepHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = TamgaColors.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         TamgaSpacing.xl,
@@ -556,24 +557,24 @@ class _StepHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Step dots (onboarding-style) — consistent multi-step language
           Row(
-            children: List.generate(
-              _labels.length,
-              (index) => Expanded(
-                child: Container(
-                  height: 5,
-                  margin: EdgeInsets.only(
-                    right: index == _labels.length - 1 ? 0 : TamgaSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: index <= step ? color : color.withValues(alpha: .16),
-                    borderRadius: BorderRadius.circular(
-                      TamgaSpacing.cornerRadiusPill,
-                    ),
-                  ),
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_labels.length, (index) {
+              final isActive = index == step;
+              return AnimatedContainer(
+                duration: reduceMotion
+                    ? Duration.zero
+                    : TamgaMotion.durationNormal,
+                margin: const EdgeInsets.symmetric(horizontal: TamgaSpacing.xs),
+                width: isActive ? 10 : 8,
+                height: isActive ? 10 : 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isActive ? color : colors.outline,
                 ),
-              ),
-            ),
+              );
+            }),
           ),
           const SizedBox(height: TamgaSpacing.sm),
           Row(

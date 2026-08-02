@@ -6,6 +6,7 @@ import '../../../app/app_config.dart';
 import '../../../app/supabase_bootstrap.dart';
 import '../data/herd_tracking_service.dart';
 import '../data/location_service.dart';
+import '../data/local_map_repository.dart';
 import '../data/map_repository.dart';
 import '../data/offline_tile_manager.dart';
 import '../data/supabase_map_repository.dart';
@@ -19,7 +20,12 @@ import '../domain/pasture_zone.dart';
 
 /// Repository provider — swap SupabaseMapRepository for LocalMapRepository when offline.
 final mapRepositoryProvider = Provider<MapRepository>((ref) {
-  return SupabaseMapRepository();
+  // Only construct the Supabase remote when configured — its constructor
+  // touches `Supabase.instance` and throws in an offline (no .env) launch,
+  // killing the whole map screen.
+  return AppConfig.isSupabaseConfigured
+      ? SupabaseMapRepository()
+      : LocalMapRepository();
 });
 
 /// Local-first repository for the horse/livestock recovery workflow.

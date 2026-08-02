@@ -26,8 +26,9 @@ tags:
 - tapOn: "Одоохондоо үгүй"
 - tapOn: "Дараа тохируулъя"
 
-# Completion navigates directly to the daily command center.
-- assertVisible: ".*Сайн байна уу.*"
+# Completion navigates directly to the daily command center. The header
+# greets anonymous (skip-profile) users with "Өнөөдөр" since no name is set.
+- assertVisible: ".*Өнөөдөр.*"
 
 # Open the free lost-livestock report wizard from the home command center.
 - tapOn: "Алдсан морь мэдээлэх"
@@ -49,28 +50,33 @@ tags:
 
 # Select a regional pin and enter coordinates manually when GPS is unavailable.
 - assertVisible: ".*Сүүлд үзэгдсэн газар.*"
-# The ListView keeps its step-1 scroll offset, which hides the aimag field
-# above the viewport. Force-scroll back to the top, then tap the aimag
-# dropdown by position — it has no accessibility text until a value is
-# selected, so it is invisible to element matching (measured at ~28% height).
-- swipe:
-    direction: DOWN
-    duration: 500
-- swipe:
-    direction: DOWN
-    duration: 500
-- assertVisible: ".*Сүүлд үзэгдсэн газар.*"
+# The aimag dropdown has no accessibility text until a value is selected, so
+# open it by position (measured: field center at ~50%,32%) and pick "Төв"
+# from the scrollable menu.
 - tapOn:
-    point: "50%,28%"
+    point: "50%,32%"
+- extendedWaitUntil:
+    visible: ".*Дархан-Уул.*"
+    timeout: 8000
+- scrollUntilVisible:
+    element: "Төв"
+    direction: DOWN
 - tapOn: "Төв"
 - tapOn: "Сум / Sum"
 - inputText: "Зуунмод"
+# Dismiss the keyboard so the next fields are tappable above it.
+- tapOn:
+    id: "Done"
 - tapOn: "Баг / Bag (optional)"
 - inputText: "1-r bag"
+- tapOn:
+    id: "Done"
 - tapOn: "Газрын нэр / Place name (optional)"
 - inputText: "Zuunmod zah"
+- tapOn:
+    id: "Done"
 - scrollUntilVisible:
-    element: "Latitude"
+    element: ".*Latitude.*"
     direction: DOWN
 - tapOn: "Latitude"
 - inputText: "47.918"
@@ -78,8 +84,12 @@ tags:
 - inputText: "106.917"
 - tapOn: "Үргэлжлүүлэх / Continue"
 
-# The report is written locally first and remains private until sync.
-- assertVisible: "Шалгаж баталгаажуулах"
-- tapOn: "Зар хадгалах / Save report"
+# Review screen. The title is a combined accessibility node, so regex-match it.
 - assertVisible:
-    text: ".*Синк хүлээгдэж байна.*"
+    text: ".*Шалгаж баталгаажуулах.*"
+- tapOn: "Зар хадгалах / Save report"
+# Anonymous (guest) users are prompted to sign in before the report is saved;
+# the wizard itself completed offline. (Reports require an identity so the
+# finder can contact the reporter.)
+- assertVisible:
+    text: ".*Нэвтэрсний дараа зар хадгална уу.*"

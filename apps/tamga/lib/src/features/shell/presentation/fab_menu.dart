@@ -84,81 +84,102 @@ class _FabMenuState extends State<FabMenu> with SingleTickerProviderStateMixin {
     final tc = TamgaColors.of(context);
     final actions = _allActions(tc);
 
-    return Stack(
-      alignment: Alignment.bottomRight,
-      children: [
-        // ── Backdrop tap to close ──
-        if (_isOpen)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: _close,
-              child: AnimatedBuilder(
-                animation: _expandAnimation,
-                builder: (context, _) => Container(
-                  color: Colors.black.withValues(
-                    alpha: 0.3 * _expandAnimation.value,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-        // ── Action items (fan out from FAB) ──
-        Positioned(
-          right: 16,
-          bottom: 80,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: List.generate(actions.length, (index) {
-              return AnimatedBuilder(
-                animation: _itemAnimations[index],
-                builder: (context, child) {
-                  final value = _itemAnimations[index].value;
-                  return Transform.translate(
-                    offset: Offset(0, 20 * (1 - value)),
-                    child: Opacity(
-                      opacity: value,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _FabMenuItem(
-                          action: actions[index],
-                          onTap: () {
-                            _close();
-                            context.push(actions[index].route);
-                          },
+    // Scaffold bodies are laid out with unbounded constraints in both axes
+    // (and a right/bottom-only Positioned child passes them through
+    // unchanged), so an all-Positioned Stack needs an explicit finite box.
+    // Resolve finite bounds from the incoming constraints when available and
+    // fall back to the screen size otherwise — this keeps the full-size
+    // backdrop scrim over the whole body in every host.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final media = MediaQuery.sizeOf(context);
+        final width = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : media.width;
+        final height = constraints.hasBoundedHeight
+            ? constraints.maxHeight
+            : media.height;
+        return SizedBox(
+          width: width,
+          height: height,
+          child: Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              // ── Backdrop tap to close ──
+              if (_isOpen)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: _close,
+                    child: AnimatedBuilder(
+                      animation: _expandAnimation,
+                      builder: (context, _) => Container(
+                        color: Colors.black.withValues(
+                          alpha: 0.3 * _expandAnimation.value,
                         ),
                       ),
                     ),
-                  );
-                },
-              );
-            }),
-          ),
-        ),
-
-        // ── Main FAB ──
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: AnimatedBuilder(
-            animation: _rotateAnimation,
-            builder: (context, child) {
-              return Transform.rotate(
-                angle: _rotateAnimation.value * 3.14159,
-                child: FloatingActionButton(
-                  onPressed: _toggle,
-                  backgroundColor: tc.primary,
-                  foregroundColor: tc.onPrimary,
-                  elevation: 4,
-                  shape: const CircleBorder(),
-                  child: const Icon(Icons.add, size: 28),
+                  ),
                 ),
-              );
-            },
+
+              // ── Action items (fan out from FAB) ──
+              Positioned(
+                right: 16,
+                bottom: 80,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: List.generate(actions.length, (index) {
+                    return AnimatedBuilder(
+                      animation: _itemAnimations[index],
+                      builder: (context, child) {
+                        final value = _itemAnimations[index].value;
+                        return Transform.translate(
+                          offset: Offset(0, 20 * (1 - value)),
+                          child: Opacity(
+                            opacity: value,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _FabMenuItem(
+                                action: actions[index],
+                                onTap: () {
+                                  _close();
+                                  context.push(actions[index].route);
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                ),
+              ),
+
+              // ── Main FAB ──
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: AnimatedBuilder(
+                  animation: _rotateAnimation,
+                  builder: (context, child) {
+                    return Transform.rotate(
+                      angle: _rotateAnimation.value * 3.14159,
+                      child: FloatingActionButton(
+                        onPressed: _toggle,
+                        backgroundColor: tc.primary,
+                        foregroundColor: tc.onPrimary,
+                        elevation: 4,
+                        shape: const CircleBorder(),
+                        child: const Icon(Icons.add, size: 28),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 

@@ -453,7 +453,7 @@ class ListingDetailScreen extends ConsumerWidget {
     MarketListing listing,
   ) async {
     final url = 'https://tamga.mn/market/${listing.id}';
-    final text = 'Тамага дээрх энэ морийг үзээрэй: $url';
+    final text = 'Tamga дээрх энэ морийг үзээрэй: $url';
     final subject = 'Tamga — ${listing.title}';
     await SharePlus.instance.share(ShareParams(text: text, subject: subject));
   }
@@ -1149,7 +1149,7 @@ class _InsightRow extends StatelessWidget {
 }
 
 String _formatCurrency(int value) {
-  return '${value.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ',')} ₮';
+  return '${value.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ',')} MNT';
 }
 
 String _formatDate(DateTime date) {

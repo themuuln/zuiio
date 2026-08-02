@@ -56,21 +56,25 @@ class SyncIndicator extends ConsumerWidget {
     return GestureDetector(
       onTap:
           onTap ?? (hasConflicts ? () => _navigateToConflicts(context) : null),
-      child: Tooltip(
-        message: tooltip,
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: dotColor,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: dotColor.withValues(alpha: 0.4),
-                blurRadius: 3,
-                spreadRadius: 1,
-              ),
-            ],
+      child: Semantics(
+        label: tooltip,
+        button: hasConflicts || onTap != null,
+        child: Tooltip(
+          message: tooltip,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: dotColor.withValues(alpha: 0.4),
+                  blurRadius: 3,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
           ),
         ),
       ),

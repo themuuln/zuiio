@@ -112,6 +112,12 @@ class _AppShellState extends ConsumerState<AppShell> {
                 !_tourCompleted &&
                 onboardingCompleted)
               FeatureTour(onCompleted: _onTourCompleted),
+            // Positioned inside the (bounded) shell Stack — NOT the Scaffold
+            // FAB slot, which lays out with tight width and UNBOUNDED height
+            // (Stack requires bounded constraints and would assert at runtime,
+            // cascading into semantics/parentDataDirty failures under XCTest).
+            if (!showGuestBanner)
+              const Positioned(right: 0, bottom: 0, child: FabMenu()),
           ],
         );
 
@@ -135,10 +141,9 @@ class _AppShellState extends ConsumerState<AppShell> {
               ),
             ],
           ),
-          // Mounted via the Scaffold slot (not a Positioned in the shell
-          // Stack) so it gets bounded constraints and auto-rises above the
-          // bottom navigation bar.
-          floatingActionButton: showGuestBanner ? null : const FabMenu(),
+          // Mounted inside the shell Stack (bounded constraints) — the
+          // Scaffold FAB slot provides unbounded height and crashes the
+          // all-Positioned menu Stack at runtime.
           bottomNavigationBar: TamgaBottomNav(
             currentIndex: widget.navigationShell.currentIndex,
             items: _buildDestinations(),
