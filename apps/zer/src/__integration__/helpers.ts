@@ -8,19 +8,31 @@
  * Run: supabase start && pnpm --filter zer test:integration
  */
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { createHmac } from "node:crypto";
 import { execSync } from "node:child_process";
+import { createHmac } from "node:crypto";
+import {
+  createClient,
+  type Session,
+  type SupabaseClient,
+} from "@supabase/supabase-js";
 import { afterAll } from "vitest";
-import type { Database } from "@/lib/database.types";
+import type { Database } from "../lib/supabase/types";
+
+type TestSupabaseClient = SupabaseClient;
+type IntegrationTable = string;
+type AppPermission = Database["public"]["Enums"]["app_permission"];
 
 // ── Service Role JWT (for bypassing RLS) ─────────────────────
 
-const jwtSecret = "super-secret-jwt-token-with-at-least-32-characters-long";
+const jwtSecret =
+  process.env.SUPABASE_JWT_SECRET ??
+  "super-secret-jwt-token-with-at-least-32-characters-long";
 
 /** Generate a service-role JWT for local Supabase. */
 function generateServiceRoleJWT(): string {
-  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+  const header = Buffer.from(
+    JSON.stringify({ alg: "HS256", typ: "JWT" }),
+  ).toString("base64url");
   const payload = Buffer.from(
     JSON.stringify({
       iss: "supabase-demo",
@@ -28,14 +40,27 @@ function generateServiceRoleJWT(): string {
       exp: Math.floor(Date.now() / 1000) + 86400 * 365,
     }),
   ).toString("base64url");
-  const sig = createHmac("sha256", jwtSecret).update(`${header}.${payload}`).digest().toString("base64url");
+  const sig = createHmac("sha256", jwtSecret)
+    .update(`${header}.${payload}`)
+    .digest()
+    .toString("base64url");
   return `${header}.${payload}.${sig}`;
 }
 
 // ── Environment ──────────────────────────────────────────────
 
-const supabaseUrl = process.env.SUPABASE_URL ?? "http://127.0.0.1:54321";
-const anonKey = process.env.SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.SUPABASE_URL ?? "http://127.0.0.1:54326";
+const databasePort = process.env.SUPABASE_DB_PORT ?? "54328";
+
+function requireIntegrationEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is required for integration tests.`);
+  }
+  return value;
+}
+
+const anonKey = requireIntegrationEnv("SUPABASE_ANON_KEY");
 
 /** Create an anon (unauthenticated) Supabase client. */
 export function createAnonClient() {
@@ -69,7 +94,7 @@ export function createTestClients() {
  */
 export async function runSql(sql: string): Promise<void> {
   execSync(
-    `PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -c ${JSON.stringify(sql)}`,
+    `PGPASSWORD=postgres psql -h 127.0.0.1 -p ${databasePort} -U postgres -d postgres -c ${JSON.stringify(sql)}`,
     { encoding: "utf-8", timeout: 10_000 },
   );
 }
@@ -77,7 +102,7 @@ export async function runSql(sql: string): Promise<void> {
 // ── Fixture cleanup tracker ──────────────────────────────────
 
 interface CleanupEntry {
-  table: string;
+  table: IntegrationTable;
   id: string;
 }
 
@@ -87,21 +112,203 @@ const cleanupQueue: CleanupEntry[] = [];
  * Register a created record for automatic cleanup.
  * Call this after every fixture insert.
  */
-export function trackCleanup(table: string, id: string) {
+export function trackCleanup(table: IntegrationTable, id: string) {
   cleanupQueue.push({ table, id });
+}
+
+/**
+ * Remove rows created indirectly by RPCs before deleting their parent fixture.
+ * Test RPCs intentionally exercise the same database-side behavior users rely
+ * on, so their child rows are not always returned to the test for tracking.
+ */
+async function cleanupDependents(
+  admin: TestSupabaseClient,
+  entry: CleanupEntry,
+) {
+  switch (entry.table) {
+    case "organizations": {
+      const productIds = await selectCleanupIds(
+        admin,
+        "products",
+        "organization_id",
+        entry.id,
+      );
+      for (const productId of productIds) {
+        await cleanupDependents(admin, { table: "products", id: productId });
+      }
+      await deleteCleanupRows(admin, "products", "organization_id", entry.id);
+      break;
+    }
+    case "products":
+      await deleteCleanupRows(admin, "stock_movements", "product_id", entry.id);
+      await deleteCleanupRows(admin, "sale_items", "product_id", entry.id);
+      break;
+    case "sales": {
+      await deleteCleanupRows(admin, "sale_items", "sale_id", entry.id);
+      await deleteCleanupRows(admin, "sale_addons", "sale_id", entry.id);
+      await deleteCleanupRows(admin, "coupon_usage", "sale_id", entry.id);
+      await deleteCleanupRows(admin, "deliveries", "sale_id", entry.id);
+      const invoiceIds = await selectCleanupIds(
+        admin,
+        "invoices",
+        "sale_id",
+        entry.id,
+      );
+      await deleteCleanupRowsIn(
+        admin,
+        "invoice_items",
+        "invoice_id",
+        invoiceIds,
+      );
+      await deleteCleanupRows(admin, "invoices", "sale_id", entry.id);
+      await deleteCleanupRows(
+        admin,
+        "quotations",
+        "converted_to_sale_id",
+        entry.id,
+      );
+      break;
+    }
+    case "branches": {
+      const journalEntryIds = await selectCleanupIds(
+        admin,
+        "journal_entries",
+        "branch_id",
+        entry.id,
+      );
+      await deleteCleanupRowsIn(
+        admin,
+        "journal_entry_lines",
+        "journal_entry_id",
+        journalEntryIds,
+      );
+      await deleteCleanupRows(admin, "journal_entries", "branch_id", entry.id);
+
+      const accountIds = await selectCleanupIds(
+        admin,
+        "chart_of_accounts",
+        "branch_id",
+        entry.id,
+      );
+      await deleteCleanupRowsIn(
+        admin,
+        "journal_entry_lines",
+        "account_id",
+        accountIds,
+      );
+      if (accountIds.length > 0) {
+        const { error: parentError } = await admin
+          .from("chart_of_accounts")
+          .update({ parent_id: null })
+          .in("id", accountIds);
+        if (parentError) {
+          console.warn(
+            `Cleanup failed to clear chart account parents for branch#${entry.id}: ${parentError.message}`,
+          );
+        }
+      }
+      await deleteCleanupRows(
+        admin,
+        "chart_of_accounts",
+        "branch_id",
+        entry.id,
+      );
+      break;
+    }
+    case "journal_entries":
+      await deleteCleanupRows(
+        admin,
+        "journal_entry_lines",
+        "journal_entry_id",
+        entry.id,
+      );
+      break;
+    case "chart_of_accounts":
+      await deleteCleanupRows(
+        admin,
+        "journal_entry_lines",
+        "account_id",
+        entry.id,
+      );
+      {
+        const { error } = await admin
+          .from("chart_of_accounts")
+          .update({ parent_id: null })
+          .eq("parent_id", entry.id);
+        if (error) {
+          console.warn(
+            `Cleanup failed to clear chart account children for ${entry.id}: ${error.message}`,
+          );
+        }
+      }
+      break;
+    case "invoices":
+      await deleteCleanupRows(admin, "invoice_items", "invoice_id", entry.id);
+      break;
+  }
+}
+
+async function deleteCleanupRows(
+  admin: TestSupabaseClient,
+  table: IntegrationTable,
+  column: string,
+  value: string,
+) {
+  const { error } = await admin.from(table).delete().eq(column, value);
+  if (error) {
+    console.warn(
+      `Cleanup failed for ${table}.${column}=${value}: ${error.message}`,
+    );
+  }
+}
+
+async function selectCleanupIds(
+  admin: TestSupabaseClient,
+  table: IntegrationTable,
+  column: string,
+  value: string,
+): Promise<string[]> {
+  const { data, error } = await admin
+    .from(table)
+    .select("id")
+    .eq(column, value);
+  if (error) {
+    console.warn(
+      `Cleanup failed to inspect ${table}.${column}=${value}: ${error.message}`,
+    );
+    return [];
+  }
+  return (data ?? []).flatMap((row) =>
+    typeof row.id === "string" ? [row.id] : [],
+  );
+}
+
+async function deleteCleanupRowsIn(
+  admin: TestSupabaseClient,
+  table: IntegrationTable,
+  column: string,
+  values: string[],
+) {
+  if (values.length === 0) return;
+  const { error } = await admin.from(table).delete().in(column, values);
+  if (error) {
+    console.warn(
+      `Cleanup failed for ${table}.${column} in ${values.length} rows: ${error.message}`,
+    );
+  }
 }
 
 /**
  * Remove all tracked records (newest first to respect FK constraints).
  */
-export async function runCleanup(admin: SupabaseClient) {
+export async function runCleanup(admin: TestSupabaseClient) {
   for (const entry of cleanupQueue.reverse()) {
-    const { error } = await admin
-      .from(entry.table as any)
-      .delete()
-      .eq("id", entry.id as any);
+    await cleanupDependents(admin, entry);
+    const { error } = await admin.from(entry.table).delete().eq("id", entry.id);
     if (error) {
-      console.warn(`Cleanup failed for ${entry.table}#${entry.id}: ${error.message}`);
+      console.warn(
+        `Cleanup failed for ${entry.table}#${entry.id}: ${error.message}`,
+      );
     }
   }
   cleanupQueue.length = 0;
@@ -118,7 +325,7 @@ afterAll(async () => {
 // ── Organization fixture ─────────────────────────────────────
 
 /** Create a test organization and return its row + id. */
-export async function createTestOrg(admin: SupabaseClient) {
+export async function createTestOrg(admin: TestSupabaseClient) {
   const slug = `test-org-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const { data, error } = await admin
     .from("organizations")
@@ -149,8 +356,8 @@ export interface TestUserBundle {
   userId: string;
   email: string;
   password: string;
-  client: SupabaseClient;
-  session: any;
+  client: TestSupabaseClient;
+  session: Session | null;
 }
 
 /**
@@ -161,34 +368,39 @@ export interface TestUserBundle {
  * 4. Authenticated Supabase client
  */
 export async function createTestUserWithPermissions(
-  admin: SupabaseClient,
+  admin: TestSupabaseClient,
   orgId: string,
   orgName: string,
-  permissions: string[],
+  permissions: AppPermission[],
 ): Promise<TestUserBundle> {
   const email = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
   const password = "test-password-123";
 
   // 1. Sign up via anon client (works locally, may require email confirm)
-  const { data: signUpData, error: signUpError } = await createAnonClient().auth.signUp({
-    email,
-    password,
-  });
+  const { data: signUpData, error: signUpError } =
+    await createAnonClient().auth.signUp({
+      email,
+      password,
+    });
   if (signUpError) throw new Error(`SignUp failed: ${signUpError.message}`);
   const userId = signUpData.user?.id;
   if (!userId) throw new Error("SignUp returned no user id");
 
   // 2. Auto-confirm the email by updating auth.users directly
-  await runSql(`UPDATE auth.users SET email_confirmed_at = now() WHERE id = '${userId}'`);
+  await runSql(
+    `UPDATE auth.users SET email_confirmed_at = now() WHERE id = '${userId}'`,
+  );
 
   // 3. Sign in to get a session
-  const { data: signInData, error: signInError } = await createAnonClient().auth.signInWithPassword({
-    email,
-    password,
-  });
+  const { data: signInData, error: signInError } =
+    await createAnonClient().auth.signInWithPassword({
+      email,
+      password,
+    });
   if (signInError) throw new Error(`SignIn failed: ${signInError.message}`);
 
-  const session = signInData.session!;
+  const session = signInData.session;
+  if (!session) throw new Error("SignIn returned no session");
   const client = createClient<Database>(supabaseUrl, anonKey, {
     global: { headers: { Authorization: `Bearer ${session.access_token}` } },
   });
@@ -198,7 +410,7 @@ export async function createTestUserWithPermissions(
     .from("roles")
     .insert({
       organization_id: orgId,
-      name: orgName + " Admin",
+      name: `${orgName} Admin`,
     })
     .select()
     .single();
@@ -209,8 +421,9 @@ export async function createTestUserWithPermissions(
   for (const perm of permissions) {
     const { error: permErr } = await admin
       .from("role_permissions")
-      .insert({ role_id: role.id, permission: perm as any });
-    if (permErr) throw new Error(`Failed to grant permission ${perm}: ${permErr.message}`);
+      .insert({ role_id: role.id, permission: perm });
+    if (permErr)
+      throw new Error(`Failed to grant permission ${perm}: ${permErr.message}`);
   }
 
   // 5. Create a profile for the user
@@ -220,13 +433,20 @@ export async function createTestUserWithPermissions(
     role_id: role.id,
     full_name: email.split("@")[0],
   });
+  if (profileErr) {
+    throw new Error(`Failed to create profile: ${profileErr.message}`);
+  }
+  trackCleanup("profiles", userId);
   return { userId, email, password, client, session };
 }
 
 // ── Branch fixture ───────────────────────────────────────────
 
 /** Create a test branch for an organization. */
-export async function createTestBranch(admin: SupabaseClient, orgId: string) {
+export async function createTestBranch(
+  admin: TestSupabaseClient,
+  orgId: string,
+) {
   const slug = `branch-${Date.now()}`;
   const { data, error } = await admin
     .from("branches")
@@ -244,7 +464,11 @@ export async function createTestBranch(admin: SupabaseClient, orgId: string) {
 
 // ── Warehouse fixture ────────────────────────────────────────
 
-export async function createTestWarehouse(admin: SupabaseClient, orgId: string, branchId: string) {
+export async function createTestWarehouse(
+  admin: TestSupabaseClient,
+  orgId: string,
+  branchId: string,
+) {
   const { data, error } = await admin
     .from("warehouses")
     .insert({
@@ -262,11 +486,12 @@ export async function createTestWarehouse(admin: SupabaseClient, orgId: string, 
 // ── Product fixture ──────────────────────────────────────────
 
 export async function createTestProduct(
-  admin: SupabaseClient,
+  admin: TestSupabaseClient,
   orgId: string,
   opts?: { currentStock?: number; name?: string; sku?: string },
 ) {
-  const sku = opts?.sku ?? `SKU-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const sku =
+    opts?.sku ?? `SKU-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const { data, error } = await admin
     .from("products")
     .insert({
@@ -289,7 +514,7 @@ export async function createTestProduct(
 export type ContactType = "supplier" | "customer" | "both";
 
 export async function createTestContact(
-  admin: SupabaseClient,
+  admin: TestSupabaseClient,
   orgId: string,
   type: ContactType = "supplier",
 ) {
@@ -310,12 +535,16 @@ export async function createTestContact(
 
 // ── Category fixture ─────────────────────────────────────────
 
-export async function createTestCategory(admin: SupabaseClient, orgId: string) {
+export async function createTestCategory(
+  admin: TestSupabaseClient,
+  orgId: string,
+) {
   const { data, error } = await admin
     .from("categories")
     .insert({
       organization_id: orgId,
       name: `Category-${Date.now()}`,
+      slug: `category-${Date.now()}`,
     })
     .select()
     .single();
@@ -326,12 +555,14 @@ export async function createTestCategory(admin: SupabaseClient, orgId: string) {
 
 // ── Price list fixture ───────────────────────────────────────
 
-export async function createTestPriceList(admin: SupabaseClient, orgId: string, branchId: string) {
+export async function createTestPriceList(
+  admin: TestSupabaseClient,
+  orgId: string,
+) {
   const { data, error } = await admin
     .from("price_lists")
     .insert({
       organization_id: orgId,
-      branch_id: branchId,
       name: `PriceList-${Date.now()}`,
     })
     .select()

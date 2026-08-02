@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod } from "./actions-helpers";
 
 // ─── resolve helper (inline to avoid esbuild depth issues) ──────────
 function resolved<T>(data: T, error: unknown = null) {
@@ -14,12 +14,14 @@ function resolved<T>(data: T, error: unknown = null) {
 // ─── Supabase chain builders ────────────────────────────────────────
 
 /** Build a supabase mock for createPromotion with controllable inserts */
-function makeCreatePromotionSupabase(opts: {
-  promotionId?: string;
-  promoInsertError?: { message: string } | null;
-  conditionInsertError?: { message: string } | null;
-  rewardInsertError?: { message: string } | null;
-} = {}) {
+function makeCreatePromotionSupabase(
+  opts: {
+    promotionId?: string;
+    promoInsertError?: { message: string } | null;
+    conditionInsertError?: { message: string } | null;
+    rewardInsertError?: { message: string } | null;
+  } = {},
+) {
   const {
     promotionId = "new-promo-id",
     promoInsertError = null,
@@ -54,11 +56,13 @@ function makeCreatePromotionSupabase(opts: {
 }
 
 /** Build a supabase mock for togglePromotionActive */
-function makeTogglePromotionSupabase(opts: {
-  promotion?: { name: string } | null;
-  fetchError?: { message: string } | null;
-  updateError?: { message: string } | null;
-} = {}) {
+function makeTogglePromotionSupabase(
+  opts: {
+    promotion?: { name: string } | null;
+    fetchError?: { message: string } | null;
+    updateError?: { message: string } | null;
+  } = {},
+) {
   const {
     promotion = { name: "Summer Promo" },
     fetchError = null,
@@ -91,11 +95,13 @@ function makeTogglePromotionSupabase(opts: {
 }
 
 /** Build a supabase mock for deletePromotion */
-function makeDeletePromotionSupabase(opts: {
-  promotion?: { name: string } | null;
-  fetchError?: { message: string } | null;
-  deleteError?: { message: string } | null;
-} = {}) {
+function makeDeletePromotionSupabase(
+  opts: {
+    promotion?: { name: string } | null;
+    fetchError?: { message: string } | null;
+    deleteError?: { message: string } | null;
+  } = {},
+) {
   const {
     promotion = { name: "Summer Promo" },
     fetchError = null,
@@ -128,10 +134,9 @@ function makeDeletePromotionSupabase(opts: {
 }
 
 /** Build a supabase mock for evaluateCartPromotions with controllable RPC result */
-function makeEvaluatePromotionsSupabase(opts: {
-  rpcResult?: unknown;
-  rpcError?: { message: string } | null;
-} = {}) {
+function makeEvaluatePromotionsSupabase(
+  opts: { rpcResult?: unknown; rpcError?: { message: string } | null } = {},
+) {
   const { rpcResult = null, rpcError = null } = opts;
 
   return {
@@ -323,10 +328,9 @@ test("createPromotion inserts successfully", async () => {
 
   // Verify revalidation
   assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 1);
-  assert.deepStrictEqual(
-    revalidateEntitiesMock.mock.calls[0].arguments[0],
-    ["promotions"],
-  );
+  assert.deepStrictEqual(revalidateEntitiesMock.mock.calls[0].arguments[0], [
+    "promotions",
+  ]);
 });
 
 test("createPromotion with conditions and rewards", async () => {
@@ -454,10 +458,9 @@ test("togglePromotionActive toggles on", async () => {
 
   // Verify revalidation
   assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 1);
-  assert.deepStrictEqual(
-    revalidateEntitiesMock.mock.calls[0].arguments[0],
-    ["promotions"],
-  );
+  assert.deepStrictEqual(revalidateEntitiesMock.mock.calls[0].arguments[0], [
+    "promotions",
+  ]);
 });
 
 test("togglePromotionActive toggles off", async () => {
@@ -528,10 +531,9 @@ test("deletePromotion deletes successfully", async () => {
 
   // Verify revalidation
   assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 1);
-  assert.deepStrictEqual(
-    revalidateEntitiesMock.mock.calls[0].arguments[0],
-    ["promotions"],
-  );
+  assert.deepStrictEqual(revalidateEntitiesMock.mock.calls[0].arguments[0], [
+    "promotions",
+  ]);
 });
 
 test("deletePromotion returns error when promotion not found", async () => {
@@ -638,7 +640,6 @@ test("evaluateCartPromotions with empty cart", async () => {
   assert.deepStrictEqual(result, {
     promotions: [],
     total_discount: 0,
-
   });
 });
 
@@ -700,7 +701,6 @@ test("evaluateCartPromotions handles non-promotion result shape", async () => {
   assert.deepStrictEqual(result, {
     promotions: [],
     total_discount: 0,
-
   });
 });
 

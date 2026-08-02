@@ -98,20 +98,21 @@ test.describe("Sidebar navigation", () => {
       { title: "Бүтээгдэхүүн", href: "/products" },
       { title: "Нэхэмжлэл", href: "/invoices" },
       { title: "Тайлан", href: "/reports" },
-      { title: "Тохиргоо", href: "/settings" },
+      { title: "Брэндийн сан", href: "/settings/presets" },
     ];
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page
+      .waitForLoadState("networkidle", { timeout: 15_000 })
+      .catch(() => undefined);
 
     for (const item of sampleItems) {
       await test.step(`Navigate to ${item.title} (${item.href})`, async () => {
-        await page.goto("/", { waitUntil: "domcontentloaded" });
+        const navLink = page.locator(`a[href="${item.href}"]`).first();
+        await expect(navLink).toBeVisible({ timeout: 15_000 });
+        await navLink.click({ timeout: 15_000 });
 
-        await page
-          .locator(`a[href="${item.href}"]`)
-          .first()
-          .click({ timeout: 5000 });
-
-        // Wait for navigation to complete instead of hardcoded timeout
-        await page.waitForURL(`**${item.href}`, { timeout: 5000 });
+        // Reports can take longer while the dashboard data loads.
+        await page.waitForURL(`**${item.href}`, { timeout: 15_000 });
         expect(page.url()).toContain(item.href);
       });
     }
@@ -130,7 +131,9 @@ test.describe("Sidebar navigation", () => {
 
   test("collapsed sidebar hides group labels", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
-
+    await page
+      .waitForLoadState("networkidle", { timeout: 15_000 })
+      .catch(() => undefined);
     await test.step("Verify sidebar is visible", async () => {
       await expect(page.locator("[data-slot='sidebar']")).toBeVisible({
         timeout: 15000,
@@ -138,23 +141,20 @@ test.describe("Sidebar navigation", () => {
     });
 
     await test.step("Toggle sidebar to collapsed", async () => {
-      const sidebarRail = page.locator("[data-slot='sidebar-rail']");
-      if (await sidebarRail.isVisible()) {
-        await sidebarRail.click();
-        // Wait for collapse animation instead of hardcoded timeout
-        await page.waitForFunction(
-          () => {
-            const labels = document.querySelectorAll(
-              "[data-slot='sidebar-group-label']",
-            );
-            return Array.from(labels).every((el) => {
-              const style = window.getComputedStyle(el);
-              return style.opacity === "0" || style.visibility === "hidden";
-            });
-          },
-          { timeout: 3000 },
-        );
-      }
+      const sidebarTrigger = page.locator("[data-slot='sidebar-trigger']");
+      await expect(sidebarTrigger).toBeVisible({ timeout: 5000 });
+      await sidebarTrigger.click();
+
+      const sidebar = page.locator("[data-slot='sidebar']");
+      await expect(sidebar).toHaveAttribute("data-state", "collapsed", {
+        timeout: 5000,
+      });
+      await expect(sidebar).toHaveAttribute("data-collapsible", "icon", {
+        timeout: 5000,
+      });
+      await expect(
+        page.locator("[data-slot='sidebar-group-label']").first(),
+      ).toHaveCSS("opacity", "0", { timeout: 5000 });
     });
 
     await test.step("Verify items still in DOM", async () => {

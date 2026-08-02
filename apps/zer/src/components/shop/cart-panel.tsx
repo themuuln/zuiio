@@ -10,7 +10,7 @@ import {
 } from "@phosphor-icons/react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useCart } from "@/app/(dashboard)/shop/cart-context";
+import { HELD_SALES_KEY, useCart } from "@/app/(dashboard)/shop/cart-context";
 import { CheckoutDrawer } from "@/components/shop/checkout-drawer";
 import { Button } from "@/components/ui/button";
 import type { CartItem } from "@/lib/shop-cart";
@@ -110,16 +110,20 @@ export function CartPanel() {
   const heldRef = useRef<HTMLDivElement>(null);
   useEffect(() => setMounted(true), []);
 
-  // Refresh the held-sales list whenever the popover opens
-  useEffect(() => {
-    if (!heldOpen) return;
+  // Unified held-sales refresh: reads from localStorage
+  const refreshHeldSales = useCallback(() => {
     try {
-      const raw = window.localStorage.getItem("zer:shop:held-sales");
+      const raw = window.localStorage.getItem(HELD_SALES_KEY);
       setHeldSales(raw ? (JSON.parse(raw) as typeof heldSales) : []);
     } catch {
       setHeldSales([]);
     }
-  }, [heldOpen]);
+  }, []);
+
+  // Refresh the held-sales list whenever the popover opens
+  useEffect(() => {
+    if (heldOpen) refreshHeldSales();
+  }, [heldOpen, refreshHeldSales]);
 
   // Close popover on outside click
   useEffect(() => {
@@ -132,15 +136,6 @@ export function CartPanel() {
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, [heldOpen]);
-  // Refresh held-sales list from localStorage (called after mutations)
-  const refreshHeldSales = useCallback(() => {
-    try {
-      const raw = window.localStorage.getItem("zer:shop:held-sales");
-      setHeldSales(raw ? (JSON.parse(raw) as typeof heldSales) : []);
-    } catch {
-      setHeldSales([]);
-    }
-  }, []);
 
   // Force empty state on server/initial client render to avoid hydration mismatch
   // (CartProvider loads from sessionStorage in useEffect, which fires after paint)

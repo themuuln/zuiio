@@ -54,7 +54,7 @@ mockMod("@zuiio/core", { rateLimit: rateLimitMock });
 
 // ─── Supabase auth mock ───────────────────────────────────────────────
 
-let signInWithPasswordMock = mock.fn(async () => ({ error: null }));
+const signInWithPasswordMock = mock.fn(async () => ({ error: null }));
 const createClientMock = mock.fn(async () => ({
   auth: { signInWithPassword: signInWithPasswordMock },
 }));
@@ -176,10 +176,13 @@ test("login: logs in successfully and redirects", async () => {
   resetMocks();
   const fd = loginFd({ next: "/dashboard" });
 
-  await assert.rejects(() => login(undefined, fd), (err: Error) => {
-    assert.equal(err.message, "REDIRECT");
-    return true;
-  });
+  await assert.rejects(
+    () => login(undefined, fd),
+    (err: Error) => {
+      assert.equal(err.message, "REDIRECT");
+      return true;
+    },
+  );
 
   assert.equal(redirectMock.mock.callCount(), 1);
   assert.equal(redirectMock.mock.calls[0].arguments[0], "/dashboard");
@@ -196,10 +199,13 @@ test("login: redirects to / when no next param", async () => {
 
   const fd = loginFd({ next: "" });
 
-  await assert.rejects(() => login(undefined, fd), (err: Error) => {
-    assert.equal(err.message, "REDIRECT");
-    return true;
-  });
+  await assert.rejects(
+    () => login(undefined, fd),
+    (err: Error) => {
+      assert.equal(err.message, "REDIRECT");
+      return true;
+    },
+  );
 
   assert.equal(redirectMock.mock.callCount(), 1);
   assert.equal(redirectMock.mock.calls[0].arguments[0], "/");
@@ -218,10 +224,13 @@ test("login: sanitizes redirect path", async () => {
 
   const fd = loginFd({ next: "/evil/path" });
 
-  await assert.rejects(() => login(undefined, fd), (err: Error) => {
-    assert.equal(err.message, "REDIRECT");
-    return true;
-  });
+  await assert.rejects(
+    () => login(undefined, fd),
+    (err: Error) => {
+      assert.equal(err.message, "REDIRECT");
+      return true;
+    },
+  );
 
   assert.equal(redirectMock.mock.callCount(), 1);
   assert.equal(redirectMock.mock.calls[0].arguments[0], "/safe-path");

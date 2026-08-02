@@ -59,10 +59,7 @@ async function fetchReportEmailConfig(
   return org as unknown as OrgReportEmailData;
 }
 
-async function saveReportEmailConfig(
-  values: ReportEmailValues,
-  orgId: string,
-) {
+async function saveReportEmailConfig(values: ReportEmailValues, orgId: string) {
   const supabase = createClient();
 
   const { error } = await supabase

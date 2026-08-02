@@ -250,7 +250,9 @@ export function ProductDetailDrawer({
           onEnhanceImage={async () => {
             if (!product.image_url) return;
             try {
-              const { enhanceProductPhotoAction } = await import("@/app/(dashboard)/ai/enhance/actions");
+              const { enhanceProductPhotoAction } = await import(
+                "@/app/(dashboard)/ai/enhance/actions"
+              );
               const result = await enhanceProductPhotoAction(product.image_url);
               if (result.imageUrl) {
                 toast.success("Зураг сайжруулагдлаа!");

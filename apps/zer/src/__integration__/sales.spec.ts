@@ -9,12 +9,18 @@ import { describe, expect, it } from "vitest";
 import {
   createAdminClient,
   createAnonClient,
-  createTestOrg,
   createTestBranch,
+  createTestOrg,
   createTestProduct,
   createTestUserWithPermissions,
   trackCleanup,
 } from "./helpers";
+
+interface SalesRpcResult {
+  success?: boolean;
+  error?: string;
+  sale_id?: string;
+}
 
 // ── Direct CRUD (via service role) ───────────────────────────
 
@@ -24,7 +30,9 @@ describe("Sales CRUD", () => {
   it("admin can create a sale with items", async () => {
     const { orgId } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 50 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 50,
+    });
 
     const { data: sale, error } = await admin
       .from("sales")
@@ -88,17 +96,34 @@ describe("Returns CRUD", () => {
   it("can create a sales return with generated number", async () => {
     const { orgId } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 50 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 50,
+    });
 
     const { data: sale } = await admin
       .from("sales")
-      .insert({ organization_id: orgId, branch_id: branchId, total_amount: 15000, paid_amount: 15000, payment_method: "cash", status: "completed" })
+      .insert({
+        organization_id: orgId,
+        branch_id: branchId,
+        total_amount: 15000,
+        paid_amount: 15000,
+        payment_method: "cash",
+        status: "completed",
+      })
       .select()
       .single();
     trackCleanup("sales", sale!.id);
-    await admin.from("sale_items").insert({ sale_id: sale!.id, product_id: productId, quantity: 3, unit_price: 5000, total_price: 15000 });
+    await admin.from("sale_items").insert({
+      sale_id: sale!.id,
+      product_id: productId,
+      quantity: 3,
+      unit_price: 5000,
+      total_price: 15000,
+    });
 
-    const { data: rn } = await admin.rpc("generate_return_number", { p_org_id: orgId });
+    const { data: rn } = await admin.rpc("generate_return_number", {
+      p_org_id: orgId,
+    });
     expect(rn).toBeTruthy();
 
     const { data: ret } = await admin
@@ -111,7 +136,7 @@ describe("Returns CRUD", () => {
         reference_id: sale!.id,
         branch_id: branchId,
         status: "completed",
-      } as any)
+      })
       .select()
       .single();
     expect(ret!.return_number).toBe(rn);
@@ -119,7 +144,12 @@ describe("Returns CRUD", () => {
 
     const { data: ri } = await admin
       .from("return_items")
-      .insert({ return_id: ret!.id, product_id: productId, quantity: 1, unit_price: 5000 })
+      .insert({
+        return_id: ret!.id,
+        product_id: productId,
+        quantity: 1,
+        unit_price: 5000,
+      })
       .select()
       .single();
     expect(ri!.total_price).toBe(5000);
@@ -128,7 +158,9 @@ describe("Returns CRUD", () => {
   it("can create purchase return in draft status", async () => {
     const { orgId } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { data: rn } = await admin.rpc("generate_return_number", { p_org_id: orgId });
+    const { data: rn } = await admin.rpc("generate_return_number", {
+      p_org_id: orgId,
+    });
 
     const { data: ret } = await admin
       .from("returns")
@@ -138,7 +170,7 @@ describe("Returns CRUD", () => {
         type: "purchase_return",
         branch_id: branchId,
         status: "draft",
-      } as any)
+      })
       .select()
       .single();
     expect(ret!.status).toBe("draft");
@@ -154,7 +186,9 @@ describe("process_shop_sale RPC", () => {
   it("creates sale + items + stock movements atomically", async () => {
     const { orgId, org } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 50 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 50,
+    });
 
     const user = await createTestUserWithPermissions(admin, orgId, org.name, [
       "sales.create",
@@ -169,26 +203,54 @@ describe("process_shop_sale RPC", () => {
       p_paid_amount: 10000,
       p_payment_method: "cash",
       p_salesperson_id: null,
-      p_items: [{ product_id: productId, quantity: 2, unit_price: 5000, total_price: 10000, commission_amount: 0, variant_id: null }],
-      p_movements: [{ product_id: productId, quantity: 2, unit_cost: 3000, variant_id: null }],
+      p_items: [
+        {
+          product_id: productId,
+          quantity: 2,
+          unit_price: 5000,
+          total_price: 10000,
+          commission_amount: 0,
+          variant_id: null,
+        },
+      ],
+      p_movements: [
+        {
+          product_id: productId,
+          quantity: 2,
+          unit_cost: 3000,
+          variant_id: null,
+        },
+      ],
       p_currency_code: "MNT",
       p_currency_symbol: "₮",
       p_exchange_rate: 1.0,
     });
 
     expect(error).toBeNull();
-    const result = data as any;
+    const result = data as SalesRpcResult;
     expect(result.success).toBe(true);
-    expect(result.sale_id).toBeDefined();
-    trackCleanup("sales", result.sale_id);
+    const saleId = result.sale_id;
+    if (!saleId) throw new Error("process_shop_sale returned no sale id");
+    trackCleanup("sales", saleId);
 
-    const { data: sale } = await admin.from("sales").select("*").eq("id", result.sale_id).single();
+    const { data: sale } = await admin
+      .from("sales")
+      .select("*")
+      .eq("id", saleId)
+      .single();
     expect(sale!.total_amount).toBe(10000);
 
-    const { data: product } = await admin.from("products").select("current_stock").eq("id", productId).single();
+    const { data: product } = await admin
+      .from("products")
+      .select("current_stock")
+      .eq("id", productId)
+      .single();
     expect(product!.current_stock).toBe(48);
 
-    const { data: movements } = await admin.from("stock_movements").select("*").eq("reference", `sale:${result.sale_id}`);
+    const { data: movements } = await admin
+      .from("stock_movements")
+      .select("*")
+      .eq("reference", `sale:${saleId}`);
     expect(movements!.length).toBe(1);
     expect(movements![0].type).toBe("out");
     expect(movements![0].quantity).toBe(2);
@@ -197,9 +259,13 @@ describe("process_shop_sale RPC", () => {
   it("rejects insufficient stock", async () => {
     const { orgId, org } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 1 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 1,
+    });
 
-    const user = await createTestUserWithPermissions(admin, orgId, org.name, ["sales.create"]);
+    const user = await createTestUserWithPermissions(admin, orgId, org.name, [
+      "sales.create",
+    ]);
 
     const { data } = await user.client.rpc("process_shop_sale", {
       p_org_id: orgId,
@@ -210,13 +276,29 @@ describe("process_shop_sale RPC", () => {
       p_paid_amount: 20000,
       p_payment_method: "cash",
       p_salesperson_id: null,
-      p_items: [{ product_id: productId, quantity: 5, unit_price: 4000, total_price: 20000, commission_amount: 0, variant_id: null }],
-      p_movements: [{ product_id: productId, quantity: 5, unit_cost: 2000, variant_id: null }],
+      p_items: [
+        {
+          product_id: productId,
+          quantity: 5,
+          unit_price: 4000,
+          total_price: 20000,
+          commission_amount: 0,
+          variant_id: null,
+        },
+      ],
+      p_movements: [
+        {
+          product_id: productId,
+          quantity: 5,
+          unit_cost: 2000,
+          variant_id: null,
+        },
+      ],
       p_currency_code: "MNT",
       p_currency_symbol: "₮",
       p_exchange_rate: 1.0,
     });
-    const result = data as any;
+    const result = data as SalesRpcResult;
     expect(result.error).toBeDefined();
     expect(result.error).toContain("хүрэлцэхгүй");
   });
@@ -224,9 +306,13 @@ describe("process_shop_sale RPC", () => {
   it("rejects unauthorized user without sales.create permission", async () => {
     const { orgId, org } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 50 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 50,
+    });
 
-    const user = await createTestUserWithPermissions(admin, orgId, org.name, ["products.read"]);
+    const user = await createTestUserWithPermissions(admin, orgId, org.name, [
+      "products.read",
+    ]);
 
     const { data } = await user.client.rpc("process_shop_sale", {
       p_org_id: orgId,
@@ -237,13 +323,29 @@ describe("process_shop_sale RPC", () => {
       p_paid_amount: 5000,
       p_payment_method: "cash",
       p_salesperson_id: null,
-      p_items: [{ product_id: productId, quantity: 1, unit_price: 5000, total_price: 5000, commission_amount: 0, variant_id: null }],
-      p_movements: [{ product_id: productId, quantity: 1, unit_cost: 3000, variant_id: null }],
+      p_items: [
+        {
+          product_id: productId,
+          quantity: 1,
+          unit_price: 5000,
+          total_price: 5000,
+          commission_amount: 0,
+          variant_id: null,
+        },
+      ],
+      p_movements: [
+        {
+          product_id: productId,
+          quantity: 1,
+          unit_cost: 3000,
+          variant_id: null,
+        },
+      ],
       p_currency_code: "MNT",
       p_currency_symbol: "₮",
       p_exchange_rate: 1.0,
     });
-    const result = data as any;
+    const result = data as SalesRpcResult;
     expect(result.error).toBeDefined();
     expect(result.error).toBe("Permission denied");
   });

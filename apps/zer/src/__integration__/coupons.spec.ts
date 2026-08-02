@@ -84,18 +84,26 @@ describe("Coupons CRUD", () => {
     // Create coupons in both orgs
     const code1 = `QRY1-${Date.now()}`;
     const code2 = `QRY2-${Date.now()}`;
-    await admin.from("coupons").insert({
-      organization_id: orgId,
-      code: code1,
-      discount_type: "percentage",
-      discount_value: 5,
-    }).select().single();
-    await admin.from("coupons").insert({
-      organization_id: orgId2,
-      code: code2,
-      discount_type: "percentage",
-      discount_value: 10,
-    }).select().single();
+    await admin
+      .from("coupons")
+      .insert({
+        organization_id: orgId,
+        code: code1,
+        discount_type: "percentage",
+        discount_value: 5,
+      })
+      .select()
+      .single();
+    await admin
+      .from("coupons")
+      .insert({
+        organization_id: orgId2,
+        code: code2,
+        discount_type: "percentage",
+        discount_value: 10,
+      })
+      .select()
+      .single();
 
     // Query by first org
     const { data: org1Coupons, error } = await admin
@@ -157,7 +165,12 @@ describe("Coupons RLS", () => {
     const { orgId: orgB } = await createTestOrg(admin);
 
     // Create a user in org A with coupons.read permission
-    const userA = await createTestUserWithPermissions(admin, orgA, orgAEntity.name, ["coupons.read"]);
+    const userA = await createTestUserWithPermissions(
+      admin,
+      orgA,
+      orgAEntity.name,
+      ["coupons.read"],
+    );
 
     // Use admin to create a coupon in org B (different org)
     const code = `SCOPE-${Date.now()}`;
@@ -187,7 +200,9 @@ describe("Coupons RLS", () => {
     const { orgId, org } = await createTestOrg(admin);
 
     // Create a user with coupons.read permission
-    const user = await createTestUserWithPermissions(admin, orgId, org.name, ["coupons.read"]);
+    const user = await createTestUserWithPermissions(admin, orgId, org.name, [
+      "coupons.read",
+    ]);
 
     // Use admin to create a coupon in user's org
     const code = `OWN-${Date.now()}`;
@@ -219,7 +234,9 @@ describe("Coupons RLS", () => {
     const { orgId, org } = await createTestOrg(admin);
 
     // Create a user WITHOUT coupons.read permission
-    const user = await createTestUserWithPermissions(admin, orgId, org.name, ["products.read"]);
+    const user = await createTestUserWithPermissions(admin, orgId, org.name, [
+      "products.read",
+    ]);
 
     // Use admin to create a coupon
     const code = `NOPERM-${Date.now()}`;
@@ -379,19 +396,24 @@ describe("Coupon usage RLS", () => {
     trackCleanup("coupons", coupon!.id);
 
     // User with sales.create — coupon_usage insert allows it
-    const user = await createTestUserWithPermissions(admin, orgId, org.name, ["sales.create"]);
+    const user = await createTestUserWithPermissions(admin, orgId, org.name, [
+      "sales.create",
+    ]);
 
-    const { data: usage, error } = await user.client
-      .from("coupon_usage")
-      .insert({
-        coupon_id: coupon!.id,
-        organization_id: orgId,
-        used_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
+    const { error } = await user.client.from("coupon_usage").insert({
+      coupon_id: coupon!.id,
+      organization_id: orgId,
+      used_at: new Date().toISOString(),
+    });
 
     expect(error).toBeNull();
+    const { data: usage, error: usageReadError } = await admin
+      .from("coupon_usage")
+      .select("id, coupon_id, organization_id")
+      .eq("coupon_id", coupon!.id)
+      .eq("organization_id", orgId)
+      .single();
+    expect(usageReadError).toBeNull();
     expect(usage!.coupon_id).toBe(coupon!.id);
     expect(usage!.organization_id).toBe(orgId);
     trackCleanup("coupon_usage", usage!.id);
@@ -413,18 +435,23 @@ describe("Coupon usage RLS", () => {
     trackCleanup("coupons", coupon!.id);
 
     // User with coupons.update — coupon_usage insert also allows it
-    const user = await createTestUserWithPermissions(admin, orgId, org.name, ["coupons.update"]);
+    const user = await createTestUserWithPermissions(admin, orgId, org.name, [
+      "coupons.update",
+    ]);
 
-    const { data: usage, error } = await user.client
-      .from("coupon_usage")
-      .insert({
-        coupon_id: coupon!.id,
-        organization_id: orgId,
-      })
-      .select()
-      .single();
+    const { error } = await user.client.from("coupon_usage").insert({
+      coupon_id: coupon!.id,
+      organization_id: orgId,
+    });
 
     expect(error).toBeNull();
+    const { data: usage, error: usageReadError } = await admin
+      .from("coupon_usage")
+      .select("id, coupon_id, organization_id")
+      .eq("coupon_id", coupon!.id)
+      .eq("organization_id", orgId)
+      .single();
+    expect(usageReadError).toBeNull();
     expect(usage!.coupon_id).toBe(coupon!.id);
     trackCleanup("coupon_usage", usage!.id);
   });
@@ -457,7 +484,12 @@ describe("Coupon usage RLS", () => {
     trackCleanup("coupon_usage", usageB!.id);
 
     // User from org A with sales.read should NOT see org B's coupon_usage
-    const userA = await createTestUserWithPermissions(admin, orgA, orgAEntity.name, ["sales.read"]);
+    const userA = await createTestUserWithPermissions(
+      admin,
+      orgA,
+      orgAEntity.name,
+      ["sales.read"],
+    );
 
     const { data: results, error } = await userA.client
       .from("coupon_usage")
@@ -494,7 +526,9 @@ describe("Coupon usage RLS", () => {
     trackCleanup("coupon_usage", usage!.id);
 
     // User with products.read only — no sales.read or coupons.update
-    const user = await createTestUserWithPermissions(admin, orgId, org.name, ["products.read"]);
+    const user = await createTestUserWithPermissions(admin, orgId, org.name, [
+      "products.read",
+    ]);
 
     const { data: results, error } = await user.client
       .from("coupon_usage")

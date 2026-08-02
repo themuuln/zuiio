@@ -7,7 +7,6 @@ import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { PurchaseCreateDrawer } from "@/components/purchases/purchase-create-drawer";
-import { buttonVariants } from "@/components/ui/button";
 import type { PurchaseRow } from "./purchases-table";
 import { PurchasesTable } from "./purchases-table";
 
@@ -63,14 +62,13 @@ export function PurchasesContent({
           title="Худалдан авалтын захиалга байхгүй"
           description="Шинэ захиалга үүсгэж, нийлүүлэгчээс бараа захиалах."
           action={
-            <button
-              type="button"
-              className={buttonVariants({ variant: "default" })}
-              onClick={() => setCreateOpen(true)}
-            >
-              <ShoppingCart className="size-4" />
-              Шинэ захиалга
-            </button>
+            <PurchaseCreateDrawer
+              suppliers={suppliers}
+              products={products}
+              open={createOpen}
+              onOpenChange={setCreateOpen}
+              onSuccess={handleCreateSuccess}
+            />
           }
         />
       ) : (

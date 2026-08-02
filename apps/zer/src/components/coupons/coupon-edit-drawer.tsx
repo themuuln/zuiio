@@ -146,10 +146,7 @@ export function CouponEditDrawer({
       data.max_discount_amount !== undefined &&
       data.max_discount_amount > 0
     ) {
-      formData.append(
-        "max_discount_amount",
-        String(data.max_discount_amount),
-      );
+      formData.append("max_discount_amount", String(data.max_discount_amount));
     }
     formData.append("valid_from", data.valid_from);
     formData.append("valid_until", data.valid_until ?? "");
@@ -196,14 +193,9 @@ export function CouponEditDrawer({
         <FieldGroup>
           <Field>
             <FieldLabel>Код</FieldLabel>
-            <Input
-              placeholder="Жишээ: SUMMER2024"
-              {...register("code")}
-            />
+            <Input placeholder="Жишээ: SUMMER2024" {...register("code")} />
             {errors.code && (
-              <p className="text-xs text-destructive">
-                {errors.code.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.code.message}</p>
             )}
           </Field>
 
@@ -232,10 +224,7 @@ export function CouponEditDrawer({
                     htmlFor="ec-type-fixed"
                     className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm has-[data-checked]:border-primary has-[data-checked]:bg-primary/5"
                   >
-                    <RadioGroupItem
-                      value="fixed_amount"
-                      id="ec-type-fixed"
-                    />
+                    <RadioGroupItem value="fixed_amount" id="ec-type-fixed" />
                     Тогтмол дүн
                   </label>
                 </RadioGroup>
@@ -315,9 +304,7 @@ export function CouponEditDrawer({
                 >
                   <option value="all">Бүх бараа</option>
                   <option value="selected_products">Сонгосон бараа</option>
-                  <option value="selected_categories">
-                    Сонгосон ангилал
-                  </option>
+                  <option value="selected_categories">Сонгосон ангилал</option>
                 </NativeSelect>
               )}
             />
@@ -379,7 +366,10 @@ export function CouponEditDrawer({
               min="0"
               step="1"
               placeholder="Хязгааргүй"
-              {...register("usage_limit", { valueAsNumber: true })}
+              {...register("usage_limit", {
+                setValueAs: (value) =>
+                  value === "" ? undefined : Number(value),
+              })}
             />
           </Field>
 

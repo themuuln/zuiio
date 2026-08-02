@@ -1,6 +1,11 @@
 "use client";
 
-import { CalendarBlank, CreditCard, Envelope, User } from "@phosphor-icons/react";
+import {
+  CalendarBlank,
+  CreditCard,
+  Envelope,
+  User,
+} from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { InfoRow } from "@/components/ui/info-row";
@@ -61,10 +66,12 @@ export function GiftCardDetailDrawer({
   open,
   onOpenChange,
 }: {
-  giftCard: GiftCardDetailData;
+  giftCard: GiftCardDetailData | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  if (!giftCard) return null;
+
   const isExpired =
     giftCard.expires_at && new Date(giftCard.expires_at) < new Date();
 
@@ -82,7 +89,10 @@ export function GiftCardDetailDrawer({
             {giftCard.is_active ? "Идэвхтэй" : "Идэвхгүй"}
           </Badge>
           {isExpired && (
-            <Badge variant="outline" className="text-destructive border-destructive/50">
+            <Badge
+              variant="outline"
+              className="text-destructive border-destructive/50"
+            >
               Хугацаа дууссан
             </Badge>
           )}
@@ -94,9 +104,7 @@ export function GiftCardDetailDrawer({
           <p
             className={cn(
               "mt-1 text-2xl font-semibold",
-              giftCard.current_balance > 0
-                ? "text-green-600"
-                : "text-red-600",
+              giftCard.current_balance > 0 ? "text-green-600" : "text-red-600",
             )}
           >
             {formatCurrency(giftCard.current_balance)}
@@ -150,7 +158,9 @@ export function GiftCardDetailDrawer({
             icon={<CalendarBlank className="size-4" />}
             label="Дуусах огноо"
             value={
-              giftCard.expires_at ? formatDate(giftCard.expires_at) : "Тодорхойгүй"
+              giftCard.expires_at
+                ? formatDate(giftCard.expires_at)
+                : "Тодорхойгүй"
             }
           />
         </div>

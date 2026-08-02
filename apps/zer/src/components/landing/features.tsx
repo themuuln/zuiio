@@ -33,10 +33,7 @@ const companyTypes = [
 
 type OrgType = (typeof companyTypes)[number]["value"];
 
-const categoryConfig: Record<
-  string,
-  { label: string; className: string }
-> = {
+const categoryConfig: Record<string, { label: string; className: string }> = {
   inventory: {
     label: "Бараа материал",
     className:
@@ -358,9 +355,7 @@ export function Features() {
                         </span>
                       ) : null;
                     })()}
-                  <h3 className="text-xl font-semibold">
-                    {heroFeature.title}
-                  </h3>
+                  <h3 className="text-xl font-semibold">{heroFeature.title}</h3>
                 </div>
                 <p className="mb-3 text-sm leading-relaxed text-muted-foreground md:text-base">
                   {heroFeature.description}

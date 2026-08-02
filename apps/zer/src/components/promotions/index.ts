@@ -1,9 +1,8 @@
-export { PromotionCreateDrawer } from "./promotion-create-drawer";
 export type { PromotionCreateData } from "./promotion-create-drawer";
-
-export { PromotionDetailDrawer } from "./promotion-detail-drawer";
+export { PromotionCreateDrawer } from "./promotion-create-drawer";
 export type {
-  PromotionDetailData,
   PromotionConditionData,
+  PromotionDetailData,
   PromotionRewardData,
 } from "./promotion-detail-drawer";
+export { PromotionDetailDrawer } from "./promotion-detail-drawer";

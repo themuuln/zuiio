@@ -10,13 +10,20 @@ import { describe, expect, it } from "vitest";
 import {
   createAdminClient,
   createAnonClient,
-  createTestOrg,
   createTestBranch,
-  createTestWarehouse,
+  createTestOrg,
   createTestProduct,
   createTestUserWithPermissions,
+  createTestWarehouse,
   trackCleanup,
 } from "./helpers";
+
+interface InventoryRpcResult {
+  success?: boolean;
+  error?: string;
+  movements_created?: number;
+  current_stock?: number;
+}
 
 // ── Warehouse CRUD ───────────────────────────────────────────
 
@@ -26,7 +33,11 @@ describe("Warehouse CRUD", () => {
   it("admin can create and read warehouses", async () => {
     const { orgId } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { warehouse, warehouseId } = await createTestWarehouse(admin, orgId, branchId);
+    const { warehouse, warehouseId } = await createTestWarehouse(
+      admin,
+      orgId,
+      branchId,
+    );
     expect(warehouseId).toBeDefined();
     expect(warehouse.name).toMatch(/^Warehouse-/);
   });
@@ -35,7 +46,9 @@ describe("Warehouse CRUD", () => {
     const { orgId } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
     const { warehouseId } = await createTestWarehouse(admin, orgId, branchId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 100 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 100,
+    });
 
     const { data, error } = await admin
       .from("warehouse_products")
@@ -68,7 +81,9 @@ describe("Stock Movements CRUD", () => {
   it("admin can create inbound (type=in) movement", async () => {
     const { orgId } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 10 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 10,
+    });
 
     const { data, error } = await admin
       .from("stock_movements")
@@ -91,7 +106,9 @@ describe("Stock Movements CRUD", () => {
   it("admin can create adjustment movement", async () => {
     const { orgId } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 10 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 10,
+    });
 
     const { data, error } = await admin
       .from("stock_movements")
@@ -118,7 +135,9 @@ describe("process_restock_stock_movements RPC", () => {
   it("creates inbound movements and updates stock", async () => {
     const { orgId, org } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 0 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 0,
+    });
 
     const { data: supplier } = await admin
       .from("contacts")
@@ -127,7 +146,9 @@ describe("process_restock_stock_movements RPC", () => {
       .single();
     trackCleanup("contacts", supplier!.id);
 
-    const { data: poNum } = await admin.rpc("generate_purchase_order_number", { p_org_id: orgId });
+    const { data: poNum } = await admin.rpc("generate_purchase_order_number", {
+      p_org_id: orgId,
+    });
     const { data: po } = await admin
       .from("purchase_orders")
       .insert({
@@ -137,42 +158,58 @@ describe("process_restock_stock_movements RPC", () => {
         status: "draft",
         total_amount: 0,
         branch_id: branchId,
-      } as any)
+      })
       .select()
       .single();
     trackCleanup("purchase_orders", po!.id);
 
-    await admin
-      .from("purchase_order_items")
-      .insert({
-        purchase_order_id: po!.id,
-        product_id: productId,
-        quantity: 10,
-        unit_cost: 3000,
-      });
+    await admin.from("purchase_order_items").insert({
+      purchase_order_id: po!.id,
+      product_id: productId,
+      quantity: 10,
+      unit_cost: 3000,
+    });
 
     const user = await createTestUserWithPermissions(admin, orgId, org.name, [
       "purchases.create",
     ]);
 
-    const { data, error } = await user.client.rpc("process_restock_stock_movements", {
-      p_org_id: orgId,
-      p_branch_id: branchId,
-      p_user_id: user.userId,
-      p_po_id: po!.id,
-      p_items: [{ product_id: productId, quantity: 10, unit_cost: 3000, variant_id: null }],
-      p_mark_received: true,
-    });
+    const { data, error } = await user.client.rpc(
+      "process_restock_stock_movements",
+      {
+        p_org_id: orgId,
+        p_branch_id: branchId,
+        p_user_id: user.userId,
+        p_po_id: po!.id,
+        p_items: [
+          {
+            product_id: productId,
+            quantity: 10,
+            unit_cost: 3000,
+            variant_id: null,
+          },
+        ],
+        p_mark_received: true,
+      },
+    );
 
     expect(error).toBeNull();
-    const result = data as any;
+    const result = data as InventoryRpcResult;
     expect(result.success).toBe(true);
     expect(result.movements_created).toBeGreaterThanOrEqual(1);
 
-    const { data: product } = await admin.from("products").select("current_stock").eq("id", productId).single();
+    const { data: product } = await admin
+      .from("products")
+      .select("current_stock")
+      .eq("id", productId)
+      .single();
     expect(product!.current_stock).toBe(10);
 
-    const { data: poCheck } = await admin.from("purchase_orders").select("status").eq("id", po!.id).single();
+    const { data: poCheck } = await admin
+      .from("purchase_orders")
+      .select("status")
+      .eq("id", po!.id)
+      .single();
     expect(poCheck!.status).toBe("received");
   });
 });
@@ -185,7 +222,9 @@ describe("process_batch_adjustment RPC", () => {
   it("creates adjustment movements and updates stock", async () => {
     const { orgId, org } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 100 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 100,
+    });
 
     const user = await createTestUserWithPermissions(admin, orgId, org.name, [
       "stock_movements.create",
@@ -195,24 +234,37 @@ describe("process_batch_adjustment RPC", () => {
       p_org_id: orgId,
       p_branch_id: branchId,
       p_user_id: user.userId,
-      p_items: [{ product_id: productId, quantity: -10, variant_id: null, unit_cost: null }],
+      p_items: [
+        {
+          product_id: productId,
+          quantity: -10,
+          variant_id: null,
+          unit_cost: null,
+        },
+      ],
       p_reference: `adj-test-${Date.now()}`,
       p_notes: "Batch adjustment test",
     });
 
     expect(error).toBeNull();
-    const result = data as any;
+    const result = data as InventoryRpcResult;
     expect(result.success).toBe(true);
     expect(result.movements_created).toBe(1);
 
-    const { data: product } = await admin.from("products").select("current_stock").eq("id", productId).single();
+    const { data: product } = await admin
+      .from("products")
+      .select("current_stock")
+      .eq("id", productId)
+      .single();
     expect(product!.current_stock).toBe(90);
   });
 
   it("zero-quantity items are skipped", async () => {
     const { orgId, org } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 50 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 50,
+    });
 
     const user = await createTestUserWithPermissions(admin, orgId, org.name, [
       "stock_movements.create",
@@ -222,12 +274,19 @@ describe("process_batch_adjustment RPC", () => {
       p_org_id: orgId,
       p_branch_id: branchId,
       p_user_id: user.userId,
-      p_items: [{ product_id: productId, quantity: 0, variant_id: null, unit_cost: null }],
+      p_items: [
+        {
+          product_id: productId,
+          quantity: 0,
+          variant_id: null,
+          unit_cost: null,
+        },
+      ],
       p_reference: "adj-zero-test",
       p_notes: "Should not create movement",
     });
 
-    const result = data as any;
+    const result = data as InventoryRpcResult;
     expect(result.success).toBe(true);
     expect(result.movements_created).toBe(0);
   });
@@ -240,28 +299,39 @@ describe("process_sale_stock_decrement RPC", () => {
 
   it("decrements stock with FOR UPDATE locking", async () => {
     const { orgId, org } = await createTestOrg(admin);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 20 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 20,
+    });
 
     const user = await createTestUserWithPermissions(admin, orgId, org.name, [
       "sales.create",
     ]);
 
-    const { data, error } = await user.client.rpc("process_sale_stock_decrement", {
-      p_org_id: orgId,
-      p_items: [{ product_id: productId, quantity: 5, variant_id: null }],
-    });
+    const { data, error } = await user.client.rpc(
+      "process_sale_stock_decrement",
+      {
+        p_org_id: orgId,
+        p_items: [{ product_id: productId, quantity: 5, variant_id: null }],
+      },
+    );
 
     expect(error).toBeNull();
-    const result = data as any;
+    const result = data as InventoryRpcResult;
     expect(result.success).toBe(true);
 
-    const { data: product } = await admin.from("products").select("current_stock").eq("id", productId).single();
+    const { data: product } = await admin
+      .from("products")
+      .select("current_stock")
+      .eq("id", productId)
+      .single();
     expect(product!.current_stock).toBe(15);
   });
 
   it("rejects batch with insufficient stock", async () => {
     const { orgId, org } = await createTestOrg(admin);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 2 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 2,
+    });
 
     const user = await createTestUserWithPermissions(admin, orgId, org.name, [
       "sales.create",
@@ -272,7 +342,7 @@ describe("process_sale_stock_decrement RPC", () => {
       p_items: [{ product_id: productId, quantity: 10, variant_id: null }],
     });
 
-    const result = data as any;
+    const result = data as InventoryRpcResult;
     expect(result.error).toBeDefined();
   });
 });
@@ -283,7 +353,9 @@ describe("decrement_product_stock_safe RPC", () => {
   it("safely decrements a single product", async () => {
     const admin = createAdminClient();
     const { orgId } = await createTestOrg(admin);
-    const { productId } = await createTestProduct(admin, orgId, { currentStock: 30 });
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 30,
+    });
 
     const { data, error } = await admin.rpc("decrement_product_stock_safe", {
       p_product_id: productId,
@@ -292,7 +364,7 @@ describe("decrement_product_stock_safe RPC", () => {
     });
 
     expect(error).toBeNull();
-    const result = data as any;
+    const result = data as InventoryRpcResult;
     expect(result.success).toBe(true);
     expect(result.current_stock).toBe(27);
   });

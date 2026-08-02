@@ -9,7 +9,6 @@ import { PageShell } from "@/components/erp/page-shell";
 import { InvoiceCreateDrawer } from "@/components/invoices/invoice-create-drawer";
 import { InvoiceDetailDrawer } from "@/components/invoices/invoice-detail-drawer";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency } from "@/lib/format";
 import { dateColumn, textColumn } from "@/lib/table-columns";
@@ -111,31 +110,18 @@ export function InvoicesContent({
   if (!loading && invoiceRows.length === 0) {
     return (
       <>
-        <PageShell
-          title="Нэхэмжлэл"
-          description="Борлуулалтын нэхэмжлэлүүд"
-          actions={
-            <InvoiceCreateDrawer
-              contacts={contacts}
-              products={products}
-              open={createOpen}
-              onOpenChange={setCreateOpen}
-            />
-          }
-        >
+        <PageShell title="Нэхэмжлэл" description="Борлуулалтын нэхэмжлэлүүд">
           <ErpEmptyState
             icon={<FileText className="size-4" />}
             title="Нэхэмжлэл байхгүй"
             description="Шинэ нэхэмжлэл үүсгэж, харилцагчдад хуваалцах холбоос илгээнэ үү."
             action={
-              <button
-                type="button"
-                className={buttonVariants({ variant: "default" })}
-                onClick={() => setCreateOpen(true)}
-              >
-                <FileText className="size-4" />
-                Шинэ нэхэмжлэл
-              </button>
+              <InvoiceCreateDrawer
+                contacts={contacts}
+                products={products}
+                open={createOpen}
+                onOpenChange={setCreateOpen}
+              />
             }
           />
         </PageShell>

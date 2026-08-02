@@ -4,15 +4,20 @@
  */
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Standard mocks ──────────────────────────────────────────────────
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 const captureMock = mock.fn(() => {});
-mockMod("@zuiio/capture", { capture: captureMock, withDbCapture: withDbCaptureMock });
+mockMod("@zuiio/capture", {
+  capture: captureMock,
+  withDbCapture: withDbCaptureMock,
+});
 
 const revalidateEntitiesMock = mock.fn(() => {});
 const revalidateEntityTagMock = mock.fn(() => {});
@@ -25,10 +30,13 @@ mockMod("@/lib/revalidate", {
 
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
-let mockCtx: Record<string, unknown> = mockActionCtx();
+const mockCtx: Record<string, unknown> = mockActionCtx();
 mockMod("@/lib/action-utils", {
   requireActionContext: mock.fn(async () => mockCtx),
   requireWriteAction: mock.fn(async () => mockCtx),
@@ -65,8 +73,11 @@ function resetMocks() {
 /** Thenable chain: `await chain` resolves to {data, error}. */
 function thenable(data: unknown = null, error: unknown = null) {
   const c: Record<string, unknown> = {};
-  c.then = (res: Function, rej?: Function) =>
-    Promise.resolve({ data, error }).then(res, rej);
+  // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are intentionally thenable in this test mock.
+  c.then = (
+    res: (value: { data: unknown; error: unknown }) => unknown,
+    rej?: (reason: unknown) => unknown,
+  ) => Promise.resolve({ data, error }).then(res, rej);
   c.select = mock.fn(() => c);
   c.insert = mock.fn(() => c);
   c.update = mock.fn(() => c);
@@ -127,7 +138,11 @@ test("createJournalEntry rejects invalid lines JSON", async () => {
   mockCtx.supabase = { from: mock.fn(), rpc: rpcNotLocked() };
   const result = await createJournalEntry(
     undefined,
-    formData({ entry_date: "2025-01-01", description: "Test", lines: "not-json" }),
+    formData({
+      entry_date: "2025-01-01",
+      description: "Test",
+      lines: "not-json",
+    }),
   );
   assert.match(result.error, /буруу/i);
 });
@@ -253,6 +268,7 @@ test("createAccount rejects duplicate code", async () => {
 test("createAccount creates successfully", async () => {
   resetMocks();
   const coaChain = thenable(null, null);
+  coaChain.single = mock.fn(() => resolved({ id: "new-account-id" }, null));
   mockCtx.supabase = {
     from: mock.fn(() => coaChain),
     rpc: mock.fn(),
@@ -336,7 +352,8 @@ test("updateJournalEntry rolls back old lines on insert error", async () => {
     delete: mock.fn(() => deleteChain),
     insert: mock.fn(() => {
       insertCount++;
-      if (insertCount === 1) return thenable(null, { message: "insert failed" });
+      if (insertCount === 1)
+        return thenable(null, { message: "insert failed" });
       return thenable(null, null);
     }),
   };

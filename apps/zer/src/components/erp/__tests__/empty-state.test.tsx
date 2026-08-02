@@ -13,10 +13,7 @@ describe("ErpEmptyState", () => {
 
   it("renders description when provided", () => {
     render(
-      <ErpEmptyState
-        title="No items"
-        description="Try creating a new item"
-      />,
+      <ErpEmptyState title="No items" description="Try creating a new item" />,
     );
     expect(screen.getByText("Try creating a new item")).toBeDefined();
   });

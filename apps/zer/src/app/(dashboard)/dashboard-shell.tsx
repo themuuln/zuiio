@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/sidebar";
 import { type BranchOption, useBranchContext } from "@/lib/branch-context";
 import { APP_NAME } from "@/lib/constants";
+import { useI18n } from "@/lib/i18n";
 import { filterNavGroups, type NavGroup, navGroups } from "@/lib/navigation";
 import {
   type OrgSettings,
@@ -90,6 +91,7 @@ function SidebarNav({
   visibleGroups: NavGroup[];
   pathname: string;
 }) {
+  const { t } = useI18n();
   return (
     <>
       <SidebarHeader>
@@ -170,7 +172,7 @@ function SidebarNav({
                   ) : (
                     <Storefront className="size-3 shrink-0" />
                   )}
-                  {currentBranch?.name ?? "Бүх салбар"}
+                  {currentBranch?.name ?? t("common.allBranches")}
                 </span>
               </div>
             </SelectTrigger>
@@ -182,7 +184,7 @@ function SidebarNav({
             >
               <SelectItem value="">
                 <Storefront className="size-4" />
-                Бүх салбар
+                {t("common.allBranches")}
               </SelectItem>
               {branches.map((b) => (
                 <SelectItem key={b.id} value={b.id}>
@@ -193,7 +195,7 @@ function SidebarNav({
               <Separator className="my-1" />
               <SelectItem value="__create">
                 <Plus className="size-4" />
-                Шинэ салбар
+                {t("common.newBranch")}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -202,8 +204,10 @@ function SidebarNav({
 
       <SidebarContent>
         {visibleGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+          <SidebarGroup key={group.labelKey ?? group.label}>
+            <SidebarGroupLabel>
+              {group.labelKey ? t(group.labelKey) : group.label}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => {
@@ -229,11 +233,15 @@ function SidebarNav({
                         <SidebarMenuButton
                           asChild
                           isActive={isActive}
-                          tooltip={item.title}
+                          tooltip={
+                            item.titleKey ? t(item.titleKey) : item.title
+                          }
                         >
                           <Link href={item.href}>
                             <Icon />
-                            <span>{item.title}</span>
+                            <span>
+                              {item.titleKey ? t(item.titleKey) : item.title}
+                            </span>
                           </Link>
                         </SidebarMenuButton>
                       </ViewTransition>
@@ -251,7 +259,7 @@ function SidebarNav({
           user={{
             name:
               userFullName ||
-              (userEmail ? userEmail.split("@")[0] : "Хэрэглэгч"),
+              (userEmail ? userEmail.split("@")[0] : t("common.user")),
             email: userEmail,
             initials,
           }}

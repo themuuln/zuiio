@@ -51,7 +51,9 @@ function makeSupabase() {
   };
 }
 
-let findOrCreateContact: (...args: unknown[]) => Promise<{ id: string } | { error: string }>;
+let findOrCreateContact: (
+  ...args: unknown[]
+) => Promise<{ id: string } | { error: string }>;
 
 test.before(async () => {
   const mod = await import("@/lib/contact-utils");
@@ -67,26 +69,48 @@ test.beforeEach(() => {
 
 test("findOrCreateContact returns existing contact when found", async () => {
   existingContact = { id: "existing-1" };
-  const result = await findOrCreateContact(makeSupabase(), "org-123", "customer", "Test Customer");
+  const result = await findOrCreateContact(
+    makeSupabase(),
+    "org-123",
+    "customer",
+    "Test Customer",
+  );
   assert.ok("id" in result);
   if ("id" in result) assert.equal(result.id, "existing-1");
 });
 
 test("findOrCreateContact creates new contact when not found", async () => {
-  const result = await findOrCreateContact(makeSupabase(), "org-123", "customer", "New Customer", "99112233");
+  const result = await findOrCreateContact(
+    makeSupabase(),
+    "org-123",
+    "customer",
+    "New Customer",
+    "99112233",
+  );
   assert.ok("id" in result);
   if ("id" in result) assert.equal(result.id, "new-contact-1");
 });
 
 test("findOrCreateContact creates new contact with null phone", async () => {
-  const result = await findOrCreateContact(makeSupabase(), "org-123", "supplier", "Supplier Co", null);
+  const result = await findOrCreateContact(
+    makeSupabase(),
+    "org-123",
+    "supplier",
+    "Supplier Co",
+    null,
+  );
   assert.ok("id" in result);
   if ("id" in result) assert.equal(result.id, "new-contact-1");
 });
 
 test("findOrCreateContact returns error when insert fails", async () => {
   insertResponse = { data: null, error: new Error("insert failed") };
-  const result = await findOrCreateContact(makeSupabase(), "org-123", "customer", "Fail Contact");
+  const result = await findOrCreateContact(
+    makeSupabase(),
+    "org-123",
+    "customer",
+    "Fail Contact",
+  );
   assert.ok("error" in result);
   if ("error" in result) assert.ok(result.error.includes("алдаа"));
   assert.equal(captureSpy.mock.calls.length, 1);
@@ -94,7 +118,12 @@ test("findOrCreateContact returns error when insert fails", async () => {
 
 test("findOrCreateContact captures error on find query failure", async () => {
   existingError = new Error("query timeout");
-  const result = await findOrCreateContact(makeSupabase(), "org-123", "customer", "Retry Contact");
+  const result = await findOrCreateContact(
+    makeSupabase(),
+    "org-123",
+    "customer",
+    "Retry Contact",
+  );
   assert.ok("id" in result);
   assert.equal(captureSpy.mock.calls.length, 1);
 });

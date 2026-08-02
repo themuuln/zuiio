@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import type * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 function AspectRatio({
   className,
@@ -10,7 +10,7 @@ function AspectRatio({
   style,
   ...props
 }: React.ComponentProps<"div"> & {
-  ratio?: number
+  ratio?: number;
 }) {
   return (
     <div
@@ -22,7 +22,7 @@ function AspectRatio({
       }}
       {...props}
     />
-  )
+  );
 }
 
-export { AspectRatio }
+export { AspectRatio };

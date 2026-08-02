@@ -1,14 +1,36 @@
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockMod, resolved } from "./actions-helpers";
+import { mockMod } from "./actions-helpers";
 
-// ─── Module mocks ───────────────────────────────────────────────────
+type QueryResult = {
+  data: unknown;
+  error: unknown;
+};
+
+type QueryChainMethod = (...args: unknown[]) => QueryChain;
+
+type QueryChain = {
+  select: QueryChainMethod;
+  eq: QueryChainMethod;
+  gte: QueryChainMethod;
+  lte: QueryChainMethod;
+  is: QueryChainMethod;
+  in: QueryChainMethod;
+  order: QueryChainMethod;
+  single: () => Promise<QueryResult>;
+  then: PromiseLike<QueryResult>["then"];
+};
+
+type BusinessEventsSupabase = Parameters<
+  typeof import("@/lib/business-events").listBusinessEvents
+>[0];
 
 const captureMock = mock.fn(() => {});
-const withDbCaptureMock = mock.fn(async (_name: string, query: any) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: PromiseLike<QueryResult>) => await query,
+);
+
+// ─── Module mocks ───────────────────────────────────────────────────
 
 mockMod("@zuiio/capture", {
   capture: captureMock,
@@ -20,34 +42,44 @@ mockMod("server-only", {});
 // Each from() call pops the next enqueued response for that table.
 // Chain methods are thenable so `await` works through withDbCapture.
 
-function makeChain(data: any, error: any = null): any {
-  const result = { data, error };
-  const chain: any = {};
-  for (const m of ["select", "eq", "gte", "lte", "is", "order"]) {
-    chain[m] = mock.fn((..._args: any[]) => makeChain(data, error));
+function makeChain(data: unknown, error: unknown = null): QueryChain {
+  const result: QueryResult = { data, error };
+  const chain = {} as QueryChain;
+  for (const method of [
+    "select",
+    "eq",
+    "gte",
+    "lte",
+    "is",
+    "in",
+    "order",
+  ] as const) {
+    chain[method] = mock.fn((..._args: unknown[]) => makeChain(data, error));
   }
   chain.single = mock.fn(async () => result);
-  chain.then = (resolve: any, reject: any) =>
-    Promise.resolve(result).then(resolve, reject);
+  // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are intentionally thenable.
+  Object.defineProperty(chain, "then", {
+    value: Promise.resolve(result).then.bind(Promise.resolve(result)),
+  });
   return chain;
 }
 
-type TableResponse = { data: any; error?: any };
+type TableResponse = QueryResult;
 let responseQueues: Record<string, TableResponse[]> = {};
 
-function enqueue(table: string, data: any, error?: any) {
+function enqueue(table: string, data: unknown, error: unknown = null) {
   if (!responseQueues[table]) responseQueues[table] = [];
   responseQueues[table].push({ data, error });
 }
 
-function makeSupabase() {
+function makeSupabase(): BusinessEventsSupabase {
   return {
     from: mock.fn((table: string) => {
       const queue = responseQueues[table] ?? [];
       const entry = queue.shift();
       return makeChain(entry?.data ?? null, entry?.error ?? null);
     }),
-  };
+  } as unknown as BusinessEventsSupabase;
 }
 
 // ─── Import SUT ─────────────────────────────────────────────────────
@@ -163,7 +195,7 @@ test("checkStockTargets returns empty shortages when stock is sufficient", async
       demand_multiplier: null,
     },
   ]);
-  enqueue("products", { name: "Widget", current_stock: 15 });
+  enqueue("products", [{ id: "p1", name: "Widget", current_stock: 15 }]);
 
   const result = await bizEvents.checkStockTargets(supabase, "org-1", "e1");
 
@@ -186,7 +218,7 @@ test("checkStockTargets reports shortage when stock is below target", async () =
       demand_multiplier: 1.5,
     },
   ]);
-  enqueue("products", { name: "Widget", current_stock: 8 });
+  enqueue("products", [{ id: "p1", name: "Widget", current_stock: 8 }]);
 
   const result = await bizEvents.checkStockTargets(supabase, "org-1", "e1");
 
@@ -228,10 +260,10 @@ test("checkStockTargets reports category-level shortage", async () => {
   ]);
   // Two products in category: total stock = 5 + 3 = 8 < 20
   enqueue("products", [
-    { name: "A", current_stock: 5 },
-    { name: "B", current_stock: 3 },
+    { id: "pa", category_id: "cat1", name: "A", current_stock: 5 },
+    { id: "pb", category_id: "cat1", name: "B", current_stock: 3 },
   ]);
-  enqueue("categories", { name: "Beverages" });
+  enqueue("categories", [{ id: "cat1", name: "Beverages" }]);
 
   const result = await bizEvents.checkStockTargets(supabase, "org-1", "e1");
 

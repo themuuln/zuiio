@@ -280,19 +280,38 @@ test.describe("Financial Data Protection", () => {
 
     // Navigate to accounting → journal entries tab
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
-    await page.getByRole("tab", { name: "Журналын бичилт" }).click();
-    await page.waitForTimeout(500);
+    await page
+      .waitForLoadState("networkidle", { timeout: 15_000 })
+      .catch(() => undefined);
+    const journalTab = page.getByRole("tab", { name: "Журналын бичилт" });
+    await expect(journalTab).toBeVisible({ timeout: 15_000 });
+    await journalTab.click();
+    await expect(journalTab).toHaveAttribute("aria-selected", "true", {
+      timeout: 15_000,
+    });
 
-    // Verify the UI shows the journal entry list (confirms page loaded)
-    const hasTable = await page
-      .locator("table")
-      .isVisible()
-      .catch(() => false);
-    const hasEmpty = await page
-      .getByText("Журналын бичилт байхгүй")
-      .isVisible()
-      .catch(() => false);
-    expect(hasTable || hasEmpty).toBe(true);
+    // Base UI derives the panel's accessible name from its active tab only
+    // after the controlled value update, so scope to the visible panel.
+    const journalPanel = page.locator('[role="tabpanel"]:not([hidden])');
+    await expect(journalPanel).toBeVisible({ timeout: 15_000 });
+    await expect
+      .poll(
+        async () =>
+          (await journalPanel
+            .locator("table")
+            .isVisible()
+            .catch(() => false)) ||
+          (await journalPanel
+            .getByText("Журналын бичилт байхгүй")
+            .isVisible()
+            .catch(() => false)) ||
+          (await journalPanel
+            .getByText("Журналын бичилтүүд")
+            .isVisible()
+            .catch(() => false)),
+        { timeout: 15_000 },
+      )
+      .toBe(true);
 
     // Verify the period lock blocks journal entry creation.
     // Extract the action ID from the page's bundled JS, then call the

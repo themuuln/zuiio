@@ -23,12 +23,16 @@ describe("Categories CRUD", () => {
 
     const { data: cat, error } = await admin
       .from("categories")
-      .insert({ organization_id: orgId, name: "Electronics", slug: "electronics" })
+      .insert({
+        organization_id: orgId,
+        name: "Electronics",
+        slug: "electronics",
+      })
       .select()
       .single();
     expect(error).toBeNull();
-    expect(cat!.name).toBe("Electronics");
-    trackCleanup("categories", cat!.id);
+    expect(cat?.name).toBe("Electronics");
+    trackCleanup("categories", cat?.id);
   });
 
   it("admin can create category with specific name", async () => {
@@ -36,11 +40,15 @@ describe("Categories CRUD", () => {
 
     const { data: cat } = await admin
       .from("categories")
-      .insert({ organization_id: orgId, name: "Office Supplies", slug: "office-supplies" })
+      .insert({
+        organization_id: orgId,
+        name: "Office Supplies",
+        slug: "office-supplies",
+      })
       .select()
       .single();
-    expect(cat!.name).toBe("Office Supplies");
-    trackCleanup("categories", cat!.id);
+    expect(cat?.name).toBe("Office Supplies");
+    trackCleanup("categories", cat?.id);
   });
 
   it("admin can update category name", async () => {
@@ -48,23 +56,27 @@ describe("Categories CRUD", () => {
 
     const { data: cat } = await admin
       .from("categories")
-      .insert({ organization_id: orgId, name: "Old Category", slug: "old-category" })
+      .insert({
+        organization_id: orgId,
+        name: "Old Category",
+        slug: "old-category",
+      })
       .select()
       .single();
-    trackCleanup("categories", cat!.id);
+    trackCleanup("categories", cat?.id);
 
     const { error } = await admin
       .from("categories")
       .update({ name: "Updated Category" })
-      .eq("id", cat!.id);
+      .eq("id", cat?.id);
     expect(error).toBeNull();
 
     const { data: updated } = await admin
       .from("categories")
       .select("name")
-      .eq("id", cat!.id)
+      .eq("id", cat?.id)
       .single();
-    expect(updated!.name).toBe("Updated Category");
+    expect(updated?.name).toBe("Updated Category");
   });
 
   it("admin can delete a category", async () => {
@@ -72,11 +84,15 @@ describe("Categories CRUD", () => {
 
     const { data: cat } = await admin
       .from("categories")
-      .insert({ organization_id: orgId, name: "Temp Category", slug: "temp-category" })
+      .insert({
+        organization_id: orgId,
+        name: "Temp Category",
+        slug: "temp-category",
+      })
       .select()
       .single();
 
-    const { error } = await admin.from("categories").delete().eq("id", cat!.id);
+    const { error } = await admin.from("categories").delete().eq("id", cat?.id);
     expect(error).toBeNull();
   });
 
@@ -85,11 +101,15 @@ describe("Categories CRUD", () => {
 
     const { data: cat } = await admin
       .from("categories")
-      .insert({ organization_id: orgId, name: "Slug Test", slug: "custom-slug" })
+      .insert({
+        organization_id: orgId,
+        name: "Slug Test",
+        slug: "custom-slug",
+      })
       .select()
       .single();
-    expect(cat!.slug).toBe("custom-slug");
-    trackCleanup("categories", cat!.id);
+    expect(cat?.slug).toBe("custom-slug");
+    trackCleanup("categories", cat?.id);
   });
 });
 
@@ -107,8 +127,8 @@ describe("Brands CRUD", () => {
       .select()
       .single();
     expect(error).toBeNull();
-    expect(brand!.name).toBe("Samsung");
-    trackCleanup("brands", brand!.id);
+    expect(brand?.name).toBe("Samsung");
+    trackCleanup("brands", brand?.id);
   });
 
   it("admin can create brand with logo_url", async () => {
@@ -123,8 +143,8 @@ describe("Brands CRUD", () => {
       })
       .select()
       .single();
-    expect(brand!.logo_url).toBe("https://example.com/nike-logo.png");
-    trackCleanup("brands", brand!.id);
+    expect(brand?.logo_url).toBe("https://example.com/nike-logo.png");
+    trackCleanup("brands", brand?.id);
   });
 
   it("admin can update brand name", async () => {
@@ -135,12 +155,12 @@ describe("Brands CRUD", () => {
       .insert({ organization_id: orgId, name: "Old Brand" })
       .select()
       .single();
-    trackCleanup("brands", brand!.id);
+    trackCleanup("brands", brand?.id);
 
     const { error } = await admin
       .from("brands")
       .update({ name: "New Brand" })
-      .eq("id", brand!.id);
+      .eq("id", brand?.id);
     expect(error).toBeNull();
   });
 
@@ -153,7 +173,7 @@ describe("Brands CRUD", () => {
       .select()
       .single();
 
-    const { error } = await admin.from("brands").delete().eq("id", brand!.id);
+    const { error } = await admin.from("brands").delete().eq("id", brand?.id);
     expect(error).toBeNull();
   });
 });
@@ -168,19 +188,23 @@ describe("get_public_categories RPC", () => {
 
     const { data: cat } = await admin
       .from("categories")
-      .insert({ organization_id: orgId, name: "Unique Slug Test", slug: "unique-slug-test" })
+      .insert({
+        organization_id: orgId,
+        name: "Unique Slug Test",
+        slug: "unique-slug-test",
+      })
       .select()
       .single();
-    trackCleanup("categories", cat!.id);
+    trackCleanup("categories", cat?.id);
 
-    const { data, error } = await admin.rpc("get_public_categories", {
-      p_slug: cat!.slug,
+    const { error } = await admin.rpc("get_public_categories", {
+      p_slug: cat?.slug,
     });
     expect(error).toBeNull();
   });
 
   it("returns null or empty for non-existent slug", async () => {
-    const { data, error } = await admin.rpc("get_public_categories", {
+    const { error } = await admin.rpc("get_public_categories", {
       p_slug: "nonexistent-slug-12345",
     });
     expect(error).toBeNull();

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 /**
  * Cross-area flows: ensures integration between sales creation, product stock,
@@ -18,12 +18,15 @@ let cachedProductWithStock: string | null = null;
  * Get the name of the first product that has stock > 0.
  * Navigates to /products and reads the table.
  */
-async function getProductWithStock(page: any): Promise<string> {
+async function getProductWithStock(page: Page): Promise<string> {
   if (cachedProductWithStock) return cachedProductWithStock;
 
-  await page.goto("/products", { waitUntil: "domcontentloaded" });
+  await page.goto(`/products?refresh=${Date.now()}`, {
+    waitUntil: "domcontentloaded",
+  });
 
   const rows = page.locator("table tbody tr");
+  await expect(rows.first()).toBeVisible({ timeout: 10_000 });
   const count = await rows.count();
 
   for (let i = 0; i < count; i++) {
@@ -41,9 +44,11 @@ async function getProductWithStock(page: any): Promise<string> {
     }
   }
 
-  // Fallback: try first row regardless of stock
   const fallbackName =
     (await rows.first().locator("td").nth(1).textContent())?.trim() ?? "";
+  if (!fallbackName) {
+    throw new Error("No products are available for cross-area sale flows.");
+  }
   cachedProductWithStock = fallbackName;
   return fallbackName;
 }
@@ -54,7 +59,7 @@ async function getProductWithStock(page: any): Promise<string> {
  * then clicks the matching product card.
  */
 async function selectProductByName(
-  page: any,
+  page: Page,
   productName: string,
   rowIndex = 0,
 ) {
@@ -82,7 +87,7 @@ async function selectProductByName(
 /**
  * Helper: select the first available product with stock.
  */
-async function _selectProductWithStock(page: any, rowIndex = 0) {
+async function _selectProductWithStock(page: Page, rowIndex = 0) {
   const productName = await getProductWithStock(page);
   // Now navigate back to sales and open the form
   // (caller should have already navigated to /sales and opened the drawer)
@@ -94,7 +99,7 @@ async function _selectProductWithStock(page: any, rowIndex = 0) {
  * The new sale form uses simple text fields inside an expandable
  * "Нэмэлт тохиргоо" section — expand it first.
  */
-async function createCustomerInPicker(page: any, customerName: string) {
+async function createCustomerInPicker(page: Page, customerName: string) {
   // Expand the "Нэмэлт тохиргоо" section first
   const advancedBtn = page.getByRole("button", { name: "Нэмэлт тохиргоо" });
   await expect(advancedBtn).toBeVisible({ timeout: 3000 });
@@ -110,16 +115,15 @@ async function createCustomerInPicker(page: any, customerName: string) {
 /**
  * Submit the sale form and wait for result.
  */
-async function submitSaleForm(page: any) {
+async function submitSaleForm(page: Page) {
   await page.getByRole("button", { name: "Борлуулалт хадгалах" }).click();
-  await page.waitForTimeout(5000);
 }
 
 /**
  * Wait for the success toast and dismiss it.
  * Returns the toast text or null if no toast appeared.
  */
-async function waitForSuccessToast(page: any): Promise<string | null> {
+async function waitForSuccessToast(page: Page): Promise<string | null> {
   const toast = page.locator("[data-sonner-toast]").first();
   try {
     await expect(toast).toBeVisible({ timeout: 12000 });
@@ -138,7 +142,7 @@ async function waitForSuccessToast(page: any): Promise<string | null> {
 /**
  * Close the currently open drawer by pressing Escape.
  */
-async function closeDrawer(page: any) {
+async function closeDrawer(page: Page) {
   await page.keyboard.press("Escape");
   await page.waitForTimeout(800);
   // Verify drawer closed
@@ -159,28 +163,69 @@ async function closeDrawer(page: any) {
 /**
  * Open the create sale drawer by clicking "Шинэ борлуулалт".
  */
-async function openCreateDrawer(page: any) {
-  await page.getByRole("button", { name: "Шинэ борлуулалт" }).click();
-  await page.waitForTimeout(1500);
-  await expect(
-    page.getByRole("heading", { name: "Борлуулалт нэмэх" }),
-  ).toBeVisible({ timeout: 5000 });
+async function openCreateDrawer(page: Page) {
+  const trigger = page.getByRole("button", { name: "Шинэ борлуулалт" });
+  const heading = page.getByRole("heading", { name: "Борлуулалт нэмэх" });
+
+  await expect(trigger).toBeVisible({ timeout: 10_000 });
+  await expect
+    .poll(
+      async () => {
+        if (await heading.isVisible()) return true;
+        try {
+          await trigger.click({ timeout: 1_000 });
+        } catch {
+          // The trigger can be temporarily covered while the page hydrates.
+        }
+        return await heading.isVisible();
+      },
+      { timeout: 15_000, intervals: [100, 250, 500] },
+    )
+    .toBe(true);
+}
+
+/**
+ * Open the sale detail drawer from the first visible table row.
+ */
+async function openDetailDrawerFromFirstRow(page: Page) {
+  const row = page.locator("table tbody tr").first();
+  const heading = page.getByRole("heading", {
+    name: "Борлуулалтын дэлгэрэнгүй",
+  });
+
+  await expect(row).toBeVisible({ timeout: 10_000 });
+  await expect
+    .poll(
+      async () => {
+        if (await heading.isVisible()) return true;
+        try {
+          await row.click({ timeout: 1_000 });
+        } catch {
+          // The row can be temporarily non-interactive while the page hydrates.
+        }
+        return await heading.isVisible();
+      },
+      { timeout: 15_000, intervals: [100, 250, 500] },
+    )
+    .toBe(true);
 }
 
 /**
  * Get a product's current stock by reading the products table.
  */
 async function getProductStock(
-  page: any,
+  page: Page,
   productName: string,
 ): Promise<number> {
-  await page.goto("/products", { waitUntil: "domcontentloaded" });
+  await page.goto(`/products?refresh=${Date.now()}`, {
+    waitUntil: "domcontentloaded",
+  });
 
   const row = page
     .locator("table tbody tr")
     .filter({ hasText: productName })
     .first();
-  await expect(row).toBeVisible({ timeout: 5000 });
+  await expect(row).toBeVisible({ timeout: 10_000 });
 
   const stockCell = row.locator("td").nth(6);
   const stockText = await stockCell.textContent();
@@ -217,7 +262,9 @@ test.describe("Cross-Area Flows", () => {
     expect(toastText).toContain("амжилттай");
 
     // Navigate to /sales to see fresh data
-    await page.goto("/sales", { waitUntil: "domcontentloaded" });
+    await page.goto(`/sales?refresh=${Date.now()}`, {
+      waitUntil: "domcontentloaded",
+    });
 
     // Verify the customer name appears in the table
     await expect(page.getByText(customerName).first()).toBeVisible({
@@ -225,7 +272,9 @@ test.describe("Cross-Area Flows", () => {
     });
 
     // Navigate to /products to verify stock page loads
-    await page.goto("/products", { waitUntil: "domcontentloaded" });
+    await page.goto(`/products?refresh=${Date.now()}`, {
+      waitUntil: "domcontentloaded",
+    });
 
     await expect(page.locator("table").first()).toBeVisible({ timeout: 5000 });
   });
@@ -299,80 +348,63 @@ test.describe("Cross-Area Flows", () => {
   }) => {
     await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
-    // Check that data exists
     const table = page.locator("table");
-    const hasData = await table.isVisible().catch(() => false);
-    if (!hasData) {
-      test.skip(true, "Skipping — no sales data to filter");
-      return;
-    }
+    await expect(table).toBeVisible({ timeout: 10_000 });
 
-    // 1. Click a filter chip to activate it
     const fullyPaidChip = page.getByRole("button", { name: "Бүрэн төлөгдсөн" });
-    if (await fullyPaidChip.isVisible()) {
-      await fullyPaidChip.click();
-      await page.waitForTimeout(500);
-    }
+    await expect(fullyPaidChip).toBeVisible({ timeout: 5_000 });
+    await fullyPaidChip.click();
+    await expect(fullyPaidChip).toHaveClass(/border-primary/);
 
-    // 2. Type in the search input
-    const searchInput = page.getByPlaceholder(
-      "Огноо, харилцагч, дүнгээр хайх...",
-    );
-    if (await searchInput.isVisible()) {
-      await searchInput.fill("а");
-      await page.waitForTimeout(500);
-    }
+    const searchInput = page.getByPlaceholder("Харилцагч хайх...");
+    await expect(searchInput).toBeVisible({ timeout: 5_000 });
+    await searchInput.fill("а");
 
-    // 3. Page should render without error
-    const tableOrNoResults = page
-      .locator("table")
-      .or(page.locator("text=No results."));
-    await expect(tableOrNoResults.first()).toBeVisible({ timeout: 3000 });
+    await expect(table.or(page.getByText("No results.")).first()).toBeVisible({
+      timeout: 5_000,
+    });
 
-    // 4. Verify the chip is still highlighted/active
-    const chipButton = page.getByRole("button", { name: "Бүрэн төлөгдсөн" });
-    const classAttr = await chipButton.getAttribute("class");
-    const _isActive = classAttr?.includes("border-primary") ?? false;
-
-    // 5. Clear search
     await searchInput.clear();
-    await page.waitForTimeout(300);
-
-    // 6. Deselect the chip
-    await chipButton.click();
-    await page.waitForTimeout(300);
+    await fullyPaidChip.click();
+    await expect(fullyPaidChip).not.toHaveClass(/border-primary/);
   });
 
   test("VAL-CROSS-005: Empty to populated transition", async ({ page }) => {
     await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
-    const table = page.locator("table");
-    const hasData = await table.isVisible().catch(() => false);
+    const table = page.locator("table").first();
+    const emptyState = page.getByText("Борлуулалт бүртгэгдээгүй").first();
+    await expect
+      .poll(
+        async () => (await table.isVisible()) || (await emptyState.isVisible()),
+        { timeout: 10_000, intervals: [100, 250, 500] },
+      )
+      .toBe(true);
 
-    if (hasData) {
-      await expect(table).toBeVisible({ timeout: 3000 });
-    } else {
-      // Empty state should be shown
-      const emptyState = page.getByText("Борлуулалт бүртгэгдээгүй").first();
-      await expect(emptyState).toBeVisible({ timeout: 5000 });
-
-      // Create first sale using the CTA
-      const productName = await getProductWithStock(page);
-      const createBtn = page.getByRole("button", { name: "Шинэ борлуулалт" });
-      await expect(createBtn).toBeVisible({ timeout: 3000 });
-      await createBtn.click();
-      await page.waitForTimeout(1500);
-      await selectProductByName(page, productName, 0);
-      await createCustomerInPicker(page, `First Sale ${Date.now()}`);
-      await submitSaleForm(page);
-      await waitForSuccessToast(page);
-      await page.waitForTimeout(2000);
-
-      // Table should appear after creating first sale
-      await page.goto("/sales", { waitUntil: "domcontentloaded" });
-
-      await expect(page.locator("table")).toBeVisible({ timeout: 5000 });
+    if (await table.isVisible()) {
+      await expect(table).toBeVisible({ timeout: 3_000 });
+      return;
     }
+
+    // Empty state should be shown before the first sale.
+    await expect(emptyState).toBeVisible({ timeout: 5_000 });
+
+    const productName = await getProductWithStock(page);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
+    await openCreateDrawer(page);
+
+    await selectProductByName(page, productName, 0);
+    await createCustomerInPicker(page, `First Sale ${Date.now()}`);
+    await submitSaleForm(page);
+    await waitForSuccessToast(page);
+
+    // Table should appear after creating first sale.
+    await page.goto(`/sales?refresh=${Date.now()}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(page.locator("table").first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("VAL-CROSS-006: Create drawer opens from both button and /sales?create=true", async ({
@@ -380,18 +412,13 @@ test.describe("Cross-Area Flows", () => {
   }) => {
     // Path 1: Click "Шинэ борлуулалт" button
     await page.goto("/sales", { waitUntil: "domcontentloaded" });
-
-    await page.getByRole("button", { name: "Шинэ борлуулалт" }).click();
-    await page.waitForTimeout(1500);
-    await expect(
-      page.getByRole("heading", { name: "Борлуулалт нэмэх" }),
-    ).toBeVisible({ timeout: 5000 });
+    await openCreateDrawer(page);
 
     // Close the drawer
     await closeDrawer(page);
     await expect(
       page.getByRole("heading", { name: "Борлуулалт нэмэх" }),
-    ).not.toBeVisible({ timeout: 3000 });
+    ).not.toBeVisible({ timeout: 3_000 });
 
     // Path 2: Navigate to /sales?create=true
     await page.goto("/sales?create=true", { waitUntil: "domcontentloaded" });
@@ -399,11 +426,10 @@ test.describe("Cross-Area Flows", () => {
     // Verify drawer auto-opens
     await expect(
       page.getByRole("heading", { name: "Борлуулалт нэмэх" }),
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible({ timeout: 10_000 });
 
     // Verify URL was cleaned
-    const currentUrl = page.url();
-    expect(currentUrl).not.toContain("create=true");
+    expect(page.url()).not.toContain("create=true");
   });
 
   test("VAL-CROSS-007: Sale detail accessible from both row click and post-save toast Дэлгэрэнгүй", async ({
@@ -413,6 +439,9 @@ test.describe("Cross-Area Flows", () => {
 
     // Check if we have sales data
     const rows = page.locator("table tbody tr");
+    await expect(page.locator("table").first()).toBeVisible({
+      timeout: 10_000,
+    });
     const rowCount = await rows.count();
 
     if (rowCount === 0) {
@@ -421,17 +450,13 @@ test.describe("Cross-Area Flows", () => {
     }
 
     // Path 1: Click a sale row → detail drawer opens
-    await rows.first().click();
-    await page.waitForTimeout(1500);
-    await expect(
-      page.getByRole("heading", { name: "Борлуулалтын дэлгэрэнгүй" }),
-    ).toBeVisible({ timeout: 5000 });
+    await openDetailDrawerFromFirstRow(page);
 
     // Close the drawer
     await closeDrawer(page);
     await expect(
       page.getByRole("heading", { name: "Борлуулалтын дэлгэрэнгүй" }),
-    ).not.toBeVisible({ timeout: 3000 });
+    ).not.toBeVisible({ timeout: 3_000 });
 
     // Path 2: Create a new sale, then click Дэлгэрэнгүй in the toast
     const productName = await getProductWithStock(page);
@@ -444,19 +469,17 @@ test.describe("Cross-Area Flows", () => {
     await submitSaleForm(page);
 
     // Wait for the toast with action buttons
-    await page.waitForTimeout(3000);
     const toast = page.locator("[data-sonner-toast]").first();
-    await expect(toast).toBeVisible({ timeout: 15000 });
+    await expect(toast).toBeVisible({ timeout: 15_000 });
 
     // Click "Дэлгэрэнгүй" button
     const detailBtn = page.getByRole("button", { name: "Дэлгэрэнгүй" }).first();
-    await expect(detailBtn).toBeVisible({ timeout: 5000 });
+    await expect(detailBtn).toBeVisible({ timeout: 5_000 });
     await detailBtn.click();
-    await page.waitForTimeout(2000);
 
     // Verify the detail drawer opens
     await expect(
       page.getByRole("heading", { name: "Борлуулалтын дэлгэрэнгүй" }),
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible({ timeout: 10_000 });
   });
 });

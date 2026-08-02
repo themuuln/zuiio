@@ -14,8 +14,12 @@ const AUTH_FILE = ".auth/user.json";
 
 export default defineConfig({
   testDir: "./e2e",
-  testIgnore: ["**/codeceptjs/**"],
-  fullyParallel: true,
+  testIgnore: [
+    "**/codeceptjs/**",
+    "**/fixture.ts",
+    "**/seed.spec.ts",
+    "**/midscene_run/**",
+  ],
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : 4,

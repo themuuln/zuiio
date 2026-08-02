@@ -1,14 +1,13 @@
 "use server";
 import * as Sentry from "@sentry/nextjs";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture, withDbCapture } from "@zuiio/capture";
-
 import { requireAppContext, requireWriteAction } from "@/lib/action-utils";
 import { findOrCreateContact } from "@/lib/contact-utils";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
-import type { CartItemData } from "@/lib/types";
 import type { Database } from "@/lib/supabase/types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { CartItemData } from "@/lib/types";
 import { getString } from "@/lib/validation";
 
 export async function createShopSale(
@@ -66,7 +65,7 @@ export async function createShopSale(
 
       // Parse coupon fields
       const couponCode = getString(formData, "coupon_code");
-      const discountAmount = Number(formData.get("discount_amount") ?? 0);
+      const _discountAmount = Number(formData.get("discount_amount") ?? 0);
 
       // Parse gift card fields
       const giftCardId = getString(formData, "gift_card_id");
@@ -238,13 +237,21 @@ export async function createShopSale(
       if (couponId && couponCode) {
         (async () => {
           const couponDb = supabase as unknown as {
-            from(table: 'coupon_usage'): {
-              insert(data: Record<string, unknown>): Promise<{ error: unknown }>;
+            from(table: "coupon_usage"): {
+              insert(
+                data: Record<string, unknown>,
+              ): Promise<{ error: unknown }>;
             };
-            from(table: 'coupons'): {
+            from(table: "coupons"): {
               select(columns: string): {
-                eq(col: string, val: string): {
-                  maybeSingle(): Promise<{ data: Record<string, unknown> | null; error: unknown }>;
+                eq(
+                  col: string,
+                  val: string,
+                ): {
+                  maybeSingle(): Promise<{
+                    data: Record<string, unknown> | null;
+                    error: unknown;
+                  }>;
                 };
               };
               update(data: Record<string, unknown>): {
@@ -262,9 +269,14 @@ export async function createShopSale(
               sale_id: saleId,
             });
           if (usageError) {
-            capture(usageError instanceof Error ? usageError : new Error(String(usageError)), {
-              context: "createShopSale: coupon_usage insert",
-            });
+            capture(
+              usageError instanceof Error
+                ? usageError
+                : new Error(String(usageError)),
+              {
+                context: "createShopSale: coupon_usage insert",
+              },
+            );
           }
 
           // Read current used_count and increment
@@ -285,9 +297,14 @@ export async function createShopSale(
             .update({ used_count: currentCount + 1 })
             .eq("id", couponId);
           if (updateError) {
-            capture(updateError instanceof Error ? updateError : new Error(String(updateError)), {
-              context: "createShopSale: coupon used_count update",
-            });
+            capture(
+              updateError instanceof Error
+                ? updateError
+                : new Error(String(updateError)),
+              {
+                context: "createShopSale: coupon used_count update",
+              },
+            );
           }
         })().catch((e) => {
           capture(e, { context: "createShopSale: fire-and-forget coupon" });
@@ -298,7 +315,10 @@ export async function createShopSale(
       if (giftCardId && giftCardAmount > 0) {
         (async () => {
           const gcDb = supabase as unknown as {
-            rpc(fn: "redeem_gift_card", params: Record<string, unknown>): Promise<{
+            rpc(
+              fn: "redeem_gift_card",
+              params: Record<string, unknown>,
+            ): Promise<{
               data: unknown;
               error: unknown;
             }>;
@@ -316,9 +336,14 @@ export async function createShopSale(
           );
 
           if (redeemError) {
-            capture(redeemError instanceof Error ? redeemError : new Error(String(redeemError)), {
-              context: "createShopSale: redeem_gift_card",
-            });
+            capture(
+              redeemError instanceof Error
+                ? redeemError
+                : new Error(String(redeemError)),
+              {
+                context: "createShopSale: redeem_gift_card",
+              },
+            );
           } else if (
             redeemResult &&
             typeof redeemResult === "object" &&
@@ -326,7 +351,8 @@ export async function createShopSale(
             !(redeemResult as Record<string, unknown>).success
           ) {
             const errMsg =
-              typeof (redeemResult as Record<string, unknown>).error === "string"
+              typeof (redeemResult as Record<string, unknown>).error ===
+              "string"
                 ? ((redeemResult as Record<string, unknown>).error as string)
                 : "Бэлгийн карт ашиглахад алдаа гарлаа.";
             capture(new Error(errMsg), {
@@ -372,9 +398,18 @@ async function validateCouponInternal(
   // coupons table exists in DB but not in generated types
   const couponDb = supabase as unknown as {
     from(table: "coupons"): {
-      select(columns: string, opts?: { count?: "exact"; head?: boolean }): {
-        eq(col: string, val: string): {
-          eq(col2: string, val2: string): {
+      select(
+        columns: string,
+        opts?: { count?: "exact"; head?: boolean },
+      ): {
+        eq(
+          col: string,
+          val: string,
+        ): {
+          eq(
+            col2: string,
+            val2: string,
+          ): {
             maybeSingle(): Promise<{
               data: Record<string, unknown> | null;
               error: unknown;
@@ -470,9 +505,18 @@ async function validateCouponInternal(
   if (contactId && c.per_customer_limit !== null) {
     const usageDb = supabase as unknown as {
       from(table: "coupon_usage"): {
-        select(columns: string, opts?: { count?: "exact"; head?: boolean }): {
-          eq(col: string, val: string): {
-            eq(col2: string, val2: string): Promise<{ count: number | null; error: unknown }>;
+        select(
+          columns: string,
+          opts?: { count?: "exact"; head?: boolean },
+        ): {
+          eq(
+            col: string,
+            val: string,
+          ): {
+            eq(
+              col2: string,
+              val2: string,
+            ): Promise<{ count: number | null; error: unknown }>;
           };
         };
       };
@@ -507,7 +551,8 @@ async function validateCouponInternal(
   // Calculate discount amount
   let discountAmount: number;
   if (c.discount_type === "percentage") {
-    discountAmount = Math.round(cartTotal * (c.discount_value / 100) * 100) / 100;
+    discountAmount =
+      Math.round(cartTotal * (c.discount_value / 100) * 100) / 100;
     if (c.max_discount_amount !== null) {
       discountAmount = Math.min(discountAmount, c.max_discount_amount);
     }
@@ -539,7 +584,13 @@ export async function validateCouponCode(
 }> {
   const { supabase, organizationId } = await requireAppContext();
 
-  return validateCouponInternal(supabase, organizationId, code, cartTotal, contactId);
+  return validateCouponInternal(
+    supabase,
+    organizationId,
+    code,
+    cartTotal,
+    contactId,
+  );
 }
 
 /**
@@ -563,8 +614,14 @@ export async function validateGiftCardCode(
   const gcDb = supabase as unknown as {
     from(table: "gift_cards"): {
       select(columns: string): {
-        eq(col: string, val: string): {
-          eq(col2: string, val2: string): {
+        eq(
+          col: string,
+          val: string,
+        ): {
+          eq(
+            col2: string,
+            val2: string,
+          ): {
             maybeSingle(): Promise<{
               data: Record<string, unknown> | null;
               error: unknown;

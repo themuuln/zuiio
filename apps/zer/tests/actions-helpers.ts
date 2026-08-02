@@ -130,16 +130,12 @@ export function formData(
  *
  * Uses Node's `mock.module` via an unchecked cast for Bun compat.
  */
-export function mockMod(
-  specifier: string,
-  mod: Record<string, unknown>,
-): void {
+export function mockMod(specifier: string, mod: Record<string, unknown>): void {
   (mock.module as (specifier: string, opts: Record<string, unknown>) => void)(
     specifier,
     { namedExports: mod },
   );
 }
-
 
 /**
  * Register mocks for modules that ALL server action tests need.

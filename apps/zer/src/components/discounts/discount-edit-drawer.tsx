@@ -342,7 +342,10 @@ export function DiscountEditDrawer({
               min="0"
               step="1"
               placeholder="Хязгааргүй"
-              {...register("usage_limit", { valueAsNumber: true })}
+              {...register("usage_limit", {
+                setValueAs: (value) =>
+                  value === "" ? undefined : Number(value),
+              })}
             />
           </Field>
 

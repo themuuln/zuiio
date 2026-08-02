@@ -29,10 +29,12 @@ const getUserMock = mock.fn(async () => ({
   error: null,
 }));
 
-const rpcMock = mock.fn(async (_name: string, _args: Record<string, unknown>) => ({
-  data: { id: "org-1" },
-  error: null,
-}));
+const rpcMock = mock.fn(
+  async (_name: string, _args: Record<string, unknown>) => ({
+    data: { id: "org-1" },
+    error: null,
+  }),
+);
 
 const createClientMock = mock.fn(async () => ({
   auth: { getUser: getUserMock },
@@ -41,9 +43,7 @@ const createClientMock = mock.fn(async () => ({
 mockMod("@/lib/supabase/server", { createClient: createClientMock });
 
 mockMod("@/lib/format", {
-  slugify: mock.fn((name: string) =>
-    name.toLowerCase().replace(/\s+/g, "-"),
-  ),
+  slugify: mock.fn((name: string) => name.toLowerCase().replace(/\s+/g, "-")),
 });
 
 // ─── Lazy-loaded module ──────────────────────────────────────────────
@@ -53,9 +53,7 @@ let createOrganization: (
 ) => Promise<unknown>;
 
 test.before(async () => {
-  const mod = await import(
-    "@/app/(onboarding)/organization/new/actions"
-  );
+  const mod = await import("@/app/(onboarding)/organization/new/actions");
   createOrganization = mod.createOrganization;
 });
 
@@ -87,7 +85,10 @@ test("createOrganization — rejects when no user", async () => {
     error: null,
   }));
 
-  const result = await createOrganization(undefined, formData({ name: "Acme" }));
+  const result = await createOrganization(
+    undefined,
+    formData({ name: "Acme" }),
+  );
   assert.deepEqual(result, { error: "Нэвтрэх шаардлагатай." });
   assert.equal(rpcMock.mock.callCount(), 0, "should not call RPC");
 });
@@ -103,10 +104,7 @@ test("createOrganization — rejects missing name", async () => {
 test("createOrganization — rejects empty name after trim", async () => {
   resetMocks();
 
-  const result = await createOrganization(
-    undefined,
-    formData({ name: "   " }),
-  );
+  const result = await createOrganization(undefined, formData({ name: "   " }));
   assert.deepEqual(result, { error: "Байгууллагын нэр шаардлагатай." });
   assert.equal(rpcMock.mock.callCount(), 0, "should not call RPC");
 });
@@ -141,11 +139,7 @@ test("createOrganization — creates with auto-generated slug via slugify", asyn
   resetMocks();
 
   await assert.rejects(
-    () =>
-      createOrganization(
-        undefined,
-        formData({ name: "My Company Name" }),
-      ),
+    () => createOrganization(undefined, formData({ name: "My Company Name" })),
     { message: "REDIRECT" },
   );
 
@@ -161,8 +155,7 @@ test("createOrganization — uses default companyType retail when not provided",
   resetMocks();
 
   await assert.rejects(
-    () =>
-      createOrganization(undefined, formData({ name: "Test Org" })),
+    () => createOrganization(undefined, formData({ name: "Test Org" })),
     { message: "REDIRECT" },
   );
 
@@ -237,8 +230,7 @@ test("createOrganization — calls capture for both rpcError and result on succe
   resetMocks();
 
   await assert.rejects(
-    () =>
-      createOrganization(undefined, formData({ name: "Good Org" })),
+    () => createOrganization(undefined, formData({ name: "Good Org" })),
     { message: "REDIRECT" },
   );
 
@@ -252,11 +244,7 @@ test("createOrganization — trims name before sending to RPC", async () => {
   resetMocks();
 
   await assert.rejects(
-    () =>
-      createOrganization(
-        undefined,
-        formData({ name: "  Trimmed Name  " }),
-      ),
+    () => createOrganization(undefined, formData({ name: "  Trimmed Name  " })),
     { message: "REDIRECT" },
   );
 

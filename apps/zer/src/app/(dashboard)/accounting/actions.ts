@@ -195,15 +195,19 @@ export async function createAccount(
     return { error: `"${code}" кодтой данс бүртгэгдсэн байна.` };
   }
 
-  const { error: insertError } = await db.from("chart_of_accounts").insert({
-    organization_id: organizationId,
-    branch_id: branchId,
-    code,
-    name,
-    type,
-    parent_id: parentId || null,
-    is_active: isActive,
-  });
+  const { data: account, error: insertError } = await db
+    .from("chart_of_accounts")
+    .insert({
+      organization_id: organizationId,
+      branch_id: branchId,
+      code,
+      name,
+      type,
+      parent_id: parentId || null,
+      is_active: isActive,
+    })
+    .select("id")
+    .single();
 
   capture(insertError, { context: "createAccount: insert account" });
   if (insertError) {
@@ -216,8 +220,8 @@ export async function createAccount(
       organizationId,
       userId,
       "created",
-      "product",
-      code,
+      "account",
+      account.id,
       undefined,
       `Данс "${code} - ${name}" үүсгэсэн`,
     ),

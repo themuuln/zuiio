@@ -7,7 +7,7 @@ import test, { mock } from "node:test";
 
 // ─── Mocks: must be before any module imports ─────────────────────────
 // server-only throws at import in non-server context - must be mocked first
-const serverOnlyMock = mock.module("server-only", {
+const _serverOnlyMock = mock.module("server-only", {
   exports: {},
 });
 
@@ -16,7 +16,7 @@ mock.module("@zuiio/capture", {
   exports: { capture: captureSpy },
 });
 
-import { mockMod, resolved } from "./actions-helpers";
+import { resolved } from "./actions-helpers";
 
 let mockOrgSetting: Record<string, boolean | null> | null = null;
 let mockQueryError: Error | null = null;
@@ -39,7 +39,11 @@ function makeSupabase() {
   };
 }
 
-let checkOrgSetting: (supabase: unknown, organizationId: string, setting: string) => Promise<boolean>;
+let checkOrgSetting: (
+  supabase: unknown,
+  organizationId: string,
+  setting: string,
+) => Promise<boolean>;
 
 test.before(async () => {
   const mod = await import("@/lib/org-settings");
@@ -56,31 +60,51 @@ test.beforeEach(() => {
 
 test("checkOrgSetting returns true when setting is explicitly true", async () => {
   mockOrgSetting = { has_inventory: true };
-  const result = await checkOrgSetting(makeSupabase(), "org-123", "has_inventory");
+  const result = await checkOrgSetting(
+    makeSupabase(),
+    "org-123",
+    "has_inventory",
+  );
   assert.equal(result, true);
 });
 
 test("checkOrgSetting returns false when setting is explicitly false", async () => {
   mockOrgSetting = { has_inventory: false };
-  const result = await checkOrgSetting(makeSupabase(), "org-123", "has_inventory");
+  const result = await checkOrgSetting(
+    makeSupabase(),
+    "org-123",
+    "has_inventory",
+  );
   assert.equal(result, false);
 });
 
 test("checkOrgSetting returns true when setting is null (default)", async () => {
   mockOrgSetting = { has_variants: null };
-  const result = await checkOrgSetting(makeSupabase(), "org-123", "has_variants");
+  const result = await checkOrgSetting(
+    makeSupabase(),
+    "org-123",
+    "has_variants",
+  );
   assert.equal(result, true);
 });
 
 test("checkOrgSetting returns true when setting is undefined in data", async () => {
   mockOrgSetting = {};
-  const result = await checkOrgSetting(makeSupabase(), "org-123", "has_variants");
+  const result = await checkOrgSetting(
+    makeSupabase(),
+    "org-123",
+    "has_variants",
+  );
   assert.equal(result, true);
 });
 
 test("checkOrgSetting returns false on query error and captures it", async () => {
   mockQueryError = new Error("DB connection failed");
-  const result = await checkOrgSetting(makeSupabase(), "org-123", "has_inventory");
+  const result = await checkOrgSetting(
+    makeSupabase(),
+    "org-123",
+    "has_inventory",
+  );
   assert.equal(result, false);
   assert.equal(captureSpy.mock.calls.length, 1);
   const callArg = captureSpy.mock.calls[0].arguments[0];
@@ -96,12 +120,20 @@ test("checkOrgSetting throws for invalid setting column", async () => {
 
 test("checkOrgSetting: has_suppliers is a valid setting", async () => {
   mockOrgSetting = { has_suppliers: true };
-  const result = await checkOrgSetting(makeSupabase(), "org-123", "has_suppliers");
+  const result = await checkOrgSetting(
+    makeSupabase(),
+    "org-123",
+    "has_suppliers",
+  );
   assert.equal(result, true);
 });
 
 test("checkOrgSetting: onboarding_completed is a valid setting", async () => {
   mockOrgSetting = { onboarding_completed: false };
-  const result = await checkOrgSetting(makeSupabase(), "org-123", "onboarding_completed");
+  const result = await checkOrgSetting(
+    makeSupabase(),
+    "org-123",
+    "onboarding_completed",
+  );
   assert.equal(result, false);
 });

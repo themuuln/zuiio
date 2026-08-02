@@ -9,7 +9,6 @@
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
 import {
-  createMockSupabase,
   mockActionCtx,
   mockMod,
   registerDefaultMocks,
@@ -65,9 +64,7 @@ let batchCreatePurchaseOrders: (
 }>;
 
 test.before(async () => {
-  const mod = await import(
-    "@/app/(dashboard)/inventory/restock/actions"
-  );
+  const mod = await import("@/app/(dashboard)/inventory/restock/actions");
   batchCreatePurchaseOrders = mod.batchCreatePurchaseOrders;
 });
 
@@ -104,9 +101,7 @@ function buildSupabase(overrides?: {
       sel.select = mock.fn(() => {
         const s: Record<string, unknown> = {};
         s.single = mock.fn(
-          () =>
-            overrides?.poInsert ??
-            resolved({ id: "po-test-id" }, null),
+          () => overrides?.poInsert ?? resolved({ id: "po-test-id" }, null),
         );
         return s;
       });
@@ -115,9 +110,7 @@ function buildSupabase(overrides?: {
     self.select = mock.fn(() => {
       const s: Record<string, unknown> = {};
       s.single = mock.fn(
-        () =>
-          overrides?.poInsert ??
-          resolved({ id: "po-test-id" }, null),
+        () => overrides?.poInsert ?? resolved({ id: "po-test-id" }, null),
       );
       return s;
     });
@@ -131,10 +124,7 @@ function buildSupabase(overrides?: {
 
   const itemsChain = () => {
     const self: Record<string, unknown> = {};
-    self.insert = mock.fn(
-      () =>
-        overrides?.itemsInsert ?? resolved(null, null),
-    );
+    self.insert = mock.fn(() => overrides?.itemsInsert ?? resolved(null, null));
     return self;
   };
 
@@ -202,8 +192,14 @@ test("creates single order successfully", async () => {
 
   // Verify generate_purchase_order_number was called
   assert.equal(supabase.rpc.mock.callCount(), 2); // generate number + process restock
-  assert.equal(supabase.rpc.mock.calls[0].arguments[0], "generate_purchase_order_number");
-  assert.equal(supabase.rpc.mock.calls[1].arguments[0], "process_restock_stock_movements");
+  assert.equal(
+    supabase.rpc.mock.calls[0].arguments[0],
+    "generate_purchase_order_number",
+  );
+  assert.equal(
+    supabase.rpc.mock.calls[1].arguments[0],
+    "process_restock_stock_movements",
+  );
 
   // Verify revalidateEntities was called
   assert.equal(revalidateEntitiesMock.mock.callCount(), 1);
@@ -281,8 +277,10 @@ test("handles items insert error with rollback", async () => {
   // Verify rollback: purchase_orders.delete().eq() should have been called
   // find the delete call on purchase_orders table
   const fromCalls = supabase.from.mock.calls;
-  const deleteCall = fromCalls.find(
-    (c) => c.arguments[0] === "purchase_orders" && typeof c.result?.delete === "function",
+  const _deleteCall = fromCalls.find(
+    (c) =>
+      c.arguments[0] === "purchase_orders" &&
+      typeof c.result?.delete === "function",
   );
   // The chain goes from("purchase_orders") -> delete -> eq
   // Since withDbCapture wraps the whole chain, verify delete was invoked

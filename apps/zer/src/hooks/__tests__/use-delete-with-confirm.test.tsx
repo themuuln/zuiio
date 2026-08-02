@@ -1,7 +1,7 @@
 /**
  * Tests for useDeleteWithConfirm hook.
  */
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -97,7 +97,8 @@ describe("useDeleteWithConfirm", () => {
       result.current.handleDelete("id-1");
     });
 
-    const confirmMsg = (window.confirm as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const confirmMsg = (window.confirm as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
     expect(confirmMsg).toContain("TestItem");
     expect(confirmMsg).toContain("Бараа");
   });

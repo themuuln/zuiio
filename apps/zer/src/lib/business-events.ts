@@ -182,18 +182,28 @@ export async function checkStockTargets(
   // 3. Check each target — batch queries instead of N+1 per target
   const shortages: StockShortage[] = [];
 
-  const productTargets = targets.filter((t): t is StockTargetRow & { product_id: string } => !!t.product_id);
-  const categoryTargets = targets.filter((t): t is StockTargetRow & { category_id: string } => !!t.category_id);
+  const productTargets = targets.filter(
+    (t): t is StockTargetRow & { product_id: string } => !!t.product_id,
+  );
+  const categoryTargets = targets.filter(
+    (t): t is StockTargetRow & { category_id: string } => !!t.category_id,
+  );
 
   // Batch-fetch all referenced products
-  const productMap: Record<string, { name: string | null; current_stock: number }> = {};
+  const productMap: Record<
+    string,
+    { name: string | null; current_stock: number }
+  > = {};
   if (productTargets.length > 0) {
     const { data: products } = await withDbCapture(
       "business-events:fetch_product_stock_batch",
       supabase
         .from("products")
         .select("id, name, current_stock")
-        .in("id", productTargets.map((t) => t.product_id))
+        .in(
+          "id",
+          productTargets.map((t) => t.product_id),
+        )
         .eq("organization_id", organizationId),
     );
     for (const p of products ?? []) {
@@ -226,7 +236,9 @@ export async function checkStockTargets(
     );
     for (const p of categoryProducts ?? []) {
       const catId = p.category_id;
-      if (catId) categoryStockMap[catId] = (categoryStockMap[catId] ?? 0) + (p.current_stock ?? 0);
+      if (catId)
+        categoryStockMap[catId] =
+          (categoryStockMap[catId] ?? 0) + (p.current_stock ?? 0);
     }
   }
 

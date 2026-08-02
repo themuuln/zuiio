@@ -62,6 +62,8 @@ export async function createShareLink(
       .from("shared_reports")
       .insert({
         organization_id: organizationId,
+        // Legacy column remains NOT NULL; never store the raw share token.
+        token: tokenHash,
         token_hash: tokenHash,
         expires_at: expiresAt,
         date_from: dateFrom,

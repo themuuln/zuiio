@@ -4,15 +4,14 @@ import { Gift } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import {
-  GiftCardCreateDrawer,
-  GiftCardDetailDrawer,
-  type GiftCardDetailData,
-} from "@/components/gift-cards";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
+import {
+  GiftCardCreateDrawer,
+  type GiftCardDetailData,
+  GiftCardDetailDrawer,
+} from "@/components/gift-cards";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -37,11 +36,7 @@ function toDetailData(d: GiftCardRow): GiftCardDetailData {
   };
 }
 
-export function GiftCardsContent({
-  giftCards,
-}: {
-  giftCards: GiftCardRow[];
-}) {
+export function GiftCardsContent({ giftCards }: { giftCards: GiftCardRow[] }) {
   const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(
     searchParams.get("create") === "true",
@@ -57,16 +52,7 @@ export function GiftCardsContent({
 
   if (giftCards.length === 0) {
     return (
-      <PageShell
-        title="Бэлгийн карт"
-        description="Бэлгийн картуудын жагсаалт"
-        actions={
-          <GiftCardCreateDrawer
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-          />
-        }
-      >
+      <PageShell title="Бэлгийн карт" description="Бэлгийн картуудын жагсаалт">
         <ErpEmptyState
           icon={<Gift className="size-4" />}
           title="Бэлгийн карт байхгүй"
@@ -132,15 +118,11 @@ export function GiftCardsContent({
       cell: ({ row }) => {
         const date = row.original.expires_at;
         if (!date)
-          return (
-            <span className="text-muted-foreground">Тодорхойгүй</span>
-          );
+          return <span className="text-muted-foreground">Тодорхойгүй</span>;
         return (
           <span
             className={cn(
-              new Date(date) < new Date()
-                ? "text-destructive"
-                : undefined,
+              new Date(date) < new Date() ? "text-destructive" : undefined,
             )}
           >
             {formatDate(date)}
@@ -175,11 +157,7 @@ export function GiftCardsContent({
         />
       </PageShell>
       <GiftCardDetailDrawer
-        giftCard={
-          selectedCard
-            ? toDetailData(selectedCard)
-            : ({} as GiftCardDetailData)
-        }
+        giftCard={selectedCard ? toDetailData(selectedCard) : null}
         open={!!selectedCard}
         onOpenChange={(open) => {
           if (!open) setSelectedCard(null);

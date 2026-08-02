@@ -39,9 +39,7 @@ mockMod("@/lib/action-utils", {
 // ─── Lazy-loaded module ──────────────────────────────────────────────
 
 let getStaffList: () => Promise<Record<string, unknown>>;
-let fetchProductsPage: (
-  offset: number,
-) => Promise<Record<string, unknown>>;
+let fetchProductsPage: (offset: number) => Promise<Record<string, unknown>>;
 
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/shop/actions");
@@ -109,11 +107,16 @@ test("getStaffList returns empty profiles on DB error", async () => {
 test("getStaffList queries profiles for the correct org", async () => {
   resetMocks();
   const mockEq = mock.fn(() => ({
-    order: mock.fn(() => resolved([{ id: "u1", full_name: "Test", role: "admin" }])),
+    order: mock.fn(() =>
+      resolved([{ id: "u1", full_name: "Test", role: "admin" }]),
+    ),
   }));
   const supabase = createMockSupabase({
     profiles: {
-      select: mock.fn(() => ({ eq: mockEq, order: mock.fn(() => resolved([])) })),
+      select: mock.fn(() => ({
+        eq: mockEq,
+        order: mock.fn(() => resolved([])),
+      })),
     },
   });
   mockCtx = mockActionCtx({ supabase, organizationId: "org-42" });
@@ -161,7 +164,6 @@ test("fetchProductsPage calls supabase with correct query", async () => {
   assert.ok("products" in result, "should have products key");
   assert.ok("hasMore" in result, "should have hasMore key");
 });
-
 
 test("fetchProductsPage passes correct offset to range", async () => {
   resetMocks();

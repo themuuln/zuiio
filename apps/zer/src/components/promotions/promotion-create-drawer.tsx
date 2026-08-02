@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { capture } from "@zuiio/capture";
 import { Plus, Trash } from "@phosphor-icons/react";
+import { capture } from "@zuiio/capture";
 import { useEffect, useState } from "react";
 import { Controller, type Resolver, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -47,10 +47,7 @@ function mapFormTypeToDbType(
   formType: string,
 ): "buy_x_get_y" | "threshold_discount" | "free_shipping" | "bundle_discount" {
   if (formType === "1+1" || formType === "2+1") return "buy_x_get_y";
-  return formType as
-    | "threshold_discount"
-    | "free_shipping"
-    | "bundle_discount";
+  return formType as "threshold_discount" | "free_shipping" | "bundle_discount";
 }
 
 const promotionSchema = z.object({
@@ -122,7 +119,6 @@ export function PromotionCreateDrawer({
   // Product search
   const [productQuery, setProductQuery] = useState("");
 
-
   // Locally fetched products if not provided
   const [localProducts, setLocalProducts] = useState<Array<{
     id: string;
@@ -133,7 +129,6 @@ export function PromotionCreateDrawer({
     register,
     handleSubmit,
     control,
-    watch,
     reset,
     formState: { errors },
   } = useForm<PromotionValues>({
@@ -425,9 +420,7 @@ export function PromotionCreateDrawer({
               {...register("name")}
             />
             {errors.name && (
-              <p className="text-xs text-destructive">
-                {errors.name.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.name.message}</p>
             )}
           </Field>
 
@@ -560,7 +553,10 @@ export function PromotionCreateDrawer({
               min="0"
               step="1"
               placeholder="Хязгааргүй"
-              {...register("usage_limit", { valueAsNumber: true })}
+              {...register("usage_limit", {
+                setValueAs: (value) =>
+                  value === "" ? undefined : Number(value),
+              })}
             />
           </Field>
 
@@ -718,9 +714,7 @@ export function PromotionCreateDrawer({
                     }
                     className="w-full"
                   >
-                    <option value="percentage_discount">
-                      %-ийн хямдрал
-                    </option>
+                    <option value="percentage_discount">%-ийн хямдрал</option>
                     <option value="fixed_discount">
                       Тогтмол дүнгийн хямдрал
                     </option>
@@ -786,9 +780,7 @@ export function PromotionCreateDrawer({
                           className="w-full"
                         />
                         <ComboboxContent>
-                          <ComboboxEmpty>
-                            Бүтээгдэхүүн байхгүй
-                          </ComboboxEmpty>
+                          <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
                           <ComboboxList>
                             {(item: { id: string; name: string }) => (
                               <ComboboxItem key={item.id} value={item.id}>
@@ -814,11 +806,7 @@ export function PromotionCreateDrawer({
                       placeholder="1"
                       value={reward.reward_max_count}
                       onChange={(e) =>
-                        updateReward(
-                          index,
-                          "reward_max_count",
-                          e.target.value,
-                        )
+                        updateReward(index, "reward_max_count", e.target.value)
                       }
                     />
                   </div>

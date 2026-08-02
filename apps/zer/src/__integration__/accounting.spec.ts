@@ -4,18 +4,14 @@
  * Covers: chart_of_accounts, journal_entries, journal_entry_lines,
  * seed_default_chart_of_accounts, generate_journal_entry_number,
  * fiscal_periods, RLS enforcement.
- *
- * NOTE: seed_default_chart_of_accounts is broken due to missing
- * branch_id parameter (pre-existing DB bug). Tests for it verify
- * the function produces a NOT NULL error rather than succeeding.
  */
 
 import { describe, expect, it } from "vitest";
 import {
   createAdminClient,
   createAnonClient,
-  createTestOrg,
   createTestBranch,
+  createTestOrg,
   trackCleanup,
 } from "./helpers";
 
@@ -41,9 +37,9 @@ describe("Chart of Accounts CRUD", () => {
       .select()
       .single();
     expect(error).toBeNull();
-    expect(acct!.code).toBe("4100");
-    expect(acct!.type).toBe("income");
-    trackCleanup("chart_of_accounts", acct!.id);
+    expect(acct?.code).toBe("4100");
+    expect(acct?.type).toBe("income");
+    trackCleanup("chart_of_accounts", acct?.id);
   });
 
   it("admin can create all account types", async () => {
@@ -65,8 +61,8 @@ describe("Chart of Accounts CRUD", () => {
         .select()
         .single();
       expect(error).toBeNull();
-      expect(acct!.type).toBe(types[i]);
-      trackCleanup("chart_of_accounts", acct!.id);
+      expect(acct?.type).toBe(types[i]);
+      trackCleanup("chart_of_accounts", acct?.id);
     }
   });
 
@@ -75,8 +71,20 @@ describe("Chart of Accounts CRUD", () => {
     const { branchId } = await createTestBranch(admin, orgId);
 
     await admin.from("chart_of_accounts").insert([
-      { organization_id: orgId, branch_id: branchId, code: "1000", name: "Assets", type: "asset" },
-      { organization_id: orgId, branch_id: branchId, code: "2000", name: "Liabilities", type: "liability" },
+      {
+        organization_id: orgId,
+        branch_id: branchId,
+        code: "1000",
+        name: "Assets",
+        type: "asset",
+      },
+      {
+        organization_id: orgId,
+        branch_id: branchId,
+        code: "2000",
+        name: "Liabilities",
+        type: "liability",
+      },
     ]);
 
     const { data: accounts, error } = await admin
@@ -84,7 +92,7 @@ describe("Chart of Accounts CRUD", () => {
       .select("code, type")
       .eq("organization_id", orgId);
     expect(error).toBeNull();
-    expect(accounts!.length).toBeGreaterThanOrEqual(2);
+    expect(accounts?.length).toBeGreaterThanOrEqual(2);
   });
 
   it("admin can update account name and is_active", async () => {
@@ -102,12 +110,12 @@ describe("Chart of Accounts CRUD", () => {
       })
       .select()
       .single();
-    trackCleanup("chart_of_accounts", acct!.id);
+    trackCleanup("chart_of_accounts", acct?.id);
 
     const { error } = await admin
       .from("chart_of_accounts")
       .update({ name: "Renamed Account", is_active: false })
-      .eq("id", acct!.id);
+      .eq("id", acct?.id);
     expect(error).toBeNull();
   });
 
@@ -130,29 +138,38 @@ describe("Chart of Accounts CRUD", () => {
     const { error } = await admin
       .from("chart_of_accounts")
       .delete()
-      .eq("id", acct!.id);
+      .eq("id", acct?.id);
     expect(error).toBeNull();
   });
 });
 
-// ── seed_default_chart_of_accounts RPC (pre-existing bug) ──
+// ── seed_default_chart_of_accounts RPC ───────────
 
 describe("seed_default_chart_of_accounts RPC", () => {
   const admin = createAdminClient();
 
-  it("fails with NOT NULL error because branch_id is missing from function (pre-existing bug)", async () => {
+  it("seeds the default accounts for the organization's default branch", async () => {
     const { orgId } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
 
     const { error } = await admin.rpc("seed_default_chart_of_accounts", {
       p_organization_id: orgId,
     });
-    // The function predates branch_id NOT NULL on chart_of_accounts.
-    // Expected: 23502 NOT NULL violation on branch_id.
-    expect(error).not.toBeNull();
-    if (error) {
-      expect(error.code).toBe("23502");
-    }
+    expect(error).toBeNull();
+
+    const { data: accounts, error: queryError } = await admin
+      .from("chart_of_accounts")
+      .select("code, branch_id, parent_id")
+      .eq("organization_id", orgId)
+      .eq("branch_id", branchId);
+    expect(queryError).toBeNull();
+    expect(accounts).toHaveLength(18);
+    expect(accounts?.every((account) => account.branch_id === branchId)).toBe(
+      true,
+    );
+    expect(
+      accounts?.some((account) => account.code === "1100" && account.parent_id),
+    ).toBe(true);
   });
 });
 
@@ -200,7 +217,7 @@ describe("Journal Entry CRUD", () => {
       })
       .select()
       .single();
-    trackCleanup("chart_of_accounts", cash!.id);
+    trackCleanup("chart_of_accounts", cash?.id);
 
     const { data: revenue } = await admin
       .from("chart_of_accounts")
@@ -213,7 +230,7 @@ describe("Journal Entry CRUD", () => {
       })
       .select()
       .single();
-    trackCleanup("chart_of_accounts", revenue!.id);
+    trackCleanup("chart_of_accounts", revenue?.id);
 
     const { data: je, error: jeErr } = await admin
       .from("journal_entries")
@@ -227,25 +244,23 @@ describe("Journal Entry CRUD", () => {
       .select()
       .single();
     expect(jeErr).toBeNull();
-    expect(je!.entry_number).toBeTruthy();
-    trackCleanup("journal_entries", je!.id);
+    expect(je?.entry_number).toBeTruthy();
+    trackCleanup("journal_entries", je?.id);
 
     // Add balanced lines
     await admin.from("journal_entry_lines").insert({
-      journal_entry_id: je!.id,
-      account_id: cash!.id,
+      journal_entry_id: je?.id,
+      account_id: cash?.id,
       debit_amount: 100000,
       credit_amount: 0,
     });
 
-    const { error: line2Err } = await admin
-      .from("journal_entry_lines")
-      .insert({
-        journal_entry_id: je!.id,
-        account_id: revenue!.id,
-        debit_amount: 0,
-        credit_amount: 100000,
-      });
+    const { error: line2Err } = await admin.from("journal_entry_lines").insert({
+      journal_entry_id: je?.id,
+      account_id: revenue?.id,
+      debit_amount: 0,
+      credit_amount: 100000,
+    });
     expect(line2Err).toBeNull();
   });
 
@@ -264,7 +279,7 @@ describe("Journal Entry CRUD", () => {
       })
       .select()
       .single();
-    trackCleanup("chart_of_accounts", acct!.id);
+    trackCleanup("chart_of_accounts", acct?.id);
 
     const { data: je, error } = await admin
       .from("journal_entries")
@@ -279,8 +294,8 @@ describe("Journal Entry CRUD", () => {
       .select()
       .single();
     expect(error).toBeNull();
-    expect(je!.reference_type).toBe("sale");
-    trackCleanup("journal_entries", je!.id);
+    expect(je?.reference_type).toBe("sale");
+    trackCleanup("journal_entries", je?.id);
   });
 
   it("admin can read journal entries filtered by org", async () => {
@@ -307,7 +322,7 @@ describe("Journal Entry CRUD", () => {
       .select("id")
       .eq("organization_id", orgId);
     expect(error).toBeNull();
-    expect(entries!.length).toBeGreaterThanOrEqual(2);
+    expect(entries?.length).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -348,8 +363,8 @@ describe("Fiscal Period", () => {
       .select()
       .single();
     expect(error).toBeNull();
-    expect(period!.is_closed).toBe(false);
-    trackCleanup("fiscal_periods", period!.id);
+    expect(period?.is_closed).toBe(false);
+    trackCleanup("fiscal_periods", period?.id);
   });
 
   it.skip("check_period_locked returns false for open period", async () => {
@@ -363,7 +378,7 @@ describe("Fiscal Period", () => {
       is_closed: false,
     });
 
-    const { data, error } = await admin.rpc("check_period_locked", {
+    const { error } = await admin.rpc("check_period_locked", {
       p_org_id: orgId,
       p_check_date: "2026-07-15",
     });
@@ -384,13 +399,13 @@ describe("Fiscal Period", () => {
       })
       .select()
       .single();
-    trackCleanup("fiscal_periods", period!.id);
+    trackCleanup("fiscal_periods", period?.id);
 
     // close_fiscal_period requires auth context which may not be available via RPC.
     // We just verify the function is callable — it may error on auth.
     const { error } = await admin.rpc("close_fiscal_period", {
       p_org_id: orgId,
-      p_period_id: period!.id,
+      p_period_id: period?.id,
       p_closed_by: "00000000-0000-0000-0000-000000000000",
     });
     // Accept either success (null) or any error (function exists)

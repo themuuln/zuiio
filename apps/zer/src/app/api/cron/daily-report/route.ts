@@ -77,12 +77,13 @@ export async function POST(request: Request) {
 
     if (configs && configs.length > 0) {
       for (const config of configs) {
-        const eventTypes = config.event_types as string[];
-        if (
-          !Array.isArray(eventTypes) ||
-          !eventTypes.includes("daily_summary")
-        ) {
-          continue;
+        const configData = config.config_data as { event_types?: unknown };
+        const eventTypes = Array.isArray(configData.event_types)
+          ? configData.event_types.filter(
+              (event): event is string => typeof event === "string",
+            )
+          : [];
+        if (!eventTypes.includes("daily_summary")) {
         }
 
         const orgId = config.organization_id;

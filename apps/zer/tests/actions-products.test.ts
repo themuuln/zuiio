@@ -8,15 +8,17 @@ import test, { mock } from "node:test";
 
 import {
   createMockSupabase,
-  mockActionCtx,
   formData,
+  mockActionCtx,
   mockMod,
   registerDefaultMocks,
   resolved,
 } from "./actions-helpers";
 
 /** Cast mock.module'd export to access .mock tracker (library boundary type mismatch). */
-type MockedFn = { mock: { calls: { arguments: unknown[] }[]; callCount: () => number } };
+type MockedFn = {
+  mock: { calls: { arguments: unknown[] }[]; callCount: () => number };
+};
 
 // ─── Global mocks ────────────────────────────────────────────────────
 
@@ -27,7 +29,6 @@ let mockCtx: Record<string, unknown> = mockActionCtx();
 mockMod("@zuiio/capture", {
   capture: mock.fn(() => {}),
 });
-
 
 // Mock revalidate (actions import it)
 const revalidateEntitySpy = mock.fn(() => {});
@@ -57,13 +58,16 @@ mockMod("@/lib/notification", {
 
 let updateProduct: (...args: unknown[]) => Promise<Record<string, unknown>>;
 let deleteProduct: (...args: unknown[]) => Promise<Record<string, unknown>>;
-let toggleProductPublication: (...args: unknown[]) => Promise<Record<string, unknown>>;
+let toggleProductPublication: (
+  ...args: unknown[]
+) => Promise<Record<string, unknown>>;
 
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/products/actions");
   updateProduct = mod.updateProduct as typeof updateProduct;
   deleteProduct = mod.deleteProduct as typeof deleteProduct;
-  toggleProductPublication = mod.toggleProductPublication as typeof toggleProductPublication;
+  toggleProductPublication =
+    mod.toggleProductPublication as typeof toggleProductPublication;
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -102,7 +106,11 @@ test("updateProduct resolves category_name to category_id via existing category"
   });
   mockCtx = mockActionCtx({ supabase });
 
-  const fd = formData({ id: "prod-1", name: "Test Product", category_name: "Drinks" });
+  const fd = formData({
+    id: "prod-1",
+    name: "Test Product",
+    category_name: "Drinks",
+  });
   const result = await updateProduct(undefined, fd);
   assert.deepEqual(result, { success: true });
 
@@ -125,7 +133,11 @@ test("updateProduct creates category when category_name not found", async () => 
   });
   mockCtx = mockActionCtx({ supabase });
 
-  const fd = formData({ id: "prod-1", name: "Test Product", category_name: "New Category" });
+  const fd = formData({
+    id: "prod-1",
+    name: "Test Product",
+    category_name: "New Category",
+  });
   const result = await updateProduct(undefined, fd);
   assert.deepEqual(result, { success: true });
 });

@@ -75,7 +75,11 @@ export function MonthlyTrendChart({ data }: { data: MonthlyTrendItem[] }) {
                     }
                     return [String(value ?? ""), "Борлуулалт"];
                   }}
-                  labelFormatter={(label) => formatDate(label)}
+                  labelFormatter={(label) =>
+                    formatDate(
+                      typeof label === "string" ? label : String(label ?? ""),
+                    )
+                  }
                 />
                 <Bar
                   dataKey="total"

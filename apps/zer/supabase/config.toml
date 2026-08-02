@@ -3,11 +3,16 @@
 
 [api]
 enabled = true
-port = 54321
+port = 54326
 schemas = ["public", "storage", "graphql_public"]
 
 [db]
-port = 54322
+port = 54328
+
+# Pooler disabled: default port 54329 is used by other apps' stacks in this
+# monorepo. Integration tests connect straight to Postgres on [db] port.
+[db.pooler]
+enabled = false
 
 [auth]
 enabled = true
@@ -15,6 +20,12 @@ enabled = true
 # Email auth settings
 [auth.email]
 enable_confirmations = true
+
+[local_smtp]
+enabled = true
+port = 54331
+smtp_port = 54332
+pop3_port = 54333
 
 # Storage
 [storage]

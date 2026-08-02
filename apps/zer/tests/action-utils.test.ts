@@ -4,7 +4,7 @@ import { mockMod, resolved } from "./actions-helpers";
 
 // ─── Mock setup ───────────────────────────────────────────────────────
 
-let branchSingleMock: () => Promise<any>;
+let branchSingleMock: () => Promise<unknown>;
 let mockRequireAppContext: Record<string, unknown>;
 
 function makeSupabase() {
@@ -47,10 +47,12 @@ mockMod("@/lib/erp", {
   ),
 });
 
-const withDbCaptureFn = mock.fn(async (_name: string, query: Promise<any>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureFn = mock.fn(
+  async (_name: string, query: PromiseLike<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 
 mockMod("@zuiio/capture", {
   capture: mock.fn(() => {}),
@@ -73,38 +75,38 @@ test.beforeEach(() => {
 // ─── requireActionContext ─────────────────────────────────────────────
 
 test("requireActionContext returns full context when permission granted", async () => {
-  const result = await actionUtils.requireActionContext("sales.create" as any);
+  const result = await actionUtils.requireActionContext("sales.create");
 
-  assert.ok(!("error" in result), "should not have error");
-  assert.equal((result as any).organizationId, "org-123");
-  assert.equal((result as any).userId, "user-456");
-  assert.deepEqual((result as any).permissions, ["sales.create"]);
+  if ("error" in result) throw new Error(result.error);
+  assert.equal(result.organizationId, "org-123");
+  assert.equal(result.userId, "user-456");
+  assert.deepEqual(result.permissions, ["sales.create"]);
 });
 
 test("requireActionContext returns error when permission denied", async () => {
   // Set permissions that do NOT include "products.delete"
-  (mockRequireAppContext as any).permissions = ["sales.create"];
+  mockRequireAppContext.permissions = ["sales.create"];
 
-  const result = await actionUtils.requireActionContext("products.delete" as any);
+  const result = await actionUtils.requireActionContext("products.delete");
 
-  assert.ok("error" in result);
-  assert.equal((result as any).error, "Танд эрх байхгүй байна.");
+  if (!("error" in result)) throw new Error("Expected permission error");
+  assert.equal(result.error, "Танд эрх байхгүй байна.");
 });
 
 // ─── requireBranchScope ───────────────────────────────────────────────
 
 test("requireBranchScope returns null when not branch scoped", () => {
-  const ctx = { isBranchScoped: false, branchId: null } as any;
+  const ctx = { isBranchScoped: false, branchId: null };
   assert.equal(actionUtils.requireBranchScope(ctx), null);
 });
 
 test("requireBranchScope returns null when branch scoped with branchId", () => {
-  const ctx = { isBranchScoped: true, branchId: "branch-1" } as any;
+  const ctx = { isBranchScoped: true, branchId: "branch-1" };
   assert.equal(actionUtils.requireBranchScope(ctx), null);
 });
 
 test("requireBranchScope returns error when branch scoped without branchId", () => {
-  const ctx = { isBranchScoped: true, branchId: null } as any;
+  const ctx = { isBranchScoped: true, branchId: null };
   const result = actionUtils.requireBranchScope(ctx);
 
   assert.ok(result !== null);
@@ -114,22 +116,22 @@ test("requireBranchScope returns error when branch scoped without branchId", () 
 // ─── requireWriteAction ───────────────────────────────────────────────
 
 test("requireWriteAction returns error immediately when permission denied", async () => {
-  (mockRequireAppContext as any).permissions = [];
+  mockRequireAppContext.permissions = [];
 
-  const result = await actionUtils.requireWriteAction("sales.create" as any);
+  const result = await actionUtils.requireWriteAction("sales.create");
 
-  assert.ok("error" in result);
-  assert.equal((result as any).error, "Танд эрх байхгүй байна.");
+  if (!("error" in result)) throw new Error("Expected permission error");
+  assert.equal(result.error, "Танд эрх байхгүй байна.");
 });
 
 test("requireWriteAction uses existing branchId when branch scoped with branchId", async () => {
-  (mockRequireAppContext as any).isBranchScoped = true;
-  (mockRequireAppContext as any).branchId = "existing-branch";
+  mockRequireAppContext.isBranchScoped = true;
+  mockRequireAppContext.branchId = "existing-branch";
 
-  const result = await actionUtils.requireWriteAction("sales.create" as any);
+  const result = await actionUtils.requireWriteAction("sales.create");
 
-  assert.ok(!("error" in result), "should not have error");
-  assert.equal((result as any).branchId, "existing-branch");
+  if ("error" in result) throw new Error(result.error);
+  assert.equal(result.branchId, "existing-branch");
   // Should NOT have queried branches table
   assert.equal(withDbCaptureFn.mock.callCount(), 0);
 });
@@ -138,10 +140,10 @@ test("requireWriteAction resolves branch when not branch scoped and no branchId"
   // branchSingleMock defaults to resolved(null), override for this test
   branchSingleMock = mock.fn(async () => resolved({ id: "resolved-branch" }));
 
-  const result = await actionUtils.requireWriteAction("sales.create" as any);
+  const result = await actionUtils.requireWriteAction("sales.create");
 
-  assert.ok(!("error" in result), "should not have error");
-  assert.equal((result as any).branchId, "resolved-branch");
+  if ("error" in result) throw new Error(result.error);
+  assert.equal(result.branchId, "resolved-branch");
   assert.equal(withDbCaptureFn.mock.callCount(), 1);
 });
 
@@ -149,8 +151,8 @@ test("requireWriteAction returns error when no branch exists for non-scoped user
   // branchSingleMock returns null data — no branch found
   branchSingleMock = mock.fn(async () => resolved(null));
 
-  const result = await actionUtils.requireWriteAction("sales.create" as any);
+  const result = await actionUtils.requireWriteAction("sales.create");
 
-  assert.ok("error" in result);
-  assert.equal((result as any).error, "Салбар тодорхойгүй байна.");
+  if (!("error" in result)) throw new Error("Expected missing branch error");
+  assert.equal(result.error, "Салбар тодорхойгүй байна.");
 });

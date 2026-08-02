@@ -6,14 +6,16 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Global mocks ────────────────────────────────────────────────────
 
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 
 const revalidateEntitiesMock = mock.fn(() => {});
 const revalidateEntityTagMock = mock.fn(() => {});
@@ -25,7 +27,10 @@ mockMod("@/lib/revalidate", {
 
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 const captureMock = mock.fn(() => {});
@@ -38,10 +43,14 @@ const getStringMock = mock.fn((fd: FormData, key: string) => fd.get(key) ?? "");
 mockMod("@/lib/validation", { getString: getStringMock });
 
 const safeParseMock = mock.fn(() => ({ success: true, data: {} }));
-mockMod("@/lib/validation-schemas", { purchaseSchema: { safeParse: safeParseMock } });
+mockMod("@/lib/validation-schemas", {
+  purchaseSchema: { safeParse: safeParseMock },
+});
 
 const postPurchaseToJournalMock = mock.fn(async () => {});
-mockMod("@/lib/accounting", { postPurchaseToJournal: postPurchaseToJournalMock });
+mockMod("@/lib/accounting", {
+  postPurchaseToJournal: postPurchaseToJournalMock,
+});
 
 const withBranchFilterMock = mock.fn(
   (query: Record<string, unknown>, _branchId: string, isScoped: boolean) => {
@@ -89,7 +98,13 @@ test.before(async () => {
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 const VALID_ITEMS = JSON.stringify([
-  { product_id: "p1", description: "Widget", quantity: 10, unit_cost: 5, variant_id: "v1" },
+  {
+    product_id: "p1",
+    description: "Widget",
+    quantity: 10,
+    unit_cost: 5,
+    variant_id: "v1",
+  },
   { product_id: "p2", quantity: 3, unit_cost: 8 },
 ]);
 
@@ -111,7 +126,9 @@ test("createPurchaseOrder: rejects missing items", async () => {
     supabase: {
       from: mock.fn(() => ({
         select: mock.fn(() => ({
-          eq: mock.fn(() => ({ single: mock.fn(() => resolved({ has_suppliers: false }, null)) })),
+          eq: mock.fn(() => ({
+            single: mock.fn(() => resolved({ has_suppliers: false }, null)),
+          })),
         })),
       })),
       rpc: mock.fn(() => resolved(null)),
@@ -132,7 +149,9 @@ test("createPurchaseOrder: rejects empty items array", async () => {
     supabase: {
       from: mock.fn(() => ({
         select: mock.fn(() => ({
-          eq: mock.fn(() => ({ single: mock.fn(() => resolved({ has_suppliers: false }, null)) })),
+          eq: mock.fn(() => ({
+            single: mock.fn(() => resolved({ has_suppliers: false }, null)),
+          })),
         })),
       })),
       rpc: mock.fn(() => resolved(null)),
@@ -153,7 +172,9 @@ test("createPurchaseOrder: rejects when org has suppliers but no supplier_id", a
     supabase: {
       from: mock.fn(() => ({
         select: mock.fn(() => ({
-          eq: mock.fn(() => ({ single: mock.fn(() => resolved({ has_suppliers: true }, null)) })),
+          eq: mock.fn(() => ({
+            single: mock.fn(() => resolved({ has_suppliers: true }, null)),
+          })),
         })),
       })),
       rpc: mock.fn(() => resolved(null)),
@@ -216,7 +237,9 @@ test("createPurchaseOrder: creates successfully", async () => {
 
   assert.deepEqual(result, { success: true, error: undefined });
   assert.equal(postPurchaseToJournalMock.mock.callCount(), 1);
-  assert.deepEqual(revalidateEntitiesMock.mock.calls[0]?.arguments[0], ["purchases"]);
+  assert.deepEqual(revalidateEntitiesMock.mock.calls[0]?.arguments[0], [
+    "purchases",
+  ]);
 });
 
 test("createPurchaseOrder: handles RPC order number error", async () => {
@@ -370,10 +393,7 @@ test("createPurchaseOrder: rejects item with missing product_id", async () => {
 
   const items = JSON.stringify([{ product_id: "", quantity: 5, unit_cost: 3 }]);
 
-  const result = await createPurchaseOrder(
-    undefined,
-    formData({ items }),
-  );
+  const result = await createPurchaseOrder(undefined, formData({ items }));
 
   assert.equal(result.error, "Бүтээгдэхүүн сонгоно уу.");
 });
@@ -393,12 +413,11 @@ test("createPurchaseOrder: rejects item with zero quantity", async () => {
     },
   });
 
-  const items = JSON.stringify([{ product_id: "p1", quantity: 0, unit_cost: 3 }]);
+  const items = JSON.stringify([
+    { product_id: "p1", quantity: 0, unit_cost: 3 },
+  ]);
 
-  const result = await createPurchaseOrder(
-    undefined,
-    formData({ items }),
-  );
+  const result = await createPurchaseOrder(undefined, formData({ items }));
 
   assert.equal(result.error, "Тоо хэмжээ 0-ээс их байх ёстой.");
 });
@@ -532,7 +551,10 @@ test("updatePurchaseOrderStatus: handles received status with items (calls RPC)"
     rpcMock.mock.calls[0]?.arguments[0],
     "process_restock_stock_movements",
   );
-  const rpcArgs = rpcMock.mock.calls[0]?.arguments[1] as Record<string, unknown>;
+  const rpcArgs = rpcMock.mock.calls[0]?.arguments[1] as Record<
+    string,
+    unknown
+  >;
   assert.equal(rpcArgs.p_po_id, "order-2");
   assert.ok(Array.isArray(rpcArgs.p_items));
   assert.equal((rpcArgs.p_items as Array<unknown>).length, 2);
@@ -584,9 +606,7 @@ test("updatePurchaseOrderStatus: handles received status with no items (skips RP
 
 test("updatePurchaseOrderStatus: handles RPC error on received", async () => {
   resetMocks();
-  const rpcMock = mock.fn(() =>
-    resolved(null, { message: "restock failed" }),
-  );
+  const rpcMock = mock.fn(() => resolved(null, { message: "restock failed" }));
   mockCtx = mockActionCtx({
     supabase: {
       from: mock.fn((table: string) => {

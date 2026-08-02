@@ -10,14 +10,25 @@ interface SendResult {
   error?: string;
 }
 
+type NotificationConfigData = {
+  chat_id?: unknown;
+  event_types?: unknown;
+};
+
+function getNotificationConfigData(value: unknown): NotificationConfigData {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return {};
+  }
+  return value as NotificationConfigData;
+}
 function isEventEnabled(
-  config: { event_types: unknown; enabled: boolean | null },
+  config: { config_data: unknown; enabled: boolean | null },
   eventType: EventType,
 ): boolean {
   if (!config.enabled) return false;
-  const eventTypes = config.event_types as string[] | null;
+  const eventTypes = getNotificationConfigData(config.config_data).event_types;
   if (!Array.isArray(eventTypes) || eventTypes.length === 0) return true;
-  return eventTypes.includes(eventType);
+  return eventTypes.some((event) => event === eventType);
 }
 
 /**
@@ -53,7 +64,7 @@ export async function sendTelegramNotification(
   // Fetch org's telegram config
   const { data: config } = await client
     .from("notification_configs")
-    .select("chat_id,config_data,enabled,event_types")
+    .select("config_data,enabled")
     .eq("organization_id", orgId)
     .eq("channel", "telegram")
     .maybeSingle();
@@ -66,11 +77,9 @@ export async function sendTelegramNotification(
     return { success: false, error: "Энэ төрлийн мэдэгдэл идэвхгүй байна." };
   }
 
-  // Get chat_id: first from new chat_id column, then fallback to config_data
-  const chatId =
-    config.chat_id ??
-    (config.config_data as { chat_id?: string })?.chat_id ??
-    null;
+  // Get chat_id from the JSON config payload.
+  const chatIdValue = getNotificationConfigData(config.config_data).chat_id;
+  const chatId = typeof chatIdValue === "string" ? chatIdValue : null;
 
   if (!chatId) {
     return { success: false, error: "Chat ID тохируулаагүй байна." };

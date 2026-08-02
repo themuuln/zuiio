@@ -26,89 +26,46 @@ test.describe("Promotions module", () => {
     await expect(page.getByText("Хүчинтэй дуусах").first()).toBeVisible();
     await expect(page.getByText("Ашиглах хязгаар").first()).toBeVisible();
     await expect(page.getByText("Идэвхтэй").first()).toBeVisible();
-    await expect(
-      page.getByText("Нөхцөлүүд").first(),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Урамшуулалууд").first(),
-    ).toBeVisible();
+    await expect(page.getByText("Нөхцөлүүд").first()).toBeVisible();
+    await expect(page.getByText("Урамшуулалууд").first()).toBeVisible();
   });
 
   test("create a promotion successfully", async ({ page }) => {
     await page.goto("/promotions", { waitUntil: "domcontentloaded" });
 
     await openDrawerByText(page, "Шинэ урамшуулал");
-    await page.waitForTimeout(1500);
+    const drawer = page.locator("[data-drawer-popup]:visible").first();
+    await expect(drawer).toBeVisible();
 
-    // Fill promotion name
-    const nameInput = page.getByPlaceholder(
-      "Жишээ: Зуны супер урамшуулал",
-    ).first();
-    const nameVisible = await nameInput.isVisible().catch(() => false);
-    if (nameVisible) {
-      await nameInput.fill(UNIQUE_NAME);
-    } else {
-      // Fallback: try input[name="name"]
-      const nameByName = page.locator('input[name="name"]').first();
-      if (await nameByName.isVisible().catch(() => false)) {
-        await nameByName.fill(UNIQUE_NAME);
-      }
-    }
+    await drawer
+      .getByPlaceholder("Жишээ: Зуны супер урамшуулал")
+      .fill(UNIQUE_NAME);
 
-    // Add a condition
-    const addConditionBtn = page.getByText("Нөхцөл нэмэх").first();
-    if (await addConditionBtn.isVisible().catch(() => false)) {
-      await addConditionBtn.click();
-      await page.waitForTimeout(300);
-    }
+    await drawer.getByRole("button", { name: "Нөхцөл нэмэх" }).click();
+    const conditionInput = drawer.getByPlaceholder("Тоо");
+    await expect(conditionInput).toBeVisible();
+    await conditionInput.fill("2");
 
-    // Fill condition value (default: min_quantity, gte)
-    const conditionInputs = page.locator(
-      '[class*="rounded-lg"][class*="border-border"] input[type="text"]',
-    );
-    const firstConditionInput = conditionInputs.first();
-    if (await firstConditionInput.isVisible().catch(() => false)) {
-      await firstConditionInput.fill("2");
-    }
+    await drawer.getByRole("button", { name: "Урамшуулал нэмэх" }).click();
+    const rewardValueInput = drawer
+      .locator('input[type="number"][placeholder="0"]')
+      .last();
+    await expect(rewardValueInput).toBeVisible();
+    await rewardValueInput.fill("10");
 
-    // Add a reward
-    const addRewardBtn = page.getByText("Урамшуулал нэмэх").first();
-    if (await addRewardBtn.isVisible().catch(() => false)) {
-      await addRewardBtn.click();
-      await page.waitForTimeout(300);
-    }
+    await drawer.getByRole("button", { name: "Хадгалах" }).click();
 
-    // Fill reward value (default: percentage_discount)
-    const rewardInputs = page.locator(
-      '[class*="space-y-2"] input[type="number"]',
-    );
-    // The first number input in rewards section
-    const rewardValueInput = rewardInputs.first();
-    if (await rewardValueInput.isVisible().catch(() => false)) {
-      await rewardValueInput.fill("10");
-    }
+    const toast = page.locator("[data-sonner-toast]:visible").first();
+    await expect(toast).toContainText("Урамшуулал амжилттай үүсгэгдсэн.", {
+      timeout: 10_000,
+    });
+    await expect(drawer).toBeHidden({ timeout: 10_000 });
 
-    // Submit via the drawer submit button
-    const submitBtn = page.getByText("Хадгалах").first();
-    if (await submitBtn.isVisible().catch(() => false)) {
-      await submitBtn.click();
-      await page.waitForTimeout(2000);
-
-      // Check for success toast
-      const toast = page.locator("[data-sonner-toast]").first();
-      const toastVisible = await toast.isVisible().catch(() => false);
-      if (toastVisible) {
-        await expect(toast).toContainText(
-          "Урамшуулал амжилттай үүсгэгдсэн.",
-          { timeout: 5000 },
-        );
-      }
-    }
-
-    // Navigate back to list and verify the promotion appears
-    await page.goto("/promotions", { waitUntil: "domcontentloaded" });
+    await page.goto(`/promotions?refresh=${Date.now()}`, {
+      waitUntil: "domcontentloaded",
+    });
     await expect(page.locator("main")).toContainText(UNIQUE_NAME, {
-      timeout: 10000,
+      timeout: 10_000,
     });
   });
 });

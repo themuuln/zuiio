@@ -9,7 +9,11 @@ import { Input } from "@/components/ui/input";
 
 interface CheckoutCouponProps {
   cartTotal: number;
-  onDiscountApplied: (discountAmount: number, couponId: string, couponCode: string) => void;
+  onDiscountApplied: (
+    discountAmount: number,
+    couponId: string,
+    couponCode: string,
+  ) => void;
   onDiscountRemoved: () => void;
   contactId?: string | null;
 }
@@ -31,7 +35,11 @@ export function CheckoutCoupon({
     if (!trimmed) return;
     setIsPending(true);
     try {
-      const result = await validateCouponCode(trimmed, cartTotal, contactId ?? undefined);
+      const result = await validateCouponCode(
+        trimmed,
+        cartTotal,
+        contactId ?? undefined,
+      );
       if (!result.valid || result.error) {
         toast.error(result.error || "Купон хэрэглэх боломжгүй байна.");
         return;

@@ -23,6 +23,7 @@ Object.defineProperty(globalThis, "navigator", {
 };
 
 import { mockMod } from "./actions-helpers";
+
 mockMod("@zuiio/capture", { capture: mock.fn(() => {}) });
 
 // Dynamic import required: mock.module() and browser stubs must register before the module loads

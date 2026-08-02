@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/native-select";
 import { COMPANY_TYPES } from "@/lib/constants";
 import { slugify } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { createOrganization } from "./actions";
 
 const orgSchema = z.object({
@@ -33,6 +34,7 @@ const orgSchema = z.object({
 type OrgValues = z.infer<typeof orgSchema>;
 
 export default function NewOrganizationPage() {
+  const { t } = useI18n();
   const [serverError, setServerError] = useState<string | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
 
@@ -101,7 +103,9 @@ export default function NewOrganizationPage() {
               )}
             </Field>
             <Field>
-              <FieldLabel htmlFor="company_type">Байгууллагын төрөл</FieldLabel>
+              <FieldLabel htmlFor="company_type">
+                {t("settings.organizationType")}
+              </FieldLabel>
               <div className="relative">
                 <Storefront className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground z-10" />
                 <NativeSelect
@@ -111,7 +115,7 @@ export default function NewOrganizationPage() {
                 >
                   {COMPANY_TYPES.map((ct) => (
                     <NativeSelectOption key={ct.value} value={ct.value}>
-                      {ct.label}
+                      {t(ct.labelKey)}
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>

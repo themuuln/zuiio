@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  renderTemplate,
+  DEFAULT_TEMPLATES,
   getChannelLabel,
   isValidPhone,
   isValidTelegramChatId,
-  DEFAULT_TEMPLATES,
+  renderTemplate,
 } from "@/lib/notifications";
 
 // ─── renderTemplate ─────────────────────────────────────────────────

@@ -89,6 +89,11 @@ export function OrgSettingsContent() {
         logo_url: string | null;
         banner_url: string | null;
         business_hours: Record<string, string> | null;
+        ga_measurement_id: string | null;
+        meta_description: string | null;
+        meta_pixel_id: string | null;
+        meta_title: string | null;
+        og_image_url: string | null;
         policies: string | null;
         social_links: Record<string, string> | null;
       } | null;

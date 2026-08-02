@@ -61,7 +61,9 @@ export async function createCoupon(
   }
 
   if (!/^[A-Za-z0-9_-]+$/.test(code)) {
-    return { error: "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно." };
+    return {
+      error: "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно.",
+    };
   }
 
   if (discountValue <= 0) {
@@ -186,7 +188,9 @@ export async function updateCoupon(
   }
 
   if (!/^[A-Za-z0-9_-]+$/.test(code)) {
-    return { error: "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно." };
+    return {
+      error: "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно.",
+    };
   }
 
   if (discountValue <= 0) {
@@ -266,10 +270,7 @@ export async function updateCoupon(
 
 // ─── Toggle active ─────────────────────────────────────────────────────────
 
-export async function toggleCouponActive(
-  couponId: string,
-  isActive: boolean,
-) {
+export async function toggleCouponActive(couponId: string, isActive: boolean) {
   const ctx = await requireWriteAction("coupons.update");
   if ("error" in ctx) return ctx;
   const { supabase, organizationId, userId } = ctx;
@@ -475,10 +476,7 @@ export async function validateCouponCode(
   }
 
   // Validate: global usage limit
-  if (
-    coupon.usage_limit !== null &&
-    coupon.used_count >= coupon.usage_limit
-  ) {
+  if (coupon.usage_limit !== null && coupon.used_count >= coupon.usage_limit) {
     return {
       valid: false,
       discount_amount: 0,
@@ -505,10 +503,7 @@ export async function validateCouponCode(
       });
     }
 
-    if (
-      usageCount !== null &&
-      usageCount >= (coupon.per_customer_limit ?? 1)
-    ) {
+    if (usageCount !== null && usageCount >= (coupon.per_customer_limit ?? 1)) {
       return {
         valid: false,
         discount_amount: 0,
@@ -537,7 +532,10 @@ export async function validateCouponCode(
     discountAmount = total * (coupon.discount_value / 100);
     // Apply max_discount_amount cap if set
     if (coupon.max_discount_amount !== null) {
-      discountAmount = Math.min(discountAmount, Number(coupon.max_discount_amount));
+      discountAmount = Math.min(
+        discountAmount,
+        Number(coupon.max_discount_amount),
+      );
     }
   } else {
     // fixed_amount — cannot exceed cart total

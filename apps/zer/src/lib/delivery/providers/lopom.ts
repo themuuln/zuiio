@@ -1,5 +1,5 @@
+import { createHmac } from "node:crypto";
 import { capture } from "@zuiio/capture";
-import { createHash, createHmac } from "crypto";
 import type {
   CreateDeliveryParams,
   CreateDeliveryResult,
@@ -33,12 +33,21 @@ export function createLopomProvider(
    * Lalamove uses HMAC-SHA256 signature for auth.
    * Signature = HMAC-SHA256(apiSecret, timestamp + "\n" + method + "\n" + path + "\n" + body + "\n")
    */
-  function signRequest(method: string, path: string, body: string, timestamp: string): string {
+  function signRequest(
+    method: string,
+    path: string,
+    body: string,
+    timestamp: string,
+  ): string {
     const raw = `${timestamp}\n${method}\n${path}\n${body}\n`;
     return createHmac("sha256", apiSecret).update(raw).digest("hex");
   }
 
-  async function apiFetch<T>(method: string, path: string, body?: unknown): Promise<T> {
+  async function apiFetch<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
     const timestamp = Date.now().toString();
     const bodyStr = body ? JSON.stringify(body) : "";
     const signature = signRequest(method, path, bodyStr, timestamp);
@@ -81,20 +90,30 @@ export function createLopomProvider(
           stops: [
             {
               address: params.pickupAddress,
-              contact: { name: params.pickupContact, phone: params.pickupPhone },
+              contact: {
+                name: params.pickupContact,
+                phone: params.pickupPhone,
+              },
             },
             {
               address: params.dropoffAddress,
-              contact: { name: params.dropoffContact, phone: params.dropoffPhone },
+              contact: {
+                name: params.dropoffContact,
+                phone: params.dropoffPhone,
+              },
             },
           ],
         });
 
         // 2. Create order
-        const order = await apiFetch<{ orderId: string }>("POST", "/v3/orders", {
-          quotationId: quotation.quotationId,
-          stops: quotation.stops,
-        });
+        const order = await apiFetch<{ orderId: string }>(
+          "POST",
+          "/v3/orders",
+          {
+            quotationId: quotation.quotationId,
+            stops: quotation.stops,
+          },
+        );
 
         return {
           externalId: order.orderId,

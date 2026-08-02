@@ -26,7 +26,9 @@ mockMod("@/lib/audit", {
 let periodLocked = false;
 let accountsResult: { id: string; code: string }[] = [];
 let entryNumber = "JV-2025-0001";
-let journalEntryResult: { data: unknown; error: unknown } = resolved({ id: "je-1" });
+let journalEntryResult: { data: unknown; error: unknown } = resolved({
+  id: "je-1",
+});
 let linesError: Error | null = null;
 
 function makeSupabase() {
@@ -72,7 +74,9 @@ function makeSupabase() {
   };
 }
 
-let createJournalEntry: (...args: unknown[]) => Promise<{ success: boolean; error?: string }>;
+let createJournalEntry: (
+  ...args: unknown[]
+) => Promise<{ success: boolean; error?: string }>;
 
 test.before(async () => {
   const mod = await import("@/lib/accounting-utils");

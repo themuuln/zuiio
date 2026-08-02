@@ -2,8 +2,8 @@
 
 import {
   Buildings,
-  CalendarCheck,
   Calculator,
+  CalendarCheck,
   ChartBar,
   Chat,
   Check,
@@ -13,21 +13,21 @@ import {
   Gear,
   Gift,
   Globe,
-  Headphones,
-  Package,
-  PuzzlePiece,
-  Receipt,
   HardDrive,
+  Headphones,
   Heart,
   Image,
   ImageSquare,
+  Package,
+  PuzzlePiece,
+  Receipt,
   ShieldCheck,
   ShoppingCart,
   Sliders,
   Sparkle,
+  Tag,
   Truck,
   User,
-  Tag,
   Users,
   Warehouse,
 } from "@phosphor-icons/react";
@@ -40,47 +40,48 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const featureConfig: Record<string, { icon: React.ElementType; ai?: boolean }> = {
-  "1 эзэмшигч": { icon: User },
-  "200 хүртэлх бараа": { icon: Package },
-  "Борлуулалт ба POS касс": { icon: ShoppingCart },
-  "Зарлагын бүртгэл": { icon: Receipt },
-  "Үндсэн тайлан": { icon: ChartBar },
-  "И-мэйл дэмжлэг": { icon: Envelope },
-  "5,000 хүртэлх бараа": { icon: Package },
-  "Харилцагчийн бүртгэл": { icon: Users },
-  "Бүх төрлийн тайлан": { icon: ChartBar },
-  "Олон агуулах": { icon: Warehouse },
-  "Худалдан авалт ба нийлүүлэгч": { icon: Truck },
-  "Онлайн дэлгүүр": { icon: Globe },
-  "Баримт бичиг": { icon: FileText },
-  "Хямдрал ба урамшуулал": { icon: Tag },
-  "Бэлгийн сонголт": { icon: Gift },
-  "Лояльти программ": { icon: Heart },
-  "Хүргэлтийн удирдлага": { icon: Truck },
-  "AI Telegram туслах": { icon: Sparkle, ai: true },
-  "AI постер": { icon: ImageSquare, ai: true },
-  "AI зураг сайжруулах": { icon: Image, ai: true },
-  "AI бүтээгдэхүүний тайлбар": { icon: Sparkle, ai: true },
-  "AI лого": { icon: ImageSquare, ai: true },
-  "AI дэлгүүрийн нэр": { icon: Sparkle, ai: true },
-  "AI домэйн нэр": { icon: Globe, ai: true },
-  "AI Чатбот (Facebook Messenger)": { icon: Chat, ai: true },
-  "Автомат өдрийн тайлан": { icon: CalendarCheck, ai: true },
-  "Тэргүүлэх дэмжлэг": { icon: Headphones },
-  "Барааны тоо хязгааргүй": { icon: Package },
-  "Бүрэн боломж — бүх модуль": { icon: PuzzlePiece },
-  "Олон салбар": { icon: Buildings },
-  "Нягтлан бодох бүртгэл": { icon: Calculator },
-  "Үйлдвэрлэлийн удирдлага (BOM)": { icon: Gear },
-  "Хүний нөөц ба цалин": { icon: Users },
-  "API холболт": { icon: Code },
-  "24/7 тэргүүлэх дэмжлэг": { icon: Headphones },
-  "Тохиролцсон хязгаар": { icon: Sliders },
-  "Тусгай интеграц": { icon: PuzzlePiece },
-  "Тусгай сервер": { icon: HardDrive },
-  "Dedicated support SLA": { icon: ShieldCheck },
-};
+const featureConfig: Record<string, { icon: React.ElementType; ai?: boolean }> =
+  {
+    "1 эзэмшигч": { icon: User },
+    "200 хүртэлх бараа": { icon: Package },
+    "Борлуулалт ба POS касс": { icon: ShoppingCart },
+    "Зарлагын бүртгэл": { icon: Receipt },
+    "Үндсэн тайлан": { icon: ChartBar },
+    "И-мэйл дэмжлэг": { icon: Envelope },
+    "5,000 хүртэлх бараа": { icon: Package },
+    "Харилцагчийн бүртгэл": { icon: Users },
+    "Бүх төрлийн тайлан": { icon: ChartBar },
+    "Олон агуулах": { icon: Warehouse },
+    "Худалдан авалт ба нийлүүлэгч": { icon: Truck },
+    "Онлайн дэлгүүр": { icon: Globe },
+    "Баримт бичиг": { icon: FileText },
+    "Хямдрал ба урамшуулал": { icon: Tag },
+    "Бэлгийн сонголт": { icon: Gift },
+    "Лояльти программ": { icon: Heart },
+    "Хүргэлтийн удирдлага": { icon: Truck },
+    "AI Telegram туслах": { icon: Sparkle, ai: true },
+    "AI постер": { icon: ImageSquare, ai: true },
+    "AI зураг сайжруулах": { icon: Image, ai: true },
+    "AI бүтээгдэхүүний тайлбар": { icon: Sparkle, ai: true },
+    "AI лого": { icon: ImageSquare, ai: true },
+    "AI дэлгүүрийн нэр": { icon: Sparkle, ai: true },
+    "AI домэйн нэр": { icon: Globe, ai: true },
+    "AI Чатбот (Facebook Messenger)": { icon: Chat, ai: true },
+    "Автомат өдрийн тайлан": { icon: CalendarCheck, ai: true },
+    "Тэргүүлэх дэмжлэг": { icon: Headphones },
+    "Барааны тоо хязгааргүй": { icon: Package },
+    "Бүрэн боломж — бүх модуль": { icon: PuzzlePiece },
+    "Олон салбар": { icon: Buildings },
+    "Нягтлан бодох бүртгэл": { icon: Calculator },
+    "Үйлдвэрлэлийн удирдлага (BOM)": { icon: Gear },
+    "Хүний нөөц ба цалин": { icon: Users },
+    "API холболт": { icon: Code },
+    "24/7 тэргүүлэх дэмжлэг": { icon: Headphones },
+    "Тохиролцсон хязгаар": { icon: Sliders },
+    "Тусгай интеграц": { icon: PuzzlePiece },
+    "Тусгай сервер": { icon: HardDrive },
+    "Dedicated support SLA": { icon: ShieldCheck },
+  };
 
 const plans = [
   {
@@ -286,7 +287,10 @@ export function Pricing() {
                   const cfg = featureConfig[feature] ?? {};
                   const Icon = cfg.icon ?? Check;
                   return (
-                    <li key={feature} className="flex items-center gap-3 text-sm">
+                    <li
+                      key={feature}
+                      className="flex items-center gap-3 text-sm"
+                    >
                       <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
                         <Icon weight="bold" className="size-3 text-primary" />
                       </span>

@@ -41,6 +41,7 @@ export function TableActionsCell({
     <div
       className="flex items-center gap-1"
       onClick={(e) => e.stopPropagation()}
+      role="none"
     >
       {onView && (
         <button

@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { capture } from "@zuiio/capture";
 import { useSearchParams } from "next/navigation";
-import { saleKeys } from "@/lib/query/keys";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
@@ -12,6 +11,7 @@ import {
   SaleDetailDrawer,
 } from "@/components/sales/sale-detail-drawer";
 import { SalesCreateDrawer } from "@/components/sales/sales-create-drawer";
+import { saleKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 import type { SaleRow } from "./sales-table";
 import { SalesTable } from "./sales-table";

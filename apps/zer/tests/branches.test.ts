@@ -6,7 +6,9 @@ import test, { mock } from "node:test";
 import { mockMod } from "./actions-helpers";
 
 mockMod("next/navigation", {
-  redirect: mock.fn(() => { throw new Error("NEXT_REDIRECT"); }),
+  redirect: mock.fn(() => {
+    throw new Error("NEXT_REDIRECT");
+  }),
 });
 
 let getEffectiveBranchId: (...args: unknown[]) => string | null;
@@ -31,7 +33,10 @@ test("getEffectiveBranchId: org-wide user with null context and null selection r
   assert.equal(getEffectiveBranchId(null, false, null), null);
 });
 test("getEffectiveBranchId: scoped user uses contextBranchId regardless of selection", () => {
-  assert.equal(getEffectiveBranchId("assigned-branch", true, "selected-branch"), "assigned-branch");
+  assert.equal(
+    getEffectiveBranchId("assigned-branch", true, "selected-branch"),
+    "assigned-branch",
+  );
 });
 test("getEffectiveBranchId: scoped user with null context returns null", () => {
   assert.equal(getEffectiveBranchId(null, true, "selected-branch"), null);
@@ -45,7 +50,12 @@ test("enforceBranchAccess: allows access when record branch matches context", ()
 
 test("enforceBranchAccess: redirects when record branch does not match context", () => {
   assert.throws(
-    () => enforceBranchAccess({ id: "rec-1", branch_id: "branch-2" }, "branch-1", true),
+    () =>
+      enforceBranchAccess(
+        { id: "rec-1", branch_id: "branch-2" },
+        "branch-1",
+        true,
+      ),
     /NEXT_REDIRECT/,
   );
 });

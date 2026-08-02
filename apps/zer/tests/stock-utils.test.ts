@@ -3,16 +3,16 @@
  */
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockMod, resolved } from "./actions-helpers";
 import type {
-  SupabaseDb,
-  fetchProductsForStock as FetchProductsForStockFn,
-  fetchVariantsForStock as FetchVariantsForStockFn,
+  createStockMovements as CreateStockMovementsFn,
   decrementProductStock as DecrementProductStockFn,
   decrementVariantStock as DecrementVariantStockFn,
+  fetchProductsForStock as FetchProductsForStockFn,
+  fetchVariantsForStock as FetchVariantsForStockFn,
   incrementProductStock as IncrementProductStockFn,
-  createStockMovements as CreateStockMovementsFn,
+  SupabaseDb,
 } from "@/lib/stock-utils";
+import { mockMod, resolved } from "./actions-helpers";
 
 // ─── Mocks ────────────────────────────────────────────────────────────
 
@@ -65,6 +65,7 @@ function chainResult(result: { data: unknown; error: unknown }) {
   self.single = mock.fn(() => resolved(result.data, result.error));
   self.maybeSingle = mock.fn(() => resolved(result.data, result.error));
   // Thenable: `await chain` resolves to { data, error }
+  // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are intentionally thenable in this test mock.
   self.then = (
     onFulfilled: (v: typeof result) => void,
     onRejected?: (e: unknown) => void,
@@ -120,7 +121,9 @@ test("fetchProductsForStock returns map of products", async () => {
     { id: "p1", name: "Widget", current_stock: 10, unit: "pcs" },
     { id: "p2", name: "Gadget", current_stock: null, unit: null },
   ];
-  const supabase = makeSupabase({ products: [{ data: products, error: null }] });
+  const supabase = makeSupabase({
+    products: [{ data: products, error: null }],
+  });
 
   const result = await fetchProductsForStock(
     supabase as unknown as SupabaseDb,
@@ -375,20 +378,17 @@ test("createStockMovements inserts items and returns empty object", async () => 
     stock_movements: [{ data: null, error: null }],
   });
 
-  const result = await createStockMovements(
-    supabase as unknown as SupabaseDb,
-    {
-      organizationId: "org-1",
-      branchId: "br-1",
-      type: "in",
-      reference: "PO-001",
-      createdBy: "user-1",
-      items: [
-        { productId: "p1", quantity: 10, unitCost: 5000 },
-        { productId: "p2", quantity: 5, unitCost: 12000, variantId: "v1" },
-      ],
-    },
-  );
+  const result = await createStockMovements(supabase as unknown as SupabaseDb, {
+    organizationId: "org-1",
+    branchId: "br-1",
+    type: "in",
+    reference: "PO-001",
+    createdBy: "user-1",
+    items: [
+      { productId: "p1", quantity: 10, unitCost: 5000 },
+      { productId: "p2", quantity: 5, unitCost: 12000, variantId: "v1" },
+    ],
+  });
 
   assert.deepEqual(result, {});
 });
@@ -398,17 +398,14 @@ test("createStockMovements returns error message on insert failure", async () =>
     stock_movements: [{ data: null, error: { message: "insert failed" } }],
   });
 
-  const result = await createStockMovements(
-    supabase as unknown as SupabaseDb,
-    {
-      organizationId: "org-1",
-      branchId: "br-1",
-      type: "out",
-      reference: "SO-001",
-      createdBy: "user-1",
-      items: [{ productId: "p1", quantity: 2, unitCost: 3000 }],
-    },
-  );
+  const result = await createStockMovements(supabase as unknown as SupabaseDb, {
+    organizationId: "org-1",
+    branchId: "br-1",
+    type: "out",
+    reference: "SO-001",
+    createdBy: "user-1",
+    items: [{ productId: "p1", quantity: 2, unitCost: 3000 }],
+  });
 
   assert.equal(result.error, "insert failed");
 });
@@ -418,17 +415,14 @@ test("createStockMovements with empty items returns success", async () => {
     stock_movements: [{ data: null, error: null }],
   });
 
-  const result = await createStockMovements(
-    supabase as unknown as SupabaseDb,
-    {
-      organizationId: "org-1",
-      branchId: "br-1",
-      type: "in",
-      reference: "PO-002",
-      createdBy: "user-1",
-      items: [],
-    },
-  );
+  const result = await createStockMovements(supabase as unknown as SupabaseDb, {
+    organizationId: "org-1",
+    branchId: "br-1",
+    type: "in",
+    reference: "PO-002",
+    createdBy: "user-1",
+    items: [],
+  });
 
   assert.deepEqual(result, {});
 });

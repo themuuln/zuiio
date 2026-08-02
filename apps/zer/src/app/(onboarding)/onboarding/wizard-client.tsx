@@ -22,6 +22,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { FEATURES } from "@/lib/constants";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { completeOnboarding } from "./actions";
 
@@ -77,6 +78,7 @@ export function OnboardingWizard({
   importedBrandNames,
   companyType,
 }: OnboardingWizardProps) {
+  const { t } = useI18n();
   const [step, setStep] = useState<Step>("presets");
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(
@@ -152,13 +154,15 @@ export function OnboardingWizard({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-2xl">Zer-д тавтай морилно уу</CardTitle>
+            <CardTitle className="text-2xl">
+              {t("onboarding.welcome")}
+            </CardTitle>
             <CardDescription>
               {step === "presets"
-                ? "Брэнд бүтээгдэхүүний сангаас сонгон импортлох"
+                ? t("onboarding.importPresets")
                 : step === "features"
-                  ? "Хүссэн модулиудаа сонгоно уу"
-                  : "Бэлэн боллоо!"}
+                  ? t("onboarding.chooseFeatures")
+                  : t("onboarding.complete")}
             </CardDescription>
           </div>
           {/* Step indicator */}
@@ -305,16 +309,14 @@ export function OnboardingWizard({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Ашиглахыг хүсч буй модулиудаа сонгоно уу. Сонгоогүй модулиуд
-                хажуугийн цэснээс нуугдана, хэрэгцээ гарахад Тохиргоо хэсгээс
-                идэвхжүүлж болно.
+                {t("onboarding.chooseFeatures")}
               </p>
               <button
                 type="button"
                 onClick={selectAllFeatures}
                 className="whitespace-nowrap text-xs text-primary underline-offset-4 hover:underline"
               >
-                Бүгдийг сонгох
+                {t("onboarding.selectAll")}
               </button>
             </div>
 
@@ -338,9 +340,11 @@ export function OnboardingWizard({
                       className="pointer-events-none"
                     />
                     <div>
-                      <p className="text-sm font-medium">{feature.label}</p>
+                      <p className="text-sm font-medium">
+                        {t(feature.labelKey)}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {feature.description}
+                        {t(feature.descriptionKey)}
                       </p>
                     </div>
                   </button>
@@ -529,11 +533,14 @@ export function OnboardingWizard({
 
             <div className="flex items-center justify-between pt-2">
               <p className="text-xs text-muted-foreground">
-                {selectedFeatures.size} / {FEATURES.length} модуль сонгосон
+                {t("onboarding.selectedModules", {
+                  count: selectedFeatures.size,
+                })}{" "}
+                / {FEATURES.length}
               </p>
               <div className="flex gap-2">
                 <Button variant="ghost" onClick={() => setStep("presets")}>
-                  Буцах
+                  {t("common.back")}
                 </Button>
                 <Button
                   onClick={() => {
@@ -544,8 +551,10 @@ export function OnboardingWizard({
                   }}
                 >
                   {selectedFeatures.size === 0
-                    ? "Бүгдийг сонгох"
-                    : `${selectedFeatures.size} модуль сонгосон`}
+                    ? t("onboarding.selectAll")
+                    : t("onboarding.selectedModules", {
+                        count: selectedFeatures.size,
+                      })}
                   <ArrowRight data-icon="inline-end" />
                 </Button>
               </div>

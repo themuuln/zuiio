@@ -121,7 +121,8 @@ interface SettingsData {
 }
 
 export function SettingsContent() {
-  const { organizationId, hasBrands, hasDeliveryTracking, hasEmailReports } = useOrgSettings();
+  const { organizationId, hasBrands, hasDeliveryTracking, hasEmailReports } =
+    useOrgSettings();
 
   const { data, isLoading } = useQuery({
     queryKey: ["settings:overview", organizationId],
@@ -557,9 +558,7 @@ export function SettingsContent() {
               <MapPinArea className="size-5" />
               Хүргэлтийн бүсүүд
             </CardTitle>
-            <CardDescription>
-              Хүргэлтийн үнийн бүс, тохиргоо
-            </CardDescription>
+            <CardDescription>Хүргэлтийн үнийн бүс, тохиргоо</CardDescription>
           </CardHeader>
           <CardContent className="flex gap-2">
             <Button asChild variant="outline">
@@ -621,10 +620,20 @@ export function SettingsContent() {
         </Card>
       )}
 
-      {isSuperAdmin && <NotificationSettings isSuperAdmin organizationId={organizationId} userId={userId} />}
+      {isSuperAdmin && (
+        <NotificationSettings
+          isSuperAdmin
+          organizationId={organizationId}
+          userId={userId}
+        />
+      )}
 
       {isSuperAdmin && hasEmailReports && (
-        <SmtpSettings isSuperAdmin={isSuperAdmin} organizationId={organizationId} userId={userId} />
+        <SmtpSettings
+          isSuperAdmin={isSuperAdmin}
+          organizationId={organizationId}
+          userId={userId}
+        />
       )}
 
       {hasEmailReports && canManageEmail && smtpCount > 0 && (

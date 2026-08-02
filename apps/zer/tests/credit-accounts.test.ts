@@ -7,13 +7,22 @@ const withDbCaptureMock = mock.fn(async (_name, query) => {
   const result = await query;
   return result;
 });
-mockMod("@zuiio/capture", { capture: captureMock, withDbCapture: withDbCaptureMock });
+mockMod("@zuiio/capture", {
+  capture: captureMock,
+  withDbCapture: withDbCaptureMock,
+});
 mockMod("server-only", {});
 mockMod("@/lib/format", { formatCurrency: mock.fn((n: number) => `₮${n}`) });
 
-interface MockEntry { entry_type: string; amount: number }
+interface MockEntry {
+  entry_type: string;
+  amount: number;
+}
 let mockEntries: MockEntry[] = [];
-let mockContact: Promise<{ data: Record<string, unknown> | null; error: unknown }> | null = null;
+let mockContact: Promise<{
+  data: Record<string, unknown> | null;
+  error: unknown;
+}> | null = null;
 
 function makeSupabase() {
   return {
@@ -37,7 +46,10 @@ function makeSupabase() {
           select: mock.fn(() => ({
             eq: mock.fn(() => ({
               eq: mock.fn(() => ({
-                single: mock.fn(async () => mockContact ?? resolved(null, new Error("not found"))),
+                single: mock.fn(
+                  async () =>
+                    mockContact ?? resolved(null, new Error("not found")),
+                ),
               })),
             })),
           })),
@@ -67,7 +79,11 @@ test.beforeEach(() => {
 
 test("getContactBalance returns 0 for no entries", async () => {
   mockEntries = [];
-  const balance = await creditAccounts.getContactBalance(mockSupabase(), "org-1", "contact-1");
+  const balance = await creditAccounts.getContactBalance(
+    mockSupabase(),
+    "org-1",
+    "contact-1",
+  );
   assert.equal(balance, 0);
 });
 
@@ -76,18 +92,26 @@ test("getContactBalance calculates balance correctly (sale_debit 1000, payment_c
     { entry_type: "sale_debit", amount: 1000 },
     { entry_type: "payment_credit", amount: 300 },
   ];
-  const balance = await creditAccounts.getContactBalance(mockSupabase(), "org-1", "contact-1");
+  const balance = await creditAccounts.getContactBalance(
+    mockSupabase(),
+    "org-1",
+    "contact-1",
+  );
   assert.equal(balance, 700);
 });
 
 test("getContactBalance handles multiple entry types", async () => {
   mockEntries = [
-    { entry_type: "sale_debit", amount: 1000 },    // +1000
-    { entry_type: "payment_credit", amount: 200 },  // -200
-    { entry_type: "refund", amount: 100 },           // -100
-    { entry_type: "adjustment", amount: 50 },        // +50
+    { entry_type: "sale_debit", amount: 1000 }, // +1000
+    { entry_type: "payment_credit", amount: 200 }, // -200
+    { entry_type: "refund", amount: 100 }, // -100
+    { entry_type: "adjustment", amount: 50 }, // +50
   ];
-  const balance = await creditAccounts.getContactBalance(mockSupabase(), "org-1", "contact-1");
+  const balance = await creditAccounts.getContactBalance(
+    mockSupabase(),
+    "org-1",
+    "contact-1",
+  );
   assert.equal(balance, 750);
 });
 
@@ -98,7 +122,8 @@ test("getContactBalance throws on query error", async () => {
   }));
 
   await assert.rejects(
-    () => creditAccounts.getContactBalance(mockSupabase(), "org-1", "contact-1"),
+    () =>
+      creditAccounts.getContactBalance(mockSupabase(), "org-1", "contact-1"),
     { message: "Үйлчлүгчийн үлдэгдэл татахад алдаа гарлаа." },
   );
   assert.equal(captureMock.mock.callCount(), 1);
@@ -110,23 +135,40 @@ test("getAvailableCredit returns available credit when limit set", async () => {
   mockContact = resolved({ credit_limit: 5000 });
   mockEntries = [{ entry_type: "sale_debit", amount: 1000 }];
 
-  const result = await creditAccounts.getAvailableCredit(mockSupabase(), "org-1", "contact-1");
-  assert.deepEqual(result, { balance: 1000, creditLimit: 5000, available: 4000 });
+  const result = await creditAccounts.getAvailableCredit(
+    mockSupabase(),
+    "org-1",
+    "contact-1",
+  );
+  assert.deepEqual(result, {
+    balance: 1000,
+    creditLimit: 5000,
+    available: 4000,
+  });
 });
 
 test("getAvailableCredit returns null available when no credit limit", async () => {
   mockContact = resolved({ credit_limit: null });
   mockEntries = [{ entry_type: "sale_debit", amount: 500 }];
 
-  const result = await creditAccounts.getAvailableCredit(mockSupabase(), "org-1", "contact-1");
-  assert.deepEqual(result, { balance: 500, creditLimit: null, available: null });
+  const result = await creditAccounts.getAvailableCredit(
+    mockSupabase(),
+    "org-1",
+    "contact-1",
+  );
+  assert.deepEqual(result, {
+    balance: 500,
+    creditLimit: null,
+    available: null,
+  });
 });
 
 test("getAvailableCredit throws when contact not found", async () => {
   mockContact = null;
 
   await assert.rejects(
-    () => creditAccounts.getAvailableCredit(mockSupabase(), "org-1", "contact-1"),
+    () =>
+      creditAccounts.getAvailableCredit(mockSupabase(), "org-1", "contact-1"),
     { message: "Үйлчлүгчийн мэдээлэл олдсонгүй." },
   );
   assert.equal(captureMock.mock.callCount(), 1);
@@ -179,7 +221,12 @@ test("checkCreditLimit allows when no credit limit → allowed: true", async () 
   mockContact = resolved({ credit_limit: null });
   mockEntries = [];
 
-  const result = await creditAccounts.checkCreditLimit(mockSupabase(), "org-1", "contact-1", 1000);
+  const result = await creditAccounts.checkCreditLimit(
+    mockSupabase(),
+    "org-1",
+    "contact-1",
+    1000,
+  );
   assert.deepEqual(result, { allowed: true });
 });
 
@@ -188,7 +235,12 @@ test("checkCreditLimit allows when within limit → allowed: true", async () => 
   mockEntries = [{ entry_type: "sale_debit", amount: 1000 }];
 
   // balance=1000, limit=5000, sale=3000 → projected=4000 ≤ 5000
-  const result = await creditAccounts.checkCreditLimit(mockSupabase(), "org-1", "contact-1", 3000);
+  const result = await creditAccounts.checkCreditLimit(
+    mockSupabase(),
+    "org-1",
+    "contact-1",
+    3000,
+  );
   assert.deepEqual(result, { allowed: true });
 });
 
@@ -197,7 +249,12 @@ test("checkCreditLimit rejects when over limit → allowed: false with reason", 
   mockEntries = [{ entry_type: "sale_debit", amount: 4000 }];
 
   // balance=4000, limit=5000, sale=2000 → projected=6000 > 5000
-  const result = await creditAccounts.checkCreditLimit(mockSupabase(), "org-1", "contact-1", 2000);
+  const result = await creditAccounts.checkCreditLimit(
+    mockSupabase(),
+    "org-1",
+    "contact-1",
+    2000,
+  );
   assert.equal(result.allowed, false);
   assert.match(result.reason!, /Зээлийн хязгаар хэтэрсэн/);
   assert.match(result.reason!, /₮5000/);

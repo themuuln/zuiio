@@ -111,9 +111,12 @@ describe("Roles CRUD", () => {
     // The set_role_permissions RPC checks has_permission('roles.manage').
     // Service_role client bypasses RLS but has no profile entry.
     // Must use an authenticated user with roles.manage permission.
-    const user = await createTestUserWithPermissions(admin, orgId, "RoleManager", [
-      "roles.manage",
-    ]);
+    const user = await createTestUserWithPermissions(
+      admin,
+      orgId,
+      "RoleManager",
+      ["roles.manage"],
+    );
 
     const { data: role } = await admin
       .from("roles")
@@ -123,15 +126,18 @@ describe("Roles CRUD", () => {
     trackCleanup("roles", role!.id);
 
     // Add some initial permissions
-    await admin.from("role_permissions").insert([
-      { role_id: role!.id, permission: "products.read" as any },
-    ]);
+    await admin
+      .from("role_permissions")
+      .insert([{ role_id: role!.id, permission: "products.read" }]);
 
     // Replace with new set via RPC
-    const { data: result, error } = await user.client.rpc("set_role_permissions", {
-      p_role_id: role!.id,
-      p_permissions: ["products.create", "sales.read", "contacts.read"],
-    });
+    const { data: result, error } = await user.client.rpc(
+      "set_role_permissions",
+      {
+        p_role_id: role!.id,
+        p_permissions: ["products.create", "sales.read", "contacts.read"],
+      },
+    );
     expect(error).toBeNull();
     expect(result).toHaveProperty("success", true);
 
@@ -140,8 +146,12 @@ describe("Roles CRUD", () => {
       .from("role_permissions")
       .select("permission")
       .eq("role_id", role!.id);
-    const permValues = perms!.map((p: any) => p.permission).sort();
-    expect(permValues).toEqual(["contacts.read", "products.create", "sales.read"]);
+    const permValues = perms!.map((p) => p.permission).sort();
+    expect(permValues).toEqual([
+      "contacts.read",
+      "products.create",
+      "sales.read",
+    ]);
   });
 
   it("user WITHOUT roles.manage permission gets error from set_role_permissions", async () => {
@@ -169,9 +179,12 @@ describe("Roles CRUD", () => {
   it("user WITH roles.manage permission succeeds with set_role_permissions", async () => {
     const { orgId } = await createTestOrg(admin);
 
-    const user = await createTestUserWithPermissions(admin, orgId, "CanManage", [
-      "roles.manage",
-    ]);
+    const user = await createTestUserWithPermissions(
+      admin,
+      orgId,
+      "CanManage",
+      ["roles.manage"],
+    );
 
     const { data: role } = await admin
       .from("roles")
@@ -202,8 +215,8 @@ describe("Roles CRUD", () => {
     trackCleanup("roles", role!.id);
 
     await admin.from("role_permissions").insert([
-      { role_id: role!.id, permission: "products.read" as any },
-      { role_id: role!.id, permission: "sales.read" as any },
+      { role_id: role!.id, permission: "products.read" },
+      { role_id: role!.id, permission: "sales.read" },
     ]);
 
     const { data: perms, error } = await admin
@@ -226,7 +239,7 @@ describe("Roles CRUD", () => {
 
     const { data: rp } = await admin
       .from("role_permissions")
-      .insert({ role_id: role!.id, permission: "products.delete" as any })
+      .insert({ role_id: role!.id, permission: "products.delete" })
       .select()
       .single();
 
@@ -238,8 +251,6 @@ describe("Roles CRUD", () => {
   });
 });
 
-
-
 // ── Permission check functions ──────────────────
 
 describe("Permission check functions", () => {
@@ -248,9 +259,12 @@ describe("Permission check functions", () => {
   it("has_permission() returns true for a user who has the permission", async () => {
     const { orgId } = await createTestOrg(admin);
 
-    const user = await createTestUserWithPermissions(admin, orgId, "HasSalesRead", [
-      "sales.read",
-    ]);
+    const user = await createTestUserWithPermissions(
+      admin,
+      orgId,
+      "HasSalesRead",
+      ["sales.read"],
+    );
 
     const { data: result, error } = await user.client.rpc("has_permission", {
       p_permission: "sales.read",
@@ -297,7 +311,9 @@ describe("Permission check functions", () => {
       "sales.read",
     ]);
 
-    const { data: result, error } = await user.client.rpc("get_user_permissions");
+    const { data: result, error } = await user.client.rpc(
+      "get_user_permissions",
+    );
     expect(error).toBeNull();
     expect(Array.isArray(result)).toBe(true);
     expect(result!.length).toBeGreaterThanOrEqual(3);
@@ -314,9 +330,12 @@ describe("Profile role assignment", () => {
   it("admin can update a profile's role_id", async () => {
     const { orgId } = await createTestOrg(admin);
 
-    const user = await createTestUserWithPermissions(admin, orgId, "ProfUpdate", [
-      "products.read",
-    ]);
+    const user = await createTestUserWithPermissions(
+      admin,
+      orgId,
+      "ProfUpdate",
+      ["products.read"],
+    );
 
     // Find user's profile and its current role
     const { data: profile } = await admin

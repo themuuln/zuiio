@@ -13,11 +13,11 @@ import {
   FileText,
   Folder,
   Gift,
-  Megaphone,
   House,
   IdentificationBadge,
   ImageSquare,
   MapPin,
+  Megaphone,
   Package,
   Percent,
   Sparkle,
@@ -29,9 +29,11 @@ import {
   Warehouse,
 } from "@phosphor-icons/react/dist/ssr";
 import { FEATURE_KEYS } from "@/lib/constants";
+import { type MessageKey, messages } from "@/lib/i18n/messages";
 
 export type NavItem = {
   title: string;
+  titleKey?: MessageKey;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   featureKey?: string;
@@ -39,270 +41,96 @@ export type NavItem = {
 
 export type NavGroup = {
   label: string;
+  labelKey?: MessageKey;
   items: NavItem[];
 };
 
+function navItem(
+  titleKey: MessageKey,
+  href: string,
+  icon: React.ComponentType<{ className?: string }>,
+  featureKey?: string,
+): NavItem {
+  return {
+    title: messages.mn[titleKey],
+    titleKey,
+    href,
+    icon,
+    ...(featureKey ? { featureKey } : {}),
+  };
+}
+
+function navGroup(labelKey: MessageKey, items: NavItem[]): NavGroup {
+  return {
+    label: messages.mn[labelKey],
+    labelKey,
+    items,
+  };
+}
+
 export const navGroups: NavGroup[] = [
-  {
-    label: "Үндсэн",
-    items: [{ title: "Хяналтын самбар", href: "/", icon: House }],
-  },
-  {
-    label: "Үйл ажиллагаа",
-    items: [
-      {
-        title: "Борлуулалт",
-        href: "/sales",
-        icon: CurrencyDollar,
-        featureKey: "sales",
-      },
-      {
-        title: "Дэлгүүр",
-        href: "/shop",
-        icon: Storefront,
-        featureKey: "shop",
-      },
-      {
-        title: "Зарлага",
-        href: "/expenses",
-        icon: CreditCard,
-        featureKey: "expenses",
-      },
-      {
-        title: "Худалдан авалт",
-        href: "/purchases",
-        icon: Trolley,
-        featureKey: "purchases",
-      },
-      {
-        title: "Буцаалт",
-        href: "/returns",
-        icon: ArrowCounterClockwise,
-        featureKey: "returns",
-      },
-      {
-        title: "Хүргэлт",
-        href: "/deliveries",
-        icon: Truck,
-        featureKey: "deliveries",
-      },
-      {
-        title: "Купон",
-        href: "/coupons",
-        icon: Tag,
-        featureKey: "coupons",
-      },
-      {
-        title: "Бэлгийн карт",
-        href: "/gift-cards",
-        icon: Gift,
-        featureKey: "gift_cards",
-      },
-      {
-        title: "Урамшуулал",
-        href: "/promotions",
-        icon: Sparkle,
-        featureKey: "promotions",
-      },
-    ],
-  },
-  {
-    label: "Бүртгэл",
-    items: [
-      { title: "Бүтээгдэхүүн", href: "/products", icon: Package },
-      { title: "Багц", href: "/products/bundles", icon: Cube },
-      { title: "Бөөн импорт", href: "/products/bulk", icon: Cube },
-      {
-        title: "Ангилалууд",
-        href: "/inventory/categories",
-        icon: Folder,
-        featureKey: "_categories",
-      },
-      {
-        title: "Агуулах",
-        href: "/inventory/warehouses",
-        icon: Warehouse,
-        featureKey: "_inventory",
-      },
-      {
-        title: "Үлдэгдэл хөдөлгөөн",
-        href: "/inventory/movements",
-        icon: MapPin,
-        featureKey: "_inventory",
-      },
-      {
-        title: "Тохируулга",
-        href: "/inventory/adjustments",
-        icon: MapPin,
-        featureKey: "_inventory",
-      },
-      {
-        title: "Дахин захиалга",
-        href: "/inventory/restock",
-        icon: Clock,
-        featureKey: "_inventory",
-      },
-      {
-        title: "Салбарууд",
-        href: "/settings/branches",
-        icon: Buildings,
-        featureKey: "_multi_branch",
-      },
-      { title: "Харилцагчид", href: "/customers", icon: Users },
-      {
-        title: "Нийлүүлэгчид",
-        href: "/suppliers",
-        icon: Buildings,
-        featureKey: "_suppliers",
-      },
-    ],
-  },
-  {
-    label: "Баримт бичиг",
-    items: [
-      {
-        title: "Нэхэмжлэл",
-        href: "/invoices",
-        icon: FileText,
-        featureKey: "invoices",
-      },
-      {
-        title: "Үнийн санал",
-        href: "/quotations",
-        icon: ClipboardText,
-        featureKey: "quotations",
-      },
-      {
-        title: "Хямдрал",
-        href: "/discounts",
-        icon: Percent,
-        featureKey: "discounts",
-      },
-      {
-        title: "Купон",
-        href: "/coupons",
-        icon: Tag,
-        featureKey: "coupons",
-      },
-      {
-        title: "Бэлгийн карт",
-        href: "/gift-cards",
-        icon: Gift,
-        featureKey: "gift_cards",
-      },
-      {
-        title: "Сурталчилгаа",
-        href: "/promotions",
-        icon: Megaphone,
-        featureKey: "promotions",
-      },
-    ],
-  },
-  {
-    label: "Шинжилгээ",
-    items: [
-      {
-        title: "Тайлан",
-        href: "/reports",
-        icon: ChartBar,
-        featureKey: "reports",
-      },
-      {
-        title: "Комисс",
-        href: "/commissions",
-        icon: Coin,
-        featureKey: "commissions",
-      },
-      {
-        title: "Нягтлан бодох бүртгэл",
-        href: "/accounting",
-        icon: Calculator,
-        featureKey: "accounting",
-      },
-    ],
-  },
-  {
-    label: "AI хэрэгслүүд",
-    items: [
-      {
-        title: "AI постер",
-        href: "/ai/poster",
-        icon: ImageSquare,
-      },
-      {
-        title: "AI зураг сайжруулах",
-        href: "/ai/enhance",
-        icon: ImageSquare,
-      },
-      {
-        title: "AI лого",
-        href: "/ai/logo",
-        icon: ImageSquare,
-      },
-      {
-        title: "AI нэр санал болгох",
-        href: "/ai/naming",
-        icon: Sparkle,
-      },
-    ],
-  },
-  {
-    label: "Үйлдвэрлэл",
-    items: [
-      {
-        title: "BOM",
-        href: "/bom",
-        icon: Cube,
-        featureKey: "boms",
-      },
-      {
-        title: "Үйлдвэрлэлийн захиалга",
-        href: "/production",
-        icon: ClipboardText,
-        featureKey: "production_orders",
-      },
-      {
-        title: "Чанарын хяналт",
-        href: "/quality",
-        icon: CheckCircle,
-        featureKey: "quality_control",
-      },
-    ],
-  },
-  {
-    label: "Хүний нөөц",
-    items: [
-      {
-        title: "Ажилтны бүртгэл",
-        href: "/hr",
-        icon: IdentificationBadge,
-        featureKey: FEATURE_KEYS.hr,
-      },
-      {
-        title: "Цалин",
-        href: "/hr/payroll",
-        icon: CurrencyDollar,
-        featureKey: FEATURE_KEYS.hr,
-      },
-    ],
-  },
-  {
-    label: "Систем",
-    items: [
-      {
-        title: "Брэнд сан",
-        href: "/settings/presets",
-        icon: Cube,
-        featureKey: "_brands",
-      },
-      {
-        title: "Үйлдлийн түүх",
-        href: "/audit",
-        icon: Clock,
-        featureKey: "_audit_log",
-      },
-    ],
-  },
+  navGroup("nav.group.main", [navItem("nav.dashboard", "/", House)]),
+  navGroup("nav.group.operations", [
+    navItem("nav.sales", "/sales", CurrencyDollar, "sales"),
+    navItem("nav.shop", "/shop", Storefront, "shop"),
+    navItem("nav.expenses", "/expenses", CreditCard, "expenses"),
+    navItem("nav.purchases", "/purchases", Trolley, "purchases"),
+    navItem("nav.returns", "/returns", ArrowCounterClockwise, "returns"),
+    navItem("nav.deliveries", "/deliveries", Truck, "deliveries"),
+    navItem("nav.coupons", "/coupons", Tag, "coupons"),
+    navItem("nav.giftCards", "/gift-cards", Gift, "gift_cards"),
+    navItem("nav.promotions", "/promotions", Sparkle, "promotions"),
+  ]),
+  navGroup("nav.group.records", [
+    navItem("nav.products", "/products", Package),
+    navItem("nav.bundles", "/products/bundles", Cube),
+    navItem("nav.bulkImport", "/products/bulk", Cube),
+    navItem("nav.categories", "/inventory/categories", Folder, "_categories"),
+    navItem("nav.warehouses", "/inventory/warehouses", Warehouse, "_inventory"),
+    navItem("nav.stockMovements", "/inventory/movements", MapPin, "_inventory"),
+    navItem("nav.adjustments", "/inventory/adjustments", MapPin, "_inventory"),
+    navItem("nav.restock", "/inventory/restock", Clock, "_inventory"),
+    navItem("nav.branches", "/settings/branches", Buildings, "_multi_branch"),
+    navItem("nav.customers", "/customers", Users),
+    navItem("nav.suppliers", "/suppliers", Buildings, "_suppliers"),
+  ]),
+  navGroup("nav.group.documents", [
+    navItem("nav.invoices", "/invoices", FileText, "invoices"),
+    navItem("nav.quotations", "/quotations", ClipboardText, "quotations"),
+    navItem("nav.discounts", "/discounts", Percent, "discounts"),
+    navItem("nav.coupons", "/coupons", Tag, "coupons"),
+    navItem("nav.giftCards", "/gift-cards", Gift, "gift_cards"),
+    navItem("nav.promotions", "/promotions", Megaphone, "promotions"),
+  ]),
+  navGroup("nav.group.analytics", [
+    navItem("nav.reports", "/reports", ChartBar, "reports"),
+    navItem("nav.commissions", "/commissions", Coin, "commissions"),
+    navItem("nav.accounting", "/accounting", Calculator, "accounting"),
+  ]),
+  navGroup("nav.group.ai", [
+    navItem("nav.aiPoster", "/ai/poster", ImageSquare),
+    navItem("nav.aiEnhance", "/ai/enhance", ImageSquare),
+    navItem("nav.aiLogo", "/ai/logo", ImageSquare),
+    navItem("nav.aiNaming", "/ai/naming", Sparkle),
+  ]),
+  navGroup("nav.group.production", [
+    navItem("nav.bom", "/bom", Cube, "boms"),
+    navItem(
+      "nav.productionOrders",
+      "/production",
+      ClipboardText,
+      "production_orders",
+    ),
+    navItem("nav.quality", "/quality", CheckCircle, "quality_control"),
+  ]),
+  navGroup("nav.group.people", [
+    navItem("nav.employees", "/hr", IdentificationBadge, FEATURE_KEYS.hr),
+    navItem("nav.payroll", "/hr/payroll", CurrencyDollar, FEATURE_KEYS.hr),
+  ]),
+  navGroup("nav.group.system", [
+    navItem("nav.brandLibrary", "/settings/presets", Cube, "_brands"),
+    navItem("nav.auditLog", "/audit", Clock, "_audit_log"),
+  ]),
 ];
 
 export function filterNavGroups(

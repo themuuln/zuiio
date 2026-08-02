@@ -90,12 +90,14 @@ export function ShareDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button variant="outline" size="sm">
-          <ShareNetwork data-icon="inline-start" />
-          Хуваалцах
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button variant="outline" size="sm">
+            <ShareNetwork data-icon="inline-start" />
+            Хуваалцах
+          </Button>
+        }
+      />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Тайлан хуваалцах</DialogTitle>

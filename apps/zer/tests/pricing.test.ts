@@ -2,14 +2,9 @@
  * Tests for src/lib/pricing.ts — calculateSalePricing
  */
 import assert from "node:assert/strict";
-import { describe, test, mock } from "node:test";
+import { mock, test } from "node:test";
+import type { calculateSalePricing as CalculateSalePricingFn } from "@/lib/pricing";
 import { mockMod, resolved } from "./actions-helpers";
-
-import type {
-  calculateSalePricing as CalculateSalePricingFn,
-  SaleItemInput,
-  PricedSaleItem,
-} from "@/lib/pricing";
 
 // ─── Mocks ────────────────────────────────────────────────────────────
 
@@ -59,6 +54,7 @@ function chainResult(result: { data: unknown; error: unknown }) {
   }
   self.single = mock.fn(() => resolved(result.data, result.error));
   self.maybeSingle = mock.fn(() => resolved(result.data, result.error));
+  // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are intentionally thenable in this test mock.
   self.then = (
     onFulfilled: (v: typeof result) => void,
     onRejected?: (e: unknown) => void,
@@ -150,7 +146,9 @@ test("item with price list rule applies fixed unit price", async () => {
     ],
     price_lists: [
       {
-        data: [{ id: "list-1", priority: 10, valid_from: null, valid_until: null }],
+        data: [
+          { id: "list-1", priority: 10, valid_from: null, valid_until: null },
+        ],
         error: null,
       },
     ],
@@ -206,7 +204,12 @@ test("item with segment-linked price list uses segment price", async () => {
       {
         data: [
           { id: "list-seg", priority: 10, valid_from: null, valid_until: null },
-          { id: "list-default", priority: 20, valid_from: null, valid_until: null },
+          {
+            id: "list-default",
+            priority: 20,
+            valid_from: null,
+            valid_until: null,
+          },
         ],
         error: null,
       },
@@ -268,7 +271,9 @@ test("multiple items are priced correctly", async () => {
     ],
     price_lists: [
       {
-        data: [{ id: "list-1", priority: 10, valid_from: null, valid_until: null }],
+        data: [
+          { id: "list-1", priority: 10, valid_from: null, valid_until: null },
+        ],
         error: null,
       },
     ],
@@ -346,7 +351,9 @@ test("quantity-based pricing: higher quantity gets better price", async () => {
     ],
     price_lists: [
       {
-        data: [{ id: "list-1", priority: 10, valid_from: null, valid_until: null }],
+        data: [
+          { id: "list-1", priority: 10, valid_from: null, valid_until: null },
+        ],
         error: null,
       },
     ],
@@ -402,15 +409,15 @@ test("category rule applies when no product-specific rule exists", async () => {
   const supabase = makeSupabase({
     products: [
       {
-        data: [
-          { id: "prod-1", sale_price: 5000, category_id: "cat-1" },
-        ],
+        data: [{ id: "prod-1", sale_price: 5000, category_id: "cat-1" }],
         error: null,
       },
     ],
     price_lists: [
       {
-        data: [{ id: "list-1", priority: 10, valid_from: null, valid_until: null }],
+        data: [
+          { id: "list-1", priority: 10, valid_from: null, valid_until: null },
+        ],
         error: null,
       },
     ],
@@ -446,15 +453,15 @@ test("percentage adjustment rounds to nearest integer", async () => {
   const supabase = makeSupabase({
     products: [
       {
-        data: [
-          { id: "prod-1", sale_price: 3333, category_id: "cat-1" },
-        ],
+        data: [{ id: "prod-1", sale_price: 3333, category_id: "cat-1" }],
         error: null,
       },
     ],
     price_lists: [
       {
-        data: [{ id: "list-1", priority: 10, valid_from: null, valid_until: null }],
+        data: [
+          { id: "list-1", priority: 10, valid_from: null, valid_until: null },
+        ],
         error: null,
       },
     ],

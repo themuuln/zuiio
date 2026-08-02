@@ -14,10 +14,6 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   reactCompiler: true,
-  // TypeScript validation is handled by `pnpm validate` before build.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   experimental: {
     useTypeScriptCli: true,
     inlineCss: true,
@@ -89,8 +85,8 @@ export default withSentryConfig(nextConfig, {
   // Bypass ad-blockers by proxying Sentry events through a Next.js route
   tunnelRoute: "/monitoring",
 
-  webpack: {
-    // Hidden source maps are only uploaded when SENTRY_UPLOAD is explicitly set
-    hiddenSourceMap: process.env.SENTRY_UPLOAD !== "true",
+  // Only upload source maps when explicitly enabled for a release.
+  sourcemaps: {
+    disable: process.env.SENTRY_UPLOAD !== "true",
   },
 });

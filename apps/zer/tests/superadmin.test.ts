@@ -23,12 +23,12 @@ mockMod("@/lib/supabase/server", {
 // ─── Lazy-loaded module ───────────────────────────────────────────────
 
 let getSuperadminEmail: () => Promise<string | null>;
-let requireSuperadmin: () => Promise<string>;
+let _requireSuperadmin: () => Promise<string>;
 
 test.before(async () => {
   const mod = await import("@/lib/superadmin");
   getSuperadminEmail = mod.getSuperadminEmail;
-  requireSuperadmin = mod.requireSuperadmin;
+  _requireSuperadmin = mod.requireSuperadmin;
 });
 
 test.beforeEach(() => {

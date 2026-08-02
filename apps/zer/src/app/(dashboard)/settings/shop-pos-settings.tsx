@@ -188,6 +188,7 @@ function DefaultPaymentMethodSelect({ initial }: { initial: string }) {
     <Select
       value={value}
       onValueChange={(method) => {
+        if (method === null) return;
         setValue(method);
         mutation.mutate(method);
       }}

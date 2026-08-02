@@ -5,7 +5,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod } from "./actions-helpers";
 
 // ─── Resolve helper ──────────────────────────────────────────────────
 function ok<T>(data: T, error: unknown = null) {
@@ -41,10 +41,12 @@ function countChain(result: unknown) {
 }
 
 // ─── Global mocks ────────────────────────────────────────────────────
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 const captureMock = mock.fn(() => {});
 mockMod("@zuiio/capture", {
   capture: captureMock,
@@ -59,7 +61,10 @@ mockMod("@/lib/revalidate", {
 });
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
@@ -72,8 +77,14 @@ mockMod("@/lib/action-utils", {
 let createRole: (fd: FormData) => Promise<unknown>;
 let updateRole: (roleId: string, fd: FormData) => Promise<unknown>;
 let deleteRole: (roleId: string) => Promise<unknown>;
-let setRolePermissions: (roleId: string, permissions: unknown[]) => Promise<unknown>;
-let updateUserRole: (profileId: string, roleId: string | null) => Promise<unknown>;
+let setRolePermissions: (
+  roleId: string,
+  permissions: unknown[],
+) => Promise<unknown>;
+let updateUserRole: (
+  profileId: string,
+  roleId: string | null,
+) => Promise<unknown>;
 
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/settings/roles/actions");
@@ -99,10 +110,14 @@ test("createRole — rejects missing name", async () => {
 
 test("createRole — creates role successfully (returns undefined)", async () => {
   resetMocks();
-  const result = await createRole(formData({ name: "Admin", description: "Admin role" }));
+  const result = await createRole(
+    formData({ name: "Admin", description: "Admin role" }),
+  );
   assert.strictEqual(result, undefined);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 1);
-  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, ["roles"]);
+  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, [
+    "roles",
+  ]);
 });
 
 test("createRole — handles insert error", async () => {
@@ -117,7 +132,9 @@ test("createRole — handles insert error", async () => {
     },
   });
   const result = await createRole(formData({ name: "Admin" }));
-  assert.deepStrictEqual(result, { error: "Энэ нэртэй үүрэг бүртгэгдсэн байна" });
+  assert.deepStrictEqual(result, {
+    error: "Энэ нэртэй үүрэг бүртгэгдсэн байна",
+  });
   assert.strictEqual(captureMock.mock.callCount(), 1);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 0);
 });
@@ -131,10 +148,15 @@ test("updateRole — rejects missing name", async () => {
 
 test("updateRole — updates role successfully (returns undefined)", async () => {
   resetMocks();
-  const result = await updateRole("role-1", formData({ name: "Editor", description: "Updated" }));
+  const result = await updateRole(
+    "role-1",
+    formData({ name: "Editor", description: "Updated" }),
+  );
   assert.strictEqual(result, undefined);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 1);
-  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, ["roles"]);
+  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, [
+    "roles",
+  ]);
 });
 
 test("updateRole — handles DB error", async () => {
@@ -169,7 +191,9 @@ test("deleteRole — deletes successfully (returns undefined)", async () => {
   const result = await deleteRole("role-1");
   assert.strictEqual(result, undefined);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 1);
-  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, ["roles"]);
+  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, [
+    "roles",
+  ]);
 });
 
 test("deleteRole — handles DB error", async () => {
@@ -228,7 +252,10 @@ test("setRolePermissions — handles RPC error", async () => {
   resetMocks();
   const rpcError = { message: "rpc failed" };
   mockCtx = mockActionCtx({
-    supabase: { from: mock.fn(() => ({})), rpc: mock.fn(() => ok(null, rpcError)) },
+    supabase: {
+      from: mock.fn(() => ({})),
+      rpc: mock.fn(() => ok(null, rpcError)),
+    },
   });
   const result = await setRolePermissions("role-1", ["products.view"]);
   assert.deepStrictEqual(result, { error: "rpc failed" });
@@ -248,7 +275,9 @@ test("updateUserRole — updates user role successfully (returns undefined)", as
   const result = await updateUserRole("profile-1", "role-1");
   assert.strictEqual(result, undefined);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 1);
-  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, ["users"]);
+  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, [
+    "users",
+  ]);
 });
 
 test("updateUserRole — sets role to null (returns undefined)", async () => {
@@ -262,7 +291,9 @@ test("updateUserRole — sets role to null (returns undefined)", async () => {
   const result = await updateUserRole("profile-1", null);
   assert.strictEqual(result, undefined);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 1);
-  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, ["users"]);
+  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, [
+    "users",
+  ]);
 });
 
 test("updateUserRole — handles DB error", async () => {

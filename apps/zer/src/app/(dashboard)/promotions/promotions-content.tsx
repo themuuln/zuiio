@@ -4,13 +4,13 @@ import { Gift, NotePencil } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import {
-  PromotionCreateDrawer,
-  PromotionDetailDrawer,
-  type PromotionDetailData,
-} from "@/components/promotions";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
+import {
+  PromotionCreateDrawer,
+  type PromotionDetailData,
+  PromotionDetailDrawer,
+} from "@/components/promotions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
@@ -66,12 +66,6 @@ export function PromotionsContent({
       <PageShell
         title="Сурталчилгаа"
         description="Урамшуулал, хямдралын тохиргоо"
-        actions={
-          <PromotionCreateDrawer
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-          />
-        }
       >
         <ErpEmptyState
           icon={<Gift className="size-4" />}

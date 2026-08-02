@@ -23,7 +23,7 @@ export function CheckoutGiftCard({
   const [giftCardAmount, setGiftCardAmount] = useState(0);
   const [remainingBalance, setRemainingBalance] = useState(0);
   const [appliedCode, setAppliedCode] = useState("");
-  const [appliedCardId, setAppliedCardId] = useState("");
+  const [_appliedCardId, setAppliedCardId] = useState("");
   const [isPending, setIsPending] = useState(false);
 
   const handleApply = async () => {
@@ -33,9 +33,7 @@ export function CheckoutGiftCard({
     try {
       const result = await validateGiftCardCode(trimmed, cartTotal);
       if (!result.valid || result.error) {
-        toast.error(
-          result.error || "Бэлгийн карт хэрэглэх боломжгүй байна.",
-        );
+        toast.error(result.error || "Бэлгийн карт хэрэглэх боломжгүй байна.");
         return;
       }
       if (result.redeemable_amount <= 0) {
@@ -73,9 +71,7 @@ export function CheckoutGiftCard({
             <span className="text-xs font-medium text-muted-foreground">
               Бэлгийн карт хэрэглэсэн
             </span>
-            <span className="text-xs text-muted-foreground">
-              {appliedCode}
-            </span>
+            <span className="text-xs text-muted-foreground">{appliedCode}</span>
             <span className="text-lg font-bold text-violet-700 dark:text-violet-400">
               -{giftCardAmount.toLocaleString()}₮
             </span>

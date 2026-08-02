@@ -118,14 +118,16 @@ async function testSmtpConnection() {
   }
 }
 
-
 interface Props {
   isSuperAdmin: boolean;
   organizationId: string;
   userId: string;
 }
 
-export function SmtpSettings({ isSuperAdmin: _isSuperAdmin, organizationId }: Props) {
+export function SmtpSettings({
+  isSuperAdmin: _isSuperAdmin,
+  organizationId,
+}: Props) {
   const queryClient = useQueryClient();
   const { notify } = useSettings();
 

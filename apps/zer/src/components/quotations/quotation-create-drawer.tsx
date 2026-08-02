@@ -337,10 +337,7 @@ export function QuotationCreateDrawer({
               getProductLabel={(p) => p.name}
               onProductSelect={(product, i) => {
                 if (product) {
-                  setValue(
-                    `items.${i}.unit_price`,
-                    (product as any).sale_price ?? 0,
-                  );
+                  setValue(`items.${i}.unit_price`, product.sale_price ?? 0);
                 }
               }}
               onVariantSelect={(variant, i) => {

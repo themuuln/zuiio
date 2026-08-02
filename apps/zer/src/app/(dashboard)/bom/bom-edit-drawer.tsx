@@ -26,8 +26,8 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
-import { bomKeys } from "@/lib/query/keys";
 import { useOrgId } from "@/lib/hooks/use-org-id";
+import { bomKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 import { getBom, updateBom } from "./bom-actions";
 

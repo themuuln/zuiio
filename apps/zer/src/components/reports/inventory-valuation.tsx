@@ -2,6 +2,7 @@
 
 import { Package } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
@@ -20,16 +21,33 @@ type ValuationRow = {
 export function InventoryValuation() {
   const { organizationId } = useOrgSettings();
 
-  const query = useQuery({
+  const query = useQuery<ValuationRow[]>({
     queryKey: ["reports", "inventory-valuation", organizationId],
     queryFn: async () => {
+      if (!organizationId) return [];
       const supabase = createClient();
-      const { data, error } = await supabase.rpc("get_inventory_valuation", {
-        p_organization_id: organizationId,
-      });
+      const { data, error } = await withDbCapture(
+        "reports: inventory valuation",
+        supabase
+          .from("products")
+          .select("id,name,sku,current_stock,cost_price")
+          .eq("organization_id", organizationId)
+          .is("deleted_at", null),
+      );
       if (error) throw error;
 
-      return (data ?? []) as ValuationRow[];
+      return (data ?? []).map((product) => {
+        const quantity = Number(product.current_stock ?? 0);
+        const cost = Number(product.cost_price ?? 0);
+        return {
+          product_id: product.id,
+          product_name: product.name,
+          sku: product.sku,
+          total_quantity: quantity,
+          total_cost: quantity * cost,
+          average_cost: cost,
+        };
+      });
     },
     enabled: !!organizationId,
   });

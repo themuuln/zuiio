@@ -1,5 +1,7 @@
 "use client";
 
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
 import * as React from "react";
 import {
   Controller,
@@ -9,11 +11,8 @@ import {
   FormProvider,
   useFormContext,
 } from "react-hook-form";
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
-
-import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const Form = FormProvider;
 
@@ -117,13 +116,13 @@ function FormControl({ render, ...props }: useRender.ComponentProps<"div">) {
           : `${formDescriptionId} ${formMessageId}`,
         "aria-invalid": !!error || undefined,
       },
-      props
+      props,
     ),
     render,
     state: {
       slot: "form-control" as const,
     },
-  })
+  });
 }
 
 function FormDescription({ className, ...props }: React.ComponentProps<"p">) {

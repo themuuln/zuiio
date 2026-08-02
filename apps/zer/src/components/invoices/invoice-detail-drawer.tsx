@@ -3,7 +3,6 @@
 import { ShareNetwork } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { capture } from "@zuiio/capture";
-import { invoiceKeys } from "@/lib/query/keys";
 import { useEffect, useRef, useState } from "react";
 import {
   createInvoiceShareLink,
@@ -32,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { invoiceKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 
 const STATUS_LABELS: Record<string, string> = {

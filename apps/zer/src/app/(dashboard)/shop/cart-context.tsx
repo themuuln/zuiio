@@ -120,7 +120,7 @@ type HeldSale = {
   heldAt: string;
 };
 
-const HELD_SALES_KEY = "zer:shop:held-sales";
+export const HELD_SALES_KEY = "zer:shop:held-sales";
 
 function loadHeldSales(): HeldSale[] {
   if (typeof window === "undefined") return [];

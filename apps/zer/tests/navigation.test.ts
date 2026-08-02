@@ -38,7 +38,11 @@ test("filterNavGroups keeps items without featureKey", () => {
 test("filterNavGroups includes items whose featureKey is in enabledFeatures", () => {
   const groups = [
     group("Features", [
-      item({ title: "Inventory", href: "/inventory", featureKey: "_inventory" }),
+      item({
+        title: "Inventory",
+        href: "/inventory",
+        featureKey: "_inventory",
+      }),
       item({ title: "Audit Log", href: "/audit", featureKey: "_audit_log" }),
     ]),
   ];
@@ -54,9 +58,17 @@ test("filterNavGroups includes items whose featureKey is in enabledFeatures", ()
 test("filterNavGroups excludes items whose featureKey is NOT in enabledFeatures", () => {
   const groups = [
     group("Features", [
-      item({ title: "Inventory", href: "/inventory", featureKey: "_inventory" }),
+      item({
+        title: "Inventory",
+        href: "/inventory",
+        featureKey: "_inventory",
+      }),
       item({ title: "Brands", href: "/brands", featureKey: "_brands" }),
-      item({ title: "Categories", href: "/categories", featureKey: "_categories" }),
+      item({
+        title: "Categories",
+        href: "/categories",
+        featureKey: "_categories",
+      }),
     ]),
   ];
 
@@ -72,7 +84,11 @@ test("filterNavGroups excludes items whose featureKey is NOT in enabledFeatures"
 test("filterNavGroups excludes _multi_branch item when hasMultiBranch is false", () => {
   const groups = [
     group("Settings", [
-      item({ title: "Branches", href: "/settings/branches", featureKey: "_multi_branch" }),
+      item({
+        title: "Branches",
+        href: "/settings/branches",
+        featureKey: "_multi_branch",
+      }),
       item({ title: "General", href: "/settings/general" }),
     ]),
   ];
@@ -87,7 +103,11 @@ test("filterNavGroups excludes _multi_branch item when hasMultiBranch is false",
 test("filterNavGroups keeps _multi_branch item when hasMultiBranch is true", () => {
   const groups = [
     group("Settings", [
-      item({ title: "Branches", href: "/settings/branches", featureKey: "_multi_branch" }),
+      item({
+        title: "Branches",
+        href: "/settings/branches",
+        featureKey: "_multi_branch",
+      }),
       item({ title: "General", href: "/settings/general" }),
     ]),
   ];
@@ -102,12 +122,14 @@ test("filterNavGroups keeps _multi_branch item when hasMultiBranch is true", () 
 
 test("filterNavGroups removes groups that become empty after filtering", () => {
   const groups = [
-    group("Should Stay", [
-      item({ title: "Dashboard", href: "/" }),
-    ]),
+    group("Should Stay", [item({ title: "Dashboard", href: "/" })]),
     group("Should Go", [
       item({ title: "Brands", href: "/brands", featureKey: "_brands" }),
-      item({ title: "Categories", href: "/categories", featureKey: "_categories" }),
+      item({
+        title: "Categories",
+        href: "/categories",
+        featureKey: "_categories",
+      }),
     ]),
   ];
 
@@ -123,7 +145,11 @@ test("filterNavGroups keeps groups that still have items after filtering", () =>
     group("Mixed", [
       item({ title: "Dashboard", href: "/" }),
       item({ title: "Brands", href: "/brands", featureKey: "_brands" }),
-      item({ title: "Inventory", href: "/inventory", featureKey: "_inventory" }),
+      item({
+        title: "Inventory",
+        href: "/inventory",
+        featureKey: "_inventory",
+      }),
     ]),
   ];
 
@@ -149,7 +175,11 @@ test("filterNavGroups handles all items filtered out across all groups", () => {
       item({ title: "Brands", href: "/brands", featureKey: "_brands" }),
     ]),
     group("Group B", [
-      item({ title: "Categories", href: "/categories", featureKey: "_categories" }),
+      item({
+        title: "Categories",
+        href: "/categories",
+        featureKey: "_categories",
+      }),
     ]),
   ];
 
@@ -167,11 +197,19 @@ test("filterNavGroups preserves order of groups and items", () => {
       item({ title: "Brands", href: "/brands", featureKey: "_brands" }),
     ]),
     group("First", [
-      item({ title: "Categories", href: "/categories", featureKey: "_categories" }),
+      item({
+        title: "Categories",
+        href: "/categories",
+        featureKey: "_categories",
+      }),
       item({ title: "First", href: "/first" }),
     ]),
     group("Second", [
-      item({ title: "Inventory", href: "/inventory", featureKey: "_inventory" }),
+      item({
+        title: "Inventory",
+        href: "/inventory",
+        featureKey: "_inventory",
+      }),
     ]),
   ];
 

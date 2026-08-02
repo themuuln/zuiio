@@ -42,14 +42,15 @@ test.describe("Roles & Permissions", () => {
     // Navigate to settings which opens the drawer via ?roles=true
     await page.goto("/settings?roles=true");
 
-    // The roles drawer should be visible
+    const rolesDrawer = page.locator("[data-drawer-popup]:visible").first();
     await expect(
-      page.getByRole("heading", { name: /Үүрэг, эрхүүд/i }),
+      rolesDrawer.getByRole("heading", { name: /Үүрэг, эрхүүд/i }),
     ).toBeVisible();
 
-    // Should show role buttons with role names
-    await expect(page.getByRole("button", { name: /owner/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /manager/i })).toBeVisible();
+    // The local E2E fixture seeds the system owner role.
+    await expect(
+      rolesDrawer.getByRole("button", { name: /owner/i }),
+    ).toBeVisible();
   });
 
   test("selecting a role shows permission editor", async ({ page }) => {
@@ -68,12 +69,28 @@ test.describe("Roles & Permissions", () => {
   test("clicking new role button opens drawer with form", async ({ page }) => {
     await page.goto("/settings?roles=true");
 
-    // Click the "Шинэ" button to create a new role
-    await page.getByRole("button", { name: /Шинэ/i }).click();
+    const rolesDrawer = page.locator("[data-drawer-popup]:visible").first();
+    const newRoleButton = rolesDrawer.getByRole("button", {
+      name: "Шинэ",
+      exact: true,
+    });
+    await expect(newRoleButton).toBeVisible({ timeout: 15000 });
 
-    // Should see the form inside the drawer panel
-    await expect(page.getByLabel(/Үүргийн нэр/i)).toBeVisible();
-    await expect(page.getByLabel(/Тайлбар/i)).toBeVisible();
+    await newRoleButton.click();
+    await expect(page.locator("[data-drawer-popup]:visible")).toHaveCount(2, {
+      timeout: 15000,
+    });
+
+    // Should see the form inside the nested drawer panel.
+    await expect(page.getByRole("heading", { name: "Шинэ үүрэг" })).toBeVisible(
+      { timeout: 15000 },
+    );
+    await expect(page.getByLabel(/Үүргийн нэр/i)).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByLabel(/Тайлбар/i)).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("navigating to /settings/roles auto-opens the drawer", async ({

@@ -101,13 +101,16 @@ test("ENTITY_PATHS has all expected entity keys", () => {
     "commissions",
     "coupons",
     "customers",
+    "deliveries",
     "discounts",
     "expenses",
+    "gift_cards",
     "hr",
     "invoices",
     "inventory",
     "products",
     "production",
+    "promotions",
     "purchases",
     "quality",
     "quotations",
@@ -123,6 +126,6 @@ test("ENTITY_PATHS has all expected entity keys", () => {
 });
 
 test("ENTITY_PATHS['production'] has 2 entries", () => {
-  assert.equal(ENTITY_PATHS["production"].length, 2);
-  assert.deepEqual(ENTITY_PATHS["production"], ["/production", "/quality"]);
+  assert.equal(ENTITY_PATHS.production.length, 2);
+  assert.deepEqual(ENTITY_PATHS.production, ["/production", "/quality"]);
 });

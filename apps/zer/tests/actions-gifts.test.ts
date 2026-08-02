@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod } from "./actions-helpers";
 
 // ─── Resolve helper (inline to avoid esbuild depth issues) ──────────
 function resolved<T>(data: T, error: unknown = null) {
@@ -14,9 +14,9 @@ function resolved<T>(data: T, error: unknown = null) {
 // ─── Supabase chain builders ────────────────────────────────────────
 
 /** Build supabase mock for createGiftOption — insert returns a Promise */
-function makeCreateSupabase(opts: {
-  insertError?: { message: string; code?: string } | null;
-} = {}) {
+function makeCreateSupabase(
+  opts: { insertError?: { message: string; code?: string } | null } = {},
+) {
   const { insertError = null } = opts;
 
   return {
@@ -27,9 +27,9 @@ function makeCreateSupabase(opts: {
 }
 
 /** Build supabase mock for updateGiftOption — update → eq → eq chain */
-function makeUpdateSupabase(opts: {
-  updateError?: { message: string } | null;
-} = {}) {
+function makeUpdateSupabase(
+  opts: { updateError?: { message: string } | null } = {},
+) {
   const { updateError = null } = opts;
 
   return {
@@ -44,9 +44,9 @@ function makeUpdateSupabase(opts: {
 }
 
 /** Build supabase mock for deleteGiftOption — delete → eq → eq chain */
-function makeDeleteSupabase(opts: {
-  deleteError?: { message: string } | null;
-} = {}) {
+function makeDeleteSupabase(
+  opts: { deleteError?: { message: string } | null } = {},
+) {
   const { deleteError = null } = opts;
 
   return {
@@ -61,9 +61,11 @@ function makeDeleteSupabase(opts: {
 }
 
 // ─── Global mocks ───────────────────────────────────────────────────
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  return await query;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    return await query;
+  },
+);
 mockMod("@zuiio/capture", {
   capture: mock.fn(() => {}),
   withDbCapture: withDbCaptureMock,
@@ -78,7 +80,10 @@ mockMod("@/lib/revalidate", {
 
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
@@ -138,7 +143,10 @@ function validUpdateData(overrides: Record<string, string | null> = {}) {
 test("createGiftOption rejects missing name", async () => {
   resetMocks();
   mockCtx = mockActionCtx();
-  const result = await createGiftOption(undefined, validCreateData({ name: "" }));
+  const result = await createGiftOption(
+    undefined,
+    validCreateData({ name: "" }),
+  );
   assert.deepStrictEqual(result, { error: "Нэр шаардлагатай." });
 });
 
@@ -207,7 +215,11 @@ test("updateGiftOption updates successfully", async () => {
   const supabase = makeUpdateSupabase();
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await updateGiftOption("gift-123", undefined, validUpdateData());
+  const result = await updateGiftOption(
+    "gift-123",
+    undefined,
+    validUpdateData(),
+  );
   assert.deepStrictEqual(result, { success: true });
 
   // Verify supabase.from was called with gift_options
@@ -226,7 +238,11 @@ test("updateGiftOption handles DB error", async () => {
   });
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await updateGiftOption("gift-123", undefined, validUpdateData());
+  const result = await updateGiftOption(
+    "gift-123",
+    undefined,
+    validUpdateData(),
+  );
   assert.deepStrictEqual(result, {
     error: "Бэлэг сонголт шинэчлэхэд алдаа гарлаа: update failed",
   });

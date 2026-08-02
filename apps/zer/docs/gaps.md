@@ -341,3 +341,79 @@ This is the highest-impact, lowest-effort improvement:
 2. Picks business type (retail/wholesale/manufacturing)
 3. System auto-creates default categories, invoice template, report views
 4. User is productive in minutes, not hours
+
+---
+
+---
+
+# Competitor Research Update (2026-07-31)
+
+> Source: Deep research run — 5 parallel workers, 63 sources (54 T1). Full report at `~/.omp/research/2026-07-31-tolom-zer-onoo-competitor-research/synthesis.md`
+
+---
+
+## 🛑 Critical Competitive Landscape
+
+### Mongolian ERP market is crowded (10+ domestic players)
+
+Zer competes against: **Workzone**, **Ultimate/Masu**, **Todu**, **ОЧ 7.7**, **Od (Odoo-based)**, **1C Mongolia**, **Amar POS**, **Gerege**, **Dayansoft**, **Next ERP**, **Everest**, **Sync**. All have:
+- Mongolian tax/e-barimt compliance
+- POS module (web, mobile)
+- Domestic bank connectivity
+- Payroll/HR modules
+- Mongolian-language UI
+
+**Zer's differentiation must come from:** modern UX, offline-first, pure-cloud SaaS, and Mongolian-market pricing (MNT 50-200K/mo, not intl SaaS pricing).
+
+### No global ERP covers Mongolian needs end-to-end
+
+Odoo ($24.90-$61/user/mo) has partial Mongolian modules but the main e-barimt module was unpublished. Square (best offline POS) is geo-blocked outside ~8 countries. ERPNext (free) lacks Mongolian localization. QuickBooks ($38-$275/mo) has no offline, no POS, no Mongolian tax.
+
+---
+
+## 🔴 New P0 Gaps (From Competitor Research)
+
+| Feature | Status | Competitor benchmark | Effort | Priority |
+|---------|--------|---------------------|--------|----------|
+| **POS module** | ❌ Missing | ALL 10+ Mongolian competitors have POS | 4-6 weeks | 🔴 Blocks retail SME segment |
+| **QPay payment integration** | ❌ Missing | Todu, MASU, all local POS systems | 2-3 weeks | 🔴 Blocks storefront revenue |
+| **e-Barimt tax receipt** | ❌ Missing | All local competitors | 3-4 weeks | 🔴 Legal requirement |
+| **Payroll + HR module** | ❌ Missing | 1C, Workzone, Next ERP, Erkhet, Ultimate | 4-6 weeks | 🟢 Purchase trigger for SMEs |
+| **Consumer mobile app** | ❌ Missing | Todu (Android/iOS), MASU (mobile) | 4-6 weeks | 🟢 Table-stakes for modern POS |
+
+## 🟡 Updated P1 Gaps
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Offline-first hardening** | 🟡 Partial → 🔴 P0 | Structural moat — no international/local competitor offers true offline-first for Mongolian market |
+| **Social commerce (Facebook/Telegram)** | ❌ Missing | 75%+ Mongolians on Facebook; Mongolian SMEs sell via Facebook posts |
+| **AI features (Mongolian-language)** | ❌ Missing | Odoo AI marketing in Mongolia (March 2026 event); trend is clear |
+| **Online storefront** | (already in storefront gap doc) | Already planned above — keep as priority |
+
+## Updated Comparison Matrix (vs Mongolian ERP)
+
+| Feature | Zer | Workzone | Ultimate/Masu | Todu | 1C Mongolia |
+|---------|-----|----------|---------------|------|-------------|
+| Inventory | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Sales/CRM | ✅ | ✅ | ✅ | ✅ | ✅ |
+| POS | ❌ Missing | ✅ | ✅ Masu POS | ✅ Web/Mobile | ✅ 1C Retail |
+| Payroll/HR | ❌ Missing | ✅ | ✅ | ❓ Unknown | ✅ |
+| e-Barimt | ❌ Missing | ✅ | ✅ | ✅ | ✅ |
+| QPay | ❌ Missing | ❓ Unknown | ✅ | ✅ | ❓ Unknown |
+| Offline-first | 🟡 Partial | ❌ | ✅ POS offline | ✅ POS offline | ❌ Desktop |
+| AI | ❌ | ❓ Unknown | ✅ Ultimate AI | ❓ Unknown | ❌ |
+| Mobile App | ❌ Missing | ❓ Unknown | ✅ Masu Mobile | ✅ Android/iOS | ❌ |
+| Pricing | MNT-market | Contact | Contact/Free start | Contact | Per-user RUB |
+| Modern UX | ✅ Best | ⚠️ Legacy | ⚠️ Legacy | ⚠️ Mixed | ❌ Legacy |
+
+## Strategic Recommendation: "Offline-First POS + E-commerce for Mongolian Retail"
+
+Zer should **NOT** compete as "another ERP" — the local market is saturated. Instead:
+
+1. **POS module** reuses existing product/inventory data (well-scoped, 4-6 weeks)
+2. **Online storefront** (already planned in gaps doc — P0 MVP in 7-10 days)
+3. **QPay + e-Barimt + SocialPay** = complete Mongolian payment stack
+4. **Offline-first** = genuine differentiator — "works without internet"
+5. **Price at MNT 50-200K/mo** — Mongolian market rates, not international SaaS pricing
+
+**Skip payroll/HR**, full accounting, manufacturing — 1C, Workzone, and ОЧ 7.7 dominate these. Partner instead.

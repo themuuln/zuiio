@@ -6,10 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   CouponCreateDrawer,
-  CouponDetailDrawer,
   type CouponDetailData,
-  CouponEditDrawer,
+  CouponDetailDrawer,
   type CouponEditData,
+  CouponEditDrawer,
 } from "@/components/coupons";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
@@ -68,16 +68,7 @@ export function CouponsContent({ coupons }: { coupons: CouponRow[] }) {
 
   if (coupons.length === 0) {
     return (
-      <PageShell
-        title="Купон"
-        description="Хөнгөлөлтийн купонуудын тохиргоо"
-        actions={
-          <CouponCreateDrawer
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-          />
-        }
-      >
+      <PageShell title="Купон" description="Хөнгөлөлтийн купонуудын тохиргоо">
         <ErpEmptyState
           icon={<Tag className="size-4" />}
           title="Купон байхгүй"
@@ -170,10 +161,7 @@ export function CouponsContent({ coupons }: { coupons: CouponRow[] }) {
         title="Купон"
         description="Хөнгөлөлтийн купонуудын тохиргоо"
         actions={
-          <CouponCreateDrawer
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-          />
+          <CouponCreateDrawer open={createOpen} onOpenChange={setCreateOpen} />
         }
       >
         <DataTable

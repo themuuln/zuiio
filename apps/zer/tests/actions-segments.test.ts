@@ -5,15 +5,20 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Global mocks ──────────────────────────────────────────────────
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 const captureMock = mock.fn(() => {});
-mockMod("@zuiio/capture", { capture: captureMock, withDbCapture: withDbCaptureMock });
+mockMod("@zuiio/capture", {
+  capture: captureMock,
+  withDbCapture: withDbCaptureMock,
+});
 
 const revalidateEntitiesMock = mock.fn(() => {});
 const revalidateEntityTagMock = mock.fn(() => {});
@@ -25,7 +30,10 @@ mockMod("@/lib/revalidate", {
 });
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
@@ -35,12 +43,14 @@ mockMod("@/lib/action-utils", {
 });
 
 // ─── Supabase mock factory for segments ────────────────────────────
-function makeSegmentsSupabase(opts: {
-  insertResult?: unknown;
-  updateResult?: unknown;
-  deleteResult?: unknown;
-  upsertFn?: (data: unknown, opts: unknown) => unknown;
-} = {}) {
+function makeSegmentsSupabase(
+  opts: {
+    insertResult?: unknown;
+    updateResult?: unknown;
+    deleteResult?: unknown;
+    upsertFn?: (data: unknown, opts: unknown) => unknown;
+  } = {},
+) {
   const {
     insertResult = resolved(null),
     updateResult = resolved(null),
@@ -122,7 +132,10 @@ test("createCustomerSegment — creates successfully with default is_active", as
   const supabase = makeSegmentsSupabase();
   mockCtx.supabase = supabase;
 
-  const result = await createCustomerSegment(undefined, formData({ name: "VIP" }));
+  const result = await createCustomerSegment(
+    undefined,
+    formData({ name: "VIP" }),
+  );
 
   assert.deepStrictEqual(result, { success: true });
   assert.strictEqual(supabase.from.mock.callCount(), 1);
@@ -133,7 +146,9 @@ test("createCustomerSegment — creates successfully with default is_active", as
 
   // Verify revalidation was called
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 1);
-  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, ["customers"]);
+  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, [
+    "customers",
+  ]);
 });
 
 test("createCustomerSegment — handles 23505 duplicate error", async () => {
@@ -144,7 +159,10 @@ test("createCustomerSegment — handles 23505 duplicate error", async () => {
   });
   mockCtx.supabase = supabase;
 
-  const result = await createCustomerSegment(undefined, formData({ name: "VIP" }));
+  const result = await createCustomerSegment(
+    undefined,
+    formData({ name: "VIP" }),
+  );
 
   assert.ok("error" in result);
   assert.ok((result as { error: string }).error.includes("VIP"));
@@ -157,15 +175,23 @@ test("createCustomerSegment — handles insert error", async () => {
   resetMocks();
   mockCtx = mockActionCtx();
   const supabase = makeSegmentsSupabase({
-    insertResult: resolved(null, { code: "XX000", message: "connection refused" }),
+    insertResult: resolved(null, {
+      code: "XX000",
+      message: "connection refused",
+    }),
   });
   mockCtx.supabase = supabase;
 
-  const result = await createCustomerSegment(undefined, formData({ name: "Test" }));
+  const result = await createCustomerSegment(
+    undefined,
+    formData({ name: "Test" }),
+  );
 
   assert.ok("error" in result);
   assert.ok(
-    (result as { error: string }).error.includes("Сегмент үүсгэхэд алдаа гарлаа"),
+    (result as { error: string }).error.includes(
+      "Сегмент үүсгэхэд алдаа гарлаа",
+    ),
   );
   assert.strictEqual(captureMock.mock.callCount(), 1);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 0);
@@ -190,7 +216,9 @@ test("updateCustomerSegment — updates successfully", async () => {
   assert.deepStrictEqual(result, { success: true });
   assert.strictEqual(supabase.from.mock.callCount(), 1);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 1);
-  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, ["customers"]);
+  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, [
+    "customers",
+  ]);
 });
 
 test("updateCustomerSegment — handles DB error", async () => {
@@ -209,7 +237,9 @@ test("updateCustomerSegment — handles DB error", async () => {
 
   assert.ok("error" in result);
   assert.ok(
-    (result as { error: string }).error.includes("Сегмент шинэчлэхэд алдаа гарлаа"),
+    (result as { error: string }).error.includes(
+      "Сегмент шинэчлэхэд алдаа гарлаа",
+    ),
   );
   assert.strictEqual(captureMock.mock.callCount(), 1);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 0);
@@ -246,7 +276,9 @@ test("deleteCustomerSegment — deletes successfully", async () => {
   assert.deepStrictEqual(result, { success: true });
   assert.strictEqual(supabase.from.mock.callCount(), 1);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 1);
-  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, ["customers"]);
+  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, [
+    "customers",
+  ]);
 });
 
 test("deleteCustomerSegment — handles DB error", async () => {
@@ -261,7 +293,9 @@ test("deleteCustomerSegment — handles DB error", async () => {
 
   assert.ok("error" in result);
   assert.ok(
-    (result as { error: string }).error.includes("Сегмент устгахад алдаа гарлаа"),
+    (result as { error: string }).error.includes(
+      "Сегмент устгахад алдаа гарлаа",
+    ),
   );
   assert.strictEqual(captureMock.mock.callCount(), 1);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 0);
@@ -283,7 +317,9 @@ test("seedCustomerSegmentPreset — seeds all 4 presets successfully", async () 
   // from() called once per preset (4 times total) in the loop
   assert.strictEqual(supabase.from.mock.callCount(), 4);
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 1);
-  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, ["customers"]);
+  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, [
+    "customers",
+  ]);
 });
 
 test("seedCustomerSegmentPreset — handles upsert error (captures but continues)", async () => {

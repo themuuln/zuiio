@@ -23,7 +23,7 @@ test.describe("Feature gating — redirects", () => {
   test("inventory movements page loads normally", async ({ page }) => {
     await page.goto("/inventory/movements", { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByText("Үлдэгдэл хөдөлгөөн").first()).toBeVisible({
+    await expect(page.getByText("Үлдэгдлийн хөдөлгөөн").first()).toBeVisible({
       timeout: 10000,
     });
   });
@@ -134,15 +134,18 @@ test.describe("Feature gating — product form fields", () => {
     await createBtn.click();
     await page.waitForTimeout(1500);
 
-    // Brand field should be visible
-    await expect(page.locator("#brand_id")).toBeVisible({ timeout: 5000 });
+    // Product category, brand, and variant controls use accessible names.
+    await expect(page.getByRole("textbox", { name: "Брэнд" })).toBeVisible({
+      timeout: 5000,
+    });
 
-    // Category field should be visible
-    await expect(page.locator("#category_name")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("textbox", { name: "Ангилал" })).toBeVisible({
+      timeout: 5000,
+    });
 
-    // Variant manager button/text should be visible
-    // The VariantManagerDrawer trigger says "Вариант нэмэх"
-    await expect(page.getByText("Вариант").first()).toBeVisible({
+    await expect(
+      page.getByRole("button", { name: "Вариант тохируулах" }),
+    ).toBeVisible({
       timeout: 5000,
     });
   });

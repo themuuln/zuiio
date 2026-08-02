@@ -23,11 +23,14 @@ import {
 import { useIsMobile } from "@/lib/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
-function Slot({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) {
+function Slot({
+  children,
+  ...props
+}: React.PropsWithChildren<Record<string, unknown>>) {
   if (React.isValidElement(children)) {
-    return React.cloneElement(children, props as React.Attributes)
+    return React.cloneElement(children, props as React.Attributes);
   }
-  return null
+  return null;
 }
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";

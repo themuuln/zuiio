@@ -6,6 +6,7 @@ test.describe("Login page a11y", () => {
     page,
   }) => {
     // Wait for the form to fully render
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
     await page.locator('input[name="email"]').waitFor({ state: "visible" });
 
     const results = await new AxeBuilder({ page })

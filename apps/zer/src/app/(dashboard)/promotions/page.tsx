@@ -61,7 +61,11 @@ export type PromotionRow = {
   id: string;
   name: string;
   description: string | null;
-  type: "buy_x_get_y" | "threshold_discount" | "free_shipping" | "bundle_discount";
+  type:
+    | "buy_x_get_y"
+    | "threshold_discount"
+    | "free_shipping"
+    | "bundle_discount";
   is_active: boolean;
   priority: number;
   stackable: boolean;

@@ -6,14 +6,16 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Global mocks ────────────────────────────────────────────────────
 
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 
 const revalidateEntitiesMock = mock.fn(() => {});
 const revalidateEntityTagMock = mock.fn(() => {});
@@ -25,7 +27,10 @@ mockMod("@/lib/revalidate", {
 
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 const captureMock = mock.fn(() => {});
@@ -41,15 +46,20 @@ const getStringMock = mock.fn((fd: FormData, key: string) => {
 mockMod("@/lib/validation", { getString: getStringMock });
 
 const safeParseMock = mock.fn(() => ({ success: true, data: {} }));
-mockMod("@/lib/validation-schemas", { quotationSchema: { safeParse: safeParseMock } });
+mockMod("@/lib/validation-schemas", {
+  quotationSchema: { safeParse: safeParseMock },
+});
 
 const withBranchFilterMock = mock.fn(
-  (query: Record<string, unknown>, _branchId: string, _isScoped: boolean) => query,
+  (query: Record<string, unknown>, _branchId: string, _isScoped: boolean) =>
+    query,
 );
 mockMod("@/lib/branches", { withBranchFilter: withBranchFilterMock });
 
 const createInvoiceFromSaleMock = mock.fn(async () => {});
-mockMod("@/lib/invoicing", { createInvoiceFromSale: createInvoiceFromSaleMock });
+mockMod("@/lib/invoicing", {
+  createInvoiceFromSale: createInvoiceFromSaleMock,
+});
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
 mockMod("@/lib/action-utils", {
@@ -81,7 +91,13 @@ test.before(async () => {
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 const VALID_ITEMS = JSON.stringify([
-  { product_id: "p1", description: "Widget", quantity: 10, unit_price: 5, variant_id: "v1" },
+  {
+    product_id: "p1",
+    description: "Widget",
+    quantity: 10,
+    unit_price: 5,
+    variant_id: "v1",
+  },
   { product_id: "p2", description: "Gadget", quantity: 3, unit_price: 8 },
 ]);
 
@@ -175,7 +191,9 @@ test("createQuotation: creates quotation successfully", async () => {
   assert.deepEqual(result, { success: true, error: undefined });
   assert.equal(insertItemsMock.mock.callCount(), 1);
   assert.equal(revalidateEntitiesMock.mock.callCount(), 1);
-  assert.deepEqual(revalidateEntitiesMock.mock.calls[0]?.arguments[0], ["quotations"]);
+  assert.deepEqual(revalidateEntitiesMock.mock.calls[0]?.arguments[0], [
+    "quotations",
+  ]);
 });
 
 test("createQuotation: handles RPC generate_quote_number error", async () => {
@@ -205,11 +223,13 @@ test("createQuotation: handles quotation insert error", async () => {
   });
 
   // Override withDbCapture to return error for insert call
-  withDbCaptureMock.mock.mockImplementation(async (_name: string, query: Promise<unknown>) => {
-    const result = await query;
-    // If it resolves to something that looks like an insert, inject error
-    return result;
-  });
+  withDbCaptureMock.mock.mockImplementation(
+    async (_name: string, query: Promise<unknown>) => {
+      const result = await query;
+      // If it resolves to something that looks like an insert, inject error
+      return result;
+    },
+  );
 
   // We need the insert to fail — simulate by returning error via the supabase chain
   mockCtx = mockActionCtx({
@@ -293,10 +313,7 @@ test("updateQuotationStatus: updates status successfully", async () => {
               eq: mock.fn(() => ({
                 eq: mock.fn(() => ({
                   single: mock.fn(() =>
-                    resolved(
-                      { status: "draft", quote_number: "Q-0001" },
-                      null,
-                    ),
+                    resolved({ status: "draft", quote_number: "Q-0001" }, null),
                   ),
                 })),
               })),
@@ -317,7 +334,9 @@ test("updateQuotationStatus: updates status successfully", async () => {
 
   assert.deepEqual(result, { success: true, error: undefined });
   assert.equal(revalidateEntitiesMock.mock.callCount(), 1);
-  assert.deepEqual(revalidateEntitiesMock.mock.calls[0]?.arguments[0], ["quotations"]);
+  assert.deepEqual(revalidateEntitiesMock.mock.calls[0]?.arguments[0], [
+    "quotations",
+  ]);
 });
 
 test("updateQuotationStatus: rejects when quotation not found", async () => {
@@ -352,19 +371,14 @@ test("updateQuotationStatus: handles update DB error", async () => {
               eq: mock.fn(() => ({
                 eq: mock.fn(() => ({
                   single: mock.fn(() =>
-                    resolved(
-                      { status: "draft", quote_number: "Q-0001" },
-                      null,
-                    ),
+                    resolved({ status: "draft", quote_number: "Q-0001" }, null),
                   ),
                 })),
               })),
             })),
             update: mock.fn(() => ({
               eq: mock.fn(() => ({
-                eq: mock.fn(() =>
-                  resolved(null, { message: "Update failed" }),
-                ),
+                eq: mock.fn(() => resolved(null, { message: "Update failed" })),
               })),
             })),
           };
@@ -455,9 +469,7 @@ test("convertQuotationToSale: converts successfully", async () => {
           return {
             select: mock.fn(() => ({
               eq: mock.fn(() => ({
-                single: mock.fn(() =>
-                  resolved({ current_stock: 50 }, null),
-                ),
+                single: mock.fn(() => resolved({ current_stock: 50 }, null)),
               })),
             })),
             update: mock.fn(() => ({
@@ -655,7 +667,9 @@ test("convertQuotationToSale: handles sale items insert error with rollback", as
 
   const result = await convertQuotationToSale("q-conv");
 
-  assert.ok(result.error?.includes("Борлуулалтын бараа хадгалахад алдаа гарлаа"));
+  assert.ok(
+    result.error?.includes("Борлуулалтын бараа хадгалахад алдаа гарлаа"),
+  );
   assert.equal(deleteSaleMock.mock.callCount(), 1);
 });
 

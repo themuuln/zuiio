@@ -10,7 +10,6 @@ import {
   createAdminClient,
   createAnonClient,
   createTestOrg,
-  createTestBranch,
   createTestProduct,
   trackCleanup,
 } from "./helpers";
@@ -30,8 +29,8 @@ describe("Variant Groups & Options", () => {
       .select()
       .single();
     expect(error).toBeNull();
-    expect(group!.name).toBe("Color");
-    trackCleanup("product_variant_groups", group!.id);
+    expect(group?.name).toBe("Color");
+    trackCleanup("product_variant_groups", group?.id);
   });
 
   it("admin can create variant options within a group", async () => {
@@ -43,22 +42,22 @@ describe("Variant Groups & Options", () => {
       .insert({ product_id: productId, name: "Size" })
       .select()
       .single();
-    trackCleanup("product_variant_groups", group!.id);
+    trackCleanup("product_variant_groups", group?.id);
 
     const { data: opt1 } = await admin
       .from("product_variant_options")
-      .insert({ group_id: group!.id, value: "Small" })
+      .insert({ group_id: group?.id, value: "Small" })
       .select()
       .single();
 
     const { data: opt2 } = await admin
       .from("product_variant_options")
-      .insert({ group_id: group!.id, value: "Large" })
+      .insert({ group_id: group?.id, value: "Large" })
       .select()
       .single();
 
-    expect(opt1!.value).toBe("Small");
-    expect(opt2!.value).toBe("Large");
+    expect(opt1?.value).toBe("Small");
+    expect(opt2?.value).toBe("Large");
   });
 
   it("admin can read variant groups filtered by product", async () => {
@@ -75,7 +74,7 @@ describe("Variant Groups & Options", () => {
       .select("id, name")
       .eq("product_id", productId);
     expect(error).toBeNull();
-    expect(groups!.length).toBeGreaterThanOrEqual(2);
+    expect(groups?.length).toBeGreaterThanOrEqual(2);
   });
 
   it("admin can delete a variant group (cascades to options)", async () => {
@@ -90,12 +89,12 @@ describe("Variant Groups & Options", () => {
 
     await admin
       .from("product_variant_options")
-      .insert({ group_id: group!.id, value: "Temp Option" });
+      .insert({ group_id: group?.id, value: "Temp Option" });
 
     const { error } = await admin
       .from("product_variant_groups")
       .delete()
-      .eq("id", group!.id);
+      .eq("id", group?.id);
     expect(error).toBeNull();
   });
 });
@@ -121,9 +120,9 @@ describe("Product Variants", () => {
       .select()
       .single();
     expect(error).toBeNull();
-    expect(variant!.product_id).toBe(productId);
-    expect(Number(variant!.sale_price)).toBe(5000);
-    expect(variant!.current_stock).toBe(10);
+    expect(variant?.product_id).toBe(productId);
+    expect(Number(variant?.sale_price)).toBe(5000);
+    expect(variant?.current_stock).toBe(10);
   });
 
   it("admin can assign variant options to a variant", async () => {
@@ -135,11 +134,11 @@ describe("Product Variants", () => {
       .insert({ product_id: productId, name: "Color" })
       .select()
       .single();
-    trackCleanup("product_variant_groups", group!.id);
+    trackCleanup("product_variant_groups", group?.id);
 
     const { data: option } = await admin
       .from("product_variant_options")
-      .insert({ group_id: group!.id, value: "Red" })
+      .insert({ group_id: group?.id, value: "Red" })
       .select()
       .single();
 
@@ -153,12 +152,10 @@ describe("Product Variants", () => {
       .select()
       .single();
 
-    const { error } = await admin
-      .from("product_variant_assignments")
-      .insert({
-        variant_id: variant!.id,
-        option_id: option!.id,
-      });
+    const { error } = await admin.from("product_variant_assignments").insert({
+      variant_id: variant?.id,
+      option_id: option?.id,
+    });
     expect(error).toBeNull();
   });
 
@@ -177,7 +174,7 @@ describe("Product Variants", () => {
       .select("id, sku")
       .eq("product_id", productId);
     expect(error).toBeNull();
-    expect(variants!.length).toBeGreaterThanOrEqual(2);
+    expect(variants?.length).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -188,7 +185,6 @@ describe("Product Bundles", () => {
 
   it("admin can create a bundle", async () => {
     const { orgId } = await createTestOrg(admin);
-    const { branchId } = await createTestBranch(admin, orgId);
 
     const { data: bundle, error } = await admin
       .from("product_bundles")
@@ -201,8 +197,8 @@ describe("Product Bundles", () => {
       .select()
       .single();
     expect(error).toBeNull();
-    expect(bundle!.name).toBe("Starter Pack");
-    trackCleanup("product_bundles", bundle!.id);
+    expect(bundle?.name).toBe("Starter Pack");
+    trackCleanup("product_bundles", bundle?.id);
   });
 
   it("admin can add items to a bundle", async () => {
@@ -217,19 +213,19 @@ describe("Product Bundles", () => {
       })
       .select()
       .single();
-    trackCleanup("product_bundles", bundle!.id);
+    trackCleanup("product_bundles", bundle?.id);
 
     const { data: item, error } = await admin
       .from("product_bundle_items")
       .insert({
-        bundle_id: bundle!.id,
+        bundle_id: bundle?.id,
         product_id: productId,
         quantity: 2,
       })
       .select()
       .single();
     expect(error).toBeNull();
-    expect(item!.quantity).toBe(2);
+    expect(item?.quantity).toBe(2);
   });
 
   it("admin can read bundles with items", async () => {
@@ -244,10 +240,10 @@ describe("Product Bundles", () => {
       })
       .select()
       .single();
-    trackCleanup("product_bundles", bundle!.id);
+    trackCleanup("product_bundles", bundle?.id);
 
     await admin.from("product_bundle_items").insert({
-      bundle_id: bundle!.id,
+      bundle_id: bundle?.id,
       product_id: productId,
       quantity: 1,
     });
@@ -255,9 +251,9 @@ describe("Product Bundles", () => {
     const { data: items, error } = await admin
       .from("product_bundle_items")
       .select("id, quantity")
-      .eq("bundle_id", bundle!.id);
+      .eq("bundle_id", bundle?.id);
     expect(error).toBeNull();
-    expect(items!.length).toBeGreaterThanOrEqual(1);
+    expect(items?.length).toBeGreaterThanOrEqual(1);
   });
 
   it("admin can delete a bundle (cascades to items)", async () => {
@@ -274,7 +270,7 @@ describe("Product Bundles", () => {
       .single();
 
     await admin.from("product_bundle_items").insert({
-      bundle_id: bundle!.id,
+      bundle_id: bundle?.id,
       product_id: productId,
       quantity: 1,
     });
@@ -282,7 +278,7 @@ describe("Product Bundles", () => {
     const { error } = await admin
       .from("product_bundles")
       .delete()
-      .eq("id", bundle!.id);
+      .eq("id", bundle?.id);
     expect(error).toBeNull();
   });
 });
@@ -306,8 +302,8 @@ describe("Price Lists & Rules", () => {
       .select()
       .single();
     expect(error).toBeNull();
-    expect(pl!.name).toBe("Wholesale");
-    trackCleanup("price_lists", pl!.id);
+    expect(pl?.name).toBe("Wholesale");
+    trackCleanup("price_lists", pl?.id);
   });
 
   it("admin can add a per-product rule to a price list", async () => {
@@ -322,34 +318,37 @@ describe("Price Lists & Rules", () => {
       })
       .select()
       .single();
-    trackCleanup("price_lists", pl!.id);
+    trackCleanup("price_lists", pl?.id);
 
     const { data: rule, error } = await admin
       .from("price_list_rules")
       .insert({
-        price_list_id: pl!.id,
+        price_list_id: pl?.id,
         organization_id: orgId,
         product_id: productId,
         unit_price: 9000,
         min_quantity: 5,
-      } as any)
+      })
       .select()
       .single();
     expect(error).toBeNull();
-    expect(Number(rule!.unit_price)).toBe(9000);
+    expect(Number(rule?.unit_price)).toBe(9000);
   });
 
   it("admin can add a per-category rule with percentage adjustment", async () => {
     const { orgId } = await createTestOrg(admin);
-    const { productId } = await createTestProduct(admin, orgId);
 
     // Create a category first
     const { data: cat } = await admin
       .from("categories")
-      .insert({ organization_id: orgId, name: "Discount Cat", slug: "discount-cat" })
+      .insert({
+        organization_id: orgId,
+        name: "Discount Cat",
+        slug: "discount-cat",
+      })
       .select()
       .single();
-    trackCleanup("categories", cat!.id);
+    trackCleanup("categories", cat?.id);
 
     const { data: pl } = await admin
       .from("price_lists")
@@ -359,20 +358,20 @@ describe("Price Lists & Rules", () => {
       })
       .select()
       .single();
-    trackCleanup("price_lists", pl!.id);
+    trackCleanup("price_lists", pl?.id);
 
     const { data: rule, error } = await admin
       .from("price_list_rules")
       .insert({
-        price_list_id: pl!.id,
+        price_list_id: pl?.id,
         organization_id: orgId,
-        category_id: cat!.id,
+        category_id: cat?.id,
         percentage_adjustment: -10,
-      } as any)
+      })
       .select()
       .single();
     expect(error).toBeNull();
-    expect(Number(rule!.percentage_adjustment)).toBe(-10);
+    expect(Number(rule?.percentage_adjustment)).toBe(-10);
   });
 
   it("admin can read price lists with rules", async () => {
@@ -387,24 +386,22 @@ describe("Price Lists & Rules", () => {
       })
       .select()
       .single();
-    trackCleanup("price_lists", pl!.id);
+    trackCleanup("price_lists", pl?.id);
 
-    const { error: ruleErr } = await admin
-      .from("price_list_rules")
-      .insert({
-        price_list_id: pl!.id,
-        organization_id: orgId,
-        product_id: productId,
-        unit_price: 8000,
-      } as any);
+    const { error: ruleErr } = await admin.from("price_list_rules").insert({
+      price_list_id: pl?.id,
+      organization_id: orgId,
+      product_id: productId,
+      unit_price: 8000,
+    });
     expect(ruleErr).toBeNull();
 
     const { data: rules, error } = await admin
       .from("price_list_rules")
       .select("id")
-      .eq("price_list_id", pl!.id);
+      .eq("price_list_id", pl?.id);
     expect(error).toBeNull();
-    expect(rules!.length).toBeGreaterThanOrEqual(1);
+    expect(rules?.length).toBeGreaterThanOrEqual(1);
   });
 
   it("admin can delete a price list (cascades to rules)", async () => {
@@ -420,11 +417,11 @@ describe("Price Lists & Rules", () => {
       .single();
 
     await admin.from("price_list_rules").insert({
-      price_list_id: pl!.id,
+      price_list_id: pl?.id,
       organization_id: orgId,
-    } as any);
+    });
 
-    const { error } = await admin.from("price_lists").delete().eq("id", pl!.id);
+    const { error } = await admin.from("price_lists").delete().eq("id", pl?.id);
     expect(error).toBeNull();
   });
 });

@@ -5,11 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import {
-  createAnonClient,
-  createAdminClient,
-  createTestOrg,
-} from "./helpers";
+import { createAdminClient, createAnonClient, createTestOrg } from "./helpers";
 
 // Products RLS
 describe("Products RLS", () => {
@@ -36,17 +32,20 @@ describe("Products RLS", () => {
       .select()
       .single();
     expect(error).toBeNull();
-    expect(data!.name).toBe("Test Product");
+    expect(data?.name).toBe("Test Product");
   });
 });
 
 // Stock movements RLS
 describe("Stock movements RLS", () => {
-  const admin = createAdminClient();
+  const _admin = createAdminClient();
 
   it("anon cannot access stock movements", async () => {
     const anon = createAnonClient();
-    const { data, error } = await anon.from("stock_movements").select("*").limit(1);
+    const { data, error } = await anon
+      .from("stock_movements")
+      .select("*")
+      .limit(1);
     if (error) {
       expect(error.code).toBe("42501");
     } else {

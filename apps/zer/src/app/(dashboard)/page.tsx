@@ -1,4 +1,4 @@
-import { Coin, Package, ShoppingCart, Truck } from "@phosphor-icons/react/dist/ssr";
+import { Coin, Package, ShoppingCart } from "@phosphor-icons/react/dist/ssr";
 import { Suspense } from "react";
 import { HeroActionCard } from "@/components/dashboard/dashboard-cards";
 import { getDashboardContext } from "@/lib/dashboard-context";

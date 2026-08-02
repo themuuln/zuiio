@@ -32,7 +32,9 @@ mockMod("@/lib/supabase/server", {
   createClient: mock.fn(async () => ({
     from: () => ({
       select: () => ({
-        eq: () => ({ single: async () => resolved({ id: "org-1", name: "Test Org" }) }),
+        eq: () => ({
+          single: async () => resolved({ id: "org-1", name: "Test Org" }),
+        }),
       }),
     }),
     rpc: async () => resolved(null),
@@ -52,9 +54,9 @@ mockMod("@/lib/action-utils", {
   })),
 });
 
-function makeSupabase() {
+function _makeSupabase() {
   return {
-    from: mock.fn((table: string) => ({
+    from: mock.fn((_table: string) => ({
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
           eq: mock.fn(() => ({
@@ -90,9 +92,15 @@ function makeSupabase() {
   };
 }
 
-let postSaleToJournal: (...args: unknown[]) => Promise<{ success: boolean; error?: string }>;
-let postExpenseToJournal: (...args: unknown[]) => Promise<{ success: boolean; error?: string }>;
-let postPurchaseToJournal: (...args: unknown[]) => Promise<{ success: boolean; error?: string }>;
+let postSaleToJournal: (
+  ...args: unknown[]
+) => Promise<{ success: boolean; error?: string }>;
+let postExpenseToJournal: (
+  ...args: unknown[]
+) => Promise<{ success: boolean; error?: string }>;
+let postPurchaseToJournal: (
+  ...args: unknown[]
+) => Promise<{ success: boolean; error?: string }>;
 
 test.before(async () => {
   const mod = await import("@/lib/accounting");
@@ -104,7 +112,9 @@ test.before(async () => {
 test.beforeEach(() => {
   captureSpy.mock.resetCalls();
   createJournalEntryMock.mock.resetCalls();
-  createJournalEntryMock.mock.mockImplementation(async () => ({ success: true }));
+  createJournalEntryMock.mock.mockImplementation(async () => ({
+    success: true,
+  }));
 });
 
 test("exports have correct function names", () => {

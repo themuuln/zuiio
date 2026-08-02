@@ -35,11 +35,13 @@ vi.mock("@/components/ui/button", () => ({
     children,
     variant,
     className,
+    asChild: _asChild,
     ...props
   }: {
     children?: React.ReactNode;
     variant?: string;
     className?: string;
+    asChild?: boolean;
   }) => (
     <button data-variant={variant} className={className} {...props}>
       {children}
@@ -151,7 +153,9 @@ describe("Pricing", () => {
 
     // Standard plan features — some appear in multiple plans, use getAllByText
     expect(screen.getByText("5,000 хүртэлх бараа")).toBeInTheDocument();
-    expect(screen.getAllByText("Борлуулалт ба POS касс").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("Борлуулалт ба POS касс").length,
+    ).toBeGreaterThan(0);
     expect(screen.getByText("Онлайн дэлгүүр")).toBeInTheDocument();
 
     // AI features should have the Sparkle icon
@@ -162,14 +166,14 @@ describe("Pricing", () => {
     const aiRow = aiFeature.closest("li");
     expect(aiRow).toBeInTheDocument();
     // The Sparkle icon should be in this row
-    const sparkles = aiRow!.querySelector(".text-amber-500");
+    const sparkles = aiRow?.querySelector(".text-amber-500");
     expect(sparkles).toBeInTheDocument();
 
     // Non-AI features should NOT have the Sparkle icon
     const nonAIFeature = screen.getByText("5,000 хүртэлх бараа");
     const nonAIRow = nonAIFeature.closest("li");
     expect(nonAIRow).toBeInTheDocument();
-    const noSparkles = nonAIRow!.querySelector(".text-amber-500");
+    const noSparkles = nonAIRow?.querySelector(".text-amber-500");
     expect(noSparkles).not.toBeInTheDocument();
   });
 
@@ -177,7 +181,7 @@ describe("Pricing", () => {
     render(<Pricing />);
 
     // Each feature li should have an icon in its circle container
-    const featureIcons = screen
+    const _featureIcons = screen
       .getAllByText("Борлуулалт ба POS касс")
       .map((el) => el.closest("li"))
       .filter(Boolean);

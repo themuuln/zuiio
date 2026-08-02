@@ -77,9 +77,7 @@ let seedPresetCategories: () => Promise<{
 }>;
 
 test.before(async () => {
-  const mod = await import(
-    "@/app/(dashboard)/inventory/categories/actions"
-  );
+  const mod = await import("@/app/(dashboard)/inventory/categories/actions");
   createCategory = mod.createCategory;
   updateCategory = mod.updateCategory;
   deleteCategory = mod.deleteCategory;
@@ -175,10 +173,7 @@ test("createCategory rejects missing name", async () => {
   const fd = formData({});
   const result = await createCategory(undefined, fd);
   assert.ok(result && "error" in result, "should return error");
-  assert.ok(
-    String(result.error).includes("нэр"),
-    "error should mention name",
-  );
+  assert.ok(String(result.error).includes("нэр"), "error should mention name");
 });
 
 test("createCategory rejects validation failure", async () => {
@@ -225,20 +220,14 @@ test("createCategory inserts with organization_id and name when no duplicate", a
   const insertArg = insertFn.mock.calls[0].arguments[0];
   assert.equal(insertArg.organization_id, "org-42");
   assert.equal(insertArg.name, "Хоол");
-  assert.equal(
-    result && "success" in result,
-    true,
-    "should return success",
-  );
+  assert.equal(result && "success" in result, true, "should return success");
 });
 
 test("createCategory handles insert error", async () => {
   const supabase = createMockSupabase({
     categories: {
       ...mockDuplicateCheckChain(null),
-      insert: mock.fn(() =>
-        resolved(null, { message: "insert failed" }),
-      ),
+      insert: mock.fn(() => resolved(null, { message: "insert failed" })),
     },
   });
   mockCtx = mockActionCtx({ supabase });
@@ -267,10 +256,7 @@ test("createCategory calls revalidateEntity on success", async () => {
     1,
     "should call revalidateEntity once",
   );
-  assert.equal(
-    revalidateEntityMock.mock.calls[0].arguments[0],
-    "categories",
-  );
+  assert.equal(revalidateEntityMock.mock.calls[0].arguments[0], "categories");
 });
 
 test("createCategory returns { success: true as const }", async () => {
@@ -294,10 +280,7 @@ test("updateCategory rejects missing id", async () => {
   const fd = formData({ name: "Шинэ нэр" });
   const result = await updateCategory(undefined, fd);
   assert.ok(result && "error" in result, "should return error");
-  assert.ok(
-    String(result.error).includes("ID"),
-    "error should mention ID",
-  );
+  assert.ok(String(result.error).includes("ID"), "error should mention ID");
 });
 test("updateCategory calls supabase.update with correct fields", async () => {
   // Track eq calls directly since Node mock API lacks .results
@@ -344,11 +327,7 @@ test("updateCategory calls supabase.update with correct fields", async () => {
   assert.deepEqual(eqCalls[0], ["id", "cat-1"]);
   assert.deepEqual(eqCalls[1], ["organization_id", "org-42"]);
 
-  assert.equal(
-    result && "success" in result,
-    true,
-    "should return success",
-  );
+  assert.equal(result && "success" in result, true, "should return success");
 });
 
 test("updateCategory handles DB error", async () => {
@@ -384,10 +363,7 @@ test("updateCategory calls revalidateEntity on success", async () => {
     1,
     "should call revalidateEntity once",
   );
-  assert.equal(
-    revalidateEntityMock.mock.calls[0].arguments[0],
-    "categories",
-  );
+  assert.equal(revalidateEntityMock.mock.calls[0].arguments[0], "categories");
 });
 
 // ─── Tests: deleteCategory ───────────────────────────────────────────
@@ -397,10 +373,7 @@ test("deleteCategory rejects missing id", async () => {
   const fd = formData({});
   const result = await deleteCategory(undefined, fd);
   assert.ok(result && "error" in result, "should return error");
-  assert.ok(
-    String(result.error).includes("ID"),
-    "error should mention ID",
-  );
+  assert.ok(String(result.error).includes("ID"), "error should mention ID");
 });
 
 test("deleteCategory rejects when products reference the category", async () => {
@@ -484,10 +457,7 @@ test("deleteCategory calls revalidateEntity on success", async () => {
     1,
     "should call revalidateEntity once",
   );
-  assert.equal(
-    revalidateEntityMock.mock.calls[0].arguments[0],
-    "categories",
-  );
+  assert.equal(revalidateEntityMock.mock.calls[0].arguments[0], "categories");
 });
 
 // ─── Tests: seedPresetCategories ─────────────────────────────────────
@@ -498,9 +468,7 @@ test("seedPresetCategories reads PRESET_CATEGORIES and inserts all for retail", 
     organizations: {
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
-          single: mock.fn(() =>
-            resolved({ company_type: "retail" }),
-          ),
+          single: mock.fn(() => resolved({ company_type: "retail" })),
         })),
       })),
     },
@@ -521,19 +489,14 @@ test("seedPresetCategories skips existing categories", async () => {
     organizations: {
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
-          single: mock.fn(() =>
-            resolved({ company_type: "retail" }),
-          ),
+          single: mock.fn(() => resolved({ company_type: "retail" })),
         })),
       })),
     },
     categories: {
       select: mock.fn(() => ({
         eq: mock.fn(() =>
-          resolved(
-            [{ name: "Хүнс" }, { name: "Ундаа" }],
-            null,
-          ),
+          resolved([{ name: "Хүнс" }, { name: "Ундаа" }], null),
         ),
       })),
     },
@@ -549,9 +512,7 @@ test("seedPresetCategories returns seeded: 0 when all exist", async () => {
     organizations: {
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
-          single: mock.fn(() =>
-            resolved({ company_type: "retail" }),
-          ),
+          single: mock.fn(() => resolved({ company_type: "retail" })),
         })),
       })),
     },
@@ -559,11 +520,7 @@ test("seedPresetCategories returns seeded: 0 when all exist", async () => {
       select: mock.fn(() => ({
         eq: mock.fn(() =>
           resolved(
-            [
-              { name: "Хүнс" },
-              { name: "Ундаа" },
-              { name: "Хувцас" },
-            ],
+            [{ name: "Хүнс" }, { name: "Ундаа" }, { name: "Хувцас" }],
             null,
           ),
         ),
@@ -582,17 +539,13 @@ test("seedPresetCategories only inserts non-existing categories", async () => {
     organizations: {
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
-          single: mock.fn(() =>
-            resolved({ company_type: "retail" }),
-          ),
+          single: mock.fn(() => resolved({ company_type: "retail" })),
         })),
       })),
     },
     categories: {
       select: mock.fn(() => ({
-        eq: mock.fn(() =>
-          resolved([{ name: "Хүнс" }], null),
-        ),
+        eq: mock.fn(() => resolved([{ name: "Хүнс" }], null)),
       })),
       insert: insertFn,
     },
@@ -620,9 +573,7 @@ test("seedPresetCategories returns error on insert failure", async () => {
     organizations: {
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
-          single: mock.fn(() =>
-            resolved({ company_type: "retail" }),
-          ),
+          single: mock.fn(() => resolved({ company_type: "retail" })),
         })),
       })),
     },
@@ -630,9 +581,7 @@ test("seedPresetCategories returns error on insert failure", async () => {
       select: mock.fn(() => ({
         eq: mock.fn(() => resolved([], null)),
       })),
-      insert: mock.fn(() =>
-        resolved(null, { message: "insert failed" }),
-      ),
+      insert: mock.fn(() => resolved(null, { message: "insert failed" })),
     },
   });
   mockCtx = mockActionCtx({ supabase });
@@ -647,9 +596,7 @@ test("seedPresetCategories falls back to 'other' for unknown company type", asyn
     organizations: {
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
-          single: mock.fn(() =>
-            resolved({ company_type: "unknown_type" }),
-          ),
+          single: mock.fn(() => resolved({ company_type: "unknown_type" })),
         })),
       })),
     },

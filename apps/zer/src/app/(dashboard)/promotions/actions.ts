@@ -7,7 +7,7 @@ import { logAuditEventWithClient } from "@/lib/audit";
 import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
-function parseFloatSafe(value: FormDataEntryValue | null): number {
+function _parseFloatSafe(value: FormDataEntryValue | null): number {
   if (typeof value !== "string") return 0;
   const parsed = Number.parseFloat(value);
   return Number.isNaN(parsed) ? 0 : parsed;
@@ -58,12 +58,22 @@ export async function createPromotion(
   const conditions: string[] = (() => {
     const raw = formData.get("conditions");
     if (typeof raw !== "string") return [];
-    try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; }
+    try {
+      const p = JSON.parse(raw);
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
   })();
   const rewards: string[] = (() => {
     const raw = formData.get("rewards");
     if (typeof raw !== "string") return [];
-    try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; }
+    try {
+      const p = JSON.parse(raw);
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
   })();
 
   // Validate
@@ -77,7 +87,7 @@ export async function createPromotion(
     "free_shipping",
     "bundle_discount",
   ] as const;
-  if (!validTypes.includes(type as typeof validTypes[number])) {
+  if (!validTypes.includes(type as (typeof validTypes)[number])) {
     return { error: "Буруу сурталчилгааны төрөл." };
   }
 
@@ -260,7 +270,7 @@ export async function updatePromotion(
     "free_shipping",
     "bundle_discount",
   ] as const;
-  if (!validTypes.includes(type as typeof validTypes[number])) {
+  if (!validTypes.includes(type as (typeof validTypes)[number])) {
     return { error: "Буруу сурталчилгааны төрөл." };
   }
 
@@ -376,10 +386,7 @@ export async function updatePromotion(
   // Replace rewards: delete existing, insert new
   const { error: delRewardError } = await withDbCapture(
     "promotions: delete old rewards",
-    supabase
-      .from("promotion_rewards")
-      .delete()
-      .eq("promotion_id", promotionId),
+    supabase.from("promotion_rewards").delete().eq("promotion_id", promotionId),
   );
 
   if (delRewardError) {
@@ -571,7 +578,7 @@ export async function evaluateCartPromotions(
 
   const { data, error } = await withDbCapture(
     "promotions: evaluate",
-    (supabase.rpc as any)("evaluate_promotions", {
+    supabase.rpc("evaluate_promotions", {
       p_org_id: organizationId,
       p_items: JSON.parse(
         JSON.stringify(
@@ -592,7 +599,7 @@ export async function evaluateCartPromotions(
     return {
       promotions: [],
       total_discount: 0,
-      error: `Сурталчилгаа үнэлэхэд алдаа гарлаа: ${(error && typeof error === 'object' && 'message' in error) ? String(error.message) : String(error)}`,
+      error: `Сурталчилгаа үнэлэхэд алдаа гарлаа: ${error && typeof error === "object" && "message" in error ? String(error.message) : String(error)}`,
     };
   }
 
@@ -601,9 +608,13 @@ export async function evaluateCartPromotions(
 
   try {
     const parsed: Record<string, unknown> =
-      typeof data === "string" ? JSON.parse(data) : (data as Record<string, unknown>);
+      typeof data === "string"
+        ? JSON.parse(data)
+        : (data as Record<string, unknown>);
     const promoArr = parsed?.promotions;
-    evaluated = (Array.isArray(promoArr) ? promoArr : []) as EvaluatedPromotion[];
+    evaluated = (
+      Array.isArray(promoArr) ? promoArr : []
+    ) as EvaluatedPromotion[];
   } catch {
     capture({ data }, { context: "evaluateCartPromotions: parse result" });
     return {

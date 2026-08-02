@@ -4,13 +4,15 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Global mocks ────────────────────────────────────────────────────
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 mockMod("@zuiio/capture", {
   capture: mock.fn(() => {}),
   withDbCapture: withDbCaptureMock,
@@ -26,14 +28,22 @@ mockMod("@/lib/revalidate", {
 
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 const getStringMock = mock.fn((fd: FormData, key: string) => fd.get(key) ?? "");
 mockMod("@/lib/validation", { getString: getStringMock });
 
-const safeParseMock = mock.fn((data: Record<string, unknown>) => ({ success: true, data }));
-mockMod("@/lib/validation-schemas", { expenseSchema: { safeParse: safeParseMock } });
+const safeParseMock = mock.fn((data: Record<string, unknown>) => ({
+  success: true,
+  data,
+}));
+mockMod("@/lib/validation-schemas", {
+  expenseSchema: { safeParse: safeParseMock },
+});
 
 let mockValidationError: string | null = null;
 mockMod("@/lib/domain-rules", {
@@ -109,7 +119,9 @@ function validForm(overrides: Record<string, string> = {}) {
 test("updateExpense rejects missing id", async () => {
   resetMocks();
   const supabase = makeSupabase();
-  mockCtx = mockActionCtx({ supabase: supabase as unknown as Record<string, unknown> });
+  mockCtx = mockActionCtx({
+    supabase: supabase as unknown as Record<string, unknown>,
+  });
 
   const form = formData({
     id: "",
@@ -126,7 +138,9 @@ test("updateExpense rejects validation error from domain-rules", async () => {
   resetMocks();
   mockValidationError = "Category is required";
   const supabase = makeSupabase();
-  mockCtx = mockActionCtx({ supabase: supabase as unknown as Record<string, unknown> });
+  mockCtx = mockActionCtx({
+    supabase: supabase as unknown as Record<string, unknown>,
+  });
 
   const result = await updateExpense(undefined, validForm());
   assert.deepStrictEqual(result, { error: "Category is required" });
@@ -139,7 +153,9 @@ test("updateExpense rejects when Zod safeParse fails", async () => {
     error: { issues: [{ message: "category is required" }] },
   }));
   const supabase = makeSupabase();
-  mockCtx = mockActionCtx({ supabase: supabase as unknown as Record<string, unknown> });
+  mockCtx = mockActionCtx({
+    supabase: supabase as unknown as Record<string, unknown>,
+  });
 
   const result = await updateExpense(undefined, validForm());
   assert.deepStrictEqual(result, { error: "category is required" });
@@ -148,14 +164,19 @@ test("updateExpense rejects when Zod safeParse fails", async () => {
 test("updateExpense updates successfully with all fields", async () => {
   resetMocks();
   const supabase = makeSupabase();
-  mockCtx = mockActionCtx({ supabase: supabase as unknown as Record<string, unknown> });
+  mockCtx = mockActionCtx({
+    supabase: supabase as unknown as Record<string, unknown>,
+  });
 
   const result = await updateExpense(undefined, validForm());
   assert.deepStrictEqual(result, { success: true as const, error: undefined });
 
   // Verify from("expenses") was called
   assert.strictEqual(supabase._calls.from.mock.callCount(), 1);
-  assert.strictEqual(supabase._calls.from.mock.calls[0].arguments[0], "expenses");
+  assert.strictEqual(
+    supabase._calls.from.mock.calls[0].arguments[0],
+    "expenses",
+  );
 
   // Verify update payload
   assert.strictEqual(supabase._calls.update.mock.callCount(), 1);
@@ -169,12 +190,21 @@ test("updateExpense updates successfully with all fields", async () => {
   // Verify eq("id", ...)
   assert.strictEqual(supabase._calls.eq1.mock.callCount(), 1);
   assert.strictEqual(supabase._calls.eq1.mock.calls[0].arguments[0], "id");
-  assert.strictEqual(supabase._calls.eq1.mock.calls[0].arguments[1], "expense-123");
+  assert.strictEqual(
+    supabase._calls.eq1.mock.calls[0].arguments[1],
+    "expense-123",
+  );
 
   // Verify eq("organization_id", ...)
   assert.strictEqual(supabase._calls.eq2.mock.callCount(), 1);
-  assert.strictEqual(supabase._calls.eq2.mock.calls[0].arguments[0], "organization_id");
-  assert.strictEqual(supabase._calls.eq2.mock.calls[0].arguments[1], "test-org-id");
+  assert.strictEqual(
+    supabase._calls.eq2.mock.calls[0].arguments[0],
+    "organization_id",
+  );
+  assert.strictEqual(
+    supabase._calls.eq2.mock.calls[0].arguments[1],
+    "test-org-id",
+  );
 });
 
 test("updateExpense updates with branch scoping", async () => {
@@ -191,8 +221,14 @@ test("updateExpense updates with branch scoping", async () => {
 
   // Verify eq("branch_id", ...) was called
   assert.strictEqual(supabase._calls.eq3.mock.callCount(), 1);
-  assert.strictEqual(supabase._calls.eq3.mock.calls[0].arguments[0], "branch_id");
-  assert.strictEqual(supabase._calls.eq3.mock.calls[0].arguments[1], "branch-456");
+  assert.strictEqual(
+    supabase._calls.eq3.mock.calls[0].arguments[0],
+    "branch_id",
+  );
+  assert.strictEqual(
+    supabase._calls.eq3.mock.calls[0].arguments[1],
+    "branch-456",
+  );
 });
 
 test("updateExpense does not add branch eq when not branch-scoped", async () => {
@@ -220,7 +256,9 @@ test("updateExpense handles DB error", async () => {
   const from = mock.fn(() => ({ update }));
   const supabase = { from };
 
-  mockCtx = mockActionCtx({ supabase: supabase as unknown as Record<string, unknown> });
+  mockCtx = mockActionCtx({
+    supabase: supabase as unknown as Record<string, unknown>,
+  });
 
   const result = await updateExpense(undefined, validForm());
   assert.ok(result && "error" in result);
@@ -233,7 +271,9 @@ test("updateExpense handles DB error", async () => {
 test("updateExpense calls revalidateEntities on success", async () => {
   resetMocks();
   const supabase = makeSupabase();
-  mockCtx = mockActionCtx({ supabase: supabase as unknown as Record<string, unknown> });
+  mockCtx = mockActionCtx({
+    supabase: supabase as unknown as Record<string, unknown>,
+  });
 
   await updateExpense(undefined, validForm());
 
@@ -246,7 +286,9 @@ test("updateExpense rejects missing category via domain-rules", async () => {
   resetMocks();
   mockValidationError = "Category is required for expense";
   const supabase = makeSupabase();
-  mockCtx = mockActionCtx({ supabase: supabase as unknown as Record<string, unknown> });
+  mockCtx = mockActionCtx({
+    supabase: supabase as unknown as Record<string, unknown>,
+  });
 
   const form = formData({
     id: "expense-789",
@@ -265,7 +307,9 @@ test("updateExpense rejects missing category via domain-rules", async () => {
 test("updateExpense defaults payment_method to cash when omitted", async () => {
   resetMocks();
   const supabase = makeSupabase();
-  mockCtx = mockActionCtx({ supabase: supabase as unknown as Record<string, unknown> });
+  mockCtx = mockActionCtx({
+    supabase: supabase as unknown as Record<string, unknown>,
+  });
 
   const form = formData({
     id: "expense-101",
@@ -285,7 +329,9 @@ test("updateExpense defaults payment_method to cash when omitted", async () => {
 test("updateExpense defaults description to null when empty", async () => {
   resetMocks();
   const supabase = makeSupabase();
-  mockCtx = mockActionCtx({ supabase: supabase as unknown as Record<string, unknown> });
+  mockCtx = mockActionCtx({
+    supabase: supabase as unknown as Record<string, unknown>,
+  });
 
   const form = formData({
     id: "expense-202",
@@ -309,7 +355,9 @@ test("updateExpense handles Zod parse with no issues message", async () => {
     error: { issues: [] },
   }));
   const supabase = makeSupabase();
-  mockCtx = mockActionCtx({ supabase: supabase as unknown as Record<string, unknown> });
+  mockCtx = mockActionCtx({
+    supabase: supabase as unknown as Record<string, unknown>,
+  });
 
   const result = await updateExpense(undefined, validForm());
   assert.deepStrictEqual(result, { error: "Мэдээлэл буруу байна." });

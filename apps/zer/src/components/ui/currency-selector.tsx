@@ -90,21 +90,23 @@ export function CurrencySelector({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("w-[200px] justify-between", className)}
-          disabled={disabled}
-        >
-          <span className="flex items-center gap-2">
-            <span className="font-medium">{selected?.symbol}</span>
-            <span>{selected?.code}</span>
-          </span>
-          <CaretDown className="ml-2 size-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className={cn("w-[200px] justify-between", className)}
+            disabled={disabled}
+          >
+            <span className="flex items-center gap-2">
+              <span className="font-medium">{selected?.symbol}</span>
+              <span>{selected?.code}</span>
+            </span>
+            <CaretDown className="ml-2 size-4 shrink-0 opacity-50" />
+          </Button>
+        }
+      />
       <PopoverContent className="w-[200px] p-0">
         <Command>
           <CommandInput placeholder="Валют сонгох..." />

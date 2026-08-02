@@ -5,7 +5,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod } from "./actions-helpers";
 
 // ─── resolve helper (inline to avoid esbuild depth issues) ──────────
 function resolved<T>(data: T, error: unknown = null) {
@@ -41,7 +41,9 @@ type TransactionRow = {
   created_by: string | null;
 };
 
-function defaultGiftCardRow(overrides: Partial<GiftCardRow> = {}): GiftCardRow {
+function _defaultGiftCardRow(
+  overrides: Partial<GiftCardRow> = {},
+): GiftCardRow {
   return {
     id: "gc-1",
     code: "GIFT50",
@@ -60,7 +62,9 @@ function defaultGiftCardRow(overrides: Partial<GiftCardRow> = {}): GiftCardRow {
   };
 }
 
-function defaultTransactionRow(overrides: Partial<TransactionRow> = {}): TransactionRow {
+function _defaultTransactionRow(
+  overrides: Partial<TransactionRow> = {},
+): TransactionRow {
   return {
     id: "tx-1",
     gift_card_id: "gc-1",
@@ -77,12 +81,14 @@ function defaultTransactionRow(overrides: Partial<TransactionRow> = {}): Transac
 // ─── Supabase chain builders ────────────────────────────────────────
 
 /** Build a supabase mock for createGiftCard with controllable duplicate + insert behavior */
-function makeCreateGiftCardSupabase(opts: {
-  giftCardId?: string;
-  insertError?: { message: string } | null;
-  duplicateCode?: boolean;
-  transactionError?: { message: string } | null;
-} = {}) {
+function makeCreateGiftCardSupabase(
+  opts: {
+    giftCardId?: string;
+    insertError?: { message: string } | null;
+    duplicateCode?: boolean;
+    transactionError?: { message: string } | null;
+  } = {},
+) {
   const {
     giftCardId = "created-gc-1",
     insertError = null,
@@ -102,7 +108,9 @@ function makeCreateGiftCardSupabase(opts: {
     })),
     insert: mock.fn(() => ({
       select: mock.fn(() => ({
-        single: mock.fn(() => resolved({ id: giftCardId, code: "GIFT50" }, insertError)),
+        single: mock.fn(() =>
+          resolved({ id: giftCardId, code: "GIFT50" }, insertError),
+        ),
       })),
     })),
   };
@@ -121,16 +129,13 @@ function makeCreateGiftCardSupabase(opts: {
 }
 
 /** Build a supabase mock for updateGiftCard */
-function makeUpdateGiftCardSupabase(opts: {
-  existingId?: string | null;
-  duplicateCode?: boolean;
-  updateError?: { message: string } | null;
-} = {}) {
-  const {
-    existingId = "gc-1",
-    duplicateCode = false,
-    updateError = null,
-  } = opts;
+function makeUpdateGiftCardSupabase(
+  opts: {
+    duplicateCode?: boolean;
+    updateError?: { message: string } | null;
+  } = {},
+) {
+  const { duplicateCode = false, updateError = null } = opts;
 
   const giftCardsTable = {
     select: mock.fn(() => ({
@@ -162,11 +167,13 @@ function makeUpdateGiftCardSupabase(opts: {
 }
 
 /** Build a supabase mock for toggleGiftCardActive */
-function makeToggleGiftCardSupabase(opts: {
-  giftCard?: { code: string } | null;
-  fetchError?: { message: string } | null;
-  updateError?: { message: string } | null;
-} = {}) {
+function makeToggleGiftCardSupabase(
+  opts: {
+    giftCard?: { code: string } | null;
+    fetchError?: { message: string } | null;
+    updateError?: { message: string } | null;
+  } = {},
+) {
   const {
     giftCard = { code: "GIFT50" },
     fetchError = null,
@@ -199,11 +206,13 @@ function makeToggleGiftCardSupabase(opts: {
 }
 
 /** Build a supabase mock for deleteGiftCard */
-function makeDeleteGiftCardSupabase(opts: {
-  giftCard?: { code: string } | null;
-  fetchError?: { message: string } | null;
-  deleteError?: { message: string } | null;
-} = {}) {
+function makeDeleteGiftCardSupabase(
+  opts: {
+    giftCard?: { code: string } | null;
+    fetchError?: { message: string } | null;
+    deleteError?: { message: string } | null;
+  } = {},
+) {
   const {
     giftCard = { code: "GIFT50" },
     fetchError = null,
@@ -236,12 +245,14 @@ function makeDeleteGiftCardSupabase(opts: {
 }
 
 /** Build a supabase mock for topUpGiftCard */
-function makeTopUpGiftCardSupabase(opts: {
-  giftCard?: { code: string; current_balance: number } | null;
-  fetchError?: { message: string } | null;
-  updateError?: { message: string } | null;
-  transactionError?: { message: string } | null;
-} = {}) {
+function makeTopUpGiftCardSupabase(
+  opts: {
+    giftCard?: { code: string; current_balance: number } | null;
+    fetchError?: { message: string } | null;
+    updateError?: { message: string } | null;
+    transactionError?: { message: string } | null;
+  } = {},
+) {
   const {
     giftCard = { code: "GIFT50", current_balance: 50000 },
     fetchError = null,
@@ -280,16 +291,18 @@ function makeTopUpGiftCardSupabase(opts: {
 }
 
 /** Build a supabase mock for redeemGiftCardCheck */
-function makeRedeemGiftCardSupabase(opts: {
-  giftCard?: {
-    id: string;
-    code: string;
-    current_balance: number;
-    expires_at: string | null;
-    is_active: boolean;
-  } | null;
-  fetchError?: { message: string } | null;
-} = {}) {
+function makeRedeemGiftCardSupabase(
+  opts: {
+    giftCard?: {
+      id: string;
+      code: string;
+      current_balance: number;
+      expires_at: string | null;
+      is_active: boolean;
+    } | null;
+    fetchError?: { message: string } | null;
+  } = {},
+) {
   const {
     giftCard = {
       id: "gc-1",
@@ -321,9 +334,11 @@ function makeRedeemGiftCardSupabase(opts: {
 
 // ─── Global mocks ───────────────────────────────────────────────────
 const captureMock = mock.fn(() => {});
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  return await query;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    return await query;
+  },
+);
 mockMod("@zuiio/capture", {
   capture: captureMock,
   withDbCapture: withDbCaptureMock,
@@ -338,10 +353,15 @@ mockMod("@/lib/revalidate", {
 
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 mockMod("@/lib/validation", {
-  getString: mock.fn((fd: FormData, key: string) => (fd.get(key) as string) ?? ""),
+  getString: mock.fn(
+    (fd: FormData, key: string) => (fd.get(key) as string) ?? "",
+  ),
 });
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
@@ -541,7 +561,9 @@ test("createGiftCard with optional fields omitted", async () => {
 
 test("createGiftCard creates inactive card when is_active is false", async () => {
   resetMocks();
-  const supabase = makeCreateGiftCardSupabase({ giftCardId: "created-gc-inactive" });
+  const supabase = makeCreateGiftCardSupabase({
+    giftCardId: "created-gc-inactive",
+  });
   mockCtx = mockActionCtx({ supabase });
 
   const result = await createGiftCard(
@@ -558,7 +580,7 @@ test("createGiftCard creates inactive card when is_active is false", async () =>
 
 test("updateGiftCard updates successfully", async () => {
   resetMocks();
-  const supabase = makeUpdateGiftCardSupabase({ existingId: "gc-1" });
+  const supabase = makeUpdateGiftCardSupabase();
   mockCtx = mockActionCtx({ supabase });
 
   const result = await updateGiftCard(
@@ -574,10 +596,7 @@ test("updateGiftCard updates successfully", async () => {
 });
 
 test("updateGiftCard rejects missing code", async () => {
-  const result = await updateGiftCard(
-    undefined,
-    validUpdateData({ code: "" }),
-  );
+  const result = await updateGiftCard(undefined, validUpdateData({ code: "" }));
   assert.deepStrictEqual(result, { error: "Код шаардлагатай." });
 });
 
@@ -594,7 +613,6 @@ test("updateGiftCard rejects code with invalid characters", async () => {
 test("updateGiftCard handles duplicate code (excluding self)", async () => {
   resetMocks();
   const supabase = makeUpdateGiftCardSupabase({
-    existingId: "gc-1",
     duplicateCode: true,
   });
   mockCtx = mockActionCtx({ supabase });
@@ -613,15 +631,11 @@ test("updateGiftCard handles duplicate code (excluding self)", async () => {
 test("updateGiftCard handles update error", async () => {
   resetMocks();
   const supabase = makeUpdateGiftCardSupabase({
-    existingId: "gc-1",
     updateError: { message: "Constraint violation" },
   });
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await updateGiftCard(
-    undefined,
-    validUpdateData(),
-  );
+  const result = await updateGiftCard(undefined, validUpdateData());
   assert.deepStrictEqual(result, {
     error: "Бэлгийн карт шинэчлэхэд алдаа гарлаа: Constraint violation",
   });
@@ -1132,10 +1146,7 @@ test("deleteGiftCard with non-existing id returns not found", async () => {
 
 test("updateGiftCard with missing id field returns error", async () => {
   // The action checks `getString(formData, "id")` and returns error if empty
-  const result = await updateGiftCard(
-    undefined,
-    validUpdateData({ id: "" }),
-  );
+  const result = await updateGiftCard(undefined, validUpdateData({ id: "" }));
   assert.deepStrictEqual(result, { error: "Бэлгийн картын ID олдсонгүй." });
 });
 
