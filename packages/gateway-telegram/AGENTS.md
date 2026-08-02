@@ -12,7 +12,7 @@ Telegram Bot channel plugin for the agent-gateway middleware.
 | `setupBotProfile` | function | Set bot name, description, and commands |
 | `onUserLinked` | function | Post-link commands setup for a chat |
 | `onWelcome` | function | Pre-link commands for new users |
-| `startTypingLoop` | function | Typing indicator refresh loop |
+| `startTypingLoop` / `createTelegramResponseStream` | functions | Typing indicator and throttled Telegram response streaming |
 | `markdownToTelegramHtml` | function | Markdown → Telegram HTML |
 | `markdownToMessengerFormat` | function | Markdown → Messenger/WhatsApp format |
 | `convertTablesToPlainList` | function | Table → plain text list |

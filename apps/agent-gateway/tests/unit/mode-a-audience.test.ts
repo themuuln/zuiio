@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { resolveOrgFromChatUser } from "@zuiio/gateway-telegram";
 import { describe, expect, it, vi } from "vitest";
+import { resolveOrgFromChatUser } from "../../../../packages/gateway-telegram/src/index";
 
 vi.mock("server-only", () => ({}));
 

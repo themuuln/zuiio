@@ -28,21 +28,27 @@ export async function GET(request: Request) {
 	}
 
 	const tg = new TelegramChannel();
-	const draftId = `test_draft_${Date.now()}`;
+	const draftId = Math.floor(Math.random() * 2_147_483_647) + 1;
 	const text =
-		"Hello, this is a streaming test! 🚀 The tokens appear one by one, just like a real AI response. This proves sendMessageDraft works for live streaming in your Telegram bot.";
+		"Hello, this is a streaming test! 🚀 The tokens appear in batches, just like a real AI response. This proves sendMessageDraft works for live streaming in your Telegram bot.";
 
-	// Stream tokens one by one
-	const tokens = text.split("");
 	let accumulated = "";
-
+	let lastUpdateAt = 0;
 	try {
-		for (let i = 0; i < tokens.length; i++) {
-			accumulated += tokens[i];
-			await tg.sendMessageDraft(chatId, draftId, accumulated);
-			// Small delay to simulate token streaming
-			await new Promise((resolve) => setTimeout(resolve, 50));
+		for (const token of text.split("")) {
+			accumulated += token;
+			if (Date.now() - lastUpdateAt >= 250) {
+				lastUpdateAt = Date.now();
+				const sent = await tg.sendMessageDraft(chatId, draftId, accumulated);
+				if (!sent) throw new Error("Telegram draft API unavailable");
+			}
+			const { promise, resolve } = Promise.withResolvers<void>();
+			setTimeout(resolve, 25);
+			await promise;
 		}
+
+		// Finalize the ephemeral draft as a normal persistent message.
+		await tg.sendMessage(chatId, text);
 
 		return NextResponse.json({
 			status: "ok",

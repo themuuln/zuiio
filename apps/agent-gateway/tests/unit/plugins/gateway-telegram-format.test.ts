@@ -1,8 +1,8 @@
+import { describe, expect, it } from "vitest";
 import {
 	convertMarkdownToRichBlocks,
 	markdownToTelegramHtml,
-} from "@zuiio/gateway-telegram";
-import { describe, expect, it } from "vitest";
+} from "../../../../../packages/gateway-telegram/src/index";
 
 // ─── markdownToTelegramHtml ─────────────────────────────────────────────────
 

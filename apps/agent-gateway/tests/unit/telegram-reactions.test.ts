@@ -51,3 +51,74 @@ describe("TelegramChannel message reactions", () => {
 		}
 	});
 });
+
+describe("TelegramChannel response streaming API", () => {
+	it("sends native drafts with an integer draft ID", async () => {
+		const channel = new TelegramChannel("test-token");
+		const originalFetch = globalThis.fetch;
+		let capturedUrl = "";
+		let capturedBody = "";
+		globalThis.fetch = async (
+			url: string | URL | Request,
+			init?: RequestInit,
+		) => {
+			if (typeof url === "string") capturedUrl = url;
+			if (init?.body) capturedBody = init.body as string;
+			return new Response(JSON.stringify({ ok: true }), { status: 200 });
+		};
+
+		try {
+			await expect(channel.sendMessageDraft(12345, 7, "Partial")).resolves.toBe(
+				true,
+			);
+			expect(capturedUrl).toContain("/sendMessageDraft");
+			expect(JSON.parse(capturedBody)).toEqual({
+				chat_id: 12345,
+				draft_id: 7,
+				text: "Partial",
+			});
+		} finally {
+			globalThis.fetch = originalFetch;
+		}
+	});
+
+	it("creates a fallback message and edits it", async () => {
+		const channel = new TelegramChannel("test-token");
+		const originalFetch = globalThis.fetch;
+		const calls: Array<{ url: string; body: Record<string, unknown> }> = [];
+		globalThis.fetch = async (
+			url: string | URL | Request,
+			init?: RequestInit,
+		) => {
+			calls.push({
+				url: String(url),
+				body: JSON.parse(String(init?.body)),
+			});
+			return new Response(
+				JSON.stringify(
+					calls.length === 1
+						? { ok: true, result: { message_id: 12 } }
+						: { ok: true },
+				),
+				{ status: 200 },
+			);
+		};
+
+		try {
+			const messageId = await channel.sendStreamingPlaceholder(12345);
+			if (messageId === null)
+				throw new Error("Expected placeholder message ID");
+			const edited = await channel.editStreamingMessage(
+				12345,
+				messageId,
+				"Updated",
+			);
+			expect(messageId).toBe(12);
+			expect(edited).toBe(true);
+			expect(calls[0]?.url).toContain("/sendMessage");
+			expect(calls[1]?.url).toContain("/editMessageText");
+		} finally {
+			globalThis.fetch = originalFetch;
+		}
+	});
+});

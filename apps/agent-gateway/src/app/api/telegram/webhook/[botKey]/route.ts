@@ -2,7 +2,10 @@ import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 import { TelegramChannel } from "@/channels/telegram";
 import type { TelegramUpdate } from "@/channels/types";
-import { startTypingLoop } from "@/channels/typing-loop";
+import {
+	createTelegramResponseStream,
+	startTypingLoop,
+} from "@/channels/typing-loop";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { resolveOrgFromBotKey } from "@/gateway/mode-b";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
@@ -117,6 +120,7 @@ export async function POST(
 			);
 
 			const stopTyping = startTypingLoop(tg, chatId);
+			let agentInBackground = false;
 
 			try {
 				const voice = msg.voice;
@@ -135,11 +139,19 @@ export async function POST(
 					return NextResponse.json({ ok: true });
 				}
 
+				const responseStream = createTelegramResponseStream(
+					tg,
+					chatId,
+					chatType,
+					{ onFirstToken: stopTyping },
+				);
 				const agentPromise = handleAgentMessage(ctx, transcribed, chatType, {
 					getSystemPrompt: systemPromptFor,
 					getTools: (toolCtx) => getProductTools(ctx.productType, toolCtx),
+					onToken: responseStream.onToken,
 				});
 
+				agentInBackground = true;
 				runAgentWithFallback(agentPromise, {
 					onAsyncFallback: () => {
 						return userMessageId
@@ -150,7 +162,8 @@ export async function POST(
 								)
 							: Promise.resolve();
 					},
-					onResult: (response) => {
+					onResult: async (response) => {
+						stopTyping();
 						if (userMessageId) {
 							tg.setReaction(
 								chatId,
@@ -158,9 +171,10 @@ export async function POST(
 								TelegramChannel.REACTIONS.done,
 							);
 						}
-						return tg.sendMessage(chatId, response);
+						return responseStream.finish(response);
 					},
-					onError: (message) => {
+					onError: async (message) => {
+						stopTyping();
 						if (userMessageId) {
 							tg.setReaction(
 								chatId,
@@ -168,13 +182,13 @@ export async function POST(
 								TelegramChannel.REACTIONS.error,
 							);
 						}
-						return tg.sendMessage(chatId, message);
+						return responseStream.fail(message);
 					},
 				});
 
 				return NextResponse.json({ ok: true });
 			} finally {
-				stopTyping();
+				if (!agentInBackground) stopTyping();
 			}
 		}
 
@@ -190,34 +204,16 @@ export async function POST(
 			);
 		}
 
-		// Start typing indicator loop
+		// Private chats use native drafts; groups/channels use edit-in-place.
 		const stopTyping = startTypingLoop(tg, chatId);
-
-		// Streaming: use sendMessageDraft for real-time token delivery
-		const draftId = `draft_${chatId}_${Date.now()}`;
-		let streamedText = "";
-		const STREAM_UPDATE_INTERVAL = 400; // ms between draft updates
-		let lastUpdateTime = 0;
-		let typingStopped = false;
-
-		const onToken = (token: string) => {
-			streamedText += token;
-			// Stop typing indicator once streaming starts
-			if (!typingStopped) {
-				typingStopped = true;
-				stopTyping();
-			}
-			const now = Date.now();
-			if (now - lastUpdateTime > STREAM_UPDATE_INTERVAL) {
-				lastUpdateTime = now;
-				tg.sendMessageDraft(chatId, draftId, streamedText);
-			}
-		};
+		const responseStream = createTelegramResponseStream(tg, chatId, chatType, {
+			onFirstToken: stopTyping,
+		});
 
 		const agentPromise = handleAgentMessage(ctx, text, chatType, {
 			getSystemPrompt: systemPromptFor,
 			getTools: (toolCtx) => getProductTools(ctx.productType, toolCtx),
-			onToken,
+			onToken: responseStream.onToken,
 		});
 
 		runAgentWithFallback(agentPromise, {
@@ -230,14 +226,14 @@ export async function POST(
 						)
 					: Promise.resolve();
 			},
-			onResult: (response) => {
+			onResult: async (response) => {
 				stopTyping();
 				if (userMessageId) {
 					tg.setReaction(chatId, userMessageId, TelegramChannel.REACTIONS.done);
 				}
-				return tg.sendMessage(chatId, response);
+				return responseStream.finish(response);
 			},
-			onError: (message) => {
+			onError: async (message) => {
 				stopTyping();
 				if (userMessageId) {
 					tg.setReaction(
@@ -246,7 +242,7 @@ export async function POST(
 						TelegramChannel.REACTIONS.error,
 					);
 				}
-				return tg.sendMessage(chatId, message);
+				return responseStream.fail(message);
 			},
 		});
 

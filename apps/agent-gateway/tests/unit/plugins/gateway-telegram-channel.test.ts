@@ -1,5 +1,5 @@
-import { TelegramChannel } from "@zuiio/gateway-telegram";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TelegramChannel } from "../../../../../packages/gateway-telegram/src/index";
 
 vi.mock("server-only", () => ({}));
 
@@ -101,6 +101,56 @@ describe("TelegramChannel", () => {
 		await channel.setReaction(CHAT_ID, 42, "✅");
 
 		expect(fetchSpy.mock.calls[0]?.[0]).toContain("/setMessageReaction");
+	});
+
+	it("sends native draft updates with a non-zero integer draft ID", async () => {
+		fetchSpy.mockResolvedValue(
+			new Response(JSON.stringify({ ok: true }), { status: 200 }),
+		);
+
+		const sent = await channel.sendMessageDraft(CHAT_ID, 42, "Partial reply");
+
+		expect(sent).toBe(true);
+		expect(fetchSpy.mock.calls[0]?.[0]).toContain("/sendMessageDraft");
+		const body = JSON.parse(fetchSpy.mock.calls[0]?.[1]?.body as string);
+		expect(body.chat_id).toBe(CHAT_ID);
+		expect(body.draft_id).toBe(42);
+		expect(body.text).toBe("Partial reply");
+	});
+
+	it("reports draft API failures for streaming fallback", async () => {
+		fetchSpy.mockResolvedValue(
+			new Response(JSON.stringify({ ok: false }), { status: 200 }),
+		);
+
+		await expect(
+			channel.sendMessageDraft(CHAT_ID, 42, "Partial reply"),
+		).resolves.toBe(false);
+	});
+
+	it("creates and edits a fallback streaming message", async () => {
+		fetchSpy
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify({ ok: true, result: { message_id: 99 } }), {
+					status: 200,
+				}),
+			)
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify({ ok: true }), { status: 200 }),
+			);
+
+		const messageId = await channel.sendStreamingPlaceholder(CHAT_ID);
+		if (messageId === null) throw new Error("Expected placeholder message ID");
+		const edited = await channel.editStreamingMessage(
+			CHAT_ID,
+			messageId,
+			"Updated reply",
+		);
+
+		expect(messageId).toBe(99);
+		expect(edited).toBe(true);
+		expect(fetchSpy.mock.calls[0]?.[0]).toContain("/sendMessage");
+		expect(fetchSpy.mock.calls[1]?.[0]).toContain("/editMessageText");
 	});
 
 	it("splits long messages on paragraph boundaries", async () => {

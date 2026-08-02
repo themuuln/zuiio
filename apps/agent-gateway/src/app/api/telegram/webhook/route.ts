@@ -3,10 +3,14 @@ import { after, NextResponse } from "next/server";
 import { onUserLinked, onWelcome } from "@/bot-ux";
 import { TelegramChannel } from "@/channels/telegram";
 import type { TelegramUpdate } from "@/channels/types";
-import { startTypingLoop } from "@/channels/typing-loop";
+import {
+	createTelegramResponseStream,
+	startTypingLoop,
+} from "@/channels/typing-loop";
 import { handleFlowCallback, handleFlowMessage } from "@/flow-executor";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { resolveOrgFromChatUser } from "@/gateway/mode-a";
+import type { ResolutionResult } from "@/gateway/types";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { debug } from "@/lib/debug";
 import { openAiConfig, openCodeGoConfig } from "@/lib/env";
@@ -746,7 +750,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 		const tg = getTelegram();
 		const sb = getSupabase();
 
-		let resolved;
+		let resolved: ResolutionResult;
 		try {
 			resolved = await resolveOrgFromChatUser(sb, chatId, userId);
 		} catch (err) {
@@ -780,30 +784,11 @@ export async function POST(request: Request): Promise<NextResponse> {
 			);
 		}
 
-		// Streaming: use sendMessageDraft for real-time token delivery
-		const draftId = `draft_${chatId}_${Date.now()}`;
-		let streamedText = "";
-		const STREAM_UPDATE_INTERVAL = 400; // ms between draft updates
-		let lastUpdateTime = 0;
-
-		const onToken = (token: string) => {
-			streamedText += token;
-			// Stop typing indicator once streaming starts delivering content
-			if (!typingStopped) {
-				typingStopped = true;
-				stopTyping();
-			}
-			const now = Date.now();
-			if (now - lastUpdateTime > STREAM_UPDATE_INTERVAL) {
-				lastUpdateTime = now;
-				// Fire and forget — don't await
-				tg.sendMessageDraft(chatId, draftId, streamedText);
-			}
-		};
-
-		// Start typing indicator loop
+		// Private chats use native drafts; groups/channels use edit-in-place.
 		const stopTyping = startTypingLoop(tg, chatId);
-		let typingStopped = false;
+		const responseStream = createTelegramResponseStream(tg, chatId, chatType, {
+			onFirstToken: stopTyping,
+		});
 		try {
 			// Run agent synchronously — await the result then send to Telegram.
 			// Vercel serverless kills background tasks after response, so we MUST
@@ -829,7 +814,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 				return;
 			}
 
-			// No flow matched — fall through to AI agent handler
+			// No flow matched — fall through to the AI agent handler
 			const response = await handleAgentMessage(
 				resolved.context,
 				text,
@@ -838,7 +823,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 					getSystemPrompt: systemPromptFor,
 					getTools: (ctx) => getProductTools(productType, ctx),
 					dataClient,
-					onToken,
+					onToken: responseStream.onToken,
 				},
 				images,
 			);
@@ -849,7 +834,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 					() => {},
 				);
 			}
-			await tg.sendMessage(chatId, response);
+			await responseStream.finish(response);
 		} catch (err) {
 			stopTyping();
 			console.error("[webhook] agent error:", err);
@@ -861,10 +846,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 					TelegramChannel.REACTIONS.error,
 				).catch(() => {});
 			}
-			await tg.sendMessage(
-				chatId,
-				"Уучлаарай, алдаа гарлаа. Дахин оролдоно уу.",
-			);
+			await responseStream.fail("Уучлаарай, алдаа гарлаа. Дахин оролдоно уу.");
 		}
 	}
 

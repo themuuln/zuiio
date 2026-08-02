@@ -1,5 +1,5 @@
-import { resolveOrgFromBotKey } from "@zuiio/gateway-telegram";
 import { describe, expect, it, vi } from "vitest";
+import { resolveOrgFromBotKey } from "../../../../packages/gateway-telegram/src/index";
 
 vi.mock("server-only", () => ({}));
 

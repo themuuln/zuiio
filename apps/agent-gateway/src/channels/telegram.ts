@@ -332,16 +332,16 @@ export class TelegramChannel implements Channel {
 	} as const;
 	/**
 	 * Create or update a streaming draft message (Bot API 9.5+).
-	 * Used for token-by-token streaming of AI responses.
-	 * Draft auto-expires if not finalized with sendMessage.
+	 * Returns false when the API is unavailable so callers can fall back to
+	 * editing a temporary message.
 	 */
 	async sendMessageDraft(
 		chatId: number | string,
-		draftId: string,
+		draftId: number,
 		text: string,
-	): Promise<void> {
+	): Promise<boolean> {
 		try {
-			await fetch(`${this.baseUrl}/sendMessageDraft`, {
+			const res = await fetch(`${this.baseUrl}/sendMessageDraft`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -350,8 +350,69 @@ export class TelegramChannel implements Channel {
 					text,
 				}),
 			});
+			if (!res.ok) return false;
+			const data = (await res.json().catch(() => null)) as {
+				ok?: boolean;
+			} | null;
+			return data?.ok !== false;
 		} catch {
-			// Draft failures are non-critical — streaming degrades gracefully
+			// Draft failures are non-critical — streaming degrades gracefully.
+			return false;
+		}
+	}
+
+	/**
+	 * Send the temporary message used by the edit-in-place streaming fallback.
+	 * Returns the Telegram message ID, or null when the request fails.
+	 */
+	async sendStreamingPlaceholder(
+		chatId: number | string,
+	): Promise<number | null> {
+		try {
+			const res = await fetch(`${this.baseUrl}/sendMessage`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ chat_id: chatId, text: "…" }),
+			});
+			if (!res.ok) return null;
+			const data = (await res.json().catch(() => null)) as {
+				ok?: boolean;
+				result?: { message_id?: number };
+			} | null;
+			const messageId = data?.result?.message_id;
+			return data?.ok !== false && typeof messageId === "number"
+				? messageId
+				: null;
+		} catch {
+			return null;
+		}
+	}
+
+	/**
+	 * Update the temporary message used by edit-in-place streaming.
+	 */
+	async editStreamingMessage(
+		chatId: number | string,
+		messageId: number,
+		text: string,
+	): Promise<boolean> {
+		try {
+			const res = await fetch(`${this.baseUrl}/editMessageText`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					chat_id: chatId,
+					message_id: messageId,
+					text,
+				}),
+			});
+			if (!res.ok) return false;
+			const data = (await res.json().catch(() => null)) as {
+				ok?: boolean;
+			} | null;
+			return data?.ok !== false;
+		} catch {
+			return false;
 		}
 	}
 }
