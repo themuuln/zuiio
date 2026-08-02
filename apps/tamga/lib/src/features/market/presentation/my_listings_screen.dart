@@ -350,7 +350,12 @@ class _MyListingCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(listing.title, style: theme.textTheme.titleMedium),
+                        Text(
+                          listing.title,
+                          style: theme.textTheme.titleMedium,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           horse?.name ?? 'Морь тодорхойгүй',

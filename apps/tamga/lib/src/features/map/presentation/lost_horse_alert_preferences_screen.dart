@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/supabase_bootstrap.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/widgets/widgets.dart';
 import '../application/lost_horse_alert_providers.dart';
 import '../application/lost_horse_filters.dart';
 import '../domain/lost_horse_alert_subscription.dart';
@@ -115,10 +116,30 @@ class _LostHorseAlertPreferencesScreenState
           const SizedBox(height: AppSpacing.sm),
           subscriptions.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Text('Алдаа гарлаа: $error'),
+            error: (_, _) => TamgaCard(
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, size: 20),
+                  const SizedBox(width: AppSpacing.sm),
+                  const Expanded(
+                    child: Text('Мэдэгдлийн бүсүүд ачаалахад алдаа гарлаа'),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        ref.invalidate(lostHorseAlertSubscriptionsProvider),
+                    child: const Text('Дахин оролдох'),
+                  ),
+                ],
+              ),
+            ),
             data: (items) {
               if (items.isEmpty) {
-                return const Text('Одоогоор идэвхтэй бүс алга.');
+                return const EmptyState(
+                  icon: Icons.location_off_outlined,
+                  title: 'Одоогоор идэвхтэй бүс алга',
+                  description: 'Дээрх маягтаар эхний бүсээ нэмнэ үү',
+                  compact: true,
+                );
               }
               return Column(children: _subscriptionTiles(items));
             },

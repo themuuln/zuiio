@@ -219,7 +219,7 @@ class _PriceHistoryScreenState extends ConsumerState<PriceHistoryScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Ханшны графикан үзүүлэлт',
+                                'Ханшны график үзүүлэлт',
                                 style: theme.textTheme.titleMedium,
                               ),
                               const SizedBox(height: AppSpacing.xxl),
@@ -277,14 +277,10 @@ class _PriceHistoryScreenState extends ConsumerState<PriceHistoryScreen> {
                                               height: AppSpacing.xs,
                                             ),
                                             Text(
-                                              rec.horseName.substring(
-                                                0,
-                                                rec.horseName.length > 5
-                                                    ? 5
-                                                    : rec.horseName.length,
-                                              ),
+                                              rec.horseName,
                                               style: theme.textTheme.bodySmall
                                                   ?.copyWith(fontSize: 9),
+                                              maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ],

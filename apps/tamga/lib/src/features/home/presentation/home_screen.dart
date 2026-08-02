@@ -9,6 +9,7 @@ import '../../care/application/care_providers.dart';
 import '../../care/domain/care_task.dart';
 import '../../horses/application/horses_providers.dart';
 import '../../horses/domain/horse_record.dart';
+import '../../horses/presentation/add_horse_screen.dart';
 import '../../horses/presentation/horse_detail_screen.dart';
 import '../../../shared/domain/event.dart';
 import '../../shared/presentation/sync_indicator.dart';
@@ -70,13 +71,18 @@ class HomeScreen extends ConsumerWidget {
                     horses: horses,
                     overview: overviewAsync.valueOrNull,
                     onOpenRegistry: () => context.go('/horses'),
+                    onAddHorse: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const AddHorseScreen()),
+                    ),
                   ),
                 ),
               ),
               SliverToBoxAdapter(
                 child: overviewAsync.when(
                   loading: () => const _TaskSkeleton(),
-                  error: (_, _) => const SizedBox.shrink(),
+                  error: (_, _) => _SectionError(
+                    onRetry: () => ref.invalidate(careOverviewProvider),
+                  ),
                   data: (overview) => _AttentionTasks(
                     overview: overview,
                     horses: horsesAsync.valueOrNull ?? const <HorseRecord>[],
@@ -89,7 +95,9 @@ class HomeScreen extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: overviewAsync.when(
                   loading: () => const SizedBox.shrink(),
-                  error: (_, _) => const SizedBox.shrink(),
+                  error: (_, _) => _SectionError(
+                    onRetry: () => ref.invalidate(careOverviewProvider),
+                  ),
                   data: (overview) => _UpcomingEvents(
                     events: overview.upcomingEvents,
                     onOpenAll: () => context.push('/events'),
@@ -104,10 +112,21 @@ class HomeScreen extends ConsumerWidget {
                     TamgaSpacing.lg,
                     TamgaSpacing.xxxl,
                   ),
-                  child: OutlinedButton.icon(
-                    onPressed: () => context.push('/lost-horse/report'),
-                    icon: const Icon(Icons.search_off_outlined),
-                    label: const Text('Алдсан морь мэдээлэх'),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () => context.push('/lost-horse/report'),
+                        icon: const Icon(Icons.search_off_outlined),
+                        label: const Text('Алдсан морь мэдээлэх'),
+                      ),
+                      const SizedBox(height: TamgaSpacing.sm),
+                      TextButton.icon(
+                        onPressed: () => context.push('/lost-horse'),
+                        icon: const Icon(Icons.map_outlined),
+                        label: const Text('Алдсан морийг хайх'),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -296,11 +315,13 @@ class _HerdHealthStrip extends StatelessWidget {
     required this.horses,
     required this.overview,
     required this.onOpenRegistry,
+    required this.onAddHorse,
   });
 
   final List<HorseRecord> horses;
   final CareOverview? overview;
   final VoidCallback onOpenRegistry;
+  final VoidCallback onAddHorse;
 
   @override
   Widget build(BuildContext context) {
@@ -342,7 +363,7 @@ class _HerdHealthStrip extends StatelessWidget {
                 description:
                     'Морь нэмэхэд бүртгэл, эрүүл мэндийн мэдээлэл нэг дор хадгалагдана.',
                 actionLabel: 'Морь нэмэх',
-                onAction: onOpenRegistry,
+                onAction: onAddHorse,
               ),
             )
           else
@@ -426,7 +447,6 @@ class _AttentionTasks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
     final tasks = overview.tasks.take(3).toList();
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -454,13 +474,13 @@ class _AttentionTasks extends StatelessWidget {
           ),
           const SizedBox(height: TamgaSpacing.sm),
           if (tasks.isEmpty)
-            Text(
-              horses.isEmpty
+            EmptyState(
+              compact: true,
+              icon: Icons.notifications_none_outlined,
+              title: 'Сануулга алга',
+              description: horses.isEmpty
                   ? 'Морь нэмэхэд таны өдөр тутмын арчилгаа энд харагдана.'
                   : 'Шинэ сануулга үүсэхэд энд харагдана.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.onSurface),
             )
           else
             ...tasks.map(
@@ -654,10 +674,42 @@ class _HomeError extends StatelessWidget {
         TamgaSpacing.lg,
         0,
       ),
-      child: OutlinedButton.icon(
-        onPressed: onRetry,
-        icon: const Icon(Icons.refresh),
-        label: Text(message),
+      child: TamgaErrorWidget(message: message, onRetry: onRetry),
+    );
+  }
+}
+
+/// Compact inline error row for a home section (tasks, events).
+///
+/// Used instead of silently collapsing the section on error, so the user
+/// knows the data failed to load and can retry.
+class _SectionError extends StatelessWidget {
+  const _SectionError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = TamgaColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        TamgaSpacing.lg,
+        TamgaSpacing.xxl,
+        TamgaSpacing.lg,
+        0,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: colors.error, size: 20),
+          const SizedBox(width: TamgaSpacing.sm),
+          Expanded(
+            child: Text(
+              'Хэсгийг ачаалахад алдаа гарлаа.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          TextButton(onPressed: onRetry, child: const Text('Дахин оролдох')),
+        ],
       ),
     );
   }

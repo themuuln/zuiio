@@ -220,7 +220,7 @@ class _ConversationListTile extends ConsumerWidget {
                           child: Text(
                             conversation.lastMessage.isNotEmpty
                                 ? conversation.lastMessage
-                                : 'Шинэ conversation',
+                                : 'Шинэ чат',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: hasUnread
                                   ? theme.colorScheme.onSurface

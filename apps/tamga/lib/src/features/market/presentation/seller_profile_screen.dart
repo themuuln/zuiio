@@ -34,8 +34,10 @@ class SellerProfileScreen extends ConsumerWidget {
         data: (safety) {
           final profile = safety.sellerProfile;
           if (profile == null) {
-            return const Center(
-              child: Text('Худалдагчийн мэдээлэл олдсонгүй.'),
+            return const EmptyState(
+              icon: Icons.storefront_outlined,
+              title: 'Худалдагчийн мэдээлэл олдсонгүй.',
+              description: 'Энэ зарын худалдагчийн профайл байхгүй байна.',
             );
           }
 
@@ -126,6 +128,7 @@ class SellerProfileScreen extends ConsumerWidget {
               // ── Rating Distribution ──
               SliverToBoxAdapter(
                 child: _RatingDistributionSection(
+                  sellerId: sellerId,
                   ratingSummaryAsync: ratingSummaryAsync,
                 ),
               ),
@@ -151,7 +154,11 @@ class SellerProfileScreen extends ConsumerWidget {
                 data: (ratings) {
                   if (ratings.isEmpty) {
                     return const SliverFillRemaining(
-                      child: Center(child: Text('Одоогоор сэтгэгдэл байхгүй.')),
+                      hasScrollBody: false,
+                      child: EmptyState(
+                        icon: Icons.reviews_outlined,
+                        title: 'Одоогоор сэтгэгдэл байхгүй.',
+                      ),
                     );
                   }
                   return SliverList(
@@ -192,7 +199,10 @@ class SellerProfileScreen extends ConsumerWidget {
             ],
           );
         },
-        loading: () => Center(child: const CircularProgressIndicator()),
+        loading: () => SkeletonLoader(
+          items: 4,
+          itemBuilder: (ctx, i) => const SkeletonCardTile(),
+        ),
         error: (err, _) => TamgaErrorWidget(
           message: 'Худалдагчийн мэдээлэл ачаалахад алдаа гарлаа',
           onRetry: () => ref.invalidate(marketSafetySummaryProvider(listingId)),
@@ -287,8 +297,12 @@ class _RatingSummaryCard extends ConsumerWidget {
 
 /// Үнэлгээний тархалтын хэсэг.
 class _RatingDistributionSection extends ConsumerWidget {
-  const _RatingDistributionSection({required this.ratingSummaryAsync});
+  const _RatingDistributionSection({
+    required this.sellerId,
+    required this.ratingSummaryAsync,
+  });
 
+  final String sellerId;
   final AsyncValue<SellerRatingSummary> ratingSummaryAsync;
 
   @override
@@ -315,11 +329,10 @@ class _RatingDistributionSection extends ConsumerWidget {
             ratingSummaryAsync.when(
               data: (summary) {
                 if (!summary.hasRatings) {
-                  return Text(
-                    'Одоогоор үнэлгээ байхгүй.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                  return const EmptyState(
+                    icon: Icons.star_border,
+                    title: 'Одоогоор үнэлгээ байхгүй.',
+                    compact: true,
                   );
                 }
 
@@ -380,11 +393,10 @@ class _RatingDistributionSection extends ConsumerWidget {
                 items: 5,
                 itemBuilder: (ctx, i) => const SkeletonListTile(),
               ),
-              error: (err, _) => Text(
-                'Тархалт ачаалахад алдаа гарлаа.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
+              error: (err, _) => TamgaErrorWidget(
+                message: 'Тархалт ачаалахад алдаа гарлаа',
+                onRetry: () =>
+                    ref.invalidate(sellerRatingSummaryProvider(sellerId)),
               ),
             ),
           ],
@@ -395,11 +407,11 @@ class _RatingDistributionSection extends ConsumerWidget {
 
   Color _ratingColor(int rating, ThemeData theme) {
     return switch (rating) {
-      5 => const Color(0xFF4CAF50),
-      4 => const Color(0xFF8BC34A),
-      3 => const Color(0xFFFFC107),
-      2 => const Color(0xFFFF9800),
-      1 => const Color(0xFFF44336),
+      5 => theme.colorScheme.tertiary,
+      4 => theme.colorScheme.primary,
+      3 => theme.colorScheme.secondary,
+      2 => theme.colorScheme.error.withValues(alpha: 0.6),
+      1 => theme.colorScheme.error,
       _ => theme.colorScheme.primary,
     };
   }

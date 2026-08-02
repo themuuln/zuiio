@@ -11,6 +11,7 @@ import '../../../app/app_config.dart';
 import '../../../core/sync/connection_status.dart';
 import '../../shared/application/sync_providers.dart';
 import 'feature_tour.dart';
+import 'fab_menu.dart';
 import '../../../core/widgets/tamga_bottom_nav.dart';
 
 /// The primary product jobs shown in the persistent navigation bar.
@@ -134,6 +135,10 @@ class _AppShellState extends ConsumerState<AppShell> {
               ),
             ],
           ),
+          // Mounted via the Scaffold slot (not a Positioned in the shell
+          // Stack) so it gets bounded constraints and auto-rises above the
+          // bottom navigation bar.
+          floatingActionButton: showGuestBanner ? null : const FabMenu(),
           bottomNavigationBar: TamgaBottomNav(
             currentIndex: widget.navigationShell.currentIndex,
             items: _buildDestinations(),

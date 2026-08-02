@@ -228,7 +228,7 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
               contentPadding: EdgeInsets.zero,
               title: Text('Нууцлан мэдээлэх', style: TamgaTypography.body()),
               subtitle: Text(
-                'Таны нэр нууцлаг хэрэглэгч болон харагдана',
+                'Таны нэр нууцлаг хэрэглэгч хэлбэрээр харагдана',
                 style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
               ),
               value: _isAnonymous,
@@ -292,18 +292,27 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
           Positioned(
             top: TamgaSpacing.sm,
             right: TamgaSpacing.sm,
-            child: GestureDetector(
-              onTap: _removePhoto,
-              child: Container(
-                padding: const EdgeInsets.all(TamgaSpacing.xs),
-                decoration: BoxDecoration(
-                  color: colors.destructive,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.close,
-                  size: 18,
-                  color: colors.destructiveForeground,
+            child: Tooltip(
+              message: 'Устгах',
+              child: Semantics(
+                label: 'Устгах',
+                button: true,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _removePhoto,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: colors.destructive,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.close,
+                      size: 24,
+                      color: colors.destructiveForeground,
+                    ),
+                  ),
                 ),
               ),
             ),

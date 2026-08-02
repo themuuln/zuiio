@@ -123,7 +123,10 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
               leading: const Icon(Icons.free_cancellation),
               title: const Text('Үнэгүй'),
               subtitle: const Text('Хаяж морьдыг харах, газрын зураг нээх'),
-              trailing: const Icon(Icons.check_circle, color: Colors.green),
+              trailing: Icon(
+                Icons.check_circle,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             ListTile(
               leading: Icon(

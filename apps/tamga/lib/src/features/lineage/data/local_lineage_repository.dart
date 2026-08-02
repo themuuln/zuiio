@@ -415,9 +415,10 @@ class LocalLineageRepository implements LineageRepository {
       final seeded = await _storage.lineageRoots.where().findAll();
       return Result.ok(seeded.map((r) => r.toDomain()).toList());
     } catch (e) {
-      return Result.fail(
-        AppException.withDetail('FETCH_ROOTS_ERROR', e.toString()),
-      );
+      // Isar unavailable (first-launch race, store error): serve the
+      // compile-time seed data instead of failing — offline-first holds even
+      // when the local store hiccups.
+      return Result.ok(_seedRoots);
     }
   }
 
@@ -500,6 +501,12 @@ class LocalLineageRepository implements LineageRepository {
         ),
       );
     } catch (e) {
+      // Same resilience as [fetchRoots]: fall back to the compile-time seed
+      // snapshot when the store is unavailable.
+      final seed = _seedSnapshots[rootId];
+      if (seed != null) {
+        return Result.ok(seed);
+      }
       return Result.fail(
         AppException.withDetail('FETCH_SNAPSHOT_ERROR', e.toString()),
       );

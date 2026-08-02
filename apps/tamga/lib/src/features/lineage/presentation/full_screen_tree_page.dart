@@ -28,7 +28,8 @@ class FullScreenTreePage extends StatefulWidget {
   State<FullScreenTreePage> createState() => _FullScreenTreePageState();
 }
 
-class _FullScreenTreePageState extends State<FullScreenTreePage> {
+class _FullScreenTreePageState extends State<FullScreenTreePage>
+    with SingleTickerProviderStateMixin {
   final TransformationController _transformController =
       TransformationController();
   String? _selectedNodeId;
@@ -41,10 +42,25 @@ class _FullScreenTreePageState extends State<FullScreenTreePage> {
 
   bool _zoomedToFit = false;
 
+  /// Drives the zoom-to-matrix tween so zoom controls animate smoothly
+  /// instead of jumping instantly.
+  late final AnimationController _zoomController;
+  Animation<Matrix4>? _zoomAnimation;
+
   @override
   void initState() {
     super.initState();
     _selectedNodeId = widget.selectedNodeId;
+    _zoomController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 350),
+        )..addListener(() {
+          final animation = _zoomAnimation;
+          if (animation != null) {
+            _transformController.value = animation.value;
+          }
+        });
   }
 
   @override
@@ -61,6 +77,7 @@ class _FullScreenTreePageState extends State<FullScreenTreePage> {
 
   @override
   void dispose() {
+    _zoomController.dispose();
     _transformController.dispose();
     super.dispose();
   }
@@ -177,12 +194,21 @@ class _FullScreenTreePageState extends State<FullScreenTreePage> {
     Matrix4 matrix, {
     Duration duration = const Duration(milliseconds: 350),
   }) {
-    _transformController.value = matrix;
-    // TransformationController.animateTo would be ideal but requires
-    // AnimationController. For simplicity we use a linear animate.
-    // A proper implementation would use an AnimationController with
-    // Matrix4Tween. For now, set the value directly — good enough
-    // for discrete zoom-to-fit and zoom-to-node.
+    if (duration == Duration.zero) {
+      // Instant jump for zero-duration callers.
+      _zoomAnimation = null;
+      _zoomController.stop();
+      _transformController.value = matrix;
+      return;
+    }
+    _zoomController.stop();
+    _zoomAnimation =
+        Matrix4Tween(begin: _transformController.value, end: matrix).animate(
+          CurvedAnimation(parent: _zoomController, curve: Curves.easeOutCubic),
+        );
+    _zoomController
+      ..duration = duration
+      ..forward(from: 0);
   }
 
   // ─── Build ─────────────────────────────────────────────────────────────
@@ -303,18 +329,25 @@ class _FullScreenTreePageState extends State<FullScreenTreePage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _ZoomButton(icon: Icons.add_rounded, onTap: _zoomIn, theme: theme),
+            _ZoomButton(
+              icon: Icons.add_rounded,
+              onTap: _zoomIn,
+              theme: theme,
+              label: 'Томруулах',
+            ),
             const SizedBox(height: AppSpacing.sm),
             _ZoomButton(
               icon: Icons.remove_rounded,
               onTap: _zoomOut,
               theme: theme,
+              label: 'Жижигрүүлэх',
             ),
             const SizedBox(height: AppSpacing.sm),
             _ZoomButton(
               icon: Icons.fit_screen_rounded,
               onTap: _zoomToFit,
               theme: theme,
+              label: 'Дэлгэцэнд багтаах',
             ),
           ],
         ),
@@ -395,26 +428,35 @@ class _ZoomButton extends StatelessWidget {
     required this.icon,
     required this.onTap,
     required this.theme,
+    required this.label,
   });
 
   final IconData icon;
   final VoidCallback onTap;
   final ThemeData theme;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: theme.colorScheme.surface.withValues(alpha: 0.88),
-      borderRadius: BorderRadius.circular(16),
-      elevation: 2,
-      shadowColor: theme.colorScheme.shadow.withValues(alpha: 0.12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: SizedBox(
-          width: AppSpacing.section,
-          height: AppSpacing.section,
-          child: Icon(icon, size: 22, color: theme.colorScheme.onSurface),
+    return Semantics(
+      button: true,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: Material(
+          color: theme.colorScheme.surface.withValues(alpha: 0.88),
+          borderRadius: BorderRadius.circular(16),
+          elevation: 2,
+          shadowColor: theme.colorScheme.shadow.withValues(alpha: 0.12),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: onTap,
+            child: SizedBox(
+              width: AppSpacing.section,
+              height: AppSpacing.section,
+              child: Icon(icon, size: 22, color: theme.colorScheme.onSurface),
+            ),
+          ),
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/widgets/widgets.dart';
 import '../application/pedigree_layout.dart';
 import '../domain/lineage_tree_edge.dart';
 
@@ -46,7 +47,12 @@ class PedigreeTreeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (layout.nodes.isEmpty) {
-      return const SizedBox.shrink();
+      return const EmptyState(
+        compact: true,
+        icon: Icons.account_tree_outlined,
+        title: 'Угшил байхгүй',
+        description: 'Энэ модонд харуулах зангилаа байхгүй байна.',
+      );
     }
 
     final colorScheme = Theme.of(context).colorScheme;

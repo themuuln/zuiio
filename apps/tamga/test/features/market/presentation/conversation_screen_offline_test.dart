@@ -158,7 +158,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Verify snackbar is shown
-      expect(find.text('Энэ үйлдэл интернэт холболт шаарддаг'), findsOneWidget);
+      expect(
+        find.text('Офлайн — мессежийг синк хийхэд хадгална'),
+        findsOneWidget,
+      );
 
       // Verify sendMessage was NOT called
       verifyNever(
@@ -231,7 +234,10 @@ void main() {
       ).called(1);
 
       // No offline snackbar
-      expect(find.text('Энэ үйлдэл интернэт холболт шаарддаг'), findsNothing);
+      expect(
+        find.text('Офлайн — мессежийг синк хийхэд хадгална'),
+        findsNothing,
+      );
     });
   });
 }

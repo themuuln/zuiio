@@ -10,7 +10,6 @@ import '../../../core/features/feature_gate.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../shared/domain/horse.dart';
 import '../../events/application/events_providers.dart';
-import '../../events/presentation/event_detail_screen.dart';
 import '../../events/presentation/widgets/event_card.dart';
 import '../application/lineage_roots_provider.dart';
 import '../application/pedigree_layout.dart';
@@ -84,7 +83,7 @@ class LineageHomeScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           SizedBox(
-                            height: AppSpacing.xxxxl,
+                            height: 44,
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: items.length,
@@ -599,7 +598,7 @@ class _DepthSelector extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         SizedBox(
-          height: AppSpacing.xxxxl,
+          height: 44,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: LineageTreeDepth.values.length,
@@ -785,6 +784,15 @@ class _RelatedHorsesList extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    if (horses.isEmpty) {
+      return const EmptyState(
+        compact: true,
+        icon: Icons.group_outlined,
+        title: 'Холбоотой морьд байхгүй',
+        description: 'Энэ шугаманд холбоотой морьд бүртгэгдээгүй байна.',
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -866,6 +874,15 @@ class _TimelineList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (snapshot.timeline.isEmpty) {
+      return const EmptyState(
+        compact: true,
+        icon: Icons.timeline_outlined,
+        title: 'Цагийн шугам байхгүй',
+        description: 'Энэ шугаманд тэмдэглэл хараахан нэмэгдээгүй байна.',
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -969,15 +986,15 @@ class _FeaturedEventsSection extends ConsumerWidget {
                 itemBuilder: (ctx, index) {
                   final event = events[index];
                   return SizedBox(
-                    width: 420,
+                    // Card width = viewport minus a peek margin so the next
+                    // card is visible and the card never exceeds the screen.
+                    width: MediaQuery.sizeOf(ctx).width - 80,
                     child: EventCard(
                       event: event,
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => EventDetailScreen(event: event),
-                          ),
-                        );
+                        // go_router push (no /events/:id route exists yet;
+                        // the events list is the routed entry point).
+                        ctx.push('/events');
                       },
                     ),
                   );

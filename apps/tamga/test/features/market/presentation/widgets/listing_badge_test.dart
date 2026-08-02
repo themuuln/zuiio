@@ -146,7 +146,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Verified'), findsOneWidget);
+      expect(find.text('Баталгаатай'), findsOneWidget);
       expect(find.byIcon(Icons.verified_outlined), findsOneWidget);
     });
 
@@ -352,7 +352,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Verified'), findsOneWidget);
+      expect(find.text('Баталгаатай'), findsOneWidget);
     });
 
     testWidgets('shows all badges when all active', (tester) async {

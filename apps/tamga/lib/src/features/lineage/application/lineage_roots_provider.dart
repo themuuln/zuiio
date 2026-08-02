@@ -47,6 +47,15 @@ final localLineageRepositoryProvider = Provider<LocalLineageRepository>((ref) {
   );
 });
 
+/// Stream of connectivity changes from the app-wide [ConnectionMonitor].
+///
+/// Watched by [lineageRepositoryProvider] so the local/remote switch reacts
+/// to connectivity changes instead of being pinned to the value captured at
+/// first evaluation.
+final connectionStatusProvider = StreamProvider<ConnectionStatus>((ref) {
+  return ConnectionMonitor.instance.status;
+});
+
 /// Provides a [LineageRepository] that switches between local (Isar) and
 /// remote (Supabase) based on connectivity.
 ///
@@ -55,9 +64,14 @@ final localLineageRepositoryProvider = Provider<LocalLineageRepository>((ref) {
 /// - When offline: reads from the local Isar-backed [LocalLineageRepository].
 /// - Mutations always write to local Isar first via [LocalLineageRepository],
 ///   then enqueue sync items that the sync engine processes when online.
+///
+/// Watches [connectionStatusProvider] so switching to local data happens as
+/// soon as connectivity drops — not only on the next app restart.
 final lineageRepositoryProvider = Provider<LineageRepository>((ref) {
-  final isOnline =
-      ConnectionMonitor.instance.current == ConnectionStatus.online;
+  final status =
+      ref.watch(connectionStatusProvider).valueOrNull ??
+      ConnectionMonitor.instance.current;
+  final isOnline = status == ConnectionStatus.online;
 
   if (isOnline) {
     return SupabaseLineageRepository();
@@ -85,6 +99,17 @@ final selectedPedigreeNodeIdProvider = StateProvider<String?>((ref) {
 final lineageRootsProvider = FutureProvider<List<LineageRoot>>((ref) async {
   final repository = ref.watch(lineageRepositoryProvider);
   final result = await repository.fetchRoots();
+
+  // Remote fetch failed while "online" (unconfigured client, transient
+  // network error, Supabase down): fall back to local Isar/seed data so the
+  // tree still renders — the offline-first promise.
+  if (repository is SupabaseLineageRepository && result.isFailure) {
+    final localResult = await ref
+        .read(localLineageRepositoryProvider)
+        .fetchRoots();
+    return localResult.getOrThrow();
+  }
+
   final roots = result.getOrThrow();
 
   // Cache to local Isar when fetching from Supabase (online)
@@ -117,6 +142,15 @@ final lineageSnapshotProvider = FutureProvider<LineageSnapshot>((ref) async {
   final repository = ref.watch(lineageRepositoryProvider);
   final selectedId = ref.watch(selectedLineageRootIdProvider);
   final result = await repository.fetchSnapshot(selectedId);
+
+  // Same remote-failure fallback as [lineageRootsProvider].
+  if (repository is SupabaseLineageRepository && result.isFailure) {
+    final localResult = await ref
+        .read(localLineageRepositoryProvider)
+        .fetchSnapshot(selectedId);
+    return localResult.getOrThrow();
+  }
+
   final snapshot = result.getOrThrow();
 
   // Cache to local Isar when fetching from Supabase (online)

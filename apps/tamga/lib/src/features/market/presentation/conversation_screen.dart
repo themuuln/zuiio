@@ -73,9 +73,13 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     // ── Offline guard ───────────────────────────────────────────────
     final monitor = ref.read(connectionMonitorProvider);
     if (monitor.current == ConnectionStatus.offline) {
+      // Offline-first: save the message for later sync and let the user know
+      // it will be delivered once the connection is back.
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Энэ үйлдэл интернэт холболт шаарддаг')),
+          const SnackBar(
+            content: Text('Офлайн — мессежийг синк хийхэд хадгална'),
+          ),
         );
       }
 

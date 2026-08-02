@@ -131,6 +131,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       headerContent = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Leading close control ──
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  tooltip: 'Буцах',
+                  onPressed: () => Navigator.maybePop(context),
+                  icon: const Icon(Icons.arrow_back),
+                ),
+              ),
+            ),
+          ),
           // ── Cover photo area ──
           Container(
             height: 180,
@@ -370,6 +385,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── Leading close control ──
+        SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                tooltip: 'Буцах',
+                onPressed: () => Navigator.maybePop(context),
+                icon: const Icon(Icons.arrow_back),
+              ),
+            ),
+          ),
+        ),
         // ── Cover photo area (same gradient as data state) ──
         Container(
           height: 180,
@@ -507,33 +537,41 @@ class _HorsesTab extends StatelessWidget {
       data: (horses) {
         if (horses.isEmpty) {
           return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.pets_outlined,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'Морьд байхгүй байна',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Эхлэхийн тулд морь нэмнэ үү',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+            // Scroll-safe so the state never overflows in short viewports.
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.pets_outlined,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    'Морьд байхгүй байна',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Эхлэхийн тулд морь нэмнэ үү',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          // Bottom safe area keeps the last card + its edit button fully
+          // visible above the bottom navigation bar / home indicator.
+          padding: EdgeInsets.only(
+            top: AppSpacing.sm,
+            bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xxl,
+          ),
           itemCount: horses.length,
           itemBuilder: (context, index) => Padding(
             padding: const EdgeInsets.symmetric(
@@ -549,31 +587,34 @@ class _HorsesTab extends StatelessWidget {
         itemBuilder: (ctx, i) => const SkeletonListTile(),
       ),
       error: (err, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xxl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                'Морьдын мэдээлэл ачаалахад алдаа гарлаа',
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Failed to load horses',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+        // Scroll-safe so the state never overflows in short viewports.
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.error,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Морьдын мэдээлэл ачаалахад алдаа гарлаа',
+                  style: Theme.of(context).textTheme.titleMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Failed to load horses',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),

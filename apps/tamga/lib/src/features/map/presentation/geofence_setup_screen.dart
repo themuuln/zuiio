@@ -59,7 +59,7 @@ class _GeofenceSetupScreenState extends ConsumerState<GeofenceSetupScreen> {
           TextFormField(
             controller: _nameController,
             decoration: InputDecoration(
-              hintText: 'Талбайн нэр (жш: Гэрийн ойролцоо)',
+              hintText: 'Талбайн нэр (жиш: Гэрийн ойролцоо)',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(
                   TamgaSpacing.cornerRadiusSmall,
@@ -99,22 +99,28 @@ class _GeofenceSetupScreenState extends ConsumerState<GeofenceSetupScreen> {
           Row(
             children: _presetColors.map((c) {
               final isSelected = c == _selectedColor;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedColor = c),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  margin: const EdgeInsets.only(right: TamgaSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: Color(c),
-                    shape: BoxShape.circle,
-                    border: isSelected
-                        ? Border.all(color: colors.onSurface, width: 2)
+              return Semantics(
+                label: 'Өнгө сонгох',
+                button: true,
+                selected: isSelected,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => setState(() => _selectedColor = c),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    margin: const EdgeInsets.only(right: TamgaSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: Color(c),
+                      shape: BoxShape.circle,
+                      border: isSelected
+                          ? Border.all(color: colors.onSurface, width: 2)
+                          : null,
+                    ),
+                    child: isSelected
+                        ? const Icon(Icons.check, size: 20, color: Colors.white)
                         : null,
                   ),
-                  child: isSelected
-                      ? const Icon(Icons.check, size: 16, color: Colors.white)
-                      : null,
                 ),
               );
             }).toList(),

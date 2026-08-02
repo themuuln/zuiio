@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/error/error_helpers.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../application/map_providers.dart';
 import '../application/nearby_horses_provider.dart';
+import '../domain/horse_location.dart';
+import 'lost_horse_detail_screen.dart';
 
 /// Nearby horses discovery screen.
 class NearbyHorsesScreen extends ConsumerStatefulWidget {
@@ -40,14 +44,10 @@ class _NearbyHorsesScreenState extends ConsumerState<NearbyHorsesScreen> {
                     padding: const EdgeInsets.symmetric(
                       horizontal: TamgaSpacing.xs,
                     ),
-                    child: ChoiceChip(
-                      label: Text('${r.toStringAsFixed(0)} км'),
+                    child: TamgaChoicePill(
+                      label: '${r.toStringAsFixed(0)} км',
                       selected: isSelected,
-                      onSelected: (_) => setState(() => _radiusKm = r),
-                      selectedColor: colors.primary,
-                      labelStyle: TamgaTypography.caption1(
-                        color: isSelected ? colors.onPrimary : colors.onSurface,
-                      ),
+                      onTap: () => setState(() => _radiusKm = r),
                     ),
                   ),
                 );
@@ -65,7 +65,9 @@ class _NearbyHorsesScreenState extends ConsumerState<NearbyHorsesScreen> {
                     child: EmptyState(
                       icon: Icons.pets_outlined,
                       title: 'Ойрхон морь байхгүй байна',
-                      description: 'Бусад эзэн нарт харагдах тохиолдолд',
+                      description:
+                          'Одоогоор ойролцоо бүртгэлтэй морь байхгүй байна. '
+                          'Эзэд нь байршлаа хуваалцсан тохиолдолд энд харагдана.',
                     ),
                   );
                 }
@@ -82,6 +84,7 @@ class _NearbyHorsesScreenState extends ConsumerState<NearbyHorsesScreen> {
                   itemBuilder: (context, index) {
                     final horse = horses[index];
                     return TamgaCard(
+                      onTap: () => _openHorseDetail(context, horse),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -93,6 +96,8 @@ class _NearbyHorsesScreenState extends ConsumerState<NearbyHorsesScreen> {
                           const SizedBox(height: TamgaSpacing.sm),
                           Text(
                             horse.horseName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TamgaTypography.body(
                               weight: FontWeight.w600,
                             ),
@@ -100,6 +105,8 @@ class _NearbyHorsesScreenState extends ConsumerState<NearbyHorsesScreen> {
                           ),
                           Text(
                             horse.ownerName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TamgaTypography.caption1(
                               color: colors.onSurfaceVariant,
                             ),
@@ -125,6 +132,38 @@ class _NearbyHorsesScreenState extends ConsumerState<NearbyHorsesScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Opens the lost-horse report for this horse when one exists.
+  Future<void> _openHorseDetail(
+    BuildContext context,
+    HorseLocation horse,
+  ) async {
+    final result = await ref
+        .read(lostHorseRepositoryProvider)
+        .browseActiveReports();
+    if (!mounted || !context.mounted) return;
+    result.when(
+      onSuccess: (reports) {
+        final match = reports
+            .where((report) => report.horseId == horse.horseId)
+            .firstOrNull;
+        if (match == null) {
+          TamgaToast.showError(
+            context,
+            'Энэ морины зар олдсонгүй. Одоогоор идэвхтэй зар байхгүй байна.',
+          );
+          return;
+        }
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => LostHorseDetailScreen(report: match),
+          ),
+        );
+      },
+      onFailure: (error) =>
+          TamgaToast.showError(context, friendlyErrorMessage(error)),
     );
   }
 }

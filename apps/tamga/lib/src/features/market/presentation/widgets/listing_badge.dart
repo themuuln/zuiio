@@ -53,9 +53,9 @@ class ListingBadge extends StatelessWidget {
     }
     if (listing.isSellerVerified) {
       return _BadgeChip(
-        label: 'Verified',
-        bgColor: const Color(0xFF4CAF50).withValues(alpha: 0.15),
-        fgColor: const Color(0xFF2E7D32),
+        label: 'Баталгаатай',
+        bgColor: theme.colorScheme.tertiary.withValues(alpha: 0.15),
+        fgColor: theme.colorScheme.tertiary,
         icon: Icons.verified_outlined,
         compact: compact,
       );
@@ -183,9 +183,9 @@ class ListingBadgeOverlay extends StatelessWidget {
               !listing.hasSellerBadge &&
               listing.isSellerVerified)
             _BadgeChip(
-              label: 'Verified',
-              bgColor: const Color(0xFF4CAF50).withValues(alpha: 0.15),
-              fgColor: const Color(0xFF2E7D32),
+              label: 'Баталгаатай',
+              bgColor: theme.colorScheme.tertiary.withValues(alpha: 0.15),
+              fgColor: theme.colorScheme.tertiary,
               icon: Icons.verified_outlined,
               compact: true,
             ),

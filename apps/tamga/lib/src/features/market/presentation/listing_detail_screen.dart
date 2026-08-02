@@ -147,9 +147,9 @@ class ListingDetailScreen extends ConsumerWidget {
                               spacing: AppSpacing.sm,
                               runSpacing: AppSpacing.sm,
                               children: [
-                                _Badge(label: 'Trust ${listing.trustScore}%'),
+                                _Badge(label: 'Итгэл ${listing.trustScore}%'),
                                 if (listing.isSellerVerified)
-                                  const _Badge(label: 'Verified seller'),
+                                  const _Badge(label: 'Баталгаатай'),
                                 _Badge(label: listing.status.label),
                               ],
                             ),
@@ -168,7 +168,7 @@ class ListingDetailScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Horse evidence: ${horse.name}',
+                                'Морины нотолгоо: ${horse.name}',
                                 style: theme.textTheme.titleMedium,
                               ),
                               const SizedBox(height: AppSpacing.sm),
@@ -317,7 +317,7 @@ class ListingDetailScreen extends ConsumerWidget {
                     OutlinedButton.icon(
                       onPressed: () => _generateContract(context, ref, listing),
                       icon: const Icon(Icons.description_outlined),
-                      label: const Text('Гэрээ үүсгэх / Generate Contract'),
+                      label: const Text('Гэрээ үүсгэх'),
                     ),
                     const SizedBox(height: AppSpacing.sm),
 
@@ -328,9 +328,9 @@ class ListingDetailScreen extends ConsumerWidget {
                       label: Text(
                         safety.maybeWhen(
                           data: (summary) => summary.localBuyerInquiry == null
-                              ? 'Seller-тэй холбогдох'
-                              : 'Inquiry: ${summary.localBuyerInquiry!.status.label}',
-                          orElse: () => 'Seller-тэй холбогдох',
+                              ? 'Худалдагчтай холбогдох'
+                              : 'Асуулт: ${summary.localBuyerInquiry!.status.label}',
+                          orElse: () => 'Худалдагчтай холбогдох',
                         ),
                       ),
                     ),
@@ -347,9 +347,9 @@ class ListingDetailScreen extends ConsumerWidget {
                       label: Text(
                         safety.maybeWhen(
                           data: (summary) => summary.hasLocalReport
-                              ? 'Report submitted (${summary.reportCount})'
-                              : 'Report listing',
-                          orElse: () => 'Report listing',
+                              ? 'Мэдээлэгдсэн (${summary.reportCount})'
+                              : 'Зар мэдээлэх',
+                          orElse: () => 'Зар мэдээлэх',
                         ),
                       ),
                     ),
@@ -437,8 +437,8 @@ class ListingDetailScreen extends ConsumerWidget {
     TamgaToast.show(
       context,
       wasExisting
-          ? 'Inquiry already exists: ${inquiry.status.label}.'
-          : 'Inquiry created: ${inquiry.status.label}.',
+          ? 'Асуулт аль хэдийн үүссэн: ${inquiry.status.label}.'
+          : 'Асуулт үүссэн: ${inquiry.status.label}.',
     );
 
     // Navigate to conversation
@@ -498,7 +498,7 @@ class ListingDetailScreen extends ConsumerWidget {
     if (!context.mounted) {
       return;
     }
-    TamgaToast.show(context, 'Report ${report.status.label.toLowerCase()}.');
+    TamgaToast.show(context, 'Мэдээлэгдсэн: ${report.status.label}.');
   }
 
   Future<String?> _askReportReason(BuildContext context) async {
@@ -507,7 +507,7 @@ class ListingDetailScreen extends ConsumerWidget {
       final reason = await showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Report listing'),
+          title: const Text('Зар мэдээлэх'),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -546,7 +546,7 @@ class ListingDetailScreen extends ConsumerWidget {
       final recipientId = await showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Transfer Ownership Certificate'),
+          title: const Text('Гэрчилгээ шилжүүлэх'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -572,7 +572,7 @@ class ListingDetailScreen extends ConsumerWidget {
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(controller.text),
-              child: const Text('Transfer'),
+              child: const Text('Шилжүүлэх'),
             ),
           ],
         ),
@@ -629,7 +629,7 @@ class _CertificateCard extends StatelessWidget {
                 Icon(Icons.verified, color: theme.colorScheme.primary),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
-                  'Digital Pedigree Certificate',
+                  'Дижитал гарал үүслийн гэрчилгээ',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -638,23 +638,23 @@ class _CertificateCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             _CertificateDetailRow(
-              label: 'Status',
-              value: certificate.isVerified ? 'Verified' : 'Unverified',
+              label: 'Төлөв',
+              value: certificate.isVerified ? 'Баталгаажсан' : 'Баталгаажаагүй',
               valueColor: certificate.isVerified
                   ? theme.colorScheme.tertiary
                   : theme.colorScheme.primary,
             ),
-            _CertificateDetailRow(label: 'Issuer', value: certificate.issuer),
+            _CertificateDetailRow(label: 'Гаргагч', value: certificate.issuer),
             _CertificateDetailRow(
-              label: 'Issue Date',
+              label: 'Гаргасан огноо',
               value: certificate.issueDate.toLocal().toString().split(' ')[0],
             ),
             _CertificateDetailRow(
-              label: 'Owner ID',
+              label: 'Эзэмшигч ID',
               value: certificate.ownerId,
             ),
             _CertificateDetailRow(
-              label: 'Hash',
+              label: 'Хэш',
               value: certificate.certificateHash,
               isHash: true,
             ),
@@ -668,7 +668,7 @@ class _CertificateCard extends StatelessWidget {
                   ),
                   onPressed: onTransfer,
                   icon: const Icon(Icons.send),
-                  label: const Text('Transfer Certificate'),
+                  label: const Text('Гэрчилгээ шилжүүлэх'),
                 ),
               ),
             ],
@@ -744,12 +744,15 @@ class _SellerTrustCard extends ConsumerWidget {
           data: (summary) {
             final profile = summary.sellerProfile;
             if (profile == null) {
-              return const Text('Seller profile unavailable.');
+              return const Text('Худалдагчийн профайл байхгүй.');
             }
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Seller trust profile', style: theme.textTheme.titleLarge),
+                Text(
+                  'Худалдагчийн итгэлцлийн профайл',
+                  style: theme.textTheme.titleLarge,
+                ),
                 const SizedBox(height: AppSpacing.md),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -942,12 +945,12 @@ class _InquiryStatusCard extends StatelessWidget {
             leading: const Icon(Icons.mark_chat_unread_outlined),
             title: Text(
               inquiry == null
-                  ? 'No inquiry yet'
-                  : 'Your inquiry: ${inquiry.status.label}',
+                  ? 'Асуулт алга байна'
+                  : 'Таны асуулт: ${inquiry.status.label}',
             ),
             subtitle: Text(
-              'Inquiries ${summary.inquiryCount} • Reports ${summary.reportCount}'
-              '${summary.hasLocalReport ? ' • Report submitted' : ''}',
+              'Асуултууд ${summary.inquiryCount} • Мэдээллүүд ${summary.reportCount}'
+              '${summary.hasLocalReport ? ' • Мэдээлэгдсэн' : ''}',
             ),
           ),
         );
@@ -1215,7 +1218,13 @@ class _SellerOfferSection extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: TamgaErrorWidget(
+          message: 'Ирсэн саналууд ачаалахад алдаа гарлаа',
+          onRetry: () => ref.invalidate(offersForListingProvider(listingId)),
+        ),
+      ),
     );
   }
 }
@@ -1235,7 +1244,7 @@ class _SellerOfferItem extends ConsumerWidget {
       MarketOfferStatus.pending => theme.colorScheme.primary,
       MarketOfferStatus.accepted => theme.colorScheme.tertiary,
       MarketOfferStatus.declined => theme.colorScheme.error,
-      MarketOfferStatus.countered => Colors.orange,
+      MarketOfferStatus.countered => theme.colorScheme.secondary,
     };
 
     return Container(
@@ -1265,7 +1274,7 @@ class _SellerOfferItem extends ConsumerWidget {
                 Text(
                   '→ ${_formatCurrency(offer.counterAmount!)}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.orange,
+                    color: theme.colorScheme.secondary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1368,7 +1377,7 @@ class _SellerOfferItem extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Алдаа: ${apiResult.error.message}'),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }

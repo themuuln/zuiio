@@ -99,7 +99,6 @@ class ListingCard extends StatelessWidget {
                           tooltip: item.isFavorite
                               ? 'Хадгалснаас хасах'
                               : 'Хадгалах',
-                          visualDensity: VisualDensity.compact,
                           onPressed: onFavorite,
                           icon: Icon(
                             item.isFavorite
@@ -144,8 +143,6 @@ class ListingCard extends StatelessWidget {
                       runSpacing: AppSpacing.xs,
                       children: [
                         _Badge(label: 'Итгэл ${listing.trustScore}%'),
-                        if (listing.isSellerVerified)
-                          const _Badge(label: 'Баталгаатай'),
                         if (listing.viewsCount > 0)
                           _Badge(label: 'Үзсэн ${listing.viewsCount}'),
                       ],
@@ -253,7 +250,9 @@ class ListingGridCard extends StatelessWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color.fromARGB(138, 0, 0, 0),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.45,
+                                  ),
                                   borderRadius: BorderRadius.circular(
                                     AppSpacing.cornerRadiusSmall,
                                   ),
@@ -261,12 +260,7 @@ class ListingGridCard extends StatelessWidget {
                                 child: Text(
                                   '${listing.mediaUrls.length}',
                                   style: theme.textTheme.labelSmall?.copyWith(
-                                    color: const Color.fromARGB(
-                                      255,
-                                      255,
-                                      255,
-                                      255,
-                                    ),
+                                    color: theme.colorScheme.surface,
                                   ),
                                 ),
                               ),
@@ -293,8 +287,8 @@ class ListingGridCard extends StatelessWidget {
                                 iconSize: 18,
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints.tightFor(
-                                  width: 40,
-                                  height: 40,
+                                  width: 44,
+                                  height: 44,
                                 ),
                               ),
                             ),

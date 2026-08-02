@@ -556,20 +556,29 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                         Positioned(
                           left: 2,
                           top: 2,
-                          child: GestureDetector(
-                            onTap: () => _movePhotoLeft(index),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surface.withValues(
-                                  alpha: 0.85,
+                          child: Tooltip(
+                            message: 'Зөөх',
+                            child: Semantics(
+                              button: true,
+                              label: 'Зөөх',
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => _movePhotoLeft(index),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surface.withValues(
+                                      alpha: 0.85,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.chevron_left,
+                                    size: 20,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
                                 ),
-                                shape: BoxShape.circle,
-                              ),
-                              padding: const EdgeInsets.all(2),
-                              child: Icon(
-                                Icons.chevron_left,
-                                size: 16,
-                                color: theme.colorScheme.onSurface,
                               ),
                             ),
                           ),
@@ -577,42 +586,60 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                       // ── Reorder: move right ──
                       if (index < totalPhotos - 1)
                         Positioned(
-                          left: 24,
+                          right: 2,
                           top: 2,
-                          child: GestureDetector(
-                            onTap: () => _movePhotoRight(index),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surface.withValues(
-                                  alpha: 0.85,
+                          child: Tooltip(
+                            message: 'Зөөх',
+                            child: Semantics(
+                              button: true,
+                              label: 'Зөөх',
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => _movePhotoRight(index),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surface.withValues(
+                                      alpha: 0.85,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.chevron_right,
+                                    size: 20,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
                                 ),
-                                shape: BoxShape.circle,
-                              ),
-                              padding: const EdgeInsets.all(2),
-                              child: Icon(
-                                Icons.chevron_right,
-                                size: 16,
-                                color: theme.colorScheme.onSurface,
                               ),
                             ),
                           ),
                         ),
                       // ── Remove button ──
                       Positioned(
-                        top: 4,
-                        right: 4,
-                        child: GestureDetector(
-                          onTap: () => _removePhoto(index),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.error,
-                              shape: BoxShape.circle,
-                            ),
-                            padding: const EdgeInsets.all(AppSpacing.xs),
-                            child: Icon(
-                              Icons.close,
-                              size: 14,
-                              color: theme.colorScheme.onError,
+                        right: 2,
+                        bottom: 2,
+                        child: Tooltip(
+                          message: 'Устгах',
+                          child: Semantics(
+                            button: true,
+                            label: 'Устгах',
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => _removePhoto(index),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.error,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.close,
+                                  size: 20,
+                                  color: theme.colorScheme.onError,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -842,7 +869,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   runSpacing: AppSpacing.xs,
                   children: [
                     _PreviewBadge(label: _saleType.label),
-                    _PreviewBadge(label: 'Trust 0%'),
+                    _PreviewBadge(label: 'Итгэл 0%'),
                     _PreviewBadge(label: horse.name),
                     for (final tag in tags) _PreviewBadge(label: tag),
                   ],

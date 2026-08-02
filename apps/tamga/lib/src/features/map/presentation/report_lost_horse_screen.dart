@@ -216,6 +216,9 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
           maxLength: 120,
           decoration: const InputDecoration(
             labelText: 'Им, тамганы тайлбар / Ear mark or brand',
+            // Hide the default Material counter — it overlaps the single-line
+            // input content; maxLength still enforces the 120-char limit.
+            counterText: '',
           ),
         ),
         const SizedBox(height: 8),

@@ -202,6 +202,7 @@ class _FilterBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
           padding: const EdgeInsets.symmetric(
             horizontal: TamgaSpacing.md,
             vertical: TamgaSpacing.xs,
@@ -237,12 +238,23 @@ class _FilterBar extends StatelessWidget {
               ),
               if (onClear != null) ...[
                 const SizedBox(width: 2),
-                GestureDetector(
-                  onTap: onClear,
-                  child: Icon(
-                    Icons.close,
-                    size: 14,
-                    color: colors.onSurfaceVariant,
+                Tooltip(
+                  message: 'Сонголт арилгах',
+                  child: Semantics(
+                    label: 'Сонголт арилгах',
+                    button: true,
+                    child: InkWell(
+                      onTap: onClear,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Icon(
+                          Icons.close,
+                          size: 20,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],

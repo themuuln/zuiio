@@ -29,9 +29,10 @@ class _PastureManagementScreenState
         backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateZoneDialog(context),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('Бэлчээр нэмэх'),
       ),
       body: zonesAsync.when(
         data: (zones) {

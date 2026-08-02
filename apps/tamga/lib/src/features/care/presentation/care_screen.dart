@@ -132,12 +132,8 @@ class _CareScreenState extends ConsumerState<CareScreen> {
                         description: overview.healthLogCount == 0
                             ? 'Морь сонгож вакцин, туулгалт эсвэл үзлэгээ бүртгэнэ.'
                             : 'Шинэ ажил нэмэгдэхэд энд харагдана.',
-                        actionLabel: overview.healthLogCount == 0
-                            ? 'Морьд руу очих'
-                            : null,
-                        onAction: overview.healthLogCount == 0
-                            ? () => context.go('/horses')
-                            : null,
+                        // No action here — the persistent bottom CTA
+                        // 'Морь сонгоод бүртгэх' is the single entry point.
                       ),
                     );
                   }

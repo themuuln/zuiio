@@ -145,9 +145,14 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Scroll down to ensure sign-out button is visible
-      // (header is ~50px taller due to sync status section)
-      await tester.drag(find.byType(ListView).last, const Offset(0, -1000));
+      // Scroll until the sign-out tile is built. Header height varies with
+      // the sync status section and the leading back control, so a fixed
+      // drag offset is not reliable.
+      await tester.dragUntilVisible(
+        find.text('Sign Out'),
+        find.byType(ListView).last,
+        const Offset(0, -100),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -167,8 +172,12 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Scroll and ensure sign-out button is visible
-      await tester.drag(find.byType(ListView).last, const Offset(0, -1000));
+      // Scroll until the sign-out tile is built (header height varies).
+      await tester.dragUntilVisible(
+        find.text('Sign Out'),
+        find.byType(ListView).last,
+        const Offset(0, -100),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await tester.ensureVisible(find.text('Sign Out'));
@@ -199,8 +208,12 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Scroll and ensure sign-out button is visible
-      await tester.drag(find.byType(ListView).last, const Offset(0, -1000));
+      // Scroll until the sign-out tile is built (header height varies).
+      await tester.dragUntilVisible(
+        find.text('Sign Out'),
+        find.byType(ListView).last,
+        const Offset(0, -100),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await tester.ensureVisible(find.text('Sign Out'));
@@ -232,8 +245,12 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Scroll and ensure sign-out button is visible
-      await tester.drag(find.byType(ListView).last, const Offset(0, -1000));
+      // Scroll until the sign-out tile is built (header height varies).
+      await tester.dragUntilVisible(
+        find.text('Sign Out'),
+        find.byType(ListView).last,
+        const Offset(0, -100),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await tester.ensureVisible(find.text('Sign Out'));

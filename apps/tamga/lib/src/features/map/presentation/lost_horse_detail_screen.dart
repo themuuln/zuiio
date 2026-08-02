@@ -327,7 +327,7 @@ class LostHorseDetailScreen extends ConsumerWidget {
 
           // ── Video Section ─────────────────────────────────────
           if (report.videoUrls.isNotEmpty || _isR2Available(ref) == false) ...[
-            _buildVideoSection(context, ref, colors),
+            _buildVideoSection(context, colors),
             const SizedBox(height: TamgaSpacing.lg),
           ],
 
@@ -434,7 +434,7 @@ class LostHorseDetailScreen extends ConsumerWidget {
                   color: colors.error,
                 ),
                 label: Text(
-                  'Цуцалсан',
+                  'Тайлан цуцлах',
                   style: TamgaTypography.body(color: colors.error),
                 ),
                 style: OutlinedButton.styleFrom(
@@ -535,7 +535,28 @@ class LostHorseDetailScreen extends ConsumerWidget {
     final sightings = ref.watch(sightingsStreamProvider(report.id));
     return sightings.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (error, _) => Padding(
+        padding: const EdgeInsets.only(top: TamgaSpacing.sm),
+        child: TamgaCard(
+          child: Row(
+            children: [
+              Icon(Icons.error_outline, size: 20, color: colors.error),
+              const SizedBox(width: TamgaSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Олсон мэдээлэл ачаалахад алдаа гарлаа',
+                  style: TamgaTypography.body(color: colors.onSurfaceVariant),
+                ),
+              ),
+              TextButton(
+                onPressed: () =>
+                    ref.invalidate(sightingsStreamProvider(report.id)),
+                child: const Text('Дахин оролдох'),
+              ),
+            ],
+          ),
+        ),
+      ),
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -861,14 +882,9 @@ class LostHorseDetailScreen extends ConsumerWidget {
     );
   }
 
-  /// Builds the video section — shows placeholder if R2 not configured.
-  Widget _buildVideoSection(
-    BuildContext context,
-    WidgetRef ref,
-    TamgaColors colors,
-  ) {
-    final r2Available = _isR2Available(ref);
-
+  /// Builds the video section — in-app playback is not wired up, so this
+  /// renders the "coming soon" placeholder instead of fake playable tiles.
+  Widget _buildVideoSection(BuildContext context, TamgaColors colors) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -880,56 +896,8 @@ class LostHorseDetailScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: TamgaSpacing.sm),
-        TamgaCard(
-          child: r2Available && report.videoUrls.isNotEmpty
-              ? _buildVideoList(context, colors)
-              : _buildVideoPlaceholder(colors),
-        ),
+        TamgaCard(child: _buildVideoPlaceholder(colors)),
       ],
-    );
-  }
-
-  /// Builds a list of video thumbnails (when R2 is available and videos exist).
-  Widget _buildVideoList(BuildContext context, TamgaColors colors) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    const gap = TamgaSpacing.sm;
-    const padding = TamgaSpacing.lg;
-    final videoSize = (screenWidth - padding * 2 - gap * 2) / 3;
-
-    return Wrap(
-      spacing: gap,
-      runSpacing: gap,
-      children: report.videoUrls.map((url) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadiusSmall),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: videoSize,
-                height: videoSize,
-                color: colors.surfaceContainerHighest,
-                child: const Center(
-                  child: Icon(Icons.videocam_outlined, size: 28),
-                ),
-              ),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: const BoxDecoration(
-                  color: Colors.black54,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.play_arrow,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
     );
   }
 

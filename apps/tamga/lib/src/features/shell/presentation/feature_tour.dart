@@ -126,36 +126,39 @@ class _FeatureTourState extends State<FeatureTour>
 }
 
 /// Тур үе бүрийн мэдээлэл.
+///
+/// Enum values MUST mirror the five [TamgaNavItem] destinations in
+/// [AppShell._buildDestinations] — the highlight overlays them by index.
 enum _TourStep {
   home(
     label: 'Нүүр',
     icon: Icons.home,
     title: 'Нүүр',
-    description: 'Адууны удам угсааг харах, удмын мод бүтээх.',
+    description: 'Өнөөдрийн байдал, анхаарах зүйлс, хурдан үйлдлүүд.',
   ),
-  profile(
-    label: 'Профайл',
-    icon: Icons.person,
-    title: 'Профайл',
-    description: 'Өрхийн морьдын бүртгэл, мэдээлэл, удам судлал.',
+  horses(
+    label: 'Морьд',
+    icon: Icons.pets,
+    title: 'Морьд',
+    description: 'Мориныхоо бүртгэл, мэдээлэл, эрүүл мэнд, дасгалжуулалт.',
   ),
-  lostHorse(
-    label: 'Эрэл хайгуул',
-    icon: Icons.search_off,
-    title: 'Эрэл хайгуул',
-    description: 'Хаяж морь хайх, бүртгүүлэх. Premium зэрэглэлтэй.',
+  care(
+    label: 'Арчилгаа',
+    icon: Icons.event_note,
+    title: 'Арчилгаа',
+    description: 'Вакцин, туулгалт, үзлэг зэрэг арчилгааны ажлууд.',
+  ),
+  lineage(
+    label: 'Угшил',
+    icon: Icons.account_tree,
+    title: 'Угшил',
+    description: 'Удам угсаа, удмын мод, холбоо.',
   ),
   market(
-    label: 'Арилжаа',
+    label: 'Зах',
     icon: Icons.storefront,
-    title: 'Арилжаа',
-    description: 'Морь худалдах, худалдан авах зах.',
-  ),
-  events(
-    label: 'Уралдаан',
-    icon: Icons.emoji_events,
-    title: 'Уралдаан',
-    description: 'Уралдаан, шагнал, амжилтыг бүртгэх.',
+    title: 'Зах',
+    description: 'Морь худалдах, худалдан авах зах зээл.',
   );
 
   const _TourStep({

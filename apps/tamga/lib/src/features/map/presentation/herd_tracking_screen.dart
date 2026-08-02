@@ -42,11 +42,34 @@ class _HerdTrackingScreenState extends ConsumerState<HerdTrackingScreen> {
           statusAsync.when(
             data: (status) => _StatusCard(status: status),
             loading: () => const SizedBox.shrink(),
-            error: (_, _) => const SizedBox.shrink(),
+            error: (_, _) => Padding(
+              padding: TamgaSpacing.horizontalInset,
+              child: TamgaCard(
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, size: 20, color: colors.error),
+                    const SizedBox(width: TamgaSpacing.sm),
+                    const Expanded(
+                      child: Text('Мөрдөлтийн төлөв ачаалахад алдаа гарлаа'),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          ref.invalidate(herdTrackingStatusProvider),
+                      child: const Text('Дахин оролдох'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
 
           // Газрын зурагтай морьдын жагсаалт
-          Expanded(child: _HorseList(zonesAsync: zonesAsync)),
+          Expanded(
+            child: _HorseList(
+              zonesAsync: zonesAsync,
+              onRetry: () => ref.invalidate(pastureZonesProvider),
+            ),
+          ),
         ],
       ),
     );
@@ -63,6 +86,7 @@ class _TrackingToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = TamgaColors.of(context);
     return IconButton(
+      tooltip: status.isTracking ? 'Мөрдөлтийг зогсоох' : 'Мөрдөлт эхлүүлэх',
       icon: Icon(
         status.isTracking ? Icons.stop_circle : Icons.play_circle,
         color: status.isTracking ? colors.destructive : colors.primary,
@@ -141,7 +165,7 @@ class _StatusCard extends StatelessWidget {
                 if (status.queuedLocations > 0) ...[
                   const SizedBox(width: TamgaSpacing.sm),
                   _StatusChip(
-                    label: 'Queue: ${status.queuedLocations}',
+                    label: 'Дараалал: ${status.queuedLocations}',
                     isActive: false,
                   ),
                 ],
@@ -179,8 +203,7 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 12,
+        style: TamgaTypography.caption1(
           color: isActive ? colors.onPrimaryContainer : colors.onSurface,
         ),
       ),
@@ -190,9 +213,10 @@ class _StatusChip extends StatelessWidget {
 
 /// Морьдын жагсаалт — бэлчээрээр хуваарилсан.
 class _HorseList extends StatelessWidget {
-  const _HorseList({required this.zonesAsync});
+  const _HorseList({required this.zonesAsync, this.onRetry});
 
   final AsyncValue<List<PastureZone>> zonesAsync;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -222,7 +246,10 @@ class _HorseList extends StatelessWidget {
         itemBuilder: (ctx, i) => const SkeletonListTile(),
       ),
       error: (e, _) => Center(
-        child: TamgaErrorWidget(message: 'Бэлчээр ачаалахад алдаа гарлаа'),
+        child: TamgaErrorWidget(
+          message: 'Бэлчээр ачаалахад алдаа гарлаа',
+          onRetry: onRetry,
+        ),
       ),
     );
   }

@@ -104,7 +104,6 @@ class LineageTreeSection extends StatelessWidget {
                             },
                       icon: const Icon(Icons.fullscreen_rounded, size: 20),
                       tooltip: 'Бүтэн дэлгэцээр харах',
-                      visualDensity: VisualDensity.compact,
                     ),
                   ],
                 ),
