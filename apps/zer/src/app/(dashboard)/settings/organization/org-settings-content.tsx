@@ -94,6 +94,8 @@ export function OrgSettingsContent() {
         meta_pixel_id: string | null;
         meta_title: string | null;
         og_image_url: string | null;
+        custom_domain: string | null;
+        domain_verified: boolean;
         policies: string | null;
         social_links: Record<string, string> | null;
       } | null;

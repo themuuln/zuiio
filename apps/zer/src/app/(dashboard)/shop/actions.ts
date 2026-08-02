@@ -9,6 +9,7 @@ import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 import type { Database } from "@/lib/supabase/types";
 import type { CartItemData } from "@/lib/types";
 import { getString } from "@/lib/validation";
+import { deliverWebhookEvent } from "@/lib/webhooks";
 
 export async function createShopSale(
   _prevState: { error?: string } | undefined,
@@ -363,6 +364,15 @@ export async function createShopSale(
           capture(e, { context: "createShopSale: fire-and-forget gift card" });
         });
       }
+
+      // Webhook delivery (fire-and-forget)
+      deliverWebhookEvent(supabase, organizationId, "sale.created", {
+        sale_id: saleId,
+        total_amount: Number(result.total_amount ?? result.total ?? 0),
+        contact_id: contactId ?? null,
+      }).catch((e) => {
+        capture(e, { context: "createShopSale: webhook sale.created" });
+      });
 
       revalidateEntity("shop");
       revalidateEntityTag("sales", organizationId);

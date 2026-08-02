@@ -10,7 +10,7 @@
  */
 
 import type { Mock } from "vitest";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mock setup ──────────────────────────────────────────────────────
 // The mocks below use closures that capture these variables. vi.mock
@@ -23,6 +23,7 @@ const mockGetSupabaseEnv = vi.fn();
 const mockCapture = vi.fn();
 const mockNextResponseNext = vi.fn();
 const mockNextResponseRedirect = vi.fn();
+const mockNextResponseRewrite = vi.fn();
 
 vi.mock("@supabase/ssr", () => ({
   createServerClient: mockCreateServerClient,
@@ -77,6 +78,7 @@ vi.mock("next/server", () => {
 
     static next = mockNextResponseNext;
     static redirect = mockNextResponseRedirect;
+    static rewrite = mockNextResponseRewrite;
   }
 
   return { NextResponse: MockNextResponse };
@@ -88,18 +90,26 @@ function createMockRequest(
   pathname: string,
   search = "",
   cookieValues: Record<string, string> = {},
+  host = "zuiio.mn",
 ) {
   const searchParams = new URLSearchParams(search);
   return {
     nextUrl: {
       pathname,
       search,
+      origin: "https://zuiio.mn",
       clone: () => ({
         pathname,
         search,
+        origin: "https://zuiio.mn",
         searchParams: new URLSearchParams(search),
       }),
       searchParams,
+    },
+    headers: {
+      get: vi.fn((name: string) =>
+        name.toLowerCase() === "host" ? host : null,
+      ),
     },
     cookies: {
       get: vi.fn((name: string) => {
@@ -378,5 +388,87 @@ describe("updateSession", () => {
       );
       expect(mockNextResponseRedirect).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe("updateSession — custom domains", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetClaims.mockResolvedValue({ data: { claims: { sub: null } } });
+    mockGetSupabaseEnv.mockReturnValue({
+      url: "https://example.supabase.co",
+      anonKey: "test-anon-key",
+    });
+    mockCreateServerClient.mockReturnValue({
+      auth: { getClaims: mockGetClaims },
+    });
+    mockNextResponseNext.mockImplementation(() => createMockResponse());
+    mockNextResponseRewrite.mockImplementation(() => createMockResponse());
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ slug: "my-shop" }),
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("rewrites a subdomain of the primary host to /{slug}", async () => {
+    const req = createMockRequest("/products", "", {}, "my-shop.zuiio.mn");
+    const { updateSession } = await import("../proxy");
+    const result = await updateSession(req);
+
+    expect(mockNextResponseRewrite).toHaveBeenCalledTimes(1);
+    const [url] = mockNextResponseRewrite.mock.calls[0];
+    expect(url.pathname).toBe("/my-shop/products");
+    expect(result).toBeDefined();
+  });
+
+  it("rewrites a verified custom domain to /{slug} via domain-resolve", async () => {
+    const req = createMockRequest("/", "", {}, "shop.example.com");
+    const { updateSession } = await import("../proxy");
+    await updateSession(req);
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/domain-resolve?host=shop.example.com"),
+      expect.anything(),
+    );
+    const [url] = mockNextResponseRewrite.mock.calls[0];
+    expect(url.pathname).toBe("/my-shop");
+  });
+
+  it("does not rewrite the primary host", async () => {
+    const req = createMockRequest("/", "", {}, "zuiio.mn");
+    const { updateSession } = await import("../proxy");
+    await updateSession(req);
+
+    expect(mockNextResponseRewrite).not.toHaveBeenCalled();
+  });
+
+  it("does not rewrite when domain-resolve returns not found", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: false });
+    const req = createMockRequest("/", "", {}, "unknown.example.com");
+    const { updateSession } = await import("../proxy");
+    await updateSession(req);
+
+    expect(mockNextResponseRewrite).not.toHaveBeenCalled();
+  });
+
+  it("does not rewrite API routes on custom domains", async () => {
+    const req = createMockRequest(
+      "/api/domain-resolve",
+      "?host=x",
+      {},
+      "shop.example.com",
+    );
+    const { updateSession } = await import("../proxy");
+    await updateSession(req);
+
+    expect(mockNextResponseRewrite).not.toHaveBeenCalled();
+    expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1); // unauth → login
   });
 });

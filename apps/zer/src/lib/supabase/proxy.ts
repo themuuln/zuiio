@@ -3,9 +3,15 @@ import { capture } from "@zuiio/capture";
 import { type NextRequest, NextResponse } from "next/server";
 import { PUBLIC_ROUTES } from "@/lib/constants";
 import type { Database } from "../database.types";
+import { maybeRewriteStorefrontHost } from "./domain-rewrite";
 import { getSupabaseEnv } from "./env";
 
 export async function updateSession(request: NextRequest) {
+  // Custom-domain / subdomain storefront rewrite (before auth checks):
+  // public storefront pages must render under the requested host.
+  const domainRewrite = await maybeRewriteStorefrontHost(request);
+  if (domainRewrite) return domainRewrite;
+
   let supabaseResponse = NextResponse.next({ request });
   const { anonKey, url } = getSupabaseEnv();
 

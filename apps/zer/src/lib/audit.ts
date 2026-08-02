@@ -40,6 +40,7 @@ export type EntityType =
   | "promotion"
   | "review"
   | "blog_post"
+  | "webhook"
   | "loyalty_setting"
   | "loyalty_reward"
   | "delivery"

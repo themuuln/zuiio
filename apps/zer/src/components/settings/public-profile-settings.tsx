@@ -68,6 +68,8 @@ type PublicProfile = {
   meta_pixel_id: string | null;
   meta_title: string | null;
   og_image_url: string | null;
+  custom_domain: string | null;
+  domain_verified: boolean;
   policies: string | null;
   social_links: Record<string, string> | null;
 };
@@ -521,6 +523,47 @@ export function PublicProfileSettings({
                 rows={3}
                 defaultValue={initialProfile?.meta_description ?? ""}
               />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Custom Domain */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Өөрийн домэйн</h3>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="custom_domain"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                Домэйн (жишээ: shop.mydomain.mn)
+              </label>
+              <Input
+                id="custom_domain"
+                name="custom_domain"
+                placeholder="shop.mydomain.mn"
+                defaultValue={initialProfile?.custom_domain ?? ""}
+              />
+              <p className="text-xs text-muted-foreground">
+                Нийтийн дэлгүүр энэ домэйноор нээгдэнэ. Домэйнээ энэ апп руу
+                чиглүүлж (CNAME эсвэл A бичлэг), доорх "Баталгаажуулсан"
+                тэмдэглэгээг асаана уу.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="domain_verified"
+                name="domain_verified"
+                defaultChecked={initialProfile?.domain_verified === true}
+                className="size-4 rounded border-border"
+              />
+              <label
+                htmlFor="domain_verified"
+                className="text-sm text-muted-foreground"
+              >
+                Домэйний холболт баталгаажсан
+              </label>
             </div>
           </div>
 

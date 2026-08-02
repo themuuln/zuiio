@@ -75,6 +75,8 @@ export async function updatePublicProfile(
   const metaTitle = (formData.get("meta_title") as string) || null;
   const metaDescription = (formData.get("meta_description") as string) || null;
   const ogImageUrl = (formData.get("og_image_url") as string) || null;
+  const customDomain = (formData.get("custom_domain") as string) || null;
+  const domainVerified = formData.get("domain_verified") === "on";
 
   // Parse business hours from form (JSON string sent by client)
   let businessHours: Record<string, string> | null = null;
@@ -121,6 +123,8 @@ export async function updatePublicProfile(
     meta_title: metaTitle,
     meta_description: metaDescription,
     og_image_url: ogImageUrl,
+    custom_domain: customDomain?.toLowerCase() || null,
+    domain_verified: domainVerified && !!customDomain,
     business_hours:
       Object.keys(businessHours ?? {}).length > 0 ? businessHours : null,
     social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,

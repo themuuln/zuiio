@@ -18,7 +18,7 @@ Zer currently has: admin-only discounts, gift packaging (not gift cards), loyalt
 ✅ **All Tier 2 items shipped (2026-08-03):** product reviews (public submit → moderation → approved display) and per-org blog/articles CMS with public list + detail pages.
 
 **Tier 3 — Strategic (Build Later / Buy)**
-Deferred by design: generic webhooks (needed for ERP integrations, wait for stable API ecosystem), custom domains (needs DNS/SSL infra), AI features (leave to 3rd-party tools), shop.mn subdomains (Zer uses /[slug] paths).
+✅ **Items 8–9 shipped (2026-08-03):** generic webhooks (admin CRUD + HMAC-signed delivery on sale/expense/invoice/product/stock/review/blog events) and custom domains (verified custom_domain per org + middleware host→slug rewriting + canonical URLs/sitemap). Items 10–11: AI features were already covered by Zer's existing `ai/poster`, `ai/enhance`, `ai/logo`, `ai/naming` tools; shop.mn-style subdomains are superseded by custom-domain routing (Zer keeps /[slug] paths).
 
 | # | Feature | Effort | Why |
 |---|---------|--------|-----|
@@ -43,10 +43,10 @@ Subtotal: ~1 week.
 
 | # | Feature | Effort | Decision |
 |---|---------|--------|----------|
-| 8 | Generic webhooks | L | Build — needed for ERP integrations. But defer until API ecosystem is stable. |
-| 9 | Custom domains | XL | Skip for now. Requires DNS infra, SSL, reverse proxy. Can use Vercel domains later. |
-| 10 | AI features | XL | Skip. shop.mn's AI poster/text/image gen is nice but not a dealbreaker. Let 3rd-party tools handle this. |
-| 11 | *shop.mn subdomain | XL | Skip. Zer uses /[slug] URL paths — different architecture. Custom domains if/when needed. |
+| 8 | Generic webhooks | L | ✅ Shipped (2026-08-03). Admin CRUD UI, HMAC-SHA256 signatures, delivery retries, delivered on sale/expense/invoice/product/stock/review/blog events. |
+| 9 | Custom domains | XL | ✅ Shipped (2026-08-03). `custom_domain` + `domain_verified` on org public profile; middleware rewrites custom host → /[slug]; canonical URLs + sitemap use the custom domain. DNS/SSL provisioning is config-only (org owner points CNAME/A). |
+| 10 | AI features | XL | Covered — Zer already ships AI poster/enhance/logo/naming (3rd-party model backends). No gap. |
+| 11 | *shop.mn subdomain | XL | Superseded — custom-domain routing covers per-shop hosts; Zer keeps /[slug] URL paths. |
 
 ## Architecture Decisions
 

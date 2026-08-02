@@ -121,7 +121,7 @@ export async function sendEmail(
 
     // Increment daily count for the SMTP config
     await supabase.rpc("increment_smtp_count", {
-      p_config_id: config.id,
+      config_id: config.id,
     });
 
     return { success: true };

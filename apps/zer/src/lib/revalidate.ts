@@ -21,6 +21,7 @@ export const ENTITY_PATHS = {
   gift_cards: ["/", "/gift-cards", "/shop"],
   reviews: ["/", "/reviews"],
   blog: ["/", "/blog"],
+  webhooks: ["/", "/webhooks"],
   discounts: ["/", "/discounts"],
   products: ["/products", "/inventory"],
   inventory: ["/inventory", "/inventory/movements", "/products"],

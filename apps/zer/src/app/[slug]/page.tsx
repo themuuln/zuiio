@@ -13,6 +13,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { capture } from "@zuiio/capture";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -41,6 +42,8 @@ type OrgProfileData = {
     meta_pixel_id: string | null;
     meta_title: string | null;
     og_image_url: string | null;
+    custom_domain: string | null;
+    domain_verified: boolean;
     policies: string | null;
     social_links: Record<string, string> | null;
   } | null;
@@ -108,16 +111,28 @@ export async function generateMetadata({
       ? [{ url: profile.logo_url, width: 1200, height: 630 }]
       : [];
 
+  // Canonical host: use the request host when a custom domain served the
+  // page (rewrites preserve it); fall back to the configured site URL.
+  const host = (await headers()).get("host") ?? "";
+  const configuredHost = (
+    process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn"
+  ).replace(/^https?:\/\//, "");
+  const canonicalBase =
+    host && host !== configuredHost
+      ? `https://${host}`
+      : process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn";
+
   return {
     title,
     description,
     robots: { index: true, follow: true },
+    alternates: { canonical: `${canonicalBase}/${org.slug}` },
     openGraph: {
       title,
       description,
       images,
       type: "website",
-      url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn"}/${org.slug}`,
+      url: `${canonicalBase}/${org.slug}`,
     },
   };
 }

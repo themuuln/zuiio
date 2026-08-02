@@ -123,6 +123,7 @@ test("ENTITY_PATHS has all expected entity keys", () => {
     "shop",
     "suppliers",
     "users",
+    "webhooks",
   ];
   assert.deepEqual(keys.sort(), expected.sort());
 });

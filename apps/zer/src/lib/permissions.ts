@@ -145,6 +145,11 @@ export const PERMISSION_GROUPS: {
     permissions: APP_PERMISSIONS.filter((p) => p.startsWith("blog.")),
   },
   {
+    label: "Вебхук",
+    key: "webhooks",
+    permissions: APP_PERMISSIONS.filter((p) => p.startsWith("webhooks.")),
+  },
+  {
     label: "Үйлдвэрлэл",
     key: "manufacturing",
     permissions: APP_PERMISSIONS.filter((p) =>
@@ -270,6 +275,10 @@ export const PERMISSION_LABELS: Record<AppPermission, string> = {
   "blog.read": "Блог нийтлэл харах",
   "blog.update": "Блог нийтлэл засах",
   "blog.delete": "Блог нийтлэл устгах",
+  "webhooks.create": "Вебхук үүсгэх",
+  "webhooks.read": "Вебхук харах",
+  "webhooks.update": "Вебхук засах",
+  "webhooks.delete": "Вебхук устгах",
   "boms.create": "BOM үүсгэх",
   "boms.read": "BOM харах",
   "boms.update": "BOM засах",

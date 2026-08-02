@@ -369,7 +369,7 @@ test("sendEmail calls increment_smtp_count RPC on success", async () => {
   assert.equal(sb._rpcMock.mock.callCount(), 1);
   assert.equal(sb._rpcMock.mock.calls[0].arguments[0], "increment_smtp_count");
   assert.deepEqual(sb._rpcMock.mock.calls[0].arguments[1], {
-    p_config_id: "cfg-1",
+    config_id: "cfg-1",
   });
 });
 

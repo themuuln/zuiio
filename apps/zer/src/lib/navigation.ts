@@ -29,6 +29,7 @@ import {
   Truck,
   Users,
   Warehouse,
+  WebhooksLogo,
 } from "@phosphor-icons/react/dist/ssr";
 import { FEATURE_KEYS } from "@/lib/constants";
 import { type MessageKey, messages } from "@/lib/i18n/messages";
@@ -134,6 +135,7 @@ export const navGroups: NavGroup[] = [
   navGroup("nav.group.system", [
     navItem("nav.brandLibrary", "/settings/presets", Cube, "_brands"),
     navItem("nav.auditLog", "/audit", Clock, "_audit_log"),
+    navItem("nav.webhooks", "/webhooks", WebhooksLogo, "webhooks"),
   ]),
 ];
 
