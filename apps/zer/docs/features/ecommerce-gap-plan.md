@@ -12,7 +12,13 @@ Zer currently has: admin-only discounts, gift packaging (not gift cards), loyalt
 **Principle:** Build features that (a) drive customer acquisition (convince shop.mn users to switch) and (b) are uniquely defensible when combined with Zer's ERP strengths (accounting, inventory, manufacturing).
 
 **Tier 1 — Highest Impact (Build Now)**
-These close the most visible gaps and enable checkout conversion:
+✅ **All Tier 1 items shipped (2026-08-03):** coupon codes, gift cards, promotions engine, GA4 + Meta Pixel settings with per-org storefront injection, and SEO settings (meta_title/meta_description/og_image + dynamic sitemap).
+
+**Tier 2 — Important (Build Soon)**
+✅ **All Tier 2 items shipped (2026-08-03):** product reviews (public submit → moderation → approved display) and per-org blog/articles CMS with public list + detail pages.
+
+**Tier 3 — Strategic (Build Later / Buy)**
+Deferred by design: generic webhooks (needed for ERP integrations, wait for stable API ecosystem), custom domains (needs DNS/SSL infra), AI features (leave to 3rd-party tools), shop.mn subdomains (Zer uses /[slug] paths).
 
 | # | Feature | Effort | Why |
 |---|---------|--------|-----|
