@@ -102,6 +102,7 @@ type PlanType = Enums<"plan_type">;
 type Profile = Tables<"profiles">;
 type Role = Tables<"roles">;
 type ServiceCatalog = Tables<"service_catalog">;
+type ServicePartSuggestion = Tables<"service_part_suggestions">;
 type ServiceCatalogInsert = TablesInsert<"service_catalog">;
 type ServiceCatalogUpdate = TablesUpdate<"service_catalog">;
 type ServicePriceHistory = Tables<"service_price_history">;
@@ -149,7 +150,11 @@ export interface VehicleItpHistory {
   previous_status: string | null;
   new_status: string | null;
   notes: string | null;
-  action_type: "record_inspection" | "update_expiry" | "reminder_sent" | "system_update";
+  action_type:
+    | "record_inspection"
+    | "update_expiry"
+    | "reminder_sent"
+    | "system_update";
   created_at: string;
 }
 
@@ -178,6 +183,19 @@ export type PriceRule = Tables<"price_rules">;
 export type CatalogVariantGroup = Tables<"catalog_variant_groups">;
 export type CatalogVariantOption = Tables<"catalog_variant_options">;
 export type CatalogItemVariant = Tables<"catalog_item_variants">;
+
+// Part images
+// Manual type — part_images table added by 20260731000004 migration (not yet in auto-generated types)
+export interface PartImage {
+  id: string;
+  organization_id: string;
+  part_id: string;
+  image_url: string;
+  is_primary: boolean;
+  sort_order: number;
+  created_by: string;
+  created_at: string;
+}
 
 export type {
   AuditLog,
@@ -214,6 +232,7 @@ export type {
   ServiceCatalog,
   ServiceCatalogInsert,
   ServiceCatalogUpdate,
+  ServicePartSuggestion,
   ServicePriceHistory,
   StockThreshold,
   StockThresholdInsert,

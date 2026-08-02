@@ -32,6 +32,12 @@ export default async function SetupOrganizationPage() {
     getTranslations("invite"),
   ]);
 
+  // Cast to relaxed string-key type since new keys may not be in generated types yet
+  const rt = t as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+
   try {
     const supabase = await createClient();
     const { data: authUser } = await supabase.auth.getUser();
@@ -95,13 +101,19 @@ export default async function SetupOrganizationPage() {
       <OrganizationSetupForm
         pendingInvites={pendingInvites}
         copy={{
-          title: t("title"),
-          subtitle: t("subtitle"),
-          orgNameLabel: t("orgNameLabel"),
-          orgNamePlaceholder: t("orgNamePlaceholder"),
-          createOrgButton: t("createOrgButton"),
-          inviteSectionTitle: t("inviteSectionTitle"),
-          inviteSectionDesc: t("inviteSectionDesc"),
+          title: rt("title"),
+          subtitle: rt("subtitle"),
+          businessTypeTitle: rt("businessTypeTitle"),
+          businessTypeSubtitle: rt("businessTypeSubtitle"),
+          orgNameLabel: rt("orgNameLabel"),
+          orgNamePlaceholder: rt("orgNamePlaceholder"),
+          continueButton: rt("continueButton"),
+          backButton: rt("backButton"),
+          createOrgButton: rt("createOrgButton"),
+          partSuggestionsLabel: rt("partSuggestionsLabel"),
+          partSuggestionsDesc: rt("partSuggestionsDesc"),
+          inviteSectionTitle: rt("inviteSectionTitle"),
+          inviteSectionDesc: rt("inviteSectionDesc"),
           acceptInvite: inviteT("acceptButton"),
         }}
       />

@@ -27,10 +27,34 @@ export type SignupInput = z.infer<typeof signupSchema>;
 
 // ── Create Organization ──
 
+export const BUSINESS_TYPES = [
+  "general_repair",
+  "tire_shop",
+  "body_shop",
+  "dealership",
+  "fleet",
+  "quick_lube",
+] as const;
+
+export type BusinessType = (typeof BUSINESS_TYPES)[number];
+
 export const createOrganizationSchema = z.object({
   organizationName: z
     .string()
     .min(2, "Organization name must be at least 2 characters"),
+  businessType: z.enum([
+    "general_repair",
+    "tire_shop",
+    "body_shop",
+    "dealership",
+    "fleet",
+    "quick_lube",
+  ]),
+  /** Checkbox value: "on" when enabled (default), "off" when disabled. */
+  enablePartSuggestions: z
+    .enum(["on", "off"])
+    .default("on")
+    .transform((v) => v === "on"),
 });
 export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;
 

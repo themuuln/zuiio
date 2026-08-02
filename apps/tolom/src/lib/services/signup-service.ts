@@ -1,10 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateUUID } from "@zuiio/core";
 import { AppError } from "@/lib/errors";
+import { getPreset } from "@/lib/industry-presets";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import type { BusinessType } from "@/lib/validation/auth-schemas";
 
-// ── Types ─────────────────────────────────────────────────────
+// ── Types─────────────────────────────────────────────────────
 
 export interface FinalizeSignupResult {
   status: "created" | "already_setup";
@@ -103,6 +105,12 @@ export interface FinalizeSignupOptions {
   /** Override org name from user_metadata. If omitted, falls back to
    *  metadata → email-based default. */
   orgName?: string;
+  /** Business type for industry presets (services, labels, thresholds). */
+  businessType?: BusinessType;
+  /** Whether to seed service → part suggestions from the preset.
+   *  Defaults to true; stored on org settings as `enable_part_suggestions`
+   *  so the owner can toggle it later from Settings. */
+  enablePartSuggestions?: boolean;
 }
 
 export async function finalizeSignup(
@@ -164,6 +172,8 @@ export async function finalizeSignup(
     slug: finalSlug,
     userId: user.id,
     userFullName,
+    businessType: options?.businessType,
+    enablePartSuggestions: options?.enablePartSuggestions ?? true,
   });
   return { status: "created" };
 }
@@ -175,20 +185,29 @@ interface BootstrapParams {
   slug: string;
   userId: string;
   userFullName: string | null;
+  businessType?: BusinessType;
+  enablePartSuggestions?: boolean;
 }
 
 async function bootstrapOrganization(
   adminClient: SupabaseClient,
   params: BootstrapParams,
 ) {
-  const { name, slug, userId, userFullName } = params;
+  const { name, slug, userId, userFullName, businessType } = params;
+  const enablePartSuggestions = params.enablePartSuggestions ?? true;
+
+  const orgSettings: Record<string, unknown> = {};
+  if (businessType) {
+    orgSettings.business_type = businessType;
+  }
+  orgSettings.enable_part_suggestions = enablePartSuggestions;
 
   const { data: org, error: orgError } = await adminClient
     .from("organizations")
     .insert({
       name: name.trim(),
       slug: slug.trim(),
-      settings: {},
+      settings: orgSettings,
       is_active: true,
       created_by: userId,
       updated_by: userId,
@@ -265,6 +284,123 @@ async function bootstrapOrganization(
 
   if (profileError) {
     reportServerError("Failed to upsert profile:", profileError.message);
+  }
+
+  // ── Seed default catalog from industry preset ──────────────
+  if (businessType) {
+    const preset = getPreset(businessType);
+
+    // Seed service catalog
+    const serviceRows = preset.defaultServices.map((s) => ({
+      organization_id: org.id,
+      name: s.name,
+      name_mn: s.nameMn,
+      category: s.category,
+      description: s.description ?? null,
+      default_price: s.defaultPrice ?? 0,
+      estimated_duration_minutes: s.estimatedDurationMinutes ?? null,
+      interval_months: s.intervalMonths ?? null,
+      interval_km: s.intervalKm ?? null,
+      is_active: true,
+      created_by: userId,
+      updated_by: userId,
+    }));
+
+    const { data: insertedServices, error: serviceError } = await adminClient
+      .from("service_catalog")
+      .insert(serviceRows)
+      .select("id, name");
+
+    if (serviceError) {
+      reportServerError(
+        "Failed to seed default services:",
+        serviceError.message,
+      );
+    }
+
+    // Seed parts catalog
+    const partRows = preset.defaultParts.map((p) => ({
+      organization_id: org.id,
+      name: p.name,
+      name_mn: p.nameMn,
+      part_number: p.partNumber ?? null,
+      category: p.category,
+      unit: p.unit ?? "piece",
+      default_price: p.defaultPrice ?? 0,
+      is_active: true,
+      created_by: userId,
+      updated_by: userId,
+    }));
+
+    const { data: insertedParts, error: partError } = await adminClient
+      .from("parts_catalog")
+      .insert(partRows)
+      .select("id, name");
+
+    if (partError) {
+      reportServerError("Failed to seed default parts:", partError.message);
+    }
+
+    // Seed service → part suggestions (only when enabled and both inserts succeeded)
+    if (
+      enablePartSuggestions &&
+      insertedServices &&
+      insertedServices.length > 0 &&
+      insertedParts &&
+      insertedParts.length > 0
+    ) {
+      const serviceIdByName = new Map(
+        insertedServices.map((s) => [s.name, s.id]),
+      );
+      const partIdByName = new Map(insertedParts.map((p) => [p.name, p.id]));
+
+      const suggestionRows = preset.servicePartSuggestions
+        .map((sug) => {
+          const serviceId = serviceIdByName.get(sug.service);
+          const partId = partIdByName.get(sug.part);
+          if (!serviceId || !partId) return null;
+          return {
+            organization_id: org.id,
+            service_id: serviceId,
+            part_id: partId,
+            quantity: sug.quantity,
+            notes: sug.notes ?? null,
+            created_by: userId,
+          };
+        })
+        .filter((row): row is NonNullable<typeof row> => row !== null);
+
+      if (suggestionRows.length > 0) {
+        const { error: suggestionError } = await adminClient
+          .from("service_part_suggestions")
+          .insert(suggestionRows);
+
+        if (suggestionError) {
+          reportServerError(
+            "Failed to seed service part suggestions:",
+            suggestionError.message,
+          );
+        }
+      }
+    }
+
+    // Seed diagnosis labels
+    const labelRows = preset.defaultDiagnosisLabels.map((label, i) => ({
+      organization_id: org.id,
+      name: label.name,
+      name_mn: label.nameMn,
+      sort_order: i,
+      is_active: true,
+      created_by: userId,
+    }));
+
+    const { error: labelError } = await adminClient
+      .from("diagnosis_labels")
+      .insert(labelRows);
+
+    if (labelError) {
+      reportServerError("Failed to seed diagnosis labels:", labelError.message);
+    }
   }
 
   // Create default subscription (non-critical — log but don't fail)

@@ -33,6 +33,7 @@ import {
   DEFAULT_FORM,
   type SettingsForm,
 } from "./_business-defaults-form";
+import { BusinessTypeSection } from "./_business-type-section";
 import { CommissionRulesSection } from "./_commission-rules-section";
 import { DataExportSection } from "./_data-export-section";
 import { DataSharingForm } from "./_data-sharing-form";
@@ -187,6 +188,15 @@ function renderSectionContent(
 
   if (section.value === "niche") {
     return <VehicleNicheForm organization={options.organization} />;
+  }
+
+  if (section.value === "businessType") {
+    return (
+      <BusinessTypeSection
+        orgId={options.orgId}
+        organization={options.organization}
+      />
+    );
   }
 
   if (section.value === "sharing") {
@@ -492,23 +502,27 @@ export default function SettingsPage() {
           />
 
           <div className="flex min-w-0 flex-1 flex-col">
-            {filteredSections.map((section, index) => (
+            {/* NB: the map variable is intentionally NOT named `section` —
+                shadowing the `<section>` intrinsic makes Turbopack's minifier
+                emit jsxs("section_N") (an invalid custom element) instead of
+                "section". */}
+            {filteredSections.map((sec, index) => (
               <section
-                key={section.value}
-                id={`settings-section-${section.value}`}
+                key={sec.value}
+                id={`settings-section-${sec.value}`}
                 className="scroll-mt-24 flex flex-col gap-3 py-4 first:pt-0"
               >
                 <SectionHeading
-                  icon={section.value === "general" ? Building2 : section.icon}
-                  title={section.title}
-                  description={section.description}
+                  icon={sec.value === "general" ? Building2 : sec.icon}
+                  title={sec.title}
+                  description={sec.description}
                 />
-                {renderSectionContent(section, {
+                {renderSectionContent(sec, {
                   currentLocale,
                   form,
                   onSubmit: handleSubmit,
                   orgId: orgId ?? "",
-                  organization: organization!,
+                  organization,
                   preview,
                   saving: updateOrg.isPending,
                   setForm,

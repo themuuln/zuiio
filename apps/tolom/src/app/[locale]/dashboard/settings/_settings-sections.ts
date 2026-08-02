@@ -7,6 +7,7 @@ import {
   MessageCircle,
   Palette,
   Percent,
+  Settings2,
   Stethoscope,
   Tags,
   Wallet,
@@ -67,6 +68,12 @@ export function getSettingsSections(t: (key: string) => string) {
       title: t("sectionNiche"),
       description: t("sectionNicheDesc"),
       icon: Car,
+    },
+    {
+      value: "businessType",
+      title: t("sectionBusinessType"),
+      description: t("sectionBusinessTypeDesc"),
+      icon: Settings2,
     },
     {
       value: "sharing",
