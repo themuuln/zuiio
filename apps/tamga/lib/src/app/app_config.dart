@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// Runtime application configuration loaded from the bundled environment file.
@@ -18,6 +19,20 @@ abstract final class AppConfig {
 
   static bool get isSupabaseConfigured =>
       supabaseUrl.isNotEmpty && supabasePublishableKey.isNotEmpty;
+
+  /// Test-only seam: sets the Supabase config without the asset channel.
+  ///
+  /// `rootBundle.loadString` in widget tests never reaches the mocked
+  /// `flutter/assets` channel, so repository tests that must exercise the
+  /// remote-refresh path use this instead of mocking the channel.
+  @visibleForTesting
+  static void debugSetSupabaseConfig({
+    required String url,
+    required String key,
+  }) {
+    _supabaseUrl = url;
+    _supabasePublishableKey = key;
+  }
 
   /// Feature tour enabled эсэх. Түр зогсоосон — true болгож идэвхжүүлнэ.
   static const bool featureTourEnabled = false;

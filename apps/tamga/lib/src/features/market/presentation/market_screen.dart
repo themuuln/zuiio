@@ -275,7 +275,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       ),
                     ),
                     AppStatChip(
-                      label: 'Идэвхтэй',
+                      label: 'Нийт',
                       value: '${catalogState.totalCount}',
                     ),
                   ],

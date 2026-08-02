@@ -9,15 +9,24 @@ import 'supabase_lost_horse_repository.dart';
 
 /// Local-first composition. Cached rows are immediately usable; remote data is
 /// a refresh source and every local mutation remains queued until acknowledged.
+///
+/// The remote is optional on purpose: constructing [SupabaseLostHorseRepository]
+/// touches `Supabase.instance` and throws when the SDK was never initialized
+/// (offline launch without `.env`). Providers pass a remote only when Supabase
+/// is configured, so the offline-first path never dies in the constructor.
 class OfflineFirstLostHorseRepository implements LostHorseRepository {
   OfflineFirstLostHorseRepository({
     LocalLostHorseRepository? local,
     SupabaseLostHorseRepository? remote,
   }) : _local = local ?? LocalLostHorseRepository(),
-       _remote = remote ?? SupabaseLostHorseRepository();
+       _remote = remote;
 
   final LocalLostHorseRepository _local;
-  final SupabaseLostHorseRepository _remote;
+  final SupabaseLostHorseRepository? _remote;
+
+  /// Returns the remote when present and Supabase is configured, else null.
+  SupabaseLostHorseRepository? get _enabledRemote =>
+      AppConfig.isSupabaseConfigured ? _remote : null;
 
   @override
   Future<Result<LostHorseReport>> createReport(
@@ -33,24 +42,41 @@ class OfflineFirstLostHorseRepository implements LostHorseRepository {
   @override
   Future<Result<LostHorseReport>> getReport(String reportId) async {
     final cached = await _local.getReport(reportId);
-    if (cached.isSuccess || !AppConfig.isSupabaseConfigured) return cached;
-    return _remote.getReport(reportId);
+    final remote = _enabledRemote;
+    if (cached.isSuccess || remote == null) return cached;
+    // The Supabase client throws on network failure / unconfigured client;
+    // fall back to the cached result exactly like a Result.fail would.
+    try {
+      return await remote.getReport(reportId);
+    } catch (_) {
+      return cached;
+    }
   }
 
   @override
   Future<Result<List<LostHorseReport>>> getMyReports(String ownerId) async {
     final cached = await _local.getMyReports(ownerId);
-    if (!AppConfig.isSupabaseConfigured) return cached;
-    final remote = await _remote.getMyReports(ownerId);
-    return remote.isSuccess ? remote : cached;
+    final remote = _enabledRemote;
+    if (remote == null) return cached;
+    try {
+      final result = await remote.getMyReports(ownerId);
+      return result.isSuccess ? result : cached;
+    } catch (_) {
+      return cached;
+    }
   }
 
   @override
   Future<Result<List<LostHorseReport>>> browseActiveReports() async {
     final cached = await _local.browseActiveReports();
-    if (!AppConfig.isSupabaseConfigured) return cached;
-    final remote = await _remote.browseActiveReports();
-    return remote.isSuccess ? remote : cached;
+    final remote = _enabledRemote;
+    if (remote == null) return cached;
+    try {
+      final result = await remote.browseActiveReports();
+      return result.isSuccess ? result : cached;
+    } catch (_) {
+      return cached;
+    }
   }
 
   @override
@@ -79,9 +105,14 @@ class OfflineFirstLostHorseRepository implements LostHorseRepository {
   @override
   Future<Result<List<SightingReport>>> getSightings(String reportId) async {
     final cached = await _local.getSightings(reportId);
-    if (!AppConfig.isSupabaseConfigured) return cached;
-    final remote = await _remote.getSightings(reportId);
-    return remote.isSuccess ? remote : cached;
+    final remote = _enabledRemote;
+    if (remote == null) return cached;
+    try {
+      final result = await remote.getSightings(reportId);
+      return result.isSuccess ? result : cached;
+    } catch (_) {
+      return cached;
+    }
   }
 
   @override

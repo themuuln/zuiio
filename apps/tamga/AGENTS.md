@@ -126,11 +126,11 @@ Every feature MUST ship with automated tests, layered by what the change touches
 6. **Integration tests** run via `flutter drive` on a device (`make integration-test`) — use for critical paths that need the real app tree; don't overuse (slow, needs a booted simulator).
 7. **Isar/model changes** → run `dart run build_runner build --delete-conflicting-outputs` and regenerate test mocks.
 
-### Known issue — onboarding completion (2026-08-01)
+### Onboarding completion — resolved (2026-08-01, re-verified 2026-08-02)
 
-The onboarding wizard cannot be completed end-to-end in the current build: `NotificationPage.onSkip/onStart` both call `_finishOnboarding()` → `complete()` which saves `isCompleted: true` but never navigates (no `ref.listen`/`context.go` after completion), and the sync page (page 7) is unreachable because neither notification action calls `_goToNextPage()`. Tapping "Одоохондоо үгүй" leaves the user stuck on the Мэдэгдэл page.
+Onboarding completes end-to-end: `NotificationPage` advances to the sync page, and `SyncSetupPage.onStart/onLater` call `_finishOnboarding()` → `complete()` → the `onCompleted` seam (`app_router.dart` wires `OnboardingScreen(onCompleted: () => ctx.go('/home'))`). Full Maestro flows MAY tap past the notification page — `13-lost-livestock-recovery.yaml` does exactly that (notification skip → sync later → home).
 
-**Consequence for tests:** do NOT author Maestro/integration flows that tap past the notification page — `onboarding.yaml` intentionally stops at region selection. Fixing the app requires adding navigation after `complete()` (destination: `/login` for unauthenticated users) — ask before changing this (auth-adjacent).
+**Consequence for tests:** if `onboarding.yaml` or `13-lost-livestock-recovery.yaml` starts failing at the notification/sync steps again, treat it as a regression of the completion seam — do not stop authoring flows at the notification page.
 
 ## Permission Boundaries
 
@@ -319,7 +319,7 @@ Flows live in `test/maestro/`:
 | Onboarding | `onboarding.yaml` | Landing → role selection → option visibility → advances to region |
 | Lost livestock recovery | `13-lost-livestock-recovery.yaml` | Recovery wizard end-to-end (offline-first) |
 
-> ⚠️ `13-lost-livestock-recovery.yaml` currently taps past the notification page and fails on the current build due to the [onboarding completion bug](#known-issue--onboarding-completion-2026-08-01) — fix the app before relying on it as a gate.
+> The recovery flow taps through onboarding completion (notification skip → sync later → home); if it fails at those steps, see [Onboarding completion — resolved](#onboarding-completion--resolved-2026-08-01-re-verified-2026-08-02).
 
 ### Usage
 

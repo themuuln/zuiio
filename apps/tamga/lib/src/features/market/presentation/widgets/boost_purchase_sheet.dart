@@ -190,6 +190,9 @@ class _BoostPurchaseSheetState extends ConsumerState<BoostPurchaseSheet> {
     if (_selectedTier == null || _selectedType == null) return;
 
     HapticFeedback.lightImpact();
+    // Captured before any await so the error SnackBars can use it without
+    // touching BuildContext across the async gap.
+    final errorColor = Theme.of(context).colorScheme.error;
 
     // Create a PaymentRequest for the boost purchase
     final userId = currentSupabaseUserId() ?? 'local-boost';
@@ -238,7 +241,7 @@ class _BoostPurchaseSheetState extends ConsumerState<BoostPurchaseSheet> {
             content: Text(
               'Төлбөрийн хүсэлт үүсгэхэд алдаа гарлаа: ${result.error.message}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: errorColor,
           ),
         );
       }

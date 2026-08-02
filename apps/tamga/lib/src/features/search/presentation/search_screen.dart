@@ -39,7 +39,7 @@ class SearchScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: TamgaSpacing.sm),
                     Text(
-                      'Lineage, horses, events-ээс local-first өгөгдөл хайна. Thin version нь client-side filter дээр ажиллана.',
+                      'Морь, удмын мод, арга хэмжээг нэг дороос хайна.',
                       style: TamgaTypography.body(),
                     ),
                     const SizedBox(height: TamgaSpacing.lg),

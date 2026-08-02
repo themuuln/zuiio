@@ -10,6 +10,7 @@ import '../../../core/features/feature_gate.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../shared/domain/horse.dart';
 import '../../events/application/events_providers.dart';
+import '../../events/presentation/event_detail_screen.dart';
 import '../../events/presentation/widgets/event_card.dart';
 import '../application/lineage_roots_provider.dart';
 import '../application/pedigree_layout.dart';
@@ -992,9 +993,13 @@ class _FeaturedEventsSection extends ConsumerWidget {
                     child: EventCard(
                       event: event,
                       onTap: () {
-                        // go_router push (no /events/:id route exists yet;
-                        // the events list is the routed entry point).
-                        ctx.push('/events');
+                        // Same pattern as EventsScreen: full detail via
+                        // MaterialPageRoute (no /events/:id GoRoute exists).
+                        Navigator.of(ctx).push(
+                          MaterialPageRoute(
+                            builder: (_) => EventDetailScreen(event: event),
+                          ),
+                        );
                       },
                     ),
                   );

@@ -64,7 +64,7 @@ class ListingMediaGallery extends StatelessWidget {
                   vertical: AppSpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(138, 0, 0, 0),
+                  color: theme.colorScheme.shadow.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(
                     AppSpacing.cornerRadiusPill,
                   ),
@@ -72,7 +72,7 @@ class ListingMediaGallery extends StatelessWidget {
                 child: Text(
                   '${index + 1} / ${mediaUrls.length}',
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: const Color.fromARGB(255, 255, 255, 255),
+                    color: theme.colorScheme.surface,
                   ),
                 ),
               ),

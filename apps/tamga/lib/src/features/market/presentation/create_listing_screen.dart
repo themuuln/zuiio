@@ -168,7 +168,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                 Navigator.of(context).pop(); // Буцах
               }
             },
-            child: const Text('Дараа'),
+            child: const Text('Цуцлах'),
           ),
           FilledButton(
             onPressed: () {

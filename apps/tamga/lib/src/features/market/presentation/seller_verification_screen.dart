@@ -32,7 +32,7 @@ class SellerVerificationScreen extends ConsumerWidget {
                 Icons.verified_user_outlined,
                 size: 64,
                 color: summary.isVerified
-                    ? const Color(0xFF2E7D32)
+                    ? theme.colorScheme.tertiary
                     : theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(height: AppSpacing.md),
@@ -71,7 +71,7 @@ class SellerVerificationScreen extends ConsumerWidget {
                                 ? Icons.check_circle
                                 : Icons.phone_android_outlined,
                             color: summary.phoneVerified
-                                ? const Color(0xFF2E7D32)
+                                ? theme.colorScheme.tertiary
                                 : theme.colorScheme.primary,
                           ),
                           const SizedBox(width: AppSpacing.sm),
@@ -126,7 +126,7 @@ class SellerVerificationScreen extends ConsumerWidget {
                                 ? Icons.check_circle
                                 : Icons.credit_card_outlined,
                             color: summary.eMongoliaVerified
-                                ? const Color(0xFF2E7D32)
+                                ? theme.colorScheme.tertiary
                                 : theme.colorScheme.primary,
                           ),
                           const SizedBox(width: AppSpacing.sm),

@@ -131,21 +131,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       headerContent = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Leading close control ──
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  tooltip: 'Буцах',
-                  onPressed: () => Navigator.maybePop(context),
-                  icon: const Icon(Icons.arrow_back),
-                ),
-              ),
-            ),
-          ),
           // ── Cover photo area ──
           Container(
             height: 180,
@@ -335,44 +320,65 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
 
     return Scaffold(
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          SliverToBoxAdapter(child: headerContent),
+      body: Stack(
+        children: [
+          NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              SliverToBoxAdapter(child: headerContent),
 
-          // ── TabBar ──
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _TabBarDelegate(
-              TabBar(
-                controller: _tabController,
-                onTap: (_) => HapticFeedback.selectionClick(),
-                tabs: const [
-                  Tab(text: 'Морьд'),
-                  Tab(text: 'Удам'),
-                  Tab(text: 'Тохиргоо'),
-                ],
+              // ── TabBar ──
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _TabBarDelegate(
+                  TabBar(
+                    controller: _tabController,
+                    onTap: (_) => HapticFeedback.selectionClick(),
+                    tabs: const [
+                      Tab(text: 'Морьд'),
+                      Tab(text: 'Удам'),
+                      Tab(text: 'Тохиргоо'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            body: AnimatedBuilder(
+              animation: _tabController,
+              builder: (_, _) {
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, anim) =>
+                      FadeTransition(opacity: anim, child: child),
+                  child: KeyedSubtree(
+                    key: ValueKey(_tabController.index),
+                    child: switch (_tabController.index) {
+                      0 => _HorsesTab(horsesAsync: horsesAsync),
+                      1 => const _LineageTab(),
+                      _ => const _SettingsTab(),
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // ── Pinned leading close control (never scrolls away) ──
+          Positioned(
+            top: 0,
+            left: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                child: IconButton(
+                  tooltip: 'Буцах',
+                  onPressed: () => Navigator.maybePop(context),
+                  icon: const Icon(Icons.arrow_back),
+                ),
               ),
             ),
           ),
         ],
-        body: AnimatedBuilder(
-          animation: _tabController,
-          builder: (_, _) {
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, anim) =>
-                  FadeTransition(opacity: anim, child: child),
-              child: KeyedSubtree(
-                key: ValueKey(_tabController.index),
-                child: switch (_tabController.index) {
-                  0 => _HorsesTab(horsesAsync: horsesAsync),
-                  1 => const _LineageTab(),
-                  _ => const _SettingsTab(),
-                },
-              ),
-            );
-          },
-        ),
       ),
     );
   }

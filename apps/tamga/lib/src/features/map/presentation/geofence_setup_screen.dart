@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/supabase_bootstrap.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/widgets.dart';
+import '../../events/presentation/widgets/event_location_picker.dart';
 import '../application/geofence_providers.dart';
 import '../domain/search_area.dart';
 
@@ -19,6 +21,8 @@ class _GeofenceSetupScreenState extends ConsumerState<GeofenceSetupScreen> {
   final _nameController = TextEditingController();
   double _radiusKm = 10.0;
   int _selectedColor = 0xFFF06A2E;
+  double? _latitude;
+  double? _longitude;
 
   static const _presetColors = [
     0xFFF06A2E, // primary orange
@@ -125,6 +129,27 @@ class _GeofenceSetupScreenState extends ConsumerState<GeofenceSetupScreen> {
               );
             }).toList(),
           ),
+          const SizedBox(height: TamgaSpacing.xl),
+
+          // ── Location picker ───────────────────────────────────
+          Text(
+            'Байршил',
+            style: TamgaTypography.footnote(
+              weight: FontWeight.w600,
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: TamgaSpacing.sm),
+          EventLocationPicker(
+            initialLatitude: _latitude,
+            initialLongitude: _longitude,
+            onLocationChanged: (lat, lng) {
+              setState(() {
+                _latitude = lat;
+                _longitude = lng;
+              });
+            },
+          ),
           const SizedBox(height: TamgaSpacing.xxxl),
 
           // ── Save ──────────────────────────────────────────────
@@ -157,13 +182,16 @@ class _GeofenceSetupScreenState extends ConsumerState<GeofenceSetupScreen> {
   }
 
   void _saveGeofence() {
-    if (_nameController.text.isEmpty) return;
+    if (_nameController.text.isEmpty) {
+      TamgaToast.show(context, 'Талбайн нэр оруулна уу');
+      return;
+    }
 
     final area = SearchArea(
       id: '',
       name: _nameController.text,
-      centerLat: 47.9,
-      centerLng: 106.9,
+      centerLat: _latitude ?? 47.9,
+      centerLng: _longitude ?? 106.9,
       radiusKm: _radiusKm,
       color: _selectedColor,
       createdBy: currentSupabaseUserId() ?? '',
