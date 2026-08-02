@@ -251,7 +251,7 @@ class _BoostPurchaseSheetState extends ConsumerState<BoostPurchaseSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Төлбөрийн хүсэлт үүсгэхэд алдаа гарлаа: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: errorColor,
         ),
       );
     }

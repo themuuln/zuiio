@@ -453,7 +453,7 @@ class ListingDetailScreen extends ConsumerWidget {
     MarketListing listing,
   ) async {
     final url = 'https://tamga.mn/market/${listing.id}';
-    final text = 'Check out this horse on Tamga: $url';
+    final text = 'Тамага дээрх энэ морийг үзээрэй: $url';
     final subject = 'Tamga — ${listing.title}';
     await SharePlus.instance.share(ShareParams(text: text, subject: subject));
   }
@@ -514,18 +514,19 @@ class ListingDetailScreen extends ConsumerWidget {
             minLines: 2,
             maxLines: 4,
             decoration: const InputDecoration(
-              labelText: 'Reason',
-              hintText: 'Suspicious details, missing docs, unsafe request...',
+              labelText: 'Шалтгаан',
+              hintText:
+                  'Хардлагатай мэдээлэл, алга болсон баримт, аюулгүй бус хүсэлт...',
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: const Text('Цуцлах'),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(controller.text),
-              child: const Text('Submit'),
+              child: const Text('Илгээх'),
             ),
           ],
         ),
@@ -552,15 +553,15 @@ class ListingDetailScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'You are transferring the digital ownership certificate for the horse (ID: ${certificate.horseId}).',
+                'Та морины дижитал өмчлөлийн гэрчилгээг шилжүүлж байна (ID: ${certificate.horseId}).',
               ),
               const SizedBox(height: AppSpacing.lg),
               TextField(
                 controller: controller,
                 autofocus: true,
                 decoration: const InputDecoration(
-                  labelText: 'Recipient ID',
-                  hintText: 'e.g., seller-tamga, local-buyer',
+                  labelText: 'Хүлээн авагчийн ID',
+                  hintText: 'жиш: seller-tamga, local-buyer',
                 ),
               ),
             ],
@@ -568,7 +569,7 @@ class ListingDetailScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: const Text('Цуцлах'),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(controller.text),
@@ -593,7 +594,7 @@ class ListingDetailScreen extends ConsumerWidget {
       if (!context.mounted) return;
       TamgaToast.showSuccess(
         context,
-        'Certificate successfully transferred to ${recipientId.trim()}.',
+        'Гэрчилгээг ${recipientId.trim()} хэрэглэгчид шилжүүллээ.',
       );
     } finally {
       controller.dispose();
