@@ -144,8 +144,8 @@ describe("Embed token RLS", () => {
       .select("*")
       .eq("id" as never, token!.id);
 
-    expect(anonError).not.toBeNull();
-    expect(data).toBeNull();
+    expect(anonError).toBeNull(); // table grants exist; RLS row policies block
+    expect(data ?? []).toHaveLength(0);
   });
 
   it("a revoked token still resolves by hash but is not usable", async () => {

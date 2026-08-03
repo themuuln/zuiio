@@ -154,8 +154,8 @@ describe("Push subscription RLS", () => {
       .select("*")
       .eq("id" as never, subscription!.id);
 
-    expect(error).not.toBeNull();
-    expect(data).toBeNull();
+    expect(error).toBeNull(); // table grants exist; RLS row policies block
+    expect(data ?? []).toHaveLength(0);
   });
 
   it("user can read only their own subscriptions", async () => {

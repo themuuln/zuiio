@@ -111,8 +111,8 @@ describe("Webhook RLS", () => {
       .select("*")
       .eq("id", webhook!.id);
 
-    expect(error).not.toBeNull();
-    expect(data).toBeNull();
+    expect(error).toBeNull(); // table grants exist; RLS row policies block
+    expect(data ?? []).toHaveLength(0);
   });
 
   it("user with webhooks.read can read own org webhooks", async () => {
