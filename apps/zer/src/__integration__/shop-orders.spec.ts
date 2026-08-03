@@ -244,6 +244,31 @@ describe("submit_shop_order (public buyer checkout)", () => {
     expect(product?.current_stock).toBe(20);
   });
 
+  it("rejects duplicate lines for the same product that oversell stock", async () => {
+    const { org, productId } = await setupStore(admin);
+    const anon = createAnonClient();
+
+    // Stock is 20; two lines of 15 each would total 30 → must be rejected
+    // even though each line alone passes the per-line stock check.
+    const { data, error } = await anon.rpc("submit_shop_order", {
+      p_org_slug: org.slug,
+      p_items: [
+        { product_id: productId, quantity: 15, variant_id: "" },
+        { product_id: productId, quantity: 15, variant_id: "" },
+      ],
+      p_contact_name: "Бат",
+    } as never);
+    expect(data).toBeNull();
+    expect(error?.message ?? "").toMatch(/хүрэлцэхгүй|нөөц/i);
+
+    const { data: product } = (await admin
+      .from("products")
+      .select("current_stock")
+      .eq("id", productId)
+      .single()) as unknown as { data: { current_stock: number } | null };
+    expect(product?.current_stock).toBe(20);
+  });
+
   it("rejects an unknown store slug", async () => {
     const anon = createAnonClient();
     const { data, error } = await anon.rpc("submit_shop_order", {

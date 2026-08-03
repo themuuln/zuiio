@@ -213,13 +213,12 @@ describe("stock transfers", () => {
       30,
     );
 
-    const { data: rpcResult } = await user.client.rpc(
-      "approve_stock_transfer",
-      { p_transfer_id: transferId },
-    );
-    const result = rpcResult as unknown as TransferRpcResult;
-    expect(result.error).toBeDefined();
-    expect(result.error).toContain("хүрэлцэхгүй");
+    const { data, error } = await user.client.rpc("approve_stock_transfer", {
+      p_transfer_id: transferId,
+    });
+    // Short stock now RAISEs (aborts the transaction) → PostgREST error, no data.
+    expect(data).toBeNull();
+    expect(error?.message ?? "").toContain("хүрэлцэхгүй");
 
     const admin = createAdminClient();
 
@@ -244,6 +243,112 @@ describe("stock transfers", () => {
       .select("id")
       .eq("reference", `TRANSFER-${transferId}`);
     expect(movements).toHaveLength(0);
+  });
+
+  it("is atomic: a later item's short stock rolls back earlier items' moves", async () => {
+    const { orgId, fromWarehouseId, toWarehouseId, user } =
+      await setupTransfer(5);
+    const admin = createAdminClient();
+
+    // Two products: p1 (stock 5) + p2 (stock 5). Transfer p1×2 then p2×30.
+    const p1 = await createTestProduct(admin, orgId, { currentStock: 5 });
+    const p2 = await createTestProduct(admin, orgId, { currentStock: 5 });
+    await admin.from("warehouse_products").insert([
+      {
+        warehouse_id: fromWarehouseId,
+        product_id: p1.productId,
+        current_stock: 5,
+      },
+      {
+        warehouse_id: fromWarehouseId,
+        product_id: p2.productId,
+        current_stock: 5,
+      },
+    ]);
+
+    const transferId = await createTransfer(
+      user,
+      orgId,
+      fromWarehouseId,
+      toWarehouseId,
+      p1.productId,
+      2,
+    );
+    const { error: itemErr } = await admin.from("stock_transfer_items").insert({
+      transfer_id: transferId,
+      product_id: p2.productId,
+      quantity: 30,
+    });
+    expect(itemErr).toBeNull();
+
+    const { data, error } = await user.client.rpc("approve_stock_transfer", {
+      p_transfer_id: transferId,
+    });
+    expect(data).toBeNull();
+    expect(error?.message ?? "").toContain("хүрэлцэхгүй");
+
+    // p1 must NOT have been moved (the whole approval aborted).
+    const { data: p1Row } = await admin
+      .from("warehouse_products")
+      .select("current_stock")
+      .eq("warehouse_id", fromWarehouseId)
+      .eq("product_id", p1.productId)
+      .single();
+    expect(Number(p1Row!.current_stock)).toBe(5);
+
+    const { data: statusRow } = await admin
+      .from("stock_transfers")
+      .select("status")
+      .eq("id", transferId)
+      .single();
+    expect(statusRow!.status).toBe("pending");
+
+    const { data: movements } = await admin
+      .from("stock_movements")
+      .select("id")
+      .eq("reference", `TRANSFER-${transferId}`);
+    expect(movements).toHaveLength(0);
+  });
+
+  it("rejects a transfer referencing another org's warehouse", async () => {
+    const { orgId, toWarehouseId, productId, user } = await setupTransfer(50);
+    const admin = createAdminClient();
+
+    // Second org with its own branch + warehouse.
+    const other = await createTestOrg(admin);
+    const otherBranch = await createTestBranch(admin, other.orgId);
+    const otherWarehouse = await createTestWarehouse(
+      admin,
+      other.orgId,
+      otherBranch.branchId,
+    );
+
+    // Attacker crafts a transfer whose from-warehouse is the OTHER org's.
+    const { data: evilTransfer } = await admin
+      .from("stock_transfers")
+      .insert({
+        organization_id: orgId,
+        from_warehouse_id: otherWarehouse.warehouseId,
+        to_warehouse_id: toWarehouseId,
+        notes: "evil",
+      })
+      .select("id")
+      .single();
+    expect(evilTransfer).not.toBeNull();
+    trackCleanup("stock_transfers", evilTransfer!.id);
+    await admin.from("stock_transfer_items").insert({
+      transfer_id: evilTransfer!.id,
+      product_id: productId,
+      quantity: 1,
+    });
+
+    const { data, error } = await user.client.rpc("approve_stock_transfer", {
+      p_transfer_id: evilTransfer!.id,
+    });
+    // Cross-org check is pre-write → RETURNed as a JSONB error payload.
+    expect(error).toBeNull();
+    const payload = data as { error?: string } | null;
+    expect(payload?.error ?? "").toMatch(/агуулах|байгууллага/i);
   });
 
   it("cancels a pending transfer without touching stock", async () => {

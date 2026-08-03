@@ -46,6 +46,7 @@ DECLARE
   v_qty NUMERIC;
   v_unit_price NUMERIC;
   v_current_stock NUMERIC;
+  v_agg RECORD;
 BEGIN
   -- 0. Resolve storefront org by public slug; catalog must be enabled.
   SELECT o.id, o.name INTO v_org_id, v_org_name
@@ -89,13 +90,23 @@ BEGIN
   END IF;
 
   -- 3. Validate stock + compute totals server-side (prices from DB, never client).
-  FOR v_item IN
-    SELECT * FROM jsonb_array_elements(p_items) AS item
-    ORDER BY (item->>'product_id')::TEXT
+  --    Quantities are AGGREGATED per product/variant first so duplicate lines
+  --    for the same product cannot collectively oversell the available stock.
+  FOR v_agg IN
+    SELECT product_id, variant_id, SUM(quantity)::numeric AS total_qty
+    FROM (
+      SELECT
+        (i->>'product_id')::uuid AS product_id,
+        NULLIF(i->>'variant_id', '')::uuid AS variant_id,
+        (i->>'quantity')::numeric AS quantity
+      FROM jsonb_array_elements(p_items) AS i
+    ) AS lines
+    GROUP BY product_id, variant_id
+    ORDER BY product_id::text
   LOOP
-    v_product_id := (v_item->>'product_id')::UUID;
-    v_variant_id := NULLIF(v_item->>'variant_id', '')::UUID;
-    v_qty := (v_item->>'quantity')::NUMERIC;
+    v_product_id := v_agg.product_id;
+    v_variant_id := v_agg.variant_id;
+    v_qty := v_agg.total_qty;
 
     IF v_qty IS NULL OR v_qty <= 0 THEN
       RAISE EXCEPTION 'Барааны тоо буруу байна';
@@ -132,6 +143,16 @@ BEGIN
     END IF;
 
     v_total := v_total + (v_unit_price * v_qty);
+  END LOOP;
+
+  -- Per-line sanity pass (bounds only) — the aggregate loop above already
+  -- covers stock; this rejects malformed individual lines like negative or
+  -- absurd quantities before any write.
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) AS item LOOP
+    v_qty := (v_item->>'quantity')::numeric;
+    IF v_qty IS NULL OR v_qty <= 0 OR v_qty > 999 THEN
+      RAISE EXCEPTION 'Барааны тоо буруу байна';
+    END IF;
   END LOOP;
 
   -- 4. Optional contact (staff can reach the buyer).

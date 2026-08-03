@@ -167,29 +167,51 @@ BEGIN
   END IF;
 
   -- Warehouses map 1:1 to branches (warehouses.branch_id UNIQUE); derive the
-  -- NOT NULL stock_movements.branch_id from each warehouse.
-  SELECT branch_id INTO v_from_branch FROM public.warehouses WHERE id = v_from_wh;
-  SELECT branch_id INTO v_to_branch FROM public.warehouses WHERE id = v_to_wh;
+  -- NOT NULL stock_movements.branch_id from each warehouse. Both warehouses
+  -- must belong to the CURRENT org (tenant isolation — a transfer may never
+  -- touch another org's stock).
+  SELECT branch_id INTO v_from_branch
+  FROM public.warehouses
+  WHERE id = v_from_wh AND organization_id = v_org_id;
+  SELECT branch_id INTO v_to_branch
+  FROM public.warehouses
+  WHERE id = v_to_wh AND organization_id = v_org_id;
 
+  IF v_from_branch IS NULL OR v_to_branch IS NULL THEN
+    RETURN jsonb_build_object('error', 'Агуулах олдсонгүй эсвэл өөр байгууллагад харьяалагдана.');
+  END IF;
+
+  -- =============================================
+  -- Phase A: validate EVERY item's availability WITHOUT writing anything.
+  -- Locks the from-warehouse rows (FOR UPDATE) so no concurrent approval can
+  -- double-spend the same stock; rows stay locked until commit.
+  -- Any shortfall aborts the whole transaction (RAISE EXCEPTION) — no
+  -- partial movement, the transfer stays 'pending', and a retry is safe.
+  -- =============================================
   FOR v_item IN
     SELECT product_id, quantity
     FROM public.stock_transfer_items
     WHERE transfer_id = p_transfer_id
   LOOP
-    -- Lock the from-warehouse row; missing row == zero stock.
     SELECT COALESCE(current_stock, 0) INTO v_available
     FROM public.warehouse_products
     WHERE warehouse_id = v_from_wh AND product_id = v_item.product_id
     FOR UPDATE;
 
     IF v_available < v_item.quantity THEN
-      RETURN jsonb_build_object(
-        'error',
-        'Агуулахын нөөц хүрэлцэхгүй байна: бараа ' || v_item.product_id::text ||
-        ' (байгаа: ' || v_available::text || ', шаардлагатай: ' || v_item.quantity::text || ')'
-      );
+      RAISE EXCEPTION 'Агуулахын нөөц хүрэлцэхгүй байна: бараа % (байгаа: %, шаардлагатай: %)',
+        v_item.product_id::text, v_available::text, v_item.quantity::text;
     END IF;
+  END LOOP;
 
+  -- =============================================
+  -- Phase B: perform the moves (all validated, rows locked).
+  -- =============================================
+  FOR v_item IN
+    SELECT product_id, quantity
+    FROM public.stock_transfer_items
+    WHERE transfer_id = p_transfer_id
+  LOOP
     -- Decrement the from-warehouse.
     UPDATE public.warehouse_products
     SET current_stock = current_stock - v_item.quantity, updated_at = now()
