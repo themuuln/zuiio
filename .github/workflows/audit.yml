@@ -121,6 +121,11 @@ jobs:
       - name: pnpm audit
         run: pnpm audit --audit-level high
         continue-on-error: true
+      - name: Semgrep scan
+        continue-on-error: true
+        run: |
+          pip install semgrep
+          semgrep scan --config=auto --error .
 
   # ─── T3 Parallel: License ───
   license:
