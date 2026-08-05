@@ -444,7 +444,7 @@ export default function ExpensesPage() {
           return (
             <div className="flex flex-col gap-3 text-sm">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 space-y-1">
+                <div className="flex flex-col min-w-0 gap-y-1">
                   <span className="block truncate font-medium">
                     {expense.description}
                   </span>
@@ -475,7 +475,7 @@ export default function ExpensesPage() {
                 </Badge>
               </div>
               <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
-                <div className="min-w-0 space-y-1">
+                <div className="flex flex-col min-w-0 gap-y-1">
                   <span className="block truncate">
                     {expense.vendor_name || expense.category?.name || "\u2014"}
                   </span>

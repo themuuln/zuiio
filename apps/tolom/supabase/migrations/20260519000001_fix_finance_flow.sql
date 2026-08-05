@@ -41,30 +41,84 @@ alter table public.super_admins enable row level security;
 -- ------------------------------------------------------------
 
 -- Admin functions (super admin only — already GRANT'd to authenticated)
-revoke execute on function public.admin_list_organizations() from public;
-revoke execute on function public.admin_update_subscription(uuid, text, text) from public;
+-- Each revoke is guarded: several functions exist only in production
+-- (schema drift), and REVOKE on a missing function fails a fresh DB.
+do $$
+begin
+  if to_regprocedure('public.admin_list_organizations()') is not null then
+    revoke execute on function public.admin_list_organizations() from public;
+  end if;
+  if to_regprocedure('public.admin_update_subscription(uuid, text, text)') is not null then
+    revoke execute on function public.admin_update_subscription(uuid, text, text) from public;
+  end if;
+end;
+$$;
 
 -- Subscription/org functions
-revoke execute on function public.check_org_subscription_status(uuid) from public;
-revoke execute on function public.renew_organization_subscription(uuid) from public;
-revoke execute on function public.create_default_subscription(uuid) from public;
+do $$
+begin
+  if to_regprocedure('public.check_org_subscription_status(uuid)') is not null then
+    revoke execute on function public.check_org_subscription_status(uuid) from public;
+  end if;
+  if to_regprocedure('public.renew_organization_subscription(uuid)') is not null then
+    revoke execute on function public.renew_organization_subscription(uuid) from public;
+  end if;
+  if to_regprocedure('public.create_default_subscription(uuid)') is not null then
+    revoke execute on function public.create_default_subscription(uuid) from public;
+  end if;
+end;
+$$;
 
 -- Auth/lookup functions
-revoke execute on function public.lookup_user_by_email(text) from public;
-revoke execute on function public.lookup_invite_by_token(text) from public;
-revoke execute on function public.accept_invite(text, uuid) from public;
+do $$
+begin
+  if to_regprocedure('public.lookup_user_by_email(text)') is not null then
+    revoke execute on function public.lookup_user_by_email(text) from public;
+  end if;
+  if to_regprocedure('public.lookup_invite_by_token(text)') is not null then
+    revoke execute on function public.lookup_invite_by_token(text) from public;
+  end if;
+  if to_regprocedure('public.accept_invite(text, uuid)') is not null then
+    revoke execute on function public.accept_invite(text, uuid) from public;
+  end if;
+end;
+$$;
 
 -- Invoice functions (authenticated only; public access is via public_token)
-revoke execute on function public.get_invoice_by_token(text) from public;
-revoke execute on function public.get_public_invoice_by_token(text) from public;
+do $$
+begin
+  if to_regprocedure('public.get_invoice_by_token(text)') is not null then
+    revoke execute on function public.get_invoice_by_token(text) from public;
+  end if;
+  if to_regprocedure('public.get_public_invoice_by_token(text)') is not null then
+    revoke execute on function public.get_public_invoice_by_token(text) from public;
+  end if;
+end;
+$$;
 
 -- Internal cron functions (not for user invocation)
-revoke execute on function public.invoke_expire_subscriptions() from public;
-revoke execute on function public.invoke_check_service_reminders() from public;
+do $$
+begin
+  if to_regprocedure('public.invoke_expire_subscriptions()') is not null then
+    revoke execute on function public.invoke_expire_subscriptions() from public;
+  end if;
+  if to_regprocedure('public.invoke_check_service_reminders()') is not null then
+    revoke execute on function public.invoke_check_service_reminders() from public;
+  end if;
+end;
+$$;
 
 -- Bay view PIN functions (already have individual REVOKEs in org_selector migration)
-revoke execute on function public.set_organization_bay_view_pin(uuid, text) from public;
-revoke execute on function public.verify_organization_bay_view_pin(uuid, text) from public;
+do $$
+begin
+  if to_regprocedure('public.set_organization_bay_view_pin(uuid, text)') is not null then
+    revoke execute on function public.set_organization_bay_view_pin(uuid, text) from public;
+  end if;
+  if to_regprocedure('public.verify_organization_bay_view_pin(uuid, text)') is not null then
+    revoke execute on function public.verify_organization_bay_view_pin(uuid, text) from public;
+  end if;
+end;
+$$;
 
 -- ------------------------------------------------------------
 -- 5. Index for payment method lookups on invoice_payments

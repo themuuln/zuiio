@@ -199,7 +199,12 @@ describe("getWorkOrders", () => {
     expect(result).toHaveLength(1);
   });
 
-  it("applies search filter", async () => {
+  it("applies search filter via matching customer/vehicle ids", async () => {
+    // customers match
+    db.__qb.resolveOnce({ data: [{ id: "cust-1" }], error: null });
+    // vehicles match
+    db.__qb.resolveOnce({ data: [{ id: "veh-1" }], error: null });
+    // work orders
     db.__qb.resolveOnce({
       data: [makeWorkOrderRow()],
       error: null,
@@ -212,6 +217,35 @@ describe("getWorkOrders", () => {
     });
 
     expect(result).toHaveLength(1);
+    expect(db.from).toHaveBeenCalledWith("customers");
+    expect(db.from).toHaveBeenCalledWith("vehicles");
+    expect(db.from("work_orders").or).toHaveBeenCalledWith(
+      "customer_id.in.(cust-1),vehicle_id.in.(veh-1)",
+    );
+  });
+
+  it("forces an empty result when search matches no customers or vehicles", async () => {
+    // customers no match
+    db.__qb.resolveOnce({ data: [], error: null });
+    // vehicles no match
+    db.__qb.resolveOnce({ data: [], error: null });
+    // work orders (mock doesn't filter — assert the eq() forcing instead)
+    db.__qb.resolveOnce({
+      data: [makeWorkOrderRow()],
+      error: null,
+      count: null,
+    });
+    db.__qb.resolveOnce({ data: [makeCostRow()], error: null });
+
+    const result = await getWorkOrders(db as never, ORG_ID, {
+      search: "zzz-nothing",
+    });
+
+    expect(db.from("work_orders").eq).toHaveBeenCalledWith(
+      "id",
+      "00000000-0000-0000-0000-000000000000",
+    );
+    expect(result).toHaveLength(1); // mock chain does not filter
   });
 
   it("applies date filter", async () => {

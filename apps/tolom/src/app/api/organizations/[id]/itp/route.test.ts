@@ -126,11 +126,7 @@ describe("organizations/[id]/itp route", () => {
       const response = await (GET as any)({ request, orgId, supabase });
       const body = await response.json();
 
-      expect(getItpStatsMock).toHaveBeenCalledWith(
-        supabase,
-        orgId,
-        null,
-      );
+      expect(getItpStatsMock).toHaveBeenCalledWith(supabase, orgId, null);
       expect(body.data.total).toBe(10);
       expect(body.data.valid).toBe(5);
     });
@@ -285,9 +281,7 @@ describe("organizations/[id]/itp route", () => {
     });
 
     it("handles service error", async () => {
-      recordItpInspectionMock.mockRejectedValue(
-        new Error("Validation failed"),
-      );
+      recordItpInspectionMock.mockRejectedValue(new Error("Validation failed"));
 
       const supabase = { from: vi.fn() };
       const request = new NextRequest(url, {

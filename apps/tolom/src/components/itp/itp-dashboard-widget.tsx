@@ -62,7 +62,7 @@ export function ItpDashboardWidget({
           {t("dashboardWidgetTitle")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-y-4">
         {/* Stats summary */}
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1 rounded-lg border p-3">
@@ -115,11 +115,11 @@ export function ItpDashboardWidget({
 
         {/* Expiring vehicles list */}
         {expiringRecords && expiringRecords.length > 0 && (
-          <div className="space-y-2">
+          <div className="flex flex-col gap-y-2">
             <p className="text-xs font-medium text-muted-foreground">
               {t("expiringVehicles")}
             </p>
-            <div className="max-h-44 space-y-1 overflow-y-auto">
+            <div className="flex flex-col max-h-44 gap-y-1 overflow-y-auto">
               {expiringRecords.slice(0, 5).map((vehicle) => {
                 const remainingPct =
                   vehicle.days_until_expiry != null

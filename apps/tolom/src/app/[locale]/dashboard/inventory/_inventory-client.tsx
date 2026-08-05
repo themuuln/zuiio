@@ -9,7 +9,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,6 +41,13 @@ function InventoryPage() {
   // This stub is kept for PartsTab's onNavigate prop compatibility
   const handleTabChange = (_newTab: string) => {};
   const [search, setSearch] = useState("");
+
+  // Prefill search from ?q= (e.g. global search jump target). Read once on mount
+  // via window.location so we avoid useSearchParams Suspense requirements.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) setSearch(q);
+  }, []);
 
   // Data for sidebar + cross-tab coordination
   const { data: parts = [], error: partsError } = usePartsCatalog(

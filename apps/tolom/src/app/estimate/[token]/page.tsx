@@ -145,7 +145,7 @@ export default function PublicEstimatePage() {
         <Card className="rounded-3xl border-border/60 shadow-sm">
           <CardContent className="flex flex-col gap-6 p-6 md:p-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div className="space-y-3">
+              <div className="flex flex-col gap-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className={status.className}>
                     <StatusIcon className="size-3.5" />
@@ -186,7 +186,7 @@ export default function PublicEstimatePage() {
                     {t("customerInfo")}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="flex flex-col gap-y-2">
                   <Typography.Text className="font-medium">
                     {customerName}
                   </Typography.Text>
@@ -209,7 +209,7 @@ export default function PublicEstimatePage() {
                     {t("vehicleInfo")}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="flex flex-col gap-y-2">
                   <Typography.Text className="font-medium font-mono">
                     {estimate.vehicle?.plate_number ?? "—"}
                   </Typography.Text>
@@ -239,7 +239,7 @@ export default function PublicEstimatePage() {
                 className="rounded-2xl border border-border/60 bg-card p-4"
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-2">
+                  <div className="flex flex-col gap-y-2">
                     <div className="flex items-center gap-2">
                       <div className="flex size-8 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
                         {index + 1}
@@ -305,7 +305,7 @@ export default function PublicEstimatePage() {
             <CardHeader>
               <CardTitle className="text-base">{t("summary")}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="flex flex-col gap-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{t("subtotal")}</span>
                 <span className="font-mono">

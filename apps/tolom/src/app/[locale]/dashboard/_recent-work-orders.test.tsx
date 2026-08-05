@@ -246,7 +246,8 @@ describe("RecentWorkOrdersTable", () => {
       />,
     );
     // id.slice(0,8) = "wo-click", text rendered as "wo-click..."
-    const row = screen.getByText(/^wo-click\.\.\./).closest("tr")!;
+    const row = screen.getByText(/^wo-click\.\.\./).closest("tr");
+    if (!row) throw new Error("row not found");
     await user.click(row);
     expect(pushSpy).toHaveBeenCalledWith(
       "/dashboard/work-orders/wo-click-test-id",

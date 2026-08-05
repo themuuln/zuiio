@@ -515,6 +515,8 @@
   },
   "bayView": {
     "title": "Bay View",
+    "vatAbbr": "VAT",
+    "vatLabel": "Value Added Tax",
     "workOrder": "Work Order",
     "baysActive": "Bays Active",
     "bayCount": "Bay count",
@@ -997,7 +999,15 @@
     "emptyDescription": "Get started by creating your first work order or adding a customer.",
     "createFirstWorkOrder": "Create Work Order",
     "addCustomer": "Add Customer",
-    "recentWorkOrdersDesc": "Latest 10 orders"
+    "recentWorkOrdersDesc": "Latest 10 orders",
+    "todayAgenda": "Today",
+    "appointmentsToday": "Appointments today",
+    "readyForPickup": "Ready for pickup",
+    "noAppointmentsToday": "No appointments today",
+    "noPickupsToday": "Nothing ready for pickup",
+    "dueServiceReminders": "Service reminders due",
+    "noDueReminders": "No reminders due",
+    "viewAll": "View all"
   },
   "workOrders": {
     "title": "Work Orders",
@@ -1794,8 +1804,8 @@
       "total_estimated_cost": "Total Estimated Cost",
       "approve": "Approve",
       "decline": "Decline",
-      "approved": "Approved \u2713",
-      "declined": "Declined \u2717",
+      "approved": "Approved ✓",
+      "declined": "Declined ✗",
       "pending_approval": "Pending Your Approval",
       "thank_you": "Thank you! Your feedback has been saved.",
       "view_on_phone": "View inspection on your phone",
@@ -1989,6 +1999,8 @@
   },
   "estimates": {
     "pageTitle": "Estimates",
+    "vatAbbr": "VAT",
+    "vatLabel": "Value Added Tax",
     "pageSubtitle": "Build and send quotes. Convert approved ones to work orders.",
     "newQuote": "New Quote",
     "allStatuses": "All statuses",
@@ -3350,6 +3362,8 @@
   },
   "workOrderDetail": {
     "workOrder": "Work Order",
+    "vatAbbr": "VAT",
+    "vatLabel": "Value Added Tax",
     "status": "Status",
     "customerAndVehicle": "Customer & Vehicle",
     "mechanic": "Mechanic",
@@ -4278,6 +4292,11 @@
     "effectiveFrom": "Effective From",
     "totalHours": "Total Hours",
     "grossPay": "Gross Pay",
+    "ndsh": "Social insurance",
+    "ndshEmployer": "Social insurance (employer)",
+    "ndshEmployee": "Social insurance (employee)",
+    "ndshDisabled": "Social insurance disabled",
+    "ndshRatesInfo": "Social insurance: employer {employerRate}% / employee {employeeRate}%",
     "status": "Status",
     "calculate": "Calculate Payroll",
     "approve": "Approve",
@@ -4464,5 +4483,21 @@
     "submitFailed": "Failed to submit. Please try again.",
     "networkError": "Network error. Please check your connection.",
     "submitSuccess": "Booking request submitted. The shop will contact you to confirm."
+  },
+  "globalSearch": {
+    "searchPrompt": "Search customers, vehicles, work orders and parts",
+    "customers": "Customers",
+    "vehicles": "Vehicles",
+    "workOrders": "Work Orders",
+    "parts": "Parts",
+    "minChars": "Type at least 2 characters"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "description": "Work faster with your keyboard",
+    "search": "Search anything",
+    "newWorkOrder": "New work order",
+    "toggleSidebar": "Toggle sidebar",
+    "help": "Keyboard shortcuts"
   }
 }

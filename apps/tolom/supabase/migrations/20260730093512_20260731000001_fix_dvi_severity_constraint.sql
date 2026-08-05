@@ -1,0 +1,1 @@
+ALTER TABLE dvi_inspection_items DROP CONSTRAINT IF EXISTS dvi_inspection_items_severity_check; ALTER TABLE dvi_inspection_items ADD CONSTRAINT dvi_inspection_items_severity_check CHECK (severity IN ('minor', 'major', 'critical'));

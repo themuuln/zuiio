@@ -36,12 +36,17 @@ vi.mock("@/components/customers/customer-form", () => ({
     }) => (
       <div data-testid="customer-form-mock">
         <button
+          type="button"
           data-testid="customer-form-success"
           onClick={() => onSuccess({ id: "new-cust-1", first_name: "New" })}
         >
           Success
         </button>
-        <button data-testid="customer-form-cancel" onClick={onCancel}>
+        <button
+          type="button"
+          data-testid="customer-form-cancel"
+          onClick={onCancel}
+        >
           Cancel
         </button>
       </div>

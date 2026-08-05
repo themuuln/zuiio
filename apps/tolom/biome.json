@@ -24,7 +24,8 @@
       "!_scripts",
       "!scratch",
       "!*.css",
-      "!src/app/globals.css"
+      "!src/app/globals.css",
+      "!src/messages/en.d.json.ts"
     ]
   },
   "formatter": {

@@ -33,7 +33,7 @@ export function ExpenseDetailView({ expense }: ExpenseDetailViewProps) {
       {/* Amount */}
       <section className="rounded-xl border border-border/60 bg-card/40 p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
+          <div className="flex flex-col gap-y-1">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("amount")}
             </span>

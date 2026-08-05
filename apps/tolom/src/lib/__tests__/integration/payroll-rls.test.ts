@@ -22,6 +22,7 @@ import {
   createTestPayrollRecord,
   createTestUser,
   deleteRecord,
+  deleteTestOrg,
   signInAsUser,
 } from "./helpers";
 
@@ -61,20 +62,19 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!hasSupabase || !admin) return;
   // Clean up in reverse dependency order
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgAId},${userA.id}` as unknown as string,
-  );
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgBId},${userB.id}` as unknown as string,
-  );
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgAId,
+    user_id: userA.id,
+  });
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgBId,
+    user_id: userB.id,
+  });
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
-  await deleteRecord(admin, "organizations", orgAId);
-  await deleteRecord(admin, "organizations", orgBId);
+  await deleteTestOrg(admin, orgAId);
+
+  await deleteTestOrg(admin, orgBId);
 });
 
 // ── Pay Rates RLS ────────────────────────────────────────────
@@ -117,8 +117,8 @@ describeWhenSupabase("Pay Rates RLS — cross-org isolation", () => {
 
   afterAll(async () => {
     if (!admin) return;
-    await deleteRecord(admin!, "mechanic_pay_rates", payRateAId);
-    await deleteRecord(admin!, "mechanic_pay_rates", payRateBId);
+    await deleteRecord(admin, "mechanic_pay_rates", payRateAId);
+    await deleteRecord(admin, "mechanic_pay_rates", payRateBId);
   });
 
   it("User A sees only Org A pay rates", async () => {
@@ -169,8 +169,8 @@ describeWhenSupabase("Payroll Records RLS — cross-org isolation", () => {
 
   afterAll(async () => {
     if (!admin) return;
-    await deleteRecord(admin!, "payroll_records", payrollAId);
-    await deleteRecord(admin!, "payroll_records", payrollBId);
+    await deleteRecord(admin, "payroll_records", payrollAId);
+    await deleteRecord(admin, "payroll_records", payrollBId);
   });
 
   it("User A sees only Org A payroll records", async () => {
@@ -251,8 +251,8 @@ describeWhenSupabase(
 
     afterAll(async () => {
       if (!admin) return;
-      await deleteRecord(admin!, "mechanic_commission_rules", ruleAId);
-      await deleteRecord(admin!, "mechanic_commission_rules", ruleBId);
+      await deleteRecord(admin, "mechanic_commission_rules", ruleAId);
+      await deleteRecord(admin, "mechanic_commission_rules", ruleBId);
     });
 
     it("User A sees only Org A commission rules", async () => {

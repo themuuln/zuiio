@@ -52,11 +52,7 @@ describe("organizations/[id]/itp/[vehicleId] route", () => {
       });
       const body = await response.json();
 
-      expect(getItpRecordMock).toHaveBeenCalledWith(
-        supabase,
-        vehicleId,
-        orgId,
-      );
+      expect(getItpRecordMock).toHaveBeenCalledWith(supabase, vehicleId, orgId);
       expect(body.data.vehicle_id).toBe(vehicleId);
       expect(body.data.itp_status).toBe("valid");
     });
@@ -212,7 +208,13 @@ describe("organizations/[id]/itp/[vehicleId] route", () => {
         headers: { "content-type": "application/json" },
       });
       await expect(
-        (PATCH as any)({ request, orgId, user, supabase, params: { vehicleId } }),
+        (PATCH as any)({
+          request,
+          orgId,
+          user,
+          supabase,
+          params: { vehicleId },
+        }),
       ).rejects.toThrow("Update failed");
     });
   });

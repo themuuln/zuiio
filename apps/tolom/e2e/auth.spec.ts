@@ -23,14 +23,16 @@ test.describe("Authentication Flows", () => {
       await expect(
         page.getByRole("textbox", { name: "Password *", exact: true }),
       ).toBeVisible();
-      await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Sign in", exact: true }),
+      ).toBeVisible();
     });
 
     test("shows validation error on empty submit", async ({ page }) => {
       // The form has required attributes — clicking submit with empty fields
       // triggers browser native validation. We verify the form doesn't navigate away.
       const url = page.url();
-      await page.getByRole("button", { name: "Sign in" }).click();
+      await page.getByRole("button", { name: "Sign in", exact: true }).click();
       // Page should still be on login (form blocked by required validation)
       await expect(page).toHaveURL(url);
     });
@@ -72,7 +74,9 @@ test.describe("Authentication Flows", () => {
     });
 
     test("has a link to login page", async ({ page }) => {
-      await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Sign in", exact: true }),
+      ).toBeVisible();
     });
   });
 

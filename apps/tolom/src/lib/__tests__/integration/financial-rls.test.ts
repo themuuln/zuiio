@@ -24,6 +24,7 @@ import {
   createTestOrg,
   createTestUser,
   deleteRecord,
+  deleteTestOrg,
   signInAsUser,
 } from "./helpers";
 
@@ -63,20 +64,19 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!hasSupabase || !admin) return;
   // Clean up in reverse dependency order
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgAId},${userA.id}` as unknown as string,
-  );
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgBId},${userB.id}` as unknown as string,
-  );
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgAId,
+    user_id: userA.id,
+  });
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgBId,
+    user_id: userB.id,
+  });
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
-  await deleteRecord(admin, "organizations", orgAId);
-  await deleteRecord(admin, "organizations", orgBId);
+  await deleteTestOrg(admin, orgAId);
+
+  await deleteTestOrg(admin, orgBId);
 });
 
 // ── Expense Categories RLS ───────────────────────────────────
@@ -115,8 +115,8 @@ describeWhenSupabase("Expense Categories RLS — cross-org isolation", () => {
 
   afterAll(async () => {
     if (!admin) return;
-    await deleteRecord(admin!, "expense_categories", categoryAId);
-    await deleteRecord(admin!, "expense_categories", categoryBId);
+    await deleteRecord(admin, "expense_categories", categoryAId);
+    await deleteRecord(admin, "expense_categories", categoryBId);
   });
 
   it("User A sees only Org A expense categories", async () => {
@@ -167,8 +167,8 @@ describeWhenSupabase("Expenses RLS — cross-org isolation", () => {
 
   afterAll(async () => {
     if (!admin) return;
-    await deleteRecord(admin!, "expenses", expenseAId);
-    await deleteRecord(admin!, "expenses", expenseBId);
+    await deleteRecord(admin, "expenses", expenseAId);
+    await deleteRecord(admin, "expenses", expenseBId);
   });
 
   it("User A sees only Org A expenses", async () => {
@@ -218,7 +218,7 @@ describeWhenSupabase("Cash Register Sessions RLS — cross-org isolation", () =>
         organization_id: orgAId,
         opened_at: new Date().toISOString(),
         opened_by: userA.id,
-        starting_balance: 100000,
+        opening_balance: 100000,
       })
       .select()
       .single();
@@ -232,7 +232,7 @@ describeWhenSupabase("Cash Register Sessions RLS — cross-org isolation", () =>
         organization_id: orgBId,
         opened_at: new Date().toISOString(),
         opened_by: userB.id,
-        starting_balance: 50000,
+        opening_balance: 50000,
       })
       .select()
       .single();
@@ -243,8 +243,8 @@ describeWhenSupabase("Cash Register Sessions RLS — cross-org isolation", () =>
 
   afterAll(async () => {
     if (!admin) return;
-    await deleteRecord(admin!, "cash_register_sessions", sessionAId);
-    await deleteRecord(admin!, "cash_register_sessions", sessionBId);
+    await deleteRecord(admin, "cash_register_sessions", sessionAId);
+    await deleteRecord(admin, "cash_register_sessions", sessionBId);
   });
 
   it("User A sees only Org A cash register sessions", async () => {
@@ -326,10 +326,10 @@ describeWhenSupabase("Invoices RLS — cross-org isolation", () => {
 
   afterAll(async () => {
     if (!admin) return;
-    await deleteRecord(admin!, "invoices", invoiceAId);
-    await deleteRecord(admin!, "invoices", invoiceBId);
-    await deleteRecord(admin!, "customers", customerAId);
-    await deleteRecord(admin!, "customers", customerBId);
+    await deleteRecord(admin, "invoices", invoiceAId);
+    await deleteRecord(admin, "invoices", invoiceBId);
+    await deleteRecord(admin, "customers", customerAId);
+    await deleteRecord(admin, "customers", customerBId);
   });
 
   it("User A sees only Org A invoices", async () => {

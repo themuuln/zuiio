@@ -226,23 +226,23 @@ Report Service `/lib/services/report-service.ts`:
 - ✅ `getEndOfDaySummary()` — per-mechanic EOD breakdown
 - ✅ `getMechanicsList()` — basic mechanic lookup
 
-### What's Missing
+### What's Missing — Updated 2026-07-31
 
-| Gap | Impact | Priority |
-|-----|--------|----------|
-| Period-over-period comparisons | No context — is revenue good or bad? | 🔴 Critical |
-| Daily/weekly/monthly switcher on dashboard | Cannot zoom in/out on data | 🔴 Critical |
-| Goal tracking | No targets = no urgency | 🔴 Critical |
-| Empty state guidance | First-time users see blank cards | 🟡 High |
-| SQL N+1 performance | Report service loops through WOs one-by-one | 🟡 High |
-| Materialized views | Dashboard queries are slow at scale | 🟡 High |
-| Customer retention analytics | No returning customer %, churn signals | 🟡 High |
-| Inventory analytics | No turnover, stock value, low stock alerts | 🟡 High |
-| Profitability per work order | No parts margin, labor margin | 🟡 High |
-| Mechanic comparison | No per-mechanic efficiency, commission calc | 🟡 Medium |
-| Export (CSV/PDF) | No way to get data out | 🟡 Medium |
-| Benchmarks | No industry comparisons | 🟢 Low |
-| Anomaly detection | No automated alerts | 🟢 Low |
+| Gap | Status | Priority | Evidence |
+|-----|--------|----------|----------|
+| Period-over-period comparisons | ✅ **RESOLVED** | 🔴 Critical | Dashboard KPI cards show trend badges with % change vs prior period. RPC computes `summaryComparison` JSONB. |
+| Daily/weekly/monthly switcher on dashboard | ✅ **RESOLVED** | 🔴 Critical | `ToggleGroup` with today/week/month/all. `keepPreviousData` for instant switching. Persisted to localStorage. |
+| Goal tracking | ❌ **STILL OPEN** | 🔴 Critical | No goal/target setting found |
+| Empty state guidance | ❌ **STILL OPEN** | 🟡 High | No dedicated empty state guidance for first-time users |
+| SQL N+1 performance | ❓ **NOT VERIFIED** | 🟡 High | — |
+| Materialized views | ❌ **STILL OPEN** | 🟡 High | No analytics materialized views created |
+| Customer retention analytics | ❌ **STILL OPEN** | 🟡 High | No returning customer % or churn signals |
+| Inventory analytics | ✅ **RESOLVED** | 🟡 High | Stock value, low stock alerts on dashboard + eod-close |
+| Profitability per work order | ⚠️ **PARTIAL** | 🟡 High | Parts margin/labor in RPC but not displayed in UI per-WO |
+| Mechanic comparison | ✅ **RESOLVED** | 🟡 Medium | Mechanic performance page with leaderboard, KPIs, bar chart |
+| Export (CSV/PDF) | ✅ **RESOLVED** | 🟡 Medium | Invoice/estimate PDF. Tax report CSV. Org data JSON export. |
+| Benchmarks | ❌ **STILL OPEN** | 🟢 Low | No industry comparisons |
+| Anomaly detection | ❌ **STILL OPEN** | 🟢 Low | No automated alerts
 
 ---
 

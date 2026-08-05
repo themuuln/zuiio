@@ -724,7 +724,7 @@ describe("getEndOfDaySummary", () => {
 
     const m1Found = result.mechanics.find((m) => m.mechanic_id === "m-1");
     expect(m1Found).toBeDefined();
-    const m1 = m1Found!;
+    const m1 = m1Found as NonNullable<typeof m1Found>;
     expect(m1.mechanic_name).toBe("Mech One");
     expect(m1.work_orders_completed).toBe(2);
     expect(m1.services_count).toBe(2);
@@ -733,7 +733,7 @@ describe("getEndOfDaySummary", () => {
 
     const m2Found = result.mechanics.find((m) => m.mechanic_id === "m-2");
     expect(m2Found).toBeDefined();
-    const m2 = m2Found!;
+    const m2 = m2Found as NonNullable<typeof m2Found>;
     expect(m2.mechanic_name).toBe("Mech Two");
     expect(m2.work_orders_completed).toBe(1);
     expect(m2.total_revenue).toBe(150);

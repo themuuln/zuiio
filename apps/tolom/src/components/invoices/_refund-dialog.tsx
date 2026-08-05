@@ -157,9 +157,9 @@ export function RefundDialog({
         {step === "form" ? (
           <form
             onSubmit={form.handleSubmit(onSubmitForm)}
-            className="space-y-4"
+            className="flex flex-col gap-y-4"
           >
-            <div className="rounded-lg bg-muted p-3 space-y-2">
+            <div className="flex flex-col rounded-lg bg-muted p-3 gap-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {t("invoice.total")}
@@ -350,7 +350,7 @@ export function RefundDialog({
               </AlertDescription>
             </Alert>
 
-            <div className="rounded-lg border p-3 space-y-2">
+            <div className="flex flex-col rounded-lg border p-3 gap-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {t("invoice.refundAmount")}

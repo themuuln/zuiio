@@ -36,6 +36,12 @@ export interface PayrollRecord {
   paid_at: string | null;
   notes: string | null;
   mechanic_name?: string | null;
+  /** НДШ (Mongolian social insurance) — computed on read from org settings. */
+  ndsh_enabled: boolean;
+  ndsh_employer_rate: number;
+  ndsh_employee_rate: number;
+  ndsh_employer_amount: number;
+  ndsh_employee_amount: number;
 }
 
 // ── Pay Rate Management ────────────────────────────
@@ -179,6 +185,75 @@ export async function listPayRates(
   });
 }
 
+// ── НДШ Settings ────────────────────────────────────
+
+export const DEFAULT_NDSH_EMPLOYER_RATE = 11.5;
+export const DEFAULT_NDSH_EMPLOYEE_RATE = 10;
+
+interface NdshSettings {
+  enabled: boolean;
+  employerRate: number;
+  employeeRate: number;
+}
+
+/**
+ * Fetch НДШ (Mongolian social insurance) settings for an organization.
+ * Returns defaults when the settings row is missing.
+ */
+async function getOrgNdshSettings(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<NdshSettings> {
+  const { data, error } = await withDbCapture(
+    "getOrgNdshSettings",
+    db
+      .from("organization_settings")
+      .select("ndsh_enabled, ndsh_employer_rate, ndsh_employee_rate")
+      .eq("organization_id", orgId)
+      .maybeSingle(),
+  );
+  if (error || !data) {
+    return {
+      enabled: false,
+      employerRate: DEFAULT_NDSH_EMPLOYER_RATE,
+      employeeRate: DEFAULT_NDSH_EMPLOYEE_RATE,
+    };
+  }
+  return {
+    enabled: data.ndsh_enabled ?? false,
+    employerRate: Number(data.ndsh_employer_rate ?? DEFAULT_NDSH_EMPLOYER_RATE),
+    employeeRate: Number(data.ndsh_employee_rate ?? DEFAULT_NDSH_EMPLOYEE_RATE),
+  };
+}
+
+/**
+ * Compute the НДШ fields for a payroll record from gross pay and org settings.
+ * Amounts are rounded to the nearest whole MNT; both are 0 when disabled.
+ */
+function withNdsh(
+  grossPay: number,
+  settings: NdshSettings,
+): Pick<
+  PayrollRecord,
+  | "ndsh_enabled"
+  | "ndsh_employer_rate"
+  | "ndsh_employee_rate"
+  | "ndsh_employer_amount"
+  | "ndsh_employee_amount"
+> {
+  return {
+    ndsh_enabled: settings.enabled,
+    ndsh_employer_rate: settings.employerRate,
+    ndsh_employee_rate: settings.employeeRate,
+    ndsh_employer_amount: settings.enabled
+      ? Math.round((grossPay * settings.employerRate) / 100)
+      : 0,
+    ndsh_employee_amount: settings.enabled
+      ? Math.round((grossPay * settings.employeeRate) / 100)
+      : 0,
+  };
+}
+
 // ── Payroll Calculation ────────────────────────────
 
 /**
@@ -228,6 +303,9 @@ export async function calculateMonthlyPayroll(
   const { data: hoursData } = await hoursQuery;
 
   if (!hoursData || hoursData.length === 0) return [];
+
+  // Read НДШ settings once for the whole run
+  const ndshSettings = await getOrgNdshSettings(supabase, orgId);
 
   // Aggregate hours per mechanic
   const hoursMap = new Map<string, number>();
@@ -327,6 +405,7 @@ export async function calculateMonthlyPayroll(
       records.push({
         ...record,
         mechanic_name: nameMap.get(mechanicId) ?? null,
+        ...withNdsh(grossPay, ndshSettings),
       } as PayrollRecord);
     }
   }
@@ -353,6 +432,9 @@ export async function getPayrollRecords(
   const periodStart = `${year}-${String(month).padStart(2, "0")}-01`;
   const lastDay = new Date(year, month, 0).getDate();
   const periodEnd = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+
+  // Read НДШ settings once — recomputed on read so historical records show НДШ too
+  const ndshSettings = await getOrgNdshSettings(supabase, orgId);
 
   if (branchId) {
     // Get branch mechanics with names in one query, then filter records
@@ -381,6 +463,7 @@ export async function getPayrollRecords(
     return ((data ?? []) as PayrollRecord[]).map((r) => ({
       ...r,
       mechanic_name: nameMap.get(r.mechanic_id) ?? null,
+      ...withNdsh(Number(r.gross_pay ?? 0), ndshSettings),
     })) as PayrollRecord[];
   }
 
@@ -400,6 +483,7 @@ export async function getPayrollRecords(
     return {
       ...rest,
       mechanic_name: profile?.full_name ?? null,
+      ...withNdsh(Number(rest.gross_pay ?? 0), ndshSettings),
     } as PayrollRecord;
   });
 }

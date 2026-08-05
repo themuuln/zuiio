@@ -1,10 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import type {
-  GlobalPartCatalog,
-  GlobalServiceCatalog,
-  PartsCatalog,
-} from "@/lib/types";
+import type { GlobalPartCatalog, GlobalServiceCatalog } from "@/lib/types";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -40,10 +36,7 @@ export async function searchGlobalParts(
   const limit = filters?.limit ?? 50;
   const offset = filters?.offset ?? 0;
 
-  let q = db
-    .from("global_parts_catalog")
-    .select("*")
-    .eq("is_active", true);
+  let q = db.from("global_parts_catalog").select("*").eq("is_active", true);
 
   if (query?.trim()) {
     const escaped = query.trim().replace(/'/g, "''");
@@ -56,7 +49,10 @@ export async function searchGlobalParts(
     q = q.eq("category", filters.category);
   }
 
-  q = q.order("category").order("name").range(offset, offset + limit - 1);
+  q = q
+    .order("category")
+    .order("name")
+    .range(offset, offset + limit - 1);
 
   const { data, error } = await q;
   if (error) throw new Error(error.message);
@@ -94,10 +90,7 @@ export async function searchGlobalServices(
   const limit = filters?.limit ?? 50;
   const offset = filters?.offset ?? 0;
 
-  let q = db
-    .from("global_services_catalog")
-    .select("*")
-    .eq("is_active", true);
+  let q = db.from("global_services_catalog").select("*").eq("is_active", true);
 
   if (query?.trim()) {
     const escaped = query.trim().replace(/'/g, "''");
@@ -110,7 +103,10 @@ export async function searchGlobalServices(
     q = q.eq("category", filters.category);
   }
 
-  q = q.order("category").order("name").range(offset, offset + limit - 1);
+  q = q
+    .order("category")
+    .order("name")
+    .range(offset, offset + limit - 1);
 
   const { data, error } = await q;
   if (error) throw new Error(error.message);
@@ -132,7 +128,8 @@ export async function importGlobalPartsToOrg(
   partIds: string[],
 ): Promise<ImportResult> {
   if (!orgId) throw new ValidationError("Organization ID is required");
-  if (!partIds.length) throw new ValidationError("No parts selected for import");
+  if (!partIds.length)
+    throw new ValidationError("No parts selected for import");
 
   // Fetch global parts to import
   const { data: globalParts, error: fetchError } = await db
@@ -154,7 +151,9 @@ export async function importGlobalPartsToOrg(
     .is("deleted_at", null);
 
   const existingIds = new Set(
-    (existing ?? []).map((p: { global_part_id: string | null }) => p.global_part_id).filter(Boolean),
+    (existing ?? [])
+      .map((p: { global_part_id: string | null }) => p.global_part_id)
+      .filter(Boolean),
   );
 
   const recordsToInsert = globalParts

@@ -22,6 +22,7 @@ export function getMovementLabels(
     return: t("movementReturn"),
     waste: t("movementWaste"),
     disassembly: t("movementDisassembly"),
+    count_adjustment: t("movementCountAdjustment"),
   };
 }
 
@@ -36,6 +37,8 @@ export const MOVEMENT_COLORS: Record<string, string> = {
     "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30",
   return: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30",
   waste: "text-muted-foreground bg-muted/50",
+  count_adjustment:
+    "text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/30",
 };
 
 // ── PO Status labels ─────────────────────────────────────────
@@ -75,6 +78,7 @@ export function getMovementFilters(t: (key: string) => string) {
     { key: "return", label: t("movementReturn") },
     { key: "waste", label: t("movementWaste") },
     { key: "disassembly", label: t("movementDisassembly") },
+    { key: "count_adjustment", label: t("movementCountAdjustment") },
   ] as const;
 }
 

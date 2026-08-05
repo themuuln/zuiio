@@ -3,13 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Hoisted mock infrastructure ─────────────────────────────────────────
 
-const { mockS3Client, mockS3ClientInstance } = vi.hoisted(() => {
+const { mockS3Client } = vi.hoisted(() => {
   const mockSend = vi.fn();
   // Use a regular function so `new S3Client(...)` works (arrow functions are not constructible)
   const instance = { send: mockSend };
   return {
-    mockS3Client: vi.fn(() => instance),
-    mockS3ClientInstance: instance,
+    mockS3Client: vi.fn(function S3ClientMock() {
+      return instance;
+    }),
   };
 });
 
@@ -26,8 +27,17 @@ interface R2ClientModule {
 let mod: R2ClientModule;
 
 beforeEach(async () => {
+  vi.resetModules();
   vi.clearAllMocks();
   vi.unstubAllEnvs();
+  for (const key of [
+    "R2_ACCOUNT_ID",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+    "R2_BUCKET",
+  ]) {
+    vi.stubEnv(key, "");
+  }
   mod = await import("./r2-client");
 });
 

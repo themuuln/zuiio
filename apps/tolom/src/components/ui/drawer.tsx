@@ -16,6 +16,13 @@ const DrawerContext = React.createContext<DrawerContextValue>({
   closing: false,
   showSwipeHandle: false,
 });
+const DrawerPortalContainerContext = React.createContext<HTMLDivElement | null>(
+  null,
+);
+
+function useDrawerPortalContainer() {
+  return React.useContext(DrawerPortalContainerContext);
+}
 
 function useDrawerContext() {
   return React.useContext(DrawerContext);
@@ -182,6 +189,8 @@ function DrawerContent({
   drawerMaxWidth?: string;
 }) {
   const { closing, showSwipeHandle } = useDrawerContext();
+  const [contentContainer, setContentContainer] =
+    React.useState<HTMLDivElement | null>(null);
   const popupSizeId = React.useId().replace(/:/g, "_");
   const sizeStyleTag = drawerMaxWidth
     ? `[data-dw="${popupSizeId}"]{max-width:${drawerMaxWidth}!important;--drawer-max-w:${drawerMaxWidth}}`
@@ -249,35 +258,37 @@ function DrawerContent({
           )}
           {...props}
         >
-          <DrawerPrimitive.Content
-            data-slot="drawer-content"
-            className={cn(
-              direction === "bottom"
-                ? "relative flex min-h-0 w-full flex-col gap-2 overflow-hidden border-t border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl group-data-nested-drawer-open/popup:border-y"
-                : "relative flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden border-l border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl group-data-nested-drawer-open/popup:border-y",
-              contentClassName,
-            )}
-          >
-            {direction === "bottom" && showSwipeHandle && (
-              <span className="mx-auto mt-2 block h-1.5 w-10 rounded-full bg-muted-foreground/30" />
-            )}
-            {children}
-            {showCloseButton && (
-              <DrawerPrimitive.Close
-                data-slot="drawer-close"
-                render={
-                  <Button
-                    variant="ghost"
-                    className="absolute top-3 right-3 z-10"
-                    size="icon-sm"
-                  />
-                }
-              >
-                <XIcon />
-                <span className="sr-only">Close</span>
-              </DrawerPrimitive.Close>
-            )}
-          </DrawerPrimitive.Content>
+          <DrawerPortalContainerContext.Provider value={contentContainer}>
+            <DrawerPrimitive.Content
+              ref={setContentContainer}
+              className={cn(
+                direction === "bottom"
+                  ? "relative flex min-h-0 w-full flex-col gap-2 overflow-hidden border-t border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl group-data-nested-drawer-open/popup:border-y"
+                  : "relative flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden border-l border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl group-data-nested-drawer-open/popup:border-y",
+                contentClassName,
+              )}
+            >
+              {direction === "bottom" && showSwipeHandle && (
+                <span className="mx-auto mt-2 block h-1.5 w-10 rounded-full bg-muted-foreground/30" />
+              )}
+              {children}
+              {showCloseButton && (
+                <DrawerPrimitive.Close
+                  data-slot="drawer-close"
+                  render={
+                    <Button
+                      variant="ghost"
+                      className="absolute top-3 right-3 z-10"
+                      size="icon-sm"
+                    />
+                  }
+                >
+                  <XIcon />
+                  <span className="sr-only">Close</span>
+                </DrawerPrimitive.Close>
+              )}
+            </DrawerPrimitive.Content>
+          </DrawerPortalContainerContext.Provider>
         </DrawerPrimitive.Popup>
       </DrawerViewport>
     </DrawerPortal>
@@ -376,4 +387,5 @@ export {
   DrawerTrigger,
   DrawerViewport,
   DrawerVirtualKeyboardProvider,
+  useDrawerPortalContainer,
 };

@@ -19,27 +19,36 @@ vi.mock("@/lib/sentry-report-server", () => ({
   reportServerError: vi.fn(),
 }));
 
+const { sendItpReminderEmailMock } = vi.hoisted(() => ({
+  sendItpReminderEmailMock: vi.fn(),
+}));
+vi.mock("@/lib/services/email-service", () => ({
+  sendItpReminderEmail: sendItpReminderEmailMock,
+}));
+
 import { revalidateTag } from "next/cache";
 import { logAuditAfter } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
+import { sendItpReminderEmail } from "@/lib/services/email-service";
 
 const mockRevalidateTag = vi.mocked(revalidateTag);
 const mockLogAudit = vi.mocked(logAuditAfter);
-const mockLoggerWarn = vi.mocked(logger.warn);
+const _mockLoggerWarn = vi.mocked(logger.warn);
 const mockReportServerError = vi.mocked(reportServerError);
+const mockSendItpReminderEmail = vi.mocked(sendItpReminderEmail);
 
-import { ValidationError, NotFoundError } from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import {
-  getItpRecords,
   getExpiringItpRecords,
-  getItpRecord,
-  recordItpInspection,
-  updateItpRecord,
-  sendItpReminder,
-  getItpStats,
   getItpHistory,
+  getItpRecord,
+  getItpRecords,
+  getItpStats,
   getVehiclesNeedingReminder,
+  recordItpInspection,
+  sendItpReminder,
+  updateItpRecord,
 } from "../itp-service";
 
 const ORG_ID = "org-1";
@@ -126,10 +135,36 @@ describe("getItpRecords", () => {
 
     await getItpRecords(db, ORG_ID, { branchId: BRANCH_ID });
 
-    expect(db.from("vehicles").eq).toHaveBeenCalledWith(
-      "branch_id",
-      BRANCH_ID,
+    expect(db.from("vehicles").eq).toHaveBeenCalledWith("branch_id", BRANCH_ID);
+  });
+
+  it("filters by search via matching customer ids", async () => {
+    // customers match
+    db.__qb.resolveOnce({ data: [{ id: "cust-1" }], error: null });
+    // vehicles (main query)
+    db.__qb.resolveOnce({ data: [makeVehicleRow()], error: null, count: 1 });
+
+    const result = await getItpRecords(db, ORG_ID, { search: "John" });
+
+    expect(db.from).toHaveBeenCalledWith("customers");
+    expect(db.from("vehicles").or).toHaveBeenCalledWith(
+      "plate_number.ilike.%John%,customer_id.in.(cust-1)",
     );
+    expect(result.data).toHaveLength(1);
+  });
+
+  it("searches by plate alone when no customer matches", async () => {
+    // customers no match
+    db.__qb.resolveOnce({ data: [], error: null });
+    // vehicles (main query)
+    db.__qb.resolveOnce({ data: [makeVehicleRow()], error: null, count: 1 });
+
+    const result = await getItpRecords(db, ORG_ID, { search: "ABC" });
+
+    expect(db.from("vehicles").or).toHaveBeenCalledWith(
+      "plate_number.ilike.%ABC%",
+    );
+    expect(result.data).toHaveLength(1);
   });
 
   it("handles empty results", async () => {
@@ -150,7 +185,10 @@ describe("getItpRecords", () => {
   });
 
   it("handles db error", async () => {
-    db.__qb.resolveOnce({ data: null, error: new Error("DB connection failed") });
+    db.__qb.resolveOnce({
+      data: null,
+      error: new Error("DB connection failed"),
+    });
 
     await expect(getItpRecords(db, ORG_ID)).rejects.toThrow(
       "DB connection failed",
@@ -222,7 +260,11 @@ describe("recordItpInspection", () => {
     //    recordItpInspection does .select().eq().eq().single() to get prev state
     //    .single() returns qb, then await qb dequeues from resolveOnceQueue
     db.__qb.resolveOnce({
-      data: { itp_expiry_date: "2026-12-31", itp_last_passed_date: "2025-12-31", itp_notes: null },
+      data: {
+        itp_expiry_date: "2026-12-31",
+        itp_last_passed_date: "2025-12-31",
+        itp_notes: null,
+      },
       error: null,
     });
 
@@ -288,7 +330,11 @@ describe("recordItpInspection", () => {
 
   it("handles update db error", async () => {
     db.__qb.resolveOnce({
-      data: { itp_expiry_date: "2026-12-31", itp_last_passed_date: "2025-12-31", itp_notes: null },
+      data: {
+        itp_expiry_date: "2026-12-31",
+        itp_last_passed_date: "2025-12-31",
+        itp_notes: null,
+      },
       error: null,
     });
 
@@ -349,6 +395,32 @@ describe("updateItpRecord", () => {
 // ── sendItpReminder ───────────────────────────────────────────────
 
 describe("sendItpReminder", () => {
+  // Helper: queue the update + history inserts, then stub the vehicle/org
+  // fetches used for email delivery (they use .maybeSingle(), which resolves
+  // via mockResolvedValueOnce in call order: vehicle first, org second).
+  const stubEmailLookups = ({
+    customer,
+    orgName = "Тест Орг",
+  }: {
+    customer: Record<string, unknown> | null;
+    orgName?: string;
+  }) => {
+    vi.mocked(db.from("vehicles").maybeSingle).mockResolvedValueOnce({
+      data: {
+        plate_number: "5555УНА",
+        make: "Toyota",
+        model: "Camry",
+        itp_expiry_date: "2026-12-31",
+        customer,
+      },
+      error: null,
+    });
+    vi.mocked(db.from("vehicles").maybeSingle).mockResolvedValueOnce({
+      data: { name: orgName },
+      error: null,
+    });
+  };
+
   it("updates reminder_sent_at and creates history entry", async () => {
     // 1) .update().eq().eq()
     db.__qb.resolveOnce({ data: null, error: null });
@@ -356,7 +428,10 @@ describe("sendItpReminder", () => {
     // 2) .insert()
     db.__qb.resolveOnce({ data: null, error: null });
 
-    await sendItpReminder(db, VEHICLE_ID, ORG_ID, USER_ID);
+    // No customer email → email lookup resolves to null customer
+    stubEmailLookups({ customer: null });
+
+    const result = await sendItpReminder(db, VEHICLE_ID, ORG_ID, USER_ID);
 
     expect(db.from("vehicles").update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -366,6 +441,99 @@ describe("sendItpReminder", () => {
     expect(db.from("vehicle_itp_history").insert).toHaveBeenCalled();
     expect(mockLogAudit).toHaveBeenCalled();
     expect(mockRevalidateTag).toHaveBeenCalledWith(`vehicles:${ORG_ID}`, "max");
+    expect(mockSendItpReminderEmail).not.toHaveBeenCalled();
+    expect(result).toEqual({ sent: true, emailDelivered: false });
+  });
+
+  it("sends email when customer has email", async () => {
+    // 1) .update().eq().eq()
+    db.__qb.resolveOnce({ data: null, error: null });
+
+    // 2) .insert()
+    db.__qb.resolveOnce({ data: null, error: null });
+
+    mockSendItpReminderEmail.mockResolvedValue({ id: "msg-1" });
+    stubEmailLookups({
+      customer: {
+        id: "c-1",
+        first_name: "Бат",
+        last_name: "Дорж",
+        email: "bat@example.com",
+      },
+    });
+
+    const result = await sendItpReminder(db, VEHICLE_ID, ORG_ID, USER_ID);
+
+    expect(mockSendItpReminderEmail).toHaveBeenCalledTimes(1);
+    expect(mockSendItpReminderEmail).toHaveBeenCalledWith({
+      recipientEmail: "bat@example.com",
+      orgName: "Тест Орг",
+      vehicleLabel: "5555УНА Toyota Camry",
+      itpExpiryDate: "2026-12-31",
+      customerName: "Бат Дорж",
+    });
+    expect(result).toEqual({ sent: true, emailDelivered: true });
+  });
+
+  it("skips email when customer email missing but still stamps", async () => {
+    // 1) .update().eq().eq()
+    db.__qb.resolveOnce({ data: null, error: null });
+
+    // 2) .insert()
+    db.__qb.resolveOnce({ data: null, error: null });
+
+    stubEmailLookups({
+      customer: {
+        id: "c-1",
+        first_name: "Бат",
+        last_name: "Дорж",
+        email: null,
+      },
+    });
+
+    const result = await sendItpReminder(db, VEHICLE_ID, ORG_ID, USER_ID);
+
+    expect(db.from("vehicles").update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itp_reminder_sent_at: expect.any(String),
+      }),
+    );
+    expect(db.from("vehicle_itp_history").insert).toHaveBeenCalled();
+    expect(mockSendItpReminderEmail).not.toHaveBeenCalled();
+    expect(result).toEqual({ sent: true, emailDelivered: false });
+  });
+
+  it("stamps and writes history even when email send throws", async () => {
+    // 1) .update().eq().eq()
+    db.__qb.resolveOnce({ data: null, error: null });
+
+    // 2) .insert()
+    db.__qb.resolveOnce({ data: null, error: null });
+
+    mockSendItpReminderEmail.mockRejectedValue(new Error("SMTP down"));
+    stubEmailLookups({
+      customer: {
+        id: "c-1",
+        first_name: "Бат",
+        last_name: "Дорж",
+        email: "bat@example.com",
+      },
+    });
+
+    const result = await sendItpReminder(db, VEHICLE_ID, ORG_ID, USER_ID);
+
+    expect(db.from("vehicles").update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itp_reminder_sent_at: expect.any(String),
+      }),
+    );
+    expect(db.from("vehicle_itp_history").insert).toHaveBeenCalled();
+    expect(mockSendItpReminderEmail).toHaveBeenCalledTimes(1);
+    expect(mockReportServerError).toHaveBeenCalledWith(
+      "sendItpReminderEmail",
+      expect.any(Error),
+    );
+    expect(result).toEqual({ sent: true, emailDelivered: false });
   });
 
   it("handles db error on update", async () => {
@@ -412,10 +580,7 @@ describe("getItpStats", () => {
     db.__qb.resolveOnce({ data: [], error: null });
 
     await getItpStats(db, ORG_ID, BRANCH_ID);
-    expect(db.from("vehicles").eq).toHaveBeenCalledWith(
-      "branch_id",
-      BRANCH_ID,
-    );
+    expect(db.from("vehicles").eq).toHaveBeenCalledWith("branch_id", BRANCH_ID);
   });
 });
 

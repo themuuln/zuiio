@@ -171,7 +171,7 @@ describe("useDraftSave", () => {
       const saved = localStorage.getItem("wizard-draft-org-123");
       expect(saved).not.toBeNull();
 
-      const parsed = JSON.parse(saved!);
+      const parsed = JSON.parse(saved as string);
       expect(parsed.complaint).toBe("Engine noise");
       expect(parsed.selectedCustomerId).toBe("cust-1");
       expect(parsed.selectedVehicleId).toBe("veh-1");
@@ -187,7 +187,9 @@ describe("useDraftSave", () => {
         vi.advanceTimersByTime(2000);
       });
 
-      const parsed = JSON.parse(localStorage.getItem("wizard-draft-org-123")!);
+      const parsed = JSON.parse(
+        localStorage.getItem("wizard-draft-org-123") as string,
+      );
 
       expect(parsed).toMatchObject({
         selectedCustomerId: "cust-1",
@@ -247,7 +249,9 @@ describe("useDraftSave", () => {
         vi.advanceTimersByTime(1000);
       });
 
-      const _saved = JSON.parse(localStorage.getItem("wizard-draft-org-123")!);
+      const _saved = JSON.parse(
+        localStorage.getItem("wizard-draft-org-123") as string,
+      );
       // The first value may have been saved, but the second should not yet
       // We just verify the timer was reset by checking the final value after
       // advancing another full 2s
@@ -255,7 +259,9 @@ describe("useDraftSave", () => {
         vi.advanceTimersByTime(2000);
       });
 
-      const final = JSON.parse(localStorage.getItem("wizard-draft-org-123")!);
+      const final = JSON.parse(
+        localStorage.getItem("wizard-draft-org-123") as string,
+      );
       expect(final.complaint).toBe("Second");
     });
 
@@ -294,7 +300,9 @@ describe("useDraftSave", () => {
         vi.advanceTimersByTime(2000);
       });
 
-      const parsed = JSON.parse(localStorage.getItem("wizard-draft-org-123")!);
+      const parsed = JSON.parse(
+        localStorage.getItem("wizard-draft-org-123") as string,
+      );
       expect(parsed.selectedCustomerId).toBeNull();
       expect(parsed.selectedVehicleId).toBeNull();
     });

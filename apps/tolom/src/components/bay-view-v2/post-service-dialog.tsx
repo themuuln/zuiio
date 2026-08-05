@@ -394,9 +394,16 @@ export function PostServiceDialog({
             {t("cancel")}
           </Button>
           <Button onClick={handleSubmit} size="lg" disabled={saving}>
-            {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}saving
-            ? t("postServiceSaving") : isComplete ? t("complete") :
-            t("markReady")
+            {saving ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-1.5" />
+                {t("postServiceSaving")}
+              </>
+            ) : isComplete ? (
+              t("complete")
+            ) : (
+              t("markReady")
+            )}
           </Button>
         </DetailDrawer.FooterActions>
       </DetailDrawer.Footer>

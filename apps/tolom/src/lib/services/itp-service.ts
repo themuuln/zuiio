@@ -4,6 +4,7 @@ import { logAuditAfter } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
+import { sendItpReminderEmail } from "@/lib/services/email-service";
 import type { Database, VehicleItpHistory, VehicleWithItp } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
 
@@ -219,9 +220,24 @@ export async function getItpRecords(
   // Search by plate number or customer name
   if (options?.search) {
     const term = `%${options.search}%`;
-    query = query.or(
-      `plate_number.ilike.${term},customer.first_name.ilike.${term},customer.last_name.ilike.${term}`,
-    );
+    // PostgREST or() rejects embedded-resource refs — resolve matching customer
+    // ids first, then filter the vehicles query by customer_id.
+    const customerRows = await db
+      .from("customers")
+      .select("id")
+      .eq("organization_id", orgId)
+      .is("deleted_at", null)
+      .or(
+        `first_name.ilike.${term},last_name.ilike.${term},full_name.ilike.${term},company_name.ilike.${term},contact_person.ilike.${term},phone.ilike.${term},email.ilike.${term}`,
+      )
+      .limit(50);
+
+    const customerIds = (customerRows.data ?? []).map((row) => row.id);
+    const conditions: string[] = [`plate_number.ilike.${term}`];
+    if (customerIds.length > 0) {
+      conditions.push(`customer_id.in.(${customerIds.join(",")})`);
+    }
+    query = query.or(conditions.join(","));
   }
 
   // Status filter (computed — we filter in-memory after fetching)
@@ -540,13 +556,16 @@ export async function updateItpRecord(
 
 /**
  * Send ITP reminder for a vehicle. Marks reminder_sent_at to avoid duplicates.
+ *
+ * The stamp/audit/history always happen; the email is best-effort and
+ * failures never fail the reminder. Returns whether the email was delivered.
  */
 export async function sendItpReminder(
   db: SupabaseClient<Database>,
   vehicleId: string,
   orgId: string,
   userId: string,
-): Promise<void> {
+): Promise<{ sent: true; emailDelivered: boolean }> {
   const now = new Date().toISOString();
 
   const { error } = await db
@@ -582,6 +601,70 @@ export async function sendItpReminder(
   });
 
   revalidateTag(cacheTags.vehicles(orgId), "max");
+
+  // Best-effort email delivery. Failures here must never fail the reminder
+  // (the stamp above already happened), so we log and continue.
+  let emailDelivered = false;
+  try {
+    const [vehicleResult, orgResult] = await Promise.all([
+      db
+        .from("vehicles")
+        .select(
+          `
+      plate_number,
+      make,
+      model,
+      itp_expiry_date,
+      customer:customers(id, first_name, last_name, email)
+    `,
+        )
+        .eq("id", vehicleId)
+        .eq("organization_id", orgId)
+        .maybeSingle(),
+      db.from("organizations").select("name").eq("id", orgId).maybeSingle(),
+    ]);
+
+    const vehicleRow = vehicleResult?.data as unknown as {
+      plate_number: string;
+      make: string;
+      model: string;
+      itp_expiry_date: string | null;
+      customer?: {
+        first_name: string | null;
+        last_name: string | null;
+        email: string | null;
+      } | null;
+    } | null;
+    const orgName = orgResult?.data?.name ?? "Your Garage";
+
+    const customerEmail = vehicleRow?.customer?.email;
+    if (customerEmail && vehicleRow) {
+      const customerName =
+        [vehicleRow.customer?.first_name, vehicleRow.customer?.last_name]
+          .filter(Boolean)
+          .join(" ") || "Valued Customer";
+      const vehicleLabel = [
+        vehicleRow.plate_number,
+        vehicleRow.make,
+        vehicleRow.model,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      await sendItpReminderEmail({
+        recipientEmail: customerEmail,
+        orgName,
+        vehicleLabel,
+        itpExpiryDate: vehicleRow.itp_expiry_date ?? "",
+        customerName,
+      });
+      emailDelivered = true;
+    }
+  } catch (err) {
+    reportServerError("sendItpReminderEmail", err);
+  }
+
+  return { sent: true, emailDelivered };
 }
 
 /**

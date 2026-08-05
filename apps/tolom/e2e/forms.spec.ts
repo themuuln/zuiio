@@ -1,4 +1,5 @@
 import { loginViaUI, setEnglishLocale } from "./helpers";
+import { mockPrewarm, mockSettingsOrg } from "./mocks";
 import { expect, test } from "./test-extensions";
 
 // All form tests use English locale for stable English text selectors
@@ -76,10 +77,19 @@ test.describe("Form Consistency", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
       await setEnglishLocale(page);
+      // The settings page prefetches ~19 org-scoped lists; mocking them makes
+      // the page render in seconds instead of waiting on prod under load.
+      await mockSettingsOrg(page);
       await page.goto("/dashboard/settings");
+      // Settings title renders as Typography.Text, not a heading
       await page
-        .getByRole("heading", { name: /settings/i })
+        .getByText(/^settings$/i)
+        .first()
         .waitFor({ timeout: 15000 });
+      // The branches section must be present before scrolling into view
+      await page
+        .locator("section#settings-section-branches")
+        .waitFor({ state: "visible", timeout: 15000 });
     });
 
     test("branch section has add branch button", async ({ page }) => {
@@ -102,11 +112,12 @@ test.describe("Form Consistency", () => {
       const dialog = page.getByRole("dialog");
       await expect(dialog).toBeVisible({ timeout: 10000 });
 
-      // Branch form fields — inputs rendered via register() have placeholders
-      await expect(dialog.getByPlaceholder(/branch name/i)).toBeVisible();
-      await expect(dialog.getByPlaceholder(/address/i)).toBeVisible();
-      await expect(dialog.getByPlaceholder(/phone/i)).toBeVisible();
-      await expect(dialog.getByPlaceholder(/email/i)).toBeVisible();
+      // Branch form fields — inputs are labeled via placeholders (labels are
+      // sibling text, not htmlFor-associated)
+      await expect(dialog.getByPlaceholder(/downtown shop/i)).toBeVisible();
+      await expect(dialog.getByPlaceholder(/main st/i)).toBeVisible();
+      await expect(dialog.getByPlaceholder(/\+976/i)).toBeVisible();
+      await expect(dialog.getByPlaceholder(/branch@example/i)).toBeVisible();
     });
 
     test("branch form has save and cancel buttons", async ({ page }) => {
@@ -164,6 +175,10 @@ test.describe("Form Consistency", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
       await setEnglishLocale(page);
+      // The layout prewarms 6 heavy org queries on every page — mock them so
+      // the page renders fast even under parallel load (the suite asserts
+      // against the real work-orders data, which stays live).
+      await mockPrewarm(page);
       await page.goto("/dashboard/work-orders");
       await page.getByRole("heading", { level: 1 }).waitFor({ timeout: 15000 });
     });

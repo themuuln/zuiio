@@ -1,82 +1,233 @@
-// Custom Service Worker — Push Notifications
-// This file is compiled by next-pwa and prepended to the Workbox-generated SW.
-// It handles push events and notification interactions.
+/// <reference lib="webworker" />
+/**
+ * Service worker entry — built by Serwist (@serwist/turbopack) at `next build`
+ * time and served at /serwist/sw.js (see src/app/serwist/[path]/route.ts).
+ * Works under Turbopack builds (unlike next-pwa).
+ *
+ * Part 1 is the standard Serwist app-shell setup (precache + defaultCache
+ * runtime caching). Part 2 adds a Background Sync handler that replays the
+ * offline mutation queue (`zuiio-mutation-queue` IndexedDB) when
+ * connectivity returns — even if the tab that enqueued the mutations is
+ * closed. It mirrors the app-side replay engine in @zuiio/offline
+ * mutation-queue.ts so both contexts share the same records safely.
+ */
 
-interface PushNotificationPayload {
-  title: string;
-  body: string;
-  icon?: string;
-  badge?: string;
-  image?: string;
-  url?: string;
-  tag?: string;
-  renotify?: boolean;
+import { defaultCache } from "@serwist/turbopack/worker";
+import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
+import { Serwist } from "serwist";
+
+declare global {
+  interface WorkerGlobalScope extends SerwistGlobalConfig {
+    __SW_MANIFEST: (PrecacheEntry | string)[];
+  }
 }
 
-// ── Push Event ─────────────────────────────────────────────────
-self.addEventListener("push", (event: PushEvent) => {
-  if (!event.data) return;
-
-  let payload: PushNotificationPayload;
-  try {
-    payload = event.data.json() as PushNotificationPayload;
-  } catch {
-    // Fallback for non-JSON push messages
-    payload = {
-      title: "TOLOM",
-      body: event.data.text(),
-    };
-  }
-
-  const options: NotificationOptions = {
-    body: payload.body,
-    icon: payload.icon ?? "/icon-192.png",
-    badge: payload.badge ?? "/icon-192.png",
-    image: payload.image,
-    tag: payload.tag ?? "tolom-default",
-    renotify: payload.renotify ?? true,
-    vibrate: [200, 100, 200],
-    data: { url: payload.url ?? "/dashboard" },
-  };
-
-  event.waitUntil(self.registration.showNotification(payload.title, options));
+const serwist = new Serwist({
+  precacheEntries: self.__SW_MANIFEST,
+  skipWaiting: true,
+  clientsClaim: true,
+  navigationPreload: true,
+  runtimeCaching: defaultCache,
 });
 
-// ── Notification Click ─────────────────────────────────────────
-self.addEventListener("notificationclick", (event: NotificationEvent) => {
-  event.notification.close();
+serwist.addEventListeners();
 
-  const url =
-    (event.notification.data as { url?: string } | undefined)?.url ??
-    "/dashboard";
+// `self` is typed as `WorkerGlobalScope` by lib.webworker; the SW runtime
+// provides the ServiceWorkerGlobalScope members below.
+const sw = self as unknown as ServiceWorkerGlobalScope;
 
-  event.waitUntil(
+// ── Background sync: offline mutation replay ──────────────────
+
+const QUEUE_DB = "zuiio-mutation-queue";
+const QUEUE_STORE = "mutations";
+const SYNC_TAG = "sync-mutations";
+const SYNCED_MESSAGE = "MUTATIONS_SYNCED";
+
+interface QueuedMutationRow {
+  id: string;
+  endpoint: string;
+  method: string;
+  body: unknown;
+  queryKeysToInvalidate: unknown[][];
+  createdAt: number;
+  status: "pending" | "in-flight" | "completed" | "failed";
+  retries: number;
+  maxRetries: number;
+  error?: string;
+  idempotencyKey?: string;
+}
+
+function openQueueDb(): Promise<IDBDatabase> {
+  const { promise, resolve, reject } = Promise.withResolvers<IDBDatabase>();
+  const req = indexedDB.open(QUEUE_DB, 1);
+  req.onsuccess = () => resolve(req.result);
+  req.onerror = () => reject(req.error);
+  return promise;
+}
+
+function getPending(db: IDBDatabase): Promise<QueuedMutationRow[]> {
+  const { promise, resolve, reject } =
+    Promise.withResolvers<QueuedMutationRow[]>();
+  const tx = db.transaction(QUEUE_STORE, "readonly");
+  const index = tx.objectStore(QUEUE_STORE).index("status");
+  const req = index.getAll("pending");
+  req.onsuccess = () => resolve((req.result ?? []) as QueuedMutationRow[]);
+  req.onerror = () => reject(req.error);
+  return promise;
+}
+
+function getRecord(
+  db: IDBDatabase,
+  id: string,
+): Promise<QueuedMutationRow | null> {
+  const { promise, resolve, reject } =
+    Promise.withResolvers<QueuedMutationRow | null>();
+  const tx = db.transaction(QUEUE_STORE, "readonly");
+  const req = tx.objectStore(QUEUE_STORE).get(id);
+  req.onsuccess = () => resolve((req.result as QueuedMutationRow) ?? null);
+  req.onerror = () => reject(req.error);
+  return promise;
+}
+
+function putRecord(db: IDBDatabase, record: QueuedMutationRow): Promise<void> {
+  const { promise, resolve, reject } = Promise.withResolvers<void>();
+  const tx = db.transaction(QUEUE_STORE, "readwrite");
+  tx.objectStore(QUEUE_STORE).put(record);
+  tx.oncomplete = () => resolve();
+  tx.onerror = () => reject(tx.error);
+  return promise;
+}
+
+function deleteRecord(db: IDBDatabase, id: string): Promise<void> {
+  const { promise, resolve, reject } = Promise.withResolvers<void>();
+  const tx = db.transaction(QUEUE_STORE, "readwrite");
+  tx.objectStore(QUEUE_STORE).delete(id);
+  tx.oncomplete = () => resolve();
+  tx.onerror = () => reject(tx.error);
+  return promise;
+}
+
+async function setStatus(
+  db: IDBDatabase,
+  id: string,
+  status: QueuedMutationRow["status"],
+  error?: string,
+): Promise<void> {
+  const record = await getRecord(db, id);
+  if (!record) return;
+  record.status = status;
+  if (error) record.error = error;
+  // Mirror app engine: retries increment only on return to pending.
+  if (status === "pending") record.retries += 1;
+  await putRecord(db, record);
+}
+
+async function replayMutations(): Promise<{
+  completed: number;
+  failed: number;
+  queryKeys: unknown[][];
+}> {
+  const db = await openQueueDb();
+  try {
+    const pending = (await getPending(db)).sort(
+      (a, b) => a.createdAt - b.createdAt,
+    );
+    let completed = 0;
+    let failed = 0;
+    const queryKeys: unknown[][] = [];
+
+    for (const mutation of pending) {
+      if (mutation.retries >= mutation.maxRetries) {
+        await setStatus(db, mutation.id, "failed", "Max retries exceeded");
+        failed += 1;
+        continue;
+      }
+      // Safety: only relative API paths (no external URLs).
+      if (!mutation.endpoint?.startsWith("/")) {
+        await setStatus(db, mutation.id, "failed", "Invalid endpoint");
+        failed += 1;
+        continue;
+      }
+
+      try {
+        await setStatus(db, mutation.id, "in-flight");
+
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (mutation.idempotencyKey) {
+          headers["Idempotency-Key"] = mutation.idempotencyKey;
+        }
+
+        const res = await fetch(mutation.endpoint, {
+          method: mutation.method,
+          headers,
+          body: mutation.body ? JSON.stringify(mutation.body) : undefined,
+          credentials: "same-origin",
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        await deleteRecord(db, mutation.id);
+        completed += 1;
+        queryKeys.push(...(mutation.queryKeysToInvalidate ?? []));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (mutation.retries + 1 >= mutation.maxRetries) {
+          await setStatus(db, mutation.id, "failed", message);
+          failed += 1;
+        } else {
+          await setStatus(db, mutation.id, "pending", message);
+        }
+      }
+    }
+
+    return { completed, failed, queryKeys };
+  } finally {
+    db.close();
+  }
+}
+
+function notifyClients(result: {
+  completed: number;
+  failed: number;
+  queryKeys: unknown[][];
+}): Promise<void> {
+  return sw.clients.matchAll({ type: "window" }).then((clients) => {
+    for (const client of clients) {
+      client.postMessage({ type: SYNCED_MESSAGE, ...result });
+    }
+  });
+}
+
+sw.addEventListener("sync", (event) => {
+  const syncEvent = event as unknown as {
+    tag: string;
+    waitUntil: (p: Promise<unknown>) => void;
+  };
+  if (syncEvent.tag !== SYNC_TAG) return;
+
+  syncEvent.waitUntil(
     (async () => {
-      // Focus existing window if one matches the URL, otherwise open new
-      const allClients = await self.clients.matchAll({
+      // If a tab is open, its MutationQueueProvider replays on the browser's
+      // online event — skip here to avoid double-sending. Only replay when no
+      // window client can do the work (tab closed or PWA backgrounded out).
+      const clients = await sw.clients.matchAll({
         type: "window",
         includeUncontrolled: true,
       });
+      if (clients.length > 0) return;
 
-      for (const client of allClients) {
-        if ("focus" in client) {
-          // If client URL already matches, just focus
-          if (
-            client.url.includes(new URL(url, self.location.origin).pathname)
-          ) {
-            return client.focus();
-          }
-        }
-      }
-
-      // No matching window — open new one
-      return self.clients.openWindow(url);
+      const result = await replayMutations();
+      await notifyClients(result);
     })(),
   );
 });
 
-// ── Notification Close (analytics placeholder) ─────────────────
-self.addEventListener("notificationclose", (event: NotificationEvent) => {
-  // Could send analytics about dismissed notifications
-  void event;
+// Allow the page to trigger an immediate replay ("Sync now").
+sw.addEventListener("message", (event) => {
+  const data = event.data as { type?: string } | undefined;
+  if (data?.type !== "SYNC_MUTATIONS_NOW") return;
+
+  event.waitUntil(replayMutations().then((result) => notifyClients(result)));
 });

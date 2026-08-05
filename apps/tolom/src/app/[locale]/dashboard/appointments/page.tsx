@@ -87,7 +87,7 @@ export default function AppointmentsPage() {
   );
 
   return (
-    <div className="space-y-6 px-4 pt-4 pb-6 md:px-6">
+    <div className="flex flex-col gap-y-6 px-4 pt-4 pb-6 md:px-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Select
@@ -159,7 +159,7 @@ export default function AppointmentsPage() {
           className="h-[calc(100vh-200px)] min-h-[500px]"
         />
       ) : isPending ? (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full rounded-lg" />
           ))}
@@ -181,7 +181,7 @@ export default function AppointmentsPage() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-y-2">
           {filtered.map((appointment) => (
             <div
               key={appointment.id}

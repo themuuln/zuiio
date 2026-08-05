@@ -476,6 +476,7 @@ export function WorkOrderDetailDrawer({
               parts: "Parts",
               discount: "Discount",
               totalToPay: "Total to Pay",
+              vatAbbr: "НӨАТ",
             };
             return labels[key] ?? key;
           }}

@@ -1,0 +1,1 @@
+{"language":"javascript","cwd":"/Users/themuuln/.workspace/zuiio/apps/tolom","code":"const p=JSON.parse(FILE_CONTENT);console.log(JSON.stringify({scripts:p.scripts},null,2));"}

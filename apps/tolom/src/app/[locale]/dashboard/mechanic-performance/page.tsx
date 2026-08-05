@@ -112,7 +112,7 @@ function KpiCard({
 }) {
   const a = ACCENT_MAP[accent];
   return (
-    <div className="group relative flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm shadow-black/5 transition-[transform,box-shadow] duration-200 hover:shadow-md hover:-translate-y-0.5">
+    <div className="group relative flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5">
       <span
         className={cn(
           "absolute right-3 top-3 size-1.5 rounded-full shadow-[0_0_6px] transition-opacity",
@@ -433,7 +433,7 @@ export default function MechanicPerformancePage() {
             </CardHeader>
             <CardContent className="p-0">
               {leaderboardLoading ? (
-                <div className="p-4 space-y-2">
+                <div className="flex flex-col p-4 gap-y-2">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <Skeleton key={i} className="h-12 w-full rounded-lg" />
                   ))}
@@ -568,7 +568,7 @@ export default function MechanicPerformancePage() {
               </DetailDrawer.Description>
             </DetailDrawer.Header>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 gap-y-6">
               {/* KPI grid */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-muted/50 p-3">
@@ -662,7 +662,7 @@ export default function MechanicPerformancePage() {
                 <Typography.Muted className="text-xs font-medium mb-2">
                   {t("servicePartsBreakdown")}
                 </Typography.Muted>
-                <div className="space-y-2">
+                <div className="flex flex-col gap-y-2">
                   <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
                     <span className="text-sm">{t("servicesPerformed")}</span>
                     <span className="text-sm font-medium tabular-nums">
@@ -686,7 +686,7 @@ export default function MechanicPerformancePage() {
                       count: selectedMechanic.recent_reviews.length,
                     })}
                   </Typography.Muted>
-                  <div className="space-y-2">
+                  <div className="flex flex-col gap-y-2">
                     {selectedMechanic.recent_reviews.map((review, idx) => (
                       <div
                         key={`${review.date}-${idx}`}

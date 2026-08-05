@@ -707,6 +707,160 @@ describe("calculateMonthlyPayroll", () => {
 
     expect(r[0].hourly_rate).toBe(18000);
   });
+
+  it("computes НДШ employer and employee amounts when enabled", async () => {
+    const hoursData = [makeHoursRow(MECHANIC_ID, 160)];
+    const profiles = [{ id: MECHANIC_ID, full_name: "Alice" }];
+    const ratesData = [
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 15000,
+        effective_from: "2026-01-01",
+      },
+    ];
+    const existingRecords: Array<Record<string, unknown>> = [];
+    const insertedRecord = makePayrollRecord({ id: "pr-ndsh" });
+
+    // НДШ settings query (maybeSingle, resolved independently of the queue)
+    const settingsQ = db.from("organization_settings") as ReturnType<
+      typeof db.from
+    >;
+    settingsQ.maybeSingle = vi.fn().mockResolvedValue({
+      data: {
+        ndsh_enabled: true,
+        ndsh_employer_rate: 11.5,
+        ndsh_employee_rate: 10,
+      },
+      error: null,
+    });
+
+    db.__qb.resolveOnce({ data: hoursData, error: null });
+    db.__qb.resolveOnce({ data: profiles, error: null });
+    db.__qb.resolveOnce({ data: ratesData, error: null });
+    db.__qb.resolveOnce({ data: existingRecords, error: null });
+    db.__qb.resolveOnce({ data: insertedRecord, error: null });
+
+    const r = await calculateMonthlyPayroll(db as never, ORG_ID, YEAR, MONTH);
+
+    // gross_pay = 160 * 15000 = 2,400,000
+    // employer = round(2,400,000 * 11.5 / 100) = 276,000
+    // employee = round(2,400,000 * 10 / 100) = 240,000
+    expect(r).toHaveLength(1);
+    expect(r[0].ndsh_enabled).toBe(true);
+    expect(r[0].ndsh_employer_rate).toBe(11.5);
+    expect(r[0].ndsh_employee_rate).toBe(10);
+    expect(r[0].ndsh_employer_amount).toBe(276000);
+    expect(r[0].ndsh_employee_amount).toBe(240000);
+  });
+
+  it("reads НДШ settings from the organization_settings table", async () => {
+    const hoursData = [makeHoursRow(MECHANIC_ID, 40)];
+    const profiles = [{ id: MECHANIC_ID, full_name: "Alice" }];
+    const ratesData = [
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 10000,
+        effective_from: "2026-01-01",
+      },
+    ];
+    const existingRecords: Array<Record<string, unknown>> = [];
+    const insertedRecord = makePayrollRecord({ id: "pr-settings" });
+
+    const settingsQ = db.from("organization_settings") as ReturnType<
+      typeof db.from
+    >;
+    settingsQ.maybeSingle = vi.fn().mockResolvedValue({
+      data: {
+        ndsh_enabled: true,
+        ndsh_employer_rate: 11.5,
+        ndsh_employee_rate: 10,
+      },
+      error: null,
+    });
+
+    db.__qb.resolveOnce({ data: hoursData, error: null });
+    db.__qb.resolveOnce({ data: profiles, error: null });
+    db.__qb.resolveOnce({ data: ratesData, error: null });
+    db.__qb.resolveOnce({ data: existingRecords, error: null });
+    db.__qb.resolveOnce({ data: insertedRecord, error: null });
+
+    await calculateMonthlyPayroll(db as never, ORG_ID, YEAR, MONTH);
+
+    expect(db.from).toHaveBeenCalledWith("organization_settings");
+    expect(settingsQ.select).toHaveBeenCalledWith(
+      "ndsh_enabled, ndsh_employer_rate, ndsh_employee_rate",
+    );
+    expect(settingsQ.eq).toHaveBeenCalledWith("organization_id", ORG_ID);
+    expect(settingsQ.maybeSingle).toHaveBeenCalled();
+  });
+
+  it("zeroes НДШ amounts when disabled", async () => {
+    const hoursData = [makeHoursRow(MECHANIC_ID, 160)];
+    const profiles = [{ id: MECHANIC_ID, full_name: "Alice" }];
+    const ratesData = [
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 15000,
+        effective_from: "2026-01-01",
+      },
+    ];
+    const existingRecords: Array<Record<string, unknown>> = [];
+    const insertedRecord = makePayrollRecord({ id: "pr-ndsh-off" });
+
+    const settingsQ = db.from("organization_settings") as ReturnType<
+      typeof db.from
+    >;
+    settingsQ.maybeSingle = vi.fn().mockResolvedValue({
+      data: {
+        ndsh_enabled: false,
+        ndsh_employer_rate: 11.5,
+        ndsh_employee_rate: 10,
+      },
+      error: null,
+    });
+
+    db.__qb.resolveOnce({ data: hoursData, error: null });
+    db.__qb.resolveOnce({ data: profiles, error: null });
+    db.__qb.resolveOnce({ data: ratesData, error: null });
+    db.__qb.resolveOnce({ data: existingRecords, error: null });
+    db.__qb.resolveOnce({ data: insertedRecord, error: null });
+
+    const r = await calculateMonthlyPayroll(db as never, ORG_ID, YEAR, MONTH);
+
+    expect(r).toHaveLength(1);
+    expect(r[0].ndsh_enabled).toBe(false);
+    expect(r[0].ndsh_employer_amount).toBe(0);
+    expect(r[0].ndsh_employee_amount).toBe(0);
+  });
+
+  it("defaults to disabled when no НДШ settings row exists", async () => {
+    const hoursData = [makeHoursRow(MECHANIC_ID, 80)];
+    const profiles = [{ id: MECHANIC_ID, full_name: "Alice" }];
+    const ratesData = [
+      {
+        mechanic_id: MECHANIC_ID,
+        hourly_rate: 10000,
+        effective_from: "2026-01-01",
+      },
+    ];
+    const existingRecords: Array<Record<string, unknown>> = [];
+    const insertedRecord = makePayrollRecord({ id: "pr-ndsh-default" });
+
+    // Default mock maybeSingle resolves { data: null, error: null }
+    db.__qb.resolveOnce({ data: hoursData, error: null });
+    db.__qb.resolveOnce({ data: profiles, error: null });
+    db.__qb.resolveOnce({ data: ratesData, error: null });
+    db.__qb.resolveOnce({ data: existingRecords, error: null });
+    db.__qb.resolveOnce({ data: insertedRecord, error: null });
+
+    const r = await calculateMonthlyPayroll(db as never, ORG_ID, YEAR, MONTH);
+
+    expect(r[0].ndsh_enabled).toBe(false);
+    expect(r[0].ndsh_employer_rate).toBe(11.5);
+    expect(r[0].ndsh_employee_rate).toBe(10);
+    expect(r[0].ndsh_employer_amount).toBe(0);
+    expect(r[0].ndsh_employee_amount).toBe(0);
+  });
 });
 
 // ── getPayrollRecords ──────────────────────────────────────────────
@@ -789,6 +943,101 @@ describe("getPayrollRecords", () => {
     const r = await getPayrollRecords(db as never, ORG_ID, YEAR, MONTH);
 
     expect(r).toEqual([]);
+  });
+
+  it("computes НДШ amounts from stored gross_pay when enabled", async () => {
+    const records = [
+      {
+        ...makePayrollRecord({ id: "pr-1", mechanic_id: "mech-1" }),
+        profiles: { full_name: "Alice" },
+      },
+    ];
+
+    const settingsQ = db.from("organization_settings") as ReturnType<
+      typeof db.from
+    >;
+    settingsQ.maybeSingle = vi.fn().mockResolvedValue({
+      data: {
+        ndsh_enabled: true,
+        ndsh_employer_rate: 11.5,
+        ndsh_employee_rate: 10,
+      },
+      error: null,
+    });
+
+    db.__qb.resolveOnce({ data: records, error: null });
+
+    const r = await getPayrollRecords(db as never, ORG_ID, YEAR, MONTH);
+
+    // stored gross_pay = 2,400,000
+    expect(r).toHaveLength(1);
+    expect(r[0].ndsh_enabled).toBe(true);
+    expect(r[0].ndsh_employer_amount).toBe(276000);
+    expect(r[0].ndsh_employee_amount).toBe(240000);
+    expect(r[0].ndsh_employer_rate).toBe(11.5);
+    expect(r[0].ndsh_employee_rate).toBe(10);
+  });
+
+  it("zeroes НДШ amounts for historical records when disabled", async () => {
+    const records = [
+      {
+        ...makePayrollRecord({ id: "pr-1", mechanic_id: "mech-1" }),
+        profiles: { full_name: "Alice" },
+      },
+    ];
+
+    const settingsQ = db.from("organization_settings") as ReturnType<
+      typeof db.from
+    >;
+    settingsQ.maybeSingle = vi.fn().mockResolvedValue({
+      data: {
+        ndsh_enabled: false,
+        ndsh_employer_rate: 11.5,
+        ndsh_employee_rate: 10,
+      },
+      error: null,
+    });
+
+    db.__qb.resolveOnce({ data: records, error: null });
+
+    const r = await getPayrollRecords(db as never, ORG_ID, YEAR, MONTH);
+
+    expect(r[0].ndsh_enabled).toBe(false);
+    expect(r[0].ndsh_employer_amount).toBe(0);
+    expect(r[0].ndsh_employee_amount).toBe(0);
+  });
+
+  it("computes НДШ amounts in the branch-filtered path too", async () => {
+    const branchMechanics = [{ id: "mech-1", full_name: "Alice" }];
+    const records = [makePayrollRecord({ id: "pr-1", mechanic_id: "mech-1" })];
+
+    const settingsQ = db.from("organization_settings") as ReturnType<
+      typeof db.from
+    >;
+    settingsQ.maybeSingle = vi.fn().mockResolvedValue({
+      data: {
+        ndsh_enabled: true,
+        ndsh_employer_rate: 11.5,
+        ndsh_employee_rate: 10,
+      },
+      error: null,
+    });
+
+    db.__qb.resolveOnce({ data: branchMechanics, error: null });
+    db.__qb.resolveOnce({ data: records, error: null });
+
+    const r = await getPayrollRecords(
+      db as never,
+      ORG_ID,
+      YEAR,
+      MONTH,
+      BRANCH_ID,
+    );
+
+    expect(r).toHaveLength(1);
+    expect(r[0].ndsh_enabled).toBe(true);
+    expect(r[0].ndsh_employer_amount).toBe(276000);
+    expect(r[0].ndsh_employee_amount).toBe(240000);
   });
 });
 

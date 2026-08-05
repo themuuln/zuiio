@@ -19,6 +19,7 @@ import {
   createTestStockTransfer,
   createTestUser,
   deleteRecord,
+  deleteTestOrg,
   signInAsUser,
 } from "./helpers";
 
@@ -57,20 +58,19 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (!hasSupabase || !admin) return;
-  await deleteRecord(
-    admin,
-    "organization_users",
-    `${orgAId},${userA.id}` as unknown as string,
-  );
-  await deleteRecord(
-    admin,
-    "organization_users",
-    `${orgBId},${userB.id}` as unknown as string,
-  );
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgAId,
+    user_id: userA.id,
+  });
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgBId,
+    user_id: userB.id,
+  });
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
-  await deleteRecord(admin, "organizations", orgAId);
-  await deleteRecord(admin, "organizations", orgBId);
+  await deleteTestOrg(admin, orgAId);
+
+  await deleteTestOrg(admin, orgBId);
 });
 
 // ── Stock Transfers RLS ─────────────────────────────────────
@@ -87,27 +87,27 @@ describeWhenSupabase("Stock Transfers RLS — org-scoped", () => {
 
   beforeAll(async () => {
     // Create branches for transfers
-    const ba = await createTestBranch(admin!, orgAId);
+    const ba = await createTestBranch(admin, orgAId);
     branchAId = ba.branchId;
-    const bb = await createTestBranch(admin!, orgBId);
+    const bb = await createTestBranch(admin, orgBId);
     branchBId = bb.branchId;
 
     // Create parts for transfer items
-    const pa = await createTestPart(admin!, orgAId);
+    const pa = await createTestPart(admin, orgAId);
     partAId = pa.partId;
-    const pb = await createTestPart(admin!, orgBId);
+    const pb = await createTestPart(admin, orgBId);
     partBId = pb.partId;
 
     // Create transfers
     const ta = await createTestStockTransfer(
-      admin!,
+      admin,
       orgAId,
       branchAId,
       userA.id,
     );
     transferAId = ta.transferId;
     const tb = await createTestStockTransfer(
-      admin!,
+      admin,
       orgBId,
       branchBId,
       userB.id,
@@ -115,8 +115,10 @@ describeWhenSupabase("Stock Transfers RLS — org-scoped", () => {
     transferBId = tb.transferId;
 
     // Create transfer items (org-scoped via transfer FK)
-    const { data: itemA, error: errA } = await admin
-      ?.from("stock_transfer_items")
+    const { data: itemA, error: errA } = await (
+      admin as import("@supabase/supabase-js").SupabaseClient<Database>
+    )
+      .from("stock_transfer_items")
       .insert({
         transfer_id: transferAId,
         part_id: partAId,
@@ -128,8 +130,10 @@ describeWhenSupabase("Stock Transfers RLS — org-scoped", () => {
       throw new Error(`Failed to create transfer item A: ${errA.message}`);
     transferItemAId = itemA.id;
 
-    const { data: itemB, error: errB } = await admin
-      ?.from("stock_transfer_items")
+    const { data: itemB, error: errB } = await (
+      admin as import("@supabase/supabase-js").SupabaseClient<Database>
+    )
+      .from("stock_transfer_items")
       .insert({
         transfer_id: transferBId,
         part_id: partBId,
@@ -143,14 +147,14 @@ describeWhenSupabase("Stock Transfers RLS — org-scoped", () => {
   });
 
   afterAll(async () => {
-    await deleteRecord(admin!, "stock_transfer_items", transferItemAId);
-    await deleteRecord(admin!, "stock_transfer_items", transferItemBId);
-    await deleteRecord(admin!, "stock_transfers", transferAId);
-    await deleteRecord(admin!, "stock_transfers", transferBId);
-    await deleteRecord(admin!, "parts_catalog", partAId);
-    await deleteRecord(admin!, "parts_catalog", partBId);
-    await deleteRecord(admin!, "branches", branchAId);
-    await deleteRecord(admin!, "branches", branchBId);
+    await deleteRecord(admin, "stock_transfer_items", transferItemAId);
+    await deleteRecord(admin, "stock_transfer_items", transferItemBId);
+    await deleteRecord(admin, "stock_transfers", transferAId);
+    await deleteRecord(admin, "stock_transfers", transferBId);
+    await deleteRecord(admin, "parts_catalog", partAId);
+    await deleteRecord(admin, "parts_catalog", partBId);
+    await deleteRecord(admin, "branches", branchAId);
+    await deleteRecord(admin, "branches", branchBId);
   });
 
   it("User A sees only Org A transfers", async () => {

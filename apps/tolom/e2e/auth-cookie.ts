@@ -23,13 +23,20 @@ function getSupabaseRef(): string {
     process.env.NEXT_PUBLIC_SUPABASE_URL ??
     readEnvLocal("NEXT_PUBLIC_SUPABASE_URL") ??
     "";
-  const match = url.match(/https:\/\/([^.]+)\./);
-  if (!match?.[1]) {
-    throw new Error(
-      "Could not derive Supabase project ref from NEXT_PUBLIC_SUPABASE_URL",
-    );
+
+  try {
+    const hostname = new URL(url).hostname.replace(/^\[|\]$/g, "");
+    const [ref] = hostname.split(".");
+    if (ref) {
+      return ref;
+    }
+  } catch {
+    // Fall through to the actionable error below.
   }
-  return match[1];
+
+  throw new Error(
+    "Could not derive Supabase project ref from NEXT_PUBLIC_SUPABASE_URL",
+  );
 }
 
 function readEnvLocal(key: string): string | undefined {

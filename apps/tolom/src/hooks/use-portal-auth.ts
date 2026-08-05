@@ -20,7 +20,8 @@ export function usePortalAuth() {
 
   const {
     data: customer,
-    isLoading,
+    isPending,
+    isFetching,
     error,
   } = useQuery<CustomerPortalData | null>({
     queryKey: portalKeys.customer(),
@@ -41,18 +42,20 @@ export function usePortalAuth() {
     staleTime: 60000,
   });
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated. MUST wait for the first fetch to
+  // settle: on the initial render the query is pending but NOT fetching yet
+  // (isPending=true, isFetching=false) — redirecting on !isLoading sent every
+  // token/customer visitor to the login page before the auth query resolved.
   useEffect(() => {
-    if (!isLoading && !customer && !error) {
+    if (!isPending && !isFetching && !customer && !error) {
       const loginUrl = `/auth/customer/login?redirectTo=${encodeURIComponent(pathname)}`;
-      // TODO: use redirect() from next/navigation instead of router.replace() in useEffect
       router.replace(loginUrl);
     }
-  }, [isLoading, customer, error, router, pathname]);
+  }, [isPending, isFetching, customer, error, router, pathname]);
 
   return {
     customer,
-    loading: isLoading,
+    loading: isPending,
     token,
     error,
   };

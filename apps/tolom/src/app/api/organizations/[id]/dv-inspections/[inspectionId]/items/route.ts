@@ -1,7 +1,7 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created } from "@/lib/api-response";
-import { addInspectionItem } from "@/lib/services/dvi-service";
 import type { AddDVIItemParams } from "@/lib/services/dvi-service";
+import { addInspectionItem } from "@/lib/services/dvi-service";
 
 /**
  * POST /api/organizations/[id]/dv-inspections/[inspectionId]/items

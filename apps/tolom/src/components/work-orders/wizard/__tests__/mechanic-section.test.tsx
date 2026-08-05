@@ -48,6 +48,7 @@ vi.mock("@/components/mechanic-select", () => ({
         </span>
         <span data-testid="mechanic-select-size">{size}</span>
         <button
+          type="button"
           data-testid="mechanic-select-change"
           onClick={() => onChange("mech-2")}
         >

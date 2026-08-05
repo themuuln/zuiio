@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import {
   Select,
   SelectContent,
@@ -106,17 +107,37 @@ describe("Select", () => {
     expect(trigger).toBeInTheDocument();
 
     // Click to open
-    fireEvent.click(trigger!);
+    if (!trigger) throw new Error("select trigger not found");
+    fireEvent.click(trigger);
 
     // Base UI renders content in a portal
     const content = document.querySelector("[data-slot='select-content']");
     expect(content).toBeInTheDocument();
   });
+  it("mounts popup inside the nearest drawer", () => {
+    render(
+      <Drawer open onOpenChange={() => undefined}>
+        <DrawerContent showCloseButton={false}>
+          <DrawerTitle>Drawer</DrawerTitle>
+          <TestSelect />
+        </DrawerContent>
+      </Drawer>,
+    );
+
+    const trigger = document.querySelector("[data-slot='select-trigger']");
+    if (!trigger) throw new Error("select trigger not found");
+    fireEvent.click(trigger);
+
+    const content = document.querySelector("[data-slot='select-content']");
+    expect(content).toBeInTheDocument();
+    expect(content?.closest("[data-slot='drawer-popup']")).toBeInTheDocument();
+  });
 
   it("shows select item labels when opened", () => {
     render(<TestSelect />);
     const trigger = document.querySelector("[data-slot='select-trigger']");
-    fireEvent.click(trigger!);
+    if (!trigger) throw new Error("select trigger not found");
+    fireEvent.click(trigger);
 
     expect(screen.getByText("Banana")).toBeInTheDocument();
     expect(screen.getByText("Cherry")).toBeInTheDocument();
@@ -125,7 +146,8 @@ describe("Select", () => {
   it("renders group label", () => {
     render(<TestSelect />);
     const trigger = document.querySelector("[data-slot='select-trigger']");
-    fireEvent.click(trigger!);
+    if (!trigger) throw new Error("select trigger not found");
+    fireEvent.click(trigger);
 
     expect(screen.getByText("Fruits")).toBeInTheDocument();
   });
@@ -144,7 +166,8 @@ describe("Select", () => {
       </Select>,
     );
     const trigger = document.querySelector("[data-slot='select-trigger']");
-    fireEvent.click(trigger!);
+    if (!trigger) throw new Error("select trigger not found");
+    fireEvent.click(trigger);
 
     const sep = document.querySelector("[data-slot='select-separator']");
     expect(sep).toBeInTheDocument();

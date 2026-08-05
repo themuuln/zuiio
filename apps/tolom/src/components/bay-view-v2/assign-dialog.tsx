@@ -659,7 +659,7 @@ export function AssignDialog({
             const dragged = allItems.find((m) => m.id === activeDragId);
             if (!dragged) return null;
             return (
-              <div className="flex items-center gap-2 rounded-md bg-card px-2 py-1.5 shadow-lg ring-1 ring-border/50">
+              <div className="flex items-center gap-2 rounded-md bg-card px-2 py-1.5 ring-1 ring-border/50">
                 <GripVertical className="size-3 text-muted-foreground/30" />
                 <MechanicAvatar mechanic={dragged} className="size-6" />
                 <span className="text-xs font-medium">{dragged.full_name}</span>

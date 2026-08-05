@@ -33,7 +33,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { NumericInput } from "@/components/ui/numeric-input";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -520,7 +519,8 @@ export function PartsTab({
                       const bal = balanceMap.get(part.id);
                       const qty = bal?.quantity_on_hand ?? 0;
                       const min = thresholdMap[part.id] ?? 5;
-                      const status = qty <= 0 ? "out" : qty < min ? "low" : "ok";
+                      const status =
+                        qty <= 0 ? "out" : qty < min ? "low" : "ok";
                       return (
                         <TableRow
                           key={part.id}
@@ -543,7 +543,7 @@ export function PartsTab({
                                   <Star className="size-3" />
                                 ) : null}
                                 {part.popularity_score}
-                            </Badge>
+                              </Badge>
                             )}
                           </TableCell>
                           <TableCell className="px-3 py-1.5 text-muted-foreground">
@@ -665,7 +665,7 @@ export function PartsTab({
                 return (
                   <div
                     key={part.id}
-                    className="border border-border/50 rounded-lg p-3 space-y-2 text-sm"
+                    className="flex flex-col border border-border/50 rounded-lg p-3 gap-y-2 text-sm"
                   >
                     {/* top row: name + part number + actions */}
                     <div className="flex items-start justify-between gap-2">
@@ -786,9 +786,7 @@ export function PartsTab({
                         <div className="flex items-center gap-1">
                           <NumericInput
                             value={Number(thresholdValue) || 0}
-                            onChange={(qty) =>
-                              setThresholdValue(String(qty))
-                            }
+                            onChange={(qty) => setThresholdValue(String(qty))}
                             className="h-7 w-14 text-center"
                             min={0}
                           />
@@ -988,14 +986,12 @@ export function PartsTab({
                 return (
                   <div
                     key={gp.id}
-                    className="border border-border/50 rounded-lg p-3 space-y-2 text-sm"
+                    className="flex flex-col border border-border/50 rounded-lg p-3 gap-y-2 text-sm"
                   >
                     {/* name row */}
                     <div>
                       <span className="font-medium text-foreground line-clamp-1">
-                        {locale === "mn" && gp.name_mn
-                          ? gp.name_mn
-                          : gp.name}
+                        {locale === "mn" && gp.name_mn ? gp.name_mn : gp.name}
                       </span>
                       {locale !== "mn" && gp.name_mn && (
                         <span className="text-xs text-muted-foreground block">
@@ -1024,9 +1020,7 @@ export function PartsTab({
                         </p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">
-                          Unit
-                        </span>
+                        <span className="text-muted-foreground">Unit</span>
                         <p className="font-medium mt-0.5">{gp.unit}</p>
                       </div>
                       <div>

@@ -39,6 +39,7 @@ import { KpiCard } from "./_kpi-cards";
 import { LowStockCard } from "./_low-stock-card";
 import { RecentWorkOrdersTable } from "./_recent-work-orders";
 import { SectionHeader } from "./_section-header";
+import { TodayAgenda } from "./_today-agenda";
 
 const ChartsSection = dynamicImport(() => import("./_charts"), {
   ssr: false,
@@ -486,6 +487,9 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Today strip — appointments, pickups due, service reminders */}
+        {orgId && <TodayAgenda orgId={orgId} />}
+
         {/* Smart insights — only when the API produced comparisons */}
         {insights.length > 0 && (
           <Card className="border-primary/20 bg-primary/5">
@@ -547,7 +551,7 @@ export default function DashboardPage() {
                   className="flex items-center gap-4 rounded-xl border border-border/60 bg-card/40 p-4"
                 >
                   <Skeleton className="size-10 rounded-full" />
-                  <div className="flex-1 space-y-2">
+                  <div className="flex-1 gap-y-2">
                     <Skeleton className="h-4 w-3/5" />
                     <Skeleton className="h-3 w-2/5" />
                   </div>

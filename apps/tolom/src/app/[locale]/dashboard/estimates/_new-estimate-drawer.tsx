@@ -9,7 +9,7 @@ import {
   Send,
   Wrench,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -109,7 +109,6 @@ export function NewEstimateDrawer({
     key: string,
     values?: Record<string, string | number>,
   ) => string;
-  const locale = useLocale();
   const router = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId ?? "";
@@ -575,7 +574,7 @@ export function NewEstimateDrawer({
               <div className="flex items-center gap-2 ml-auto">
                 <div className="flex items-center gap-1.5">
                   <Label className="text-xs text-muted-foreground">
-                    {locale === "en" ? "VAT" : "НӨАТ"}
+                    {t("vatAbbr")}
                   </Label>
                   <Switch
                     checked={nuatEnabled}

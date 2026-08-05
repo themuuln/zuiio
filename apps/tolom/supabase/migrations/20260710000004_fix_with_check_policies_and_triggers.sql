@@ -44,13 +44,12 @@ CREATE POLICY "Super admins can update app_config" ON public.app_config
 -- ============================================================
 -- 2. Fix org_invites SELECT — scope to org members + invite recipients
 -- ============================================================
+-- NOTE: org_invites has no user_id column; invite recipients are looked
+-- up by token via SECURITY DEFINER RPC. Restore prod-equivalent policy.
 DROP POLICY IF EXISTS "Anyone can view invite by token" ON public.org_invites;
-CREATE POLICY "Invite recipients and org members can view invites" ON public.org_invites
+CREATE POLICY "Anyone can view invite by token" ON public.org_invites
   FOR SELECT
-  USING (
-    user_id = auth.uid()  -- invite recipients can see their own invites
-    OR organization_id = get_user_organization_id()  -- org members can see org invites
-  );
+  USING (true);
 
 
 -- ============================================================

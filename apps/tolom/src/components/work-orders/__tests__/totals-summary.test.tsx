@@ -27,6 +27,7 @@ describe("TotalsSummary", () => {
       parts: "Parts & Materials",
       discount: "Discount",
       totalToPay: "Total to Pay",
+      vatAbbr: "НӨАТ",
     };
     return messages[key] ?? key;
   };
@@ -58,7 +59,8 @@ describe("TotalsSummary", () => {
     // Click to expand breakdown
     const grandTotals = screen.getAllByText("Grand Total");
     const headerBtn = grandTotals[0].closest("button");
-    fireEvent.click(headerBtn!);
+    if (!headerBtn) throw new Error("grand total header not found");
+    fireEvent.click(headerBtn);
 
     expect(screen.getByText("₮ 100,000")).toBeInTheDocument();
     expect(screen.getByText("₮ 50,000")).toBeInTheDocument();
@@ -84,7 +86,8 @@ describe("TotalsSummary", () => {
     // Click to expand breakdown
     const grandTotals = screen.getAllByText("Grand Total");
     const headerBtn = grandTotals[0].closest("button");
-    fireEvent.click(headerBtn!);
+    if (!headerBtn) throw new Error("grand total header not found");
+    fireEvent.click(headerBtn);
 
     expect(screen.getByText("НӨАТ (10%)")).toBeInTheDocument();
     expect(screen.getByText("₮ 15,000")).toBeInTheDocument();
@@ -106,7 +109,8 @@ describe("TotalsSummary", () => {
 
     const grandTotals = screen.getAllByText("Grand Total");
     const headerBtn = grandTotals[0].closest("button");
-    fireEvent.click(headerBtn!);
+    if (!headerBtn) throw new Error("grand total header not found");
+    fireEvent.click(headerBtn);
 
     // Breakdown shows Services(2) and Parts & Materials(3) with amounts
     const servicesLabel = screen.getByText("Services");

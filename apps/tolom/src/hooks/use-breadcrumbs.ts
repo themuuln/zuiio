@@ -33,6 +33,7 @@ const SEGMENT_TO_NAV_KEY: Record<string, string> = {
   suppliers: "nav.inventorySuppliers",
   "parts-cars": "nav.inventoryPartsCars",
   alerts: "nav.inventoryAlerts",
+  reorder: "nav.inventoryReorder",
   valuation: "nav.inventoryValuation",
   new: "common.createNew",
   edit: "common.edit",

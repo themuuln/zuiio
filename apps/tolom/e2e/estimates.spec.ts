@@ -60,7 +60,7 @@ test.describe("Estimates (Mocked)", () => {
   test.describe("Sidebar Navigation", () => {
     test("has Estimates link in sidebar", async ({ page }) => {
       await expect(
-        page.getByRole("link", { name: /estimate/i }).first(),
+        page.getByRole("button", { name: /^estimates$/i }).first(),
       ).toBeVisible();
     });
   });

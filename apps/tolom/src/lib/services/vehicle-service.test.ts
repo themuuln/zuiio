@@ -415,7 +415,7 @@ describe("getVehicles", () => {
 
     const vehicleBuilder = client.from("vehicles");
     expect(vehicleBuilder.or).toHaveBeenCalledWith(
-      "plate_number.ilike.%ABC%,vin.ilike.%ABC%",
+      "plate_number.ilike.%ABC%,vin.ilike.%ABC%,make.ilike.%ABC%,model.ilike.%ABC%",
     );
     expect(results).toHaveLength(1);
     expect(results[0].plate_number).toBe("ABC123");
@@ -473,7 +473,7 @@ describe("searchByPlate", () => {
 
     const vehicleBuilder = client.from("vehicles");
     expect(vehicleBuilder.or).toHaveBeenCalledWith(
-      "plate_number.ilike.%ABC%,vin.ilike.%ABC%",
+      "plate_number.ilike.%ABC%,vin.ilike.%ABC%,make.ilike.%ABC%,model.ilike.%ABC%",
     );
     expect(results).toHaveLength(1);
     expect(results[0].plate_number).toBe("ABC123");

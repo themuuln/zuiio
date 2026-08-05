@@ -20,6 +20,7 @@ import {
   createTestOrg,
   createTestUser,
   deleteRecord,
+  deleteTestOrg,
   signInAsUser,
 } from "./helpers";
 
@@ -68,20 +69,19 @@ afterAll(async () => {
   if (!hasSupabase || !admin) return;
   await deleteRecord(admin, "customers", customerAId);
   await deleteRecord(admin, "customers", customerBId);
-  await deleteRecord(
-    admin,
-    "organization_users",
-    `${orgAId},${userA.id}` as unknown as string,
-  );
-  await deleteRecord(
-    admin,
-    "organization_users",
-    `${orgBId},${userB.id}` as unknown as string,
-  );
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgAId,
+    user_id: userA.id,
+  });
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgBId,
+    user_id: userB.id,
+  });
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
-  await deleteRecord(admin, "organizations", orgAId);
-  await deleteRecord(admin, "organizations", orgBId);
+  await deleteTestOrg(admin, orgAId);
+
+  await deleteTestOrg(admin, orgBId);
 });
 
 // ── Customer Followups RLS ───────────────────────────────────
@@ -91,15 +91,15 @@ describeWhenSupabase("Customer Followups RLS — org-scoped", () => {
   let followupBId: string;
 
   beforeAll(async () => {
-    const fa = await createTestFollowup(admin!, orgAId, customerAId);
+    const fa = await createTestFollowup(admin, orgAId, customerAId);
     followupAId = fa.followupId;
-    const fb = await createTestFollowup(admin!, orgBId, customerBId);
+    const fb = await createTestFollowup(admin, orgBId, customerBId);
     followupBId = fb.followupId;
   });
 
   afterAll(async () => {
-    await deleteRecord(admin!, "customer_followups", followupAId);
-    await deleteRecord(admin!, "customer_followups", followupBId);
+    await deleteRecord(admin, "customer_followups", followupAId);
+    await deleteRecord(admin, "customer_followups", followupBId);
   });
 
   it("User A sees only Org A followups", async () => {
@@ -142,14 +142,14 @@ describeWhenSupabase("Customer Notes RLS — org-scoped", () => {
 
   beforeAll(async () => {
     const na = await createTestCustomerNote(
-      admin!,
+      admin,
       orgAId,
       customerAId,
       userA.id,
     );
     noteAId = na.customerNoteId;
     const nb = await createTestCustomerNote(
-      admin!,
+      admin,
       orgBId,
       customerBId,
       userB.id,
@@ -158,8 +158,8 @@ describeWhenSupabase("Customer Notes RLS — org-scoped", () => {
   });
 
   afterAll(async () => {
-    await deleteRecord(admin!, "customer_notes", noteAId);
-    await deleteRecord(admin!, "customer_notes", noteBId);
+    await deleteRecord(admin, "customer_notes", noteAId);
+    await deleteRecord(admin, "customer_notes", noteBId);
   });
 
   it("User A sees only Org A notes", async () => {
@@ -201,8 +201,10 @@ describeWhenSupabase("Customer Communications RLS — org-scoped", () => {
   let commBId: string;
 
   beforeAll(async () => {
-    const { data: ca, error: errA } = await admin
-      ?.from("customer_communications")
+    const { data: ca, error: errA } = await (
+      admin as import("@supabase/supabase-js").SupabaseClient<Database>
+    )
+      .from("customer_communications")
       .insert({
         organization_id: orgAId,
         customer_id: customerAId,
@@ -216,8 +218,10 @@ describeWhenSupabase("Customer Communications RLS — org-scoped", () => {
     if (errA) throw new Error(`Failed to create comm A: ${errA.message}`);
     commAId = ca.id;
 
-    const { data: cb, error: errB } = await admin
-      ?.from("customer_communications")
+    const { data: cb, error: errB } = await (
+      admin as import("@supabase/supabase-js").SupabaseClient<Database>
+    )
+      .from("customer_communications")
       .insert({
         organization_id: orgBId,
         customer_id: customerBId,
@@ -233,8 +237,8 @@ describeWhenSupabase("Customer Communications RLS — org-scoped", () => {
   });
 
   afterAll(async () => {
-    await deleteRecord(admin!, "customer_communications", commAId);
-    await deleteRecord(admin!, "customer_communications", commBId);
+    await deleteRecord(admin, "customer_communications", commAId);
+    await deleteRecord(admin, "customer_communications", commBId);
   });
 
   it("User A sees only Org A communications", async () => {

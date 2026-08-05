@@ -211,4 +211,40 @@ describe("CustomerForm", () => {
       });
     });
   });
+
+  describe("conflict (409) feedback", () => {
+    it("renders the server's ConflictError message instead of a generic failure text", async () => {
+      const CONFLICT_MESSAGE =
+        "A customer with this phone number already exists";
+      const mutateAsync = vi
+        .fn()
+        .mockRejectedValue(new Error(CONFLICT_MESSAGE));
+      mockCreateCustomer.mockReturnValue({ mutateAsync, isPending: false });
+
+      const user = userEvent.setup();
+      renderForm({ mode: "quick" });
+
+      await user.type(required(q("firstName"), "firstName"), "John");
+      await user.type(required(phoneInput(), "phone"), "99112233");
+      await user.click(screen.getByRole("button", { name: /create/i }));
+
+      expect(await screen.findByText(CONFLICT_MESSAGE)).toBeInTheDocument();
+      // The generic fallback must NOT replace the specific message
+      expect(screen.queryByText("failedToSave")).not.toBeInTheDocument();
+    });
+
+    it("falls back to the generic failure text for non-Error rejections", async () => {
+      const mutateAsync = vi.fn().mockRejectedValue("boom");
+      mockCreateCustomer.mockReturnValue({ mutateAsync, isPending: false });
+
+      const user = userEvent.setup();
+      renderForm({ mode: "quick" });
+
+      await user.type(required(q("firstName"), "firstName"), "John");
+      await user.type(required(phoneInput(), "phone"), "99112233");
+      await user.click(screen.getByRole("button", { name: /create/i }));
+
+      expect(await screen.findByText("failedToSave")).toBeInTheDocument();
+    });
+  });
 });

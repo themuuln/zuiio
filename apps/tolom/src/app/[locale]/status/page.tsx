@@ -74,7 +74,7 @@ async function StatusContent({ locale }: { locale: string }) {
             <div className="grid gap-4 sm:grid-cols-2">
               {SERVICES.map((svc) => (
                 <Card key={svc.key}>
-                  <CardHeader className="flex-row items-center gap-3 space-y-0 pb-2">
+                  <CardHeader className="flex-row items-center gap-3 gap-y-0 pb-2">
                     <span className="text-xl">{svc.icon}</span>
                     <div className="flex-1">
                       <CardTitle className="text-sm font-medium">

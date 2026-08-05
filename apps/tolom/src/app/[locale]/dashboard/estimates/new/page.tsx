@@ -11,7 +11,7 @@ import {
   Send,
   Wrench,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -102,7 +102,6 @@ export default function NewEstimatePage() {
     key: string,
     values?: Record<string, string | number>,
   ) => string;
-  const locale = useLocale();
   const router = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId ?? "";
@@ -292,7 +291,7 @@ export default function NewEstimatePage() {
     <>
       <div className="px-4 pt-4 pb-6 md:px-6 mx-auto flex max-w-7xl flex-col gap-6 pb-8">
         <div className="flex flex-col gap-5 pb-2 xl:flex-row xl:items-start xl:justify-between">
-          <div className="space-y-3">
+          <div className="flex flex-col gap-y-3">
             <Button variant="ghost" size="sm" onClick={() => router.back()}>
               <ArrowLeft className="size-4" />
               {commonT("back")}
@@ -623,7 +622,7 @@ export default function NewEstimatePage() {
                 {t("summary")}
               </Typography.H2>
               <div className="flex flex-col gap-4">
-                <div className="space-y-3">
+                <div className="flex flex-col gap-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">
                       {t("subtotal")}
@@ -669,7 +668,7 @@ export default function NewEstimatePage() {
                     <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-3">
                       <div className="flex flex-col">
                         <Label className="text-xs font-medium">
-                          {locale === "en" ? "VAT" : "НӨАТ"}
+                          {t("vatAbbr")}
                         </Label>
                         <span className="text-[10px] text-muted-foreground">
                           {defaultTaxRate}%

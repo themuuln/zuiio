@@ -1,10 +1,17 @@
 "use client";
 
-import { AlertCircle, Dices, PackagePlus, RotateCcw } from "lucide-react";
+import {
+  AlertCircle,
+  Dices,
+  PackagePlus,
+  Printer,
+  RotateCcw,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { PartForm } from "@/components/inventory/part-form";
+import { PartImagesGallery } from "@/components/inventory/part-images-gallery";
 import { QuickStockInDialog } from "@/components/inventory/quick-stock-in-dialog";
 import { ReturnToSupplierDialog } from "@/components/inventory/return-to-supplier-dialog";
 import { VariantEditorDrawer } from "@/components/services/variant-editor-drawer";
@@ -138,6 +145,28 @@ export default function PartDetailPage() {
 
   return (
     <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
+      {/* Print-only shelf label */}
+      <div className="print-only">
+        {part && (
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <div className="text-4xl font-bold mb-2">{part.name}</div>
+            {part.name_mn && (
+              <div className="text-2xl text-gray-600 mb-4">{part.name_mn}</div>
+            )}
+            <div className="text-xl mb-2">
+              {t("partNumber")}: {part.part_number}
+            </div>
+            <div className="text-lg mb-1">{part.category}</div>
+            <div className="text-lg">
+              {onHand} {part.unit}
+            </div>
+            <div className="text-lg mt-2">
+              {part.default_price?.toLocaleString()}
+            </div>
+          </div>
+        )}
+      </div>
+      <style>{`@media print{body *{visibility:hidden}.print-only,.print-only *{visibility:visible}.print-only{position:absolute;left:0;top:0;width:100%}}@media screen{.print-only{display:none}}`}</style>
       <PartHeader
         part={part}
         onHand={onHand}
@@ -168,8 +197,11 @@ export default function PartDetailPage() {
             isPending={thresholdsLoading}
           />
 
+          {/* Part Images Gallery */}
+          {orgId && <PartImagesGallery orgId={orgId} partId={partId} />}
+
           {/* Quick Actions */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -187,6 +219,15 @@ export default function PartDetailPage() {
             >
               <RotateCcw className="size-4" />
               {t("returnToSupplier")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={() => window.print()}
+            >
+              <Printer className="size-4" />
+              {t("printLabel")}
             </Button>
           </div>
 

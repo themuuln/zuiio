@@ -16,11 +16,7 @@ vi.mock("@/lib/audit", () => ({
 const mockClient = createMockSupabaseClient();
 
 // Helper to make a chain resolve like a Supabase query
-function chainableResolve(
-  // biome-ignore lint/suspicious/noExplicitAny: test mock
-  obj: Record<string, any>,
-  result: unknown,
-) {
+function chainableResolve(obj: Record<string, any>, result: unknown) {
   // Walk through all chain methods and make them return obj
   for (const key of [
     "select",
@@ -56,7 +52,6 @@ function chainableResolve(
     error: null,
   });
   // Make the chain thenable (resolves like Supabase queries)
-  // biome-ignore lint/suspicious/noThenProperty: intentional thenable for Supabase mock chain
   obj.then = vi.fn().mockImplementation((resolve: (v: unknown) => unknown) =>
     resolve({
       data: result,

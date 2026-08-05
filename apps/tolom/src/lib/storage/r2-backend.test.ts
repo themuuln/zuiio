@@ -15,10 +15,14 @@ const {
 } = vi.hoisted(() => {
   const mockSend = vi.fn();
   const instance = { send: mockSend };
-  const mockPutCmd = vi.fn((input: Record<string, unknown>) => ({
-    input,
-    constructor: { name: "PutObjectCommand" },
-  }));
+  const mockPutCmd = vi.fn(function PutObjectCommandMock(
+    input: Record<string, unknown>,
+  ) {
+    return {
+      input,
+      constructor: { name: "PutObjectCommand" },
+    };
+  });
   return {
     mockS3ClientInstance: instance,
     mockGetSignedUrl: vi.fn(),
@@ -28,7 +32,9 @@ const {
 });
 
 vi.mock("@aws-sdk/client-s3", () => ({
-  S3Client: vi.fn(() => mockS3ClientInstance),
+  S3Client: vi.fn(function S3ClientMock() {
+    return mockS3ClientInstance;
+  }),
   PutObjectCommand: mockPutCmd,
   GetObjectCommand: vi.fn(),
   DeleteObjectCommand: vi.fn(),
@@ -50,8 +56,17 @@ interface R2BackendModule {
 let mod: R2BackendModule;
 
 beforeEach(async () => {
+  vi.resetModules();
   vi.clearAllMocks();
   vi.unstubAllEnvs();
+  for (const key of [
+    "R2_ACCOUNT_ID",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+    "R2_BUCKET",
+  ]) {
+    vi.stubEnv(key, "");
+  }
   mod = await import("./r2-backend");
 });
 

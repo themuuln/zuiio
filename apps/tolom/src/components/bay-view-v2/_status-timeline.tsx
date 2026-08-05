@@ -302,7 +302,7 @@ export function StatusTimeline(props: StatusTimelineProps) {
                         STATUS_BORDER_LEFT[h.status] ?? "#94a3b8",
                     }}
                     className={cn(
-                      "flex items-baseline justify-between gap-2 py-1.5 border-l-2 pl-2.5 -ml-0.5",
+                      "flex items-baseline justify-between gap-2 py-1.5 border-l border-l-border/40 pl-2.5 -ml-0.5",
                       isFirst ? "border-b border-border/40 pb-2.5 mb-0.5" : "",
                     )}
                   >

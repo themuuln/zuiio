@@ -20,6 +20,29 @@ export async function setEnglishLocale(page: Page): Promise<void> {
   ]);
 }
 
+/** Set the NEXT_LOCALE cookie explicitly (deterministic first render). */
+export async function setLocaleCookie(
+  page: Page,
+  locale: "en" | "mn",
+): Promise<void> {
+  await page.context().addCookies([
+    {
+      name: "NEXT_LOCALE",
+      value: locale,
+      path: "/",
+      domain: "localhost",
+    },
+  ]);
+}
+
+/**
+ * Remove the E2E session cookies so public pages (landing, login) render
+ * instead of the authenticated-user redirect to /dashboard.
+ */
+export async function clearAuthCookies(page: Page): Promise<void> {
+  await page.context().clearCookies();
+}
+
 /**
  * Wait for the page URL to stop matching any of the given patterns.
  * Uses polling instead of waitForURL to avoid load-event timeouts on

@@ -143,9 +143,9 @@ export default function MembersPage() {
 
   return (
     <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6 pb-8">
-      <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
+      <div className="rounded-3xl border border-border/60 bg-card p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-2">
+          <div className="flex flex-col gap-y-2">
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="rounded-full px-2.5 py-0.5">
                 <ShieldCheck className="mr-1 size-3.5" />

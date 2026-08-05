@@ -26,37 +26,41 @@ interface PnLRow {
 }
 
 function buildRows(data: PnLSummary, t: (key: string) => string): PnLRow[] {
+  // Reports without the full profitability payload (e.g. partial fixtures,
+  // legacy rows) must not crash the P&L card.
+  const revenue = data?.revenue ?? {};
+  const cogs = data?.cogs ?? {};
   const rows: PnLRow[] = [
     {
       label: t("serviceRevenue"),
-      amount: data.revenue.service_revenue,
+      amount: revenue.service_revenue ?? 0,
       indent: true,
     },
     {
       label: t("partsRevenue"),
-      amount: data.revenue.parts_revenue,
+      amount: revenue.parts_revenue ?? 0,
       indent: true,
     },
-    { label: t("totalRevenue"), amount: data.revenue.total, bold: true },
-    { label: t("costOfGoodsSold"), amount: -data.cogs.total },
+    { label: t("totalRevenue"), amount: revenue.total ?? 0, bold: true },
+    { label: t("costOfGoodsSold"), amount: -(cogs.total ?? 0) },
     {
       label: t("grossProfit"),
-      amount: data.gross_profit,
+      amount: data?.gross_profit ?? 0,
       bold: true,
       color:
-        data.gross_profit >= 0
+        (data?.gross_profit ?? 0) >= 0
           ? "text-green-600 dark:text-green-400"
           : "text-red-500",
     },
     {
       label: t("grossMargin"),
-      amount: data.gross_margin_pct,
+      amount: data?.gross_margin_pct ?? 0,
       isPercent: true,
       color: "text-muted-foreground",
     },
   ];
 
-  for (const cat of data.expenses.by_category.slice(0, 5)) {
+  for (const cat of (data?.expenses?.by_category ?? []).slice(0, 5)) {
     rows.push({
       label: `  ${cat.category}`,
       amount: -cat.amount,
@@ -64,13 +68,16 @@ function buildRows(data: PnLSummary, t: (key: string) => string): PnLRow[] {
     });
   }
 
-  rows.push({ label: t("totalExpenses"), amount: -data.expenses.total });
+  rows.push({
+    label: t("totalExpenses"),
+    amount: -(data?.expenses?.total ?? 0),
+  });
   rows.push({
     label: t("netProfit"),
-    amount: data.net_profit,
+    amount: data?.net_profit ?? 0,
     bold: true,
     color:
-      data.net_profit >= 0
+      (data?.net_profit ?? 0) >= 0
         ? "text-green-600 dark:text-green-400"
         : "text-red-500",
   });

@@ -467,7 +467,7 @@ INSERT INTO public.car_models (
 ),
 (
     (SELECT id FROM honda),
-    'That\'s',
+    'That''s',
     'mpv',
     'gasoline',
     'cvt,manual',

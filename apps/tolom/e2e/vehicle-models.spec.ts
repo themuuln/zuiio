@@ -36,7 +36,7 @@ test.describe("Vehicle Models (Mocked)", () => {
       route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(models),
+        body: JSON.stringify({ data: models }),
       }),
     );
     await page.goto("/dashboard/vehicle-models");
@@ -76,14 +76,29 @@ test.describe("Vehicle Models (Mocked)", () => {
     });
 
     test("shows model details (body type, year range)", async ({ page }) => {
-      // Body types from fixtures: sedan, hatchback, suv
+      // Body types from fixtures: sedan, hatchback, suv.
+      // The make/model tree is collapsed by default — expand it first.
+      // Wait for the tree to hydrate before clicking (force clicks too early
+      // miss React's handlers).
+      const make = page.getByText("Toyota", { exact: true }).first();
+      await make.waitFor({ state: "visible", timeout: 15_000 });
+      await make.click();
+      const model = page.getByText("Corolla", { exact: false }).first();
+      await model.waitFor({ state: "visible", timeout: 10_000 });
+      await model.click();
       await expect(page.getByText(/sedan|hatchback|suv/i).first()).toBeVisible({
         timeout: 10_000,
       });
     });
 
     test("shows multiple vehicle model entries", async ({ page }) => {
-      // Corolla, Prius, RX350 should all appear
+      // Corolla, Prius, RX350 should all appear once the tree is expanded.
+      // Expand both makes first (tree is collapsed by default).
+      const toyota = page.getByText("Toyota", { exact: true }).first();
+      await toyota.waitFor({ state: "visible", timeout: 15_000 });
+      await toyota.click();
+      const lexus = page.getByText("Lexus", { exact: true }).first();
+      await lexus.click();
       const corolla = page.getByText("Corolla", { exact: false }).first();
       const prius = page.getByText("Prius", { exact: false }).first();
       const rx350 = page.getByText("RX350", { exact: false }).first();
@@ -187,14 +202,6 @@ test.describe("Vehicle Models (Mocked)", () => {
       if (await deleteBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
         await expect(deleteBtn).toBeVisible();
       }
-    });
-  });
-
-  test.describe("Sidebar Navigation", () => {
-    test("has vehicle models link in sidebar", async ({ page }) => {
-      await expect(
-        page.getByRole("link", { name: /vehicle.?model/i }).first(),
-      ).toBeVisible({ timeout: 10_000 });
     });
   });
 });

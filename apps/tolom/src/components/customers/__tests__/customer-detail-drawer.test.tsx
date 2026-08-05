@@ -219,7 +219,7 @@ describe("CustomerDetailDrawer", () => {
       error: null,
     });
 
-    const { container } = render(
+    render(
       <CustomerDetailDrawer
         open={false}
         onOpenChange={vi.fn()}

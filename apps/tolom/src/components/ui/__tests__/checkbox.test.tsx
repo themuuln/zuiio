@@ -26,7 +26,8 @@ describe("Checkbox", () => {
   it("toggles checked state on click", async () => {
     const user = userEvent.setup();
     const { $ } = renderCheckbox(<Checkbox />);
-    const checkbox = $("[data-slot='checkbox']")!;
+    const checkbox = $("[data-slot='checkbox']");
+    if (!checkbox) throw new Error("checkbox not found");
     await user.click(checkbox);
     expect(checkbox).toHaveAttribute("data-checked");
   });

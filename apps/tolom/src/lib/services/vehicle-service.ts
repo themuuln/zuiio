@@ -43,7 +43,7 @@ const crud = createCrudService<
         const term = `%${search.trim()}%`;
         // biome-ignore lint/suspicious/noExplicitAny: factory hook type is PostgrestQueryBuilder lacking or()
         return (query as any).or(
-          `plate_number.ilike.${term},vin.ilike.${term}`,
+          `plate_number.ilike.${term},vin.ilike.${term},make.ilike.${term},model.ilike.${term}`,
         );
       }
       return query;
@@ -79,7 +79,9 @@ export async function getVehicles(
 
   if (options?.search?.trim()) {
     const term = `%${options.search.trim()}%`;
-    query = query.or(`plate_number.ilike.${term},vin.ilike.${term}`);
+    query = query.or(
+      `plate_number.ilike.${term},vin.ilike.${term},make.ilike.${term},model.ilike.${term}`,
+    );
   }
 
   if (options?.customerId) {

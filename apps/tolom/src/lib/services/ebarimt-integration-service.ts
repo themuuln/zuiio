@@ -16,12 +16,7 @@ import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
-import {
-  getEInvoiceSettings,
-  registerEInvoice,
-  type EInvoiceRegistrationResult,
-  type EInvoiceSettings,
-} from "./einvoice-service";
+import { getEInvoiceSettings, registerEInvoice } from "./einvoice-service";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -256,8 +251,7 @@ export async function testEbarimtConnection(
     if (response.status === 401 || response.status === 403) {
       return {
         success: false,
-        message:
-          "Authentication failed — check your API key and merchant ID",
+        message: "Authentication failed — check your API key and merchant ID",
       };
     }
 
@@ -267,8 +261,8 @@ export async function testEbarimtConnection(
     };
   } catch (error) {
     if (
-      error instanceof DOMException && error.name === "TimeoutError" ||
-      error instanceof Error && error.name === "TimeoutError"
+      (error instanceof DOMException && error.name === "TimeoutError") ||
+      (error instanceof Error && error.name === "TimeoutError")
     ) {
       return {
         success: false,

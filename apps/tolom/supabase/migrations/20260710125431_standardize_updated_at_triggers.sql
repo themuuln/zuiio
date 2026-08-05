@@ -17,21 +17,20 @@ DECLARE
   t RECORD;
 BEGIN
   FOR t IN
-    SELECT triggername, eventmanipulation, eventobject_table
+    SELECT trigger_name, event_manipulation, event_object_table
     FROM information_schema.triggers
-    WHERE triggername = 'set_updated_at'
-      AND eventobject_schema = 'public'
+    WHERE event_object_schema = 'public'
       AND action_statement LIKE '%set_updated_at()%'
   LOOP
     EXECUTE format(
       'DROP TRIGGER IF EXISTS %I ON %I',
-      t.triggername,
-      t.eventobject_table
+      t.trigger_name,
+      t.event_object_table
     );
     EXECUTE format(
       'CREATE TRIGGER %I BEFORE UPDATE ON %I FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()',
-      t.triggername,
-      t.eventobject_table
+      t.trigger_name,
+      t.event_object_table
     );
   END LOOP;
 END $$;

@@ -20,6 +20,7 @@ import {
   createTestOrg,
   createTestUser,
   deleteRecord,
+  deleteTestOrg,
   signInAsUser,
 } from "./helpers";
 
@@ -58,20 +59,19 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (!hasSupabase || !admin) return;
-  await deleteRecord(
-    admin,
-    "organization_users",
-    `${orgAId},${userA.id}` as unknown as string,
-  );
-  await deleteRecord(
-    admin,
-    "organization_users",
-    `${orgBId},${userB.id}` as unknown as string,
-  );
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgAId,
+    user_id: userA.id,
+  });
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgBId,
+    user_id: userB.id,
+  });
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
-  await deleteRecord(admin, "organizations", orgAId);
-  await deleteRecord(admin, "organizations", orgBId);
+  await deleteTestOrg(admin, orgAId);
+
+  await deleteTestOrg(admin, orgBId);
 });
 
 // ── Catalog Variant Groups RLS ──────────────────────────────
@@ -81,15 +81,15 @@ describeWhenSupabase("Catalog Variant Groups RLS — org-scoped", () => {
   let groupBId: string;
 
   beforeAll(async () => {
-    const ga = await createTestCatalogVariantGroup(admin!, orgAId);
+    const ga = await createTestCatalogVariantGroup(admin, orgAId);
     groupAId = ga.variantGroupId;
-    const gb = await createTestCatalogVariantGroup(admin!, orgBId);
+    const gb = await createTestCatalogVariantGroup(admin, orgBId);
     groupBId = gb.variantGroupId;
   });
 
   afterAll(async () => {
-    await deleteRecord(admin!, "catalog_variant_groups", groupAId);
-    await deleteRecord(admin!, "catalog_variant_groups", groupBId);
+    await deleteRecord(admin, "catalog_variant_groups", groupAId);
+    await deleteRecord(admin, "catalog_variant_groups", groupBId);
   });
 
   it("User A sees only Org A variant groups", async () => {
@@ -134,22 +134,22 @@ describeWhenSupabase("Catalog Variant Options RLS — org-scoped", () => {
 
   beforeAll(async () => {
     // Create groups first (options FK to groups)
-    const ga = await createTestCatalogVariantGroup(admin!, orgAId);
+    const ga = await createTestCatalogVariantGroup(admin, orgAId);
     groupAId = ga.variantGroupId;
-    const gb = await createTestCatalogVariantGroup(admin!, orgBId);
+    const gb = await createTestCatalogVariantGroup(admin, orgBId);
     groupBId = gb.variantGroupId;
 
-    const oa = await createTestCatalogVariantOption(admin!, orgAId, groupAId);
+    const oa = await createTestCatalogVariantOption(admin, orgAId, groupAId);
     optionAId = oa.variantOptionId;
-    const ob = await createTestCatalogVariantOption(admin!, orgBId, groupBId);
+    const ob = await createTestCatalogVariantOption(admin, orgBId, groupBId);
     optionBId = ob.variantOptionId;
   });
 
   afterAll(async () => {
-    await deleteRecord(admin!, "catalog_variant_options", optionAId);
-    await deleteRecord(admin!, "catalog_variant_options", optionBId);
-    await deleteRecord(admin!, "catalog_variant_groups", groupAId);
-    await deleteRecord(admin!, "catalog_variant_groups", groupBId);
+    await deleteRecord(admin, "catalog_variant_options", optionAId);
+    await deleteRecord(admin, "catalog_variant_options", optionBId);
+    await deleteRecord(admin, "catalog_variant_groups", groupAId);
+    await deleteRecord(admin, "catalog_variant_groups", groupBId);
   });
 
   it("User A sees only Org A variant options", async () => {
@@ -191,15 +191,15 @@ describeWhenSupabase("Catalog Item Variants RLS — org-scoped", () => {
   let itemVariantBId: string;
 
   beforeAll(async () => {
-    const va = await createTestCatalogItemVariant(admin!, orgAId);
+    const va = await createTestCatalogItemVariant(admin, orgAId);
     itemVariantAId = va.itemVariantId;
-    const vb = await createTestCatalogItemVariant(admin!, orgBId);
+    const vb = await createTestCatalogItemVariant(admin, orgBId);
     itemVariantBId = vb.itemVariantId;
   });
 
   afterAll(async () => {
-    await deleteRecord(admin!, "catalog_item_variants", itemVariantAId);
-    await deleteRecord(admin!, "catalog_item_variants", itemVariantBId);
+    await deleteRecord(admin, "catalog_item_variants", itemVariantAId);
+    await deleteRecord(admin, "catalog_item_variants", itemVariantBId);
   });
 
   it("User A sees only Org A item variants", async () => {

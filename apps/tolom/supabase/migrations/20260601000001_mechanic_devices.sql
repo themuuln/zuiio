@@ -182,7 +182,46 @@ begin
 end;
 $$;
 
--- ── RPC: Register Mechanic Device ────────────────────────────────────────
+-- Backward-compatible registration RPC retained by the production schema.
+-- The token-aware overload below is used by the newer device-registration flow.
+create or replace function public.register_mechanic_device(
+  p_org_id uuid,
+  p_device_fingerprint text,
+  p_device_name text default null
+)
+returns json
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_device_id uuid;
+begin
+  update public.mechanic_devices
+  set revoked_at = now()
+  where mechanic_id = auth.uid() and revoked_at is null;
+
+  insert into public.mechanic_devices (
+    mechanic_id,
+    organization_id,
+    device_name,
+    device_fingerprint
+  ) values (
+    auth.uid(),
+    p_org_id,
+    coalesce(p_device_name, 'Registered device'),
+    p_device_fingerprint
+  )
+  returning id into v_device_id;
+
+  return json_build_object(
+    'success', true,
+    'device_id', v_device_id
+  );
+end;
+$$;
+
+-- ── RPC: Register Mechanic Device With Token ─────────────────────────────
 create or replace function public.register_mechanic_device(
   p_org_id uuid,
   p_registration_token text,
@@ -394,7 +433,8 @@ grant execute on function public.verify_clock_token(text, uuid) to authenticated
 
 revoke all on function public.register_mechanic_device(uuid, text, text, text) from public;
 grant execute on function public.register_mechanic_device(uuid, text, text, text) to authenticated;
-
+revoke all on function public.register_mechanic_device(uuid, text, text) from public;
+grant execute on function public.register_mechanic_device(uuid, text, text) to authenticated;
 revoke all on function public.generate_registration_token(uuid, uuid) from public;
 grant execute on function public.generate_registration_token(uuid, uuid) to authenticated;
 

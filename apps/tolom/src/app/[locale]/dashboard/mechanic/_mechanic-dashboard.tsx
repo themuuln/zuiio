@@ -186,7 +186,7 @@ function KpiCard({
 }) {
   const a = ACCENT_MAP[accent];
   return (
-    <div className="group relative flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm shadow-black/5 transition-[transform,box-shadow] duration-200 hover:shadow-md hover:-translate-y-0.5">
+    <div className="group relative flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5">
       <span
         className={cn(
           "absolute right-3 top-3 size-1.5 rounded-full shadow-[0_0_6px] transition-opacity",
@@ -741,7 +741,7 @@ export function MechanicDashboard({
         </>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm shadow-black/5">
+      <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
         <div className="flex items-center gap-2 border-b border-border/40 px-4 py-3">
           <Wrench className="size-4 text-muted-foreground/60" />
           <span className="text-sm font-semibold">

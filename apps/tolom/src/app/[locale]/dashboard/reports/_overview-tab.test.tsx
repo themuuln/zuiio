@@ -52,9 +52,13 @@ vi.mock("@/components/reports", () => ({
 // Mock recharts for the inline revenue split pie
 vi.mock("recharts", () => ({
   Cell: () => <div data-testid="recharts-cell" />,
-  Pie: ({ children, data }: any) => (
-    <div data-testid="recharts-pie">{children}</div>
-  ),
+  Pie: ({
+    children,
+    data: _data,
+  }: {
+    children: React.ReactNode;
+    data?: unknown;
+  }) => <div data-testid="recharts-pie">{children}</div>,
   PieChart: ({ children }: any) => (
     <div data-testid="recharts-piechart">{children}</div>
   ),

@@ -583,6 +583,7 @@ export function serviceScheduleFixture(
 export interface CashRegisterEntryFixture {
   id: string;
   type: string;
+  source?: string | null;
   amount: number;
   description: string;
   created_at: string;
@@ -623,6 +624,7 @@ export function cashRegisterSessionFixture(
       {
         id: "entry-sale-1",
         type: "sale",
+        source: "work_order_payment",
         amount: 350000,
         description: "Work order payment",
         created_at: now.toISOString(),
@@ -631,6 +633,7 @@ export function cashRegisterSessionFixture(
       {
         id: "entry-cashout-1",
         type: "cash_out",
+        source: "cash_out",
         amount: 50000,
         description: "Office supplies",
         created_at: now.toISOString(),
@@ -678,6 +681,24 @@ export interface ReportDataFixture {
   total_revenue: number;
   total_work_orders: number;
   avg_order_value: number;
+  profitability?: {
+    service_revenue: number;
+    parts_revenue: number;
+    service_cost: number;
+    gross_profit: number;
+    margin_percent: number;
+    effective_labor_rate: number;
+    parts_to_labor_ratio: number;
+  };
+  revenue?: { service_revenue: number; parts_revenue: number; total: number };
+  cogs?: { total: number };
+  expenses?: {
+    total: number;
+    by_category: { category: string; amount: number }[];
+  };
+  net_profit?: number;
+  gross_profit?: number;
+  gross_margin_pct?: number;
   mechanics: Array<{
     id: string;
     name: string;
@@ -693,6 +714,31 @@ export function reportDataFixture(
     total_revenue: 8500000,
     total_work_orders: 45,
     avg_order_value: 188889,
+    profitability: {
+      service_revenue: 8300000,
+      parts_revenue: 4200000,
+      service_cost: 3100000,
+      gross_profit: 5200000,
+      margin_percent: 41.6,
+      effective_labor_rate: 87000,
+      parts_to_labor_ratio: 0.66,
+    },
+    revenue: {
+      service_revenue: 8300000,
+      parts_revenue: 4200000,
+      total: 12500000,
+    },
+    cogs: { total: 3100000 },
+    expenses: {
+      total: 1500000,
+      by_category: [
+        { category: "Parts", amount: 800000 },
+        { category: "Labor", amount: 700000 },
+      ],
+    },
+    net_profit: 3500000,
+    gross_profit: 5200000,
+    gross_margin_pct: 41.6,
     mechanics: [
       {
         id: SEED.mechanics.bat.id,
@@ -850,13 +896,47 @@ export function vehicleModelFixture(
 
 export interface OverviewDashboardFixture {
   summary: {
-    total_revenue: number;
-    total_expenses: number;
-    net_profit: number;
-    work_orders_count: number;
-    completed_count: number;
-    active_count: number;
+    totalRevenue: number;
+    activeWorkOrders: number;
+    completedToday: number;
+    newCustomersToday: number;
+    avgRepairOrderValue: number;
+    partsRevenue: number;
+    serviceRevenue: number;
+    grossProfit: number;
+    marginPercent: number;
+    totalCustomers: number;
+    totalVehicles: number;
   };
+  summaryComparison: {
+    totalRevenue: number;
+    activeWorkOrders: number;
+    completedToday: number;
+    newCustomersToday: number;
+    avgRepairOrderValue: number;
+    partsRevenue: number;
+    serviceRevenue: number;
+    grossProfit: number;
+    marginPercent: number;
+    totalCustomers: number;
+    totalVehicles: number;
+  } | null;
+  insights: string[];
+  workOrderStatusDistribution: { status: string; count: number }[];
+  revenueTrend: { date: string; revenue: number; workOrders: number }[];
+  topServices: { name: string; revenue: number; count: number }[];
+  technicianPerformance: {
+    id: string;
+    name: string;
+    completedOrders: number;
+    revenue: number;
+  }[];
+  serviceCategoryBreakdown: {
+    category: string;
+    revenue: number;
+    count: number;
+  }[];
+  customerAcquisitionTrend: { month: string; newCustomers: number }[];
   recentWorkOrders: WorkOrderListItemFixture[];
 }
 
@@ -865,24 +945,63 @@ export function overviewDashboardFixture(
 ): OverviewDashboardFixture {
   return {
     summary: {
-      total_revenue: 12500000,
-      total_expenses: 4200000,
-      net_profit: 8300000,
-      work_orders_count: 142,
-      completed_count: 98,
-      active_count: 12,
+      totalRevenue: 12500000,
+      activeWorkOrders: 12,
+      completedToday: 98,
+      newCustomersToday: 3,
+      avgRepairOrderValue: 87000,
+      partsRevenue: 4200000,
+      serviceRevenue: 8300000,
+      grossProfit: 5200000,
+      marginPercent: 41.6,
+      totalCustomers: 142,
+      totalVehicles: 96,
     },
-    recentWorkOrders: [
-      workOrderListItemFixture({ status: "in_progress" }),
-      workOrderListItemFixture({
-        id: "e2e-00000000-0000-0000-0000-000000000201",
-        status: "completed",
-      }),
-      workOrderListItemFixture({
-        id: "e2e-00000000-0000-0000-0000-000000000202",
-        status: "new",
-      }),
+    summaryComparison: {
+      totalRevenue: 11000000,
+      activeWorkOrders: 9,
+      completedToday: 84,
+      newCustomersToday: 2,
+      avgRepairOrderValue: 82000,
+      partsRevenue: 3800000,
+      serviceRevenue: 7200000,
+      grossProfit: 4600000,
+      marginPercent: 41.8,
+      totalCustomers: 131,
+      totalVehicles: 88,
+    },
+    insights: [
+      "Revenue is up 13.6% vs the previous period",
+      "Active work orders increased by 3",
     ],
+    workOrderStatusDistribution: [
+      { status: "new", count: 6 },
+      { status: "in_progress", count: 5 },
+      { status: "completed", count: 98 },
+    ],
+    revenueTrend: [
+      { date: "2026-07-01", revenue: 900000, workOrders: 8 },
+      { date: "2026-07-08", revenue: 1200000, workOrders: 11 },
+      { date: "2026-07-15", revenue: 1500000, workOrders: 13 },
+    ],
+    topServices: [
+      { name: "Oil change", revenue: 2100000, count: 42 },
+      { name: "Brake service", revenue: 1600000, count: 23 },
+    ],
+    technicianPerformance: [
+      { id: "tech-1", name: "B. Bat", completedOrders: 31, revenue: 2800000 },
+      { id: "tech-2", name: "D. Dorj", completedOrders: 24, revenue: 2100000 },
+    ],
+    serviceCategoryBreakdown: [
+      { category: "Maintenance", revenue: 3400000, count: 60 },
+      { category: "Repair", revenue: 4900000, count: 38 },
+    ],
+    customerAcquisitionTrend: [
+      { month: "2026-05", newCustomers: 11 },
+      { month: "2026-06", newCustomers: 14 },
+      { month: "2026-07", newCustomers: 17 },
+    ],
+    recentWorkOrders: [],
     ...overrides,
   };
 }

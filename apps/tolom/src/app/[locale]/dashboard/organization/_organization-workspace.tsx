@@ -144,7 +144,7 @@ function OrganizationIdentityPanel({
 >) {
   return (
     <Card className="border-border/70 shadow-none">
-      <CardHeader className="flex-row items-start gap-4 space-y-0 border-b pb-4">
+      <CardHeader className="flex-row items-start gap-4 gap-y-0 border-b pb-4">
         {loading ? (
           <Skeleton className="size-14 shrink-0 rounded-md" />
         ) : (
@@ -176,13 +176,13 @@ function OrganizationIdentityPanel({
       </CardHeader>
       <CardContent className="pt-1">
         {loading ? (
-          <div className="space-y-5 py-3">
+          <div className="flex flex-col gap-y-5 py-3">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-4/5" />
           </div>
         ) : editing ? (
           <form
-            className="space-y-5 pt-4"
+            className="flex flex-col gap-y-5 pt-4"
             onSubmit={(event) => {
               event.preventDefault();
               form.handleSubmit(onSave)();
@@ -290,7 +290,7 @@ function SubscriptionPanel({
         </CardTitle>
         <CardDescription>{orgT("currentPlanAndBilling")}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5 pt-5">
+      <CardContent className="flex flex-col gap-y-5 pt-5">
         {loading ? (
           <>
             <Skeleton className="h-8 w-28" />
@@ -379,7 +379,7 @@ function DestinationPanel({
 }) {
   return (
     <Card className="border-border/70 shadow-none">
-      <CardHeader className="flex-row items-center gap-2 space-y-0 border-b py-3">
+      <CardHeader className="flex-row items-center gap-2 gap-y-0 border-b py-3">
         <Icon className="size-4 text-muted-foreground" />
         <CardTitle className="text-sm">{title}</CardTitle>
       </CardHeader>
@@ -511,7 +511,7 @@ export function OrganizationWorkspace({
       </section>
 
       <section
-        className="space-y-4"
+        className="flex flex-col gap-y-4"
         aria-labelledby="workspace-controls-heading"
       >
         <div>

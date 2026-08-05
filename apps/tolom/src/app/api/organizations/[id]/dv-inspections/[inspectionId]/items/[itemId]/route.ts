@@ -33,11 +33,7 @@ export const PATCH = createRouteHandler(
 
     // Validate at least one field is provided
     if (Object.keys(body).length === 0) {
-      return apiError(
-        "VALIDATION",
-        "At least one field must be provided",
-        400,
-      );
+      return apiError("VALIDATION", "At least one field must be provided", 400);
     }
 
     const result = await updateInspectionItem(

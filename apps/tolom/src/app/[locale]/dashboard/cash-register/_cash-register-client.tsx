@@ -301,7 +301,7 @@ function TransactionList({
                   </Typography.Text>
                   <Typography.Muted className="text-xs">
                     {new Date(entry.created_at).toLocaleTimeString()} ·{" "}
-                    {entry.source.replace("_", " ")}
+                    {(entry.source ?? "").replace("_", " ")}
                   </Typography.Muted>
                 </div>
               </div>

@@ -180,7 +180,8 @@ describe("ServiceLines", () => {
     // The filtered catalog renders items — click one to add
     const oilChangeBtn = screen.getByText("Oil Change").closest("button");
     expect(oilChangeBtn).toBeInTheDocument();
-    fireEvent.click(oilChangeBtn!);
+    if (!oilChangeBtn) throw new Error("oil change button not found");
+    fireEvent.click(oilChangeBtn);
     expect(defaultHandlers.onAdd).toHaveBeenCalledWith(mockCatalog[0]);
   });
 

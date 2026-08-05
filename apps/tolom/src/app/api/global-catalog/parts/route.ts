@@ -2,8 +2,8 @@ import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
 import {
-  searchGlobalParts,
   type GlobalPartSearchFilters,
+  searchGlobalParts,
 } from "@/lib/services/global-catalog-service";
 
 export const GET = createSimpleRouteHandler(
@@ -11,17 +11,15 @@ export const GET = createSimpleRouteHandler(
     const { searchParams } = request.nextUrl;
     const query = searchParams.get("q") ?? undefined;
     const category = searchParams.get("category") ?? undefined;
-    const limit = searchParams.get("limit")
-      ? parseInt(searchParams.get("limit")!, 10)
-      : undefined;
-    const offset = searchParams.get("offset")
-      ? parseInt(searchParams.get("offset")!, 10)
-      : undefined;
+    const rawLimit = searchParams.get("limit");
+    const limit = rawLimit ? parseInt(rawLimit, 10) : undefined;
+    const rawOffset = searchParams.get("offset");
+    const offset = rawOffset ? parseInt(rawOffset, 10) : undefined;
 
     const filters: GlobalPartSearchFilters = {};
     if (category) filters.category = category;
-    if (limit && !isNaN(limit) && limit > 0) filters.limit = limit;
-    if (offset && !isNaN(offset) && offset >= 0) filters.offset = offset;
+    if (limit && !Number.isNaN(limit) && limit > 0) filters.limit = limit;
+    if (offset && !Number.isNaN(offset) && offset >= 0) filters.offset = offset;
 
     try {
       const data = await searchGlobalParts(supabase, query, filters);

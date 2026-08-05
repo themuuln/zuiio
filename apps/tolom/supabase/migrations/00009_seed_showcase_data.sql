@@ -27,7 +27,25 @@ begin
 
   if admin_user_id is null then
     -- Create a demo auth user for seeding purposes
-    insert into auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, confirmation_sent_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, role, aud)
+    insert into auth.users (
+      id,
+      instance_id,
+      email,
+      encrypted_password,
+      email_confirmed_at,
+      confirmation_sent_at,
+      confirmation_token,
+      recovery_token,
+      email_change_token_new,
+      email_change,
+      email_change_token_current,
+      raw_app_meta_data,
+      raw_user_meta_data,
+      created_at,
+      updated_at,
+      role,
+      aud
+    )
     values (
       '00000000-0000-0000-0000-000000000001',
       '00000000-0000-0000-0000-000000000000',
@@ -35,6 +53,11 @@ begin
       '',
       now(),
       now(),
+      '',
+      '',
+      '',
+      '',
+      '',
       '{"provider":"email"}'::jsonb,
       '{}'::jsonb,
       now(),

@@ -111,7 +111,6 @@ describe("cash-register-service", () => {
         .eq.mockReturnValueOnce(mockClient.from("cash_register_entries"));
       // Entries resolve via then
       const entriesQb = mockClient.from("cash_register_entries");
-      // biome-ignore lint/suspicious/noThenProperty: mock thenable query builder
       entriesQb.then = (onFulfilled: (value: unknown) => unknown) =>
         Promise.resolve({
           data: [
@@ -213,7 +212,6 @@ describe("cash-register-service", () => {
         .from("cash_register_entries")
         .order.mockReturnValueOnce(mockClient.from("cash_register_entries"));
       const entriesQb = mockClient.from("cash_register_entries");
-      // biome-ignore lint/suspicious/noThenProperty: mock thenable query builder
       entriesQb.then = (onFulfilled: (value: unknown) => unknown) =>
         Promise.resolve({
           data: [{ id: "entry-1", entry_type: "in", amount: 100000 }],
@@ -315,7 +313,6 @@ describe("cash-register-service", () => {
         .from("cash_register_entries")
         .eq.mockReturnValueOnce(mockClient.from("cash_register_entries"));
       const countQb = mockClient.from("cash_register_entries");
-      // biome-ignore lint/suspicious/noThenProperty: mock thenable query builder
       countQb.then = (onFulfilled: (value: unknown) => unknown) =>
         Promise.resolve({ count: 0, error: null }).then(onFulfilled);
 
@@ -344,7 +341,6 @@ describe("cash-register-service", () => {
         .from("cash_register_entries")
         .eq.mockReturnValueOnce(mockClient.from("cash_register_entries"));
       const countQb = mockClient.from("cash_register_entries");
-      // biome-ignore lint/suspicious/noThenProperty: mock thenable query builder
       countQb.then = (onFulfilled: (value: unknown) => unknown) =>
         Promise.resolve({ count: 3, error: null }).then(onFulfilled);
 
@@ -373,7 +369,6 @@ describe("cash-register-service", () => {
         .from("cash_register_sessions")
         .range.mockReturnValueOnce(mockClient.from("cash_register_sessions"));
       const listQb = mockClient.from("cash_register_sessions");
-      // biome-ignore lint/suspicious/noThenProperty: mock thenable query builder
       listQb.then = (onFulfilled: (value: unknown) => unknown) =>
         Promise.resolve({
           data: [{ id: "s1" }, { id: "s2" }],

@@ -4,14 +4,18 @@ import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createCrudHooks, usePendingIds, useUndoToast } from "../use-crud-list";
 
-vi.mock("@zuiio/query", () => ({
-  useOrgMutation: vi.fn(() => ({
+const { mockUseOrgMutation } = vi.hoisted(() => ({
+  mockUseOrgMutation: vi.fn(() => ({
     mutate: vi.fn(),
     mutateAsync: vi.fn(),
     isPending: false,
     isError: false,
     error: null,
   })),
+}));
+
+vi.mock("@zuiio/query", () => ({
+  useOrgMutation: mockUseOrgMutation,
 }));
 
 const queryClient = new QueryClient({
@@ -112,6 +116,41 @@ describe("createCrudHooks", () => {
 
       expect(result.current).toBeDefined();
       expect(typeof result.current.mutate).toBe("function");
+    });
+  });
+
+  describe("conflict error surfacing", () => {
+    it("does not override the error message for create — a 409 CONFLICT message surfaces", () => {
+      renderHook(() => crud.useCreate("org-1"), {
+        wrapper: createWrapper(),
+      });
+
+      const config = mockUseOrgMutation.mock.calls.at(-1)?.[0] as {
+        errorMessage?: string;
+      };
+      expect(config.errorMessage).toBeUndefined();
+    });
+
+    it("does not override the error message for update — a 409 CONFLICT message surfaces", () => {
+      renderHook(() => crud.useUpdate("org-1"), {
+        wrapper: createWrapper(),
+      });
+
+      const config = mockUseOrgMutation.mock.calls.at(-1)?.[0] as {
+        errorMessage?: string;
+      };
+      expect(config.errorMessage).toBeUndefined();
+    });
+
+    it("falls back to the server error message for delete when no deleteError is configured", () => {
+      renderHook(() => crud.useDelete("org-1"), {
+        wrapper: createWrapper(),
+      });
+
+      const config = mockUseOrgMutation.mock.calls.at(-1)?.[0] as {
+        errorMessage?: string;
+      };
+      expect(config.errorMessage).toBeUndefined();
     });
   });
 });

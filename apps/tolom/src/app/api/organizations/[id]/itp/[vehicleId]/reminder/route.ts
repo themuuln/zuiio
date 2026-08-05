@@ -16,9 +16,14 @@ export const POST = createRouteHandler(
       return apiError("VALIDATION", "vehicleId is required", 400);
     }
 
-    await sendItpReminder(supabase, vehicleId, orgId, user.id);
+    const { sent, emailDelivered } = await sendItpReminder(
+      supabase,
+      vehicleId,
+      orgId,
+      user.id,
+    );
 
-    return ok({ sent: true });
+    return ok({ sent, emailDelivered });
   },
   { rateLimit: true, requireOrg: true },
 );

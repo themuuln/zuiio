@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 import { MechanicSwitcher } from "@/components/mechanic-switcher";
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
@@ -10,6 +11,9 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -18,6 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigation } from "@/hooks/use-navigation";
+import { useRecentPages } from "@/hooks/use-recent-pages";
 import { useRouter } from "@/lib/i18n/navigation";
 import { onLinkHover } from "@/lib/prefetch";
 
@@ -67,8 +72,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     utilityItems,
     primaryItems,
     settingsItems,
+    searchItems,
     roleLoading,
   } = useNavigation();
+
+  const itemByHref = useMemo(() => {
+    const map = new Map(searchItems.map((item) => [item.href, item]));
+    return map;
+  }, [searchItems]);
+  const recent = useRecentPages(
+    useMemo(
+      () =>
+        searchItems.map((item) => ({
+          href: item.href,
+          labelKey: item.labelKey,
+        })),
+      [searchItems],
+    ),
+  );
 
   return (
     <Sidebar
@@ -89,6 +110,36 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarSkeleton />
         ) : (
           <>
+            {recent.length > 0 && (
+              <SidebarGroup>
+                <SidebarGroupLabel>
+                  {t("sidebar.recentlyViewed")}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {recent.map((entry) => {
+                      const item = itemByHref.get(entry.href);
+                      if (!item) return null;
+                      const Icon = item.icon;
+                      return (
+                        <SidebarMenuItem key={item.href}>
+                          <SidebarMenuButton
+                            onClick={() => push(item.href)}
+                            onMouseEnter={onLinkHover(item.href)}
+                            isActive={isActive(item.href)}
+                            tooltip={t(item.labelKey)}
+                            size="sm"
+                          >
+                            <Icon className="size-4 shrink-0" />
+                            <span className="truncate">{t(item.labelKey)}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
             <NavMain
               primaryItems={primaryItems}
               groups={groups}

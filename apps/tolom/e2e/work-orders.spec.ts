@@ -76,7 +76,7 @@ test.describe("Work Orders (Mocked)", () => {
   test.describe("Sidebar Navigation", () => {
     test("has Work Orders link in sidebar", async ({ page }) => {
       await expect(
-        page.getByRole("link", { name: /work order/i }).first(),
+        page.getByRole("button", { name: /^work orders$/i }).first(),
       ).toBeVisible();
     });
   });

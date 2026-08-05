@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import QueryProvider from "@/components/query-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
@@ -41,11 +42,7 @@ const NAV_ITEMS = [
   },
 ];
 
-export default function PortalLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function PortalLayoutContent({ children }: { children: React.ReactNode }) {
   const t = useTranslations() as (
     key: string,
     values?: Record<string, string | number>,
@@ -156,5 +153,17 @@ export default function PortalLayout({
         TOLOM: Auto Service Management
       </footer>
     </div>
+  );
+}
+
+export default function PortalLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <QueryProvider>
+      <PortalLayoutContent>{children}</PortalLayoutContent>
+    </QueryProvider>
   );
 }

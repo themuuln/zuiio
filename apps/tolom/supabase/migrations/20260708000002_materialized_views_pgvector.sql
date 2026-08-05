@@ -70,8 +70,8 @@ SELECT
   p.full_name AS mechanic_name,
   count(DISTINCT wo.id) AS total_orders,
   count(DISTINCT wo.id) FILTER (WHERE wo.status IN ('Completed', 'Ready for Pickup')) AS completed_orders,
-  COALESCE(sum(svc.total_price), 0) AS total_revenue,
-  COALESCE(sum(pts.total_price), 0) AS parts_revenue,
+  COALESCE(sum(wos_svc.total_price), 0) AS total_revenue,
+  COALESCE(sum(wop_pts.total_price), 0) AS parts_revenue,
   CASE
     WHEN count(DISTINCT wo.id) FILTER (WHERE wo.completed_at IS NOT NULL) > 0
     THEN round(
@@ -82,7 +82,7 @@ SELECT
     ELSE 0
   END AS avg_completion_time_hours,
   count(DISTINCT wo.id) FILTER (WHERE wo.created_at >= now() - interval '7 days') AS orders_last_7_days,
-  COALESCE(sum(svc.total_price) FILTER (WHERE wo.created_at >= now() - interval '30 days'), 0) AS revenue_last_30_days
+  COALESCE(sum(wos_svc.total_price) FILTER (WHERE wo.created_at >= now() - interval '30 days'), 0) AS revenue_last_30_days
 FROM work_orders wo
 JOIN profiles p ON p.id = wo.mechanic_id
 LEFT JOIN LATERAL (

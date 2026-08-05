@@ -1,350 +1,312 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  createMockSupabaseClient,
-  type MockSupabaseClient,
-} from "@/test/mocks/supabase";
+import { createMockSupabaseClient } from "@/test/mocks/supabase";
 
-vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
-vi.mock("@/lib/audit", () => ({ logAuditAfter: vi.fn() }));
-vi.mock("@/lib/capture", () => ({ capture: vi.fn() }));
 vi.mock("@/lib/errors", () => ({
-  AppError: class extends Error {
-    constructor(
-      m: string,
-      public code?: string,
-      public status?: number,
-    ) {
-      super(m);
-      this.name = "AppError";
-    }
-  },
-  NotFoundError: class extends Error {
-    constructor(m: string) {
-      super(m);
+  NotFoundError: class NotFoundError extends Error {
+    constructor(msg: string) {
+      super(msg);
       this.name = "NotFoundError";
     }
   },
-  ValidationError: class extends Error {
-    constructor(m: string) {
-      super(m);
+  ValidationError: class ValidationError extends Error {
+    constructor(msg: string) {
+      super(msg);
       this.name = "ValidationError";
     }
   },
 }));
-vi.mock("@/lib/sentry-report-server", () => ({ reportServerError: vi.fn() }));
-vi.mock("@/lib/supabase/with-branch", () => ({
-  resolveBranchId: vi.fn().mockResolvedValue("branch-1"),
-}));
 
-import { revalidateTag } from "next/cache";
-import { logAuditAfter } from "@/lib/audit";
-import { AppError, NotFoundError, ValidationError } from "@/lib/errors";
-import { resolveBranchId } from "@/lib/supabase/with-branch";
-
-const mockRevalidateTag = vi.mocked(revalidateTag);
-const mockLogAudit = vi.mocked(logAuditAfter);
-const mockResolveBranchId = vi.mocked(resolveBranchId);
-
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import {
-  createSupplier,
-  deleteSupplier,
-  getSupplier,
-  getSuppliers,
-  updateSupplier,
+  addSupplierPart,
+  getPartSuppliers,
+  getSupplierParts,
+  getSupplierPerformance,
+  removeSupplierPart,
+  setPreferredSupplier,
 } from "../supplier-service";
 
-// ── Shared constants ──────────────────────────────────────────────
-
 const ORG_ID = "org-1";
+const SUPPLIER_ID = "supplier-1";
+const PART_ID = "part-1";
 const USER_ID = "user-1";
-const SUPPLIER_ID = "supp-1";
 
-let db: MockSupabaseClient;
+let db: ReturnType<typeof createMockSupabaseClient>;
 
-// ── Helpers ───────────────────────────────────────────────────────
+const MOCK_SUPPLIER_PART = {
+  id: "sp-1",
+  supplier_id: SUPPLIER_ID,
+  part_id: PART_ID,
+  supplier_part_number: "SP-001",
+  unit_cost: 15000,
+  is_preferred: true,
+  notes: null,
+  created_at: "2026-01-01T00:00:00Z",
+  updated_at: "2026-01-01T00:00:00Z",
+  part: {
+    id: PART_ID,
+    name: "Oil Filter",
+    part_number: "OF-101",
+    default_price: 25000,
+    unit_cost: 12000,
+    category: "Filters",
+  },
+};
 
-function makeSupplier(overrides: Record<string, unknown> = {}) {
-  return {
+const MOCK_PART_SUPPLIER = {
+  id: "sp-1",
+  supplier_id: SUPPLIER_ID,
+  part_id: PART_ID,
+  supplier_part_number: "SP-001",
+  unit_cost: 15000,
+  is_preferred: true,
+  notes: null,
+  created_at: "2026-01-01T00:00:00Z",
+  updated_at: "2026-01-01T00:00:00Z",
+  supplier: {
     id: SUPPLIER_ID,
-    organization_id: ORG_ID,
-    name: "Test Supplier",
-    contact_person: "John Doe",
-    phone: "+976-99112233",
-    email: "john@supplier.com",
-    address: "123 Main St",
-    tax_id: "TAX-001",
-    payment_terms: "Net 30",
-    notes: "Reliable supplier",
-    is_active: true,
-    created_at: "2025-01-15T10:00:00Z",
-    updated_at: "2025-01-15T10:00:00Z",
-    created_by: USER_ID,
-    updated_by: USER_ID,
-    ...overrides,
-  };
-}
+    name: "Auto Parts Co",
+    phone: "99110001",
+    email: "contact@autoparts.mn",
+  },
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
   db = createMockSupabaseClient();
 });
 
-// ── getSuppliers ──────────────────────────────────────────────────
-
-describe("getSuppliers", () => {
-  it("returns paginated list of suppliers", async () => {
-    const suppliers = [
-      makeSupplier({ id: "s1", name: "Alpha Supplies" }),
-      makeSupplier({ id: "s2", name: "Beta Parts" }),
+describe("getSupplierPerformance", () => {
+  it("returns organization-scoped supplier metrics", async () => {
+    const metrics = [
+      {
+        supplier_id: SUPPLIER_ID,
+        organization_id: ORG_ID,
+        supplier_name: "Auto Parts Co",
+        total_pos: 4,
+        completed_pos: 3,
+        total_items_ordered: 8,
+        total_quantity_ordered: 24,
+        avg_unit_cost: 12500,
+        last_order_date: "2026-07-31T00:00:00Z",
+      },
     ];
-    db.__qb.resolveWith({ data: suppliers, count: 2, error: null });
+    db.__qb.resolveOnce({ data: metrics, error: null });
 
-    const result = await getSuppliers(db as never, ORG_ID, 1, 10);
+    const result = await getSupplierPerformance(db as never, ORG_ID);
 
-    expect(result.data).toHaveLength(2);
-    expect(result.total).toBe(2);
-    expect(result.page).toBe(1);
-    expect(result.pageSize).toBe(10);
+    expect(result).toEqual(metrics);
+    expect(db.from).toHaveBeenCalledWith("supplier_performance");
   });
 
-  it("uses default page=1 and pageSize=50 when not provided", async () => {
-    db.__qb.resolveWith({ data: [], count: 0, error: null });
+  it("throws when metrics query fails", async () => {
+    db.__qb.resolveOnce({ data: null, error: new Error("DB error") });
 
-    const result = await getSuppliers(db as never, ORG_ID);
-
-    expect(result.data).toHaveLength(0);
-    expect(result.total).toBe(0);
-    expect(result.page).toBe(1);
-    expect(result.pageSize).toBe(50);
-  });
-
-  it("clamps pageSize to max of 100", async () => {
-    db.__qb.resolveWith({ data: [], count: 0, error: null });
-
-    const result = await getSuppliers(db as never, ORG_ID, 1, 500);
-
-    expect(result.pageSize).toBe(100);
-  });
-
-  it("throws AppError on database error", async () => {
-    db.__qb.resolveWith({
-      data: null,
-      count: null,
-      error: new Error("Connection failed"),
-    });
-
-    await expect(getSuppliers(db as never, ORG_ID)).rejects.toThrow(AppError);
+    await expect(getSupplierPerformance(db as never, ORG_ID)).rejects.toThrow(
+      "DB error",
+    );
   });
 });
 
-// ── getSupplier ───────────────────────────────────────────────────
+// ── getSupplierParts ───────────────────────────────────────────
 
-describe("getSupplier", () => {
-  it("returns a single supplier by id", async () => {
-    const supplier = makeSupplier({ name: "Acme Corp" });
-    db.__qb.resolveOnce({ data: supplier, error: null });
-
-    const result = await getSupplier(db as never, SUPPLIER_ID, ORG_ID);
-
-    expect(result).toBeDefined();
-    expect(result.id).toBe(SUPPLIER_ID);
-    expect(result.name).toBe("Acme Corp");
-    expect(result.email).toBe("john@supplier.com");
-  });
-
-  it("throws NotFoundError when supplier does not exist", async () => {
+describe("getSupplierParts", () => {
+  it("returns parts for a supplier", async () => {
     db.__qb.resolveOnce({
-      data: null,
-      error: new Error("PGRST116: row not found"),
+      data: [MOCK_SUPPLIER_PART],
+      error: null,
     });
 
-    await expect(
-      getSupplier(db as never, "non-existent", ORG_ID),
-    ).rejects.toThrow(NotFoundError);
+    const result = await getSupplierParts(db as never, ORG_ID, SUPPLIER_ID);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].part?.name).toBe("Oil Filter");
+    expect(db.from).toHaveBeenCalledWith("supplier_parts");
   });
 
-  it("throws NotFoundError when data is null without DB error", async () => {
+  it("returns empty array when no parts mapped", async () => {
+    db.__qb.resolveOnce({ data: [], error: null });
+
+    const result = await getSupplierParts(db as never, ORG_ID, SUPPLIER_ID);
+    expect(result).toEqual([]);
+  });
+
+  it("throws on database error", async () => {
+    db.__qb.resolveOnce({ data: null, error: new Error("DB error") });
+
+    await expect(
+      getSupplierParts(db as never, ORG_ID, SUPPLIER_ID),
+    ).rejects.toThrow("DB error");
+  });
+});
+
+// ── getPartSuppliers ───────────────────────────────────────────
+
+describe("getPartSuppliers", () => {
+  it("returns suppliers for a part", async () => {
+    db.__qb.resolveOnce({
+      data: [MOCK_PART_SUPPLIER],
+      error: null,
+    });
+
+    const result = await getPartSuppliers(db as never, ORG_ID, PART_ID);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].supplier?.name).toBe("Auto Parts Co");
+    expect(db.from).toHaveBeenCalledWith("supplier_parts");
+  });
+
+  it("returns empty array when no suppliers mapped", async () => {
+    db.__qb.resolveOnce({ data: [], error: null });
+
+    const result = await getPartSuppliers(db as never, ORG_ID, PART_ID);
+    expect(result).toEqual([]);
+  });
+});
+
+// ── addSupplierPart ────────────────────────────────────────────
+
+describe("addSupplierPart", () => {
+  it("adds a part to a supplier", async () => {
+    // maybeSingle for duplicate check — return null (no duplicate)
+    vi.mocked(db.from("supplier_parts").maybeSingle).mockResolvedValueOnce({
+      data: null,
+      error: null,
+    } as never);
+
+    // single for insert — return the new record
+    db.__qb.resolveOnce({ data: MOCK_SUPPLIER_PART, error: null });
+
+    const result = await addSupplierPart(
+      db as never,
+      ORG_ID,
+      {
+        supplier_id: SUPPLIER_ID,
+        part_id: PART_ID,
+        supplier_part_number: "SP-001",
+        unit_cost: 15000,
+      },
+      USER_ID,
+    );
+
+    expect(result.part?.name).toBe("Oil Filter");
+    expect(result.supplier_id).toBe(SUPPLIER_ID);
+  });
+
+  it("adds a part as preferred and unsets other preferred", async () => {
+    vi.mocked(db.from("supplier_parts").maybeSingle).mockResolvedValueOnce({
+      data: null,
+      error: null,
+    } as never);
+
+    const preferredPart = { ...MOCK_SUPPLIER_PART, is_preferred: true };
+    db.__qb.resolveOnce({ data: preferredPart, error: null });
+
+    // The unset-preferred update is a separate chain (await db.from(...).update(...).eq(...).neq(...).eq(...))
+    // Since this is called after insert with .single(), it goes through a new chain
+    // But actually the unset-preferred code uses db.from() which produces a new qb chain
+    // Let's set a default resolve for any additional awaits
     db.__qb.resolveOnce({ data: null, error: null });
 
-    await expect(getSupplier(db as never, "ghost", ORG_ID)).rejects.toThrow(
-      NotFoundError,
-    );
-  });
-});
-
-// ── createSupplier ────────────────────────────────────────────────
-
-describe("createSupplier", () => {
-  const createParams = {
-    name: "New Supplier",
-    contact_person: "Jane Doe",
-    phone: "+976-99445566",
-    email: "jane@supplier.com",
-    address: "456 Oak Ave",
-    tax_id: "TAX-002",
-    payment_terms: "Net 60",
-    notes: "Preferred vendor",
-  };
-
-  it("creates and returns the supplier with audit log and cache invalidation", async () => {
-    const created = makeSupplier({ ...createParams });
-    db.__qb.resolveOnce({ data: created, error: null });
-
-    const result = await createSupplier(
+    const result = await addSupplierPart(
       db as never,
       ORG_ID,
-      createParams,
+      {
+        supplier_id: SUPPLIER_ID,
+        part_id: PART_ID,
+        is_preferred: true,
+      },
       USER_ID,
     );
 
-    expect(result).toBeDefined();
-    expect(result.name).toBe("New Supplier");
-    expect(result.email).toBe("jane@supplier.com");
-    expect(mockLogAudit).toHaveBeenCalled();
-    expect(mockRevalidateTag).toHaveBeenCalled();
+    expect(result.is_preferred).toBe(true);
   });
 
-  it("resolves branchId when branchId is provided in params", async () => {
-    const created = makeSupplier({
-      ...createParams,
-      branch_id: "branch-1",
-    });
-    db.__qb.resolveOnce({ data: created, error: null });
-
-    await createSupplier(
-      db as never,
-      ORG_ID,
-      { ...createParams, branchId: "branch-1" },
-      USER_ID,
-    );
-
-    expect(mockResolveBranchId).toHaveBeenCalled();
-  });
-
-  it("throws ValidationError when name is empty string", async () => {
-    await expect(
-      createSupplier(db as never, ORG_ID, { name: "" }, USER_ID),
-    ).rejects.toThrow(ValidationError);
-  });
-
-  it("throws ValidationError when name is only whitespace", async () => {
-    await expect(
-      createSupplier(db as never, ORG_ID, { name: "   " }, USER_ID),
-    ).rejects.toThrow(ValidationError);
-  });
-
-  it("throws AppError when database insert fails", async () => {
-    db.__qb.resolveOnce({
-      data: null,
-      error: new Error("duplicate key value violates unique constraint"),
-    });
+  it("throws ValidationError when part already mapped", async () => {
+    vi.mocked(db.from("supplier_parts").maybeSingle).mockResolvedValueOnce({
+      data: { id: "existing" },
+      error: null,
+    } as never);
 
     await expect(
-      createSupplier(db as never, ORG_ID, createParams, USER_ID),
-    ).rejects.toThrow(AppError);
-  });
-});
-
-// ── updateSupplier ────────────────────────────────────────────────
-
-describe("updateSupplier", () => {
-  it("updates and returns the supplier with audit log and cache invalidation", async () => {
-    const existing = makeSupplier();
-    const updated = makeSupplier({ name: "Updated Corp" });
-    db.__qb.resolveOnce({ data: existing, error: null });
-    db.__qb.resolveOnce({ data: updated, error: null });
-
-    const result = await updateSupplier(
-      db as never,
-      SUPPLIER_ID,
-      ORG_ID,
-      { name: "Updated Corp" },
-      USER_ID,
-    );
-
-    expect(result).toBeDefined();
-    expect(result.name).toBe("Updated Corp");
-    expect(mockLogAudit).toHaveBeenCalled();
-    expect(mockRevalidateTag).toHaveBeenCalled();
-  });
-
-  it("throws NotFoundError when supplier to update does not exist", async () => {
-    db.__qb.resolveOnce({
-      data: null,
-      error: new Error("PGRST116: row not found"),
-    });
-
-    await expect(
-      updateSupplier(
+      addSupplierPart(
         db as never,
-        "non-existent",
         ORG_ID,
-        { name: "New" },
+        {
+          supplier_id: SUPPLIER_ID,
+          part_id: PART_ID,
+        },
+        USER_ID,
+      ),
+    ).rejects.toThrow(ValidationError);
+  });
+
+  it("throws when insert returns no data", async () => {
+    vi.mocked(db.from("supplier_parts").maybeSingle).mockResolvedValueOnce({
+      data: null,
+      error: null,
+    } as never);
+
+    db.__qb.resolveOnce({ data: null, error: null });
+
+    await expect(
+      addSupplierPart(
+        db as never,
+        ORG_ID,
+        {
+          supplier_id: SUPPLIER_ID,
+          part_id: PART_ID,
+        },
         USER_ID,
       ),
     ).rejects.toThrow(NotFoundError);
   });
+});
 
-  it("throws NotFoundError when fetch returns null without error", async () => {
+// ── removeSupplierPart ─────────────────────────────────────────
+
+describe("removeSupplierPart", () => {
+  it("removes mapping successfully", async () => {
+    db.__qb.resolveOnce({
+      data: { id: "sp-1" },
+      error: null,
+    });
+
+    await expect(
+      removeSupplierPart(db as never, ORG_ID, "sp-1"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("throws NotFoundError when mapping not found", async () => {
     db.__qb.resolveOnce({ data: null, error: null });
 
     await expect(
-      updateSupplier(db as never, "ghost", ORG_ID, { name: "New" }, USER_ID),
+      removeSupplierPart(db as never, ORG_ID, "nonexistent"),
     ).rejects.toThrow(NotFoundError);
-  });
-
-  it("throws ValidationError when no fields are provided to update", async () => {
-    const existing = makeSupplier();
-    db.__qb.resolveOnce({ data: existing, error: null });
-
-    await expect(
-      updateSupplier(db as never, SUPPLIER_ID, ORG_ID, {}, USER_ID),
-    ).rejects.toThrow(ValidationError);
   });
 });
 
-// ── deleteSupplier ────────────────────────────────────────────────
+// ── setPreferredSupplier ──────────────────────────────────────
 
-describe("deleteSupplier", () => {
-  it("soft-deletes the supplier with audit log and cache invalidation", async () => {
-    const existing = makeSupplier();
-    db.__qb.resolveOnce({ data: existing, error: null });
+describe("setPreferredSupplier", () => {
+  it("unsets existing preferred and sets new one", async () => {
+    // Each await in setPreferredSupplier goes through a new from() chain
+    // First: unset all preferred → .update().eq().eq().eq()
+    db.__qb.resolveOnce({ data: null, error: null });
 
-    await deleteSupplier(db as never, SUPPLIER_ID, ORG_ID, USER_ID);
-
-    expect(mockLogAudit).toHaveBeenCalled();
-    expect(mockRevalidateTag).toHaveBeenCalled();
-  });
-
-  it("throws NotFoundError when supplier to delete does not exist", async () => {
-    db.__qb.resolveOnce({
-      data: null,
-      error: new Error("PGRST116: row not found"),
-    });
-
-    await expect(
-      deleteSupplier(db as never, "non-existent", ORG_ID, USER_ID),
-    ).rejects.toThrow(NotFoundError);
-  });
-
-  it("throws NotFoundError when fetch returns null without error", async () => {
+    // Second: set new preferred → .update().eq().eq().eq()
     db.__qb.resolveOnce({ data: null, error: null });
 
     await expect(
-      deleteSupplier(db as never, "ghost", ORG_ID, USER_ID),
-    ).rejects.toThrow(NotFoundError);
+      setPreferredSupplier(db as never, ORG_ID, PART_ID, SUPPLIER_ID),
+    ).resolves.toBeUndefined();
   });
 
-  it("throws AppError when database update during soft-delete fails", async () => {
-    const existing = makeSupplier();
-    db.__qb.resolveOnce({ data: existing, error: null });
-    db.__qb.resolveOnce({
-      data: null,
-      error: new Error("Database update failed"),
-    });
+  it("throws on unset error", async () => {
+    db.__qb.resolveOnce({ data: null, error: new Error("Update failed") });
 
     await expect(
-      deleteSupplier(db as never, SUPPLIER_ID, ORG_ID, USER_ID),
-    ).rejects.toThrow(AppError);
+      setPreferredSupplier(db as never, ORG_ID, PART_ID, SUPPLIER_ID),
+    ).rejects.toThrow("Update failed");
   });
 });

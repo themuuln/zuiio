@@ -95,7 +95,7 @@ describe("ReportKpiCard", () => {
 
   it("inverts delta colors when deltaInvert is true", () => {
     // With invert, a positive delta (normally green) becomes red
-    const { container } = render(
+    render(
       <ReportKpiCard
         label="Expenses"
         value="$5,000"

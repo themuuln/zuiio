@@ -27,7 +27,6 @@ export function TotalsSummary({
   discountTotal = 0,
   taxRate = 0,
   nuatEnabled = false,
-  locale = "mn",
   t,
 }: TotalsSummaryProps) {
   const [expanded, setExpanded] = useState(false);
@@ -36,7 +35,7 @@ export function TotalsSummary({
   const hasAdjustments = hasDiscount || hasTax;
   const taxAmount = hasTax ? Math.round(grandTotal * taxRate) / 100 : 0;
   const totalToPay = grandTotal - discountTotal + taxAmount;
-  const taxLabel = locale === "mn" ? "НӨАТ" : "VAT";
+  const taxLabel = t("vatAbbr");
   const hasItems = (serviceCount ?? 0) > 0 || (partCount ?? 0) > 0;
 
   return (

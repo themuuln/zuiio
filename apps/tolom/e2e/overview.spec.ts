@@ -31,18 +31,19 @@ test.describe("Overview (Mocked)", () => {
     });
 
     test("shows KPI summary cards", async ({ page }) => {
-      // All 4 KPI card labels should be visible
+      // All 4 KPI card labels should be visible (the insights list can repeat
+      // a label like "Active Work Orders" — take the first, the KPI card)
       await expect(
-        page.getByRole("heading", { name: /total revenue/i }).first(),
+        page.getByText("Total Revenue", { exact: true }).first(),
       ).toBeVisible();
       await expect(
-        page.getByRole("heading", { name: /active work orders/i }).first(),
+        page.getByText("Active Work Orders", { exact: true }).first(),
       ).toBeVisible();
       await expect(
-        page.getByRole("heading", { name: /total customers/i }).first(),
+        page.getByText("Total Customers", { exact: true }).first(),
       ).toBeVisible();
       await expect(
-        page.getByRole("heading", { name: /avg repair order/i }).first(),
+        page.getByText("Avg Repair Order", { exact: true }).first(),
       ).toBeVisible();
     });
   });
@@ -59,7 +60,7 @@ test.describe("Overview (Mocked)", () => {
     test("shows section header for recent work orders", async ({ page }) => {
       await expect(page.getByText("Recent Work Orders").first()).toBeVisible();
       await expect(
-        page.getByText("Latest 10 work orders").first(),
+        page.getByText(/latest 10 (work )?orders/i).first(),
       ).toBeVisible();
     });
 

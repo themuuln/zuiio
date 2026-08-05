@@ -34,6 +34,9 @@ export default defineConfig({
           css: false,
           setupFiles: ["./src/test/setup-node.ts"],
           unstubEnvs: true,
+          // Integration tests sign in against the local Supabase stack while
+          // the full suite runs in parallel — 5s is too tight under load.
+          testTimeout: 20_000,
         },
       },
       {

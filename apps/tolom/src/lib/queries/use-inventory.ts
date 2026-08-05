@@ -9,6 +9,7 @@ import type {
   InventoryBalanceWithAvgCost,
   InventoryMovement,
   InventoryTurnover,
+  PartImage,
   PartsCarParts,
   PartsCars,
   PartsCatalogItem,
@@ -70,6 +71,26 @@ export type PurchaseOrderWithSupplier = PurchaseOrder & {
 
 const fetchPurchaseOrders = createOrgQuery<PurchaseOrderWithSupplier[]>(
   "/inventory/purchase-orders",
+  { unwrap: "paginated" },
+);
+
+// ── Reorder Suggestions ──────────────────────────────────────
+
+export type ReorderSuggestion = {
+  part_id: string;
+  part_name: string;
+  part_number: string | null;
+  category: string | null;
+  unit: string | null;
+  quantity_on_hand: number;
+  minimum_quantity: number;
+  shortage: number;
+  suggested_order_qty: number;
+  preferred_supplier: string | null;
+};
+
+const fetchReorderSuggestions = createOrgQuery<ReorderSuggestion[]>(
+  "/inventory/reorder",
   { unwrap: "paginated" },
 );
 
@@ -164,6 +185,22 @@ export function useSuppliers(orgId: string | undefined) {
     queryFn: () => fetchSuppliers(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 5 * 60_000,
+  });
+}
+
+export function useReorderSuggestions(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
+  return useQuery({
+    queryKey: inventoryKeys.reorderSuggestions(orgId ?? "", branchId),
+    queryFn: () =>
+      fetchReorderSuggestions(orgId ?? "", {
+        params: branchId ? { branch_id: branchId } : undefined,
+      }),
+    enabled: !!orgId,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
   });
 }
 
@@ -627,6 +664,64 @@ export function useDeletePartsCar(orgId: string | undefined) {
   });
 }
 
+// ── Part Images ──────────────────────────────────────────────
+
+export function usePartImages(
+  orgId: string | undefined,
+  partId: string | undefined,
+) {
+  return useQuery({
+    queryKey: inventoryKeys.partImages(orgId ?? "", partId ?? ""),
+    queryFn: async () => {
+      if (!orgId || !partId) return [];
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts/${partId}/images`,
+      );
+      if (!res.ok) throw new Error("Failed to fetch part images");
+      const json = await res.json();
+      return (json.data ?? []) as PartImage[];
+    },
+    enabled: !!orgId && !!partId,
+  });
+}
+
+export function useAddPartImage(orgId: string | undefined) {
+  return useOrgMutation<
+    PartImage,
+    { partId: string; image_url: string; is_primary?: boolean }
+  >({
+    endpoint: ({ partId }) =>
+      `/api/organizations/${orgId}/inventory/parts/${partId}/images`,
+    method: "POST",
+    queryKey: inventoryKeys.parts(orgId ?? ""),
+    successMessage: "Image added",
+  });
+}
+
+export function useRemovePartImage(orgId: string | undefined) {
+  return useOrgMutation<unknown, { partId: string; imageId: string }>({
+    endpoint: ({ partId, imageId }) =>
+      `/api/organizations/${orgId}/inventory/parts/${partId}/images?imageId=${imageId}`,
+    method: "DELETE",
+    queryKey: inventoryKeys.parts(orgId ?? ""),
+    successMessage: "Image removed",
+  });
+}
+
+export function useSetPrimaryImage(orgId: string | undefined) {
+  return useOrgMutation<PartImage, { partId: string; imageId: string }>({
+    endpoint: ({ partId }) =>
+      `/api/organizations/${orgId}/inventory/parts/${partId}/images`,
+    method: "PATCH",
+    bodyFn: ({ imageId }) => ({
+      action: "set-primary",
+      image_id: imageId,
+    }),
+    queryKey: inventoryKeys.parts(orgId ?? ""),
+    successMessage: "Primary image updated",
+  });
+}
+
 export function useVehicleModelParts(
   orgId: string | undefined,
   partId: string | undefined,
@@ -662,5 +757,101 @@ export function useSupplierPriceHistory(
       return json.data ?? [];
     },
     enabled: !!orgId && !!partId,
+  });
+}
+
+// ── Supplier-Part Mapping Hooks ──────────────────────────────
+
+export function useSupplierParts(
+  orgId: string | undefined,
+  supplierId: string | undefined,
+) {
+  return useQuery({
+    queryKey: inventoryKeys.supplierParts(orgId ?? "", supplierId ?? ""),
+    queryFn: () =>
+      createOrgQuery<
+        {
+          id: string;
+          part_id: string;
+          supplier_part_number: string | null;
+          unit_cost: number | null;
+          is_preferred: boolean;
+          notes: string | null;
+          part: {
+            id: string;
+            name: string;
+            part_number: string;
+            default_price: number | null;
+            unit_cost: number | null;
+            category: string | null;
+          } | null;
+        }[]
+      >(`/inventory/suppliers/${supplierId}/parts`, { unwrap: "paginated" })(
+        orgId ?? "",
+      ),
+    enabled: !!orgId && !!supplierId,
+    staleTime: 30_000,
+  });
+}
+
+export function usePartSuppliers(
+  orgId: string | undefined,
+  partId: string | undefined,
+) {
+  return useQuery({
+    queryKey: inventoryKeys.partSuppliers(orgId ?? "", partId ?? ""),
+    queryFn: () =>
+      createOrgQuery<
+        {
+          id: string;
+          supplier_id: string;
+          supplier_part_number: string | null;
+          unit_cost: number | null;
+          is_preferred: boolean;
+          notes: string | null;
+          supplier: {
+            id: string;
+            name: string;
+            phone: string | null;
+            email: string | null;
+          } | null;
+        }[]
+      >(`/inventory/parts/${partId}/suppliers`, { unwrap: "paginated" })(
+        orgId ?? "",
+      ),
+    enabled: !!orgId && !!partId,
+    staleTime: 30_000,
+  });
+}
+
+export function useAddSupplierPart(orgId: string | undefined) {
+  return useOrgMutation<
+    { id: string; part_id: string; supplier_part_number: string | null },
+    {
+      supplierId: string;
+      part_id: string;
+      supplier_part_number?: string | null;
+      unit_cost?: number | null;
+      is_preferred?: boolean;
+      notes?: string | null;
+    }
+  >({
+    endpoint: ({ supplierId }) =>
+      `/api/organizations/${orgId}/inventory/suppliers/${supplierId}/parts`,
+    method: "POST",
+    queryKey: inventoryKeys.all(orgId ?? ""),
+    invalidateKeys: [inventoryKeys.all(orgId ?? "")],
+    successMessage: "Part added to supplier",
+  });
+}
+
+export function useRemoveSupplierPart(orgId: string | undefined) {
+  return useOrgMutation<void, { supplierId: string; id: string }>({
+    endpoint: ({ supplierId, id }) =>
+      `/api/organizations/${orgId}/inventory/suppliers/${supplierId}/parts?id=${id}`,
+    method: "DELETE",
+    queryKey: inventoryKeys.all(orgId ?? ""),
+    invalidateKeys: [inventoryKeys.all(orgId ?? "")],
+    successMessage: "Part removed from supplier",
   });
 }

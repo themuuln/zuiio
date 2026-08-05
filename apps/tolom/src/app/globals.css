@@ -76,6 +76,9 @@
 }
 
 :root {
+  /* Touch target size for tablet/mobile interaction */
+  --ui-touch-target: 44px;
+
   /* Electric Indigo Brand Colors */
   --indigo-50: oklch(0.96 0.02 265);
   --indigo-100: oklch(0.9 0.04 265);

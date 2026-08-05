@@ -27,6 +27,21 @@ async function loadBotToken(): Promise<string> {
   return "";
 }
 
+async function loadAppConfig(key: string): Promise<string | null> {
+  try {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data } = await supabase
+      .from("app_config")
+      .select("value")
+      .eq("key", key)
+      .maybeSingle();
+    return (data?.value as string | null) ?? null;
+  } catch (e) {
+    console.error(`Failed to load app_config.${key}:`, e);
+    return null;
+  }
+}
+
 function tgApi(token: string): string {
   return `https://api.telegram.org/bot${token}`;
 }
@@ -275,6 +290,21 @@ function buildWeeklyMessage(
 // ── Main Handler ─────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
+  // Auth: the pg_cron RPC invokes us with a shared secret (env var or
+  // app_config). The endpoint is otherwise unauthenticated (project
+  // convention — all cron functions are verify_jwt: false), so the secret
+  // is the gate that stops random internet callers from spamming owners.
+  const expectedSecret =
+    Deno.env.get("TELEGRAM_NOTIFY_SECRET") ??
+    (await loadAppConfig("telegram_notify_secret"));
+  const providedSecret = req.headers.get("x-telegram-notify-secret") ?? "";
+  if (!expectedSecret || providedSecret !== expectedSecret) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   // Load bot token from env var or DB fallback
   await loadBotToken();
 

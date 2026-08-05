@@ -88,7 +88,14 @@ CREATE INDEX idx_followups_due
   WHERE deleted_at IS NULL AND status = 'pending';
 
 -- ── Auto-update trigger ────────────────────────────────────────
-
-CREATE TRIGGER set_customer_followups_updated_at
-  BEFORE UPDATE ON customer_followups
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+-- set_updated_at() is defined in a later migration (20260610144528);
+-- guard creation so a fresh DB does not fail. This trigger is dropped
+-- again by 20260710000001 (P1-15) anyway.
+DO $$
+BEGIN
+  IF to_regprocedure('public.set_updated_at()') IS NOT NULL THEN
+    CREATE TRIGGER set_customer_followups_updated_at
+      BEFORE UPDATE ON customer_followups
+      FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+  END IF;
+END $$;

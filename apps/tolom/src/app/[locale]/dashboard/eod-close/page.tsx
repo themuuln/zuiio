@@ -265,7 +265,7 @@ export default function EodClosePage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           {isPending ? (
             <div className="flex flex-col gap-2">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-y-2">
                 <Skeleton className="h-6 w-48" />
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-5 w-40" />

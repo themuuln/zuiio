@@ -57,7 +57,9 @@ describe("RadioGroup", () => {
     );
     expect(items[0]).toHaveAttribute("data-checked");
     expect(items[1]).not.toHaveAttribute("data-checked");
-    await user.click(items[1]!);
+    const second = items[1];
+    if (!second) throw new Error("expected two radio items");
+    await user.click(second);
     expect(items[1]).toHaveAttribute("data-checked");
   });
 
