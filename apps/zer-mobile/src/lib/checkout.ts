@@ -43,6 +43,12 @@ export interface ShopOrderInput {
    */
   orgId?: string | null;
   branchId?: string | null;
+  /**
+   * Client-generated idempotency key, stable per checkout session. The RPC
+   * returns the first order created for a key, so a network-error retry tap
+   * cannot double-submit (offline queue replays reuse the same key too).
+   */
+  idempotencyKey?: string | null;
 }
 
 export type ShopOrderResult =
@@ -185,6 +191,7 @@ export async function submitShopOrder(
       p_currency_code: input.currencyCode ?? "MNT",
       p_contact_name: input.customerName,
       p_contact_phone: input.customerPhone ?? null,
+      p_idempotency_key: input.idempotencyKey ?? null,
     } as never);
   } catch (e) {
     // supabase-js throws on network-level failures.

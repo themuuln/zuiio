@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@zuiio/auth";
 import { type Href, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -67,6 +67,13 @@ export default function CheckoutScreen() {
   const [backendState, setBackendState] = useState<BackendState>("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // Stable per-screen idempotency key: a network-error retry tap reuses it,
+  // so the RPC returns the first order instead of creating a duplicate.
+  const idempotencyKeyRef = useRef<string | null>(null);
+  if (!idempotencyKeyRef.current) {
+    idempotencyKeyRef.current = `chk-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
   // Prefill from the signed-in buyer account.
   useEffect(() => {
     if (!sessionUser) return;
@@ -102,6 +109,7 @@ export default function CheckoutScreen() {
       paymentMethod,
       currencyCode: currency,
       couponCode: couponCode.trim() || null,
+      idempotencyKey: idempotencyKeyRef.current,
     };
 
     const validationError = validateCheckoutInput(input);

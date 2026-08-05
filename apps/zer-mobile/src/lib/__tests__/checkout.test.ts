@@ -217,6 +217,22 @@ describe("submitShopOrder", () => {
     ]);
   });
 
+  it("passes the client idempotency key to the RPC", async () => {
+    const rpc = jest.fn(
+      async (_fn: string, _args?: Record<string, unknown>) => ({
+        data: [{ order_id: "sale-123", total_amount: 3700, status: "pending" }],
+        error: null,
+      }),
+    );
+    const key = "chk-abc123";
+    await submitShopOrder(
+      makeRpcClient(rpc),
+      makeInput({ idempotencyKey: key }),
+    );
+    const args = rpc.mock.calls[0][1] as Record<string, unknown>;
+    expect(args.p_idempotency_key).toBe(key);
+  });
+
   it("returns VALIDATION_FAILED without calling the RPC", async () => {
     const rpc = jest.fn();
     const result = await submitShopOrder(
