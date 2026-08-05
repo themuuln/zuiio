@@ -20,6 +20,7 @@ interface SalesRpcResult {
   success?: boolean;
   error?: string;
   sale_id?: string;
+  duplicate?: boolean;
 }
 
 // ── Direct CRUD (via service role) ───────────────────────────
@@ -348,6 +349,81 @@ describe("process_shop_sale RPC", () => {
     const result = data as SalesRpcResult;
     expect(result.error).toBeDefined();
     expect(result.error).toBe("Permission denied");
+  });
+
+  it("replays the same dedupe key to the same sale (no double-sell)", async () => {
+    const { orgId, org } = await createTestOrg(admin);
+    const { branchId } = await createTestBranch(admin, orgId);
+    const { productId } = await createTestProduct(admin, orgId, {
+      currentStock: 50,
+    });
+
+    const user = await createTestUserWithPermissions(admin, orgId, org.name, [
+      "sales.create",
+    ]);
+    const key = `dedupe-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    const baseParams = {
+      p_org_id: orgId,
+      p_branch_id: branchId,
+      p_user_id: user.userId,
+      p_contact_id: null,
+      p_total_amount: 5000,
+      p_paid_amount: 5000,
+      p_payment_method: "cash",
+      p_salesperson_id: null,
+      p_items: [
+        {
+          product_id: productId,
+          quantity: 1,
+          unit_price: 5000,
+          total_price: 5000,
+          commission_amount: 0,
+          variant_id: null,
+        },
+      ],
+      p_movements: [
+        {
+          product_id: productId,
+          quantity: 1,
+          unit_cost: 3000,
+          variant_id: null,
+        },
+      ],
+      p_currency_code: "MNT",
+      p_currency_symbol: "₮",
+      p_exchange_rate: 1.0,
+      p_dedupe_key: key,
+    };
+
+    const first = await user.client.rpc("process_shop_sale", baseParams);
+    const firstResult = first.data as SalesRpcResult;
+    expect(firstResult.success).toBe(true);
+    const saleId = firstResult.sale_id;
+    if (!saleId) throw new Error("process_shop_sale returned no sale id");
+    trackCleanup("sales", saleId);
+
+    // A retried offline replay (process death mid-sync) must converge on the
+    // first sale and decrement stock exactly once.
+    const second = await user.client.rpc("process_shop_sale", baseParams);
+    const secondResult = second.data as SalesRpcResult;
+    expect(secondResult.success).toBe(true);
+    expect(secondResult.sale_id).toBe(saleId);
+    expect(secondResult.duplicate).toBe(true);
+
+    const { data: sales } = await admin
+      .from("sales")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("dedupe_key", key);
+    expect(sales!.length).toBe(1);
+
+    const { data: product } = await admin
+      .from("products")
+      .select("current_stock")
+      .eq("id", productId)
+      .single();
+    expect(product!.current_stock).toBe(49);
   });
 });
 

@@ -377,7 +377,7 @@ Odoo ($24.90-$61/user/mo) has partial Mongolian modules but the main e-barimt mo
 
 ---
 
-> **Status refresh 2026-08-03:** Offline-first, AI assistant, dashboard templates, hardware (partial), multi-location transfers, embeddable analytics, web-push alerts, consumer mobile app (`apps/zer-mobile`), storefront buyer accounts, and the public buyer checkout RPC (`submit_shop_order`) all shipped. Still missing: POS register (touch-optimized), QPay/SocialPay online payments, e-Barimt API integration, payroll extras, social-commerce selling.
+> **Status refresh 2026-08-03:** Offline-first, AI assistant, dashboard templates, hardware (partial), multi-location transfers, embeddable analytics, web-push alerts, consumer mobile app (`apps/zer-mobile`), storefront buyer accounts, and the public buyer checkout RPC (`submit_shop_order`) all shipped. 2026-08-03 hardening: the anon-order spam risk is closed with in-SQL flood protection (per-org + per-phone pending-order caps, migration `20260803130000`; PostgREST can't see the client IP and the consumer app hits Supabase directly, so Vercel Firewall cannot cover that path), and offline replay is now idempotent (every queued action carries a client dedupe key; `createSale`, `createShopSale`, `process_shop_sale`, and `submit_shop_order` return the first sale for a repeated key — a process death mid-replay can no longer double-sell). Still missing: POS register (touch-optimized), QPay/SocialPay online payments, e-Barimt API integration, payroll extras, social-commerce selling.
 
 ## 🔴 New P0 Gaps (From Competitor Research)
 
@@ -393,10 +393,10 @@ Odoo ($24.90-$61/user/mo) has partial Mongolian modules but the main e-barimt mo
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| **Offline-first hardening** | ✅ Shipped (2026-08-03) | IndexedDB mutation queue + SW v4 + query-cache persistence; sales queue offline and auto-replay on reconnect |
+| **Offline-first hardening** | ✅ Shipped (2026-08-03) | IndexedDB mutation queue + SW v4 + query-cache persistence; sales queue offline and auto-replay on reconnect; replay is idempotent — the queue's dedupe key is threaded through to the server actions, which return the original sale for a repeated key |
 | **Social commerce (Facebook/Telegram)** | ⚠️ Partial | Telegram + Messenger agent links/webhooks exist; no "sell via Facebook post" catalog-to-chat flow |
 | **AI features (Mongolian-language)** | ✅ Shipped | Dashboard Q&A assistant + poster/enhance/logo/naming generators |
-| **Online storefront** | ✅ Shipped | Catalog/product/blog + buyer accounts + public checkout RPC; web storefront cart/checkout UI still staff-side, consumer buying lives in apps/zer-mobile |
+| **Online storefront** | ✅ Shipped | Catalog/product/blog + buyer accounts + public checkout RPC; web storefront cart/checkout UI still staff-side, consumer buying lives in apps/zer-mobile. Public RPC protected: per-org/per-phone pending-order rate limits (SQL) + idempotent replay via `p_idempotency_key` |
 
 ## Updated Comparison Matrix (vs Mongolian ERP)
 

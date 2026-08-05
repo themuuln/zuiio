@@ -26,6 +26,7 @@ export type OfflineAction = "sale" | "shop_sale";
 export type ReplayDispatch = (
   op: OfflineAction,
   fields: Record<string, string>,
+  idempotencyKey?: string,
 ) => Promise<{ success: boolean; error?: string }>;
 
 // ─── Online status ────────────────────────────────────────────
@@ -88,8 +89,10 @@ export async function getPendingOfflineCount(): Promise<number> {
 /**
  * Replay all pending actions in FIFO order.
  *
- * Each action is passed to `dispatch`; on success it is removed from the
- * queue, on failure it is left pending for the next reconnect. `onProgress`
+ * Each action is passed to `dispatch` together with its client-generated
+ * idempotency key (the server actions dedupe on it, so a process death
+ * mid-replay cannot double-sell); on success it is removed from the queue,
+ * on failure it is left pending for the next reconnect. `onProgress`
  * is called after each action with (done, total).
  */
 export async function replayQueuedActions(
@@ -103,7 +106,11 @@ export async function replayQueuedActions(
   for (const mutation of pending) {
     const fields = (mutation.body ?? {}) as Record<string, string>;
     try {
-      const result = await dispatch(mutation.endpoint as OfflineAction, fields);
+      const result = await dispatch(
+        mutation.endpoint as OfflineAction,
+        fields,
+        mutation.idempotencyKey,
+      );
       if (result.success) {
         await removeMutation(mutation.id);
         synced++;

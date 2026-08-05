@@ -279,6 +279,114 @@ describe("submit_shop_order (public buyer checkout)", () => {
     expect(data).toBeNull();
   });
 
+  it("replays the same idempotency key to the same order (no duplicate sale)", async () => {
+    const { org, orgId, productId } = await setupStore(admin);
+    const anon = createAnonClient();
+    const key = `replay-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    const args = {
+      p_org_slug: org.slug,
+      p_items: orderItems(productId, 1),
+      p_payment_method: "cash",
+      p_idempotency_key: key,
+    } as never;
+
+    const first = await anon.rpc("submit_shop_order", args);
+    const firstRow = Array.isArray(first.data)
+      ? (first.data[0] as OrderRow)
+      : null;
+    expect(first.error).toBeNull();
+    expect(firstRow?.order_id).toBeTruthy();
+    trackCleanup("sales", firstRow!.order_id);
+
+    // A retry (process death mid-replay) must return the same order.
+    const second = await anon.rpc("submit_shop_order", args);
+    const secondRow = Array.isArray(second.data)
+      ? (second.data[0] as OrderRow)
+      : null;
+    expect(second.error).toBeNull();
+    expect(secondRow?.order_id).toBe(firstRow!.order_id);
+
+    const { data: sales } = (await admin
+      .from("sales")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("dedupe_key", key)) as unknown as {
+      data: Array<{ id: string }>;
+    };
+    expect(sales).toHaveLength(1);
+
+    // Stock decremented exactly once (20 - 1).
+    const { data: product } = (await admin
+      .from("products")
+      .select("current_stock")
+      .eq("id", productId)
+      .single()) as unknown as { data: { current_stock: number } | null };
+    expect(product?.current_stock).toBe(19);
+  });
+
+  it("rate-limits anon orders per contact phone (5 pending/hour)", async () => {
+    const { org, orgId, productId } = await setupStore(admin);
+    const anon = createAnonClient();
+    const phone = `99${String(Date.now()).slice(-6)}`;
+
+    for (let i = 0; i < 5; i++) {
+      const { data, error } = await anon.rpc("submit_shop_order", {
+        p_org_slug: org.slug,
+        p_items: orderItems(productId, 1),
+        p_payment_method: "cash",
+        p_contact_name: `Buyer ${i}`,
+        p_contact_phone: phone,
+      } as never);
+      expect(error).toBeNull();
+      const row = Array.isArray(data) ? (data[0] as OrderRow) : null;
+      expect(row?.order_id).toBeTruthy();
+      trackCleanup("sales", row!.order_id);
+    }
+
+    // 6th order from the same phone is throttled.
+    const { data, error } = await anon.rpc("submit_shop_order", {
+      p_org_slug: org.slug,
+      p_items: orderItems(productId, 1),
+      p_payment_method: "cash",
+      p_contact_name: "Spammer",
+      p_contact_phone: phone,
+    } as never);
+    expect(error).not.toBeNull();
+    expect(error?.message ?? "").toMatch(/хэт олон захиалга/i);
+    expect(data).toBeNull();
+
+    await trackOrderContact(admin, orgId, phone);
+  });
+
+  it("rate-limits anon orders per org (20 pending/hour)", async () => {
+    const { org, productId } = await setupStore(admin);
+    const anon = createAnonClient();
+
+    // 20 orders × 1 item = exactly the seeded stock; the 21st is throttled
+    // BEFORE stock validation, so the stock error never masks the rate limit.
+    for (let i = 0; i < 20; i++) {
+      const { data, error } = await anon.rpc("submit_shop_order", {
+        p_org_slug: org.slug,
+        p_items: orderItems(productId, 1),
+        p_payment_method: "cash",
+      } as never);
+      expect(error).toBeNull();
+      const row = Array.isArray(data) ? (data[0] as OrderRow) : null;
+      expect(row?.order_id).toBeTruthy();
+      trackCleanup("sales", row!.order_id);
+    }
+
+    const { data, error } = await anon.rpc("submit_shop_order", {
+      p_org_slug: org.slug,
+      p_items: orderItems(productId, 1),
+      p_payment_method: "cash",
+    } as never);
+    expect(error).not.toBeNull();
+    expect(error?.message ?? "").toMatch(/хэт олон захиалга/i);
+    expect(data).toBeNull();
+  });
+
   it("buyers cannot see other buyers' orders", async () => {
     const { org, productId } = await setupStore(admin);
     const buyerA = await createStoreBuyer(admin, "Buyer A");

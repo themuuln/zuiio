@@ -74,6 +74,7 @@ describe("offline-sync", () => {
     expect(mutation.body).toEqual(fields);
     expect(mutation.queryKeysToInvalidate).toEqual([["sales"], ["products"]]);
     expect(mutation.idempotencyKey).toEqual(expect.any(String));
+    const idempotencyKey = mutation.idempotencyKey as string;
 
     // Pending until replayed
     expect(await getPendingOfflineCount()).toBe(1);
@@ -82,7 +83,9 @@ describe("offline-sync", () => {
     const result = await replayQueuedActions(dispatch);
 
     expect(result).toEqual({ synced: 1, failed: 0 });
-    expect(dispatch).toHaveBeenCalledWith("sale", fields);
+    // The server action dedupes on the key, so a process death mid-replay
+    // cannot double-sell on retry.
+    expect(dispatch).toHaveBeenCalledWith("sale", fields, idempotencyKey);
     expect(mockedRemove).toHaveBeenCalledWith(id);
     expect(await getPendingOfflineCount()).toBe(0);
   });

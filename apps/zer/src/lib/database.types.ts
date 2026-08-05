@@ -5334,6 +5334,7 @@ export type Database = {
           currency_code: string | null;
           currency_id: string | null;
           currency_symbol: string | null;
+          dedupe_key: string | null;
           deleted_at: string | null;
           exchange_rate: number | null;
           id: string;
@@ -5358,6 +5359,7 @@ export type Database = {
           currency_code?: string | null;
           currency_id?: string | null;
           currency_symbol?: string | null;
+          dedupe_key?: string | null;
           deleted_at?: string | null;
           exchange_rate?: number | null;
           id?: string;
@@ -5382,6 +5384,7 @@ export type Database = {
           currency_code?: string | null;
           currency_id?: string | null;
           currency_symbol?: string | null;
+          dedupe_key?: string | null;
           deleted_at?: string | null;
           exchange_rate?: number | null;
           id?: string;
@@ -6358,41 +6361,26 @@ export type Database = {
         Args: { p_items: Json; p_org_id: string };
         Returns: Json;
       };
-      process_shop_sale:
-        | {
-            Args: {
-              p_branch_id: string;
-              p_contact_id: string;
-              p_currency_code?: string;
-              p_currency_symbol?: string;
-              p_exchange_rate?: number;
-              p_items: Json;
-              p_movements: Json;
-              p_org_id: string;
-              p_paid_amount: number;
-              p_payment_method: string;
-              p_salesperson_id: string;
-              p_total_amount: number;
-              p_user_id: string;
-            };
-            Returns: Json;
-          }
-        | {
-            Args: {
-              p_branch_id: string;
-              p_contact_id: string;
-              p_items: Json;
-              p_movements: Json;
-              p_org_id: string;
-              p_original_amount?: number;
-              p_paid_amount: number;
-              p_payment_method: string;
-              p_salesperson_id: string;
-              p_total_amount: number;
-              p_user_id: string;
-            };
-            Returns: Json;
-          };
+      process_shop_sale: {
+        Args: {
+          p_branch_id: string;
+          p_contact_id: string;
+          p_currency_code?: string;
+          p_currency_symbol?: string;
+          p_dedupe_key?: string;
+          p_exchange_rate?: number;
+          p_items: Json;
+          p_movements: Json;
+          p_org_id: string;
+          p_original_amount?: number;
+          p_paid_amount: number;
+          p_payment_method: string;
+          p_salesperson_id: string;
+          p_total_amount: number;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
       record_production_usage: {
         Args: {
           p_material_ids: string[];
@@ -6513,6 +6501,7 @@ export type Database = {
           p_contact_name?: string;
           p_contact_phone?: string;
           p_currency_code?: string;
+          p_idempotency_key?: string;
           p_items: Json;
           p_org_slug: string;
           p_payment_method?: string;

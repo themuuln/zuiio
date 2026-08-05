@@ -8,8 +8,9 @@
       "type": "http",
       "url": "https://mcp.vercel.com",
       "headers": {
-        "Authorization": "Bearer vcp_5eebPe50XzUzgX9uyAYkR63UGqNjoLEAat8n4ifCo4KmHaR1Vp2AJn0w"
-      }
+        "Authorization": "Bearer ${VERCEL_MCP_TOKEN}"
+      },
+      "enabled": false
     },
     "github": {
       "command": "npx",
@@ -23,7 +24,8 @@
       "args": ["@sentry/mcp-server@latest"],
       "env": {
         "SENTRY_ACCESS_TOKEN": "${SENTRY_ACCESS_TOKEN}"
-      }
+      },
+      "enabled": false
     },
     "supabase-zer": {
       "type": "http",

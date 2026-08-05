@@ -41,10 +41,16 @@ type ActionResult = { success: boolean; error?: string };
 async function dispatchQueuedAction(
   op: OfflineAction,
   fields: Record<string, string>,
+  idempotencyKey?: string,
 ): Promise<ActionResult> {
   const formData = new FormData();
   for (const [key, value] of Object.entries(fields)) {
     formData.set(key, value);
+  }
+  // The queue stamps each action with an idempotency key; the server
+  // actions dedupe on it so a crash mid-replay cannot create a second sale.
+  if (idempotencyKey) {
+    formData.set("idempotency_key", idempotencyKey);
   }
   const result =
     op === "sale"

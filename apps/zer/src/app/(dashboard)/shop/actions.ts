@@ -71,6 +71,8 @@ export async function createShopSale(
 
       const salespersonId = getString(formData, "salesperson_id") || userId;
       const paymentMethod = getString(formData, "payment_method") || "cash";
+      // undefined (not null): the RPC arg type is `p_dedupe_key?: string`.
+      const dedupeKey = getString(formData, "idempotency_key") || undefined;
       const paidAmount = Number(formData.get("paid_amount") ?? 0);
       const totalAmount = items.reduce(
         (sum, item) => sum + item.unitPrice * item.quantity,
@@ -206,6 +208,7 @@ export async function createShopSale(
           p_currency_code: currencyCode,
           p_currency_symbol: currencySymbol,
           p_exchange_rate: exchangeRate,
+          p_dedupe_key: dedupeKey,
         },
       );
       timing("rpc", performance.now() - rpcStart);
@@ -234,6 +237,14 @@ export async function createShopSale(
         return { error: errorMsg };
       }
 
+      // process_shop_sale reports 'duplicate' when this key was already
+      // processed — return the existing sale and skip side effects.
+      const isDuplicate =
+        result &&
+        typeof result === "object" &&
+        "duplicate" in result &&
+        (result as Record<string, unknown>).duplicate === true;
+
       const saleId = String(result.sale_id);
       span.setAttribute("shop.sale_id", saleId);
 
@@ -256,164 +267,171 @@ export async function createShopSale(
       }
 
       // --- Phase 5: Post-sale (fire-and-forget) ---
-      createInvoiceFromSale(
-        supabase,
-        organizationId,
-        userId,
-        saleId,
-        contactId,
-        branchId as string,
-      ).catch((e) => {
-        capture(e, { context: "createShopSale: fire-and-forget invoice" });
-      });
+      // A duplicate replay skips these — the first attempt already delivered
+      // invoice, coupon, gift-card, webhook, and revalidation. The (idempotent)
+      // store-account link above re-runs to close a crash between RPC and link.
+      if (!isDuplicate) {
+        createInvoiceFromSale(
+          supabase,
+          organizationId,
+          userId,
+          saleId,
+          contactId,
+          branchId as string,
+        ).catch((e) => {
+          capture(e, { context: "createShopSale: fire-and-forget invoice" });
+        });
 
-      // Record coupon usage and update used_count (fire-and-forget)
-      // Note: coupons/coupon_usage tables exist in DB but not yet in generated supabase types.
-      // Cast through unknown because table names are not in Database['public']['Tables'].
-      if (couponId && couponCode) {
-        (async () => {
-          const couponDb = supabase as unknown as {
-            from(table: "coupon_usage"): {
-              insert(
-                data: Record<string, unknown>,
-              ): Promise<{ error: unknown }>;
-            };
-            from(table: "coupons"): {
-              select(columns: string): {
-                eq(
-                  col: string,
-                  val: string,
-                ): {
-                  maybeSingle(): Promise<{
-                    data: Record<string, unknown> | null;
-                    error: unknown;
-                  }>;
+        // Record coupon usage and update used_count (fire-and-forget)
+        // Note: coupons/coupon_usage tables exist in DB but not yet in generated supabase types.
+        // Cast through unknown because table names are not in Database['public']['Tables'].
+        if (couponId && couponCode) {
+          (async () => {
+            const couponDb = supabase as unknown as {
+              from(table: "coupon_usage"): {
+                insert(
+                  data: Record<string, unknown>,
+                ): Promise<{ error: unknown }>;
+              };
+              from(table: "coupons"): {
+                select(columns: string): {
+                  eq(
+                    col: string,
+                    val: string,
+                  ): {
+                    maybeSingle(): Promise<{
+                      data: Record<string, unknown> | null;
+                      error: unknown;
+                    }>;
+                  };
+                };
+                update(data: Record<string, unknown>): {
+                  eq(col: string, val: string): Promise<{ error: unknown }>;
                 };
               };
-              update(data: Record<string, unknown>): {
-                eq(col: string, val: string): Promise<{ error: unknown }>;
-              };
             };
-          };
 
-          const { error: usageError } = await couponDb
-            .from("coupon_usage")
-            .insert({
-              coupon_id: couponId,
-              organization_id: organizationId,
-              contact_id: contactId,
-              sale_id: saleId,
-            });
-          if (usageError) {
-            capture(
-              usageError instanceof Error
-                ? usageError
-                : new Error(String(usageError)),
+            const { error: usageError } = await couponDb
+              .from("coupon_usage")
+              .insert({
+                coupon_id: couponId,
+                organization_id: organizationId,
+                contact_id: contactId,
+                sale_id: saleId,
+              });
+            if (usageError) {
+              capture(
+                usageError instanceof Error
+                  ? usageError
+                  : new Error(String(usageError)),
+                {
+                  context: "createShopSale: coupon_usage insert",
+                },
+              );
+            }
+
+            // Read current used_count and increment
+            const { data: currentCoupon } = await couponDb
+              .from("coupons")
+              .select("used_count")
+              .eq("id", couponId)
+              .maybeSingle();
+            const currentCount =
+              currentCoupon &&
+              typeof currentCoupon === "object" &&
+              "used_count" in currentCoupon
+                ? Number(currentCoupon.used_count)
+                : 0;
+
+            const { error: updateError } = await couponDb
+              .from("coupons")
+              .update({ used_count: currentCount + 1 })
+              .eq("id", couponId);
+            if (updateError) {
+              capture(
+                updateError instanceof Error
+                  ? updateError
+                  : new Error(String(updateError)),
+                {
+                  context: "createShopSale: coupon used_count update",
+                },
+              );
+            }
+          })().catch((e) => {
+            capture(e, { context: "createShopSale: fire-and-forget coupon" });
+          });
+        }
+
+        // Gift card redemption
+        if (giftCardId && giftCardAmount > 0) {
+          (async () => {
+            const gcDb = supabase as unknown as {
+              rpc(
+                fn: "redeem_gift_card",
+                params: Record<string, unknown>,
+              ): Promise<{
+                data: unknown;
+                error: unknown;
+              }>;
+            };
+
+            const { data: redeemResult, error: redeemError } = await gcDb.rpc(
+              "redeem_gift_card",
               {
-                context: "createShopSale: coupon_usage insert",
+                p_gift_card_id: giftCardId,
+                p_organization_id: organizationId,
+                p_amount: giftCardAmount,
+                p_sale_id: saleId,
+                p_user_id: userId,
               },
             );
-          }
 
-          // Read current used_count and increment
-          const { data: currentCoupon } = await couponDb
-            .from("coupons")
-            .select("used_count")
-            .eq("id", couponId)
-            .maybeSingle();
-          const currentCount =
-            currentCoupon &&
-            typeof currentCoupon === "object" &&
-            "used_count" in currentCoupon
-              ? Number(currentCoupon.used_count)
-              : 0;
-
-          const { error: updateError } = await couponDb
-            .from("coupons")
-            .update({ used_count: currentCount + 1 })
-            .eq("id", couponId);
-          if (updateError) {
-            capture(
-              updateError instanceof Error
-                ? updateError
-                : new Error(String(updateError)),
-              {
-                context: "createShopSale: coupon used_count update",
-              },
-            );
-          }
-        })().catch((e) => {
-          capture(e, { context: "createShopSale: fire-and-forget coupon" });
-        });
-      }
-
-      // Gift card redemption
-      if (giftCardId && giftCardAmount > 0) {
-        (async () => {
-          const gcDb = supabase as unknown as {
-            rpc(
-              fn: "redeem_gift_card",
-              params: Record<string, unknown>,
-            ): Promise<{
-              data: unknown;
-              error: unknown;
-            }>;
-          };
-
-          const { data: redeemResult, error: redeemError } = await gcDb.rpc(
-            "redeem_gift_card",
-            {
-              p_gift_card_id: giftCardId,
-              p_organization_id: organizationId,
-              p_amount: giftCardAmount,
-              p_sale_id: saleId,
-              p_user_id: userId,
-            },
-          );
-
-          if (redeemError) {
-            capture(
-              redeemError instanceof Error
-                ? redeemError
-                : new Error(String(redeemError)),
-              {
+            if (redeemError) {
+              capture(
+                redeemError instanceof Error
+                  ? redeemError
+                  : new Error(String(redeemError)),
+                {
+                  context: "createShopSale: redeem_gift_card",
+                },
+              );
+            } else if (
+              redeemResult &&
+              typeof redeemResult === "object" &&
+              "success" in (redeemResult as Record<string, unknown>) &&
+              !(redeemResult as Record<string, unknown>).success
+            ) {
+              const errMsg =
+                typeof (redeemResult as Record<string, unknown>).error ===
+                "string"
+                  ? ((redeemResult as Record<string, unknown>).error as string)
+                  : "Бэлгийн карт ашиглахад алдаа гарлаа.";
+              capture(new Error(errMsg), {
                 context: "createShopSale: redeem_gift_card",
-              },
-            );
-          } else if (
-            redeemResult &&
-            typeof redeemResult === "object" &&
-            "success" in (redeemResult as Record<string, unknown>) &&
-            !(redeemResult as Record<string, unknown>).success
-          ) {
-            const errMsg =
-              typeof (redeemResult as Record<string, unknown>).error ===
-              "string"
-                ? ((redeemResult as Record<string, unknown>).error as string)
-                : "Бэлгийн карт ашиглахад алдаа гарлаа.";
-            capture(new Error(errMsg), {
-              context: "createShopSale: redeem_gift_card",
+              });
+            }
+          })().catch((e) => {
+            capture(e, {
+              context: "createShopSale: fire-and-forget gift card",
             });
-          }
-        })().catch((e) => {
-          capture(e, { context: "createShopSale: fire-and-forget gift card" });
+          });
+        }
+
+        // Webhook delivery (fire-and-forget)
+        deliverWebhookEvent(supabase, organizationId, "sale.created", {
+          sale_id: saleId,
+          total_amount: Number(result.total_amount ?? result.total ?? 0),
+          contact_id: contactId ?? null,
+        }).catch((e) => {
+          capture(e, { context: "createShopSale: webhook sale.created" });
         });
-      }
 
-      // Webhook delivery (fire-and-forget)
-      deliverWebhookEvent(supabase, organizationId, "sale.created", {
-        sale_id: saleId,
-        total_amount: Number(result.total_amount ?? result.total ?? 0),
-        contact_id: contactId ?? null,
-      }).catch((e) => {
-        capture(e, { context: "createShopSale: webhook sale.created" });
-      });
-
-      revalidateEntity("shop");
-      revalidateEntityTag("sales", organizationId);
-      revalidateEntityTag("products", organizationId);
-      if (createdContact) {
-        revalidateEntityTag("customers", organizationId);
+        revalidateEntity("shop");
+        revalidateEntityTag("sales", organizationId);
+        revalidateEntityTag("products", organizationId);
+        if (createdContact) {
+          revalidateEntityTag("customers", organizationId);
+        }
       }
 
       timing("total", performance.now() - t0);
