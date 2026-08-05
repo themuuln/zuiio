@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import type { ProviderWebhookEvent } from "@/lib/provider/types";
 import {
   normalizeWebhook,
   verifyWebhookSignature,
 } from "@/lib/provider/webhook";
-import type { ProviderWebhookEvent } from "@/lib/provider/types";
 import { applyProviderWebhook } from "@/lib/provisioning";
 
 // ─── Per-provider HMAC config ───────────────────────────────────────
@@ -59,10 +59,10 @@ export async function POST(request: NextRequest) {
         hmacConfig.algorithm,
       );
       if (!verified) {
-        console.warn(
-          `[webhook:${provider}] HMAC verification failed`,
-          { provider, header: hmacConfig.header },
-        );
+        console.warn(`[webhook:${provider}] HMAC verification failed`, {
+          provider,
+          header: hmacConfig.header,
+        });
       }
     } else {
       verified = false;
@@ -96,16 +96,8 @@ export async function POST(request: NextRequest) {
   const db = getDb();
   const fresh = await db.insertWebhookEvent(provider, event.eventId, payload);
   if (!fresh) {
-    console.log("[webhook] duplicate", { provider, eventId: event.eventId });
     return NextResponse.json({ ok: true, duplicate: true });
   }
-
-  console.log("[webhook] processing", {
-    provider,
-    eventId: event.eventId,
-    type: event.type,
-    verified,
-  });
 
   await applyProviderWebhook(event);
   await db.markWebhookProcessed(provider, event.eventId);

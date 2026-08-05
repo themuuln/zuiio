@@ -89,7 +89,7 @@ export async function getRegionPackages(
   await ensureDevCatalog();
   const db = getDb();
   const region = await db.getRegionBySlug(slug);
-  if (!region || !region.is_active) return null;
+  if (!region?.is_active) return null;
 
   const [packages, ctx] = await Promise.all([
     db.listEnabledPackagesByRegion(region.id),
@@ -129,7 +129,7 @@ export async function getPackageDetail(
   await ensureDevCatalog();
   const db = getDb();
   const pkg = await db.getPackageById(id);
-  if (!pkg || !pkg.is_enabled || pkg.is_archived) return null;
+  if (!pkg?.is_enabled || pkg.is_archived) return null;
 
   const [regions, ctx] = await Promise.all([
     db.listRegions(false),

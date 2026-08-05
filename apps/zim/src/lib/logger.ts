@@ -27,7 +27,7 @@ function serializeError(err: unknown): { error: string; stack?: string } {
 
 function log(entry: LogEntry): void {
   try {
-    console.log(JSON.stringify(entry));
+    process.stdout.write(`${JSON.stringify(entry)}\n`);
   } catch {
     // silent — logger must never throw
   }
@@ -45,16 +45,36 @@ function log(entry: LogEntry): void {
 export function createLogger(component: string): Logger {
   return {
     info(action, meta) {
-      log({ timestamp: new Date().toISOString(), level: "info", component, action, meta });
+      log({
+        timestamp: new Date().toISOString(),
+        level: "info",
+        component,
+        action,
+        meta,
+      });
     },
     warn(action, meta) {
-      log({ timestamp: new Date().toISOString(), level: "warn", component, action, meta });
+      log({
+        timestamp: new Date().toISOString(),
+        level: "warn",
+        component,
+        action,
+        meta,
+      });
     },
     error(action, err, meta) {
       const { error, stack } = serializeError(err);
-      log({ timestamp: new Date().toISOString(), level: "error", component, action, error, stack, meta });
+      log({
+        timestamp: new Date().toISOString(),
+        level: "error",
+        component,
+        action,
+        error,
+        stack,
+        meta,
+      });
     },
-    timer(action) {
+    timer(_action) {
       const start = performance.now();
       return () => Math.round(performance.now() - start);
     },

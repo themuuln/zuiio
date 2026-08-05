@@ -1,7 +1,15 @@
-import { getProviderByName, getEnabledProviders } from "./registry";
+import { getEnabledProviders, getProviderByName } from "./registry";
 import type { EsimProvider } from "./types";
 
-export type { EsimProvider, ProviderPackage, ProvisionRequest, ProvisionedEsim, ProvisionResult, ProviderEsimStatus, EsimUsage } from "./types";
+export type {
+  EsimProvider,
+  EsimUsage,
+  ProviderEsimStatus,
+  ProviderPackage,
+  ProvisionedEsim,
+  ProvisionRequest,
+  ProvisionResult,
+} from "./types";
 
 /**
  * Legacy single-provider accessor (backwards compatible).
@@ -21,7 +29,9 @@ export function getProvider(): EsimProvider {
 
   // Fall back to first enabled provider
   const providers = getEnabledProviders();
-  cached = providers[0]!;
+  const first = providers[0];
+  if (!first) throw new Error("No enabled ESIM providers");
+  cached = first;
   return cached;
 }
 

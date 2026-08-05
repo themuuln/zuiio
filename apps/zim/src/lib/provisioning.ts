@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { sendDeliveryEmail } from "@/lib/email";
 import { getProvider } from "@/lib/provider";
 import type { ProvisionedEsim } from "@/lib/provider/types";
+import type { Json } from "@/lib/supabase/types";
 import { notifyProvisioningFailed } from "@/lib/telegram";
 
 /**
@@ -30,7 +31,7 @@ async function applyDeliveredEsims(
       qr_payload: data.lpaString,
       status: "delivered",
       delivered_at: now,
-      provider_status_raw: data.raw ?? null,
+      provider_status_raw: (data.raw ?? null) as Json,
     });
   }
 }

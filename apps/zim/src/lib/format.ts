@@ -11,7 +11,7 @@ export function formatData(dataMb: number | null): string | null {
 
 /** ISO2 country code → emoji flag. */
 export function countryFlag(code: string | null): string {
-  if (!code || code.length !== 2) return "🌐";
+  if (code?.length !== 2) return "🌐";
   const base = 0x1f1e6;
   const upper = code.toUpperCase();
   return String.fromCodePoint(

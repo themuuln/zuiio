@@ -8,8 +8,7 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
-
+  | Json[];
 
 export type OrderStatus =
   | "pending_payment"
