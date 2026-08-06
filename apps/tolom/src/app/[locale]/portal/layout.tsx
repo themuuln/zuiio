@@ -91,7 +91,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
+      <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b bg-background px-4 sm:px-6">
         <Link
           href="/portal"
           className="flex items-center gap-2 font-semibold text-base"

@@ -82,7 +82,7 @@ async function StatusContent({ locale }: { locale: string }) {
             <div className="grid gap-4 sm:grid-cols-2">
               {SERVICES.map((svc) => (
                 <Card key={svc.key}>
-                  <CardHeader className="flex-row items-center gap-3 space-y-0 pb-2">
+                  <CardHeader className="flex-row items-center gap-3 pb-2">
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <svc.icon aria-hidden="true" className="size-4" />
                     </span>

@@ -515,9 +515,7 @@ export function WorkOrderDetailDrawer({
           isFullScreen ? "bg-black/80 !backdrop-blur-none" : undefined
         }
         contentClassName={cn(
-          isFullScreen
-            ? "rounded-none border-0"
-            : "border-border/80 shadow-2xl",
+          isFullScreen ? "rounded-none border-0" : "shadow-2xl",
         )}
         viewportClassName={isFullScreen ? "p-0" : undefined}
       >

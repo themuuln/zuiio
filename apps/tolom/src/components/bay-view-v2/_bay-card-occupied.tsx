@@ -103,12 +103,15 @@ export function BayCardOccupied({ bay }: BayCardOccupiedProps) {
         </div>
       </div>
 
-      <footer className="flex min-h-14 items-center gap-3 border-t border-border/60 px-5 py-3">
-        <div className="min-w-0 flex-1">
+      <footer className="flex flex-col gap-2 border-t border-border/60 px-5 py-3">
+        <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             {t("listHeaderCustomer")}
           </p>
-          <p className="truncate text-sm font-medium text-foreground/85">
+          <p
+            className="truncate text-sm font-medium text-foreground/85"
+            title={wo.customer_name ?? undefined}
+          >
             {wo.customer_name ?? "—"}
           </p>
         </div>

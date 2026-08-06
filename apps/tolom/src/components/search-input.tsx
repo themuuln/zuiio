@@ -137,7 +137,7 @@ export function SearchInput({
       {shortcutLabel && !value && !loading && (
         <InputGroupAddon align="inline-end">
           <kbd className="hidden items-center gap-0.5 sm:flex">
-            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded border bg-muted px-1 text-[10px] font-medium text-muted-foreground/60">
+            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded border bg-muted px-1 text-[10px] font-medium text-muted-foreground">
               {shortcutLabel}
             </span>
           </kbd>

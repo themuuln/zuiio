@@ -239,7 +239,7 @@ export function ReadyForPickupForm({
                         className={cn(
                           "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-[color,background-color] duration-200 cursor-pointer",
                           isActive
-                            ? "bg-background text-foreground border border-border/30 shadow-sm"
+                            ? "bg-background text-foreground border border-border/30 "
                             : "text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground/80",
                         )}
                       >

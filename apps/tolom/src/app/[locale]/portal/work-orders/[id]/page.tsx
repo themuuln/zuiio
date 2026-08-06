@@ -189,7 +189,7 @@ export default function PortalWorkOrderDetailPage() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-start gap-4">
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <Wrench className="size-7 text-primary" />
             </div>
             <div className="min-w-0 flex-1">

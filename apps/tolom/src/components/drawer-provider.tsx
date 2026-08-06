@@ -27,7 +27,7 @@ export function DrawerProvider({ children }: { children: ReactNode }) {
         className={(state) =>
           cn(
             "relative z-1 flex min-h-dvh flex-col antialiased transition-all duration-300 origin-center overflow-hidden",
-            state.active && "rounded-2xl scale-[0.96] overflow-hidden",
+            state.active && "rounded-xl scale-[0.96] overflow-hidden",
           )
         }
       >

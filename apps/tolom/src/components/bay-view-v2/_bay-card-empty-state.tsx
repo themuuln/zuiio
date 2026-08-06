@@ -27,9 +27,9 @@ export function BayCardEmptyState({
       <div className="z-10 flex flex-col gap-1.5">
         <BayNumberLabel
           bayNumber={bayNumber}
-          className="text-sm font-semibold uppercase text-muted-foreground/60 transition-colors group-hover/btn:text-primary/80"
+          className="text-sm font-semibold uppercase text-muted-foreground/80 transition-colors group-hover/btn:text-primary/80"
         />
-        <span className="text-xs text-muted-foreground/40 transition-colors group-hover/btn:text-primary/60">
+        <span className="text-xs text-muted-foreground transition-colors group-hover/btn:text-primary/70">
           {t("clickToAddVehicle")}
         </span>
       </div>

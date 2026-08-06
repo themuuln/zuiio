@@ -16,7 +16,6 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { cacheLife } from "next/cache";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -178,9 +177,6 @@ export default async function HomePage({
 }
 
 async function HomeContent({ locale }: { locale: string }) {
-  "use cache";
-  cacheLife("daily");
-
   const t = (await getTranslations({
     locale: locale as "mn" | "en",
     namespace: "home",
@@ -200,18 +196,26 @@ async function HomeContent({ locale }: { locale: string }) {
         <section className="relative overflow-hidden border-b px-4 pt-20 pb-16 sm:px-6 sm:pt-28 sm:pb-20">
           <div className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-background" />
-            <div className="absolute top-[-20%] left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
+            <div className="absolute -top-32 left-[6%] h-[480px] w-[480px] rounded-full bg-[var(--brand-violet-glow)] blur-3xl" />
+            <div className="absolute top-[12%] -right-24 h-[420px] w-[420px] rounded-full bg-[var(--brand-teal-glow)] blur-3xl" />
           </div>
 
           <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.9fr)] lg:gap-16">
             <div className="max-w-2xl">
-              <Badge variant="outline" className="mb-6 text-xs font-medium">
+              <Badge
+                variant="outline"
+                className="mb-6 gap-2 border-border bg-background px-3 py-1 text-xs font-medium"
+              >
+                <span className="relative flex size-1.5">
+                  <span className="absolute inline-flex size-full rounded-full bg-primary opacity-60 motion-safe:animate-ping" />
+                  <span className="relative inline-flex size-1.5 rounded-full bg-primary" />
+                </span>
                 {appT("tagline")}
               </Badge>
-              <Typography.H1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              <Typography.H1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                 {t("heroTitle")}
               </Typography.H1>
-              <Typography.Muted className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+              <Typography.Muted className="mt-5 max-w-xl text-pretty text-base leading-8 text-muted-foreground sm:text-lg">
                 {t("heroSubtitle")}
               </Typography.Muted>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -219,7 +223,7 @@ async function HomeContent({ locale }: { locale: string }) {
                   size="lg"
                   render={<Link href="/auth/signup" />}
                   nativeButton={false}
-                  className="w-full sm:w-auto"
+                  className="w-full shadow-[var(--shadow-brand)] sm:w-auto"
                 >
                   {t("heroCtaPrimary")}
                   <ArrowRight className="ml-2 size-4" />
@@ -236,49 +240,32 @@ async function HomeContent({ locale }: { locale: string }) {
               </div>
             </div>
 
-            <LandingProductPreview
-              appName={appT("name")}
-              title={t("productPreviewTitle")}
-              liveLabel={t("productPreviewLive")}
-              openJobsLabel={t("productPreviewOpenJobs")}
-              readyLabel={t("productPreviewReady")}
-              revenueLabel={t("productPreviewRevenue")}
-              workOrdersLabel={t("featureWorkOrders")}
-              customersLabel={t("featureCustomers")}
-              inventoryLabel={t("featureInventory")}
-              workOrderDetail={t("productPreviewWorkOrderDetail")}
-              customerDetail={t("productPreviewCustomerDetail")}
-              inventoryDetail={t("productPreviewInventoryDetail")}
-              inProgressLabel={t("productPreviewInProgress")}
-              readyStatusLabel={t("productPreviewReadyStatus")}
-              awaitingLabel={t("productPreviewAwaiting")}
-              viewAllLabel={t("productPreviewViewAll")}
-            />
+            <LandingProductPreview />
           </div>
 
           {/* Social proof */}
-          <div className="mx-auto mt-14 grid max-w-6xl grid-cols-3 gap-6 border-t pt-8 sm:mt-16 sm:gap-8 sm:pt-10">
-            <div className="text-center">
-              <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <div className="mx-auto mt-14 grid max-w-6xl grid-cols-3 border-t pt-8 sm:mt-16 sm:divide-x sm:divide-border sm:pt-10">
+            <div className="flex min-w-0 flex-col items-center gap-1.5 px-2 text-center sm:px-8">
+              <div className="text-2xl font-bold tracking-tight tabular-nums sm:text-3xl">
                 <AnimatedCounter end={12} suffix="+" />
               </div>
-              <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+              <div className="min-w-0 text-balance text-xs text-muted-foreground sm:text-sm">
                 {t("heroSocialShops")}
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <div className="flex min-w-0 flex-col items-center gap-1.5 px-2 text-center sm:px-8">
+              <div className="text-2xl font-bold tracking-tight tabular-nums sm:text-3xl">
                 <AnimatedCounter end={130} suffix="+" />
               </div>
-              <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+              <div className="min-w-0 text-balance text-xs text-muted-foreground sm:text-sm">
                 {t("heroSocialVehicles")}
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <div className="flex min-w-0 flex-col items-center gap-1.5 px-2 text-center sm:px-8">
+              <div className="text-2xl font-bold tracking-tight tabular-nums sm:text-3xl">
                 <AnimatedCounter end={98} suffix="%" />
               </div>
-              <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+              <div className="min-w-0 text-balance text-xs text-muted-foreground sm:text-sm">
                 {t("heroSocialSatisfaction")}
               </div>
             </div>
@@ -294,10 +281,10 @@ async function HomeContent({ locale }: { locale: string }) {
         >
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto max-w-2xl text-center">
-              <Typography.H2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              <Typography.H2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
                 {t("featuresTitle")}
               </Typography.H2>
-              <Typography.Muted className="mt-4 text-muted-foreground">
+              <Typography.Muted className="mt-4 text-pretty text-muted-foreground">
                 {t("featuresSubtitle")}
               </Typography.Muted>
             </div>
@@ -307,19 +294,20 @@ async function HomeContent({ locale }: { locale: string }) {
                 return (
                   <Card
                     key={feature.key}
-                    className="group relative overflow-hidden border transition-shadow hover:shadow-md"
+                    className="group relative h-full overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-foreground/10"
                   >
                     <div
+                      aria-hidden="true"
                       className={cn(
-                        "absolute inset-0 -z-10 opacity-0 transition-opacity group-hover:opacity-100",
+                        "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100",
                         "bg-gradient-to-br",
                         feature.gradient,
                       )}
                     />
-                    <CardHeader>
+                    <CardHeader className="relative">
                       <div
                         className={cn(
-                          "flex size-14 items-center justify-center rounded-xl",
+                          "flex size-14 items-center justify-center rounded-xl ring-1 ring-inset ring-foreground/5 transition-transform duration-300 group-hover:scale-105",
                           feature.accentColor,
                         )}
                       >
@@ -340,21 +328,21 @@ async function HomeContent({ locale }: { locale: string }) {
         </section>
 
         {/* ═══ Mongolian trust badges ════════════════════════ */}
-        <section className="border-t bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
+        <section className="border-t bg-muted/30 px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-4xl text-center">
             <Typography.Muted className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
               {t("trustTitle")}
             </Typography.Muted>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
               {TRUST_ITEMS.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Badge
                     key={item.key}
                     variant="outline"
-                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+                    className="h-auto gap-2 rounded-full bg-background px-4 py-2 text-sm font-medium"
                   >
-                    <Icon className={`size-3.5 ${item.accentColor}`} />
+                    <Icon className={`size-4 ${item.accentColor}`} />
                     {t(item.key)}
                   </Badge>
                 );

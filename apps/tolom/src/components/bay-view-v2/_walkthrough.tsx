@@ -187,7 +187,7 @@ export function BayViewWalkthrough() {
       {/* Tooltip card */}
       <div
         className={cn(
-          "fixed z-[122] w-[min(360px,calc(100vw-48px))] rounded-xl border border-border bg-card p-5 shadow-xl transition-[transform,opacity] duration-300",
+          "fixed z-[122] w-[min(360px,calc(100vw-48px))] rounded-xl bg-card p-5 shadow-xl transition-[transform,opacity] duration-300",
         )}
         style={{
           top: `${position.top}px`,

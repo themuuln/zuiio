@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ClipboardList,
   LineChart,
+  Quote,
   Star,
   Store,
   Tag,
@@ -75,9 +76,9 @@ export function HowItWorksSection() {
             return (
               <div key={step.key} className="relative text-center">
                 {i < STEPS.length - 1 && (
-                  <div className="absolute top-8 left-[60%] hidden w-[80%] border-t border-dashed border-muted-foreground/20 md:block" />
+                  <div className="absolute top-8 left-[60%] hidden w-[80%] border-t border-dashed border-muted-foreground/40 md:block" />
                 )}
-                <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10">
+                <div className="mx-auto flex size-16 items-center justify-center rounded-xl bg-primary/10">
                   <Icon className="size-7 text-primary" />
                 </div>
                 <div className="mt-4">
@@ -126,7 +127,7 @@ export function WorkflowSection() {
             return (
               <Card key={pillar.key} className="flex h-full flex-col">
                 <CardHeader className="gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10">
+                  <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10">
                     <Icon className="size-5 text-primary" />
                   </div>
                   <CardTitle className="text-base">
@@ -178,7 +179,7 @@ export function DifferentiatorsSection() {
             return (
               <Card key={item.key} className="h-full">
                 <CardHeader className="gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-2xl border bg-background shadow-xs">
+                  <div className="flex size-11 items-center justify-center rounded-xl border bg-background">
                     <Icon className="size-5 text-primary" />
                   </div>
                   <CardTitle className="text-lg">
@@ -208,7 +209,8 @@ export function TestimonialsSection() {
         </Typography.H2>
         <div className="grid gap-6 md:grid-cols-2">
           {([1, 2] as const).map((i) => (
-            <Card key={i} className="relative">
+            <Card key={i} className="relative h-full">
+              <Quote className="absolute top-6 right-6 size-8 text-muted-foreground/15" />
               <CardHeader>
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }).map((_, j) => (
@@ -220,7 +222,7 @@ export function TestimonialsSection() {
                 </div>
               </CardHeader>
               <CardContent>
-                <blockquote className="text-sm leading-relaxed text-muted-foreground">
+                <blockquote className="text-sm leading-relaxed text-pretty text-muted-foreground">
                   &ldquo;{t(`testimonial${i}`)}&rdquo;
                 </blockquote>
               </CardContent>
@@ -278,7 +280,7 @@ export function PricingSection() {
           <Switch
             checked={annual}
             onCheckedChange={setAnnual}
-            aria-label="Toggle annual billing"
+            aria-label={t("pricingToggleLabel")}
           />
           <span
             className={cn(
@@ -324,7 +326,7 @@ export function PricingSection() {
                   <CardTitle className="text-lg">{name}</CardTitle>
                   <CardDescription>{desc}</CardDescription>
                   <div className="mt-4">
-                    <span className="text-3xl font-bold tracking-tight">
+                    <span className="text-3xl font-bold tracking-tight tabular-nums">
                       {annual
                         ? `₮${annualPrice.toLocaleString()}${t("pricingPerYear")}`
                         : price}
@@ -369,37 +371,39 @@ export function CtaSection() {
   const t = useTranslations("home");
 
   return (
-    <section className="relative overflow-hidden border-t px-4 py-20 text-center sm:px-6 sm:py-28">
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-background" />
-        <div className="absolute top-1/2 left-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl" />
-      </div>
-      <div className="mx-auto max-w-2xl">
-        <Typography.H2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          {t("ctaTitle")}
-        </Typography.H2>
-        <Typography.Muted className="mt-4 text-muted-foreground">
-          {t("ctaSubtitle")}
-        </Typography.Muted>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button
-            size="lg"
-            render={<Link href="/auth/signup" />}
-            nativeButton={false}
-            className="w-full sm:w-auto"
-          >
-            {t("ctaButton")}
-            <ArrowUpRight className="ml-2 size-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            render={<Link href="/pricing" />}
-            nativeButton={false}
-            className="w-full sm:w-auto"
-          >
-            {t("navPricing")}
-          </Button>
+    <section className="px-4 py-16 sm:px-6 sm:py-24">
+      <div className="relative mx-auto max-w-5xl overflow-hidden rounded-xl border bg-muted/20 px-6 py-16 text-center sm:px-12 sm:py-20">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-32 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-[var(--brand-violet-glow)] blur-3xl" />
+          <div className="absolute -right-24 -bottom-32 h-72 w-72 rounded-full bg-[var(--brand-teal-glow)] blur-3xl" />
+        </div>
+        <div className="relative mx-auto max-w-2xl">
+          <Typography.H2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+            {t("ctaTitle")}
+          </Typography.H2>
+          <Typography.Muted className="mt-4 text-pretty text-muted-foreground">
+            {t("ctaSubtitle")}
+          </Typography.Muted>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button
+              size="lg"
+              render={<Link href="/auth/signup" />}
+              nativeButton={false}
+              className="w-full shadow-[var(--shadow-brand)] sm:w-auto"
+            >
+              {t("ctaButton")}
+              <ArrowUpRight className="ml-2 size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              render={<Link href="/pricing" />}
+              nativeButton={false}
+              className="w-full sm:w-auto"
+            >
+              {t("navPricing")}
+            </Button>
+          </div>
         </div>
       </div>
     </section>

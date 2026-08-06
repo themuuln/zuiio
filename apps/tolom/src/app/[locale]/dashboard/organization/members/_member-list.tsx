@@ -61,7 +61,7 @@ export function MemberList({
 }: MemberListProps) {
   if (loading && members.length === 0) {
     return (
-      <Card className="border-border/60 shadow-sm">
+      <Card className="border-border/60 ">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="size-4" />
@@ -91,7 +91,7 @@ export function MemberList({
   }
 
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="border-border/60 ">
       <CardHeader className="gap-3 pb-4">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-base">

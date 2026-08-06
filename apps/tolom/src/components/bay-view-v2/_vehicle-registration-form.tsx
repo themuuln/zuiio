@@ -396,7 +396,7 @@ export function VehicleRegistrationForm({
             <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground animate-spin" />
           )}
           {showDropdown && searchResults.length > 0 && (
-            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-auto">
+            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover rounded-lg shadow-lg max-h-60 overflow-auto">
               {searchResults.map((v) => (
                 <button
                   key={v.id}

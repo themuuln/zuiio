@@ -82,7 +82,7 @@ function EstimateCard({
     <button
       type="button"
       onClick={() => onOpen(estimate.id)}
-      className="w-full rounded-2xl border border-border/60 bg-card p-4 text-left transition-colors hover:bg-muted/30"
+      className="w-full rounded-xl border border-border/60 bg-card p-4 text-left transition-colors hover:bg-muted/30"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 flex-1 gap-y-3">
@@ -249,7 +249,7 @@ export default function EstimatesPage() {
         }
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <Card className="rounded-3xl border-border/60 shadow-sm">
+          <Card className="rounded-xl border-border/60 ">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">
                 {t("allStatuses")}
@@ -261,7 +261,7 @@ export default function EstimatesPage() {
               </Typography.H3>
             </CardContent>
           </Card>
-          <Card className="rounded-3xl border-border/60 shadow-sm">
+          <Card className="rounded-xl border-border/60 ">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">
                 {t("active")}
@@ -273,7 +273,7 @@ export default function EstimatesPage() {
               </Typography.H3>
             </CardContent>
           </Card>
-          <Card className="rounded-3xl border-border/60 shadow-sm">
+          <Card className="rounded-xl border-border/60 ">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">
                 {t("status_sent")}
@@ -283,7 +283,7 @@ export default function EstimatesPage() {
               <Typography.H3 className="text-2xl">{summary.sent}</Typography.H3>
             </CardContent>
           </Card>
-          <Card className="rounded-3xl border-border/60 shadow-sm">
+          <Card className="rounded-xl border-border/60 ">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">
                 {t("grandTotal")}
@@ -297,7 +297,7 @@ export default function EstimatesPage() {
           </Card>
         </div>
 
-        <Card className="rounded-3xl border-border/60 shadow-sm">
+        <Card className="rounded-xl border-border/60 ">
           <CardContent className="flex flex-col gap-5 p-4 md:p-5">
             <ListToolbar
               search={{
@@ -351,7 +351,7 @@ export default function EstimatesPage() {
                 {estimatesQuery.isFetching && !isFirstLoad ? (
                   <div className="grid gap-3">
                     {Array.from({ length: 2 }).map((_, index) => (
-                      <Skeleton key={index} className="h-28 rounded-2xl" />
+                      <Skeleton key={index} className="h-28 rounded-xl" />
                     ))}
                   </div>
                 ) : null}

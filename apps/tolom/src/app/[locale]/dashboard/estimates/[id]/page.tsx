@@ -294,7 +294,7 @@ export default function EstimateDetailPage() {
   if (!estimate && !showSkeleton) {
     return (
       <div className="px-4 pt-4 pb-6 md:px-6 mx-auto flex max-w-3xl flex-col gap-6 pb-8">
-        <Card className="rounded-3xl border-destructive/50 border-border/60 bg-card">
+        <Card className="rounded-xl border-destructive/50 border-border/60 bg-card">
           <CardContent className="py-12 text-center">
             <Typography.H3>{t("notFound")}</Typography.H3>
           </CardContent>
@@ -323,7 +323,7 @@ export default function EstimateDetailPage() {
     : Number(estimate?.grand_total ?? 0);
   return (
     <div className="px-4 pt-4 pb-6 md:px-6 mx-auto flex max-w-7xl flex-col gap-6 pb-8">
-      <div className="rounded-3xl border border-border/60 bg-card p-5">
+      <div className="rounded-xl border border-border/60 bg-card p-5">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex flex-col gap-y-3">
             <Button variant="ghost" size="sm" onClick={() => router.back()}>
@@ -452,7 +452,7 @@ export default function EstimateDetailPage() {
         <div className="flex flex-col gap-6">
           {showSkeleton ? (
             <div className="grid gap-6 md:grid-cols-2">
-              <Card className="rounded-3xl border-border/60 shadow-sm">
+              <Card className="rounded-xl border-border/60 ">
                 <CardHeader>
                   <Skeleton className="h-5 w-24" />
                 </CardHeader>
@@ -461,7 +461,7 @@ export default function EstimateDetailPage() {
                   <Skeleton className="h-4 w-28" />
                 </CardContent>
               </Card>
-              <Card className="rounded-3xl border-border/60 shadow-sm">
+              <Card className="rounded-xl border-border/60 ">
                 <CardHeader>
                   <Skeleton className="h-5 w-20" />
                 </CardHeader>
@@ -473,7 +473,7 @@ export default function EstimateDetailPage() {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
-              <Card className="rounded-3xl border-border/60 shadow-sm">
+              <Card className="rounded-xl border-border/60 ">
                 <CardHeader>
                   <CardTitle className="text-base">{t("customer")}</CardTitle>
                 </CardHeader>
@@ -494,7 +494,7 @@ export default function EstimateDetailPage() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-3xl border-border/60 shadow-sm">
+              <Card className="rounded-xl border-border/60 ">
                 <CardHeader>
                   <CardTitle className="text-base">{t("vehicle")}</CardTitle>
                 </CardHeader>
@@ -517,18 +517,18 @@ export default function EstimateDetailPage() {
           )}
 
           {showSkeleton ? (
-            <Card className="rounded-3xl border-border/60 shadow-sm">
+            <Card className="rounded-xl border-border/60 ">
               <CardHeader>
                 <Skeleton className="h-5 w-24" />
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <Skeleton className="h-24 rounded-2xl" />
-                <Skeleton className="h-24 rounded-2xl" />
-                <Skeleton className="h-24 rounded-2xl" />
+                <Skeleton className="h-24 rounded-xl" />
+                <Skeleton className="h-24 rounded-xl" />
+                <Skeleton className="h-24 rounded-xl" />
               </CardContent>
             </Card>
           ) : (
-            <Card className="rounded-3xl border-border/60 shadow-sm">
+            <Card className="rounded-xl border-border/60 ">
               <CardHeader>
                 <CardTitle className="text-base">{t("lineItems")}</CardTitle>
               </CardHeader>
@@ -536,7 +536,7 @@ export default function EstimateDetailPage() {
                 {displayLines.map((line, index) => (
                   <div
                     key={line.id}
-                    className="rounded-2xl border border-border/60 bg-card p-4"
+                    className="rounded-xl border border-border/60 bg-card p-4"
                   >
                     {isEditing ? (
                       <div className="flex flex-col gap-4">
@@ -640,7 +640,7 @@ export default function EstimateDetailPage() {
                           </Field>
                         </div>
 
-                        <div className="flex items-center justify-between rounded-2xl bg-muted/30 px-4 py-3">
+                        <div className="flex items-center justify-between rounded-xl bg-muted/30 px-4 py-3">
                           <Typography.Text className="text-sm text-muted-foreground">
                             {t("total")}
                           </Typography.Text>
@@ -690,7 +690,7 @@ export default function EstimateDetailPage() {
                 ))}
 
                 {displayLines.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed p-6 text-center text-muted-foreground">
+                  <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground">
                     {t("noItems")}
                   </div>
                 ) : null}
@@ -699,7 +699,7 @@ export default function EstimateDetailPage() {
           )}
 
           {showSkeleton ? (
-            <Card className="rounded-3xl border-border/60 shadow-sm">
+            <Card className="rounded-xl border-border/60 ">
               <CardHeader>
                 <Skeleton className="h-5 w-28" />
               </CardHeader>
@@ -711,7 +711,7 @@ export default function EstimateDetailPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="rounded-3xl border-border/60 shadow-sm">
+            <Card className="rounded-xl border-border/60 ">
               <CardHeader>
                 <CardTitle className="text-base">{t("quoteDetails")}</CardTitle>
               </CardHeader>
@@ -782,7 +782,7 @@ export default function EstimateDetailPage() {
           )}
 
           {!showSkeleton && renderEstimate.converted_work_order ? (
-            <Card className="rounded-3xl border-green-200 bg-green-50/40 shadow-sm dark:border-green-900/40 dark:bg-green-950/10">
+            <Card className="rounded-xl border-green-200 bg-green-50/40  dark:border-green-900/40 dark:bg-green-950/10">
               <CardContent className="flex flex-col gap-3 py-5 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 size-5 text-green-600" />
@@ -813,7 +813,7 @@ export default function EstimateDetailPage() {
 
         {showSkeleton ? (
           <div className="flex flex-col gap-6">
-            <Card className="rounded-3xl border-border/60 shadow-sm xl:sticky xl:top-6">
+            <Card className="rounded-xl border-border/60  xl:sticky xl:top-6">
               <CardHeader>
                 <Skeleton className="h-5 w-20" />
               </CardHeader>
@@ -830,7 +830,7 @@ export default function EstimateDetailPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            <Card className="rounded-3xl border-border/60 shadow-sm xl:sticky xl:top-6">
+            <Card className="rounded-xl border-border/60  xl:sticky xl:top-6">
               <CardHeader>
                 <CardTitle className="text-base">{t("summary")}</CardTitle>
               </CardHeader>

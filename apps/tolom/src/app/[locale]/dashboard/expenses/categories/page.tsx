@@ -230,7 +230,7 @@ export default function CategoriesPage() {
               {categories.map((cat) => (
                 <Card
                   key={cat.id}
-                  className="border-border/70 shadow-xs transition-colors hover:border-foreground/15"
+                  className="border-border/70  transition-colors hover:border-foreground/15"
                 >
                   <div
                     className="h-1.5 shrink-0"

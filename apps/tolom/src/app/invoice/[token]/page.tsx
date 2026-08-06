@@ -327,7 +327,7 @@ export default function PublicInvoicePage() {
 
       {/* ── Invoice content ── */}
       <div className="mx-auto max-w-4xl p-4 md:p-8 print:p-0">
-        <Card className="print:border-none print:shadow-none">
+        <Card className="print:border-none print:">
           <CardContent className="p-6 md:p-10 print:p-0">
             {/* Header */}
             <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

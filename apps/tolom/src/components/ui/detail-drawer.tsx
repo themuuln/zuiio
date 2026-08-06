@@ -128,6 +128,7 @@ export function DetailDrawer({
     >
       <DrawerVirtualKeyboardProvider>
         <DrawerContent
+          data-slot="detail-drawer"
           drawerMaxWidth={drawerMaxWidth}
           showCloseButton={false}
           className={cn(className)}

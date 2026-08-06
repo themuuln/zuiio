@@ -550,14 +550,14 @@ export function VehicleRegistrationDrawer({
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground animate-spin" />
                 )}
                 {plateFocused && !showDropdown && plate.length < 7 && (
-                  <div className="absolute left-0 top-full z-50 mt-1 rounded-lg border border-border bg-popover p-3 shadow-md transition-opacity duration-150">
+                  <div className="absolute left-0 top-full z-50 mt-1 rounded-lg bg-popover p-3 shadow-md transition-opacity duration-150">
                     <BuuzHint />
                   </div>
                 )}
                 {showDropdown &&
                   searchResults.length > 0 &&
                   plate.length < 7 && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-auto">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover rounded-lg shadow-lg max-h-60 overflow-auto">
                       {searchResults.map((v) => (
                         <button
                           key={v.id}

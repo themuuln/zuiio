@@ -162,12 +162,12 @@ function CollapsibleNavItem({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <Collapsible
-      open={open}
-      onOpenChange={setOpen}
-      className="group/collapsible w-full"
-    >
-      <SidebarMenuItem className="w-full">
+    <SidebarMenuItem className="w-full">
+      <Collapsible
+        open={open}
+        onOpenChange={setOpen}
+        className="group/collapsible w-full"
+      >
         <ViewTransition>
           <SidebarMenuButton
             render={<CollapsibleTrigger />}
@@ -201,7 +201,7 @@ function CollapsibleNavItem({
             ))}
           </SidebarMenuSub>
         </CollapsibleContent>
-      </SidebarMenuItem>
-    </Collapsible>
+      </Collapsible>
+    </SidebarMenuItem>
   );
 }

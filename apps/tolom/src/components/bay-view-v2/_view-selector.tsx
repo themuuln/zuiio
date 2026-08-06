@@ -39,6 +39,7 @@ export function ViewSelector({ viewMode, setViewMode, t }: ViewSelectorProps) {
                   type="button"
                   onClick={() => setViewMode(opt.mode)}
                   aria-pressed={isActive}
+                  aria-label={t(opt.labelKey)}
                   className={cn(
                     "flex items-center justify-center rounded-md px-2 text-xs font-semibold transition-[color,background-color,border-color] duration-200 cursor-pointer h-full",
                     isActive

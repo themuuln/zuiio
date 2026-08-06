@@ -270,7 +270,7 @@ export function PageHeader({
 
   return (
     <>
-      <header className="sticky top-0 z-50 flex shrink-0 flex-col border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <header className="sticky top-0 z-50 flex shrink-0 flex-col border-b border-border/70 bg-background ">
         <div className="flex h-12 items-center gap-2 px-4">
           <div className="flex min-w-0 items-center gap-2 self-stretch">
             <SidebarTrigger className="-ml-1 rounded-xl" />
@@ -300,12 +300,12 @@ export function PageHeader({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-full max-w-md justify-start gap-2 rounded-xl border-border/70 bg-muted/35 px-3 text-muted-foreground shadow-none"
+              className="h-8 w-full max-w-md justify-start gap-2 rounded-xl border-border/70 bg-muted/35 px-3 text-muted-foreground "
               onClick={openSearch}
             >
               <SearchIcon className="size-3.5" />
               <span className="text-xs">{t("common.search")}</span>
-              <kbd className="ml-auto inline-flex h-4 items-center gap-0.5 rounded-md border border-border/60 bg-background px-1 font-mono text-[10px] font-medium text-muted-foreground/70">
+              <kbd className="ml-auto inline-flex h-4 items-center gap-0.5 rounded-md border border-border/60 bg-background px-1 font-mono text-[10px] font-medium text-muted-foreground">
                 {"⌘"}K
               </kbd>
             </Button>
@@ -597,7 +597,7 @@ export function PageHeader({
                     {s.keys.map((k) => (
                       <kbd
                         key={k}
-                        className="inline-flex h-4 items-center rounded-md border border-border/60 bg-background px-1 font-mono text-[10px] font-medium text-muted-foreground/70"
+                        className="inline-flex h-4 items-center rounded-md border border-border/60 bg-background px-1 font-mono text-[10px] font-medium text-muted-foreground"
                       >
                         {k}
                       </kbd>
@@ -652,6 +652,7 @@ function QuickCreateHeader() {
     key: string,
     values?: Record<string, string | number>,
   ) => string;
+  const pathname = usePathname();
   const {
     setNewCustomerDialogOpen,
     setNewVehicleDialogOpen,
@@ -663,12 +664,21 @@ function QuickCreateHeader() {
     setNewPartsCarSheetOpen,
   } = usePageHeader();
 
+  // The bay view has its own register-vehicle flow (opens VehicleRegistrationDrawer
+  // and creates a work order). The global "New Work Order" wizard button is redundant
+  // there, so we hide it to avoid two create-order affordances on the same screen.
+  const isBayView = pathname.startsWith("/dashboard/bay-view");
+
   const commonActions = [
-    {
-      label: t("dashboard.newWorkOrder"),
-      icon: ClipboardList,
-      onClick: () => setNewWorkOrderSheetOpen(true),
-    },
+    ...(!isBayView
+      ? [
+          {
+            label: t("dashboard.newWorkOrder"),
+            icon: ClipboardList,
+            onClick: () => setNewWorkOrderSheetOpen(true),
+          },
+        ]
+      : []),
     {
       label: t("appointments.newAppointment"),
       icon: CalendarPlus,

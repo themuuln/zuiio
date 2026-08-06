@@ -233,7 +233,7 @@ export function VariantPicker({
                   className={cn(
                     "group flex items-center gap-2 rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-[color,background-color,border-color,box-shadow] duration-200",
                     isSelected
-                      ? "border-primary bg-primary/10 text-primary shadow-sm"
+                      ? "border-primary bg-primary/10 text-primary "
                       : "border-border bg-card hover:border-muted-foreground/30 hover:bg-accent/50",
                   )}
                 >

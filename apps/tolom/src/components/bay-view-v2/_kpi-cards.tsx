@@ -130,7 +130,7 @@ function StatChip({
       onClick={onClick}
       className="flex items-baseline gap-2 text-xs hover:bg-muted/50 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
     >
-      <span className="text-[11px] font-medium text-muted-foreground/70 tabular-nums">
+      <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
         {label}
       </span>
       {loading ? (
@@ -154,7 +154,7 @@ function StatChip({
         </span>
       )}
       {!loading && subtitle && (
-        <span className="text-[11px] text-muted-foreground/50">{subtitle}</span>
+        <span className="text-[11px] text-muted-foreground">{subtitle}</span>
       )}
     </button>
   );

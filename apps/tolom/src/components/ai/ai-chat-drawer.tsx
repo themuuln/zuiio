@@ -34,7 +34,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
       )}
       <div
         className={cn(
-          "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+          "max-w-[80%] rounded-xl px-4 py-2.5 text-sm leading-relaxed",
           isUser
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-foreground",
@@ -156,10 +156,12 @@ function WelcomeMessage() {
 // ── Floating Trigger Button ─────────────────────────────────
 
 function AiFloatingButton({ onClick }: { onClick: () => void }) {
+  const t = useTranslations();
   return (
     <Button
       onClick={onClick}
       size="icon"
+      aria-label={t("ai.openChat")}
       className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
     >
       <Sparkles className="size-6" />

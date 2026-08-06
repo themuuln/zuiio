@@ -78,7 +78,7 @@ export default function ConfirmEmailPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("emailPlaceholder")}
             required
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? <Loader2 className="animate-spin" /> : <Mail />}

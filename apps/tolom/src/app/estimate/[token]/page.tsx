@@ -71,9 +71,9 @@ export default function PublicEstimatePage() {
     return (
       <div className="min-h-screen bg-muted/20 px-4 py-6 md:px-6 md:py-8">
         <div className="mx-auto flex max-w-5xl flex-col gap-6">
-          <Skeleton className="h-16 rounded-3xl" />
-          <Skeleton className="h-40 rounded-3xl" />
-          <Skeleton className="h-[420px] rounded-3xl" />
+          <Skeleton className="h-16 rounded-xl" />
+          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-[420px] rounded-xl" />
         </div>
       </div>
     );
@@ -83,7 +83,7 @@ export default function PublicEstimatePage() {
     return (
       <div className="min-h-screen bg-muted/20 px-4 py-6 md:px-6 md:py-8">
         <div className="mx-auto max-w-xl">
-          <Card className="rounded-3xl border-border/60 shadow-sm">
+          <Card className="rounded-xl border-border/60 ">
             <CardContent className="py-12 text-center">
               <XCircle className="mx-auto mb-4 size-10 text-muted-foreground" />
               <Typography.H3>{t("publicUnavailableTitle")}</Typography.H3>
@@ -109,7 +109,7 @@ export default function PublicEstimatePage() {
   return (
     <div className="min-h-screen bg-muted/20 px-4 py-6 print:bg-white md:px-6 md:py-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-6 print:max-w-none">
-        <div className="rounded-3xl border border-border/60 bg-background p-4 shadow-sm print:hidden">
+        <div className="rounded-xl border border-border/60 bg-background p-4  print:hidden">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <Typography.Text className="text-sm font-medium">
@@ -142,7 +142,7 @@ export default function PublicEstimatePage() {
           </div>
         </div>
 
-        <Card className="rounded-3xl border-border/60 shadow-sm">
+        <Card className="rounded-xl border-border/60 ">
           <CardContent className="flex flex-col gap-6 p-6 md:p-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="flex flex-col gap-y-3">
@@ -169,7 +169,7 @@ export default function PublicEstimatePage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3 md:min-w-56">
+              <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3 md:min-w-56">
                 <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
                   {t("grandTotal")}
                 </Typography.Text>
@@ -180,7 +180,7 @@ export default function PublicEstimatePage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <Card className="rounded-2xl border-border/60 shadow-none">
+              <Card className="rounded-xl border-border/60 ">
                 <CardHeader>
                   <CardTitle className="text-base">
                     {t("customerInfo")}
@@ -203,7 +203,7 @@ export default function PublicEstimatePage() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl border-border/60 shadow-none">
+              <Card className="rounded-xl border-border/60 ">
                 <CardHeader>
                   <CardTitle className="text-base">
                     {t("vehicleInfo")}
@@ -228,7 +228,7 @@ export default function PublicEstimatePage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-border/60 shadow-sm">
+        <Card className="rounded-xl border-border/60 ">
           <CardHeader>
             <CardTitle className="text-base">{t("lineItems")}</CardTitle>
           </CardHeader>
@@ -236,7 +236,7 @@ export default function PublicEstimatePage() {
             {estimate.items.map((item, index) => (
               <div
                 key={`${item.description}-${index}`}
-                className="rounded-2xl border border-border/60 bg-card p-4"
+                className="rounded-xl border border-border/60 bg-card p-4"
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div className="flex flex-col gap-y-2">
@@ -277,7 +277,7 @@ export default function PublicEstimatePage() {
         </Card>
 
         <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
-          <Card className="rounded-3xl border-border/60 shadow-sm">
+          <Card className="rounded-xl border-border/60 ">
             <CardHeader>
               <CardTitle className="text-base">{t("quoteDetails")}</CardTitle>
             </CardHeader>
@@ -301,7 +301,7 @@ export default function PublicEstimatePage() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-3xl border-border/60 shadow-sm">
+          <Card className="rounded-xl border-border/60 ">
             <CardHeader>
               <CardTitle className="text-base">{t("summary")}</CardTitle>
             </CardHeader>
@@ -340,12 +340,12 @@ export default function PublicEstimatePage() {
           </Card>
         </div>
 
-        <Card className="rounded-3xl border-border/60 shadow-sm">
+        <Card className="rounded-xl border-border/60 ">
           <CardHeader>
             <CardTitle className="text-base">{commonT("contact")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-border/60 px-4 py-3">
+            <div className="rounded-xl border border-border/60 px-4 py-3">
               <div className="flex items-center gap-2">
                 <Phone className="size-4 text-muted-foreground" />
                 <Typography.Text className="font-medium">
@@ -356,7 +356,7 @@ export default function PublicEstimatePage() {
                 {estimate.organization?.phone || "—"}
               </Typography.Muted>
             </div>
-            <div className="rounded-2xl border border-border/60 px-4 py-3">
+            <div className="rounded-xl border border-border/60 px-4 py-3">
               <div className="flex items-center gap-2">
                 <FileText className="size-4 text-muted-foreground" />
                 <Typography.Text className="font-medium">
@@ -367,7 +367,7 @@ export default function PublicEstimatePage() {
                 {estimate.organization?.email || "—"}
               </Typography.Muted>
             </div>
-            <div className="rounded-2xl border border-border/60 px-4 py-3">
+            <div className="rounded-xl border border-border/60 px-4 py-3">
               <div className="flex items-center gap-2">
                 <MapPin className="size-4 text-muted-foreground" />
                 <Typography.Text className="font-medium">

@@ -60,6 +60,8 @@ Load skills BEFORE coding. Earlier skills set context for later ones.
 
 Full skill matrix: `docs/agent/skill-routing.md`
 
+**Dev-loop tests:** `pnpm test:changed` (affected files only — never a full `vitest run` mid-implementation). `test` is lock-wrapped (`scripts/with-test-lock.sh`): one suite at a time.
+
 ---
 
 ## Data Flow & State

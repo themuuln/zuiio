@@ -94,7 +94,7 @@ function StatCard({
 }) {
   const inner = (
     <Card
-      className={`transition-shadow print:border-border print:shadow-none ${
+      className={`transition-shadow print:border-border print: ${
         href ? "hover:shadow-sm" : ""
       }`}
     >
@@ -449,7 +449,7 @@ export default function EodClosePage() {
         </div>
 
         {/* Cash Register Status */}
-        <Card className="print:border-border print:shadow-none">
+        <Card className="print:border-border print:">
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
               <div
@@ -491,7 +491,7 @@ export default function EodClosePage() {
         </Card>
 
         {eod ? (
-          <Card className="print:border-border print:shadow-none">
+          <Card className="print:border-border print:">
             <CardContent className="p-4">
               <div className="mb-3 flex items-center gap-2">
                 <Banknote className="size-4 text-muted-foreground" />
@@ -526,7 +526,7 @@ export default function EodClosePage() {
         ) : null}
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="print:border-border print:shadow-none">
+          <Card className="print:border-border print:">
             <CardContent className="p-4">
               <div className="mb-3 flex items-center gap-2">
                 <Crown className="size-4 text-amber-500" />
@@ -557,7 +557,7 @@ export default function EodClosePage() {
             </CardContent>
           </Card>
 
-          <Card className="print:border-border print:shadow-none">
+          <Card className="print:border-border print:">
             <CardContent className="p-4">
               <div className="mb-3 flex items-center gap-2">
                 <AlertTriangle className="size-4 text-amber-500" />
@@ -624,7 +624,7 @@ export default function EodClosePage() {
             onOpenChange={setIsPendingItemsOpen}
             className="print:hidden"
           >
-            <Card className="border-amber-200/50 bg-amber-50/30 print:border-border print:shadow-none dark:border-amber-800/30 dark:bg-amber-950/10">
+            <Card className="border-amber-200/50 bg-amber-50/30 print:border-border print: dark:border-amber-800/30 dark:bg-amber-950/10">
               <CardContent className="p-4">
                 <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between rounded-md text-left">
                   <div className="flex items-center gap-2">

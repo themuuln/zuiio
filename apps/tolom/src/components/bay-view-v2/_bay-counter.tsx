@@ -79,6 +79,7 @@ export function BayCounter({
             await handleCommit(next);
           }}
           disabled={bayCountPending || bayCount <= 1}
+          aria-label={t("decreaseBayCount")}
           className="size-5 cursor-pointer rounded hover:bg-background text-muted-foreground"
         >
           <Minus className="size-3" />
@@ -107,6 +108,7 @@ export function BayCounter({
             await handleCommit(next);
           }}
           disabled={bayCountPending || bayCount >= 50}
+          aria-label={t("increaseBayCount")}
           className="size-5 cursor-pointer rounded hover:bg-background text-muted-foreground"
         >
           <Plus className="size-3" />

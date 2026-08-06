@@ -143,7 +143,7 @@ function OrganizationIdentityPanel({
   | "pageT"
 >) {
   return (
-    <Card className="border-border/70 shadow-none">
+    <Card className="border-border/70 ">
       <CardHeader className="flex-row items-start gap-4 gap-y-0 border-b pb-4">
         {loading ? (
           <Skeleton className="size-14 shrink-0 rounded-md" />
@@ -282,7 +282,7 @@ function SubscriptionPanel({
     value ? new Date(value).toLocaleDateString() : "—";
 
   return (
-    <Card className="border-border/70 shadow-none">
+    <Card className="border-border/70 ">
       <CardHeader className="border-b pb-4">
         <CardTitle className="flex items-center gap-2 text-base">
           <CreditCard className="size-4 text-muted-foreground" />
@@ -378,7 +378,7 @@ function DestinationPanel({
   items: WorkspaceDestination[];
 }) {
   return (
-    <Card className="border-border/70 shadow-none">
+    <Card className="border-border/70 ">
       <CardHeader className="flex-row items-center gap-2 gap-y-0 border-b py-3">
         <Icon className="size-4 text-muted-foreground" />
         <CardTitle className="text-sm">{title}</CardTitle>

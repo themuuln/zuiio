@@ -159,6 +159,7 @@ export function MechanicAssignDrawer({
           setOpen(true);
         }}
         disabled={disabled}
+        aria-label={headerText}
         className={cn("inline-flex", disabled && "opacity-50")}
       >
         {trigger}

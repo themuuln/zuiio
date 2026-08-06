@@ -65,7 +65,7 @@ function KpiCard({
   } as const;
 
   return (
-    <Card className="border-border/70 shadow-xs">
+    <Card className="border-border/70 ">
       <CardHeader className="flex flex-row items-start justify-between pb-2">
         <Typography.Muted className="text-xs font-medium text-muted-foreground">
           {label}
@@ -269,7 +269,7 @@ export default function ExpensesPage() {
   // ── Badge bar ──
 
   const badgeBar = (
-    <Card className="border-border/70 bg-muted/20 shadow-xs">
+    <Card className="border-border/70 bg-muted/20 ">
       <CardContent className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="bg-background">

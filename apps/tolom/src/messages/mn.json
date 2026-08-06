@@ -383,7 +383,8 @@
     "chatTitle": "AI туслах",
     "chatPlaceholder": "Цехийн талаар асуултаа бичнэ үү...",
     "chatWelcome": "Би захиалга хайх, нөөц шалгах, харилцагч хайх зэргээр танд туслах боломжтой.",
-    "chatThinking": "Бодож байна..."
+    "chatThinking": "Бодож байна...",
+    "openChat": "AI туслах нээх"
   },
   "workshopDisplay": {
     "title": "Цехийн дэлгэц",
@@ -883,7 +884,9 @@
       "save": "Хадгалах",
       "cancel": "Цуцлах",
       "somethingWentWrong": "Ямар нэг алдаа гарлаа"
-    }
+    },
+    "confirmRemoveFromBay": "Булангаас гаргах уу?",
+    "confirmRemoveFromBayDesc": "Захиалга \"Шинэ\" төлөвт буцаж, булан, механикч, үйлчилгээ, сэлбэг, тайлбар бүгд устах болно. Энэ үйлдлийг буцаах боломжгүй."
   },
   "portal": {
     "dashboard": "Хяналтын самбар",
@@ -2338,6 +2341,18 @@
     "productPreviewWorkOrderDetail": "ЗЗ-1048 · Toyota Prius",
     "productPreviewCustomerDetail": "2 шинэ харилцан яриа",
     "productPreviewInventoryDetail": "Тормосны наклад · 8 ширхэг",
+    "productPreviewTablistLabel": "Бүтээгдэхүүний харагдац",
+    "productPreviewTabDashboard": "Хянах самбар",
+    "productPreviewTabWorkOrders": "Ажлын захиалга",
+    "productPreviewTabCustomers": "Харилцагчид",
+    "productPreviewTabInventory": "Бараа материал",
+    "productPreviewTabReports": "Тайлан",
+    "productPreviewWo2": "ЗЗ-1047 · Lexus RX 350",
+    "productPreviewWo3": "ЗЗ-1046 · Kia Sportage",
+    "productPreviewCustomer2": "С. Бат-Эрдэнэ · Honda CR-V",
+    "productPreviewCustomer3": "О. Ангирмаа · Toyota Camry",
+    "productPreviewInventory2": "Тосны шүүлтүүр · 14 ширхэг",
+    "productPreviewInventory3": "Хөдөлгүүрийн тос 5W-30 · 22 л",
     "heroStats1": "Боловсруулсан захиалга",
     "heroStats2": "Үйлчлүүлсэн харилцагч",
     "heroStats3": "Бүртгэлтэй тээврийн хэрэгсэл",
@@ -2431,6 +2446,7 @@
     "pricingFullLink": "Бүрэн үнийн санал харах",
     "pricingMostPopular": "Хамгийн их сонгодог",
     "pricingMonthly": "Сараар",
+    "pricingToggleLabel": "Сарын болон жилийн төлбөрийн хооронд шилжих",
     "pricingAnnual": "Жилээр",
     "pricingPerYear": "/жил",
     "pricingSavePercent": "20% хэмнэнэ",

@@ -319,7 +319,7 @@ export default function NewEstimatePage() {
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-3 xl:min-w-[420px]">
+          <div className="grid gap-3 rounded-xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-3 xl:min-w-[420px]">
             <div>
               <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
                 {t("subtotal")}
@@ -409,7 +409,7 @@ export default function NewEstimatePage() {
               </div>
 
               {lines.length === 0 ? (
-                <div className="mt-4 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed py-14 text-center">
+                <div className="mt-4 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed py-14 text-center">
                   <div className="rounded-full bg-muted p-3">
                     <Receipt className="size-6 text-muted-foreground" />
                   </div>
@@ -617,7 +617,7 @@ export default function NewEstimatePage() {
           </div>
 
           <div className="flex flex-col gap-6">
-            <div className="rounded-2xl border border-border/40 bg-muted/15 p-5 xl:sticky xl:top-6">
+            <div className="rounded-xl border border-border/40 bg-muted/15 p-5 xl:sticky xl:top-6">
               <Typography.H2 className="mb-4 text-base font-medium">
                 {t("summary")}
               </Typography.H2>
@@ -763,7 +763,7 @@ export default function NewEstimatePage() {
               <button
                 key={service.id}
                 type="button"
-                className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
+                className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
                 onClick={() => {
                   addServiceLine(service);
                   setServiceSearch("");
@@ -781,7 +781,7 @@ export default function NewEstimatePage() {
               </button>
             ))}
             {serviceSearch && services.length === 0 && !searchingServices ? (
-              <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+              <div className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
                 {commonT("noResults")}
               </div>
             ) : null}
@@ -814,7 +814,7 @@ export default function NewEstimatePage() {
               <button
                 key={part.id}
                 type="button"
-                className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
+                className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
                 onClick={() => {
                   addPartLine(part);
                   setPartSearch("");
@@ -832,7 +832,7 @@ export default function NewEstimatePage() {
               </button>
             ))}
             {partSearch && parts.length === 0 && !searchingParts ? (
-              <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+              <div className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
                 {commonT("noResults")}
               </div>
             ) : null}

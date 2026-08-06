@@ -263,8 +263,8 @@ function DrawerContent({
               ref={setContentContainer}
               className={cn(
                 direction === "bottom"
-                  ? "relative flex min-h-0 w-full flex-col gap-2 overflow-hidden border-t border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl group-data-nested-drawer-open/popup:border-y"
-                  : "relative flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden border-l border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl group-data-nested-drawer-open/popup:border-y",
+                  ? "relative flex min-h-0 w-full flex-col gap-2 overflow-hidden bg-popover text-sm text-popover-foreground shadow-2xl group-data-nested-drawer-open/popup:border-y"
+                  : "relative flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden bg-popover text-sm text-popover-foreground shadow-2xl group-data-nested-drawer-open/popup:border-y",
                 contentClassName,
               )}
             >

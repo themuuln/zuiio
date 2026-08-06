@@ -27,6 +27,7 @@ export function BranchPills({
       <button
         type="button"
         onClick={() => onBranchChange("all")}
+        aria-label={t("allBranches")}
         className={cn(
           "flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-[color,background-color,border-color] duration-200 cursor-pointer h-full",
           selectedBranchId === "all"
@@ -42,6 +43,7 @@ export function BranchPills({
           key={b.id}
           type="button"
           onClick={() => onBranchChange(b.id)}
+          aria-label={b.name}
           className={cn(
             "flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-[color,background-color,border-color] duration-200 cursor-pointer h-full",
             selectedBranchId === b.id

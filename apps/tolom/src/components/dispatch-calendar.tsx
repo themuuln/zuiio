@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Wrench } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -149,7 +149,7 @@ function AppointmentBlock({
       {/* Mechanic (only if enough space) */}
       {height > 72 && mechanicName && (
         <div className={cn("flex items-center gap-1 mt-1", styles.text)}>
-          <span className="text-xs">🔧</span>
+          <Wrench className="size-3 shrink-0" aria-hidden="true" />
           <span className="text-xs font-medium truncate">{mechanicName}</span>
         </div>
       )}

@@ -23,7 +23,7 @@ export function StatusStepper({ currentStatus }: { currentStatus: string }) {
       {/* Active Progress Line */}
       <div
         className={cn(
-          "absolute top-[10px] left-2.5 h-0.5 -z-10 transition-[width] duration-500 ease-in-out rounded-full",
+          "absolute top-[10px] left-2.5 h-0.5 -z-10 transition-transform duration-500 ease-out-quart rounded-full",
           lineColor,
         )}
         style={{ width: lineWidth }}
@@ -39,11 +39,9 @@ export function StatusStepper({ currentStatus }: { currentStatus: string }) {
               className={cn(
                 "size-5 rounded-full border flex items-center justify-center text-xs font-black transition-[color,background-color,border-color,box-shadow,transform] duration-300",
                 isPast &&
-                  STATUS_DOT[currentStatus] +
-                    " text-white border-transparent shadow-sm",
+                  `${STATUS_DOT[currentStatus]} text-white border-transparent`,
                 isCurrent &&
-                  STATUS_STEPPER[currentStatus] +
-                    " text-white border-transparent scale-110 shadow-sm font-bold",
+                  `${STATUS_STEPPER[currentStatus]} text-white border-transparent scale-110 font-bold`,
                 isFuture &&
                   "bg-background border-border text-muted-foreground/35",
               )}

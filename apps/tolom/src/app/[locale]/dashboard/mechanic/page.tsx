@@ -88,7 +88,7 @@ export default function MechanicPage() {
   if (!isMechanic && !isAdmin && !roleLoading) {
     return (
       <div className="px-4 pt-4 pb-6 md:px-6 tablet-touch flex flex-col items-center justify-center py-20 gap-4">
-        <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/50">
+        <div className="flex size-14 items-center justify-center rounded-xl bg-muted/50">
           <Wrench className="size-7 text-muted-foreground" />
         </div>
         <Typography.H2 className="text-lg font-semibold">

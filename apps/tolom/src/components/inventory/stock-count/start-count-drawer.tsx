@@ -215,7 +215,7 @@ export function StartCountDrawer({
                 className="h-11"
               />
               {partSearch && (
-                <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-md border bg-popover shadow-md">
+                <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-md bg-popover shadow-md">
                   {partsPending ? (
                     <div className="px-3 py-2 text-sm text-muted-foreground">
                       <Skeleton className="h-5 w-full" />

@@ -570,7 +570,7 @@ export default function WorkOrderDetailPage() {
                         className="h-11"
                       />
                       {newPart.part_name.trim() && (
-                        <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-lg bg-background shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute top-full left-0 right-0 z-10 mt-1 rounded-lg bg-background shadow-lg max-h-48 overflow-y-auto">
                           {partsCatalog
                             .filter(
                               (p) =>
@@ -1270,7 +1270,7 @@ export default function WorkOrderDetailPage() {
                   <FieldContent>
                     <select
                       aria-invalid={!!paymentForm.formState.errors.method}
-                      className="flex h-11 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-11 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
                       {...paymentForm.register("method")}
                     >
                       <option value="cash">{t("cash")}</option>

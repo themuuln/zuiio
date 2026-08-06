@@ -155,7 +155,7 @@ export function SubscriptionExpiredDialog({
   // ── Trial started success state ──
   if (startedTrial) {
     return dialogContent(
-      <Card className="w-full max-w-md border-0 shadow-none">
+      <Card className="w-full max-w-md border-0 ">
         <CardHeader className="items-center text-center">
           <CardTitle className="text-xl text-emerald-600">
             {t("trialStartedTitle")}
@@ -169,7 +169,7 @@ export function SubscriptionExpiredDialog({
   // ── Renewed (bank transfer claimed) success state ──
   if (renewed) {
     return dialogContent(
-      <Card className="w-full max-w-md border-0 shadow-none">
+      <Card className="w-full max-w-md border-0 ">
         <CardHeader className="items-center text-center">
           <CardTitle className="text-xl text-emerald-600">
             {t("renewedTitle")}
@@ -183,9 +183,9 @@ export function SubscriptionExpiredDialog({
   // ── NEW subscription: "Start 14-Day Free Trial" ──
   if (isNewSubscription) {
     return dialogContent(
-      <Card className="w-full max-w-md border-0 shadow-none">
+      <Card className="w-full max-w-md border-0 ">
         <CardHeader className="items-center text-center">
-          <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
+          <div className="mb-4 flex size-14 items-center justify-center rounded-xl bg-primary/10 shadow-sm">
             <Sparkles className="size-7 text-primary" />
           </div>
           <CardTitle className="text-xl">{t("welcomeTitle")}</CardTitle>
@@ -225,9 +225,9 @@ export function SubscriptionExpiredDialog({
 
   // ── EXPIRED (previously had trial/subscription) → Bank transfer CTA ──
   return dialogContent(
-    <Card className="w-full max-w-lg border-0 shadow-none border-destructive/20">
+    <Card className="w-full max-w-lg border-0  border-destructive/20">
       <CardHeader className="items-center text-center">
-        <div className="mb-4 flex size-14 items-center justify-center justify-self-center rounded-2xl bg-destructive/10 shadow-sm">
+        <div className="mb-4 flex size-14 items-center justify-center justify-self-center rounded-xl bg-destructive/10 shadow-sm">
           <AlertTriangle className="size-7 text-destructive" />
         </div>
 

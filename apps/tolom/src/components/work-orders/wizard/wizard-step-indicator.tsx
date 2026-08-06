@@ -63,7 +63,7 @@ export function WizardStepIndicator() {
   return (
     <nav
       aria-label="Work order creation progress"
-      className="sticky top-12 z-10 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+      className="sticky top-12 z-10 border-b border-border/40 bg-background "
     >
       <ol className="flex items-center justify-center gap-0 px-4 py-2.5 text-xs font-medium">
         {STEPS.map((step, i) => {

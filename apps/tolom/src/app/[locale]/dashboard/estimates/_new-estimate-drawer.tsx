@@ -650,7 +650,7 @@ export function NewEstimateDrawer({
               <button
                 key={service.id}
                 type="button"
-                className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
+                className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
                 onClick={() => {
                   addServiceLine(service);
                   setServiceSearch("");
@@ -670,7 +670,7 @@ export function NewEstimateDrawer({
             {serviceSearch &&
             (servicesData ?? []).length === 0 &&
             !searchingServices ? (
-              <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+              <div className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
                 {commonT("noResults")}
               </div>
             ) : null}
@@ -703,7 +703,7 @@ export function NewEstimateDrawer({
               <button
                 key={part.id}
                 type="button"
-                className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
+                className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
                 onClick={() => {
                   addPartLine(part);
                   setPartSearch("");
@@ -721,7 +721,7 @@ export function NewEstimateDrawer({
               </button>
             ))}
             {partSearch && (partsData ?? []).length === 0 && !searchingParts ? (
-              <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+              <div className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
                 {commonT("noResults")}
               </div>
             ) : null}

@@ -176,7 +176,7 @@ export default function InviteRedeemPage() {
     <div className="flex min-h-dvh items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary shadow-sm">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-xl bg-primary shadow-sm">
             <Wrench className="size-7 text-primary-foreground" />
           </div>
           <CardTitle className="text-xl">{t("title")}</CardTitle>

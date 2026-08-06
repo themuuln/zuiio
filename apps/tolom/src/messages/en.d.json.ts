@@ -386,7 +386,8 @@ declare const messages: {
     "chatTitle": "AI Assistant",
     "chatPlaceholder": "Ask me anything about your shop...",
     "chatWelcome": "I can help you find work orders, check inventory, look up customers, and more.",
-    "chatThinking": "Thinking..."
+    "chatThinking": "Thinking...",
+    "openChat": "Open AI assistant"
   },
   "workshopDisplay": {
     "title": "Workshop Display",
@@ -886,7 +887,9 @@ declare const messages: {
       "save": "Save",
       "cancel": "Cancel",
       "somethingWentWrong": "Something went wrong"
-    }
+    },
+    "confirmRemoveFromBay": "Remove from Bay?",
+    "confirmRemoveFromBayDesc": "The work order returns to \"New\" status and the bay, mechanic, services, parts, and notes are all removed. This action cannot be undone."
   },
   "portal": {
     "dashboard": "Dashboard",
@@ -2341,6 +2344,18 @@ declare const messages: {
     "productPreviewWorkOrderDetail": "WO-1048 · Toyota Prius",
     "productPreviewCustomerDetail": "2 new conversations",
     "productPreviewInventoryDetail": "Brake pads · 8 units",
+    "productPreviewTablistLabel": "Product preview",
+    "productPreviewTabDashboard": "Dashboard",
+    "productPreviewTabWorkOrders": "Work orders",
+    "productPreviewTabCustomers": "Customers",
+    "productPreviewTabInventory": "Inventory",
+    "productPreviewTabReports": "Reports",
+    "productPreviewWo2": "WO-1047 · Lexus RX 350",
+    "productPreviewWo3": "WO-1046 · Kia Sportage",
+    "productPreviewCustomer2": "S. Bat-Erdene · Honda CR-V",
+    "productPreviewCustomer3": "O. Angirmaa · Toyota Camry",
+    "productPreviewInventory2": "Oil filter · 14 units",
+    "productPreviewInventory3": "Engine oil 5W-30 · 22 L",
     "heroStats1": "Work Orders Processed",
     "heroStats2": "Customers Served",
     "heroStats3": "Vehicles Registered",
@@ -2434,6 +2449,7 @@ declare const messages: {
     "pricingFullLink": "View full pricing & comparison",
     "pricingMostPopular": "Most Popular",
     "pricingMonthly": "Monthly",
+    "pricingToggleLabel": "Toggle between monthly and annual billing",
     "pricingAnnual": "Annual",
     "pricingPerYear": "/year",
     "pricingSavePercent": "Save 20%",

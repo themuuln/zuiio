@@ -196,6 +196,7 @@ export const Toolbar = React.memo(function Toolbar({
             variant="outline"
             onClick={() => fetchData()}
             title={t("refresh")}
+            aria-label={t("refresh")}
             className="rounded-lg border-border/50 text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <RefreshCw className="size-4" />
@@ -249,6 +250,7 @@ export const Toolbar = React.memo(function Toolbar({
                     size="icon-sm"
                     variant="ghost"
                     onClick={() => setShowVehicleReg(true)}
+                    aria-label={t("registerVehicle")}
                     className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
                   />
                 }
@@ -268,6 +270,7 @@ export const Toolbar = React.memo(function Toolbar({
                     size="icon-sm"
                     variant="ghost"
                     onClick={() => setShowShiftReport(true)}
+                    aria-label={t("shiftReport")}
                     className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
                   />
                 }

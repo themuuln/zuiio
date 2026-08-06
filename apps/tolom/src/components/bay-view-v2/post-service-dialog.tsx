@@ -249,75 +249,92 @@ export function PostServiceDialog({
         </div>
 
         {/* Services */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
+        {servicesLoading ? (
+          <div className="flex flex-col gap-2">
             <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <MessageSquare className="size-4" />
               {t("postServiceServicesTitle")}
-              <Badge variant="secondary">{entries.length}</Badge>
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setAllExpanded(!allExpanded)}
-              className="gap-1 text-xs h-auto"
-            >
-              {allExpanded ? (
-                <ChevronUp className="size-3" />
-              ) : (
-                <ChevronDown className="size-3" />
-              )}
-              {allExpanded ? t("collapseToggle") : t("expandToggle")}
-            </Button>
-          </div>
-
-          {servicesLoading && (
             <div className="flex items-center justify-center py-4">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
-          )}
+          </div>
+        ) : hasEntries ? (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                <MessageSquare className="size-4" />
+                {t("postServiceServicesTitle")}
+                <Badge variant="secondary">{entries.length}</Badge>
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAllExpanded(!allExpanded)}
+                className="gap-1 text-xs h-auto"
+              >
+                {allExpanded ? (
+                  <ChevronUp className="size-3" />
+                ) : (
+                  <ChevronDown className="size-3" />
+                )}
+                {allExpanded ? t("collapseToggle") : t("expandToggle")}
+              </Button>
+            </div>
 
-          {!servicesLoading && !hasEntries && (
+            <div className="flex flex-col gap-2">
+              {entries.map((entry, idx) => (
+                <ServiceCard
+                  key={entry.workOrderServiceId}
+                  entry={entry}
+                  odometer={odometerNum}
+                  onChange={(updates) => updateEntry(idx, updates)}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <MessageSquare className="size-4" />
+              {t("postServiceServicesTitle")}
+            </span>
             <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
               {t("noServicesRecorded")}
             </Typography.Muted>
-          )}
-
-          <div className="flex flex-col gap-2">
-            {entries.map((entry, idx) => (
-              <ServiceCard
-                key={entry.workOrderServiceId}
-                entry={entry}
-                odometer={odometerNum}
-                onChange={(updates) => updateEntry(idx, updates)}
-              />
-            ))}
           </div>
-        </div>
+        )}
 
         {/* Parts */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
+        {partsLoading ? (
+          <div className="flex flex-col gap-2">
             <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <Package className="size-4" />
               {t("parts")}
-              <Badge variant="secondary">{parts.length}</Badge>
             </span>
-          </div>
-
-          {partsLoading && (
             <div className="flex items-center justify-center py-4">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
-          )}
-
-          {!partsLoading && parts.length === 0 && (
+          </div>
+        ) : parts.length === 0 ? (
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <Package className="size-4" />
+              {t("parts")}
+            </span>
             <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
               {t("noPartsRecorded")}
             </Typography.Muted>
-          )}
-
-          {!partsLoading && parts.length > 0 && (
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                <Package className="size-4" />
+                {t("parts")}
+                <Badge variant="secondary">{parts.length}</Badge>
+              </span>
+            </div>
             <div className="flex flex-col gap-1.5">
               {parts.map((part) => (
                 <div
@@ -345,8 +362,8 @@ export function PostServiceDialog({
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Mechanic notes */}
         <div className="flex flex-col gap-2">

@@ -70,7 +70,7 @@ function KpiCardSkeleton({
   subtitle?: string;
 }) {
   return (
-    <Card className="bg-transparent border-none ring-0 shadow-none px-5 py-4 gap-0 flex flex-col rounded-none flex-1 min-w-0 min-h-[88px]">
+    <Card className="bg-transparent border-none ring-0  px-5 py-4 gap-0 flex flex-col rounded-none flex-1 min-w-0 min-h-[88px]">
       <div className="flex items-center justify-between">
         <Skeleton className="h-2.5 w-20 rounded" />
         <Skeleton className="size-8 rounded-lg" />

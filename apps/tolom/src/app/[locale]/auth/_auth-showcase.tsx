@@ -50,7 +50,7 @@ export function AuthShowcaseMock({ appName }: { appName: string }) {
       <div className="absolute -inset-6 rounded-[2rem] bg-primary/10 blur-3xl" />
 
       {/* App frame */}
-      <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] shadow-2xl shadow-black/40 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-xl bg-white/[0.03] shadow-2xl shadow-black/40 backdrop-blur-sm">
         {/* Window header */}
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
           <div className="flex items-center gap-2.5">

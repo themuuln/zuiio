@@ -12,7 +12,7 @@ export function TextPlate({ plate }: { plate: string | null | undefined }) {
   if (!plate) return null;
   const formatted = formatPlateNumber(plate);
   return (
-    <div className="inline-flex items-center select-none rounded border border-border bg-background px-2 py-0.5 font-mono text-xs font-bold h-6 justify-center shadow-sm">
+    <div className="inline-flex items-center select-none rounded border border-border bg-background px-2 py-0.5 font-mono text-xs font-bold h-6 justify-center">
       {formatted}
     </div>
   );
@@ -56,7 +56,7 @@ export function MongolianLicensePlate({
   }
 
   return (
-    <div className="inline-flex items-center select-none shadow-sm rounded border border-slate-900 bg-white text-slate-900 px-2 py-0.5 font-mono text-[13px] font-bold h-7 min-w-[95px] justify-center gap-1.5 dark:border-slate-800 dark:shadow-md dark:shadow-black/25">
+    <div className="inline-flex items-center select-none rounded border border-slate-900 bg-white text-slate-900 px-2 py-0.5 font-mono text-[13px] font-bold h-7 min-w-[95px] justify-center gap-1.5 dark:border-slate-800">
       {/* Soyombo Symbol Red Strip */}
       <div className="flex flex-col items-center justify-center border-r border-slate-200 pr-1.5 h-full select-none">
         <svg

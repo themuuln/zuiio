@@ -1060,7 +1060,7 @@ function VehicleEditForm({
               value={form.notes}
               onChange={(e) => setField("notes", e.target.value)}
               rows={2}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
           </Field>
         </div>

@@ -282,7 +282,7 @@ export function BrandSettings({ orgId }: { orgId: string }) {
           Live Preview
         </Typography.Text>
 
-        <div className="rounded-lg border bg-background p-6 shadow-sm">
+        <div className="rounded-lg border bg-background p-6 ">
           <div className="flex flex-col gap-y-4">
             {/* Buttons */}
             <div className="flex gap-2">

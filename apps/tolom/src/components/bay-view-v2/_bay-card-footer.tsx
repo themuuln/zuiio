@@ -11,6 +11,17 @@ import {
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useBayCardContext } from "./_bay-card-context";
 import type { BayCardWorkOrder } from "./_bay-card-types";
@@ -24,7 +35,10 @@ export function BayCardFooter({
   workOrder,
   isPending = false,
 }: BayCardFooterProps) {
-  const t = useTranslations("bayView");
+  const t = useTranslations("bayView") as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const { onStatusChange, onRemoveFromBay, onOpenDetail } = useBayCardContext();
   // Status transition buttons — config driven
   const statusActions: {
@@ -62,7 +76,7 @@ export function BayCardFooter({
   return (
     <div
       data-slot="bay-view-footer-buttons"
-      className="flex items-center gap-1.5"
+      className="flex flex-wrap items-center gap-1.5"
     >
       {statusActions.map((action) =>
         workOrder.status === action.status ? (
@@ -144,21 +158,45 @@ export function BayCardFooter({
         {workOrder.status !== "Completed" &&
           workOrder.status !== "Cancelled" &&
           onRemoveFromBay && (
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemoveFromBay(workOrder.id);
-              }}
-              title={t("removeFromBay")}
-              aria-label={t("removeFromBay")}
-              disabled={isPending}
-              className="rounded-md text-destructive/70 bg-destructive/5 hover:bg-destructive/15 hover:text-destructive dark:bg-red-950/10 dark:hover:bg-red-950/25"
-            >
-              <Trash2 className="size-3.5" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    disabled={isPending}
+                    title={t("removeFromBay")}
+                    aria-label={t("removeFromBay")}
+                    className="rounded-md text-destructive/70 bg-destructive/5 hover:bg-destructive/15 hover:text-destructive dark:bg-red-950/10 dark:hover:bg-red-950/25"
+                  />
+                }
+              >
+                <Trash2 className="size-3.5" />
+              </AlertDialogTrigger>
+              <AlertDialogContent size="sm">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {t("confirmRemoveFromBay")}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t("confirmRemoveFromBayDesc")}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                  <AlertDialogAction
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveFromBay(workOrder.id);
+                    }}
+                  >
+                    {t("removeFromBay")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
       </div>
     </div>

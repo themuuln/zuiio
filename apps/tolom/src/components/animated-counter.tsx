@@ -21,18 +21,41 @@ export function AnimatedCounter({
   className,
   duration = 1500,
 }: AnimatedCounterProps) {
-  const [count, setCount] = useState<number | null>(null);
+  // Start at the final value so SSR, the first client paint, and the
+  // initial HTML all agree (hydration-safe) and the stat is visible even
+  // before JS runs. The count-up rewinds to 0 only once the element is
+  // scrolled into view.
+  const [count, setCount] = useState<number>(end);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  const prefersReducedMotion = useRef(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    prefersReducedMotion.current = media.matches;
+    const onChange = (e: MediaQueryListEvent) => {
+      prefersReducedMotion.current = e.matches;
+    };
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
+    // Reduced motion: never rewind — the stat stays at its final value.
+    if (prefersReducedMotion.current) {
+      setHasAnimated(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated) {
           setHasAnimated(true);
+          setCount(0);
         }
       },
       { threshold: 0.3 },
@@ -43,13 +66,9 @@ export function AnimatedCounter({
   }, [hasAnimated]);
 
   useEffect(() => {
-    if (!hasAnimated || end === 0) {
-      setCount(0);
-      return;
-    }
+    if (!hasAnimated || end === 0) return;
 
     let startTime: number | null = null;
-    const startValue = 0;
 
     function animate(timestamp: number) {
       if (!startTime) startTime = timestamp;
@@ -58,9 +77,7 @@ export function AnimatedCounter({
 
       // Ease-out cubic for smooth finish
       const eased = 1 - (1 - progress) ** 3;
-      const current = Math.round(startValue + (end - startValue) * eased);
-
-      setCount(current);
+      setCount(Math.round(end * eased));
 
       if (progress < 1) {
         requestAnimationFrame(animate);
@@ -70,23 +87,16 @@ export function AnimatedCounter({
     requestAnimationFrame(animate);
   }, [hasAnimated, end, duration]);
 
-  const formatted =
-    count !== null
-      ? count.toLocaleString("en-US", {
-          minimumFractionDigits: decimals,
-          maximumFractionDigits: decimals,
-        })
-      : "";
+  const formatted = count.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
 
   return (
     <div ref={ref} className={cn("", className)}>
-      {count !== null && (
-        <>
-          {prefix}
-          {formatted}
-          {suffix}
-        </>
-      )}
+      {prefix}
+      {formatted}
+      {suffix}
     </div>
   );
 }

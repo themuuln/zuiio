@@ -18,7 +18,7 @@ export function PartnersSlider() {
 
         {/* Founding org feature */}
         <div className="mx-auto max-w-md">
-          <div className="flex flex-col items-center gap-4 rounded-xl border bg-background p-6 shadow-xs">
+          <div className="flex flex-col items-center gap-4 rounded-xl border bg-background p-6 ">
             {/* Logo */}
             <div className="relative size-20 overflow-hidden rounded-full border">
               <Image

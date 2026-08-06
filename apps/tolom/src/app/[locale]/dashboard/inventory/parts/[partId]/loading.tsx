@@ -12,11 +12,11 @@ export default function PartDetailLoading() {
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Skeleton className="h-72 rounded-2xl" />
+          <Skeleton className="h-72 rounded-xl" />
         </div>
         <div className="flex flex-col gap-6">
-          <Skeleton className="h-40 rounded-2xl" />
-          <Skeleton className="h-80 rounded-2xl" />
+          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-80 rounded-xl" />
         </div>
       </div>
     </div>

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 export const instant = false;
 
 const inter = Inter({
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
   variable: "--font-sans",
   display: "swap",
   weight: ["400", "500", "600", "700"],

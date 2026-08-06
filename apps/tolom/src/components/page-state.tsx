@@ -42,7 +42,7 @@ function BasePageState({
   return (
     <Empty
       className={cn(
-        "min-h-[320px] rounded-2xl border border-border/70 bg-card px-6 py-10",
+        "min-h-[320px] rounded-xl border border-border/70 bg-card px-6 py-10",
         className,
       )}
     >
@@ -189,7 +189,7 @@ export function PageShellSkeleton({
           />
         ))}
       </div>
-      <Skeleton className="h-72 rounded-2xl" />
+      <Skeleton className="h-72 rounded-xl" />
     </div>
   );
 }

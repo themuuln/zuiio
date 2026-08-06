@@ -130,7 +130,7 @@ const PlateInput = forwardRef<HTMLInputElement, PlateInputProps>(
           {...props}
         />
         {focused && (
-          <div className="absolute left-0 top-full z-50 mt-1.5 rounded-lg border border-border bg-popover p-2.5 shadow-md transition-opacity duration-150">
+          <div className="absolute left-0 top-full z-50 mt-1.5 rounded-lg bg-popover p-2.5 shadow-md transition-opacity duration-150">
             <BuuzHint />
           </div>
         )}

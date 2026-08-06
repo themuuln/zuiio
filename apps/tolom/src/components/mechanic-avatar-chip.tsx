@@ -59,7 +59,7 @@ export function MechanicAvatarChip({
     <div
       {...props}
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center rounded-lg border shadow-sm transition-colors",
+        "relative inline-flex shrink-0 items-center justify-center rounded-lg border  transition-colors",
         sz.container,
         showLeadCrown
           ? "border-amber-500/35 bg-amber-500/12"

@@ -43,7 +43,7 @@ export function PendingInvites({
   t,
 }: PendingInvitesProps) {
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="border-border/60 ">
       <CardHeader className="gap-3 pb-4">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-base">

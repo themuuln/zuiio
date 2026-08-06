@@ -37,7 +37,7 @@ export default function CustomerLoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center pb-4">
           <div className="flex justify-center mb-3">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10">
+            <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10">
               <Car className="size-6 text-primary" />
             </div>
           </div>

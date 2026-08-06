@@ -41,7 +41,7 @@ export function ListToolbar({
   return (
     <div
       className={cn(
-        "sticky top-0 z-30 flex flex-col gap-3 bg-background/95 px-1 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+        "sticky top-0 z-30 flex flex-col gap-3 bg-background px-1 py-3 ",
         className,
       )}
     >

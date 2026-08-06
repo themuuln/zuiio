@@ -143,7 +143,7 @@ export default function MembersPage() {
 
   return (
     <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6 pb-8">
-      <div className="rounded-3xl border border-border/60 bg-card p-5">
+      <div className="rounded-xl border border-border/60 bg-card p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex flex-col gap-y-2">
             <div className="flex items-center gap-2">
@@ -194,7 +194,7 @@ export default function MembersPage() {
       )}
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border/60 bg-muted/15 shadow-sm">
+        <Card className="border-border/60 bg-muted/15 ">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">{t("members")}</CardTitle>
             <CardDescription>{t("membersDescription")}</CardDescription>
@@ -205,7 +205,7 @@ export default function MembersPage() {
             </Typography.Text>
           </CardContent>
         </Card>
-        <Card className="border-border/60 bg-muted/15 shadow-sm">
+        <Card className="border-border/60 bg-muted/15 ">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">{t("pendingInvites")}</CardTitle>
             <CardDescription>{t("pendingDescription")}</CardDescription>
@@ -216,7 +216,7 @@ export default function MembersPage() {
             </Typography.Text>
           </CardContent>
         </Card>
-        <Card className="border-border/60 bg-muted/15 shadow-sm">
+        <Card className="border-border/60 bg-muted/15 ">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">{t("branchLabel")}</CardTitle>
             <CardDescription>{commonT("stats")}</CardDescription>

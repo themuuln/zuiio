@@ -109,7 +109,7 @@ export default function OrganizationPage() {
             {pageT("manageYourOrg")}
           </Typography.Muted>
         </div>
-        <Card className="border-destructive/50 bg-destructive/5 shadow-none">
+        <Card className="border-destructive/50 bg-destructive/5 ">
           <CardContent className="flex flex-col items-start gap-4 py-6">
             <Typography.Text className="text-destructive">
               {error}

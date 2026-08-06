@@ -595,7 +595,7 @@ export function CatalogCombobox<T extends CatalogItem>({
       />
 
       {showDropdown && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-40 overflow-y-auto rounded-lg border bg-background shadow-lg">
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-40 overflow-y-auto rounded-lg bg-background shadow-lg">
           <PopoverCatalogResults
             items={results}
             search={search}

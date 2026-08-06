@@ -232,7 +232,7 @@ export default function PayrollPage() {
 
   return (
     <div className="flex flex-col gap-6 pb-8 px-4 pt-4 pb-6 md:px-6">
-      <div className="rounded-3xl border border-border/60 bg-card p-5">
+      <div className="rounded-xl border border-border/60 bg-card p-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex flex-col gap-y-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -310,7 +310,7 @@ export default function PayrollPage() {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-border/60 bg-muted/15 shadow-sm">
+        <Card className="border-border/60 bg-muted/15 ">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">
               {t("payroll.activeMechanics")}
@@ -325,7 +325,7 @@ export default function PayrollPage() {
             </Typography.Text>
           </CardContent>
         </Card>
-        <Card className="border-border/60 bg-muted/15 shadow-sm">
+        <Card className="border-border/60 bg-muted/15 ">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">
               {t("payroll.ratesConfigured")}
@@ -340,7 +340,7 @@ export default function PayrollPage() {
             </Typography.Text>
           </CardContent>
         </Card>
-        <Card className="border-border/60 bg-muted/15 shadow-sm">
+        <Card className="border-border/60 bg-muted/15 ">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">
               {t("payroll.payrollRecords")}
@@ -353,7 +353,7 @@ export default function PayrollPage() {
             </Typography.Text>
           </CardContent>
         </Card>
-        <Card className="border-border/60 bg-muted/15 shadow-sm">
+        <Card className="border-border/60 bg-muted/15 ">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">
               {t("payroll.grossPayroll")}
@@ -368,7 +368,7 @@ export default function PayrollPage() {
         </Card>
       </div>
 
-      <Card className="border-border/60 shadow-sm">
+      <Card className="border-border/60 ">
         <CardHeader className="gap-2 pb-4">
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="size-4" />
@@ -464,7 +464,7 @@ export default function PayrollPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/60 shadow-sm">
+      <Card className="border-border/60 ">
         <CardHeader className="gap-2 pb-4">
           <CardTitle className="flex items-center gap-2 text-base">
             <ClipboardList className="size-4" />
