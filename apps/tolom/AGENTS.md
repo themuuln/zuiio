@@ -12,6 +12,21 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Load shared context per root `../../AGENTS.md`. Always read `../../docs/vision.md` first — it is the single source of truth for direction and principles. Read the nearest dashboard module `AGENTS.md` before coding in that module.
 
+## Communication & Domain Language
+
+Always speak in ASD-STE100 Simplified Technical English.
+
+- Use short, clear sentences.
+- Prefer active voice and simple verb forms.
+- Avoid ambiguity, hedging words, and complex noun clusters.
+- One meaning per word; keep terminology consistent.
+
+Always read any `CONTEXT.md` files that exist in the project (or relevant subdirectories).
+Use the ubiquitous language defined in those files for all domain terms, concepts, names, and descriptions.
+Treat CONTEXT.md definitions as the source of truth for terminology.
+When several CONTEXT.md files apply, the nearest one wins for its own scope.
+When you introduce a new domain term or name, propose adding it to the relevant CONTEXT.md.
+
 ---
 
 ## Core Rules
