@@ -18,6 +18,16 @@ export async function generateMetadata({ params }: Props) {
   return { title: t("title"), description: t("subtitle") };
 }
 
+function formatDate(date: string, locale: string) {
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return new Intl.DateTimeFormat(locale === "mn" ? "mn-MN" : "en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(parsed);
+}
+
 export default async function BlogPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -43,7 +53,9 @@ export default async function BlogPage({ params }: Props) {
               className="group relative block rounded-2xl border border-border bg-card p-6 transition-all duration-250 ease-out hover:shadow-card-hover hover:-translate-y-0.5"
             >
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <time dateTime={post.date}>{post.date}</time>
+                <time dateTime={post.date}>
+                  {formatDate(post.date, locale)}
+                </time>
                 <span aria-hidden="true">&middot;</span>
                 <span>{post.author}</span>
               </div>

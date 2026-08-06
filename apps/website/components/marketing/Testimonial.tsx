@@ -72,15 +72,6 @@ export function Testimonial({
           <div className="text-sm font-semibold">{author}</div>
           <div className="text-xs text-muted-foreground">{role}</div>
         </div>
-        <div
-          className="flex h-8 items-center rounded-md px-2 text-[10px] font-semibold uppercase tracking-wider"
-          style={{
-            backgroundColor: "var(--brand-violet-glow)",
-            color: "var(--color-primary)",
-          }}
-        >
-          {role.split(",")[0]}
-        </div>
       </div>
     </div>
   );

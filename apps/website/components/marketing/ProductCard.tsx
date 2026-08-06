@@ -225,23 +225,23 @@ const variantConfig = {
   },
   tolom: {
     icon: TolomIcon,
-    color: "var(--brand-teal)",
-    bg: "var(--brand-teal-glow)",
+    color: "var(--product-tolom)",
+    bg: "var(--product-tolom-glow)",
   },
   tumurch: {
     icon: TumurchIcon,
-    color: "oklch(0.7 0.16 75)",
-    bg: "oklch(0.7 0.16 75 / 0.12)",
+    color: "var(--product-tumurch)",
+    bg: "var(--product-tumurch-glow)",
   },
   tamga: {
     icon: TamgaIcon,
-    color: "oklch(0.6 0.18 15)",
-    bg: "oklch(0.6 0.18 15 / 0.12)",
+    color: "var(--product-tamga)",
+    bg: "var(--product-tamga-glow)",
   },
   "zuiio-id": {
     icon: ZuiioIdIcon,
-    color: "oklch(0.55 0.02 260)",
-    bg: "oklch(0.55 0.02 260 / 0.1)",
+    color: "var(--product-zuiio)",
+    bg: "var(--product-zuiio-glow)",
   },
 } as const;
 

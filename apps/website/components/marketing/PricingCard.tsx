@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SIGNUP_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 function CheckIcon({ className }: { className?: string }) {
@@ -43,6 +44,7 @@ interface PricingCardProps {
   features: string[];
   highlighted?: boolean;
   ctaLabel: string;
+  ctaHref?: string;
   className?: string;
   badge?: string;
 }
@@ -54,6 +56,7 @@ export function PricingCard({
   features,
   highlighted,
   ctaLabel,
+  ctaHref = SIGNUP_URL,
   className,
   badge,
 }: PricingCardProps) {
@@ -101,7 +104,7 @@ export function PricingCard({
         </ul>
       )}
       <Link
-        href="/pricing"
+        href={ctaHref}
         className={cn(
           "mt-8 block rounded-xl px-4 py-3 text-center text-sm font-semibold transition-colors duration-150 ease-out",
           highlighted

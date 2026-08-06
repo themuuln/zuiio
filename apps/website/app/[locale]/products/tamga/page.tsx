@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Hero } from "@/components/marketing/Hero";
 import { ProductJsonLd } from "@/components/marketing/ProductJsonLd";
-import { Link } from "@/lib/i18n/navigation";
+import { SIGNUP_URL } from "@/lib/site";
 
 const features = [
   { key: "1" },
@@ -130,7 +130,7 @@ export default async function TamgaProductPage({ params }: Props) {
       <Hero
         title={t("title")}
         subtitle={t("subtitle")}
-        cta={{ label: t("cta"), href: "/pricing" }}
+        cta={{ label: t("cta"), href: SIGNUP_URL }}
         secondaryCta={{ label: t("learn-more"), href: "#features" }}
       />
       <section id="features" className="reveal mx-auto max-w-6xl px-6 pb-24">
@@ -210,9 +210,9 @@ export default async function TamgaProductPage({ params }: Props) {
           <p className="mx-auto mt-4 max-w-md text-muted-foreground">
             {t("cta-subtitle")}
           </p>
-          <Link href="/pricing" className="btn-primary mt-8">
+          <a href={SIGNUP_URL} className="btn-primary mt-8">
             {t("cta-button")}
-          </Link>
+          </a>
         </div>
       </section>
     </>

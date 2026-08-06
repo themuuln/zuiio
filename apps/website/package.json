@@ -11,6 +11,7 @@
     "next": "catalog:",
     "next-intl": "^4.0.0",
     "react": "catalog:",
+    "react-markdown": "catalog:",
     "react-dom": "^19.2.7",
     "tailwind-merge": "^3.2.0",
     "tw-animate-css": "^1.2.7"

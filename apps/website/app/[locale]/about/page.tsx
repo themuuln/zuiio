@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Hero } from "@/components/marketing/Hero";
+import { Link } from "@/lib/i18n/navigation";
 
 const values = [{ key: "1" }, { key: "2" }, { key: "3" }, { key: "4" }];
 
@@ -84,6 +85,27 @@ export default async function AboutPage({ params }: Props) {
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground">
             {t("team-desc")}
           </p>
+        </div>
+      </section>
+      <section className="mx-auto max-w-6xl px-6 pb-24">
+        <div className="rounded-2xl border border-border bg-card px-6 py-16 text-center">
+          <h2
+            className="text-3xl font-semibold tracking-tight"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {t("cta-title")}
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-muted-foreground">
+            {t("cta-subtitle")}
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link href="/products" className="btn-primary">
+              {t("cta-button")}
+            </Link>
+            <Link href="/pricing" className="btn-secondary">
+              {t("cta-secondary")}
+            </Link>
+          </div>
         </div>
       </section>
     </>

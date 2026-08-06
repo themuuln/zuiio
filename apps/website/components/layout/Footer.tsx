@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/navigation";
+import { SIGNUP_URL } from "@/lib/site";
 
 export async function Footer() {
   const t = await getTranslations("Footer");
@@ -22,7 +23,7 @@ export async function Footer() {
               {t("cta-subtitle")}
             </p>
           </div>
-          <Link href="/pricing" className="btn-primary shrink-0">
+          <a href={SIGNUP_URL} className="btn-primary shrink-0">
             {t("cta-button")}
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -39,7 +40,7 @@ export async function Footer() {
               <path d="M5 12h14" />
               <path d="m12 5 7 7-7 7" />
             </svg>
-          </Link>
+          </a>
         </div>
       </div>
 
@@ -87,7 +88,7 @@ export async function Footer() {
               </li>
               <li>
                 <Link
-                  href="/pricing"
+                  href="/products"
                   className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {t("products")}

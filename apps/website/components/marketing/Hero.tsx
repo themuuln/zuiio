@@ -48,7 +48,7 @@ export async function Hero({
           />
           {eyebrow}
         </div>
-        <div className="animate-fade-in mt-3 text-xs font-medium tracking-wide text-muted-foreground/70">
+        <div className="animate-fade-in mt-3 text-xs font-medium tracking-wide text-muted-foreground">
           {t("built-in-mongolia")}
         </div>
         <h1

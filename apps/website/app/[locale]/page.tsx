@@ -5,6 +5,7 @@ import { PricingCard } from "@/components/marketing/PricingCard";
 import { ProductCard } from "@/components/marketing/ProductCard";
 import { Testimonial } from "@/components/marketing/Testimonial";
 import { Link } from "@/lib/i18n/navigation";
+import { CONTACT_EMAIL, SIGNUP_URL } from "@/lib/site";
 
 const features = [
   { key: "1" },
@@ -22,9 +23,14 @@ const testimonials = [
 ];
 
 const plans = [
-  { key: "starter", max: 4 },
-  { key: "pro", max: 6, highlighted: true },
-  { key: "enterprise", max: 5 },
+  { key: "starter", max: 4, ctaHref: SIGNUP_URL },
+  { key: "pro", max: 6, highlighted: true, ctaHref: SIGNUP_URL },
+  {
+    key: "enterprise",
+    max: 5,
+    ctaHref: `mailto:${CONTACT_EMAIL}`,
+    ctaKey: "enterprise-cta",
+  },
 ];
 
 type Props = {
@@ -113,6 +119,26 @@ export default async function HomePage({ params }: Props) {
             href="/products/zuiio-id"
             variant="zuiio-id"
           />
+          <Link
+            href="/products"
+            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center transition-colors duration-250 ease-out hover:border-primary/50 hover:bg-card"
+          >
+            <span
+              className="text-lg font-semibold tracking-tight"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {t("all-products")}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              {t("all-products-sub")}
+            </span>
+            <span
+              className="mt-2 text-sm font-medium text-primary transition-transform duration-250 ease-out group-hover:translate-x-1"
+              aria-hidden="true"
+            >
+              &rarr;
+            </span>
+          </Link>
         </div>
         <div className="mt-8 text-center">
           <Link
@@ -178,7 +204,8 @@ export default async function HomePage({ params }: Props) {
                   .map((_, i) => t(`${plan.key}-feature-${i + 1}`))
                   .filter(Boolean)}
                 highlighted={plan.highlighted}
-                ctaLabel={t("cta-button")}
+                ctaLabel={plan.ctaKey ? t(plan.ctaKey) : t("cta-button")}
+                ctaHref={plan.ctaHref}
               />
             ))}
           </div>
@@ -211,7 +238,7 @@ export default async function HomePage({ params }: Props) {
             {t("cta-subtitle")}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/pricing" className="btn-primary">
+            <a href={SIGNUP_URL} className="btn-primary">
               {t("cta-button")}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -228,7 +255,7 @@ export default async function HomePage({ params }: Props) {
                 <path d="M5 12h14" />
                 <path d="m12 5 7 7-7 7" />
               </svg>
-            </Link>
+            </a>
             <Link href="/about" className="btn-secondary">
               {t("cta-secondary")}
             </Link>
@@ -251,7 +278,7 @@ export default async function HomePage({ params }: Props) {
             &ldquo;Бид Монгол бизнесүүдийн төлөө программ хангамж бүтээхээр
             зорьж байна.&rdquo;
           </blockquote>
-          <p className="mt-2 text-xs font-medium text-muted-foreground/70">
+          <p className="mt-2 text-xs font-medium text-muted-foreground">
             — Zuiio баг, Улаанбаатар
           </p>
         </div>

@@ -77,7 +77,7 @@ export default function RootLayout({
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.documentElement.classList.add('js');document.addEventListener('DOMContentLoaded',function(){var o=new IntersectionObserver(function(e){e.forEach(function(n){if(n.isIntersecting){n.target.classList.add('visible');o.unobserve(n.target)}})},{threshold:0.1});document.querySelectorAll('.reveal').forEach(function(n){o.observe(n)});setTimeout(function(){document.querySelectorAll('.reveal:not(.visible)').forEach(function(n){n.classList.add('visible')})},2000)})`,
+            __html: `document.documentElement.classList.add('js');function __initReveal(){var o=new IntersectionObserver(function(e){e.forEach(function(n){if(n.isIntersecting){n.target.classList.add('visible');o.unobserve(n.target)}})},{threshold:0.1});document.querySelectorAll('.reveal').forEach(function(n){o.observe(n)});setTimeout(function(){document.querySelectorAll('.reveal:not(.visible)').forEach(function(n){n.classList.add('visible')})},2000)}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',__initReveal)}else{__initReveal()}`,
           }}
         />
         {children}
