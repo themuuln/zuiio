@@ -38,6 +38,7 @@ import { CommissionRulesSection } from "./_commission-rules-section";
 import { DataExportSection } from "./_data-export-section";
 import { DataSharingForm } from "./_data-sharing-form";
 import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
+import { FacebookSection } from "./_facebook-section";
 import { OrganizationCard } from "./_organization-card";
 import { PaymentSettingsSection } from "./_payment-settings-section";
 import { PricingRulesSection } from "./_pricing-rules-section";
@@ -184,6 +185,10 @@ function renderSectionContent(
 
   if (section.value === "telegram") {
     return <TelegramSection />;
+  }
+
+  if (section.value === "facebook") {
+    return <FacebookSection />;
   }
 
   if (section.value === "niche") {

@@ -1,4 +1,5 @@
 import {
+  AtSign,
   Building2,
   Car,
   Database,
@@ -62,6 +63,12 @@ export function getSettingsSections(t: (key: string) => string) {
       title: t("sectionTelegram"),
       description: t("sectionTelegramDesc"),
       icon: MessageCircle,
+    },
+    {
+      value: "facebook",
+      title: t("sectionFacebook"),
+      description: t("sectionFacebookDesc"),
+      icon: AtSign,
     },
     {
       value: "niche",
