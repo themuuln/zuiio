@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 type FeatureStatus = boolean | "addon";
 
 interface PlanFeature {
-  text: string;
+  key: string;
   included: FeatureStatus;
 }
 
@@ -39,9 +39,17 @@ interface PricingCardsProps {
   translations: Record<string, string>;
 }
 
-function FeatureIcon({ status }: { status: FeatureStatus }) {
+function FeatureIcon({
+  status,
+  addonLabel,
+}: {
+  status: FeatureStatus;
+  addonLabel: string;
+}) {
   if (status === "addon") {
-    return <span className="mt-0.5 text-xs text-muted-foreground">Add-on</span>;
+    return (
+      <span className="mt-0.5 text-xs text-muted-foreground">{addonLabel}</span>
+    );
   }
   return status ? (
     <Check className="mt-0.5 size-4 shrink-0 text-emerald-500" />
@@ -67,7 +75,7 @@ export function PricingCards({ plans, translations }: PricingCardsProps) {
         </span>
         {annual && (
           <Badge variant="secondary" className="text-xs">
-            🔒 2 сар үнэгүй
+            {translations.annualSave}
           </Badge>
         )}
       </div>
@@ -77,10 +85,12 @@ export function PricingCards({ plans, translations }: PricingCardsProps) {
         {gridPlans.map((plan) => {
           const isCore = plan.key === "core";
           const price = annual
-            ? `${plan.annualPrice}/жил`
-            : `${plan.monthlyPrice}/сар`;
+            ? `${plan.annualPrice}${translations.perYear}`
+            : `${plan.monthlyPrice}${translations.perMonth}`;
           const perUnit =
-            annual && plan.annualPerMonth ? `${plan.annualPerMonth}/сар` : null;
+            annual && plan.annualPerMonth
+              ? `${plan.annualPerMonth}${translations.perMonth}`
+              : null;
 
           return (
             <Card
@@ -119,8 +129,7 @@ export function PricingCards({ plans, translations }: PricingCardsProps) {
                   </span>
                   {perUnit && (
                     <Typography.Muted className="mt-1 text-xs text-muted-foreground">
-                      ~{perUnit} {translations.monthly.toLowerCase()} —{" "}
-                      {translations.savePercent}
+                      ~{perUnit} — {translations.annualSave}
                     </Typography.Muted>
                   )}
                   {!perUnit && plan.key === "complete" && !annual && (
@@ -134,14 +143,17 @@ export function PricingCards({ plans, translations }: PricingCardsProps) {
               <CardContent className="flex-1">
                 <ul className="flex flex-col gap-2.5">
                   {plan.features.map((f) => (
-                    <li key={f.text} className="flex items-start gap-2 text-sm">
-                      <FeatureIcon status={f.included} />
+                    <li key={f.key} className="flex items-start gap-2 text-sm">
+                      <FeatureIcon
+                        status={f.included}
+                        addonLabel={translations.valueAddon}
+                      />
                       <span
                         className={
                           f.included ? "" : "text-gray-500 dark:text-gray-400"
                         }
                       >
-                        {f.text}
+                        {translations[f.key]}
                       </span>
                     </li>
                   ))}
@@ -158,7 +170,7 @@ export function PricingCards({ plans, translations }: PricingCardsProps) {
                   <ArrowRight className="ml-1 size-4" />
                 </Button>
                 <p className="text-[11px] text-muted-foreground text-center">
-                  14 хоног үнэгүй турших · Карт шаардлагагүй
+                  {translations.trialCta}
                 </p>
               </CardFooter>
             </Card>
@@ -181,25 +193,23 @@ export function PricingCards({ plans, translations }: PricingCardsProps) {
                 <div className="mt-2 flex flex-wrap gap-3">
                   {enterprisePlan.features.slice(0, 4).map((f) => (
                     <span
-                      key={f.text}
+                      key={f.key}
                       className="inline-flex items-center gap-1 text-xs text-muted-foreground"
                     >
                       <Check className="size-3 text-emerald-500" />
-                      {f.text}
+                      {translations[f.key]}
                     </span>
                   ))}
                 </div>
               </div>
               <div className="text-center sm:text-right shrink-0">
                 <div className="text-2xl font-semibold">
-                  {annual
-                    ? enterprisePlan.annualPrice
-                    : enterprisePlan.monthlyPrice}
+                  {translations.customPrice}
                 </div>
                 <Button
                   variant="outline"
                   className="mt-2"
-                  render={<Link href="/contact" />}
+                  render={<Link href="mailto:hello@tolom.app" />}
                 >
                   {translations.contactSales}
                   <ArrowRight className="ml-1 size-4" />

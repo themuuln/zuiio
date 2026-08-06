@@ -1,4 +1,15 @@
-import { ArrowRight, CheckCircle, Wrench } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle,
+  Database,
+  Folder,
+  KeyRound,
+  Mail,
+  Monitor,
+  PlugZap,
+  Smartphone,
+  Zap,
+} from "lucide-react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -10,18 +21,19 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Typography } from "@/components/ui/typography";
 
+import { LandingFooter } from "../_landing-footer";
 import { StatusSubscribeForm } from "./_status-subscribe-form";
 
 const SERVICES = [
-  { key: "Platform", icon: "🖥️" },
-  { key: "Api", icon: "🔌" },
-  { key: "Database", icon: "🗄️" },
-  { key: "Auth", icon: "🔑" },
-  { key: "Storage", icon: "📁" },
-  { key: "Email", icon: "✉️" },
-  { key: "Sms", icon: "📱" },
-  { key: "Edge", icon: "⚡" },
-];
+  { key: "Platform", icon: Monitor },
+  { key: "Api", icon: PlugZap },
+  { key: "Database", icon: Database },
+  { key: "Auth", icon: KeyRound },
+  { key: "Storage", icon: Folder },
+  { key: "Email", icon: Mail },
+  { key: "Messaging", icon: Smartphone },
+  { key: "Edge", icon: Zap },
+] as const;
 
 export default async function StatusPage({
   params,
@@ -40,10 +52,6 @@ async function StatusContent({ locale }: { locale: string }) {
   const t = (await getTranslations({
     locale: locale as "mn" | "en",
     namespace: "status",
-  })) as (key: string, values?: Record<string, string | number>) => string;
-  const appT = (await getTranslations({
-    locale: locale as "mn" | "en",
-    namespace: "app",
   })) as (key: string, values?: Record<string, string | number>) => string;
   const _authT = (await getTranslations({
     locale: locale as "mn" | "en",
@@ -74,8 +82,10 @@ async function StatusContent({ locale }: { locale: string }) {
             <div className="grid gap-4 sm:grid-cols-2">
               {SERVICES.map((svc) => (
                 <Card key={svc.key}>
-                  <CardHeader className="flex-row items-center gap-3 gap-y-0 pb-2">
-                    <span className="text-xl">{svc.icon}</span>
+                  <CardHeader className="flex-row items-center gap-3 space-y-0 pb-2">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <svc.icon aria-hidden="true" className="size-4" />
+                    </span>
                     <div className="flex-1">
                       <CardTitle className="text-sm font-medium">
                         {t(`service${svc.key}`)}
@@ -154,15 +164,18 @@ async function StatusContent({ locale }: { locale: string }) {
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl">
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              TOLOM-г туршиж үзэх
+              {t("ctaTitle")}
             </Typography.H2>
+            <Typography.Muted className="mt-3 text-muted-foreground">
+              {t("ctaSubtitle")}
+            </Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"
                 render={<Link href="/auth/signup" />}
                 nativeButton={false}
               >
-                Үнэгүй эхлэх
+                {t("ctaButton")}
                 <ArrowRight className="ml-2 size-4" />
               </Button>
               <Button
@@ -171,23 +184,14 @@ async function StatusContent({ locale }: { locale: string }) {
                 render={<Link href="/pricing" />}
                 nativeButton={false}
               >
-                Үнийн санал
+                {t("ctaPricing")}
               </Button>
             </div>
           </div>
         </section>
       </main>
-      <footer className="border-t bg-background px-4 py-8 text-center text-xs text-muted-foreground sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-center gap-2">
-            <Wrench className="size-3" />
-            <span className="font-semibold text-foreground">
-              {appT("name")}
-            </span>
-          </div>
-          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
-        </div>
-      </footer>
+
+      <LandingFooter />
     </div>
   );
 }

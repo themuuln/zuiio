@@ -145,7 +145,7 @@ export function OrganizationSelectionForm({
           <input type="hidden" name="redirectTo" value={redirectTo} />
         )}
         {state?.formError && (
-          <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {state.formError}
           </div>
         )}
@@ -178,7 +178,7 @@ export function OrganizationSelectionForm({
                 value={organizationId}
                 onChange={(event) => setOrganizationId(event.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && e.stopPropagation()}
-                className={`h-10 w-full rounded-md border bg-background py-2 pr-3 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
+                className={`h-10 w-full rounded-lg border bg-background py-2 pr-3 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
                   "organizationId" in fieldErrors
                     ? "border-destructive ring-1 ring-destructive/20"
                     : "border-input"
@@ -218,7 +218,7 @@ export function OrganizationSelectionForm({
         )}
 
         {/* PIN explanation banner */}
-        <div className="flex items-start gap-2 rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+        <div className="flex items-start gap-2 rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
           <Info className="mt-0.5 size-3.5 shrink-0" />
           <span>{copy.pinExplanation}</span>
         </div>
@@ -240,7 +240,7 @@ export function OrganizationSelectionForm({
               required
               value={pin}
               onChange={(e) => setPin(e.target.value)}
-              className={`w-full rounded-md border bg-background px-3 py-2 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
+              className={`w-full rounded-lg border bg-background px-3 py-2 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
                 "pin" in fieldErrors || hasFormError
                   ? "border-destructive ring-1 ring-destructive/20"
                   : "border-input"
@@ -280,7 +280,7 @@ export function OrganizationSelectionForm({
               required
               value={confirmPin}
               onChange={(e) => setConfirmPin(e.target.value)}
-              className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
+              className={`w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
                 "confirmPin" in fieldErrors || hasFormError
                   ? "border-destructive ring-1 ring-destructive/20"
                   : "border-input"

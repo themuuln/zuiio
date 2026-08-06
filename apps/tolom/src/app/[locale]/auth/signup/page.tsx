@@ -197,7 +197,7 @@ export default function SignupPage() {
               {isPending ? <Loader2 className="animate-spin" /> : <UserPlus />}
               {t("submit")}
             </Button>
-            <div className="relative flex items-center gap-3 my-2">
+            <div className="relative flex items-center gap-3 my-4">
               <div className="h-px flex-1 bg-border" />
               <span className="text-xs text-muted-foreground uppercase tracking-wider">
                 {authT("orContinueWith")}

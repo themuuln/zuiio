@@ -1,4 +1,4 @@
-import { ArrowRight, HelpCircle, Wrench } from "lucide-react";
+import { ArrowRight, HelpCircle } from "lucide-react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 
+import { LandingFooter } from "../_landing-footer";
 import { FaqContent } from "./_faq-content";
 
 const CATEGORIES: {
@@ -100,10 +101,6 @@ async function FaqPageContent({ locale }: { locale: string }) {
     locale: locale as "mn" | "en",
     namespace: "faq",
   })) as (key: string, values?: Record<string, string | number>) => string;
-  const appT = (await getTranslations({
-    locale: locale as "mn" | "en",
-    namespace: "app",
-  })) as (key: string, values?: Record<string, string | number>) => string;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -130,11 +127,10 @@ async function FaqPageContent({ locale }: { locale: string }) {
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl">
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              Өөр асуулт байна уу?
+              {t("ctaTitle")}
             </Typography.H2>
             <Typography.Muted className="mt-3 text-muted-foreground">
-              Хариултаа олоогүй бол бидэнтэй холбогдоорой. Бид туслахад баяртай
-              байх болно.
+              {t("ctaSubtitle")}
             </Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
@@ -142,7 +138,7 @@ async function FaqPageContent({ locale }: { locale: string }) {
                 render={<Link href="/auth/signup" />}
                 nativeButton={false}
               >
-                TOLOM-г үнэгүй турших
+                {t("ctaButton")}
                 <ArrowRight className="ml-2 size-4" />
               </Button>
               <Button
@@ -151,24 +147,14 @@ async function FaqPageContent({ locale }: { locale: string }) {
                 render={<Link href="/auth/login" />}
                 nativeButton={false}
               >
-                Нэвтрэх
+                {t("ctaLogin")}
               </Button>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t bg-background px-4 py-8 text-center text-xs text-muted-foreground sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-center gap-2">
-            <Wrench className="size-3" />
-            <span className="font-semibold text-foreground">
-              {appT("name")}
-            </span>
-          </div>
-          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 }

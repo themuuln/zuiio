@@ -247,7 +247,7 @@ export function TestimonialsSection() {
   );
 }
 
-const MONTHLY_PRICES = [299000, 699000, 1590000];
+const MONTHLY_PRICES = [299000, 699000, 1790000];
 
 export function PricingSection() {
   const t = useTranslations("home");
@@ -301,7 +301,8 @@ export function PricingSection() {
             const price = t(`${tier.key}Price`);
             const desc = t(`${tier.key}Desc`);
             const monthlyPrice = MONTHLY_PRICES[index];
-            const annualPrice = Math.round(monthlyPrice * 12 * 0.8);
+            // Annual billing equals 10 months' price — 2 months free (matches /pricing)
+            const annualPrice = monthlyPrice * 10;
 
             return (
               <Card
@@ -324,7 +325,9 @@ export function PricingSection() {
                   <CardDescription>{desc}</CardDescription>
                   <div className="mt-4">
                     <span className="text-3xl font-bold tracking-tight">
-                      {annual ? `₮${annualPrice.toLocaleString()}/yr` : price}
+                      {annual
+                        ? `₮${annualPrice.toLocaleString()}${t("pricingPerYear")}`
+                        : price}
                     </span>
                   </div>
                 </CardHeader>

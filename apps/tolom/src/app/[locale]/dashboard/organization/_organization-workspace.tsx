@@ -95,7 +95,7 @@ function OrganizationMark({ organization }: { organization?: Organization }) {
   }
 
   return (
-    <div className="flex size-14 shrink-0 items-center justify-center rounded-md bg-primary text-lg font-semibold text-primary-foreground">
+    <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">
       {initial}
     </div>
   );

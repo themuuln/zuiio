@@ -1,4 +1,4 @@
-import { ArrowRight, Check, HelpCircle, X } from "lucide-react";
+import { ArrowRight, HelpCircle } from "lucide-react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -17,7 +17,7 @@ import { PricingCards } from "./_pricing-cards";
 type FeatureStatus = boolean | "addon";
 
 interface PlanFeature {
-  text: string;
+  key: string;
   included: FeatureStatus;
 }
 
@@ -38,12 +38,12 @@ const PLAN_DATA: PlanData[] = [
     annualPrice: "₮17,900,000",
     annualPerMonth: "₮1,492,000",
     features: [
-      { text: "3 branches · 25 users · 5,000 WOs/mo", included: true },
-      { text: "Everything in Complete", included: true },
-      { text: "Multi-branch dashboard & inventory transfer", included: true },
-      { text: "API access & advanced BI", included: true },
-      { text: "Custom invoice templates", included: true },
-      { text: "Dedicated onboarding specialist", included: true },
+      { key: "feature3Branches25Users", included: true },
+      { key: "featureEverythingInPro", included: true },
+      { key: "featureMultiBranchDashboard", included: true },
+      { key: "featureApiAdvancedBi", included: true },
+      { key: "featureCustomInvoiceTemplates", included: true },
+      { key: "featureDedicatedOnboarding", included: true },
     ],
     ctaVariant: "outline",
     popular: false,
@@ -54,15 +54,15 @@ const PLAN_DATA: PlanData[] = [
     annualPrice: "₮6,990,000",
     annualPerMonth: "₮583,000",
     features: [
-      { text: "1 branch · 10 users · 1,500 WOs/mo", included: true },
-      { text: "Everything in Core", included: true },
-      { text: "Inventory management & stock control", included: true },
+      { key: "feature1Branch10Users", included: true },
+      { key: "featureEverythingInCore", included: true },
+      { key: "featureInventoryManagement", included: true },
       {
-        text: "Mechanic accountability & performance tracking",
+        key: "featureMechanicAccountability",
         included: true,
       },
-      { text: "Telegram messaging & customer retention", included: true },
-      { text: "Dashboard analytics & priority support", included: true },
+      { key: "featureTelegramMessaging", included: true },
+      { key: "featureDashboardAnalytics", included: true },
     ],
     ctaVariant: "default",
     popular: true,
@@ -73,12 +73,12 @@ const PLAN_DATA: PlanData[] = [
     annualPrice: "₮2,990,000",
     annualPerMonth: "₮249,000",
     features: [
-      { text: "1 branch · 3 users · 300 WOs/mo", included: true },
-      { text: "Tablet-first workflow", included: true },
-      { text: "Customer & vehicle CRM", included: true },
-      { text: "Work orders & service history", included: true },
-      { text: "Mechanic reports & pricing memory", included: true },
-      { text: "Basic reports & email support", included: true },
+      { key: "feature1Branch3Users", included: true },
+      { key: "featureTabletWorkflow", included: true },
+      { key: "featureCustomerVehicleCrm", included: true },
+      { key: "featureWorkOrdersHistory", included: true },
+      { key: "featureMechanicReports", included: true },
+      { key: "featureBasicReports", included: true },
     ],
     ctaVariant: "outline",
     popular: false,
@@ -89,11 +89,12 @@ const PLAN_DATA: PlanData[] = [
     annualPrice: "From ₮29,880,000",
     annualPerMonth: "",
     features: [
-      { text: "From ₮2.49M/month — tailored deployment", included: true },
-      { text: "4+ branches, SSO, & custom integrations", included: true },
-      { text: "Dedicated database & infra options", included: true },
-      { text: "Fleet management module", included: true },
-      { text: "Custom reporting & priority SLA", included: true },
+      { key: "featureChainDealerFleet", included: true },
+      { key: "featureUnlimitedBranchesUsers", included: true },
+      { key: "featureCustomIntegrationsApi", included: true },
+      { key: "featureDedicatedInfra", included: true },
+      { key: "featureFleetManagement", included: true },
+      { key: "featureCustomReporting", included: true },
     ],
     ctaVariant: "outline",
     popular: false,
@@ -162,19 +163,18 @@ const FAQ_KEYS: { q: string; a: string }[] = [
   { q: "faqQ6", a: "faqA6" },
 ];
 
-function _FeatureIcon({ status }: { status: FeatureStatus }) {
-  if (status === true) {
-    return <Check className="mt-0.5 size-4 shrink-0 text-emerald-500" />;
-  }
-  if (status === "addon") {
-    return (
-      <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded bg-muted text-[10px] font-medium text-muted-foreground">
-        $
-      </span>
-    );
-  }
-  return <X className="mt-0.5 size-4 shrink-0 text-muted-foreground/30" />;
-}
+// Comparison cells that hold a localized word instead of a raw value (number/—/✓)
+const VALUE_KEYS = new Set([
+  "Addon",
+  "Advanced",
+  "Basic",
+  "Dedicated",
+  "Email",
+  "Full",
+  "Limited",
+  "Priority",
+  "Unlimited",
+]);
 
 export default async function PricingPage({
   params,
@@ -228,11 +228,10 @@ async function PricingContent({ locale }: { locale: string }) {
                   {t("roiBefore")}
                 </Typography.Muted>
                 <Typography.H3 className="mt-2 text-2xl font-bold text-destructive sm:text-3xl">
-                  ₮3M – ₮15M / month
+                  {t("roiBeforeAmount")}
                 </Typography.H3>
                 <Typography.Text className="mt-1 text-sm text-muted-foreground">
-                  Lost work orders · Inventory leakage · Unpaid invoices ·
-                  Untracked mechanics
+                  {t("roiBeforeDetails")}
                 </Typography.Text>
               </div>
               <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-5 sm:p-6">
@@ -240,11 +239,10 @@ async function PricingContent({ locale }: { locale: string }) {
                   {t("roiAfter")}
                 </Typography.Muted>
                 <Typography.H3 className="mt-2 text-2xl font-bold text-emerald-600 sm:text-3xl">
-                  ₮699,000 / month
+                  {t("roiAfterAmount")}
                 </Typography.H3>
                 <Typography.Text className="mt-1 text-sm text-muted-foreground">
-                  Full visibility · Mechanic accountability · Inventory control
-                  · Repeat customers
+                  {t("roiAfterDetails")}
                 </Typography.Text>
               </div>
             </div>
@@ -259,10 +257,16 @@ async function PricingContent({ locale }: { locale: string }) {
               monthly: t("monthly"),
               annual: t("annual"),
               savePercent: t("savePercent"),
+              annualSave: t("annualSave"),
               mostPopular: t("mostPopular"),
               contactSales: t("contactSales"),
               getStarted: t("getStarted"),
               startTrial: t("startTrial"),
+              trialCta: t("trialCta"),
+              customPrice: t("customPrice"),
+              perMonth: t("perMonth"),
+              perYear: t("perYear"),
+              valueAddon: t("valueAddon"),
               starterName: t("coreName"),
               starterDesc: t("coreDesc"),
               proName: t("completeName"),
@@ -271,6 +275,11 @@ async function PricingContent({ locale }: { locale: string }) {
               businessDesc: t("businessDesc"),
               enterpriseName: t("enterpriseName"),
               enterpriseDesc: t("enterpriseDesc"),
+              ...Object.fromEntries(
+                PLAN_DATA.flatMap((p) =>
+                  p.features.map((f) => [f.key, t(f.key)]),
+                ),
+              ),
             }}
           />
         </section>
@@ -306,9 +315,21 @@ async function PricingContent({ locale }: { locale: string }) {
                       <td className="py-3 pr-4 text-muted-foreground">
                         {t(row.key)}
                       </td>
-                      <td className="py-3 px-4">{row.core}</td>
-                      <td className="py-3 px-4 font-medium">{row.pro}</td>
-                      <td className="py-3 pl-4">{row.business}</td>
+                      <td className="py-3 px-4">
+                        {VALUE_KEYS.has(row.core)
+                          ? t(`value${row.core}`)
+                          : row.core}
+                      </td>
+                      <td className="py-3 px-4 font-medium">
+                        {VALUE_KEYS.has(row.pro)
+                          ? t(`value${row.pro}`)
+                          : row.pro}
+                      </td>
+                      <td className="py-3 pl-4">
+                        {VALUE_KEYS.has(row.business)
+                          ? t(`value${row.business}`)
+                          : row.business}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
