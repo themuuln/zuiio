@@ -32,6 +32,8 @@ Always read `docs/vision.md` first for significant tasks — it is the single so
 
 **Before declaring any change complete, you MUST run `npm run verify`.**
 
+**Implementation loop (before that):** affected-only tests — `pnpm test:changed` from the root (`turbo run test --filter='...[HEAD]'`), or `pnpm --filter <app> test:changed` where an app has it (tolom). Never a full `verify`/`test` mid-implementation. Heavy gates are lock-wrapped (`scripts/with-test-lock.sh`): one monorepo gate at a time.
+
 This runs typecheck → lint → unit tests with coverage gating (FastGate).
 If any gate fails, diagnose → fix → re-run verify (max 3 attempts).
 If still RED after 3 attempts, ESCALATE — do NOT work around the gate.
