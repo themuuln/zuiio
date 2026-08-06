@@ -435,7 +435,9 @@ void main() {
         stubReportsTable(table);
         stubMediaTable(_FakeQueryBuilder());
 
-        final result = await repo().createReport(reportFromRow(row));
+        final result = await repo().createReport(
+          reportFromRow(row).copyWith(publicTokenHash: 'sha256-hash'),
+        );
 
         expect(result.isSuccess, isTrue);
         final saved = result.value;
@@ -459,7 +461,10 @@ void main() {
         expect(payload['owner_id'], 'o1');
         expect(payload.containsKey('photo_urls'), isFalse);
         expect(payload.containsKey('video_urls'), isFalse);
-        expect(payload.containsKey('public_token_hash'), isFalse);
+        // The share-token digest is created client-side and must reach the DB
+        // so the owner can later generate a public share link.
+        expect(payload.containsKey('public_token_hash'), isTrue);
+        expect(payload['public_token_hash'], 'sha256-hash');
       });
 
       test('returns REPORT_CREATE_FAILED when insert throws', () async {

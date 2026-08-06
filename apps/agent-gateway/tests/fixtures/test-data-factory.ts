@@ -270,23 +270,28 @@ export interface TestWorkOrder {
 	organization_id: string;
 	customer_id: string;
 	status: string;
-	total_amount: string;
-	plate_number: string;
+	total: string;
 	created_at: string;
 	updated_at: string;
 	customers?: { full_name: string; phone: string };
+	vehicles?: {
+		plate_number: string;
+		make: string;
+		model: string;
+		year: number;
+	};
 }
 
 export function generateWorkOrders(
 	count: number,
 	customers: TestCustomer[],
 	statusDistribution: Record<string, number> = {
-		pending: 0.2,
-		in_progress: 0.3,
-		waiting_parts: 0.15,
-		completed: 0.2,
-		delivered: 0.1,
-		cancelled: 0.05,
+		New: 0.2,
+		"In Progress": 0.3,
+		Diagnosing: 0.15,
+		Completed: 0.2,
+		"Ready for Pickup": 0.1,
+		Cancelled: 0.05,
 	},
 ): TestWorkOrder[] {
 	const statuses = Object.keys(statusDistribution);
@@ -308,8 +313,7 @@ export function generateWorkOrders(
 			organization_id: TEST_ORG_ID,
 			customer_id: customer.id,
 			status,
-			total_amount: String(randomAmount(100000, 5000000)),
-			plate_number: randomPlate(),
+			total: String(randomAmount(100000, 5000000)),
 			created_at: randomDate(30),
 			updated_at: randomDate(15),
 			customers: { full_name: customer.full_name, phone: customer.phone },
@@ -396,7 +400,7 @@ export function generateExpenses(count: number): TestExpense[] {
 			id: `exp-${i + 1}-${Date.now()}`,
 			organization_id: TEST_ORG_ID,
 			amount: String(randomAmount(5000, 2000000)),
-			expense_date: randomDate(30).split("T")[0]!,
+			expense_date: randomDate(30).slice(0, 10),
 			description: pick([
 				"Сэлбэг худалдан авалт",
 				"Цалин",
@@ -475,7 +479,7 @@ export function generateSales(count: number): TestSale[] {
 		return {
 			id: `sale-${i + 1}-${Date.now()}`,
 			organization_id: TEST_ORG_ID,
-			sale_date: randomDate(30).split("T")[0]!,
+			sale_date: randomDate(30).slice(0, 10),
 			total_amount: String(total),
 			paid_amount: isFullyPaid
 				? String(total)

@@ -41,17 +41,30 @@ export async function logToolCall(
 			channel_user_id: params.channelUserId,
 			tool_name: params.toolName,
 			tool_args: params.toolArgs,
-			tool_result:
-				params.toolResult != null
-					? typeof params.toolResult === "string"
-						? params.toolResult
-						: JSON.stringify(params.toolResult)
-					: null,
+			tool_result: normalizeToolResult(params.toolResult),
 			error: params.error,
 			duration_ms: params.durationMs,
 		});
 	} catch {
 		// Audit logging is non-critical — silently drop on failure
+	}
+}
+
+/**
+ * Normalizes a tool result for the jsonb audit column.
+ *
+ * Object/array results pass through as structured JSON. String results are
+ * parsed back into JSON when possible (tools return `JSON.stringify`ed
+ * payloads), falling back to a plain string — both are valid jsonb values.
+ * Never double-encodes: a JSON object stored as a JSON *string* breaks
+ * `tool_result ? 'error'` style queries and analytics.
+ */
+function normalizeToolResult(result: unknown): unknown {
+	if (result === null || typeof result !== "string") return result;
+	try {
+		return JSON.parse(result);
+	} catch {
+		return result;
 	}
 }
 

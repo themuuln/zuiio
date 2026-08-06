@@ -1,6 +1,6 @@
 import 'dart:async';
-// ignore_for_file: avoid_print
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show
         PostgresChangeEvent,
@@ -216,7 +216,7 @@ class SupabaseMessageRepository implements MessageRepository {
       await _client.from(table).upsert(data);
     } catch (e) {
       // Supabase алдааг үл тоомсорлох — local-д хадгалагдсан
-      print('[SupabaseMessageRepository] Sync failed for $table: $e');
+      debugPrint('[SupabaseMessageRepository] Sync failed for $table: $e');
     }
   }
 }

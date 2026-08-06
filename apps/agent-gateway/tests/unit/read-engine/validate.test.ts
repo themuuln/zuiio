@@ -20,7 +20,7 @@ describe("validateReadPlan", () => {
 				{
 					dataset: "work_orders",
 					dimensions: ["status"],
-					measures: [{ field: "total_amount", op: "sum", alias: "total" }],
+					measures: [{ field: "total", op: "sum", alias: "total" }],
 				},
 			],
 		};
@@ -38,7 +38,7 @@ describe("validateReadPlan", () => {
 
 	it("rejects non-dimension field used as dimension", () => {
 		const plan: ReadPlan = {
-			queries: [{ dataset: "work_orders", dimensions: ["total_amount"] }],
+			queries: [{ dataset: "work_orders", dimensions: ["total"] }],
 		};
 		const result = validateReadPlan(plan, catalog, TENANT_ID);
 		expect(result.valid).toBe(false);
@@ -64,7 +64,7 @@ describe("validateReadPlan", () => {
 			queries: [
 				{
 					dataset: "work_orders",
-					measures: [{ field: "total_amount", op: "mean", alias: "x" }],
+					measures: [{ field: "total", op: "mean", alias: "x" }],
 				},
 			],
 		};

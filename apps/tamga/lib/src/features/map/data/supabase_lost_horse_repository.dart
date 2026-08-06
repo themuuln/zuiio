@@ -33,8 +33,7 @@ class SupabaseLostHorseRepository implements LostHorseRepository {
     try {
       final row = Map<String, dynamic>.from(report.toJson())
         ..remove('photo_urls')
-        ..remove('video_urls')
-        ..remove('public_token_hash');
+        ..remove('video_urls');
       Map<String, dynamic> response;
       try {
         response = await _client
@@ -56,6 +55,7 @@ class SupabaseLostHorseRepository implements LostHorseRepository {
         localMediaPaths: localMediaPaths,
         mediaIds: mediaIds,
       );
+      await _uploadTamgaImage(report: saved);
       return Result.ok(saved);
     } catch (e) {
       return Result.fail(
@@ -112,6 +112,27 @@ class SupabaseLostHorseRepository implements LostHorseRepository {
     return extension.isEmpty || extension == path ? 'jpg' : extension;
   }
 
+  /// Uploads the owner's tamga (brand stamp) photo to the private recovery
+  /// bucket and repoints `tamga_image_url` at the storage path so the public
+  /// share page can render it through a service-role signed URL.
+  Future<void> _uploadTamgaImage({required LostHorseReport report}) async {
+    final localPath = report.tamgaImageUrl;
+    if (localPath == null || localPath.isEmpty) return;
+    final file = File(localPath);
+    if (!await file.exists()) return; // already a storage path or missing
+    final storagePath =
+        '${report.ownerId}/${report.id}/tamga.${_extensionOf(localPath)}';
+    final upload = (await _mediaStorage.upload(
+      file: file,
+      path: storagePath,
+      category: MediaCategory.recoveryPhoto,
+    )).getOrThrow();
+    await _client
+        .from('lost_horse_reports')
+        .update({'tamga_image_url': upload.path})
+        .eq('id', report.id);
+  }
+
   Future<LostHorseReport> _attachPrivateMediaUrls(
     LostHorseReport report,
   ) async {
@@ -132,7 +153,20 @@ class SupabaseLostHorseRepository implements LostHorseRepository {
         );
         if (signed.isSuccess) urls.add(signed.getOrThrow());
       }
-      return urls.isEmpty ? report : report.copyWith(photoUrls: urls);
+      var attached = urls.isEmpty ? report : report.copyWith(photoUrls: urls);
+      // Tamga image lives in a private bucket — hand non-owner viewers a
+      // signed URL instead of the raw storage path.
+      final tamga = report.tamgaImageUrl;
+      if (tamga != null && !File(tamga).existsSync()) {
+        final signed = await _mediaStorage.getSignedUrl(
+          path: tamga,
+          category: MediaCategory.recoveryPhoto,
+        );
+        if (signed.isSuccess) {
+          attached = attached.copyWith(tamgaImageUrl: signed.getOrThrow());
+        }
+      }
+      return attached;
     } catch (_) {
       return report;
     }
@@ -205,6 +239,12 @@ class SupabaseLostHorseRepository implements LostHorseRepository {
             publicLocationPrecision:
                 data['public_location_precision'] as String? ?? 'sum',
             publicContactMode: data['public_contact_mode'] as String? ?? 'none',
+            travelDirection: data['travel_direction'] != null
+                ? TravelDirection.values.firstWhere(
+                    (e) => e.name == data['travel_direction'],
+                    orElse: () => TravelDirection.north,
+                  )
+                : null,
           );
         }).toList(),
       );

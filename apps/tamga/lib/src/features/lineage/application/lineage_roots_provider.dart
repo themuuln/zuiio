@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/sync/connection_status.dart';
 import '../../../core/sync/sync_queue.dart';
+import '../../shared/application/sync_providers.dart';
 import '../../shared/data/isar_storage.dart';
 import '../data/lineage_repository.dart';
 import '../data/local_lineage_repository.dart';
@@ -44,6 +45,7 @@ final localLineageRepositoryProvider = Provider<LocalLineageRepository>((ref) {
   return LocalLineageRepository(
     storage: IsarStorage.instance,
     syncQueue: SyncQueue(),
+    syncStorage: ref.watch(isarSyncStorageProvider),
   );
 });
 

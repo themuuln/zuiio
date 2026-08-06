@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tamga/src/features/map/domain/animal_enums.dart';
 import 'package:tamga/src/features/map/domain/lost_horse_report.dart';
 import 'package:tamga/src/features/shared/data/isar_schemas/isar_lost_horse_report.dart';
 
@@ -19,6 +20,8 @@ void main() {
         publicAccessEnabled: true,
         publicLocationPrecision: 'aimag',
         publicContactMode: 'phone',
+        travelDirection: TravelDirection.southEast,
+        privateVerificationDetail: 'Баруун талын чихэнд цагаан толбо',
       );
 
       final stored = IsarLostHorseReport.fromDomain(report);
@@ -30,6 +33,11 @@ void main() {
       expect(restored.publicLocationPrecision, 'aimag');
       expect(restored.publicContactMode, 'phone');
       expect(restored.publicShareToken, isNull);
+      expect(restored.travelDirection, TravelDirection.southEast);
+      expect(
+        restored.privateVerificationDetail,
+        'Баруун талын чихэнд цагаан толбо',
+      );
     },
   );
 }

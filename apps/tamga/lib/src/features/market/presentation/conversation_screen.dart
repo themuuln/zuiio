@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/sync/connection_status.dart';
 import '../../../core/sync/sync_queue.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../shared/application/sync_providers.dart';
 import '../application/market_providers.dart';
@@ -366,22 +367,22 @@ class _ListingCardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = TamgaColors.of(context);
 
     return GestureDetector(
       onTap: () => context.push('/market/${listing.id}'),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: TamgaSpacing.listCellPadding,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          border: Border(
-            bottom: BorderSide(color: theme.colorScheme.outlineVariant),
-          ),
+          color: colors.surfaceContainerLow,
+          border: Border(bottom: BorderSide(color: colors.outlineVariant)),
         ),
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusSmall),
+              borderRadius: BorderRadius.circular(
+                TamgaSpacing.cornerRadiusSmall,
+              ),
               child: SizedBox(
                 width: 48,
                 height: 48,
@@ -391,38 +392,36 @@ class _ListingCardHeader extends StatelessWidget {
                         fit: BoxFit.cover,
                         errorWidget: (_, _, _) => Icon(
                           Icons.image_outlined,
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: colors.onSurfaceVariant,
                         ),
                       )
                     : Icon(
                         Icons.image_outlined,
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: colors.onSurfaceVariant,
                       ),
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
+            const SizedBox(width: TamgaSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     listing.title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TamgaTypography.body(weight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     '${_formatPrice(listing)} • ${listing.locationLabel}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    style: TamgaTypography.footnote(
+                      color: colors.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: theme.colorScheme.outline),
+            Icon(Icons.chevron_right, color: colors.outline),
           ],
         ),
       ),
@@ -453,7 +452,8 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = TamgaColors.of(context);
+    final scheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
@@ -470,8 +470,9 @@ class _MessageBubble extends StatelessWidget {
               ),
               child: Text(
                 'Худалдагч',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                style: TamgaTypography.caption1(
+                  color: colors.onSurfaceVariant,
+                  weight: FontWeight.w600,
                 ),
               ),
             ),
@@ -492,24 +493,24 @@ class _MessageBubble extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isMe
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.surfaceContainerHighest,
+                        ? colors.primary
+                        : scheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(
                         isMe
-                            ? AppSpacing.cornerRadius
-                            : AppSpacing.cornerRadiusSmall,
+                            ? TamgaSpacing.cornerRadius
+                            : TamgaSpacing.cornerRadiusSmall,
                       ),
                       topRight: Radius.circular(
                         isMe
-                            ? AppSpacing.cornerRadiusSmall
-                            : AppSpacing.cornerRadius,
+                            ? TamgaSpacing.cornerRadiusSmall
+                            : TamgaSpacing.cornerRadius,
                       ),
                       bottomLeft: const Radius.circular(
-                        AppSpacing.cornerRadius,
+                        TamgaSpacing.cornerRadius,
                       ),
                       bottomRight: const Radius.circular(
-                        AppSpacing.cornerRadius,
+                        TamgaSpacing.cornerRadius,
                       ),
                     ),
                   ),
@@ -518,10 +519,8 @@ class _MessageBubble extends StatelessWidget {
                     children: [
                       Text(
                         message.text,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isMe
-                              ? theme.colorScheme.onPrimary
-                              : theme.colorScheme.onSurface,
+                        style: TamgaTypography.body(
+                          color: isMe ? colors.onPrimary : colors.onSurface,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -530,23 +529,18 @@ class _MessageBubble extends StatelessWidget {
                         children: [
                           Text(
                             _formatTime(message.timestamp),
-                            style: theme.textTheme.labelSmall?.copyWith(
+                            style: TamgaTypography.caption1(
                               color: isMe
-                                  ? theme.colorScheme.onPrimary.withValues(
-                                      alpha: 0.7,
-                                    )
-                                  : theme.colorScheme.onSurfaceVariant,
-                              fontSize: 10,
-                            ),
+                                  ? colors.onPrimary.withValues(alpha: 0.7)
+                                  : colors.onSurfaceVariant,
+                            ).copyWith(fontSize: 10),
                           ),
                           if (isMe) ...[
                             const SizedBox(width: AppSpacing.xs),
                             Icon(
                               message.read ? Icons.done_all : Icons.done,
                               size: 12,
-                              color: theme.colorScheme.onPrimary.withValues(
-                                alpha: 0.7,
-                              ),
+                              color: colors.onPrimary.withValues(alpha: 0.7),
                             ),
                           ],
                         ],

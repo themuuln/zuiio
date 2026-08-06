@@ -25,20 +25,20 @@ describe("compileQuery", () => {
 	it("compiles aggregates with alias", () => {
 		const q: ReadPlanQuery = {
 			dataset: "work_orders",
-			measures: [{ field: "total_amount", op: "sum", alias: "total" }],
+			measures: [{ field: "total", op: "sum", alias: "total" }],
 		};
 		const compiled = compileQuery(q, catalog, TENANT_ID);
-		expect(compiled.params.select).toBe("total_amount.sum().total");
+		expect(compiled.params.select).toBe("total.sum().total");
 	});
 
 	it("compiles dimensions + measures", () => {
 		const q: ReadPlanQuery = {
 			dataset: "work_orders",
 			dimensions: ["status"],
-			measures: [{ field: "total_amount", op: "sum", alias: "total" }],
+			measures: [{ field: "total", op: "sum", alias: "total" }],
 		};
 		const compiled = compileQuery(q, catalog, TENANT_ID);
-		expect(compiled.params.select).toBe("status, total_amount.sum().total");
+		expect(compiled.params.select).toBe("status, total.sum().total");
 	});
 
 	it("compiles filters", () => {

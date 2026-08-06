@@ -39,6 +39,9 @@ class LostHorseReport {
     // ── New tamga/identification fields ──
     this.tamgaImageUrl,
     this.earMarkDescription,
+    this.travelDirection,
+    // ── New verification fields ──
+    this.privateVerificationDetail,
     // ── New contact fields ──
     this.contactPhone,
     // ── Pricing ──
@@ -130,6 +133,13 @@ class LostHorseReport {
   /// Имийн тайлбар — ear mark description text.
   final String? earMarkDescription;
 
+  /// Хөдөлсөн зүг — likely direction of travel.
+  final TravelDirection? travelDirection;
+
+  /// Нууц баталгаажуулах тэмдэг — owner-only mark used to verify a claimant
+  /// before closing a case. Never rendered in public listings or the public page.
+  final String? privateVerificationDetail;
+
   // ── New: Contact ──
 
   /// Холбоо барих утас — contact phone number.
@@ -212,6 +222,9 @@ class LostHorseReport {
     // ── Tamga / Identification ──
     String? tamgaImageUrl,
     String? earMarkDescription,
+    TravelDirection? travelDirection,
+    // ── Verification ──
+    String? privateVerificationDetail,
     // ── Contact ──
     String? contactPhone,
     // ── Pricing ──
@@ -261,6 +274,9 @@ class LostHorseReport {
       videoUrls: videoUrls ?? this.videoUrls,
       tamgaImageUrl: tamgaImageUrl ?? this.tamgaImageUrl,
       earMarkDescription: earMarkDescription ?? this.earMarkDescription,
+      travelDirection: travelDirection ?? this.travelDirection,
+      privateVerificationDetail:
+          privateVerificationDetail ?? this.privateVerificationDetail,
       contactPhone: contactPhone ?? this.contactPhone,
       pricingTier: pricingTier ?? this.pricingTier,
       expiresAt: expiresAt ?? this.expiresAt,
@@ -314,6 +330,9 @@ class LostHorseReport {
     // ── Tamga / Identification ──
     'tamga_image_url': tamgaImageUrl,
     'ear_mark_description': earMarkDescription,
+    'travel_direction': travelDirection?.name,
+    // ── Verification ──
+    'private_verification_detail': privateVerificationDetail,
     // ── Contact ──
     'contact_phone': contactPhone,
     // ── Pricing ──
@@ -393,6 +412,13 @@ class LostHorseReport {
       // ── Tamga / Identification ──
       tamgaImageUrl: json['tamga_image_url'] as String?,
       earMarkDescription: json['ear_mark_description'] as String?,
+      travelDirection: json['travel_direction'] != null
+          ? TravelDirection.values.firstWhere(
+              (e) => e.name == json['travel_direction'],
+              orElse: () => TravelDirection.north,
+            )
+          : null,
+      privateVerificationDetail: json['private_verification_detail'] as String?,
       // ── Contact ──
       contactPhone: json['contact_phone'] as String?,
       // ── Pricing ──

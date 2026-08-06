@@ -52,12 +52,23 @@ class ActiveReportsScreen extends ConsumerWidget {
                   ref.invalidate(activeLostHorsesStreamProvider);
                 },
                 child: ListView.separated(
-                  padding: const EdgeInsets.all(TamgaSpacing.lg),
-                  itemCount: reports.length,
+                  padding: const EdgeInsets.fromLTRB(
+                    TamgaSpacing.lg,
+                    TamgaSpacing.sm,
+                    TamgaSpacing.lg,
+                    TamgaSpacing.lg,
+                  ),
+                  itemCount: reports.length + 1,
                   separatorBuilder: (_, _) =>
                       const SizedBox(height: TamgaSpacing.md),
                   itemBuilder: (context, index) {
-                    final report = reports[index];
+                    if (index == 0) {
+                      return _ResultSummary(
+                        count: reports.length,
+                        hasLocation: currentPos != null,
+                      );
+                    }
+                    final report = reports[index - 1];
                     final distanceKm = currentPos == null
                         ? null
                         : report.distanceTo(
@@ -104,6 +115,57 @@ class ActiveReportsScreen extends ConsumerWidget {
   }
 }
 
+// ── Result Summary ──────────────────────────────────────────────────
+
+/// Compact line showing how many reports matched and the sort order.
+class _ResultSummary extends StatelessWidget {
+  const _ResultSummary({required this.count, required this.hasLocation});
+
+  final int count;
+  final bool hasLocation;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = TamgaColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        TamgaSpacing.xs,
+        TamgaSpacing.xs,
+        TamgaSpacing.xs,
+        TamgaSpacing.xs,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '$count идэвхтэй зар',
+              style: TamgaTypography.caption1(
+                color: colors.onSurfaceVariant,
+                weight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (hasLocation)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.near_me_outlined, size: 14, color: colors.primary),
+                const SizedBox(width: 4),
+                Text(
+                  'ойроос хол руу',
+                  style: TamgaTypography.caption1(
+                    color: colors.primary,
+                    weight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Filter Bar ─────────────────────────────────────────────────────────
 
 /// Horizontal scrollable row of filter chips.
@@ -134,6 +196,7 @@ class _FilterBar extends StatelessWidget {
               context: context,
               label: filter.aimag ?? 'Аймаг',
               isActive: filter.aimag != null,
+              icon: Icons.location_on_outlined,
               onTap: () => _showAimagPicker(context),
               onClear: filter.aimag != null
                   ? () => ref
@@ -146,6 +209,7 @@ class _FilterBar extends StatelessWidget {
               context: context,
               label: filter.animalType?.displayName ?? 'Төрөл',
               isActive: filter.animalType != null,
+              icon: Icons.pets_outlined,
               onTap: () => _showAnimalTypePicker(context),
               onClear: filter.animalType != null
                   ? () => ref
@@ -158,6 +222,7 @@ class _FilterBar extends StatelessWidget {
               context: context,
               label: filter.coatColor ?? 'Зүс',
               isActive: filter.coatColor != null,
+              icon: Icons.palette_outlined,
               onTap: () => _showCoatColorPicker(context),
               onClear: filter.coatColor != null
                   ? () => ref
@@ -170,6 +235,7 @@ class _FilterBar extends StatelessWidget {
               context: context,
               label: filter.status?.label ?? 'Статус',
               isActive: filter.status != null,
+              icon: Icons.flag_outlined,
               onTap: () => _showStatusPicker(context),
               onClear: filter.status != null
                   ? () => ref
@@ -192,6 +258,7 @@ class _FilterBar extends StatelessWidget {
     required String label,
     required bool isActive,
     required VoidCallback onTap,
+    IconData? icon,
     VoidCallback? onClear,
   }) {
     final colors = TamgaColors.of(context);
@@ -221,6 +288,14 @@ class _FilterBar extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 16,
+                  color: isActive ? colors.primary : colors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+              ],
               Text(
                 label,
                 style: TamgaTypography.caption1(

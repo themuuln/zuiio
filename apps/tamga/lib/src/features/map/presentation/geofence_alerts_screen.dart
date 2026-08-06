@@ -34,13 +34,46 @@ class GeofenceAlertsScreen extends ConsumerWidget {
             );
           }
 
-          return ListView.separated(
+          final unread = alerts.where((a) => !a.acknowledged).length;
+
+          return ListView(
             padding: const EdgeInsets.all(TamgaSpacing.lg),
-            itemCount: alerts.length,
-            separatorBuilder: (_, _) => const SizedBox(height: TamgaSpacing.sm),
-            itemBuilder: (context, index) {
-              return _AlertTile(alert: alerts[index]);
-            },
+            children: [
+              // ── Summary header ─────────────────────────────────
+              Row(
+                children: [
+                  Text('Түүх', style: TamgaTypography.title3()),
+                  const Spacer(),
+                  if (unread > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: TamgaSpacing.sm,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer,
+                        borderRadius: BorderRadius.circular(
+                          TamgaSpacing.cornerRadiusPill,
+                        ),
+                      ),
+                      child: Text(
+                        '$unread шинэ',
+                        style: TamgaTypography.footnote(
+                          color: colors.onPrimaryContainer,
+                          weight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: TamgaSpacing.md),
+              ...alerts.map(
+                (alert) => Padding(
+                  padding: const EdgeInsets.only(bottom: TamgaSpacing.sm),
+                  child: _AlertTile(alert: alert),
+                ),
+              ),
+            ],
           );
         },
         loading: () => SkeletonLoader(
@@ -74,27 +107,27 @@ class _AlertTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = TamgaColors.of(context);
     final isEntered = alert.alertType == GeofenceAlertType.entered;
+    final accent = isEntered ? colors.primary : colors.error;
 
     return TamgaCard(
       border: alert.acknowledged
           ? null
-          : Border.all(color: colors.primary.withValues(alpha: 0.3)),
+          : Border.all(color: accent.withValues(alpha: 0.4)),
+      padding: TamgaSpacing.listCellPadding,
       child: Row(
         children: [
-          // Icon
+          // Icon — colored circle with direction glyph
           Container(
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: (isEntered ? colors.primary : colors.error).withValues(
-                alpha: 0.12,
-              ),
+              color: accent.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(
               isEntered ? Icons.login : Icons.logout,
               size: 18,
-              color: isEntered ? colors.primary : colors.error,
+              color: accent,
             ),
           ),
           const SizedBox(width: TamgaSpacing.md),
@@ -108,6 +141,7 @@ class _AlertTile extends StatelessWidget {
                   alert.horseName,
                   style: TamgaTypography.body(weight: FontWeight.w600),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   '${alert.geofenceName} — ${isEntered ? 'орлоо' : 'гарлаа'}',
                   style: TamgaTypography.caption1(
@@ -118,10 +152,39 @@ class _AlertTile extends StatelessWidget {
             ),
           ),
 
-          // Time
-          Text(
-            _timeAgo(alert.triggeredAt),
-            style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
+          // Status badge + time
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: TamgaSpacing.sm,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: alert.acknowledged
+                      ? colors.surfaceContainer
+                      : accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(
+                    TamgaSpacing.cornerRadiusSmall,
+                  ),
+                ),
+                child: Text(
+                  alert.acknowledged ? 'Уншсан' : 'Шинэ',
+                  style: TamgaTypography.caption1(
+                    color: alert.acknowledged
+                        ? colors.onSurfaceVariant
+                        : accent,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _timeAgo(alert.triggeredAt),
+                style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
+              ),
+            ],
           ),
         ],
       ),

@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		if (!["tolom", "zer"].includes(body.productType)) {
+		if (!["tolom", "zer", "zatly"].includes(body.productType)) {
 			return NextResponse.json(
-				{ error: "productType must be 'tolom' or 'zer'" },
+				{ error: "productType must be 'tolom', 'zer', or 'zatly'" },
 				{ status: 400 },
 			);
 		}

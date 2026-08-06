@@ -5,6 +5,7 @@ import '../../../core/services/local_notification_service.dart';
 import '../../../core/sync/sync_queue.dart';
 import '../../../shared/domain/event.dart';
 import '../../../shared/domain/event_registration.dart';
+import '../../shared/application/sync_providers.dart';
 import '../../shared/data/isar_storage.dart';
 import '../../shared/data/pagination/pagination_state.dart';
 import '../data/event_repository.dart';
@@ -27,6 +28,7 @@ final localEventRepositoryProvider = Provider<EventRepository>((ref) {
   return LocalEventRepository(
     storage: IsarStorage.instance,
     syncQueue: SyncQueue(),
+    syncStorage: ref.watch(isarSyncStorageProvider),
   );
 });
 

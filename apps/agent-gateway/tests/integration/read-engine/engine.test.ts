@@ -93,7 +93,7 @@ describe("ReadEngine", () => {
 			queries: [
 				{
 					dataset: "work_orders",
-					measures: [{ field: "total_amount", op: "sum", alias: "total" }],
+					measures: [{ field: "total", op: "sum", alias: "total" }],
 				},
 			],
 		};
@@ -161,7 +161,7 @@ describe("ReadEngine", () => {
 			queries: [
 				{
 					dataset: "work_orders",
-					measures: [{ field: "total_amount", op: "sum", alias: "value" }],
+					measures: [{ field: "total", op: "sum", alias: "value" }],
 				},
 				{
 					dataset: "invoices",

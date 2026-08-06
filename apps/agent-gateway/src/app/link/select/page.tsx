@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { productDisplayName, productPageTitle } from "@/lib/product-branding";
 
 interface FbPage {
 	id: string;
@@ -22,10 +23,13 @@ export default function SelectPage() {
 	const [orgId, setOrgId] = useState<string | null>(null);
 	const [productType, setProductType] = useState<string>("zer");
 
+	const productName = productDisplayName(productType);
+
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
 		setOrgId(params.get("orgId"));
 		setProductType(params.get("productType") ?? "zer");
+		document.title = productPageTitle(params.get("productType"));
 
 		const raw = document.cookie
 			.split("; ")
@@ -66,9 +70,17 @@ export default function SelectPage() {
 			const data = (await res.json()) as {
 				error?: string;
 				instagramLinked?: boolean;
+				returnUrl?: string | null;
 			};
 			if (!res.ok) throw new Error(data.error ?? "Холболт амжилтгүй.");
 			setStatus("connected");
+			// Return the user to the product app when the gateway is configured
+			// with a server-side return URL for this product.
+			if (typeof data.returnUrl === "string") {
+				window.setTimeout(() => {
+					window.location.href = data.returnUrl as string;
+				}, 1200);
+			}
 		} catch (err) {
 			setStatus("error");
 			setError(err instanceof Error ? err.message : "Холболт амжилтгүй.");
@@ -105,7 +117,7 @@ export default function SelectPage() {
 						<h1 style={titleStyle}>✅ Холбогдсон</h1>
 						<p style={descStyle}>
 							Facebook хуудас амжилттай холбогдлоо. Таны харилцагчдын мессежид
-							AI автоматаар хариулах болно.
+							{productName} AI автоматаар хариулах болно.
 						</p>
 					</>
 				)}
@@ -120,7 +132,9 @@ export default function SelectPage() {
 				{status === "ready" && pages && (
 					<>
 						<h1 style={titleStyle}>📘 Хуудас сонгох</h1>
-						<p style={descStyle}>Аль Facebook хуудсаа холбох вэ?</p>
+						<p style={descStyle}>
+							Аль Facebook хуудсаа {productName}-д холбох вэ?
+						</p>
 						<div
 							style={{ display: "flex", flexDirection: "column", gap: "12px" }}
 						>

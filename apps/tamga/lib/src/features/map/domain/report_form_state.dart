@@ -1,5 +1,6 @@
 import '../../../shared/domain/horse.dart' show HorseGender;
-import 'animal_enums.dart' show AnimalType, AnimalAge, HorseBreed;
+import 'animal_enums.dart'
+    show AnimalType, AnimalAge, HorseBreed, TravelDirection;
 
 /// Pure form state for creating a free horse/livestock recovery report.
 ///
@@ -19,6 +20,9 @@ class LostHorseReportDraft {
     this.tamgaImagePath,
     this.photoPaths = const [],
     this.lostCount = 1,
+    this.searchRadiusKm = 5.0,
+    this.travelDirection,
+    this.privateVerificationDetail,
     this.lastSeenLat,
     this.lastSeenLng,
     this.lastSeenAt,
@@ -43,6 +47,16 @@ class LostHorseReportDraft {
   final String? tamgaImagePath;
   final List<String> photoPaths;
   final int lostCount;
+
+  /// Хайх радиус — how far the community should look, in kilometers.
+  final double searchRadiusKm;
+
+  /// Хөдөлсөн зүг — likely direction of travel.
+  final TravelDirection? travelDirection;
+
+  /// Нууц баталгаажуулах тэмдэг — owner-only verification mark.
+  final String? privateVerificationDetail;
+
   final double? lastSeenLat;
   final double? lastSeenLng;
   final DateTime? lastSeenAt;
@@ -69,6 +83,9 @@ class LostHorseReportDraft {
     final errors = <String>[];
     final current = now ?? DateTime.now();
     if (lostCount < 1) errors.add('Малын тоо 1-ээс бага байж болохгүй.');
+    if (searchRadiusKm < 1 || searchRadiusKm > 100) {
+      errors.add('Хайх радиус 1-100 км хооронд байна.');
+    }
     if (lastSeenLat == null || lastSeenLng == null) {
       errors.add(
         'Сүүлд үзэгдсэн байршлаа сонгоно уу. / Select a last-seen location.',
@@ -96,8 +113,8 @@ class LostHorseReportDraft {
         '/ Add at least one useful identifier.',
       );
     }
-    if (sharePhone && (!contactPhoneVerified || contactPhone == null)) {
-      errors.add('Утас хуваалцахын өмнө баталгаажуулна уу.');
+    if (sharePhone && (contactPhone == null || contactPhone!.trim().isEmpty)) {
+      errors.add('Утас хуваалцахын тулд дугаараа оруулна уу.');
     }
     return errors;
   }

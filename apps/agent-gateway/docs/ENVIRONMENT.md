@@ -71,12 +71,19 @@ These do not block startup; each gates its own surface and fails closed when uns
 
 ### Facebook Messenger
 
-| Variable | Description | Default |
-|---|---|---|
-| `NEXT_PUBLIC_FACEBOOK_APP_ID` | Facebook App ID | _(none)_ |
-| `FB_APP_SECRET` | Facebook App Secret | _(none)_ |
-| `FB_VERIFY_TOKEN` | Facebook webhook verify token | _(none)_ |
-| `META_TOKEN_ENCRYPTION_KEY` | AES-256-GCM key for encrypting Facebook page access tokens at rest (planned — not yet wired into code) | _(none)_ |
+| Variable | Description | Default | Required for |
+|---|---|---|---|
+| `FB_APP_ID` | Facebook App ID (server-side; used in OAuth dialog + token exchange) | _(none)_ | OAuth connect, token refresh |
+| `FB_APP_SECRET` | Facebook App Secret | _(none)_ | Webhook HMAC validation |
+| `FB_VERIFY_TOKEN` | Facebook webhook verify token — MUST match the value entered in the Meta app dashboard webhook config | _(none)_ | Webhook subscription handshake |
+| `FB_OAUTH_REDIRECT_URI` | Absolute callback URL, e.g. `https://agent.zuiiotech.com/api/facebook/callback` — MUST be added to the Meta app's Valid OAuth Redirect URIs | _(none)_ | OAuth connect |
+| `NEXT_PUBLIC_FACEBOOK_APP_ID` | Public App ID for the client-side FB SDK (page-select UI in `/link/select`) | _(none)_ | Page selection UI |
+| `FB_GRAPH_API_VERSION` | Graph API version | `v25.0` | All Graph API calls |
+| `FB_RETURN_URL_ZER` | Where the user lands after connecting a page from Zer settings (e.g. `https://app.zer.example/settings`) — server-controlled, returned by `/api/facebook/select`; no redirect when unset | _(none)_ | Post-connect UX |
+| `FB_RETURN_URL_TOLOM` | Same for Tolom | _(none)_ | Post-connect UX |
+| `META_TOKEN_ENCRYPTION_KEY` | AES-256-GCM key for encrypting Facebook page access tokens at rest (wired via `20260802000000_meta_token_encryption.sql`) | _(none — derived fallback)_ | Token at-rest encryption |
+
+> ⚠️ **Deployment audit (2026-08-06):** production (`agent-gateway` on Vercel) was missing `FB_APP_ID`, `FB_OAUTH_REDIRECT_URI`, `NEXT_PUBLIC_FACEBOOK_APP_ID`, `FB_GRAPH_API_VERSION`, and migrations 007+ were never applied to the shared Supabase project (`krrkhozadforrydffegg`). The Messenger/Instagram channel is therefore non-functional in production until env vars + migrations + a fresh deploy land. See [FACEBOOK_INSTAGRAM_PLAN.md §1.5](FACEBOOK_INSTAGRAM_PLAN.md).
 
 ### WhatsApp Cloud API
 

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar/isar.dart';
 
 import '../../../app/supabase_bootstrap.dart';
+import '../../shared/data/isar_storage.dart';
 import '../domain/lost_horse_report.dart';
 import '../domain/map_enums.dart';
 import 'map_providers.dart';
@@ -22,6 +24,22 @@ final activeLostHorsesStreamProvider = StreamProvider<List<LostHorseReport>>((
   return Stream.fromFuture(
     repo.browseActiveReports().then((result) => result.getOrThrow()),
   );
+});
+
+/// Ids of recovery reports that still have a pending local sync item
+/// (upload, publish, or resolution not yet acknowledged by the server).
+final pendingRecoverySyncProvider = FutureProvider<Set<String>>((ref) async {
+  final items = await IsarStorage.instance.syncQueueItems.where().findAll();
+  const recoveryTypes = {
+    'lost_horse_report',
+    'lost_horse_publish',
+    'lost_horse_resolution',
+    'lost_horse_sighting',
+  };
+  return items
+      .where((item) => recoveryTypes.contains(item.entityType))
+      .map((item) => item.entityId)
+      .toSet();
 });
 
 /// Current user's lost horse reports.

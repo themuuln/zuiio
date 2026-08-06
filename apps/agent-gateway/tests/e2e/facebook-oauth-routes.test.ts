@@ -241,6 +241,48 @@ describe("POST /api/facebook/select", () => {
 		expect(res.cookies.get("fb_pages")?.maxAge).toBe(0);
 	});
 
+	it("returns the server-configured return URL for the product, null otherwise", async () => {
+		const sb = { from: vi.fn(() => chainableSupabase()) };
+		mockCreateServiceClient.mockReturnValue(sb);
+		process.env.FB_RETURN_URL_ZER = "https://app.zer.example/settings?tab=ai";
+		delete process.env.FB_RETURN_URL_TOLOM;
+		try {
+			// zer product → env-configured URL returned
+			const { POST } = await import("@/app/api/facebook/select/route");
+			let req = new NextRequest("http://localhost/api/facebook/select", {
+				method: "POST",
+				headers: { cookie: `fb_pages=${encodeURIComponent(pagesCookie)}` },
+				body: JSON.stringify({
+					pageId: "page-1",
+					pageName: "Авто Сервис",
+					orgId: ORG_ID,
+					productType: "zer",
+				}),
+			});
+			let res = await POST(req);
+			expect((await res.json()).returnUrl).toBe(
+				"https://app.zer.example/settings?tab=ai",
+			);
+
+			// tolom product → no env configured → null (no redirect)
+			req = new NextRequest("http://localhost/api/facebook/select", {
+				method: "POST",
+				headers: { cookie: `fb_pages=${encodeURIComponent(pagesCookie)}` },
+				body: JSON.stringify({
+					pageId: "page-1",
+					pageName: "Авто Сервис",
+					orgId: ORG_ID,
+					productType: "tolom",
+				}),
+			});
+			res = await POST(req);
+			expect((await res.json()).returnUrl).toBeNull();
+		} finally {
+			delete process.env.FB_RETURN_URL_ZER;
+			delete process.env.FB_RETURN_URL_TOLOM;
+		}
+	});
+
 	it("additionally stores an instagram connection when linked", async () => {
 		mockGetPageInfo.mockResolvedValue({
 			instagramBusinessAccount: { id: "ig-42" },

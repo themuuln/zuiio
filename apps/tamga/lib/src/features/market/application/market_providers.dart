@@ -4,6 +4,7 @@ import '../../events/application/events_providers.dart';
 import '../../../shared/domain/event.dart';
 import '../../horses/application/horses_providers.dart';
 import '../../horses/domain/horse_record.dart';
+import '../../shared/application/sync_providers.dart';
 import '../../shared/data/isar_storage.dart';
 import '../../shared/data/pagination/pagination_state.dart';
 import '../../../core/sync/sync_queue.dart';
@@ -150,6 +151,7 @@ final marketRepositoryProvider = FutureProvider<MarketRepository>((ref) async {
   return LocalMarketRepositoryV2(
     storage: IsarStorage.instance,
     syncQueue: SyncQueue(),
+    syncStorage: ref.watch(isarSyncStorageProvider),
   );
 });
 

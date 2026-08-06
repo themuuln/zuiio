@@ -61,6 +61,9 @@ class ListingCard extends StatelessWidget {
                             width: 72,
                             height: 72,
                             fit: BoxFit.cover,
+                            // Decode a 2x-sized bitmap instead of the full
+                            // original (often 1000px+) — big memory win in lists.
+                            memCacheWidth: 144,
                             placeholder: (_, _) => _ImagePlaceholder(
                               theme: theme,
                               width: 72,
@@ -204,6 +207,7 @@ class ListingGridCard extends StatelessWidget {
                         imageUrl: imageUrl,
                         fit: BoxFit.cover,
                         width: double.infinity,
+                        memCacheWidth: 800,
                         height: double.infinity,
                       ),
                     )

@@ -72,46 +72,21 @@ class _NearbyHorsesScreenState extends ConsumerState<NearbyHorsesScreen> {
                   );
                 }
 
-                return GridView.builder(
-                  padding: const EdgeInsets.all(TamgaSpacing.lg),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: TamgaSpacing.md,
-                    crossAxisSpacing: TamgaSpacing.md,
-                    childAspectRatio: 1.2,
+                return ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(
+                    TamgaSpacing.lg,
+                    TamgaSpacing.xs,
+                    TamgaSpacing.lg,
+                    TamgaSpacing.lg,
                   ),
                   itemCount: horses.length,
                   itemBuilder: (context, index) {
                     final horse = horses[index];
-                    return TamgaCard(
-                      onTap: () => _openHorseDetail(context, horse),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TamgaAvatar(
-                            name: horse.horseName,
-                            size: 48,
-                            placeholder: Icons.pets,
-                          ),
-                          const SizedBox(height: TamgaSpacing.sm),
-                          Text(
-                            horse.horseName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TamgaTypography.body(
-                              weight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          Text(
-                            horse.ownerName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TamgaTypography.caption1(
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: TamgaSpacing.sm),
+                      child: _NearbyHorseTile(
+                        horse: horse,
+                        onTap: () => _openHorseDetail(context, horse),
                       ),
                     );
                   },
@@ -146,24 +121,145 @@ class _NearbyHorsesScreenState extends ConsumerState<NearbyHorsesScreen> {
     if (!mounted || !context.mounted) return;
     result.when(
       onSuccess: (reports) {
-        final match = reports
-            .where((report) => report.horseId == horse.horseId)
+        final report = reports
+            .where((r) => r.horseId == horse.horseId)
             .firstOrNull;
-        if (match == null) {
-          TamgaToast.showError(
-            context,
-            'Энэ морины зар олдсонгүй. Одоогоор идэвхтэй зар байхгүй байна.',
+        if (report != null) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => LostHorseDetailScreen(report: report),
+            ),
           );
-          return;
+        } else {
+          TamgaToast.show(
+            context,
+            '${horse.horseName} — зар байхгүй, байршлаа хуваалцсан',
+          );
         }
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => LostHorseDetailScreen(report: match),
-          ),
-        );
       },
       onFailure: (error) =>
           TamgaToast.showError(context, friendlyErrorMessage(error)),
+    );
+  }
+}
+
+/// List row for one nearby horse — photo placeholder, identity, live badges.
+class _NearbyHorseTile extends StatelessWidget {
+  const _NearbyHorseTile({required this.horse, required this.onTap});
+
+  final HorseLocation horse;
+  final VoidCallback onTap;
+
+  String _timeAgo(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return 'сая';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}м өмнө';
+    if (diff.inHours < 24) return '${diff.inHours}ц өмнө';
+    return '${diff.inDays}ө өмнө';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = TamgaColors.of(context);
+
+    return TamgaCard(
+      onTap: onTap,
+      padding: TamgaSpacing.listCellPadding,
+      child: Row(
+        children: [
+          // Avatar — green ring signals a live shared location
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: colors.primary, width: 2),
+            ),
+            child: TamgaAvatar(name: horse.horseName, size: 44),
+          ),
+          const SizedBox(width: TamgaSpacing.md),
+
+          // Identity
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  horse.horseName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TamgaTypography.body(weight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  horse.ownerName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TamgaTypography.caption1(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                if (horse.coatColor != null) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: TamgaSpacing.sm,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.primaryContainer,
+                      borderRadius: BorderRadius.circular(
+                        TamgaSpacing.cornerRadiusSmall,
+                      ),
+                    ),
+                    child: Text(
+                      horse.coatColor!,
+                      style: TamgaTypography.caption1(
+                        color: colors.onPrimaryContainer,
+                        weight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // Live indicator + last update
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: colors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: TamgaSpacing.xs),
+                  Text(
+                    'Шууд',
+                    style: TamgaTypography.caption1(
+                      color: colors.primary,
+                      weight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _timeAgo(horse.lastUpdated),
+                style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
+              ),
+            ],
+          ),
+          const SizedBox(width: TamgaSpacing.sm),
+          Icon(Icons.chevron_right, size: 20, color: colors.outline),
+        ],
+      ),
     );
   }
 }

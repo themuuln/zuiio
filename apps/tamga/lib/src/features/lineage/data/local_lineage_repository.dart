@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 
 import '../../../core/error/app_exception.dart';
@@ -5,6 +8,7 @@ import '../../../core/error/result.dart';
 import '../../../core/sync/sync_queue.dart';
 import '../../../shared/domain/horse.dart';
 import '../../shared/data/isar_storage.dart';
+import '../../shared/data/isar_sync_storage.dart';
 import '../../shared/data/isar_schemas/isar_lineage_root.dart';
 import '../../shared/data/isar_schemas/isar_lineage_snapshot.dart';
 import '../../shared/data/isar_schemas/isar_lineage_tree_node.dart';
@@ -27,11 +31,28 @@ class LocalLineageRepository implements LineageRepository {
   LocalLineageRepository({
     required IsarStorage storage,
     required SyncQueue syncQueue,
+    IsarSyncStorage? syncStorage,
   }) : _storage = storage,
-       _syncQueue = syncQueue;
+       _syncQueue = syncQueue,
+       _syncStorage = syncStorage;
 
   final IsarStorage _storage;
   final SyncQueue _syncQueue;
+  final IsarSyncStorage? _syncStorage;
+
+  /// Persist the sync intent to the durable queue (no-op when not wired).
+  void _enqueueAndPersist(SyncQueueItem item) {
+    _syncQueue.enqueue(item);
+    final store = _syncStorage;
+    if (store == null) return;
+    unawaited(() async {
+      try {
+        await store.enqueue(item);
+      } catch (e) {
+        debugPrint('[lineage] Failed to persist queue item: $e');
+      }
+    }());
+  }
 
   // ── Seed Data ──────────────────────────────────────────────────────
 
@@ -544,7 +565,7 @@ class LocalLineageRepository implements LineageRepository {
         await _storage.lineageTreeNodes.put(node);
       });
 
-      _syncQueue.enqueue(
+      _enqueueAndPersist(
         SyncQueueItem(
           entityType: 'lineage',
           entityId: '${horseId}_parent_$parentId',
@@ -584,7 +605,7 @@ class LocalLineageRepository implements LineageRepository {
         }
       });
 
-      _syncQueue.enqueue(
+      _enqueueAndPersist(
         SyncQueueItem(
           entityType: 'lineage',
           entityId: '${horseId}_parent_$parentId',
@@ -646,7 +667,7 @@ class LocalLineageRepository implements LineageRepository {
       if (birthYear != null) updateData['birthYear'] = birthYear;
       if (notes != null) updateData['notes'] = notes;
 
-      _syncQueue.enqueue(
+      _enqueueAndPersist(
         SyncQueueItem(
           entityType: 'lineage',
           entityId: horseId,

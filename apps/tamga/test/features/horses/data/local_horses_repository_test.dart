@@ -49,13 +49,11 @@ void main() {
   });
 
   group('LocalHorsesRepository', () {
-    test('fetchHorses seeds six default horses on an empty database', () async {
+    test('fetchHorses returns empty list on an empty database', () async {
       final result = await repository.fetchHorses();
 
       expect(result.isSuccess, true);
-      expect(result.value, hasLength(6));
-      expect(result.value.map((h) => h.id), contains('khan-khuleg'));
-      expect(result.value.every((h) => h.id.isNotEmpty), true);
+      expect(result.value, isEmpty);
     });
 
     test(
@@ -74,18 +72,24 @@ void main() {
       },
     );
 
-    test(
-      'fetchHorsesPaginated seeds when empty and reports the total',
-      () async {
-        final result = await repository.fetchHorsesPaginated(page: 0, limit: 3);
+    Future<void> seedHorses(int count) async {
+      for (var i = 0; i < count; i++) {
+        await repository.saveHorse(_horse(id: 'h$i', name: 'Морь $i'));
+      }
+    }
 
-        expect(result.isSuccess, true);
-        expect(result.value.items, hasLength(3));
-        expect(result.value.totalCount, 6);
-      },
-    );
+    test('fetchHorsesPaginated reports the total', () async {
+      await seedHorses(6);
+
+      final result = await repository.fetchHorsesPaginated(page: 0, limit: 3);
+
+      expect(result.isSuccess, true);
+      expect(result.value.items, hasLength(3));
+      expect(result.value.totalCount, 6);
+    });
 
     test('fetchHorsesPaginated returns successive pages', () async {
+      await seedHorses(6);
       final page0 = (await repository.fetchHorsesPaginated(
         page: 0,
         limit: 2,
@@ -112,6 +116,7 @@ void main() {
     });
 
     test('fetchHorsesPaginated beyond the data returns empty items', () async {
+      await seedHorses(6);
       final result = await repository.fetchHorsesPaginated(page: 99, limit: 10);
 
       expect(result.isSuccess, true);
@@ -119,13 +124,13 @@ void main() {
       expect(result.value.totalCount, 6);
     });
 
-    test('fetchHorsesPaginated seeding is idempotent', () async {
+    test('fetchHorsesPaginated never seeds demo data', () async {
       await repository.fetchHorsesPaginated(page: 0, limit: 3);
 
       final second = await repository.fetchHorsesPaginated(page: 0, limit: 10);
 
-      expect(second.value.totalCount, 6);
-      expect(second.value.items, hasLength(6));
+      expect(second.value.totalCount, 0);
+      expect(second.value.items, isEmpty);
     });
 
     test('saveHorse persists the horse to Isar storage', () async {

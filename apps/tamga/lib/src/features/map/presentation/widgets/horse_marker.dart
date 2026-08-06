@@ -52,20 +52,32 @@ class HorseMarker extends StatelessWidget {
           child: const Icon(Icons.pets, size: 18, color: Colors.white),
         ),
 
-        // Label
+        // Label — rounded chip with subtle elevation so it reads over any
+        // map basemap.
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(
-            horizontal: TamgaSpacing.xs,
-            vertical: 2,
+            horizontal: TamgaSpacing.sm,
+            vertical: 3,
           ),
           decoration: BoxDecoration(
             color: colors.surface,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadiusSmall),
+            border: Border.all(color: colors.outlineVariant),
+            boxShadow: [
+              BoxShadow(
+                color: colors.shadow.withValues(alpha: 0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
           child: Text(
             name,
-            style: TamgaTypography.caption1(color: colors.onSurface),
+            style: TamgaTypography.caption1(
+              color: colors.onSurface,
+              weight: FontWeight.w600,
+            ),
           ),
         ),
       ],
