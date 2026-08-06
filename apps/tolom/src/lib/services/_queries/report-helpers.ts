@@ -70,7 +70,8 @@ export async function fetchCompletedWoIds(
     q = q.eq("mechanic_id", mechanicId);
   }
 
-  const { data } = await q;
+  const { data, error } = await q;
+  if (error) throw error;
   if (!data) return [];
   return (data as unknown as Array<{ id: string }>).map((w) => w.id);
 }
@@ -116,6 +117,9 @@ export async function fetchWoRevenue(
       )
       .in("work_order_id", woIds),
   ]);
+
+  if (svcs.error) throw svcs.error;
+  if (parts.error) throw parts.error;
 
   let serviceRevenue = 0;
   let serviceCost = 0;

@@ -412,9 +412,9 @@ export function VehicleForm({
       // Steering (wheel position)
       if (d.steering) {
         const steeringEn = mapMongolianValue(d.steering, {
-          Баруун: "Right",
-          Зүүн: "Left",
-          Төв: "Center",
+          баруун: "Right",
+          зүүн: "Left",
+          төв: "Center",
         });
         if (steeringEn) form.setValue("steering", steeringEn);
       }

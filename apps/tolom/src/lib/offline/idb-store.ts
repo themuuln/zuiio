@@ -10,8 +10,9 @@ const DB_VERSION = 1;
 
 /**
  * All domain object stores. Each represents a data type that can be
- * cached offline. The IndexedDB key is `id` for single records and
- * `org_id::id` for org-scoped records.
+ * cached offline. The IndexedDB key is `id` for every record; org
+ * scoping lives in the `organization_id` index (records are keyed by id
+ * only, so a same-id record from another org overwrites the earlier one).
  */
 export const STORES = [
   "organizations",

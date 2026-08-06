@@ -50,6 +50,10 @@ export async function updateWorkOrderStatus(
       .single();
 
   if (currentWorkOrderError || !currentWorkOrder) {
+    logger.error(
+      { workOrderId: id, orgId, dbError: currentWorkOrderError },
+      "updateWorkOrderStatus: failed to load work order",
+    );
     throw new NotFoundError("Work order not found");
   }
 
@@ -71,7 +75,13 @@ export async function updateWorkOrderStatus(
     )
     .single();
 
-  if (error || !data) throw new NotFoundError("Work order not found");
+  if (error || !data) {
+    logger.error(
+      { workOrderId: id, orgId, dbError: error },
+      "updateWorkOrderStatus: failed to update work order",
+    );
+    throw new NotFoundError("Work order not found");
+  }
 
   if (statusChanged) {
     await insertStatusHistory(

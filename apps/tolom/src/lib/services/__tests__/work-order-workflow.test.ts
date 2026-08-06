@@ -27,7 +27,7 @@ vi.mock("@/lib/errors", () => ({
     }
   },
 }));
-vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn() } }));
+vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), error: vi.fn() } }));
 vi.mock("@/lib/sentry-report-server", () => ({ reportServerError: vi.fn() }));
 vi.mock("@/lib/supabase/with-branch", () => ({
   resolveBranchId: vi.fn().mockResolvedValue("branch-1"),
@@ -109,6 +109,12 @@ describe("updateWorkOrderStatus", () => {
     await expect(
       updateWorkOrderStatus(db, WO_ID, ORG_ID, "Diagnosing"),
     ).rejects.toThrow("Work order not found");
+
+    // The underlying DB error is logged so the real cause is not masked
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ dbError: { message: "not found" } }),
+      "updateWorkOrderStatus: failed to load work order",
+    );
   });
 
   it("updates status and records history when status changes", async () => {

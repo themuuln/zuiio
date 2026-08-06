@@ -30,5 +30,9 @@ export async function getWorkOrderDetail(
     throw new NotFoundError("Work order not found");
   }
 
+  if (!data) {
+    throw new NotFoundError("Work order not found");
+  }
+
   return data as unknown as WorkOrderDetail;
 }

@@ -304,7 +304,7 @@ export function useCatalogMutations<T extends EntityKind>(
     const saveData: Item = {
       [nf]: found[nf],
       quantity: found.quantity ?? 1,
-      unit_price: Number(found.final_price ?? found.unit_price ?? 0),
+      unit_price: Number(found.unit_price ?? found.final_price ?? 0),
     };
 
     updateCol(setWo, ck, (all) => all.filter((i) => i.id !== id));
@@ -529,9 +529,12 @@ export function useCatalogMutations<T extends EntityKind>(
             ...i,
             discount_amount: oldAmount,
             discount_percentage: oldPercent,
-            final_price:
-              Number(i.unit_price ?? 0) * Number(i.quantity ?? 1) -
-              Number(oldAmount),
+            final_price: calculateFinalPrice(
+              Number(i.unit_price ?? 0),
+              Number(i.quantity ?? 1),
+              oldAmount,
+              oldPercent,
+            ),
           };
         }),
       );
