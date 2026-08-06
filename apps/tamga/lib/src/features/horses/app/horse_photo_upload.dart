@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -71,7 +72,9 @@ Future<Result<String>> uploadHorsePhoto({
   // Clean up compressed file
   try {
     await compressedFile.delete();
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('[HorsePhotoUpload] Failed to delete temp file: $e');
+  }
 
   return uploadResult.map((upload) {
     // Update Supabase

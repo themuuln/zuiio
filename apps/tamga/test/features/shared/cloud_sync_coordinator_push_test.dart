@@ -5,15 +5,22 @@ import 'package:tamga/src/core/sync/sync_queue.dart';
 import 'package:tamga/src/core/sync/connection_status.dart';
 import 'package:tamga/src/features/horses/data/co_ownership_repository.dart';
 import 'package:tamga/src/features/horses/domain/co_ownership.dart';
+import 'package:tamga/src/features/horses/domain/horse_record.dart';
 import 'package:tamga/src/features/documents/data/document_repository.dart';
 import 'package:tamga/src/features/certificates/data/certificate_repository.dart';
 import 'package:tamga/src/features/payments/data/payment_repository.dart';
 import 'package:tamga/src/features/profile/application/cloud_sync_coordinator.dart';
 import 'package:tamga/src/features/horses/data/horses_repository.dart';
 import 'package:tamga/src/features/health/data/health_repository.dart';
+import 'package:tamga/src/shared/domain/health_log.dart';
 import 'package:tamga/src/features/events/data/event_repository.dart';
 import 'package:tamga/src/features/market/data/market_repository.dart';
+import 'package:tamga/src/features/market/data/supabase_market_repository.dart';
+import 'package:tamga/src/features/market/domain/market_listing.dart';
 import 'package:tamga/src/features/breeding/data/breeding_repository.dart';
+import 'package:tamga/src/features/breeding/data/supabase_breeding_repository.dart';
+import 'package:tamga/src/features/breeding/domain/breeding_record.dart';
+import 'package:tamga/src/shared/domain/event.dart';
 import 'package:tamga/src/features/profile/data/profile_settings_repository.dart';
 import 'package:tamga/src/features/map/data/map_repository.dart';
 import 'package:tamga/src/features/map/data/lost_horse_repository.dart';
@@ -34,6 +41,12 @@ class MockEventRepository extends Mock implements EventRepository {}
 class MockMarketRepository extends Mock implements MarketRepository {}
 
 class MockBreedingRepository extends Mock implements BreedingRepository {}
+
+class MockSupabaseMarketRepository extends Mock
+    implements SupabaseMarketRepository {}
+
+class MockSupabaseBreedingRepository extends Mock
+    implements SupabaseBreedingRepository {}
 
 class MockProfileSettingsRepository extends Mock
     implements ProfileSettingsRepository {}
@@ -90,6 +103,80 @@ void _registerFallbackValues() {
       updatedAt: DateTime.now(),
     ),
   );
+  registerFallbackValue(
+    HealthLog(
+      id: 'fallback-hl',
+      horseId: 'fallback-horse',
+      logType: LogType.vaccination,
+      date: null,
+      notes: '',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    ),
+  );
+  registerFallbackValue(
+    Event(
+      id: 'fallback-evt',
+      horseId: 'fallback-horse',
+      title: 'fallback',
+      eventType: EventType.race,
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    ),
+  );
+  registerFallbackValue(
+    MarketListing.fromJson({
+      'id': 'fallback-listing',
+      'horseId': 'h',
+      'sellerId': 's',
+      'title': 'T',
+      'description': 'D',
+      'priceAmount': 1000,
+      'currency': 'MNT',
+      'saleType': 'sale',
+      'status': 'published',
+      'locationLabel': 'L',
+      'disciplineTags': <String>[],
+      'documentTags': <String>[],
+      'mediaUrls': <String>[],
+      'isSellerVerified': false,
+      'createdAt': '2026-01-01T00:00:00.000',
+      'updatedAt': '2026-01-01T00:00:00.000',
+    }),
+  );
+  registerFallbackValue(
+    BreedingRecord(
+      id: 'fallback-br',
+      sireId: 'sire',
+      sireName: 'S',
+      damId: 'dam',
+      damName: 'D',
+      breedingDate: DateTime(2026),
+      expectedFoalingDate: DateTime(2026, 5),
+      status: 'Хээлтсэн',
+      herdLabel: '',
+      notes: '',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    ),
+  );
+  registerFallbackValue(
+    HorseRecord(
+      id: 'fallback-horse',
+      ownerId: 'owner',
+      name: 'Морь',
+      relationLabel: '',
+      coat: 'Хээр',
+      birthYear: 2020,
+      awardCount: 0,
+      offspringCount: 0,
+      isOwnedByHousehold: true,
+      notes: '',
+      gender: HorseGender.gelding,
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    ),
+  );
 }
 
 // ── Test coordinator factory ────────────────────────────────────────────
@@ -112,6 +199,11 @@ CloudSyncCoordinator createTestCoordinator({
   CertificateRepository? certificateRepository,
   PaymentRepository? paymentRepository,
   LostHorseRepository? lostHorseRepository,
+  HorsesRepository? cloudHorsesRepository,
+  HealthRepository? cloudHealthRepository,
+  EventRepository? cloudEventRepository,
+  SupabaseMarketRepository? cloudMarketRepository,
+  SupabaseBreedingRepository? cloudBreedingRepository,
 }) {
   return CloudSyncCoordinator(
     horsesRepository: horsesRepository ?? MockHorsesRepository(),
@@ -129,6 +221,11 @@ CloudSyncCoordinator createTestCoordinator({
     certificateRepository: certificateRepository ?? MockCertificateRepository(),
     paymentRepository: paymentRepository ?? MockPaymentRepository(),
     lostHorseRepository: lostHorseRepository,
+    cloudHorsesRepository: cloudHorsesRepository,
+    cloudHealthRepository: cloudHealthRepository,
+    cloudEventRepository: cloudEventRepository,
+    cloudMarketRepository: cloudMarketRepository,
+    cloudBreedingRepository: cloudBreedingRepository,
   );
 }
 
@@ -1035,5 +1132,298 @@ void main() {
       // Reset for clean state
       coordinator.testSetSyncing(false);
     });
+  });
+
+  // ── Cloud push handlers write to Supabase repos ────────────────────
+  //
+  // Regression guard: these handlers used to re-save into the LOCAL repos and
+  // delete the queue row — a silent no-op that never reached the cloud.
+
+  group('Cloud push handlers target Supabase repos', () {
+    test('_pushHealthLog create saves via the cloud health repo', () async {
+      final cloudHealth = MockHealthRepository();
+      when(() => cloudHealth.saveHealthLog(any())).thenAnswer(
+        (_) async => Result.ok(
+          HealthLog(
+            id: 'hl-1',
+            horseId: 'h1',
+            logType: LogType.vaccination,
+            date: null,
+            notes: '',
+            createdAt: DateTime(2026, 1, 1),
+            updatedAt: DateTime(2026, 1, 1),
+          ),
+        ),
+      );
+      final coordinator = createTestCoordinator(
+        cloudHealthRepository: cloudHealth,
+      );
+      final item = SyncQueueItem(
+        entityType: 'health',
+        entityId: 'hl-1',
+        action: SyncAction.create,
+        data: {
+          'id': 'hl-1',
+          'horseId': 'h1',
+          'logType': 'vaccination',
+          'date': null,
+          'createdAt': '2026-01-01T00:00:00.000',
+          'updatedAt': '2026-01-01T00:00:00.000',
+        },
+        timestamp: DateTime(2026, 6, 1),
+      );
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+      verify(() => cloudHealth.saveHealthLog(any())).called(1);
+    });
+
+    test('_pushHealthLog delete calls the cloud health repo', () async {
+      final cloudHealth = MockHealthRepository();
+      when(
+        () => cloudHealth.deleteHealthLog(any(), any()),
+      ).thenAnswer((_) async => const Result<void>.ok(null));
+      final coordinator = createTestCoordinator(
+        cloudHealthRepository: cloudHealth,
+      );
+      final item = SyncQueueItem(
+        entityType: 'health',
+        entityId: 'hl-del',
+        action: SyncAction.delete,
+        data: {'horseId': 'h1'},
+        timestamp: DateTime(2026, 6, 1),
+      );
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+      verify(() => cloudHealth.deleteHealthLog('h1', 'hl-del')).called(1);
+    });
+
+    test('_pushEvent create saves via the cloud event repo', () async {
+      final cloudEvents = MockEventRepository();
+      when(() => cloudEvents.saveEvent(any())).thenAnswer(
+        (_) async => Result.ok(
+          Event(
+            id: 'evt-1',
+            horseId: 'h1',
+            title: 'Т',
+            eventType: EventType.race,
+            createdAt: DateTime(2026, 1, 1),
+            updatedAt: DateTime(2026, 1, 1),
+          ),
+        ),
+      );
+      final coordinator = createTestCoordinator(
+        cloudEventRepository: cloudEvents,
+      );
+      final item = SyncQueueItem(
+        entityType: 'event',
+        entityId: 'evt-1',
+        action: SyncAction.create,
+        data: {
+          'id': 'evt-1',
+          'horseId': 'h1',
+          'title': 'Т',
+          'eventType': 'race',
+          'createdAt': '2026-01-01T00:00:00.000',
+          'updatedAt': '2026-01-01T00:00:00.000',
+        },
+        timestamp: DateTime(2026, 6, 1),
+      );
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+      verify(() => cloudEvents.saveEvent(any())).called(1);
+    });
+
+    test(
+      '_pushMarketListing create upserts via the cloud market repo',
+      () async {
+        final cloudMarket = MockSupabaseMarketRepository();
+        when(() => cloudMarket.create(any())).thenAnswer(
+          (_) async => Result.ok(
+            MarketListing.fromJson({
+              'id': 'lst-1',
+              'horseId': 'h',
+              'sellerId': 's',
+              'title': 'T',
+              'description': 'D',
+              'priceAmount': 1000,
+              'currency': 'MNT',
+              'saleType': 'sale',
+              'status': 'published',
+              'locationLabel': 'L',
+              'disciplineTags': <String>[],
+              'documentTags': <String>[],
+              'mediaUrls': <String>[],
+              'isSellerVerified': false,
+              'createdAt': '2026-01-01T00:00:00.000',
+              'updatedAt': '2026-01-01T00:00:00.000',
+            }),
+          ),
+        );
+        final coordinator = createTestCoordinator(
+          cloudMarketRepository: cloudMarket,
+        );
+        final item = SyncQueueItem(
+          entityType: 'market',
+          entityId: 'lst-1',
+          action: SyncAction.create,
+          data: {
+            'id': 'lst-1',
+            'horseId': 'h',
+            'sellerId': 's',
+            'title': 'T',
+            'description': 'D',
+            'priceAmount': 1000,
+            'currency': 'MNT',
+            'saleType': 'sale',
+            'status': 'published',
+            'locationLabel': 'L',
+            'disciplineTags': <String>[],
+            'documentTags': <String>[],
+            'mediaUrls': <String>[],
+            'isSellerVerified': false,
+            'createdAt': '2026-01-01T00:00:00.000',
+            'updatedAt': '2026-01-01T00:00:00.000',
+          },
+          timestamp: DateTime(2026, 6, 1),
+        );
+
+        final result = await coordinator.testPushItem(item);
+
+        expect(result.isSuccess, isTrue);
+        verify(() => cloudMarket.create(any())).called(1);
+      },
+    );
+
+    test('_pushMarketListing delete removes the remote row', () async {
+      final cloudMarket = MockSupabaseMarketRepository();
+      when(
+        () => cloudMarket.delete(any()),
+      ).thenAnswer((_) async => const Result<void>.ok(null));
+      final coordinator = createTestCoordinator(
+        cloudMarketRepository: cloudMarket,
+      );
+      final item = SyncQueueItem(
+        entityType: 'market',
+        entityId: 'lst-del',
+        action: SyncAction.delete,
+        data: {},
+        timestamp: DateTime(2026, 6, 1),
+      );
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+      verify(() => cloudMarket.delete('lst-del')).called(1);
+    });
+
+    test(
+      '_pushBreedingRecord create upserts via the cloud breeding repo',
+      () async {
+        final cloudBreeding = MockSupabaseBreedingRepository();
+        when(() => cloudBreeding.create(any())).thenAnswer(
+          (_) async => Result.ok(
+            BreedingRecord(
+              id: 'br-1',
+              sireId: 'sire',
+              sireName: 'S',
+              damId: 'dam',
+              damName: 'D',
+              breedingDate: DateTime(2026, 1, 1),
+              expectedFoalingDate: DateTime(2026, 5, 1),
+              status: 'confirmed',
+              herdLabel: '',
+              notes: '',
+              createdAt: DateTime(2026, 1, 1),
+              updatedAt: DateTime(2026, 1, 1),
+            ),
+          ),
+        );
+        final coordinator = createTestCoordinator(
+          cloudBreedingRepository: cloudBreeding,
+        );
+        final item = SyncQueueItem(
+          entityType: 'breeding',
+          entityId: 'br-1',
+          action: SyncAction.create,
+          data: {
+            'id': 'br-1',
+            'sireId': 'sire',
+            'sireName': 'S',
+            'damId': 'dam',
+            'damName': 'D',
+            'breedingDate': '2026-01-01T00:00:00.000',
+            'expectedFoalingDate': '2026-05-01T00:00:00.000',
+            'status': 'confirmed',
+            'herdLabel': '',
+            'notes': '',
+            'createdAt': '2026-01-01T00:00:00.000',
+            'updatedAt': '2026-01-01T00:00:00.000',
+          },
+          timestamp: DateTime(2026, 6, 1),
+        );
+
+        final result = await coordinator.testPushItem(item);
+
+        expect(result.isSuccess, isTrue);
+        verify(() => cloudBreeding.create(any())).called(1);
+      },
+    );
+
+    test('_pushHorse delete hard-deletes via the cloud horses repo', () async {
+      final cloudHorses = MockHorsesRepository();
+      when(
+        () => cloudHorses.deleteHorse(any()),
+      ).thenAnswer((_) async => const Result<void>.ok(null));
+      final coordinator = createTestCoordinator(
+        cloudHorsesRepository: cloudHorses,
+      );
+      final item = SyncQueueItem(
+        entityType: 'horse',
+        entityId: 'horse-del',
+        action: SyncAction.delete,
+        data: {},
+        timestamp: DateTime(2026, 6, 1),
+      );
+
+      final result = await coordinator.testPushItem(item);
+
+      expect(result.isSuccess, isTrue);
+      verify(() => cloudHorses.deleteHorse('horse-del')).called(1);
+    });
+
+    test(
+      '_pushMarketMessage dispatches (guard fails without Supabase)',
+      () async {
+        final coordinator = createTestCoordinator();
+        final item = SyncQueueItem(
+          entityType: 'market_message',
+          entityId: 'msg-1',
+          action: SyncAction.create,
+          data: {
+            'id': 'msg-1',
+            'conversationId': 'conv-1',
+            'senderId': 'u-1',
+            'text': 'Сайн уу',
+            'timestamp': '2026-06-01T00:00:00.000',
+            'read': false,
+          },
+          timestamp: DateTime(2026, 6, 1),
+        );
+
+        final result = await coordinator.testPushItem(item);
+
+        // Without a configured client the handler reports the configuration
+        // guard failure (NOT the unknown-entity dead letter) — proving the
+        // message is now dispatched to its own handler.
+        expect(result.isFailure, isTrue);
+        expect(result.error.code, 'SUPABASE_NOT_CONFIGURED');
+      },
+    );
   });
 }

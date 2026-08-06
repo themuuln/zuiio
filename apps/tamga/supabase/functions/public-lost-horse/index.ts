@@ -83,6 +83,15 @@ Deno.serve(async (req: Request) => {
       .eq("report_id", report.id)
       .order("sort_order", { ascending: true });
 
+    // Recovery media lives in a private bucket — hand out service-role signed
+    // URLs (7 days) so anonymous visitors can actually see photos and the
+    // tamga image without exposing the storage layout.
+    const sign = (path: string) =>
+      supabase.storage
+        .from("lost-horse-reports")
+        .createSignedUrl(path, 60 * 60 * 24 * 7)
+        .then(({ data, error }) => (error || !data ? null : data.signedUrl));
+
     const locationParts =
       report.public_location_precision === "aimag"
         ? [report.location_aimag]
@@ -90,13 +99,27 @@ Deno.serve(async (req: Request) => {
           ? [report.location_aimag, report.location_sum, report.location_bag]
           : [report.location_aimag, report.location_sum];
     const location = locationParts.filter(Boolean).map(escapeHtml).join(" · ");
-    const photos = (media ?? [])
-      .filter((item) => item.media_type === "photo")
-      .map(
-        (item) =>
-          `<img src="${escapeHtml(item.url)}" alt="Морины зураг" loading="lazy">`,
+    const photos = (
+      await Promise.all(
+        (media ?? [])
+          .filter((item) => item.media_type === "photo")
+          .map(async (item) => {
+            const url = await sign(String(item.url));
+            return url
+              ? `<img src="${escapeHtml(url)}" alt="Морины зураг" loading="lazy">`
+              : "";
+          }),
       )
+    )
+      .filter(Boolean)
       .join("");
+    let tamgaImage = "";
+    if (report.tamga_image_url) {
+      const url = await sign(String(report.tamga_image_url));
+      if (url) {
+        tamgaImage = `<p><strong>Тамга:</strong><br><img src="${escapeHtml(url)}" alt="Тамганы зураг"></p>`;
+      }
+    }
     const contactPhone = normalizePhone(report.contact_phone);
     const contact =
       report.public_contact_mode === "phone" && contactPhone
@@ -111,8 +134,7 @@ Deno.serve(async (req: Request) => {
 <p class="meta">${location || "Байршил тодорхойгүй"}</p><p class="meta">Сүүлд үзэгдсэн: ${escapeHtml(report.last_seen_at)}</p>
 ${photos ? `<figure>${photos}</figure>` : ""}<p class="description">${escapeHtml(report.description || "Тайлбар байхгүй")}</p>
 ${report.animal_type ? `<p class="meta">Төрөл: ${escapeHtml(report.animal_type)}${report.coat_color ? ` · Зүс: ${escapeHtml(report.coat_color)}` : ""}</p>` : ""}
-${report.tamga_image_url ? `<p><strong>Тамга:</strong><br><img src="${escapeHtml(report.tamga_image_url)}" alt="Тамганы зураг"></p>` : ""}
-${report.ear_mark_description ? `<p><strong>Имийн тайлбар:</strong> ${escapeHtml(report.ear_mark_description)}</p>` : ""}${contact}
+${report.ear_mark_description ? `<p><strong>Имийн тайлбар:</strong> ${escapeHtml(report.ear_mark_description)}</p>` : ""}${tamgaImage}${contact}
 </main></body></html>`);
   } catch (error) {
     console.error("Public lost-horse page error:", error);

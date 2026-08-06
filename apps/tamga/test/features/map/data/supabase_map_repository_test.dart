@@ -389,7 +389,10 @@ Map<String, dynamic> pastureZoneRow({
     'is_active': true,
     'created_at': null,
     'updated_at': null,
-    'pasture_assignments': ?assignments,
+    // isar_generator's bundled analyzer predates null-aware elements, so the
+    // conditional entry form is intentional.
+    // ignore: use_null_aware_elements
+    if (assignments != null) 'pasture_assignments': assignments,
   };
 }
 

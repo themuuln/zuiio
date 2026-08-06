@@ -13,21 +13,27 @@ import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_queue.dart';
 import '../../../shared/domain/health_log.dart';
 import '../../breeding/data/breeding_repository.dart';
+import '../../breeding/data/supabase_breeding_repository.dart';
 import '../../breeding/domain/breeding_record.dart';
 import '../../certificates/data/certificate_repository.dart';
 import '../../documents/data/document_repository.dart';
 import '../../documents/domain/document_record.dart';
 import '../../events/data/event_repository.dart';
+import '../../events/data/supabase_event_repository.dart';
 import '../../../shared/domain/event.dart';
 import '../../horses/data/co_ownership_repository.dart';
 import '../../horses/data/horses_repository.dart';
+import '../../horses/data/supabase_horses_repository.dart';
 import '../../horses/domain/co_ownership.dart';
 import '../../horses/domain/horse_record.dart';
 import '../../market/data/market_repository.dart';
+import '../../market/data/supabase_market_repository.dart';
 import '../../market/domain/market_listing.dart';
+import '../../market/domain/market_message.dart';
 import '../../payments/data/payment_repository.dart';
 import '../../shared/data/isar_sync_storage.dart';
 import '../../health/data/health_repository.dart';
+import '../../health/data/supabase_health_repository.dart';
 import '../../map/data/map_repository.dart';
 import '../../map/domain/geofence_alert.dart';
 import '../../map/domain/horse_location.dart';
@@ -137,6 +143,13 @@ class CloudSyncCoordinator {
     required this.certificateRepository,
     required this.paymentRepository,
     this.lostHorseRepository,
+    // Cloud-side repos for queue pushes. Default to real Supabase
+    // implementations; tests inject mocks.
+    this.cloudHorsesRepository,
+    this.cloudHealthRepository,
+    this.cloudEventRepository,
+    this.cloudMarketRepository,
+    this.cloudBreedingRepository,
   });
 
   final HorsesRepository horsesRepository;
@@ -153,6 +166,33 @@ class CloudSyncCoordinator {
   final CertificateRepository certificateRepository;
   final LostHorseRepository? lostHorseRepository;
   final PaymentRepository paymentRepository;
+
+  /// Cloud-side repositories used by queue push handlers.
+  ///
+  /// The local [*Repository] fields above back the UI; pushes must write to
+  /// Supabase — wiring the local repos as push targets silently dropped
+  /// offline changes (re-save locally, delete the queue row, nothing reaches
+  /// the cloud).
+  final HorsesRepository? cloudHorsesRepository;
+  final HealthRepository? cloudHealthRepository;
+  final EventRepository? cloudEventRepository;
+  final SupabaseMarketRepository? cloudMarketRepository;
+  final SupabaseBreedingRepository? cloudBreedingRepository;
+
+  HorsesRepository get _cloudHorses =>
+      cloudHorsesRepository ?? SupabaseHorsesRepository();
+
+  HealthRepository get _cloudHealth =>
+      cloudHealthRepository ?? SupabaseHealthRepository();
+
+  EventRepository get _cloudEvents =>
+      cloudEventRepository ?? SupabaseEventRepository();
+
+  SupabaseMarketRepository get _cloudMarket =>
+      cloudMarketRepository ?? SupabaseMarketRepository();
+
+  SupabaseBreedingRepository get _cloudBreeding =>
+      cloudBreedingRepository ?? SupabaseBreedingRepository();
 
   /// Sync-ийн одоогийн төлөв.
   SyncState _state = const SyncState();
@@ -432,6 +472,8 @@ class CloudSyncCoordinator {
           return _pushLineageNode(item);
         case 'payment':
           return _pushPayment(item);
+        case 'market_message':
+          return _pushMarketMessage(item);
         default:
           developer.log(
             'Warning: unknown entity type "${item.entityType}" for item ${item.entityId}',
@@ -463,9 +505,20 @@ class CloudSyncCoordinator {
 
   Future<Result<bool>> _pushHorse(SyncQueueItem item) async {
     if (item.action == SyncAction.delete) {
-      // Delete — Supabase дээр soft delete эсвэл hard delete хийх боломжтой
-      // Одоогоор амжилттай гэж тэмдэглэнэ (sync delete flow ирээдүйд)
-      return const Result.ok(true);
+      // Hard delete on the remote side so the next full pull does not
+      // resurrect the horse.
+      try {
+        final result = await _cloudHorses.deleteHorse(item.entityId);
+        return result.map((_) => true);
+      } catch (e) {
+        return Result.fail(
+          AppException(
+            message: 'Horse delete push алдаа: $e',
+            code: 'HORSE_DELETE_PUSH_ERROR',
+            details: {'entityId': item.entityId},
+          ),
+        );
+      }
     }
 
     final horse = Horse.fromJson(item.data);
@@ -486,7 +539,7 @@ class CloudSyncCoordinator {
       return const Result.ok(true);
     }
 
-    final result = await horsesRepository.saveHorse(horse);
+    final result = await _cloudHorses.saveHorse(horse);
     return result.map((_) => true);
   }
 
@@ -494,12 +547,12 @@ class CloudSyncCoordinator {
     if (item.action == SyncAction.delete) {
       final logId = item.entityId;
       final horseId = item.data['horseId'] as String? ?? '';
-      final result = await healthRepository.deleteHealthLog(horseId, logId);
+      final result = await _cloudHealth.deleteHealthLog(horseId, logId);
       return result.map((_) => true);
     }
 
     final log = HealthLog.fromJson(item.data);
-    final result = await healthRepository.saveHealthLog(log);
+    final result = await _cloudHealth.saveHealthLog(log);
     return result.map((_) => true);
   }
 
@@ -518,13 +571,13 @@ class CloudSyncCoordinator {
       // Cloud дээрх өгөгдөл илүү шинэ — гэхдээ local өөрчлөлтийг push хийнэ
     }
 
-    final result = await eventRepository.saveEvent(event);
+    final result = await _cloudEvents.saveEvent(event);
     return result.map((_) => true);
   }
 
   Future<Result<bool>> _pushMarketListing(SyncQueueItem item) async {
     if (item.action == SyncAction.delete) {
-      final result = await marketRepository.deleteListing(item.entityId);
+      final result = await _cloudMarket.delete(item.entityId);
       return result.map((_) => true);
     }
 
@@ -536,19 +589,51 @@ class CloudSyncCoordinator {
       // Cloud дээрх өгөгдөл илүү шинэ — гэхдээ local өөрчлөлтийг push хийнэ
     }
 
-    final result = await marketRepository.saveListing(listing);
+    final result = await _cloudMarket.create(listing);
     return result.map((_) => true);
   }
 
   Future<Result<bool>> _pushBreedingRecord(SyncQueueItem item) async {
     if (item.action == SyncAction.delete) {
-      // Breeding delete flow ирээдүйд
-      return const Result.ok(true);
+      final result = await _cloudBreeding.delete(item.entityId);
+      return result.map((_) => true);
     }
 
     final record = BreedingRecord.fromJson(item.data);
-    final result = await breedingRepository.saveBreedingRecord(record);
-    return result.map((list) => list.isNotEmpty);
+    final result = await _cloudBreeding.create(record);
+    return result.map((_) => true);
+  }
+
+  Future<Result<bool>> _pushMarketMessage(SyncQueueItem item) async {
+    try {
+      if (item.action == SyncAction.delete) {
+        // Delete not supported for messages
+        return const Result.ok(true);
+      }
+
+      final client = getConfiguredSupabaseClient();
+      if (client == null) {
+        return const Result.fail(
+          AppException(
+            message: 'Supabase тохиргоо байхгүй байна',
+            code: 'SUPABASE_NOT_CONFIGURED',
+          ),
+        );
+      }
+
+      final message = MarketMessage.fromJson(item.data);
+      // Mirrors SupabaseMessageRepository.sendMessage's cloud write.
+      await client.from('messages').upsert(message.toJson());
+      return const Result.ok(true);
+    } catch (e) {
+      return Result.fail(
+        AppException(
+          message: 'Market message push алдаа: $e',
+          code: 'MARKET_MESSAGE_PUSH_ERROR',
+          details: {'entityId': item.entityId},
+        ),
+      );
+    }
   }
 
   // ── Map entity push ───────────────────────────────────────────

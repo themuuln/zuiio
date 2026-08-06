@@ -54,6 +54,10 @@ class IsarLostHorseReport {
   // ── New: Tamga / Identification ──
   String? tamgaImageUrl;
   String? earMarkDescription;
+  String? travelDirection; // stored as string from TravelDirection.name
+
+  // ── New: Verification ──
+  String? privateVerificationDetail;
 
   // ── New: Contact ──
   String? contactPhone;
@@ -115,6 +119,9 @@ class IsarLostHorseReport {
       // ── Tamga / Identification ──
       ..tamgaImageUrl = report.tamgaImageUrl
       ..earMarkDescription = report.earMarkDescription
+      ..travelDirection = report.travelDirection?.name
+      // ── Verification ──
+      ..privateVerificationDetail = report.privateVerificationDetail
       // ── Contact ──
       ..contactPhone = report.contactPhone
       // ── Pricing ──
@@ -192,6 +199,14 @@ class IsarLostHorseReport {
       // ── Tamga / Identification ──
       tamgaImageUrl: tamgaImageUrl,
       earMarkDescription: earMarkDescription,
+      travelDirection: travelDirection != null
+          ? TravelDirection.values.firstWhere(
+              (e) => e.name == travelDirection,
+              orElse: () => TravelDirection.north,
+            )
+          : null,
+      // ── Verification ──
+      privateVerificationDetail: privateVerificationDetail,
       // ── Contact ──
       contactPhone: contactPhone,
       // ── Pricing ──

@@ -53,27 +53,33 @@ class IsarSyncStorage {
   }
 
   /// Add one row while preserving coalescing for the same entity.
+  ///
+  /// Uses a targeted entityId query instead of loading the whole queue — the
+  /// old implementation fetched every active row into Dart on every write.
   Future<void> enqueue(SyncQueueItem item) async {
     final isar = _storage.syncQueueItems.isar;
     await isar.writeTxn(() async {
-      final existing = await _storage.syncQueueItems
+      final related = await _storage.syncQueueItems
           .filter()
+          .entityIdEqualTo(item.entityId)
           .isDeadLetterEqualTo(false)
           .findAll();
-      final related = existing.where((row) => row.entityId == item.entityId);
       if (item.action == SyncAction.delete &&
           related.any((row) => row.action == SyncAction.create)) {
-        for (final row in related) {
-          await _storage.syncQueueItems.delete(row.id);
-        }
+        // create + delete cancels out — drop all related rows.
+        await _storage.syncQueueItems.deleteAll(
+          related.map((row) => row.id).toList(),
+        );
         return;
       }
       if (item.action == SyncAction.update) {
-        for (final row in related.where(
-          (row) => row.action != SyncAction.delete,
-        )) {
-          await _storage.syncQueueItems.delete(row.id);
-        }
+        // Updates coalesce — replace earlier non-delete rows for the entity.
+        await _storage.syncQueueItems.deleteAll(
+          related
+              .where((row) => row.action != SyncAction.delete)
+              .map((row) => row.id)
+              .toList(),
+        );
       }
       await _storage.syncQueueItems.put(IsarSyncQueueItem.fromDomain(item));
     });

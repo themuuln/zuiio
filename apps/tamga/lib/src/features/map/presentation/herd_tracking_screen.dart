@@ -113,19 +113,22 @@ class _AlertBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
-    return Container(
-      width: double.infinity,
+    final scheme = Theme.of(context).colorScheme;
+    return TamgaCard(
+      margin: TamgaSpacing.horizontalInset,
+      color: scheme.errorContainer,
       padding: TamgaSpacing.cardPadding,
-      color: colors.error,
       child: Row(
         children: [
-          Icon(Icons.warning_amber, color: colors.onError),
+          Icon(Icons.warning_amber, color: scheme.onErrorContainer),
           const SizedBox(width: TamgaSpacing.sm),
           Expanded(
             child: Text(
               '${alerts.length} анхааруулга',
-              style: TextStyle(color: colors.onError),
+              style: TamgaTypography.subheadline(
+                color: scheme.onErrorContainer,
+                weight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -142,42 +145,68 @@ class _StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final colors = TamgaColors.of(context);
+    return TamgaCard(
       margin: TamgaSpacing.horizontalInset,
-      child: Padding(
-        padding: TamgaSpacing.cardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Мөрдөх төлөв', style: TamgaTypography.headline()),
-            const SizedBox(height: TamgaSpacing.sm),
-            Row(
-              children: [
-                _StatusChip(
-                  label: status.mode.label,
-                  isActive: status.isTracking,
+      showTopAccent: status.isTracking,
+      accentColor: colors.primary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Live pulse dot when tracking
+              AnimatedContainer(
+                duration: TamgaMotion.durationNormal,
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: status.isTracking
+                      ? colors.primary
+                      : colors.onSurfaceVariant,
+                  shape: BoxShape.circle,
+                  boxShadow: status.isTracking
+                      ? [
+                          BoxShadow(
+                            color: colors.primary.withValues(alpha: 0.5),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
                 ),
+              ),
+              const SizedBox(width: TamgaSpacing.sm),
+              Text('Мөрдөх төлөв', style: TamgaTypography.headline()),
+            ],
+          ),
+          const SizedBox(height: TamgaSpacing.sm),
+          Row(
+            children: [
+              _StatusChip(
+                label: status.mode.label,
+                isActive: status.isTracking,
+              ),
+              const SizedBox(width: TamgaSpacing.sm),
+              _StatusChip(
+                label: 'Батарей ${status.batteryLevel}%',
+                isActive: status.batteryLevel > 20,
+              ),
+              if (status.queuedLocations > 0) ...[
                 const SizedBox(width: TamgaSpacing.sm),
                 _StatusChip(
-                  label: 'Батарей ${status.batteryLevel}%',
-                  isActive: status.batteryLevel > 20,
+                  label: 'Дараалал: ${status.queuedLocations}',
+                  isActive: false,
                 ),
-                if (status.queuedLocations > 0) ...[
-                  const SizedBox(width: TamgaSpacing.sm),
-                  _StatusChip(
-                    label: 'Дараалал: ${status.queuedLocations}',
-                    isActive: false,
-                  ),
-                ],
               ],
-            ),
-            const SizedBox(height: TamgaSpacing.sm),
-            Text(
-              '${status.trackedHorseCount} морь мөрдөж байна',
-              style: TamgaTypography.footnote(),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: TamgaSpacing.sm),
+          Text(
+            '${status.trackedHorseCount} морь мөрдөж байна',
+            style: TamgaTypography.footnote(color: colors.onSurfaceVariant),
+          ),
+        ],
       ),
     );
   }
@@ -264,32 +293,71 @@ class _ZoneCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = TamgaColors.of(context);
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: zone.isOverdue
-              ? colors.error
-              : colors.primaryContainer,
-          child: Icon(
-            Icons.park,
-            color: zone.isOverdue ? colors.onError : colors.onPrimaryContainer,
+    final accent = zone.isOverdue ? colors.error : colors.primary;
+
+    return TamgaCard(
+      showTopAccent: zone.isOverdue,
+      accentColor: colors.error,
+      padding: TamgaSpacing.listCellPadding,
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(
+                TamgaSpacing.cornerRadiusSmall,
+              ),
+            ),
+            child: Icon(Icons.park_outlined, color: accent, size: 20),
           ),
-        ),
-        title: Text(zone.name),
-        subtitle: Text(
-          zone.isOverdue
-              ? 'Хугацаа дууссан!'
-              : '${zone.remainingDays} өдөр үлдсэн',
-          style: TextStyle(
-            color: zone.isOverdue
-                ? colors.destructive
-                : colors.onSurfaceVariant,
+          const SizedBox(width: TamgaSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  zone.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TamgaTypography.body(weight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  zone.isOverdue
+                      ? 'Хугацаа дууссан!'
+                      : '${zone.remainingDays} өдөр үлдсэн',
+                  style: TamgaTypography.caption1(
+                    color: zone.isOverdue
+                        ? colors.destructive
+                        : colors.onSurfaceVariant,
+                    weight: zone.isOverdue ? FontWeight.w700 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        trailing: Text(
-          '${zone.assignedHorseIds.length} морь',
-          style: TamgaTypography.footnote(),
-        ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: TamgaSpacing.sm,
+              vertical: 2,
+            ),
+            decoration: BoxDecoration(
+              color: colors.surfaceContainer,
+              borderRadius: BorderRadius.circular(
+                TamgaSpacing.cornerRadiusSmall,
+              ),
+            ),
+            child: Text(
+              '${zone.assignedHorseIds.length} морь',
+              style: TamgaTypography.caption1(
+                color: colors.onSurfaceVariant,
+                weight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

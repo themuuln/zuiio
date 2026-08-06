@@ -30,6 +30,7 @@ class PublicHorseProfileScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
+            tooltip: 'Хуваалцах',
             onPressed: () {
               final url = 'https://tamga.mn/horse/${horse.id}';
               final text = 'Tamga дээрх энэ морийг үзээрэй: $url';

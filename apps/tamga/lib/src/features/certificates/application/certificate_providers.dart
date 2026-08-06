@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/supabase_bootstrap.dart';
 import '../../../core/error/result.dart';
 import '../../../core/sync/sync_queue.dart';
+import '../../shared/application/sync_providers.dart';
 import '../../shared/data/isar_storage.dart';
 import '../data/certificate_repository.dart';
 import '../data/local_certificate_repository.dart';
@@ -14,6 +15,7 @@ final certificateRepositoryProvider = Provider<CertificateRepository>((ref) {
   return LocalCertificateRepository(
     storage: IsarStorage.instance,
     syncQueue: SyncQueue(),
+    syncStorage: ref.watch(isarSyncStorageProvider),
   );
 });
 

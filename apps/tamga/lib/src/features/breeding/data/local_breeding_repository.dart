@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:isar/isar.dart';
 
 import '../../../core/data/local_repository.dart';
@@ -11,7 +13,17 @@ import 'breeding_repository.dart';
 class LocalBreedingRepository
     extends LocalRepository<BreedingRecord, IsarBreedingRecord>
     implements BreedingRepository {
-  LocalBreedingRepository({required super.storage, required super.syncQueue});
+  LocalBreedingRepository({
+    required super.storage,
+    required super.syncQueue,
+    super.syncStorage,
+  });
+
+  /// Enqueue + persist to the durable queue (no-op when not wired).
+  void _enqueueAndPersist(SyncQueueItem item) {
+    syncQueue.enqueue(item);
+    unawaited(persistEnqueue(item));
+  }
 
   @override
   IsarCollection<IsarBreedingRecord> get collection => storage.breedingRecords;
@@ -107,7 +119,7 @@ class LocalBreedingRepository
         );
       });
 
-      syncQueue.enqueue(
+      _enqueueAndPersist(
         SyncQueueItem(
           entityType: 'breeding',
           entityId: record.id,

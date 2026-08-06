@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/supabase_bootstrap.dart';
-import '../../../app/theme/app_spacing.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/lost_horse_alert_providers.dart';
 import '../application/lost_horse_filters.dart';
@@ -35,23 +35,63 @@ class _LostHorseAlertPreferencesScreenState
 
   @override
   Widget build(BuildContext context) {
+    final colors = TamgaColors.of(context);
     final subscriptions = ref.watch(lostHorseAlertSubscriptionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Морь олдсон мэдэгдэл')),
+      backgroundColor: colors.surface,
+      appBar: AppBar(
+        title: Text('Морь олдсон мэдэгдэл', style: TamgaTypography.headline()),
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(TamgaSpacing.lg),
         children: [
-          Text(
-            'Таны сонгосон бүсэд шинэ хаяж морь бүртгэгдэхэд push мэдэгдэл авна.',
-            style: Theme.of(context).textTheme.bodyLarge,
+          // ── Intro card ────────────────────────────────────────
+          TamgaCard(
+            showTopAccent: true,
+            accentColor: colors.primary,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.notifications_active_outlined,
+                  color: colors.primary,
+                ),
+                const SizedBox(width: TamgaSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Таны сонгосон бүсэд шинэ хаяж морь бүртгэгдэхэд push мэдэгдэл авна.',
+                        style: TamgaTypography.body(weight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Get notified when a new lost-horse report appears nearby.',
+                        style: TamgaTypography.caption1(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: TamgaSpacing.lg),
+
+          // ── Region form ───────────────────────────────────────
           Text(
-            'Get notified when a new lost-horse report appears nearby.',
-            style: Theme.of(context).textTheme.bodyMedium,
+            'Бүс сонгох',
+            style: TamgaTypography.footnote(
+              weight: FontWeight.w600,
+              color: colors.onSurfaceVariant,
+            ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: TamgaSpacing.sm),
           DropdownButtonFormField<String>(
             initialValue: _aimag,
             decoration: const InputDecoration(
@@ -65,7 +105,7 @@ class _LostHorseAlertPreferencesScreenState
                 .toList(),
             onChanged: (value) => setState(() => _aimag = value),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: TamgaSpacing.md),
           TextField(
             controller: _sumController,
             decoration: const InputDecoration(
@@ -73,7 +113,7 @@ class _LostHorseAlertPreferencesScreenState
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: TamgaSpacing.md),
           TextField(
             controller: _bagController,
             decoration: const InputDecoration(
@@ -81,23 +121,35 @@ class _LostHorseAlertPreferencesScreenState
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Push мэдэгдэл / Push alerts'),
-            value: _pushEnabled,
-            onChanged: (value) => setState(() => _pushEnabled = value),
-          ),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('SMS мэдэгдэл / SMS alerts'),
-            subtitle: const Text(
-              'Зөвхөн бүртгэлтэй утасны дугаарт / To your verified phone',
+          const SizedBox(height: TamgaSpacing.md),
+
+          // ── Channel toggles ───────────────────────────────────
+          TamgaCard(
+            padding: const EdgeInsets.symmetric(
+              horizontal: TamgaSpacing.md,
+              vertical: TamgaSpacing.xs,
             ),
-            value: _smsEnabled,
-            onChanged: (value) => setState(() => _smsEnabled = value),
+            child: Column(
+              children: [
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Push мэдэгдэл / Push alerts'),
+                  value: _pushEnabled,
+                  onChanged: (value) => setState(() => _pushEnabled = value),
+                ),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('SMS мэдэгдэл / SMS alerts'),
+                  subtitle: const Text(
+                    'Зөвхөн бүртгэлтэй утасны дугаарт / To your verified phone',
+                  ),
+                  value: _smsEnabled,
+                  onChanged: (value) => setState(() => _smsEnabled = value),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: TamgaSpacing.lg),
           FilledButton.icon(
             onPressed: _saving ? null : _save,
             icon: _saving
@@ -108,19 +160,21 @@ class _LostHorseAlertPreferencesScreenState
                 : const Icon(Icons.notifications_active_outlined),
             label: const Text('Мэдэгдэл идэвхжүүлэх / Enable alerts'),
           ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: TamgaSpacing.xl),
+
+          // ── Active regions ────────────────────────────────────
           Text(
             'Идэвхтэй бүсүүд / Active regions',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: TamgaTypography.title3(weight: FontWeight.w600),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: TamgaSpacing.sm),
           subscriptions.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, _) => TamgaCard(
               child: Row(
                 children: [
                   const Icon(Icons.error_outline, size: 20),
-                  const SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: TamgaSpacing.sm),
                   const Expanded(
                     child: Text('Мэдэгдлийн бүсүүд ачаалахад алдаа гарлаа'),
                   ),
@@ -152,23 +206,31 @@ class _LostHorseAlertPreferencesScreenState
   List<Widget> _subscriptionTiles(List<LostHorseAlertSubscription> items) {
     return [
       for (final item in items)
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.location_on_outlined),
-            title: Text(item.locationAimag),
-            subtitle: Text(
-              [item.locationSum, item.locationBag]
-                  .whereType<String>()
-                  .where((value) => value.isNotEmpty)
-                  .join(' · '),
+        TamgaCard(
+          margin: const EdgeInsets.only(bottom: TamgaSpacing.sm),
+          // Transparent Material keeps ListTile ink under its own ancestor.
+          child: Material(
+            type: MaterialType.transparency,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: TamgaSpacing.md,
+              ),
+              leading: const Icon(Icons.location_on_outlined),
+              title: Text(item.locationAimag),
+              subtitle: Text(
+                [item.locationSum, item.locationBag]
+                    .whereType<String>()
+                    .where((value) => value.isNotEmpty)
+                    .join(' · '),
+              ),
+              trailing: item.id == null
+                  ? null
+                  : IconButton(
+                      tooltip: 'Устгах / Remove',
+                      icon: const Icon(Icons.notifications_off_outlined),
+                      onPressed: () => _revoke(item.id!),
+                    ),
             ),
-            trailing: item.id == null
-                ? null
-                : IconButton(
-                    tooltip: 'Устгах / Remove',
-                    icon: const Icon(Icons.notifications_off_outlined),
-                    onPressed: () => _revoke(item.id!),
-                  ),
           ),
         ),
     ];

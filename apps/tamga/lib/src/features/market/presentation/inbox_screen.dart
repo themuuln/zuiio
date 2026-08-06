@@ -1,8 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/market_providers.dart';
 import '../application/message_providers.dart';
@@ -130,7 +132,7 @@ class _ConversationListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final colors = TamgaColors.of(context);
 
     final isReportConversation = conversation.reportId != null;
 
@@ -154,113 +156,125 @@ class _ConversationListTile extends ConsumerWidget {
 
     final hasUnread = conversation.unreadCount > 0;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xs,
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            children: [
-              // Listing thumbnail (or placeholder for report conversations)
-              ClipRRect(
+    return TamgaCard(
+      margin: TamgaSpacing.horizontalInset,
+      onTap: onTap,
+      padding: TamgaSpacing.listCellPadding,
+      border: hasUnread
+          ? Border.all(color: colors.primary.withValues(alpha: 0.35))
+          : null,
+      child: Row(
+        children: [
+          // Thumbnail (or report badge for lost-horse conversations)
+          if (isReportConversation)
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: colors.error.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(
-                  AppSpacing.cornerRadiusSmall,
-                ),
-                child: SizedBox(
-                  width: 56,
-                  height: 56,
-                  child: thumbnailUrl != null
-                      ? Image.network(
-                          thumbnailUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _ThumbnailPlaceholder(),
-                        )
-                      : _ThumbnailPlaceholder(),
+                  TamgaSpacing.cornerRadiusSmall,
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
+              child: Icon(Icons.search_off, size: 24, color: colors.error),
+            )
+          else
+            ClipRRect(
+              borderRadius: BorderRadius.circular(
+                TamgaSpacing.cornerRadiusSmall,
+              ),
+              child: SizedBox(
+                width: 56,
+                height: 56,
+                child: thumbnailUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: thumbnailUrl,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                        // Decode a 2x bitmap — avoids full-resolution decodes
+                        // for every conversation thumbnail.
+                        memCacheWidth: 112,
+                        placeholder: (_, _) => _ThumbnailPlaceholder(),
+                        errorWidget: (_, _, _) => _ThumbnailPlaceholder(),
+                      )
+                    : _ThumbnailPlaceholder(),
+              ),
+            ),
+          const SizedBox(width: TamgaSpacing.md),
 
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: hasUnread
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TamgaTypography.body(
+                          color: isReportConversation
+                              ? colors.error
+                              : colors.onSurface,
+                          weight: hasUnread ? FontWeight.w700 : FontWeight.w600,
                         ),
-                        if (conversation.lastMessageAt != null)
-                          Text(
-                            _formatTime(conversation.lastMessageAt!),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            conversation.lastMessage.isNotEmpty
-                                ? conversation.lastMessage
-                                : 'Шинэ чат',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: hasUnread
-                                  ? theme.colorScheme.onSurface
-                                  : theme.colorScheme.onSurfaceVariant,
-                              fontWeight: hasUnread
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    if (conversation.lastMessageAt != null)
+                      Text(
+                        _formatTime(conversation.lastMessageAt!),
+                        style: TamgaTypography.caption1(
+                          color: colors.onSurfaceVariant,
                         ),
-                        if (hasUnread)
-                          Container(
-                            margin: const EdgeInsets.only(left: AppSpacing.sm),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: AppSpacing.xs,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.error,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '${conversation.unreadCount}',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onError,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                      ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: TamgaSpacing.xs),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        conversation.lastMessage.isNotEmpty
+                            ? conversation.lastMessage
+                            : 'Шинэ чат',
+                        style: TamgaTypography.footnote(
+                          color: hasUnread
+                              ? colors.onSurface
+                              : colors.onSurfaceVariant,
+                          weight: hasUnread ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (hasUnread)
+                      Container(
+                        margin: const EdgeInsets.only(left: TamgaSpacing.sm),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: TamgaSpacing.sm,
+                          vertical: TamgaSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.error,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '${conversation.unreadCount}',
+                          style: TamgaTypography.caption1(
+                            color: colors.onError,
+                            weight: FontWeight.w700,
+                          ).copyWith(fontSize: 10),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

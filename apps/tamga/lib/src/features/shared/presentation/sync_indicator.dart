@@ -27,25 +27,31 @@ class SyncIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final syncState = ref.watch(syncStateProvider);
+    // Select only the fields this widget renders — avoids rebuilding on
+    // lastSyncTime/pushedCount/pulledCount changes after every sync.
+    final syncState = ref.watch(
+      syncStateProvider.select(
+        (s) => (s.status, s.conflictCount, s.pendingCount, s.errorMessage),
+      ),
+    );
 
     final Color dotColor;
     final String tooltip;
-    final bool hasConflicts = syncState.conflictCount > 0;
+    final hasConflicts = syncState.$2 > 0;
 
     if (hasConflicts) {
       dotColor = Colors.red;
-      tooltip = '${syncState.conflictCount} зөрчилдөөн байна';
-    } else if (syncState.status == SyncStatus.error) {
+      tooltip = '${syncState.$2} зөрчилдөөн байна';
+    } else if (syncState.$1 == SyncStatus.error) {
       dotColor = Colors.red;
-      tooltip = syncState.errorMessage ?? 'Синхрончлолд алдаа гарлаа';
-    } else if (syncState.pendingCount > 0) {
+      tooltip = syncState.$4 ?? 'Синхрончлолд алдаа гарлаа';
+    } else if (syncState.$3 > 0) {
       dotColor = Colors.amber;
-      tooltip = '${syncState.pendingCount} синк хүлээгдэж байна';
-    } else if (syncState.status == SyncStatus.syncing) {
+      tooltip = '${syncState.$3} синк хүлээгдэж байна';
+    } else if (syncState.$1 == SyncStatus.syncing) {
       dotColor = Colors.amber;
       tooltip = 'Синхрончлол явагдаж байна...';
-    } else if (syncState.status == SyncStatus.synced) {
+    } else if (syncState.$1 == SyncStatus.synced) {
       dotColor = Colors.green;
       tooltip = 'Синхрончлогдсон';
     } else {

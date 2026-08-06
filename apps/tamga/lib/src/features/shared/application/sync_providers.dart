@@ -37,7 +37,7 @@ final isarSyncStorageProvider = Provider<IsarSyncStorage>((ref) {
 final cloudSyncCoordinatorProvider = FutureProvider<CloudSyncCoordinator>((
   ref,
 ) async {
-  return CloudSyncCoordinator(
+  final coordinator = CloudSyncCoordinator(
     horsesRepository: await ref.watch(horsesRepositoryProvider.future),
     healthRepository: await ref.watch(healthRepositoryProvider.future),
     eventRepository: ref.watch(localEventRepositoryProvider),
@@ -55,6 +55,23 @@ final cloudSyncCoordinatorProvider = FutureProvider<CloudSyncCoordinator>((
     syncStorage: ref.watch(isarSyncStorageProvider),
     connectionMonitor: ref.watch(connectionMonitorProvider),
   );
+
+  // Periodic sync — only when the user enabled auto-sync. The timer fires a
+  // guarded syncAll() (offline/unauth early-exit), so it is cheap to keep.
+  try {
+    final settings = await coordinator.profileSettingsRepository
+        .fetchSettings();
+    if (settings.getOrThrow().autoSyncEnabled) {
+      coordinator.startPeriodicSync();
+    }
+  } catch (_) {
+    // Settings unreadable — stay on manual/resume-only sync.
+  }
+
+  // Prevent timer + stream leaks at provider teardown (tests, hot restart).
+  ref.onDispose(coordinator.dispose);
+
+  return coordinator;
 });
 
 /// Dead letter queue-д байгаа item-үүдийг шалгах provider.
@@ -76,10 +93,14 @@ class SyncStateNotifier extends StateNotifier<SyncState> {
   SyncStateNotifier(this._ref) : super(const SyncState()) {
     // Coordinator-ийн stateStream-ийг сонсож байна
     _listenToCoordinator();
+    // Сүлжээ offline → online шилжихэд автоматаар sync хийх
+    _listenToConnection();
   }
 
   final Ref _ref;
   StreamSubscription<SyncState>? _subscription;
+  StreamSubscription<ConnectionStatus>? _connectionSubscription;
+  ConnectionStatus? _lastConnectionStatus;
 
   void _listenToCoordinator() {
     // Coordinator нь FutureProvider тул эхлэхэд нь сонсно
@@ -92,6 +113,23 @@ class SyncStateNotifier extends StateNotifier<SyncState> {
         state = coordinatorState;
       });
     });
+  }
+
+  /// Сүлжээний төлөвийн өөрчлөлтийг сонсох.
+  ///
+  /// Offline байсан болон онлайн болмогц sync эхлүүлнэ —
+  /// хэрэглэгч сүлжээнд буцаж холбогдоход гараар дарахгүйгээр sync хийнэ.
+  void _listenToConnection() {
+    _connectionSubscription = _ref
+        .read(connectionMonitorProvider)
+        .status
+        .listen((status) {
+          final wasOffline = _lastConnectionStatus == ConnectionStatus.offline;
+          _lastConnectionStatus = status;
+          if (status == ConnectionStatus.online && wasOffline) {
+            triggerSync();
+          }
+        });
   }
 
   /// Гар ажиллагаатай sync эхлүүлэх.
@@ -113,6 +151,7 @@ class SyncStateNotifier extends StateNotifier<SyncState> {
   @override
   void dispose() {
     _subscription?.cancel();
+    _connectionSubscription?.cancel();
     super.dispose();
   }
 }

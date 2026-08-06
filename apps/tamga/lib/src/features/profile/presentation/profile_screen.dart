@@ -345,8 +345,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             body: AnimatedBuilder(
               animation: _tabController,
               builder: (_, _) {
+                // Respect the OS reduced-motion preference.
+                final switchDuration = MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 200);
                 return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
+                  duration: switchDuration,
                   transitionBuilder: (child, anim) =>
                       FadeTransition(opacity: anim, child: child),
                   child: KeyedSubtree(

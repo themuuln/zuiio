@@ -4,6 +4,9 @@ import 'package:tamga/src/features/map/domain/report_form_state.dart';
 
 LostHorseReportDraft defaultDraft({
   String? description = 'A clear identifying description that is long enough.',
+  double? searchRadiusKm = 5.0,
+  String? contactPhone,
+  bool sharePhone = false,
 }) => LostHorseReportDraft(
   animalType: AnimalType.horse,
   identificationDescription: description,
@@ -12,6 +15,9 @@ LostHorseReportDraft defaultDraft({
   lastSeenLat: 47.9,
   lastSeenLng: 106.9,
   lastSeenAt: DateTime(2026, 7, 31),
+  searchRadiusKm: searchRadiusKm ?? 5.0,
+  contactPhone: contactPhone,
+  sharePhone: sharePhone,
 );
 
 void main() {
@@ -37,5 +43,28 @@ void main() {
       lastSeenAt: DateTime(2026, 8, 1, 0, 6),
     ).validate(now: DateTime(2026, 8, 1));
     expect(errors, contains(contains('ирээдүйд')));
+  });
+
+  test('sharing a phone requires a phone number', () {
+    final errors = defaultDraft(
+      sharePhone: true,
+      contactPhone: null,
+    ).validate(now: DateTime(2026, 8, 1));
+    expect(errors, contains(contains('дугаараа оруулна')));
+  });
+
+  test('sharing a phone passes when a phone is present', () {
+    final errors = defaultDraft(
+      sharePhone: true,
+      contactPhone: '+976 9911 2233',
+    ).validate(now: DateTime(2026, 8, 1));
+    expect(errors, isEmpty);
+  });
+
+  test('rejects an out-of-range search radius', () {
+    final errors = defaultDraft(
+      searchRadiusKm: 0.5,
+    ).validate(now: DateTime(2026, 8, 1));
+    expect(errors, contains(contains('радиус')));
   });
 }

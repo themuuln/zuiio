@@ -51,104 +51,193 @@ class _GeofenceSetupScreenState extends ConsumerState<GeofenceSetupScreen> {
       body: ListView(
         padding: const EdgeInsets.all(TamgaSpacing.lg),
         children: [
-          // ── Name ──────────────────────────────────────────────
-          Text(
-            'Нэр',
-            style: TamgaTypography.footnote(
-              weight: FontWeight.w600,
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: TamgaSpacing.sm),
-          TextFormField(
-            controller: _nameController,
-            decoration: InputDecoration(
-              hintText: 'Талбайн нэр (жиш: Гэрийн ойролцоо)',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                  TamgaSpacing.cornerRadiusSmall,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: TamgaSpacing.xl),
-
-          // ── Radius ────────────────────────────────────────────
-          Text(
-            'Радиус: ${_radiusKm.toStringAsFixed(0)} км',
-            style: TamgaTypography.footnote(
-              weight: FontWeight.w600,
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-          Slider(
-            value: _radiusKm,
-            min: 1,
-            max: 50,
-            divisions: 49,
-            activeColor: Color(_selectedColor),
-            onChanged: (v) => setState(() => _radiusKm = v),
-          ),
-          const SizedBox(height: TamgaSpacing.xl),
-
-          // ── Color picker ──────────────────────────────────────
-          Text(
-            'Өнгө',
-            style: TamgaTypography.footnote(
-              weight: FontWeight.w600,
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: TamgaSpacing.sm),
-          Row(
-            children: _presetColors.map((c) {
-              final isSelected = c == _selectedColor;
-              return Semantics(
-                label: 'Өнгө сонгох',
-                button: true,
-                selected: isSelected,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => setState(() => _selectedColor = c),
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    margin: const EdgeInsets.only(right: TamgaSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: Color(c),
-                      shape: BoxShape.circle,
-                      border: isSelected
-                          ? Border.all(color: colors.onSurface, width: 2)
-                          : null,
+          // ── Intro ──────────────────────────────────────────────
+          TamgaCard(
+            color: colors.primaryContainer,
+            padding: TamgaSpacing.cardPadding,
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.primary,
+                    borderRadius: BorderRadius.circular(
+                      TamgaSpacing.cornerRadiusSmall,
                     ),
-                    child: isSelected
-                        ? const Icon(Icons.check, size: 20, color: Colors.white)
-                        : null,
+                  ),
+                  child: const Icon(Icons.radar, size: 22, color: Colors.white),
+                ),
+                const SizedBox(width: TamgaSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Геохашаа',
+                        style: TamgaTypography.body(
+                          color: colors.onPrimaryContainer,
+                          weight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Морь хязгаараас гарахад мэдэгдэнэ',
+                        style: TamgaTypography.footnote(
+                          color: colors.onPrimaryContainer.withValues(
+                            alpha: 0.8,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: TamgaSpacing.xl),
-
-          // ── Location picker ───────────────────────────────────
-          Text(
-            'Байршил',
-            style: TamgaTypography.footnote(
-              weight: FontWeight.w600,
-              color: colors.onSurfaceVariant,
+              ],
             ),
           ),
-          const SizedBox(height: TamgaSpacing.sm),
-          EventLocationPicker(
-            initialLatitude: _latitude,
-            initialLongitude: _longitude,
-            onLocationChanged: (lat, lng) {
-              setState(() {
-                _latitude = lat;
-                _longitude = lng;
-              });
-            },
+          const SizedBox(height: TamgaSpacing.lg),
+
+          // ── Нэр ──────────────────────────────────────────────
+          _SectionCard(
+            title: 'Мэдээлэл',
+            icon: Icons.edit_location_alt_outlined,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Нэр',
+                  style: TamgaTypography.footnote(
+                    weight: FontWeight.w600,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: TamgaSpacing.sm),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    hintText: 'Талбайн нэр (жиш: Гэрийн ойролцоо)',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        TamgaSpacing.cornerRadiusSmall,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: TamgaSpacing.lg),
+
+          // ── Radius ────────────────────────────────────────────
+          _SectionCard(
+            title: 'Хэмжээ',
+            icon: Icons.radio_button_checked_outlined,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Радиус: ${_radiusKm.toStringAsFixed(0)} км',
+                      style: TamgaTypography.footnote(
+                        weight: FontWeight.w600,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: Color(_selectedColor),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: colors.outlineVariant),
+                      ),
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: _radiusKm,
+                  min: 1,
+                  max: 50,
+                  divisions: 49,
+                  activeColor: Color(_selectedColor),
+                  onChanged: (v) => setState(() => _radiusKm = v),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: TamgaSpacing.lg),
+
+          // ── Color + location ──────────────────────────────────
+          _SectionCard(
+            title: 'Дүрс байршил',
+            icon: Icons.color_lens_outlined,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Өнгө',
+                  style: TamgaTypography.footnote(
+                    weight: FontWeight.w600,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: TamgaSpacing.sm),
+                Row(
+                  children: _presetColors.map((c) {
+                    final isSelected = c == _selectedColor;
+                    return Semantics(
+                      label: 'Өнгө сонгох',
+                      button: true,
+                      selected: isSelected,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => setState(() => _selectedColor = c),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          margin: const EdgeInsets.only(right: TamgaSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: Color(c),
+                            shape: BoxShape.circle,
+                            border: isSelected
+                                ? Border.all(color: colors.onSurface, width: 2)
+                                : null,
+                          ),
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 20,
+                                  color: Colors.white,
+                                )
+                              : null,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: TamgaSpacing.lg),
+                Text(
+                  'Байршил',
+                  style: TamgaTypography.footnote(
+                    weight: FontWeight.w600,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: TamgaSpacing.sm),
+                EventLocationPicker(
+                  initialLatitude: _latitude,
+                  initialLongitude: _longitude,
+                  onLocationChanged: (lat, lng) {
+                    setState(() {
+                      _latitude = lat;
+                      _longitude = lng;
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: TamgaSpacing.xxxl),
 
@@ -161,6 +250,7 @@ class _GeofenceSetupScreenState extends ConsumerState<GeofenceSetupScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(_selectedColor),
                 foregroundColor: Colors.white,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(
                     TamgaSpacing.cornerRadius,
@@ -200,5 +290,44 @@ class _GeofenceSetupScreenState extends ConsumerState<GeofenceSetupScreen> {
 
     ref.read(createSearchAreaProvider(area));
     Navigator.of(context).pop();
+  }
+}
+
+/// Grouped section card for the geofence form — title + icon header,
+/// then form fields below. Keeps the long form scannable.
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
+
+  final String title;
+  final IconData icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = TamgaColors.of(context);
+    return TamgaCard(
+      padding: TamgaSpacing.cardPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: colors.primary),
+              const SizedBox(width: TamgaSpacing.sm),
+              Text(
+                title,
+                style: TamgaTypography.subheadline(weight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: TamgaSpacing.md),
+          child,
+        ],
+      ),
+    );
   }
 }

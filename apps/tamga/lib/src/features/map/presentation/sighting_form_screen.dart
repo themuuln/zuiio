@@ -24,6 +24,32 @@ class SightingFormScreen extends ConsumerStatefulWidget {
   ConsumerState<SightingFormScreen> createState() => _SightingFormScreenState();
 }
 
+/// Section title with leading icon for the sighting form.
+class _SightingSectionTitle extends StatelessWidget {
+  const _SightingSectionTitle(this.title, this.icon);
+
+  final String title;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = TamgaColors.of(context);
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: colors.primary),
+        const SizedBox(width: 6),
+        Text(
+          title,
+          style: TamgaTypography.footnote(
+            weight: FontWeight.w600,
+            color: colors.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _locationNameController = TextEditingController();
@@ -147,36 +173,21 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
           padding: const EdgeInsets.all(TamgaSpacing.lg),
           children: [
             // ── Photo section ────────────────────────────────────
-            Text(
-              'Зураг (заавал биш)',
-              style: TamgaTypography.footnote(
-                weight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
+            _SightingSectionTitle('Зураг (заавал биш)', Icons.photo_outlined),
             const SizedBox(height: TamgaSpacing.sm),
             _buildPhotoSection(colors),
             const SizedBox(height: TamgaSpacing.xl),
 
             // ── GPS location ─────────────────────────────────────
-            Text(
-              'Байршил',
-              style: TamgaTypography.footnote(
-                weight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
+            _SightingSectionTitle('Байршил', Icons.my_location_outlined),
             const SizedBox(height: TamgaSpacing.sm),
             _buildLocationPreview(currentPos, colors),
             const SizedBox(height: TamgaSpacing.xl),
 
             // ── Location description ─────────────────────────────
-            Text(
+            _SightingSectionTitle(
               'Газрын нэр (заавал биш)',
-              style: TamgaTypography.footnote(
-                weight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
-              ),
+              Icons.place_outlined,
             ),
             const SizedBox(height: TamgaSpacing.sm),
             TextFormField(
@@ -197,13 +208,7 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
             const SizedBox(height: TamgaSpacing.xl),
 
             // ── Description / Notes ──────────────────────────────
-            Text(
-              'Тайлбар (заавал биш)',
-              style: TamgaTypography.footnote(
-                weight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
+            _SightingSectionTitle('Тайлбар (заавал биш)', Icons.notes_outlined),
             const SizedBox(height: TamgaSpacing.sm),
             TextFormField(
               controller: _descriptionController,
@@ -325,7 +330,7 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
       children: [
         Expanded(
           child: _buildPhotoActionButton(
-            icon: Icons.camera_alt_outlined,
+            icon: Icons.photo_camera_outlined,
             label: 'Камера',
             onTap: _pickFromCamera,
             colors: colors,

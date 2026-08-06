@@ -686,11 +686,22 @@ class _BreedBreakdownCard extends ConsumerWidget {
               error: (_, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Text(
-                    'Үүлдрийн мэдээлэл ачаалахад алдаа гарлаа',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.error,
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Үүлдрийн мэдээлэл ачаалахад алдаа гарлаа',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextButton.icon(
+                        onPressed: () => ref.invalidate(herdAnalyticsProvider),
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: const Text('Дахин оролдох'),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/app_config.dart';
 import '../../../core/sync/sync_queue.dart';
+import '../../shared/application/sync_providers.dart';
 import '../../shared/data/isar_storage.dart';
 import '../data/co_ownership_repository.dart';
 import '../data/supabase_co_ownership_repository.dart';
@@ -19,6 +20,7 @@ final coOwnershipRepositoryProvider = Provider<CoOwnershipRepository>((ref) {
   return LocalCoOwnershipRepository(
     storage: IsarStorage.instance,
     syncQueue: SyncQueue(),
+    syncStorage: ref.watch(isarSyncStorageProvider),
   );
 });
 

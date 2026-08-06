@@ -358,6 +358,7 @@ class _FilePreview extends StatelessWidget {
             icon: const Icon(Icons.close),
             iconSize: 20,
             color: colorScheme.onSurfaceVariant,
+            tooltip: 'Устгах',
           ),
         ],
       ),

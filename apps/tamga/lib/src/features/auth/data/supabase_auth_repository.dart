@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
@@ -279,7 +280,9 @@ class SupabaseAuthRepository implements AuthRepository {
         try {
           final notificationService = NotificationService();
           await notificationService.removeToken();
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('[SupabaseAuthRepository] removeToken failed: $e');
+        }
       }),
     );
 

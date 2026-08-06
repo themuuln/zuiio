@@ -498,6 +498,88 @@ void main() {
     });
   });
 
+  // ── LostHorseDetailScreen private verification detail logic ──
+
+  group('LostHorseDetailScreen private verification detail', () {
+    /// Simulates the owner-only private mark visibility rule.
+    bool showPrivateDetail(LostHorseReport r, {required bool isOwner}) {
+      return isOwner &&
+          r.privateVerificationDetail != null &&
+          r.privateVerificationDetail!.trim().isNotEmpty;
+    }
+
+    LostHorseReport withMark(String? mark) => LostHorseReport(
+      id: 'r1',
+      ownerId: 'o1',
+      lastSeenLat: 47.9,
+      lastSeenLng: 106.9,
+      lastSeenAt: DateTime(2026, 6, 1),
+      createdAt: DateTime(2026, 6, 1),
+      updatedAt: DateTime(2026, 6, 1),
+      privateVerificationDetail: mark,
+    );
+
+    test('hidden from non-owners even when populated', () {
+      expect(
+        showPrivateDetail(
+          withMark('Баруун талын чихэнд цагаан толбо'),
+          isOwner: false,
+        ),
+        isFalse,
+      );
+    });
+
+    test('visible to the owner', () {
+      expect(
+        showPrivateDetail(
+          withMark('Баруун талын чихэнд цагаан толбо'),
+          isOwner: true,
+        ),
+        isTrue,
+      );
+    });
+
+    test('hidden when the mark is blank', () {
+      expect(showPrivateDetail(withMark('   '), isOwner: true), isFalse);
+    });
+
+    test('hidden when no mark was provided', () {
+      expect(showPrivateDetail(withMark(null), isOwner: true), isFalse);
+    });
+  });
+
+  // ── LostHorseDetailScreen travel direction logic ──
+
+  group('LostHorseDetailScreen travel direction', () {
+    test('direction is rendered in animal info when present', () {
+      final report = LostHorseReport(
+        id: 'r1',
+        ownerId: 'o1',
+        lastSeenLat: 47.9,
+        lastSeenLng: 106.9,
+        lastSeenAt: DateTime(2026, 6, 1),
+        createdAt: DateTime(2026, 6, 1),
+        updatedAt: DateTime(2026, 6, 1),
+        travelDirection: TravelDirection.southEast,
+      );
+      expect(report.travelDirection, TravelDirection.southEast);
+      expect(report.travelDirection!.displayName, 'Зүүн урд');
+    });
+
+    test('direction defaults to null', () {
+      final report = LostHorseReport(
+        id: 'r1',
+        ownerId: 'o1',
+        lastSeenLat: 47.9,
+        lastSeenLng: 106.9,
+        lastSeenAt: DateTime(2026, 6, 1),
+        createdAt: DateTime(2026, 6, 1),
+        updatedAt: DateTime(2026, 6, 1),
+      );
+      expect(report.travelDirection, isNull);
+    });
+  });
+
   // ── LostHorseDetailScreen video section logic (VAL-MEDIA-004) ──
 
   group('LostHorseDetailScreen video section', () {
