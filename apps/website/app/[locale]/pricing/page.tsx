@@ -127,7 +127,7 @@ export default async function PricingPage({ params }: Props) {
             </ul>
             <div className="mt-8">
               <a
-                href="mailto:sales@zuiio.com"
+                href="mailto:info@zuiiotech.com"
                 className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90"
               >
                 {t("bundle-cta")}
@@ -151,7 +151,7 @@ export default async function PricingPage({ params }: Props) {
             {t("enterprise-desc")}
           </p>
           <a
-            href="mailto:sales@zuiio.com"
+            href="mailto:info@zuiiotech.com"
             className="btn-primary mt-6 inline-flex"
           >
             {t("enterprise-cta")}

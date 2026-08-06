@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const base = "https://zuiio.com";
+const base = "https://zuiiotech.com";
 const routes = [
   "",
   "/about",

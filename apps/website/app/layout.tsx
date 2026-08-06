@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Instrument_Serif } from "next/font/google";
+import { Geist, Lora } from "next/font/google";
 import "./globals.css";
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
+const lora = Lora({
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
   weight: "400",
   variable: "--font-display",
   display: "swap",
 });
 
 const geist = Geist({
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
   variable: "--font-sans",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://zuiio.com"),
+  metadataBase: new URL("https://zuiiotech.com"),
   title: {
     default: "Zuiio — Монгол бизнесийн программ хангамж",
     template: "%s | Zuiio",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     title: "Zuiio",
     description:
       "Business management and auto repair software — built for the way Mongolia works.",
-    url: "https://zuiio.com",
+    url: "https://zuiiotech.com",
     siteName: "Zuiio",
     locale: "mn_MN",
     type: "website",
@@ -52,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="mn"
-      className={`${instrumentSerif.variable} ${geist.variable}`}
+      className={`${lora.variable} ${geist.variable}`}
       suppressHydrationWarning
     >
       <body className="min-h-screen flex flex-col antialiased">
@@ -63,13 +63,13 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "Zuiio",
-              url: "https://zuiio.com",
-              logo: "https://zuiio.com/logo.png",
+              url: "https://zuiiotech.com",
+              logo: "https://zuiiotech.com/icon.png",
               description:
                 "Software for Mongolian businesses — ERP and auto repair management.",
               contactPoint: {
                 "@type": "ContactPoint",
-                email: "sales@zuiio.com",
+                email: "info@zuiiotech.com",
                 contactType: "sales",
               },
             }),
@@ -77,7 +77,7 @@ export default function RootLayout({
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.addEventListener('DOMContentLoaded',function(){var o=new IntersectionObserver(function(e){e.forEach(function(n){if(n.isIntersecting){n.target.classList.add('visible');o.unobserve(n.target)}})},{threshold:0.1});document.querySelectorAll('.reveal').forEach(function(n){o.observe(n)});setTimeout(function(){document.querySelectorAll('.reveal:not(.visible)').forEach(function(n){n.classList.add('visible')})},2000)})`,
+            __html: `document.documentElement.classList.add('js');document.addEventListener('DOMContentLoaded',function(){var o=new IntersectionObserver(function(e){e.forEach(function(n){if(n.isIntersecting){n.target.classList.add('visible');o.unobserve(n.target)}})},{threshold:0.1});document.querySelectorAll('.reveal').forEach(function(n){o.observe(n)});setTimeout(function(){document.querySelectorAll('.reveal:not(.visible)').forEach(function(n){n.classList.add('visible')})},2000)})`,
           }}
         />
         {children}

@@ -91,7 +91,7 @@ export async function LegalPage(document: LegalDocument) {
             <p className="mb-1 text-sm font-semibold">{contactTitle}</p>
             <p className="mb-3 text-sm text-muted-foreground">{contactBody}</p>
             <Link
-              href="mailto:legal@zuiio.com"
+              href="mailto:info@zuiiotech.com"
               className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
             >
               {contactLabel}
