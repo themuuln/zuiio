@@ -1,7 +1,7 @@
 # Facebook / Instagram / Messenger Integration Plan
 
-> **Status:** Phase 1 (Foundation) **implemented** and deployed. Phase 2 (Meta Admin) and Phase 3 (Production Hardening) unchanged — blocked on Meta Business Verification documents.
-> **Last Updated:** 2026-08-02
+> **Status:** Phase 1 (Foundation) **implemented and LIVE in production** (deployed 2026-08-06, all probes green). Phase 2 (Meta Admin) blocked on Meta Business Verification (under review as of 2026-08-06).
+> **Last Updated:** 2026-08-06
 > **Owner:** Agent Gateway team
 
 ---
@@ -411,11 +411,31 @@ function validateWebhookSignature(
 - **Token-verified start flow:** `/api/facebook/start` requires a `token` verified by `verifyCompactToken()` (same HMAC compact link tokens as the Telegram link flow) instead of trusting raw `orgId`/`productType` params.
 - Messenger/Instagram events run through the agent pipeline with `audience: "customer"` (fail-closed customer tool set — see ADAPTIVE_AGENT_CONTEXT_PLAN.md).
 
+### Phase 1.5: Deployment & Verification (✅ DONE 2026-08-06)
+
+Live verification after the 2026-08-06 deploy (all four probes green):
+
+| # | Item | Result |
+|---|---|---|
+| 1 | Migrations 007 → 20260802000003 applied to prod (`krrkhozadforrydffegg`) | ✅ `channel_connections`, flow tables, `agent_async_jobs`, `agent_webchat_widgets`, `agent_context_profiles`, `pending_updates` all exist; `agent_sessions` has `channel*` columns; RLS enabled+FORCED on `channel_connections`. Note: `20260718000000_sms_payment_verification.sql` was **skipped** — it references `orgs(id)` which doesn't exist in this DB (sms-pay app context); the sms section of harden_rls was skipped for the same reason. 007's data migration was filtered to existing orgs (4 orphan test rows in `telegram_links` excluded) |
+| 2 | Fresh production deploy (dpl_4oHtRYoDxHbBUZxYd2vafixkKRw4) | ✅ All FB/flow/link routes live on `agent.zuiiotech.com`. Deployed with a temporarily trimmed vercel.json (see cron note below); file restored after deploy |
+| 3 | Env vars set | ✅ `FB_APP_ID`, `FB_APP_SECRET`, `FB_VERIFY_TOKEN` (generated), `FB_OAUTH_REDIRECT_URI`, `NEXT_PUBLIC_FACEBOOK_APP_ID`, `FB_RETURN_URL_ZER` (`https://zer.zuiiotech.com/settings`), `AGENT_GATEWAY_API_SECRET` (also set on zer — was missing in prod, which had been 401ing the Telegram link card) |
+| 4 | Webhook handshake | ✅ `GET /api/facebook/webhook` echoes the challenge (200) with the real verify token; 403 with a wrong token |
+| 5 | HMAC validation | ✅ Signed POST with the real app secret → `{"ok":true}`; bad signature → 401 |
+| 6 | OAuth chain | ✅ `/api/link/generate` (x-api-key) → `/api/facebook/start` returns the FB dialog URL with real app id, callback, scopes, HMAC state |
+| 7 | Meta app subscription | ✅ `POST /{app-id}/subscriptions` via app token: `object=page`, callback `https://agent.zuiiotech.com/api/facebook/webhook`, fields `messages,messaging_postbacks,message_deliveries,messaging_handovers`, active |
+
+**Still required (user actions):**
+1. **Meta dashboard (one step):** Settings → Advanced → Security → Valid OAuth Redirect URIs → add `https://agent.zuiiotech.com/api/facebook/callback` (no Graph API for this)
+2. **Connect a test Page** (dev mode works without App Review) → full E2E: page message → webhook → flow/AI → reply
+3. **Cron limitation:** Vercel Hobby plan rejects sub-daily crons — the deployed cron list has only `cleanup-sessions` (03:00) + `briefing` (08:00). `resume-flows`, `process-jobs`, `reminders`, `drain-queue`, `re-embed`, `refresh-meta-tokens` routes exist but are **not scheduled** — flows won't auto-resume, async jobs won't drain, tokens won't auto-refresh. Fix: upgrade to Pro, or run the cron endpoints from an external scheduler (e.g. cron-job.org) with `CRON_SECRET` bearer auth.
+4. **Tolom:** `AGENT_GATEWAY_API_SECRET` still needs to be set on the tolom Vercel project (different account) so its server-side gateway calls authenticate.
+
 ### Phase 2: Meta Admin (Deferred)
 
 | Task | Blocked By | Timeline |
 |---|---|---|
-| Business Verification | English company certificate | ~14 business days |
+| Business Verification | ⏳ **Under review** (as of 2026-08-06) | ~14 business days |
 | App Review submission | Business Verification | ~3-7 business days |
 | Permission requests | App Review | Same |
 | Switch to Advanced Access | All reviews pass | After approval |
@@ -454,6 +474,7 @@ META_TOKEN_ENCRYPTION_KEY=    # AES-256-GCM key for token encryption (optional; 
 - [App Review Guide](https://developers.facebook.com/docs/app-review/)
 - [Webhook Security](https://developers.facebook.com/docs/graph-api/webhooks/getting-started#verify-requests)
 - [Zatly Facebook App Requirements](../../apps/zatly/docs/facebook-app-requirements.md) — reference for Meta setup
+- [ManyChat Competitor Plan](MANYCHAT_COMPETITIVE_PLAN.md) — competitor features, gap analysis, zatly/zer/tolom integration architecture, UX plan
 
 ---
 

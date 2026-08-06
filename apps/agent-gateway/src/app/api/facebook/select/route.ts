@@ -137,11 +137,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		}
 
 		// Clear pages cookie
+		// Server-controlled return destination (env per product) — never from
+		// client input, so no open-redirect surface.
+		const returnUrls: Record<string, string> = {
+			zer: process.env.FB_RETURN_URL_ZER ?? "",
+			tolom: process.env.FB_RETURN_URL_TOLOM ?? "",
+		};
 		const response = NextResponse.json({
 			success: true,
 			message: "Facebook Page connected successfully",
 			webhookSubscribed: subscribed,
 			instagramLinked: !!pageInfo?.instagramBusinessAccount,
+			returnUrl: returnUrls[productType || "zer"] || null,
 		});
 
 		response.cookies.set("fb_pages", "", {

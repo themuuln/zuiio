@@ -3,6 +3,9 @@ import LinkClient from "./link-client";
 
 export const dynamic = "force-dynamic";
 
+// Neutral product-facing title — the gateway name never reaches end users.
+export const metadata = { title: "Холболт" };
+
 /**
  * Link page — org channel connection UI.
  *

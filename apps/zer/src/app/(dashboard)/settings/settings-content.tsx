@@ -37,6 +37,7 @@ import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
 import { BrandingDrawer } from "./branding-drawer";
 import { applyDashboardTemplate } from "./dashboard-template/actions";
+import { FacebookLinkCard } from "./facebook-link-card";
 import { LeaveOrganizationDialog } from "./leave-org-dialog";
 import { LinkCodeDisplay } from "./link-code-display";
 import { NotificationSettings } from "./notification-settings";
@@ -690,6 +691,9 @@ export function SettingsContent() {
         </CardHeader>
         <CardContent>{telegramContent}</CardContent>
       </Card>
+
+      {/* Facebook / Instagram Link */}
+      <FacebookLinkCard />
 
       {/* Roles & Permissions */}
       {canManageRoles && (
