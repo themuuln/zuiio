@@ -1,6 +1,6 @@
 # Root-level ignore for `vercel deploy` run from the monorepo root.
-# This repo's root deploys build apps/tolom only (project Root Directory =
-# apps/tolom), so sibling apps' sources are excluded from uploads.
+# Only apps with Vercel projects are included in uploads (tolom, website);
+# sibling apps' sources are excluded.
 # Workspace members' package.json files are kept so `pnpm install` at the
 # root can resolve every project in pnpm-lock.yaml.
 
@@ -21,4 +21,6 @@
 apps/*
 !apps/tolom/
 !apps/tolom/**
+!apps/website/
+!apps/website/**
 !apps/*/package.json
