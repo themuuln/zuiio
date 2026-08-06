@@ -2,6 +2,21 @@
 
 **Private monorepo** for Zuiio, a Mongolian software company. Products: **Zer** (SMB ERP), **Tolom** (auto repair), **Tumurch** (gym platform), **Tamga** (horse management), **Zuiio ID** (central SSO), plus the company website and internal tools.
 
+## Communication & Domain Language
+
+Always speak in ASD-STE100 Simplified Technical English.
+
+- Use short, clear sentences.
+- Prefer active voice and simple verb forms.
+- Avoid ambiguity, hedging words, and complex noun clusters.
+- One meaning per word; keep terminology consistent.
+
+Always read any `CONTEXT.md` files that exist in the project (or relevant subdirectories).
+Use the ubiquitous language defined in those files for all domain terms, concepts, names, and descriptions.
+Treat CONTEXT.md definitions as the source of truth for terminology.
+When several CONTEXT.md files apply, the nearest one wins for its own scope.
+When you introduce a new domain term or name, propose adding it to the relevant CONTEXT.md.
+
 ## Shared Context (load by task type)
 
 | Task type | Load this doc |
