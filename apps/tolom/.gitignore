@@ -91,3 +91,6 @@ docs/.vitepress/dist/
 
 # Turbo build artifacts
 .turbo/
+
+# Supabase CLI local runtime state (contains dev secrets — never commit)
+supabase/.temp/
