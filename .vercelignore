@@ -18,7 +18,33 @@
 **/.env.*
 
 # --- Sibling apps: keep only their package.json for workspace resolution ---
-apps/*
-!apps/tolom/
-!apps/tolom/**
+# Root deploys serve apps/tolom and apps/agent-gateway — their sources are
+# uploaded. Vercel's ignore does not support re-inclusion under a
+# directory-wide exclusion, so sibling apps are excluded by name.
+!apps/
+apps/archive/
+apps/docs/
+apps/khosuud/
+apps/onoo/
+apps/onoo-app/
+apps/sakhuu/
+apps/side/
+apps/sms-pay/
+apps/tamga/
+apps/tamga-web/
+apps/tolom-mobile/
+apps/tumurch/
+apps/tumurch-rn/
+apps/website/
+apps/zatly/
+apps/zer/
+apps/zer-app/
+apps/zerbu/
+apps/zill/
+apps/zim/
+apps/zoa/
+apps/zraf/
+apps/zraf-web/
+apps/zuiio-id/
+apps/zunch/
 !apps/*/package.json

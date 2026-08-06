@@ -85,19 +85,29 @@ export function computeToolAverages(
 
 /**
  * Get usage statistics for an organization over a date range.
+ *
+ * Gateway state (daily spend, sessions, handoffs) is written to the
+ * gateway/Zer project for every org, but the tool audit log is written to
+ * the product's own project (tool calls run with the product's data client).
+ * For Tolom orgs pass the Tolom client as `auditSupabase` so audit-derived
+ * stats (tool calls, response times, byChannel, error rate) come from the
+ * right project. Defaults to the main client when omitted.
  */
 export async function getUsageStats(
 	supabase: SupabaseClient,
 	orgId: string,
 	days: number = 7,
 	providerCostPer1M: number = 0.14, // OpenCodeGo Flash default
+	auditSupabase?: SupabaseClient,
 ): Promise<UsageStats> {
 	const end = new Date();
 	const start = new Date(Date.now() - days * 86400000);
-	const startDate = start.toISOString().split("T")[0]!;
-	const endDate = end.toISOString().split("T")[0]!;
+	const startDate = start.toISOString().slice(0, 10);
+	const endDate = end.toISOString().slice(0, 10);
 
 	try {
+		const auditSb = auditSupabase ?? supabase;
+
 		// Daily spend
 		const { data: spend } = await supabase
 			.from("agent_daily_spend")
@@ -119,7 +129,7 @@ export async function getUsageStats(
 		const totalApiCalls = dailyBreakdown.reduce((s, d) => s + d.calls, 0);
 
 		// Tool calls + response times from the audit log
-		const { data: tools } = await supabase
+		const { data: tools } = await auditSb
 			.from("agent_audit_log")
 			.select("tool_name, duration_ms, channel, error")
 			.eq("organization_id", orgId)

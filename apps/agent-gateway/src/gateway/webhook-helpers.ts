@@ -6,7 +6,7 @@ import { createCustomerMemoryTools } from "@/gateway/customer-memory-tool";
 import { createReadDataTool } from "@/gateway/read-data-tool";
 import { createWriteDataTool } from "@/gateway/write-data-tool";
 import { getRedis } from "@/lib/redis";
-import { createServiceClient } from "@/lib/supabase";
+import { createServiceClient, getSupabaseForProduct } from "@/lib/supabase";
 import type { GatewayTool, ToolContext } from "@/providers/types";
 import { gateWriteTool } from "@/runtime/write-gate";
 
@@ -38,10 +38,14 @@ export async function systemPromptFor(
 		}
 	}
 
-	// Cache miss — query Supabase
+	// Cache miss — query the product's own Supabase project (Tolom has a
+	// separate project; its organizations table is not in the gateway/Zer DB).
 	if (!orgName) {
 		try {
-			const sb = createServiceClient();
+			const sb =
+				productType === "tolom"
+					? getSupabaseForProduct("tolom")
+					: createServiceClient();
 			const { data } = await sb
 				.from("organizations")
 				.select("name")
@@ -67,10 +71,10 @@ RULES:
 1. Never say "I don't have that data" — always use tools to query business data
 2. Use correct date ranges: "last year" → 1yr ago, "this month" → month start, omit for all time
 3. After showing data, offer relevant next steps
-4. Write tool (confirm before executing): writeData(dataset, operation, data). Datasets: vehicles, customers, work_orders, appointments, expenses, suppliers, parts_catalog, service_catalog, sales, invoices. Operations: insert, update, delete. Always confirm the exact change with the user before executing.
+4. Write tool (confirm before executing): writeData(dataset, operation, data). Datasets: vehicles, customers, work_orders, appointments, expenses, suppliers, parts_catalog, service_catalog, invoices. Operations: insert, update, delete. Always confirm the exact change with the user before executing.
 5. General greetings → respond without tools
 6. Complex ops → guide step by step, ONE question per step, confirm before submit
-READ TOOL: Use readData(plan) for ALL data lookups. plan is a ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }. Datasets include: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, expense_categories, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports, notifications.
+READ TOOL: Use readData(plan) for ALL data lookups. plan is a ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }. Datasets include: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, expense_categories, suppliers, profiles, parts_catalog, service_catalog, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports.
 Examples: "show active orders" → readData({ queries: [{ dataset:"work_orders", filters:[{field:"status",op:"eq",value:"in_progress"}], limit:10 }] }); "customer by phone" → readData({ queries: [{ dataset:"customers", filters:[{field:"phone",op:"eq",value:"12345678"}] }] }); "today's appointments" → readData({ queries: [{ dataset:"appointments", filters:[{field:"scheduled_at",op:"gte",value:"2024-01-15"}] }] })
 MEMORY: When you identify a customer (by id or phone via readData on "customers"), call recallCustomerMemory to retrieve their saved preferences/history and use it to personalize. When the user states a durable fact about themselves (name they prefer, contact preference, vehicle, note), call rememberCustomerFact to save it.
 Organization ID: ${orgId}${groupWarning}`;
@@ -82,7 +86,7 @@ Organization ID: ${orgId}${groupWarning}`;
 1. "би мэдээлэлгүй" гэж хэзээ ч хэлэхгүй — бүх өгөгдлийг хэрэгслээр асууна
 2. Бизнесийн асуулт бүрт хэрэгсэл ашиглах. Зөв хугацаа ашиглах.
 3. Идэвхтэй байх — өгөгдөл харуулсны дараа дараагийн алхмуудыг санал болго
-4. Бичлэгийн хэрэгсэл — writeData(dataset, operation, data). Хүснэгтүүд: vehicles, customers, work_orders, appointments, expenses, suppliers, parts_catalog, service_catalog, sales, invoices. Үйлдлүүд: insert, update, delete. Гүйцэтгэхээс өмнө хэрэглэгчээс заавал баталгаажуулна.
+4. Бичлэгийн хэрэгсэл — writeData(dataset, operation, data). Хүснэгтүүд: vehicles, customers, work_orders, appointments, expenses, suppliers, parts_catalog, service_catalog, invoices. Үйлдлүүд: insert, update, delete. Гүйцэтгэхээс өмнө хэрэглэгчээс заавал баталгаажуулна.
 5. Ерөнхий асуулт — хэрэгсэлгүйгээр хариул
 6. Төвөгтэй үйлдэл: алхам алхамаар, нэг асуулт нэг алхам, баталгаажуул
 Жишээ: "идэвхтэй захиалга" → readData({ queries: [{ dataset:"work_orders", filters:[{field:"status",op:"eq",value:"in_progress"}], limit:10 }] }); "утсаар харилцагч" → readData({ queries: [{ dataset:"customers", filters:[{field:"phone",op:"eq",value:"12345678"}] }] }); "өнөөдрийн цаг" → readData({ queries: [{ dataset:"appointments", filters:[{field:"scheduled_at",op:"gte",value:"2024-01-15"}] }] })
@@ -101,7 +105,7 @@ RULES:
 2. Use correct date ranges for queries
 3. After showing data, offer relevant next steps
 4. Read tool: use readData(plan) for ALL data lookups. Datasets: sales, sale_items, products, categories, contacts, expenses, invoices, invoice_items, returns, return_items, purchase_orders, purchase_order_items, stock_movements, warehouses, employees, cash_sessions. plan is a ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }
-5. Write tool (confirm before executing): writeData(dataset, operation, data). Datasets: products, categories, contacts, expenses, sale_items, purchase_orders, purchase_order_items. Operations: insert, update, delete. Always confirm the exact change with the user before executing.
+5. Write tool (confirm before executing): writeData(dataset, operation, data). Datasets: products, categories, contacts, expenses, purchase_orders. Operations: insert, update, delete. Always confirm the exact change with the user before executing.
 MEMORY: When you identify a customer/contact (by id or phone via readData on "contacts"), call recallCustomerMemory to retrieve their saved preferences/history and personalize. When the user states a durable fact about themselves, call rememberCustomerFact to save it.
 6. General questions → respond without tools
 Organization ID: ${orgId}${groupWarning}`;
@@ -110,7 +114,7 @@ Organization ID: ${orgId}${groupWarning}`;
 ХЭЛНИЙ ДҮРЭМ: ЗӨВХӨН Монгол хэлээр хариулна. Англи, Орос бусад хэл ашиглахгүй.
 ФОРМАТ: Зөвхөн HTML (<b>, <i>, <code>). Markdown ашиглахгүй. Хариулт богино — 1-2 өгүүлбэр.
 ХЭРЭГСЛИЙН ДҮРЭМ: readData(plan) ашиглах — бүх өгөгдөл хайх, шүүх, бүлэглэх. plan нь ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }. Хүснэгтүүд: sales, sale_items, products, categories, contacts, expenses, invoices, invoice_items, returns, return_items, purchase_orders, purchase_order_items, stock_movements, warehouses, employees, cash_sessions.
-Бичлэгийн хэрэгсэл — writeData(dataset, operation, data). Хүснэгтүүд: products, categories, contacts, expenses, sale_items, purchase_orders, purchase_order_items. Үйлдлүүд: insert, update, delete. Гүйцэтгэхээс өмнө хэрэглэгчээс заавал баталгаажуулна.
+Бичлэгийн хэрэгсэл — writeData(dataset, operation, data). Хүснэгтүүд: products, categories, contacts, expenses, purchase_orders. Үйлдлүүд: insert, update, delete. Гүйцэтгэхээс өмнө хэрэглэгчээс заавал баталгаажуулна.
 САНУУЛАГ: Хэрэглэгч/харилцагчийг (ID эсвэл утасаар readData "contacts"-ээр) таньсны дараа recallCustomerMemory дуудж тэдний хадгалагдсан дуртай зүйл/түүхийг аваад хариултаа хувиаршуул. Хэрэглэгч өөрийнхөө тухай бат бөх мэдээлэл хэлсэн үед rememberCustomerFact дуудж хадгал.
 - Ангиллаар: getSalesByCategory
 - Бусад бүх асуулт: readData ашиглах
@@ -146,7 +150,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		59,
 		59,
 	).toISOString();
-	const monthStartDate = monthStart.split("T")[0]!;
+	const monthStartDate = monthStart.slice(0, 10);
 
 	return [
 		{
@@ -159,7 +163,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					const [workOrders, invoices, customers] = await Promise.all([
 						supabase
 							.from("work_orders")
-							.select("status, total_amount")
+							.select("status, total")
 							.eq("organization_id", orgId)
 							.is("deleted_at", null),
 						supabase
@@ -178,9 +182,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 
 					const activeWO = (workOrders.data ?? []).filter(
 						(wo: Record<string, unknown>) =>
-							!["delivered", "cancelled", "completed"].includes(
-								String(wo.status),
-							),
+							!["Completed", "Cancelled"].includes(String(wo.status)),
 					);
 
 					return {
@@ -317,11 +319,11 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					let woQuery = supabase
 						.from("work_orders")
 						.select(
-							"id, vehicle_id, total_amount, created_at, status, vehicles(plate_number, make, model, year)",
+							"id, vehicle_id, total, created_at, status, vehicles(plate_number, make, model, year)",
 						)
 						.eq("organization_id", orgId)
 						.is("deleted_at", null)
-						.not("status", "in", '("cancelled")');
+						.not("status", "in", '("Cancelled")');
 
 					if (dateFrom) woQuery = woQuery.gte("created_at", dateFrom);
 					if (dateTo) woQuery = woQuery.lte("created_at", dateTo);
@@ -343,10 +345,10 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					>();
 
 					for (const wo of workOrders ?? []) {
-						const v = wo.vehicles as any;
+						const v = wo.vehicles;
 						const vid = wo.vehicle_id ?? "unknown";
 						const existing = vehicleMap.get(vid);
-						const revenue = Number(wo.total_amount) || 0;
+						const revenue = Number(wo.total) || 0;
 						const woDate = wo.created_at ?? "";
 
 						if (existing) {
@@ -471,16 +473,15 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					);
 					const expensesByCategory: Record<string, number> = {};
 					for (const r of expenseRows) {
-						const cat = ((r as any).expense_categories as any)?.name ?? "Бусад";
+						const cat = r.expense_categories?.name ?? "Бусад";
 						expensesByCategory[cat] =
-							(expensesByCategory[cat] ?? 0) + (Number((r as any).amount) || 0);
+							(expensesByCategory[cat] ?? 0) + (Number(r.amount) || 0);
 					}
 					const paymentsByMethod: Record<string, number> = {};
 					for (const r of paymentRows) {
-						const method = (r as any).method ?? "бусад";
+						const method = r.method ?? "бусад";
 						paymentsByMethod[method] =
-							(paymentsByMethod[method] ?? 0) +
-							(Number((r as any).amount) || 0);
+							(paymentsByMethod[method] ?? 0) + (Number(r.amount) || 0);
 					}
 
 					return {
@@ -511,7 +512,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					name: "table",
 					type: "string",
 					description:
-						"Хүснэгтийн нэр (work_orders, invoices, customers, expenses, sales)",
+						"Хүснэгтийн нэр (work_orders, invoices, customers, expenses)",
 					required: true,
 				},
 				{
@@ -536,7 +537,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					> = {
 						work_orders: {
 							dateCol: "created_at",
-							select: "id, status, description, total_amount, created_at",
+							select: "id, status, description, total, created_at",
 						},
 						invoices: {
 							dateCol: "issued_at",
@@ -550,10 +551,6 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						expenses: {
 							dateCol: "expense_date",
 							select: "id, amount, description, expense_date",
-						},
-						sales: {
-							dateCol: "sale_date",
-							select: "id, total_amount, paid_amount, sale_date, customer_name",
 						},
 					};
 					if (!table || !allowedTables[table]) {
@@ -618,7 +615,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					const [internalRes, historicalRes] = await Promise.all([
 						supabase
 							.from("parts_catalog")
-							.select("id, name, part_number, unit_price, category")
+							.select("id, name, part_number, default_price, category")
 							.eq("organization_id", orgId)
 							.is("deleted_at", null)
 							.or(`name.ilike.%${q}%,part_number.ilike.%${q}%`)
@@ -641,7 +638,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 							(p: Record<string, unknown>) => ({
 								name: p.name,
 								partNumber: p.part_number,
-								price: Number(p.unit_price) || 0,
+								price: Number(p.default_price) || 0,
 								category: p.category,
 							}),
 						),
@@ -711,25 +708,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						.order("created_at", { ascending: false })
 						.limit(1000);
 
-					// Query sales_items (direct parts sales) if the table exists
-					const salesItemsPromise = supabase
-						.from("sales_items")
-						.select(
-							"part_name, part_number, quantity, unit_price, total_price, created_at",
-						)
-						.eq("organization_id", orgId)
-						.gte("created_at", dateFrom)
-						.lte("created_at", dateTo)
-						.order("created_at", { ascending: false })
-						.limit(1000)
-						.then(
-							(res) => res,
-							() => ({ data: null, error: null }),
-						);
-					const [woPartsRes, salesItemsRes] = await Promise.all([
-						woPartsPromise,
-						salesItemsPromise,
-					]);
+					const woPartsRes = await woPartsPromise;
 
 					// Merge and aggregate by part_name
 					type PartRow = {
@@ -757,30 +736,6 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						const num = p.part_number ?? "";
 						const revenue =
 							Number(p.final_price) ||
-							Number(p.unit_price) * Number(p.quantity) ||
-							0;
-						const qty = Number(p.quantity) || 0;
-						const existing = partsMap.get(name);
-						if (existing) {
-							existing.totalQuantity += qty;
-							existing.totalRevenue += revenue;
-							existing.saleCount += 1;
-						} else {
-							partsMap.set(name, {
-								partName: name,
-								partNumber: num,
-								totalQuantity: qty,
-								totalRevenue: revenue,
-								saleCount: 1,
-							});
-						}
-					}
-
-					for (const p of (salesItemsRes.data ?? []) as PartRow[]) {
-						const name = p.part_name ?? "—";
-						const num = p.part_number ?? "";
-						const revenue =
-							Number(p.total_price) ||
 							Number(p.unit_price) * Number(p.quantity) ||
 							0;
 						const qty = Number(p.quantity) || 0;
@@ -1015,7 +970,7 @@ function zerTools(context: ToolContext): GatewayTool[] {
 							products!inner(name, category_id, categories!inner(name))
 						`)
 						.eq("sales.organization_id", orgId)
-						.gte("created_at", dateStart)
+						.gte("sales.sale_date", dateStart)
 						.is("deleted_at", null);
 
 					if (categoryFilter) {
@@ -1035,7 +990,7 @@ function zerTools(context: ToolContext): GatewayTool[] {
 						{ totalRevenue: number; totalQuantity: number; itemCount: number }
 					>();
 					for (const item of items) {
-						const prod = item.products as any;
+						const prod = item.products;
 						const catName = prod?.categories?.name ?? "Бусад";
 						const existing = byCategory.get(catName) ?? {
 							totalRevenue: 0,

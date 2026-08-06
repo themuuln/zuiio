@@ -27,18 +27,18 @@ vi.mock("@/lib/redis", () => ({
 
 vi.mock("server-only", () => ({}));
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 // ─── Imports (after mocks are set up) ───────────────────────────────────────
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import type { ToolContext } from "@/providers/types";
 
 // ─── Realistic Mock Data ─────────────────────────────────────────────────────
-const MOCK_DATA: Record<string, any[]> = {
+const MOCK_DATA: Record<string, unknown[]> = {
 	work_orders: [
 		{
 			id: "wo-1",
-			status: "in_progress",
-			total_amount: 1200000,
-			plate_number: "1234АБ",
+			status: "In Progress",
+			total: 1200000,
 			description: "Тормоз засвар",
 			created_at: "2025-07-15T10:00:00Z",
 			customers: { full_name: "Бат-Эрдэнэ", phone: "99112233" },
@@ -51,9 +51,8 @@ const MOCK_DATA: Record<string, any[]> = {
 		},
 		{
 			id: "wo-2",
-			status: "completed",
-			total_amount: 800000,
-			plate_number: "5678СД",
+			status: "Completed",
+			total: 800000,
 			description: "Мотор oil change",
 			created_at: "2025-07-14T14:00:00Z",
 			customers: { full_name: "Сараа", phone: "88112233" },
@@ -66,9 +65,8 @@ const MOCK_DATA: Record<string, any[]> = {
 		},
 		{
 			id: "wo-3",
-			status: "received",
-			total_amount: 2500000,
-			plate_number: "9999ЕР",
+			status: "New",
+			total: 2500000,
 			description: "AC засвар",
 			created_at: "2025-07-16T09:00:00Z",
 			customers: { full_name: "Оюун", phone: "77112233" },
@@ -231,21 +229,21 @@ const MOCK_DATA: Record<string, any[]> = {
 			id: "pc-1",
 			name: "Window Motor",
 			part_number: "WM-001",
-			unit_price: 8597494,
+			default_price: 8597494,
 			category: "Electrical",
 		},
 		{
 			id: "pc-2",
 			name: "Coolant Tester",
 			part_number: "CT-002",
-			unit_price: 10000000,
+			default_price: 10000000,
 			category: "Tools",
 		},
 		{
 			id: "pc-3",
 			name: "AC Accumulator",
 			part_number: "AC-003",
-			unit_price: 10300000,
+			default_price: 10300000,
 			category: "AC",
 		},
 	],
@@ -342,7 +340,7 @@ const EMPTY_TABLES = [
 	"invoice_payments",
 ];
 
-const ALL_DATA: Record<string, any[]> = { ...MOCK_DATA };
+const ALL_DATA: Record<string, unknown[]> = { ...MOCK_DATA };
 for (const t of EMPTY_TABLES) ALL_DATA[t] = [];
 
 // ─── Mock Supabase Client ────────────────────────────────────────────────────
@@ -396,7 +394,7 @@ const orgId = "test-org-123";
 const context: ToolContext = {
 	orgId,
 	userId: "user-123",
-	supabase: createMockSupabase() as any,
+	supabase: createMockSupabase() as unknown as SupabaseClient,
 };
 
 // ─── Helper: get a tool by name ─────────────────────────────────────────────
@@ -419,7 +417,18 @@ describe("Real Tool Execution — Output Format Verification", () => {
 			const result = (await getTool("getSparePartsSales").execute(
 				{},
 				context,
-			)) as any;
+			)) as {
+				period: string;
+				totalRevenue: number;
+				totalParts: number;
+				parts: Array<{
+					partName: string;
+					totalRevenue: number;
+					totalQuantity: number;
+					saleCount: number;
+					partNumber: string;
+				}>;
+			};
 
 			expect(result).toHaveProperty("period");
 			expect(result).toHaveProperty("totalRevenue");
@@ -451,7 +460,15 @@ describe("Real Tool Execution — Output Format Verification", () => {
 			const result = (await getTool("partsLookup").execute(
 				{ query: "Window Motor" },
 				context,
-			)) as any;
+			)) as {
+				query: string;
+				internalCatalog: Array<{
+					name: string;
+					partNumber: string;
+					price: number;
+				}>;
+				historicalPricing: unknown[];
+			};
 
 			expect(result.query).toBe("Window Motor");
 			expect(Array.isArray(result.internalCatalog)).toBe(true);
