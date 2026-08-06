@@ -172,7 +172,7 @@ export function SearchInput({
  * Returns true if the user is currently editing a text-like element,
  * so keyboard shortcuts don't hijack normal typing.
  */
-function isEditingActive(): boolean {
+export function isEditingActive(): boolean {
   const el = document.activeElement;
   if (!el) return false;
   const tag = el.tagName;

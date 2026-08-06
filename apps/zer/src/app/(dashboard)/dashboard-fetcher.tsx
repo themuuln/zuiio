@@ -66,7 +66,7 @@ export async function DashboardFetcher({
   const _shopDefaultPaymentMethod =
     posSettings?.shop_default_payment_method ?? "cash";
 
-  const allFeatures =
+  const _allFeatures =
     enabledFeatures.length > 0
       ? [
           ...enabledFeatures,

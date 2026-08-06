@@ -1,5 +1,13 @@
-export const APP_NAME = "Zer";
-export const APP_DESCRIPTION = "Small business ERP system";
+import {
+  DEFAULT_LOCALE,
+  type Locale,
+  type MessageKey,
+  messages,
+  translate,
+} from "@/lib/i18n/messages";
+
+export const APP_NAME = messages[DEFAULT_LOCALE]["app.name"];
+export const APP_DESCRIPTION = messages[DEFAULT_LOCALE]["app.description"];
 
 export const PUBLIC_ROUTES = [
   "/landing",
@@ -10,104 +18,197 @@ export const PUBLIC_ROUTES = [
   "/update-password",
   "/organization/new",
   "/sso",
+  "/offline",
 ];
 
 export const COMPANY_TYPES = [
-  { value: "retail", label: "Жижиглэн худалдаа" },
-  { value: "wholesale", label: "Бөөний худалдаа" },
-  { value: "service", label: "Үйлчилгээ" },
-  { value: "manufacturing", label: "Үйлдвэрлэл" },
-  { value: "restaurant", label: "Ресторан" },
-  { value: "gym", label: "Фитнес / Спорт клуб" },
-  { value: "religious", label: "Шашны дэлгүүр" },
-  { value: "other", label: "Бусад" },
+  {
+    value: "retail",
+    labelKey: "companyType.retail",
+    label: messages.mn["companyType.retail"],
+  },
+  {
+    value: "wholesale",
+    labelKey: "companyType.wholesale",
+    label: messages.mn["companyType.wholesale"],
+  },
+  {
+    value: "service",
+    labelKey: "companyType.service",
+    label: messages.mn["companyType.service"],
+  },
+  {
+    value: "manufacturing",
+    labelKey: "companyType.manufacturing",
+    label: messages.mn["companyType.manufacturing"],
+  },
+  {
+    value: "restaurant",
+    labelKey: "companyType.restaurant",
+    label: messages.mn["companyType.restaurant"],
+  },
+  {
+    value: "gym",
+    labelKey: "companyType.gym",
+    label: messages.mn["companyType.gym"],
+  },
+  {
+    value: "religious",
+    labelKey: "companyType.religious",
+    label: messages.mn["companyType.religious"],
+  },
+  {
+    value: "other",
+    labelKey: "companyType.other",
+    label: messages.mn["companyType.other"],
+  },
 ] as const;
 
-export function getCompanyTypeLabel(type: string): string {
-  const found = COMPANY_TYPES.find((ct) => ct.value === type);
-  return found?.label ?? type;
+export function getCompanyTypeLabel(
+  type: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  const found = COMPANY_TYPES.find((companyType) => companyType.value === type);
+  return found ? translate(locale, found.labelKey) : type;
 }
 
 // ─── Feature definitions for onboarding & sidebar gating ───
 
 export interface FeatureDef {
   key: string;
+  labelKey: MessageKey;
+  descriptionKey: MessageKey;
   label: string;
   description: string;
 }
 
+const localizedFeature = (
+  key: string,
+  labelKey: MessageKey,
+  descriptionKey: MessageKey,
+): FeatureDef => ({
+  key,
+  labelKey,
+  descriptionKey,
+  label: messages[DEFAULT_LOCALE][labelKey],
+  description: messages[DEFAULT_LOCALE][descriptionKey],
+});
+
 export const FEATURES: FeatureDef[] = [
-  {
-    key: "sales",
-    label: "Борлуулалт",
-    description: "Борлуулалтын бүртгэл, касс",
-  },
-  { key: "shop", label: "Дэлгүүр", description: "Дэлгүүрийн интерфейс" },
-  { key: "expenses", label: "Зарлага", description: "Зарлагын бүртгэл" },
-  {
-    key: "purchases",
-    label: "Худалдан авалт",
-    description: "Худалдан авалтын бүртгэл",
-  },
-  { key: "returns", label: "Буцаалт", description: "Буцаалтын бүртгэл" },
-  {
-    key: "deliveries",
-    label: "Хүргэлт",
-    description: "Хүргэлтийн удирдлага, хяналт",
-  },
-  { key: "coupons", label: "Купон", description: "Купоны систем, хөнгөлөлт" },
-  {
-    key: "gift_cards",
-    label: "Бэлгийн карт",
-    description: "Бэлгийн картын систем",
-  },
-  {
-    key: "promotions",
-    label: "Урамшуулал",
-    description: "Урамшууллын тохиргоо",
-  },
-  {
-    key: "invoices",
-    label: "Нэхэмжлэх",
-    description: "Нэхэмжлэх үүсгэх, илгээх",
-  },
-  {
-    key: "quotations",
-    label: "Үнийн санал",
-    description: "Үнийн санал бэлтгэх",
-  },
-  { key: "discounts", label: "Хямдрал", description: "Хямдрал, урамшуулал" },
-  { key: "coupons", label: "Купон", description: "Купоны код, хөнгөлөлт" },
-  { key: "gift_cards", label: "Бэлгийн карт", description: "Бэлгийн карт, баланс" },
-  { key: "promotions", label: "Сурталчилгаа", description: "Урамшууллын нөхцөл, шагнал" },
-  { key: "reports", label: "Тайлан", description: "Тайлан, шинжилгээ" },
-  { key: "commissions", label: "Комисс", description: "Комиссын тооцоо" },
-  { key: "accounting", label: "Нягтлан", description: "Нягтлан бодох бүртгэл" },
-  {
-    key: "boms",
-    label: "BOM",
-    description: "Бүтээгдэхүүний бүртгэлийн жагсаалт",
-  },
-  {
-    key: "production_orders",
-    label: "Үйлдвэрлэл",
-    description: "Үйлдвэрлэлийн захиалга",
-  },
-  {
-    key: "job_costing",
-    label: "Зардал тооцоо",
-    description: "Үйлдвэрлэлийн зардал болон ашиг",
-  },
-  {
-    key: "quality_control",
-    label: "Чанарын хяналт",
-    description: "Үйлдвэрлэлийн чанарын шалгалт",
-  },
-  {
-    key: "material_tracking",
-    label: "Материалын хяналт",
-    description: "Материалын гаргалт ба буцаалт",
-  },
+  localizedFeature("sales", "feature.sales.label", "feature.sales.description"),
+  localizedFeature("shop", "feature.shop.label", "feature.shop.description"),
+  localizedFeature(
+    "expenses",
+    "feature.expenses.label",
+    "feature.expenses.description",
+  ),
+  localizedFeature(
+    "purchases",
+    "feature.purchases.label",
+    "feature.purchases.description",
+  ),
+  localizedFeature(
+    "returns",
+    "feature.returns.label",
+    "feature.returns.description",
+  ),
+  localizedFeature(
+    "deliveries",
+    "feature.deliveries.label",
+    "feature.deliveries.description",
+  ),
+  localizedFeature(
+    "coupons",
+    "feature.coupons.label",
+    "feature.coupons.description",
+  ),
+  localizedFeature(
+    "gift_cards",
+    "feature.giftCards.label",
+    "feature.giftCards.description",
+  ),
+  localizedFeature(
+    "promotions",
+    "feature.promotions.label",
+    "feature.promotions.description",
+  ),
+  localizedFeature(
+    "reviews",
+    "feature.reviews.label",
+    "feature.reviews.description",
+  ),
+  localizedFeature("blog", "feature.blog.label", "feature.blog.description"),
+  localizedFeature(
+    "webhooks",
+    "feature.webhooks.label",
+    "feature.webhooks.description",
+  ),
+  localizedFeature(
+    "invoices",
+    "feature.invoices.label",
+    "feature.invoices.description",
+  ),
+  localizedFeature(
+    "quotations",
+    "feature.quotations.label",
+    "feature.quotations.description",
+  ),
+  localizedFeature(
+    "discounts",
+    "feature.discounts.label",
+    "feature.discounts.description",
+  ),
+  localizedFeature(
+    "coupons",
+    "feature.coupons.label",
+    "feature.coupons.description",
+  ),
+  localizedFeature(
+    "gift_cards",
+    "feature.giftCards.label",
+    "feature.giftCards.description",
+  ),
+  localizedFeature(
+    "promotions",
+    "feature.promotions.label",
+    "feature.promotions.description",
+  ),
+  localizedFeature(
+    "reports",
+    "feature.reports.label",
+    "feature.reports.description",
+  ),
+  localizedFeature(
+    "commissions",
+    "feature.commissions.label",
+    "feature.commissions.description",
+  ),
+  localizedFeature(
+    "accounting",
+    "feature.accounting.label",
+    "feature.accounting.description",
+  ),
+  localizedFeature("boms", "feature.boms.label", "feature.boms.description"),
+  localizedFeature(
+    "production_orders",
+    "feature.productionOrders.label",
+    "feature.productionOrders.description",
+  ),
+  localizedFeature(
+    "job_costing",
+    "feature.jobCosting.label",
+    "feature.jobCosting.description",
+  ),
+  localizedFeature(
+    "quality_control",
+    "feature.qualityControl.label",
+    "feature.qualityControl.description",
+  ),
+  localizedFeature(
+    "material_tracking",
+    "feature.materialTracking.label",
+    "feature.materialTracking.description",
+  ),
 ];
 
 /**
@@ -191,6 +292,7 @@ export const PRESET_CATEGORIES: Record<string, readonly string[]> = {
     "Утлага, хонх",
     "Дуут аяга",
     "Хийморь",
+    "Бусад",
   ],
   other: ["Бусад"],
 };

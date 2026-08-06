@@ -1,7 +1,8 @@
 # Tax System Improvements Plan — TOLOM
 
 > Last revised: 2026-06-10
-> 
+> **Implemented: 2026-07-31** — All P0 items and most P2/P3 items verified as done.
+> **Updated: 2026-08-03** — НДШ payroll columns shipped, tax label i18n complete, settings sync fixed.
 > **Key requirement:** НӨАТ is optional — some companies don't pay it. Default rate = 10%.
 
 ---
@@ -19,18 +20,21 @@
 
 ## 1. Current State Analysis
 
-### What Exists Today
+### What Exists Today (Updated 2026-07-31)
 
 | Area | Status | Notes |
 |------|--------|-------|
-| **Tax rate setting** | ⚠️ Partial | Single `default_tax_rate` in org settings — no toggle to enable/disable |
-| **НӨАТ toggle** | ❌ Missing | No way to disable НӨАТ for non-registered businesses |
-| **Tax on estimates** | ⚠️ Manual | User manually enters `tax_total` as absolute amount |
-| **Tax on invoices** | ⚠️ Partial | `tax_total` field exists but `createInvoiceFromWorkOrder` sets it to `0` |
-| **Tax on work orders** | ❌ Missing | No НӨАТ toggle on work order — tax not tracked |
-| **Tax on expenses** | ✅ Basic | `tax_amount` field on expenses (manual entry) |
-| **PDF rendering** | ✅ Basic | Shows "Tax" label with amount, no rate breakdown |
-| **Bay View totals** | ✅ Basic | Shows tax calculation with rate percentage |
+| **Org-level НӨАТ toggle** | ✅ Done | `nuat_enabled` column on `organization_settings`, defaults to `false`. Toggle in settings form. |
+| **НӨАТ toggle on work orders** | ✅ Done | `nuat_enabled` column on `work_orders`. Switch in bay view detail drawer. |
+| **Tax on estimates** | ✅ Auto-calculated | `nuatEnabled ? Math.round(...) : 0` in estimate creation. |
+| **Tax on invoices (from WO)** | ✅ Done | `createInvoiceFromWorkOrder()` reads `wo.nuat_enabled`, calculates tax. Tests cover both states. |
+| **Tax rate auto-application** | ✅ Done | Org-level `default_tax_rate` auto-applies. `calculateTax()` returns 0 when `nuatEnabled === false`. |
+| **Tax name localization** | ✅ Done | `vatAbbr`/`vatLabel` keys in `bayView`, `workOrderDetail`, `estimates` namespaces + `pdf-styles` translations. 5 inline `locale === 'mn' ? 'НӨАТ' : 'VAT'` fallbacks replaced (totals-summary, invoice PDF, estimate drawer/pages, pdf-styles). |
+| **Per-item tax rates** | 🟡 DB + service ready | `tax_rate`, `is_tax_exempt` on `invoice_items`/`estimate_items`. Service calculates per item. **UI not exposed.** |
+| **Tax report generation** | ✅ Done | Full tax report page with date filter, CSV export. Nav item in sidebar. |
+| **Tax reg number on invoices** | ✅ Done | `tax_id` on organizations. Rendered in invoice PDF. |
+| **НДШ tracking** | ✅ Done | `ndsh_enabled` + employer/employee rates in `organization_settings`. Payroll page shows НДШ employer/employee columns + rates line; payroll service computes `ndsh_employer_amount`/`ndsh_employee_amount` (computed-on-read). |
+| **E-invoice integration** | ✅ Done | `einvoice-service.ts`, `ebarimt-integration-service.ts`, settings UI. |
 
 ### Current Tax Calculation Flow
 
@@ -93,32 +97,32 @@ PDF: Shows "Tax: {amount}" if tax_total > 0
 
 ---
 
-## 3. Identified Gaps
+## 3. Identified Gaps (Updated 2026-07-31)
 
 ### Critical Gaps
 
-| Gap | Impact | Priority |
-|-----|--------|----------|
-| НӨАТ not optional at org level | Non-registered businesses forced to use it | P0 |
-| No НӨАТ toggle on work orders | Can't control tax per work order | P0 |
-| Work orders don't carry tax to invoices | Tax lost on invoice creation | P0 |
-| No tax rate auto-application | Manual calculation errors | P0 |
-| No tax name localization | "Tax" instead of "НӨАТ" | P1 |
+| Gap | Status | Priority | Evidence |
+|-----|--------|----------|----------|
+| НӨАТ not optional at org level | ✅ **RESOLVED** | P0 | `nuat_enabled` column on `organization_settings`, toggle in settings form |
+| No НӨАТ toggle on work orders | ✅ **RESOLVED** | P0 | `nuat_enabled` on `work_orders`, switch in bay view drawer |
+| Work orders don't carry tax to invoices | ✅ **RESOLVED** | P0 | `createInvoiceFromWorkOrder()` reads flag, calculates tax, tests cover both |
+| No tax rate auto-application | ✅ **RESOLVED** | P0 | Org rate auto-applied in estimates, invoices, work orders |
+| No tax name localization | ✅ **RESOLVED** | P1 | `vatAbbr`/`vatLabel` i18n keys in `bayView`, `workOrderDetail`, `estimates` namespaces + `pdf-styles`; inline locale fallbacks removed across totals-summary, invoice PDF, estimate drawer/pages (2026-08-03) |
 
 ### Important Gaps
 
-| Gap | Impact | Priority |
-|-----|--------|----------|
-| No per-item tax rates | Can't exempt certain items | P2 |
-| No tax report generation | Can't file taxes easily | P2 |
-| No tax registration number on invoices | Non-compliant invoices | P2 |
+| Gap | Status | Priority | Evidence |
+|-----|--------|----------|----------|
+| No per-item tax rates | 🟡 **PARTIALLY RESOLVED** | P2 | DB columns + service exist. **UI not exposed** — no per-item controls in work order/estimate forms |
+| No tax report generation | ✅ **RESOLVED** | P2 | Full tax report page with date filter, CSV export |
+| No tax registration number on invoices | ✅ **RESOLVED** | P2 | `tax_id` on organizations, rendered in invoice PDF |
 
 ### Nice-to-Have Gaps
 
-| Gap | Impact | Priority |
-|-----|--------|----------|
-| No НДШ tracking | Social insurance separate | P3 | ✅ Section 4.10 |
-| No e-invoice integration | Future requirement | P3 | ✅ Section 4.11 |
+| Gap | Status | Priority | Evidence |
+|-----|--------|----------|----------|
+| No НДШ tracking | ✅ **RESOLVED** | P3 | `getOrgNdshSettings()` (defaults 11.5/10, opt-in) + `withNdsh` in payroll service; payroll page shows employer/employee НДШ columns and rates line. Settings sync from UI JSON → `organization_settings` columns via `updateOrganization` (2026-08-03). Note: landed in payroll, not work-order labor lines |
+| No e-invoice integration | ✅ **RESOLVED** | P3 | Full `einvoice-service.ts` + `ebarimt-integration-service.ts` + settings UI |
 
 ---
 
@@ -656,8 +660,8 @@ if (org.einvoice_enabled && invoice.einvoice_status !== 'registered') {
 
 ### Phase 4
 
-- [ ] НДШ settings exist in org (opt-in, default rates)
-- [ ] Work orders show labor cost + НДШ breakdown
+- [x] НДШ settings exist in org (opt-in, default rates)
+- [ ] Work orders show labor cost + НДШ breakdown (shipped in payroll instead)
 - [ ] Profitability reports include НДШ
 - [ ] E-Invoice settings exist in org (API key, merchant ID)
 - [ ] Invoices can be registered with E-Barimt

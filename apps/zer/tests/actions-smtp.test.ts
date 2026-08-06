@@ -7,7 +7,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockMod } from "./actions-helpers";
 
 // ─── Global mocks ────────────────────────────────────────────────────
 
@@ -15,7 +15,10 @@ const captureMock = mock.fn(() => {});
 mockMod("@zuiio/capture", { capture: captureMock });
 
 const revalidatePathMock = mock.fn(() => {});
-mockMod("next/cache", { revalidatePath: revalidatePathMock, revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: revalidatePathMock,
+  revalidateTag: mock.fn(() => {}),
+});
 
 mockMod("next/server", { after: (fn: () => unknown) => fn() });
 mockMod("server-only", {});
@@ -85,7 +88,9 @@ function resetMocks() {
   captureMock.mock.resetCalls();
   revalidatePathMock.mock.resetCalls();
   getSuperadminEmailMock.mock.resetCalls();
-  getSuperadminEmailMock.mock.mockImplementation(async () => "admin@example.com");
+  getSuperadminEmailMock.mock.mockImplementation(
+    async () => "admin@example.com",
+  );
   svc = buildServiceMocks();
 }
 
@@ -133,7 +138,9 @@ test("addSmtpConfig: creates with defaults for missing fields", async () => {
   assert.equal(inserted.priority, 0);
 
   assert.equal(revalidatePathMock.mock.callCount(), 1);
-  assert.deepEqual(revalidatePathMock.mock.calls[0].arguments, ["/settings/smtp"]);
+  assert.deepEqual(revalidatePathMock.mock.calls[0].arguments, [
+    "/settings/smtp",
+  ]);
 });
 
 test("addSmtpConfig: creates with all fields", async () => {
@@ -165,7 +172,9 @@ test("addSmtpConfig: creates with all fields", async () => {
 test("addSmtpConfig: handles DB error", async () => {
   resetMocks();
   svc = buildServiceMocks({
-    insertResult: { error: { message: "relation smtp_configs does not exist" } },
+    insertResult: {
+      error: { message: "relation smtp_configs does not exist" },
+    },
   });
 
   const fd = formData({
@@ -196,9 +205,14 @@ test("deleteSmtpConfig: deletes successfully", async () => {
   assert.equal(svc.from.mock.callCount(), 1);
   assert.deepEqual(svc.from.mock.calls[0].arguments, ["smtp_configs"]);
   assert.equal(svc.deleteEq.mock.callCount(), 1);
-  assert.deepEqual(svc.deleteEq.mock.calls[0].arguments, ["id", "config-abc-123"]);
+  assert.deepEqual(svc.deleteEq.mock.calls[0].arguments, [
+    "id",
+    "config-abc-123",
+  ]);
   assert.equal(revalidatePathMock.mock.callCount(), 1);
-  assert.deepEqual(revalidatePathMock.mock.calls[0].arguments, ["/settings/smtp"]);
+  assert.deepEqual(revalidatePathMock.mock.calls[0].arguments, [
+    "/settings/smtp",
+  ]);
 });
 
 test("deleteSmtpConfig: rejects when not superadmin", async () => {
@@ -241,9 +255,14 @@ test("toggleSmtpConfig: toggles on successfully", async () => {
   assert.equal(svc.from.mock.callCount(), 1);
   assert.deepEqual(svc.from.mock.calls[0].arguments, ["smtp_configs"]);
   assert.equal(svc.updateEq.mock.callCount(), 1);
-  assert.deepEqual(svc.updateEq.mock.calls[0].arguments, ["id", "config-abc-123"]);
+  assert.deepEqual(svc.updateEq.mock.calls[0].arguments, [
+    "id",
+    "config-abc-123",
+  ]);
   assert.equal(revalidatePathMock.mock.callCount(), 1);
-  assert.deepEqual(revalidatePathMock.mock.calls[0].arguments, ["/settings/smtp"]);
+  assert.deepEqual(revalidatePathMock.mock.calls[0].arguments, [
+    "/settings/smtp",
+  ]);
 });
 
 test("toggleSmtpConfig: toggles off successfully", async () => {
@@ -253,7 +272,10 @@ test("toggleSmtpConfig: toggles off successfully", async () => {
 
   assert.deepEqual(result, { success: true });
   assert.equal(svc.updateEq.mock.callCount(), 1);
-  assert.deepEqual(svc.updateEq.mock.calls[0].arguments, ["id", "config-abc-123"]);
+  assert.deepEqual(svc.updateEq.mock.calls[0].arguments, [
+    "id",
+    "config-abc-123",
+  ]);
   assert.equal(revalidatePathMock.mock.callCount(), 1);
 });
 test("toggleSmtpConfig: handles DB error", async () => {

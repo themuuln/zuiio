@@ -6,8 +6,8 @@ import assert from "node:assert/strict";
 import test, { mock } from "node:test";
 import {
   createMockSupabase,
-  mockActionCtx,
   formData,
+  mockActionCtx,
   mockMod,
   registerDefaultMocks,
   resolved,
@@ -41,9 +41,7 @@ let createBatchAdjustment: (
 ) => Promise<Record<string, unknown>>;
 
 test.before(async () => {
-  const mod = await import(
-    "@/app/(dashboard)/inventory/adjustments/actions"
-  );
+  const mod = await import("@/app/(dashboard)/inventory/adjustments/actions");
   createBatchAdjustment = mod.createBatchAdjustment;
 });
 
@@ -133,7 +131,10 @@ test("calls supabase.rpc with correct payload structure", async () => {
   const rpcName = supabase.rpc.mock.calls[0].arguments[0] as string;
   assert.equal(rpcName, "process_batch_adjustment");
 
-  const rpcParams = supabase.rpc.mock.calls[0].arguments[1] as Record<string, unknown>;
+  const rpcParams = supabase.rpc.mock.calls[0].arguments[1] as Record<
+    string,
+    unknown
+  >;
 
   // Verify param keys
   assert.equal(typeof rpcParams.p_org_id, "string");
@@ -175,7 +176,10 @@ test("filters out items with quantity=0 before rpc call", async () => {
 
   await createBatchAdjustment(undefined, formData({ items }));
 
-  const rpcParams = supabase.rpc.mock.calls[0].arguments[1] as Record<string, unknown>;
+  const rpcParams = supabase.rpc.mock.calls[0].arguments[1] as Record<
+    string,
+    unknown
+  >;
   const pItems = rpcParams.p_items as Array<Record<string, unknown>>;
   assert.equal(pItems.length, 2);
   assert.equal(pItems[0].product_id, "p1");
@@ -188,12 +192,12 @@ test("uses default notes when notes not provided", async () => {
   mockCtx = mockActionCtx({ supabase });
   resetRevalidate();
 
-  await createBatchAdjustment(
-    undefined,
-    formData({ items: VALID_ITEMS }),
-  );
+  await createBatchAdjustment(undefined, formData({ items: VALID_ITEMS }));
 
-  const rpcParams = supabase.rpc.mock.calls[0].arguments[1] as Record<string, unknown>;
+  const rpcParams = supabase.rpc.mock.calls[0].arguments[1] as Record<
+    string,
+    unknown
+  >;
   assert.equal(rpcParams.p_notes, "Бөөнөөр тохируулга");
 });
 
@@ -248,10 +252,7 @@ test("calls revalidateEntities(['inventory']) on success", async () => {
   mockCtx = mockActionCtx({ supabase });
   resetRevalidate();
 
-  await createBatchAdjustment(
-    undefined,
-    formData({ items: VALID_ITEMS }),
-  );
+  await createBatchAdjustment(undefined, formData({ items: VALID_ITEMS }));
 
   assert.deepEqual(revalidateMock.entities, ["inventory"]);
 });
@@ -262,10 +263,7 @@ test("does not call revalidateEntities on rpc error", async () => {
   mockCtx = mockActionCtx({ supabase });
   resetRevalidate();
 
-  await createBatchAdjustment(
-    undefined,
-    formData({ items: VALID_ITEMS }),
-  );
+  await createBatchAdjustment(undefined, formData({ items: VALID_ITEMS }));
 
   assert.equal(revalidateMock.entities, null);
 });

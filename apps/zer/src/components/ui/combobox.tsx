@@ -19,16 +19,15 @@ type ComboboxContextValue<T> = {
   onCreate?: (label: string) => void;
 };
 
-const ComboboxContext = React.createContext<ComboboxContextValue<any> | null>(
-  null,
-);
+const ComboboxContext =
+  React.createContext<ComboboxContextValue<unknown> | null>(null);
 
 function useComboboxContext<T>() {
   const ctx = React.useContext(ComboboxContext);
   if (!ctx) {
     throw new Error("Combobox sub-components must be used within Combobox");
   }
-  return ctx as ComboboxContextValue<T>;
+  return ctx as unknown as ComboboxContextValue<T>;
 }
 
 // --- Combobox ---
@@ -146,20 +145,25 @@ function ComboboxInner<T>(
   return (
     <ComboboxContext.Provider
       value={{
-        items,
+        items: items as unknown[],
         inputValue,
         open,
         highlightedIndex,
         value: value ?? null,
-        itemToStringLabel,
-        onValueChange,
+        itemToStringLabel: (item) => itemToStringLabel(item as T | null),
+        onValueChange: (nextValue) => onValueChange(nextValue as T | null),
         onInputValueChange,
         setOpen,
         setHighlightedIndex,
         onCreate,
       }}
     >
-      <div ref={containerRef} className="relative" onKeyDown={handleKeyDown}>
+      <div
+        ref={containerRef}
+        className="relative"
+        onKeyDown={handleKeyDown}
+        role="none"
+      >
         <input
           type="hidden"
           name={name}
@@ -183,7 +187,7 @@ const Combobox = React.forwardRef(ComboboxInner) as <T>(
 ) => React.ReactElement;
 (
   Combobox as React.ForwardRefExoticComponent<
-    ComboboxProps<any> & React.RefAttributes<HTMLDivElement>
+    ComboboxProps<unknown> & React.RefAttributes<HTMLDivElement>
   >
 ).displayName = "Combobox";
 
@@ -243,6 +247,7 @@ const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputProps>(
             }}
           >
             <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               width="16"
               height="16"
@@ -288,16 +293,10 @@ ComboboxContent.displayName = "ComboboxContent";
 // --- ComboboxSeparator ---
 
 const ComboboxSeparator = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  HTMLHRElement,
+  React.HTMLAttributes<HTMLHRElement>
 >(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    role="separator"
-    aria-valuenow={0}
-    className={cn("my-1 h-px bg-border", className)}
-    {...props}
-  />
+  <hr ref={ref} className={cn("my-1 h-px bg-border", className)} {...props} />
 ));
 ComboboxSeparator.displayName = "ComboboxSeparator";
 
@@ -320,21 +319,28 @@ ComboboxGroupLabel.displayName = "ComboboxGroupLabel";
 
 // --- ComboboxList ---
 
-const ComboboxList = React.forwardRef<
-  HTMLUListElement,
-  Omit<React.HTMLAttributes<HTMLUListElement>, "children"> & {
-    children?: React.ReactNode | ((item: any) => React.ReactNode);
-    groups?: { label?: string; items: readonly any[] }[];
-  }
->(({ className, children, groups, ...props }, ref) => {
-  const ctx = useComboboxContext();
+type ComboboxListProps<T> = Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "children"
+> & {
+  children?: React.ReactNode | ((item: T) => React.ReactNode);
+  groups?: { label?: string; items: readonly T[] }[];
+};
+
+function ComboboxListInner<T>(
+  { className, children, groups, ...props }: ComboboxListProps<T>,
+  ref: React.ForwardedRef<HTMLDivElement>,
+) {
+  // biome-ignore lint/correctness/useHookAtTopLevel: React.forwardRef render function is a component.
+  const ctx = useComboboxContext<T>();
 
   if (!ctx.open) return null;
 
   return (
-    <ul
+    <div
       ref={ref}
       className={cn("max-h-[300px] overflow-y-auto", className)}
+      role="listbox"
       {...props}
     >
       {typeof children === "function" && groups
@@ -348,10 +354,12 @@ const ComboboxList = React.forwardRef<
                 )}
                 {group.items.map((item) => {
                   const idx = flatIndex++;
-                  const renderFn = children as (item: any) => React.ReactNode;
+                  const renderFn = children as (item: T) => React.ReactNode;
                   return (
-                    <li
+                    <div
                       key={idx}
+                      role="option"
+                      tabIndex={-1}
                       aria-selected={idx === ctx.highlightedIndex}
                       className={cn(
                         "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none",
@@ -366,7 +374,7 @@ const ComboboxList = React.forwardRef<
                       }}
                     >
                       {renderFn(item)}
-                    </li>
+                    </div>
                   );
                 })}
               </React.Fragment>
@@ -374,8 +382,10 @@ const ComboboxList = React.forwardRef<
           })()
         : typeof children === "function"
           ? ctx.items.map((item, index) => (
-              <li
+              <div
                 key={index}
+                role="option"
+                tabIndex={-1}
                 aria-selected={index === ctx.highlightedIndex}
                 className={cn(
                   "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none",
@@ -389,14 +399,17 @@ const ComboboxList = React.forwardRef<
                   ctx.setOpen(false);
                 }}
               >
-                {(children as (item: any) => React.ReactNode)(item)}
-              </li>
+                {(children as (item: T) => React.ReactNode)(item)}
+              </div>
             ))
           : children}
-    </ul>
+    </div>
   );
-});
-ComboboxList.displayName = "ComboboxList";
+}
+
+const ComboboxList = React.forwardRef(ComboboxListInner) as <T>(
+  props: ComboboxListProps<T> & React.RefAttributes<HTMLDivElement>,
+) => React.ReactElement | null;
 
 // --- ComboboxEmpty ---
 
@@ -434,6 +447,7 @@ const ComboboxCreate = React.forwardRef<
     <div
       ref={ref}
       role="option"
+      tabIndex={-1}
       aria-selected={false}
       className={cn(
         "relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
@@ -447,6 +461,7 @@ const ComboboxCreate = React.forwardRef<
       {...props}
     >
       <svg
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         width="16"
         height="16"

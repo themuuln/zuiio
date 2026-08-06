@@ -151,33 +151,33 @@ export function OverviewTab({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <ReportKpiCard
             label={t("grossProfit")}
-            value={formatCurrency(r.profitability.gross_profit)}
+            value={formatCurrency(r.profitability?.gross_profit)}
             icon={TrendingUp}
             cls={
-              r.profitability.gross_profit >= 0
+              r.profitability?.gross_profit >= 0
                 ? "text-green-600 dark:text-green-400"
                 : "text-red-500"
             }
           />
           <ReportKpiCard
             label={t("margin")}
-            value={`${r.profitability.margin_percent}%`}
+            value={`${r.profitability?.margin_percent}%`}
             icon={BarChart3}
             cls={
-              r.profitability.margin_percent >= 0
+              r.profitability?.margin_percent >= 0
                 ? "text-green-600 dark:text-green-400"
                 : "text-red-500"
             }
           />
           <ReportKpiCard
             label={t("effLaborRate")}
-            value={formatCurrency(r.profitability.effective_labor_rate)}
+            value={formatCurrency(r.profitability?.effective_labor_rate)}
             icon={Wallet}
             subtitle={t("perWorkOrder")}
           />
           <ReportKpiCard
             label={t("partsToLabor")}
-            value={`${Math.round(r.profitability.parts_to_labor_ratio * 100)}%`}
+            value={`${Math.round(r.profitability?.parts_to_labor_ratio * 100)}%`}
             icon={BarChart3}
             subtitle={t("partsOverLabor")}
           />
@@ -214,11 +214,11 @@ export function OverviewTab({
                       data={[
                         {
                           name: t("services"),
-                          value: r.profitability.service_revenue,
+                          value: r.profitability?.service_revenue,
                         },
                         {
                           name: t("parts"),
-                          value: r.profitability.parts_revenue,
+                          value: r.profitability?.parts_revenue,
                         },
                       ]}
                       cx="50%"
@@ -238,12 +238,12 @@ export function OverviewTab({
                   {[
                     {
                       name: t("services"),
-                      value: r.profitability.service_revenue,
+                      value: r.profitability?.service_revenue,
                       color: "var(--chart-1)",
                     },
                     {
                       name: t("parts"),
-                      value: r.profitability.parts_revenue,
+                      value: r.profitability?.parts_revenue,
                       color: "var(--chart-2)",
                     },
                   ].map((item) => {
@@ -284,7 +284,7 @@ export function OverviewTab({
                   {t("serviceRevenue")}
                 </span>
                 <span className="font-medium tabular-nums">
-                  {formatCurrency(r.profitability.service_revenue)}
+                  {formatCurrency(r.profitability?.service_revenue)}
                 </span>
               </div>
               <div className="flex justify-between text-xs">
@@ -292,7 +292,7 @@ export function OverviewTab({
                   {t("serviceCost")}
                 </span>
                 <span className="tabular-nums text-red-500/80">
-                  -{formatCurrency(r.profitability.service_cost)}
+                  -{formatCurrency(r.profitability?.service_cost)}
                 </span>
               </div>
               <div className="flex justify-between text-xs border-t border-border pt-1.5">
@@ -300,21 +300,21 @@ export function OverviewTab({
                   {t("partsRevenue")}
                 </span>
                 <span className="font-medium tabular-nums">
-                  {formatCurrency(r.profitability.parts_revenue)}
+                  {formatCurrency(r.profitability?.parts_revenue)}
                 </span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">{t("partsCost")}</span>
                 <span className="tabular-nums text-red-500/80">
-                  -{formatCurrency(r.profitability.parts_cost)}
+                  -{formatCurrency(r.profitability?.parts_cost)}
                 </span>
               </div>
               <div className="flex justify-between text-xs font-semibold border-t border-border pt-1.5">
                 <span>{t("grossProfit")}</span>
                 <span
-                  className={`tabular-nums ${r.profitability.gross_profit >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"}`}
+                  className={`tabular-nums ${r.profitability?.gross_profit >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"}`}
                 >
-                  {formatCurrency(r.profitability.gross_profit)}
+                  {formatCurrency(r.profitability?.gross_profit)}
                 </span>
               </div>
             </CardContent>

@@ -15,7 +15,9 @@ const { mockS3ClientInstance, mockGetSignedUrl, mockReportServerError } =
 
 // Use regular functions so `new S3Client(...)` works (arrow functions are not constructible)
 vi.mock("@aws-sdk/client-s3", () => ({
-  S3Client: vi.fn(() => mockS3ClientInstance),
+  S3Client: vi.fn(function S3ClientMock() {
+    return mockS3ClientInstance;
+  }),
   PutObjectCommand: vi.fn(),
   GetObjectCommand: vi.fn(),
   DeleteObjectCommand: vi.fn(),
@@ -58,8 +60,17 @@ interface R2ServiceModule {
 let mod: R2ServiceModule;
 
 beforeEach(async () => {
+  vi.resetModules();
   vi.clearAllMocks();
   vi.unstubAllEnvs();
+  for (const key of [
+    "R2_ACCOUNT_ID",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+    "R2_BUCKET",
+  ]) {
+    vi.stubEnv(key, "");
+  }
   mod = await import("./r2-service");
 });
 

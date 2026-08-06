@@ -1,35 +1,41 @@
 // ─── Mutation queue engine (IndexedDB-backed) ─────────────────
+
+// ─── Background sync (service-worker replay) ──────────────────
 export {
+  type BackgroundSyncStatus,
+  MUTATION_SYNC_TAG,
+  MUTATION_SYNCED_MESSAGE,
+  type MutationSyncMessage,
+  requestMutationBackgroundSync,
+  subscribeMutationSync,
+} from "./background-sync";
+// ─── React Query IndexedDB persister ──────────────────────────
+export { indexedDbPersister } from "./indexed-db-persister";
+export {
+  cleanupStaleMutations,
   enqueueMutation,
-  replayPendingMutations,
-  removeMutation,
   getAllMutations,
   getMutationsByStatus,
   getPendingCount,
-  cleanupStaleMutations,
   type QueuedMutation,
   type ReplayResult,
+  removeMutation,
+  replayPendingMutations,
 } from "./mutation-queue";
-
 // ─── React context provider ───────────────────────────────────
 export {
   MutationQueueProvider,
   useMutationQueue,
 } from "./mutation-queue-provider";
-
 // ─── Offline-aware mutation hook ──────────────────────────────
 export {
-  useOfflineMutation,
-  isQueuedResponse,
   handleOfflineSuccess,
+  isQueuedResponse,
   type OfflineMutationOptions,
+  useOfflineMutation,
 } from "./use-offline-mutation";
-
 // ─── High-order wrapper for existing mutations ────────────────
 export {
-  withOfflineQueue,
   type OfflineQueueConfig,
+  withOfflineQueue,
 } from "./with-offline-queue";
-
-// ─── React Query IndexedDB persister ──────────────────────────
-export { indexedDbPersister } from "./indexed-db-persister";

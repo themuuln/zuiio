@@ -20,7 +20,8 @@ INSERT INTO global_services_catalog (name, name_mn, category, description, estim
   ('Wash & Wax Package', 'Угаалга + арчилгаа', 'Cleaning', 'Exterior wash followed by wax application', 60, NULL, NULL),
   ('Leather Conditioning', 'Арьсан арчилгаа', 'Cleaning', 'Clean and condition leather seats', 60, NULL, NULL),
   ('Headlight Restoration', 'Гэрлийн нүх цэвэрлэгээ', 'Cleaning', 'Restore cloudy/yellowed headlight lenses', 45, NULL, NULL),
-  ('Convertible Top Cleaning', 'Зөөлөн дээвэр цэвэрлэгээ', 'Cleaning', 'Clean and treat soft top / convertible roof', 60, NULL, NULL);
+  ('Convertible Top Cleaning', 'Зөөлөн дээвэр цэвэрлэгээ', 'Cleaning', 'Clean and treat soft top / convertible roof', 60, NULL, NULL)
+ON CONFLICT DO NOTHING;
 
 -- ── Paint & Body Services (Бүрхүүл) ────────────────────────────────────────
 
@@ -39,7 +40,8 @@ INSERT INTO global_services_catalog (name, name_mn, category, description, estim
   ('Trunk / Hood Strut Replacement', 'Багажны хаалганы түшүүр солих', 'Paint & Body', 'Replace gas struts for trunk or hood', 20, NULL, NULL),
   ('Full Body Paint', 'Бүтэн машин будалт', 'Paint & Body', 'Complete vehicle repaint', 1440, NULL, NULL),
   ('Rust Treatment', 'Зэврэлт эмчилгээ', 'Paint & Body', 'Treat and prevent rust spots', 120, NULL, NULL),
-  ('Plastic Trim Restoration', 'Пластик засварлах', 'Paint & Body', 'Restore faded black plastic trim', 60, NULL, NULL);
+  ('Plastic Trim Restoration', 'Пластик засварлах', 'Paint & Body', 'Restore faded black plastic trim', 60, NULL, NULL)
+ON CONFLICT DO NOTHING;
 
 -- ── Roadside / Additional Services (Нэмэлт) ───────────────────────────────
 
@@ -49,7 +51,8 @@ INSERT INTO global_services_catalog (name, name_mn, category, description, estim
   ('Fuel Delivery', 'Түлш хүргэх', 'Additional', 'Deliver emergency fuel to stranded vehicle', 30, NULL, NULL),
   ('Tire Change (Spare)', 'Нэмэлт дугуй солих', 'Additional', 'Install spare tire on roadside', 20, NULL, NULL),
   ('Lockout Service', 'Хаалга онгойлгох', 'Additional', 'Unlock vehicle when keys are locked inside', 20, NULL, NULL),
-  ('Winch / Recovery', 'Ачааны машин аврах', 'Additional', 'Winch stuck vehicle out of mud/snow', 45, NULL, NULL);
+  ('Winch / Recovery', 'Ачааны машин аврах', 'Additional', 'Winch stuck vehicle out of mud/snow', 45, NULL, NULL)
+ON CONFLICT DO NOTHING;
 
 -- ── Additional Engine Services ─────────────────────────────────────────────
 
@@ -65,7 +68,8 @@ INSERT INTO global_services_catalog (name, name_mn, category, description, estim
   ('Exhaust Manifold Replacement', 'Гаралтын коллектор солих', 'Engine', 'Remove and replace exhaust manifold', 120, NULL, NULL),
   ('Engine Mount Replacement', 'Хөдөлгүүрийн суурь солих', 'Engine', 'Replace engine mount(s)', 120, NULL, NULL),
   ('PCV Valve Replacement', 'PCV хавхлага солих', 'Engine', 'Replace positive crankcase ventilation valve', 15, NULL, NULL),
-  ('Thermostat Replacement', 'Термостат солих', 'Engine', 'Replace engine coolant thermostat', 60, NULL, NULL);
+  ('Thermostat Replacement', 'Термостат солих', 'Engine', 'Replace engine coolant thermostat', 60, NULL, NULL)
+ON CONFLICT DO NOTHING;
 
 -- ── Additional Electrical Services ─────────────────────────────────────────
 
@@ -81,7 +85,8 @@ INSERT INTO global_services_catalog (name, name_mn, category, description, estim
   ('Seat Heater Element Replacement', 'Суудлын халаагуур солих', 'Electrical', 'Replace seat heating element', 60, NULL, NULL),
   ('Aftermarket Stereo Installation', 'Чигжүүр суулгах', 'Electrical', 'Install aftermarket head unit / stereo', 120, NULL, NULL),
   ('Dashcam Installation', 'Бичлэгийн камер суулгах', 'Electrical', 'Install front and/or rear dashcam', 60, NULL, NULL),
-  ('Parking Sensor Installation', 'Паркинг мэдрэгч суулгах', 'Electrical', 'Install ultrasonic parking sensors', 90, NULL, NULL);
+  ('Parking Sensor Installation', 'Паркинг мэдрэгч суулгах', 'Electrical', 'Install ultrasonic parking sensors', 90, NULL, NULL)
+ON CONFLICT DO NOTHING;
 
 -- ── Additional Tire & Wheel Services ───────────────────────────────────────
 
@@ -95,7 +100,8 @@ INSERT INTO global_services_catalog (name, name_mn, category, description, estim
   ('Flat Tire Repair', 'Дугуйн засвар', 'Wheel & Tire', 'Patch or plug punctured tire', 20, NULL, NULL),
   ('Rim Repair / Straightening', 'Хэрм засварлах', 'Wheel & Tire', 'Repair bent or damaged alloy rim', 60, NULL, NULL),
   ('Rim Powder Coating', 'Хэрм будалт', 'Wheel & Tire', 'Powder coat wheels for custom finish', 240, NULL, NULL),
-  ('Spare Tire Inspection', 'Нэмэлт дугуй шалгах', 'Wheel & Tire', 'Inspect and inflate spare tire', 10, NULL, NULL);
+  ('Spare Tire Inspection', 'Нэмэлт дугуй шалгах', 'Wheel & Tire', 'Inspect and inflate spare tire', 10, NULL, NULL)
+ON CONFLICT DO NOTHING;
 
 -- ── Additional Diagnostics Services ────────────────────────────────────────
 
@@ -105,7 +111,8 @@ INSERT INTO global_services_catalog (name, name_mn, category, description, estim
   ('Cooling System Pressure Test', 'Хөргөлтийн системийн даралт шалгалт', 'Diagnostics', 'Pressure test cooling system for leaks', 20, NULL, NULL),
   ('Fuel Injector Testing', 'Түлшний шүүрүүр шалгах', 'Diagnostics', 'Flow test and clean fuel injectors', 60, NULL, NULL),
   ('Wheel Bearing Noise Diagnosis', 'Дугуйн ачааны шалгалт', 'Diagnostics', 'Diagnose wheel bearing noise and play', 30, NULL, NULL),
-  ('Electrical Draw Test', 'Цахилгаан зарцуулалт шалгах', 'Diagnostics', 'Find parasitic battery drain', 60, NULL, NULL);
+  ('Electrical Draw Test', 'Цахилгаан зарцуулалт шалгах', 'Diagnostics', 'Find parasitic battery drain', 60, NULL, NULL)
+ON CONFLICT DO NOTHING;
 
 -- ── Additional Transmission Services ───────────────────────────────────────
 
@@ -115,7 +122,8 @@ INSERT INTO global_services_catalog (name, name_mn, category, description, estim
   ('Drive Shaft Balance', 'Дамжуулагчийн баланс', 'Transmission & Drivetrain', 'Balance propeller/driveshaft', 60, NULL, NULL),
   ('Transfer Case Fluid Change', 'Шилжүүрийн хайрцгийн тос солих', 'Transmission & Drivetrain', 'Change transfer case fluid (4WD/AWD)', 30, NULL, 50000),
   ('Transmission Mount Replacement', 'Хурдны хайрцгийн суурь солих', 'Transmission & Drivetrain', 'Replace transmission mount', 90, NULL, NULL),
-  ('Clutch Hydraulic Bleed', 'Компакт гидравлик цэвэрлэгээ', 'Transmission & Drivetrain', 'Bleed clutch hydraulic system', 30, NULL, NULL);
+  ('Clutch Hydraulic Bleed', 'Компакт гидравлик цэвэрлэгээ', 'Transmission & Drivetrain', 'Bleed clutch hydraulic system', 30, NULL, NULL)
+ON CONFLICT DO NOTHING;
 
 -- ── Additional AC & Heating Services ───────────────────────────────────────
 
@@ -124,7 +132,8 @@ INSERT INTO global_services_catalog (name, name_mn, category, description, estim
   ('Cabin Filter Upgrade (HEPA)', 'Салонны шүүлтүүр (HEPA)', 'AC & Heating', 'Install HEPA cabin filter upgrade', 10, NULL, 15000),
   ('Heater Core Replacement', 'Халаагуурын цөм солих', 'AC & Heating', 'Replace heater core (dash removal required)', 480, NULL, NULL),
   ('Blower Motor Replacement', 'Салонны сэнсний мотор солих', 'AC & Heating', 'Replace HVAC blower motor', 60, NULL, NULL),
-  ('AC Compressor Clutch Replacement', 'Агааржуулалтын компрессорын зүүлт солих', 'AC & Heating', 'Replace AC compressor clutch assembly', 120, NULL, NULL);
+  ('AC Compressor Clutch Replacement', 'Агааржуулалтын компрессорын зүүлт солих', 'AC & Heating', 'Replace AC compressor clutch assembly', 120, NULL, NULL)
+ON CONFLICT DO NOTHING;
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- PARTS
@@ -147,7 +156,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Window Tint Film (Roll)', 'Хуруум шилний кино (ролик)', NULL, 'Cleaning', 'Window tint film roll (1.5m x 10m)', 'piece'),
   ('Ozone Generator Rental', 'Озоны генератор түрээс', NULL, 'Cleaning', 'Ozone machine for odor elimination', 'piece'),
   ('Polish Compound', 'Полиш нэгдэл', NULL, 'Cleaning', 'Cutting / finishing polish compound', 'liter'),
-  ('Pad (Polishing)', 'Полиш дэр', NULL, 'Cleaning', 'Foam or wool polishing pad', 'piece');
+  ('Pad (Polishing)', 'Полиш дэр', NULL, 'Cleaning', 'Foam or wool polishing pad', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- ── Hoses & Lines (missing) ───────────────────────────────────────────────
 
@@ -168,7 +178,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Transmission Cooler Line', 'Хурдны хайрцгийн хөргүүрийн шланг', NULL, 'Transmission', 'Transmission cooler / oil cooler line', 'piece'),
   ('Vacuum Hose', 'Вакуум шланг', NULL, 'Engine', 'Vacuum hose for various systems', 'meter'),
   ('Intercooler Hose', 'Интеркулер шланг', NULL, 'Engine', 'Turbo intercooler hose / pipe', 'piece'),
-  ('Windshield Washer Hose', 'Шил арчигчийн шланг', NULL, 'Body', 'Washer fluid delivery hose', 'piece');
+  ('Windshield Washer Hose', 'Шил арчигчийн шланг', NULL, 'Body', 'Washer fluid delivery hose', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- ── Electrical Connectors & Switches ───────────────────────────────────────
 
@@ -198,7 +209,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Wire Connector Kit', 'Утасны холбогч кит', NULL, 'Consumables', 'Crimp connectors, butt splices, terminals', 'set'),
   ('Split Loom Tubing', 'Утасны хамгаалагч', NULL, 'Consumables', 'Split corrugated wire loom tubing', 'meter'),
   ('Solder Kit', 'Гар утасны кит', NULL, 'Consumables', 'Solder wire + flux paste', 'set'),
-  ('Heat Shrink Tubing Kit', 'Дулааны хамгаалагч кит', NULL, 'Consumables', 'Assorted heat shrink tubing', 'set');
+  ('Heat Shrink Tubing Kit', 'Дулааны хамгаалагч кит', NULL, 'Consumables', 'Assorted heat shrink tubing', 'set')
+ON CONFLICT DO NOTHING;
 
 -- ── Body Parts (missing) ──────────────────────────────────────────────────
 
@@ -232,7 +244,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Cargo Net', 'Ачааны сүлжээ', NULL, 'Body', 'Trunk cargo net / organizer', 'piece'),
   ('Roof Rack Cross Bars', 'Дээврийн тавиур', NULL, 'Body', 'Roof rack cross bars (pair)', 'set'),
   ('Bike Rack (Hitch)', 'Дугуйн тавиур (холбогч)', NULL, 'Body', 'Hitch-mounted bike carrier', 'piece'),
-  ('Trunk Organizer', 'Багажны зохион байгуулагч', NULL, 'Body', 'Collapsible trunk storage organizer', 'piece');
+  ('Trunk Organizer', 'Багажны зохион байгуулагч', NULL, 'Body', 'Collapsible trunk storage organizer', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- ── Hardware & Fasteners ───────────────────────────────────────────────────
 
@@ -279,4 +292,5 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Tire Inflator (Portable)', 'Дугуйн дүүргүүр (зөөврийн)', NULL, 'Wheels', 'Portable 12V tire inflator / compressor', 'piece'),
   ('Tire Pressure Gauge', 'Дугуйн даралтын хэмжүүр', NULL, 'Wheels', 'Digital tire pressure gauge', 'piece'),
   ('Wheel Weight Set', 'Дугуйн жин кит', NULL, 'Wheels', 'Adhesive wheel weights for balancing', 'set'),
-  ('Rim Protector Ring', 'Хэрм хамгаалагч', NULL, 'Wheels', 'Rim edge protector ring', 'piece');
+  ('Rim Protector Ring', 'Хэрм хамгаалагч', NULL, 'Wheels', 'Rim edge protector ring', 'piece')
+ON CONFLICT DO NOTHING;

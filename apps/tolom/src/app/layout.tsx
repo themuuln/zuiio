@@ -1,3 +1,4 @@
+import { SerwistProvider } from "@serwist/turbopack/react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
@@ -62,7 +63,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <head />
       <body className="flex min-h-dvh flex-col">
-        <ThemeProvider>{children}</ThemeProvider>
+        <SerwistProvider
+          swUrl="/serwist/sw.js"
+          reloadOnOnline
+          cacheOnNavigation
+        >
+          <ThemeProvider>{children}</ThemeProvider>
+        </SerwistProvider>
         <ReactGrab />
         <Analytics />
         <SpeedInsights />

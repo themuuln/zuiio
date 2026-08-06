@@ -4,10 +4,16 @@ import { mockMod } from "./actions-helpers";
 
 const captureMock = mock.fn(() => {});
 mockMod("@zuiio/capture", { capture: captureMock });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
-mockMod("next/server", { after: (fn) => fn() });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
+mockMod("next/server", { after: (fn: () => unknown) => fn() });
 mockMod("server-only", {});
-const redirectMock = mock.fn(() => { throw new Error("REDIRECT"); });
+const redirectMock = mock.fn((path: string): never => {
+  void path;
+  throw new Error("REDIRECT");
+});
 mockMod("next/navigation", { redirect: redirectMock });
 
 const signOutMock = mock.fn(async () => {});
@@ -17,7 +23,7 @@ mockMod("@/lib/supabase/server", {
   })),
 });
 
-let logout;
+let logout: () => Promise<never>;
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/actions");
   logout = mod.logout;
@@ -43,6 +49,8 @@ test("logout works without exceptions from signOut", async () => {
 });
 
 test("logout calls signOut exactly once", async () => {
-  try { await logout(); } catch {}
+  try {
+    await logout();
+  } catch {}
   assert.equal(signOutMock.mock.callCount(), 1);
 });

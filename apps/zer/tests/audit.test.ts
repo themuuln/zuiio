@@ -36,7 +36,7 @@ let erpInsertMock = mock.fn(async (data: Record<string, unknown>) => {
   return { data: null, error: null };
 });
 
-let erpSupabase = {
+const erpSupabase = {
   from: mock.fn((_table: string) => ({
     insert: erpInsertMock,
   })),

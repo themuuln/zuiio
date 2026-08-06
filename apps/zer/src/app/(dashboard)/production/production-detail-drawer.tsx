@@ -224,7 +224,7 @@ function LaborStageCard({
               </Label>
               <Select
                 value={laborEmployeeId}
-                onValueChange={setLaborEmployeeId}
+                onValueChange={(value) => setLaborEmployeeId(value ?? "")}
               >
                 <SelectTrigger
                   id={`labor-employee-${stage.id}`}

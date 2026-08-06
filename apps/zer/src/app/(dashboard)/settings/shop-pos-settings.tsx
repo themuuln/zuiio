@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { MessageKey } from "@/lib/i18n/messages";
+import { useI18n } from "@/lib/i18n/provider";
 import {
   updateOrgFeatureSetting,
   updateShopDefaultPaymentMethod,
@@ -28,6 +30,7 @@ export type ShopPosSettingsValues = {
   has_checkout_customer: boolean;
   has_checkout_quick_amounts: boolean;
   has_receipt_drawer: boolean;
+  has_receipt_printer: boolean;
   has_track_stock: boolean;
   shop_default_payment_method: string;
 };
@@ -44,9 +47,13 @@ const TOGGLES: {
     | "has_checkout_customer"
     | "has_checkout_quick_amounts"
     | "has_receipt_drawer"
+    | "has_receipt_printer"
     | "has_track_stock";
   label: string;
   description: string;
+  /** i18n keys — when present, the label/description are translated. */
+  labelKey?: MessageKey;
+  descriptionKey?: MessageKey;
 }[] = [
   {
     key: "has_checkout_customer",
@@ -67,6 +74,14 @@ const TOGGLES: {
       "Борлуулалт хийсний дараа баримтыг цонхонд харуулна. Баримт хэвлэх шаардлагагүй дэлгүүрт унтраана.",
   },
   {
+    key: "has_receipt_printer",
+    label: "Баримт хэвлэгч",
+    description:
+      "Борлуулалт бүрийн дараа баримтыг автоматаар хэвлэх. Баримт хэвлэгч холбогдсон дэлгүүрт асаана.",
+    labelKey: "settings.receiptPrinter",
+    descriptionKey: "settings.receiptPrinter.description",
+  },
+  {
     key: "has_track_stock",
     label: "Барааны үлдэгдэл хянах",
     description:
@@ -83,6 +98,7 @@ export function ShopPosSettings({
 }: {
   initial: ShopPosSettingsValues;
 }) {
+  const { t } = useI18n();
   return (
     <Card>
       <CardHeader>
@@ -96,13 +112,15 @@ export function ShopPosSettings({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          {TOGGLES.map((t) => (
+          {TOGGLES.map((tgl) => (
             <PosToggle
-              key={t.key}
-              settingKey={t.key}
-              label={t.label}
-              description={t.description}
-              defaultValue={initial[t.key]}
+              key={tgl.key}
+              settingKey={tgl.key}
+              label={tgl.labelKey ? t(tgl.labelKey) : tgl.label}
+              description={
+                tgl.descriptionKey ? t(tgl.descriptionKey) : tgl.description
+              }
+              defaultValue={initial[tgl.key]}
             />
           ))}
         </div>
@@ -188,6 +206,7 @@ function DefaultPaymentMethodSelect({ initial }: { initial: string }) {
     <Select
       value={value}
       onValueChange={(method) => {
+        if (method === null) return;
         setValue(method);
         mutation.mutate(method);
       }}

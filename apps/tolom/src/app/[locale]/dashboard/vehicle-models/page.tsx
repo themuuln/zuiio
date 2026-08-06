@@ -315,7 +315,7 @@ export default function VehicleModelsPage() {
       <Card className="overflow-hidden border-border/70 bg-card">
         <CardHeader className="border-b bg-muted/20 px-4 py-4 sm:px-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-1">
+            <div className="flex flex-col gap-y-1">
               <CardTitle className="text-lg font-semibold">
                 {t("title")}
               </CardTitle>
@@ -353,14 +353,14 @@ export default function VehicleModelsPage() {
                   className="overflow-hidden rounded-lg border border-border/60"
                 >
                   <div className="flex min-h-16 items-center gap-4 px-4 py-3">
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 gap-y-2">
                       <Skeleton className="h-5 w-40" />
                       <Skeleton className="h-4 w-28" />
                     </div>
                     <Skeleton className="h-8 w-20 rounded-md" />
                   </div>
                   <Separator />
-                  <div className="space-y-3 px-4 py-4">
+                  <div className="flex flex-col gap-y-3 px-4 py-4">
                     <Skeleton className="h-12 w-full rounded-md" />
                     <Skeleton className="h-12 w-full rounded-md" />
                   </div>

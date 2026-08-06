@@ -37,7 +37,9 @@ export async function requireActionContext(
  * Guard for branch-scoped users, returning a user-facing error
  * when the branch context is missing.
  */
-export function requireBranchScope(ctx: ActionContext): ActionError | null {
+export function requireBranchScope(
+  ctx: Pick<ActionContext, "isBranchScoped" | "branchId">,
+): ActionError | null {
   if (ctx.isBranchScoped && !ctx.branchId) {
     return { error: "Салбар тодорхойгүй байна." };
   }

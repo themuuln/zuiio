@@ -1,4 +1,5 @@
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
+import { messages } from "@/lib/i18n/messages";
 
 export default function AuthLayout({
   children,
@@ -17,7 +18,7 @@ export default function AuthLayout({
             {APP_NAME}
           </p>
           <h1 className="mt-4 max-w-xl text-5xl font-semibold leading-tight tracking-tight text-foreground">
-            Монгол жижиг бизнесийн өдөр тутмын ажиллагааг нэг төвөөс удирдана.
+            {messages.mn["auth.heroTitle"]}
           </h1>
           <p className="mt-4 max-w-lg text-base text-muted-foreground">
             {APP_DESCRIPTION}

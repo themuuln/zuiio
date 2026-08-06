@@ -36,7 +36,7 @@ export function MarketingPageSkeleton() {
         <section className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl">
             <Skeleton className="h-8 w-48" />
-            <div className="mt-6 space-y-3">
+            <div className="flex flex-col mt-6 gap-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-4 w-full" />
               ))}

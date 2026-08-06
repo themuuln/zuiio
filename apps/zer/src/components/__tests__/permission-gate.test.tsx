@@ -32,10 +32,7 @@ describe("PermissionGate", () => {
 
   it("renders nothing when permission denied and no fallback", () => {
     const { container } = render(
-      <PermissionGate
-        permissions={["products.read"]}
-        required="admin.access"
-      >
+      <PermissionGate permissions={["products.read"]} required="admin.access">
         <div>Admin content</div>
       </PermissionGate>,
     );

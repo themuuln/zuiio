@@ -81,16 +81,16 @@ describe("GET /api/global-catalog/parts", () => {
     searchGlobalPartsMock.mockResolvedValue([mockParts[0]]);
 
     const req = new NextRequest(
-      new URL("http://localhost/api/global-catalog/parts?category=Brake%20System"),
+      new URL(
+        "http://localhost/api/global-catalog/parts?category=Brake%20System",
+      ),
     );
     const response = await GET({ request: req, supabase, user });
     const body = await response.json();
 
-    expect(searchGlobalPartsMock).toHaveBeenCalledWith(
-      supabase,
-      undefined,
-      { category: "Brake System" },
-    );
+    expect(searchGlobalPartsMock).toHaveBeenCalledWith(supabase, undefined, {
+      category: "Brake System",
+    });
     expect(body.data).toHaveLength(1);
   });
 
@@ -103,16 +103,17 @@ describe("GET /api/global-catalog/parts", () => {
     const response = await GET({ request: req, supabase, user });
     const body = await response.json();
 
-    expect(searchGlobalPartsMock).toHaveBeenCalledWith(
-      supabase,
-      undefined,
-      { limit: 10, offset: 20 },
-    );
+    expect(searchGlobalPartsMock).toHaveBeenCalledWith(supabase, undefined, {
+      limit: 10,
+      offset: 20,
+    });
     expect(body.data).toHaveLength(1);
   });
 
   it("returns 500 on query error", async () => {
-    searchGlobalPartsMock.mockRejectedValue(new Error("Database connection failed"));
+    searchGlobalPartsMock.mockRejectedValue(
+      new Error("Database connection failed"),
+    );
 
     const req = new NextRequest(
       new URL("http://localhost/api/global-catalog/parts"),

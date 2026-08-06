@@ -1,4 +1,4 @@
-import { execSync, readFileSync, statSync } from "node:fs";
+import { execSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { FullConfig } from "@playwright/test";
 import { chromium } from "@playwright/test";
@@ -12,6 +12,76 @@ const PORT = process.env.PORT ?? 3000;
 const BASE_URL = `http://localhost:${PORT}`;
 const TEST_EMAIL = process.env.E2E_EMAIL ?? "themuuln4@gmail.com";
 const TEST_PASSWORD = process.env.E2E_PASSWORD ?? "Tolom!11";
+
+/**
+ * Normalize the saved storage state:
+ * 1. Force NEXT_LOCALE=en so the whole E2E suite renders English by default
+ *    (specs assert English labels). Specs that need Mongolian (e.g.
+ *    i18n.spec.ts) preset their own cookie per-test.
+ * 2. Re-add the bare sb-access-token / sb-refresh-token cookies. The app's
+ *    middleware drops them during the /dashboard session-refresh navigation,
+ *    but specs like po-barcode-receive read them from the auth file to
+ *    rebuild the sb-<ref>-auth-token session cookie.
+ */
+function forceEnglishLocale(authFile: string) {
+  const state = JSON.parse(readFileSync(authFile, "utf8"));
+  const cookies = state.cookies as Array<Record<string, unknown>>;
+  const sessionCookie = cookies.find((c) =>
+    String(c.name).endsWith("-auth-token"),
+  );
+  let accessToken = cookies.find((c) => c.name === "sb-access-token")?.value;
+  let refreshToken = cookies.find((c) => c.name === "sb-refresh-token")?.value;
+  if (!accessToken && sessionCookie) {
+    try {
+      const parsed = JSON.parse(String(sessionCookie.value));
+      accessToken = parsed.access_token ?? null;
+      refreshToken = parsed.refresh_token ?? null;
+    } catch {
+      // session cookie not JSON — leave bare tokens missing
+    }
+  }
+  state.cookies = cookies.filter(
+    (c) =>
+      c.name !== "NEXT_LOCALE" &&
+      c.name !== "sb-access-token" &&
+      c.name !== "sb-refresh-token",
+  );
+  state.cookies.push({
+    name: "NEXT_LOCALE",
+    value: "en",
+    domain: "localhost",
+    path: "/",
+    expires: -1,
+    httpOnly: false,
+    secure: false,
+    sameSite: "Lax",
+  });
+  if (accessToken) {
+    state.cookies.push({
+      name: "sb-access-token",
+      value: accessToken,
+      domain: "localhost",
+      path: "/",
+      expires: -1,
+      httpOnly: false,
+      secure: false,
+      sameSite: "Lax",
+    });
+  }
+  if (refreshToken) {
+    state.cookies.push({
+      name: "sb-refresh-token",
+      value: refreshToken,
+      domain: "localhost",
+      path: "/",
+      expires: -1,
+      httpOnly: false,
+      secure: false,
+      sameSite: "Lax",
+    });
+  }
+  writeFileSync(authFile, JSON.stringify(state));
+}
 
 /**
  * Load env vars from .env.local (Playwright runs outside Next.js, so
@@ -36,6 +106,34 @@ function loadEnvLocal() {
     // .env.local doesn't exist — rely on process.env
   }
 }
+const LOCAL_SUPABASE_HOSTS: Record<string, true> = {
+  localhost: true,
+  "127.0.0.1": true,
+  "::1": true,
+};
+
+function requireLocalSupabaseUrl(rawUrl: string): string {
+  if (!rawUrl) {
+    throw new Error(
+      "E2E tests require NEXT_PUBLIC_SUPABASE_URL to point to a local Supabase instance.",
+    );
+  }
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(rawUrl);
+  } catch {
+    throw new Error("E2E tests require a valid local Supabase URL.");
+  }
+
+  if (LOCAL_SUPABASE_HOSTS[parsedUrl.hostname] !== true) {
+    throw new Error(
+      `E2E tests refuse non-local Supabase URLs (${parsedUrl.hostname}) to prevent production data mutation.`,
+    );
+  }
+
+  return parsedUrl.toString().replace(/\/$/, "");
+}
 
 /**
  * Global setup — seeds data and logs in once.
@@ -47,6 +145,19 @@ function loadEnvLocal() {
  */
 export default async function globalSetup(_config: FullConfig) {
   loadEnvLocal();
+  const supabaseUrl = requireLocalSupabaseUrl(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "",
+  );
+  if (process.env.SUPABASE_URL) {
+    requireLocalSupabaseUrl(process.env.SUPABASE_URL);
+  }
+  if (!process.env.CI) {
+    process.stdout.write("🌱 Seeding E2E test data (local Supabase)...\n");
+    execSync("bun supabase/seed-e2e.ts", {
+      stdio: "inherit",
+      cwd: PROJECT_ROOT,
+    });
+  }
 
   // Skip login if auth state already exists and is fresh (< 24 hours old)
   const authFile = "e2e/.auth/user.json";
@@ -102,28 +213,13 @@ export default async function globalSetup(_config: FullConfig) {
       });
       await page.waitForURL("**/dashboard**", { timeout: 30_000 });
       await context.storageState({ path: authFile });
+      forceEnglishLocale(authFile);
       await browser.close();
       return;
     }
     process.stdout.write(
       "⚠️  Auth file fresh but token expired/stale, performing full login\n",
     );
-  }
-
-  // Skip seeding for remote Supabase — only seed local instances
-  const supabaseUrl = (
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
-  ).toLowerCase();
-  const isLocalSupabase =
-    supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1");
-  if (!process.env.CI && isLocalSupabase) {
-    process.stdout.write("🌱 Seeding E2E test data (local Supabase)...\n");
-    execSync("bun supabase/seed-e2e.ts", {
-      stdio: "inherit",
-      cwd: process.cwd(),
-    });
-  } else if (!process.env.CI) {
-    process.stdout.write("⏭️  Skipping seed — using remote Supabase\n");
   }
 
   const anonKey =
@@ -204,11 +300,13 @@ export default async function globalSetup(_config: FullConfig) {
   await page.waitForURL("**/dashboard**", { timeout: 30_000 });
 
   await context.storageState({ path: authFile });
+  forceEnglishLocale(authFile);
   // user.json now holds sb-access-token + sb-refresh-token — reconstruct the
   // sb-<ref>-auth-token cookie that @supabase/ssr actually reads, then re-save
   // so every auth-dependent spec inherits a working client session.
   await addSupabaseSessionCookie(context);
   await context.storageState({ path: authFile });
+  forceEnglishLocale(authFile);
   await browser.close();
 
   process.stdout.write("✓ Auth state saved via Supabase API\n");

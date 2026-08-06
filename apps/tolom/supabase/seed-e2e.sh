@@ -15,15 +15,23 @@ set -euo pipefail
 EMAIL="${E2E_EMAIL:-themuuln4@gmail.com}"
 PASSWORD="${E2E_PASSWORD:-Tolom!11}"
 SUPABASE_URL="${SUPABASE_URL:-http://localhost:54321}"
+SUPABASE_HOST=$(python3 -c 'from urllib.parse import urlparse; import sys; print(urlparse(sys.argv[1]).hostname or "")' "$SUPABASE_URL")
+case "$SUPABASE_HOST" in
+  localhost|127.0.0.1|::1) ;;
+  *)
+    echo "❌ E2E seeding only permits a local Supabase URL."
+    exit 1
+    ;;
+esac
 SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"
 ANON_KEY="${SUPABASE_ANON_KEY:-}"
 
-# Resolve service role key from supabase status if not provided
+# Resolve service role and anon keys from the local Supabase status output.
 if [ -z "$SERVICE_ROLE_KEY" ]; then
-  SERVICE_ROLE_KEY=$(supabase status --json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['service_role_key'])" 2>/dev/null || echo "")
+  SERVICE_ROLE_KEY=$(supabase status --output json 2>/dev/null | python3 -c 'import json,sys; data=json.load(sys.stdin); print(data.get("SERVICE_ROLE_KEY") or data.get("service_role_key") or "")' 2>/dev/null || echo "")
 fi
 if [ -z "$ANON_KEY" ]; then
-  ANON_KEY=$(supabase status --json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['anon_key'])" 2>/dev/null || echo "")
+  ANON_KEY=$(supabase status --output json 2>/dev/null | python3 -c 'import json,sys; data=json.load(sys.stdin); print(data.get("ANON_KEY") or data.get("anon_key") or "")' 2>/dev/null || echo "")
 fi
 
 if [ -z "$SERVICE_ROLE_KEY" ]; then

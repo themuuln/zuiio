@@ -61,12 +61,17 @@ vi.mock("@/components/vehicles/vehicle-form", () => ({
       <div data-testid="vehicle-form-mock">
         <span data-testid="vehicle-form-mode">{mode}</span>
         <button
+          type="button"
           data-testid="vehicle-form-success"
           onClick={() => onSuccess({ id: "new-veh-1", plate_number: "NEW001" })}
         >
           Success
         </button>
-        <button data-testid="vehicle-form-cancel" onClick={onCancel}>
+        <button
+          type="button"
+          data-testid="vehicle-form-cancel"
+          onClick={onCancel}
+        >
           Cancel
         </button>
       </div>

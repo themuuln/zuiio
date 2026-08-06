@@ -25,18 +25,18 @@ const mockRevalidateTag = vi.mocked(revalidateTag);
 const mockLogAudit = vi.mocked(logAuditAfter);
 const mockReportServerError = vi.mocked(reportServerError);
 
-import { ValidationError, NotFoundError } from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import {
-  getInspections,
-  getInspection,
-  createInspection,
-  updateInspection,
   addInspectionItem,
-  updateInspectionItem,
+  convertInspectionToWorkOrder,
+  createInspection,
+  getInspection,
+  getInspections,
   removeInspectionItem,
   sendInspectionToCustomer,
   submitCustomerApproval,
-  convertInspectionToWorkOrder,
+  updateInspection,
+  updateInspectionItem,
 } from "../dvi-service";
 
 const ORG_ID = "org-1";
@@ -172,17 +172,17 @@ describe("getInspection", () => {
   it("throws NotFoundError for missing inspection", async () => {
     db.__qb.resolveOnce({ data: null, error: new Error("not found") });
 
-    await expect(
-      getInspection(db, INSPECTION_ID, ORG_ID),
-    ).rejects.toThrow(NotFoundError);
+    await expect(getInspection(db, INSPECTION_ID, ORG_ID)).rejects.toThrow(
+      NotFoundError,
+    );
   });
 
   it("throws NotFoundError when data is null without error", async () => {
     db.__qb.resolveOnce({ data: null, error: null });
 
-    await expect(
-      getInspection(db, INSPECTION_ID, ORG_ID),
-    ).rejects.toThrow(NotFoundError);
+    await expect(getInspection(db, INSPECTION_ID, ORG_ID)).rejects.toThrow(
+      NotFoundError,
+    );
   });
 });
 
@@ -288,18 +288,12 @@ describe("updateInspection", () => {
       error: null,
     });
 
-    const result = await updateInspection(
-      db,
-      INSPECTION_ID,
-      ORG_ID,
-      USER_ID,
-      { technician_notes: "Updated notes" },
-    );
+    const result = await updateInspection(db, INSPECTION_ID, ORG_ID, USER_ID, {
+      technician_notes: "Updated notes",
+    });
 
     expect(result.technician_notes).toBe("Updated notes");
-    expect(
-      db.from("digital_vehicle_inspections").update,
-    ).toHaveBeenCalledWith(
+    expect(db.from("digital_vehicle_inspections").update).toHaveBeenCalledWith(
       expect.objectContaining({ technician_notes: "Updated notes" }),
     );
     expect(mockRevalidateTag).toHaveBeenCalled();
@@ -316,13 +310,11 @@ describe("updateInspection", () => {
       error: null,
     });
 
-    const result = await updateInspection(
-      db,
-      INSPECTION_ID,
-      ORG_ID,
-      USER_ID,
-      { odometer: 60000, fuel_level: 50, status: "sent" },
-    );
+    const result = await updateInspection(db, INSPECTION_ID, ORG_ID, USER_ID, {
+      odometer: 60000,
+      fuel_level: 50,
+      status: "sent",
+    });
 
     expect(result.odometer).toBe(60000);
     expect(result.fuel_level).toBe(50);
@@ -386,19 +378,13 @@ describe("addInspectionItem", () => {
       error: null,
     });
 
-    const result = await addInspectionItem(
-      db,
-      INSPECTION_ID,
-      ORG_ID,
-      USER_ID,
-      {
-        category: "brakes",
-        item_name: "Brake discs",
-        condition: "poor",
-        severity: "critical",
-        notes: "Needs immediate replacement",
-      },
-    );
+    const result = await addInspectionItem(db, INSPECTION_ID, ORG_ID, USER_ID, {
+      category: "brakes",
+      item_name: "Brake discs",
+      condition: "poor",
+      severity: "critical",
+      notes: "Needs immediate replacement",
+    });
 
     expect(result.condition).toBe("poor");
     expect(result.severity).toBe("critical");
@@ -470,9 +456,7 @@ describe("updateInspectionItem", () => {
     );
 
     expect(result.notes).toBe("Updated notes");
-    expect(
-      db.from("dvi_inspection_items").update,
-    ).toHaveBeenCalledWith(
+    expect(db.from("dvi_inspection_items").update).toHaveBeenCalledWith(
       expect.objectContaining({ notes: "Updated notes" }),
     );
   });
@@ -548,9 +532,7 @@ describe("sendInspectionToCustomer", () => {
     expect(result.token).toBeTruthy();
     expect(typeof result.token).toBe("string");
     expect(result.token.length).toBeGreaterThan(0);
-    expect(
-      db.from("digital_vehicle_inspections").update,
-    ).toHaveBeenCalledWith(
+    expect(db.from("digital_vehicle_inspections").update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "sent",
       }),
@@ -577,10 +559,7 @@ describe("submitCustomerApproval", () => {
     db.__qb.resolveOnce({ data: null, error: null });
     // 3) count items — all approved
     db.__qb.resolveOnce({
-      data: [
-        { customer_approved: true },
-        { customer_approved: true },
-      ],
+      data: [{ customer_approved: true }, { customer_approved: true }],
       error: null,
     });
     // 4) update inspection status
@@ -600,10 +579,7 @@ describe("submitCustomerApproval", () => {
     db.__qb.resolveOnce({ data: { id: INSPECTION_ID }, error: null });
     db.__qb.resolveOnce({ data: null, error: null });
     db.__qb.resolveOnce({
-      data: [
-        { customer_approved: false },
-        { customer_approved: false },
-      ],
+      data: [{ customer_approved: false }, { customer_approved: false }],
       error: null,
     });
     db.__qb.resolveOnce({ data: null, error: null });
@@ -686,9 +662,7 @@ describe("convertInspectionToWorkOrder", () => {
         status: "New",
       }),
     );
-    expect(
-      db.from("digital_vehicle_inspections").update,
-    ).toHaveBeenCalledWith(
+    expect(db.from("digital_vehicle_inspections").update).toHaveBeenCalledWith(
       expect.objectContaining({
         work_order_id: "wo-1",
         status: "converted",

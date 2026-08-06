@@ -6,8 +6,8 @@ import assert from "node:assert/strict";
 import test, { mock } from "node:test";
 
 import {
-  mockActionCtx,
   formData,
+  mockActionCtx,
   mockMod,
   registerDefaultMocks,
   resolved,
@@ -40,9 +40,7 @@ let updateBundle: (
   prev: undefined,
   fd: FormData,
 ) => Promise<Record<string, unknown>>;
-let deleteBundle: (
-  bundleId: string,
-) => Promise<Record<string, unknown>>;
+let deleteBundle: (bundleId: string) => Promise<Record<string, unknown>>;
 
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/products/bundles/actions");
@@ -63,7 +61,11 @@ function resetMocks() {
 
 test("createBundle rejects missing name", async () => {
   resetMocks();
-  const fd = formData({ items: JSON.stringify([{ product_id: "p1", variant_id: null, quantity: 2 }]) });
+  const fd = formData({
+    items: JSON.stringify([
+      { product_id: "p1", variant_id: null, quantity: 2 },
+    ]),
+  });
   const result = await createBundle(undefined, fd);
   assert.equal(result.error, "Багцын нэр шаардлагатай.");
 });
@@ -272,7 +274,11 @@ test("updateBundle handles items JSON parse error", async () => {
 
   const result = await updateBundle(undefined, fd);
   assert.equal(result.error, "Барааны мэдээллийн формат буруу байна.");
-  assert.equal(captureMock.mock.calls.length, 1, "should capture the parse error");
+  assert.equal(
+    captureMock.mock.calls.length,
+    1,
+    "should capture the parse error",
+  );
 });
 
 test("updateBundle handles update DB error", async () => {

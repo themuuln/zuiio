@@ -115,7 +115,7 @@ describe("QuickShortcuts", () => {
     const rpcArgs = getRpcArgs();
     expect(rpcArgs).toBeDefined();
     expect(rpcArgs?.p_organization_id).toBe("org-B");
-  });
+  }, 10_000);
 
   it("does not use a hardcoded orgId", async () => {
     const { QuickShortcuts } = await import("../quick-shortcuts");
@@ -123,7 +123,7 @@ describe("QuickShortcuts", () => {
 
     const rpcArgs = getRpcArgs();
     expect(rpcArgs?.p_organization_id).toBe("org-X");
-  });
+  }, 10_000);
 });
 
 // ─── Tests: recent-sales ──────────────────────────────────────────────

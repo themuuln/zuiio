@@ -17,7 +17,7 @@ describe("Calendar", () => {
   });
 
   it("renders month navigation buttons", () => {
-    const { $ } = renderCalendar(<Calendar mode="single" />);
+    renderCalendar(<Calendar mode="single" />);
     // There should be previous and next buttons
     const buttons = document.querySelectorAll("[data-slot='button']");
     expect(buttons.length).toBeGreaterThanOrEqual(2);

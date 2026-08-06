@@ -152,7 +152,7 @@ export default function TaxReportPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-end gap-4">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-y-2">
               <Label htmlFor="startDate">{t("startDate")}</Label>
               <Input
                 id="startDate"
@@ -162,7 +162,7 @@ export default function TaxReportPage() {
                 className="w-40"
               />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-y-2">
               <Label htmlFor="endDate">{t("endDate")}</Label>
               <Input
                 id="endDate"

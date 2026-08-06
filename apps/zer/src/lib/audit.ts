@@ -14,6 +14,8 @@ export type AuditAction =
   | "payment_received"
   | "activated"
   | "deactivated"
+  | "published"
+  | "unpublished"
   | "assigned";
 
 export type EntityType =
@@ -36,10 +38,14 @@ export type EntityType =
   | "coupon"
   | "gift_card"
   | "promotion"
+  | "review"
+  | "blog_post"
+  | "webhook"
   | "loyalty_setting"
   | "loyalty_reward"
   | "delivery"
-  | "delivery_zone";
+  | "delivery_zone"
+  | "stock_transfer";
 
 type FieldChange = {
   old: unknown;

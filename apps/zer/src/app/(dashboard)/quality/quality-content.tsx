@@ -235,7 +235,10 @@ export function QualityContent() {
 
       {/* Filters */}
       <div className="flex gap-3">
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
+        <Select
+          value={typeFilter}
+          onValueChange={(value) => setTypeFilter(value ?? "all")}
+        >
           <SelectTrigger
             className="w-[200px]"
             aria-label="Шалгалтын төрөлөөр шүүх"
@@ -249,7 +252,10 @@ export function QualityContent() {
           </SelectContent>
         </Select>
 
-        <Select value={resultFilter} onValueChange={setResultFilter}>
+        <Select
+          value={resultFilter}
+          onValueChange={(value) => setResultFilter(value ?? "all")}
+        >
           <SelectTrigger className="w-[200px]" aria-label="Үр дүнгээр шүүх">
             <SelectValue placeholder="Бүх үр дүн" />
           </SelectTrigger>

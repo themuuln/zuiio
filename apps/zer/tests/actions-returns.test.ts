@@ -9,8 +9,8 @@ import test, { mock } from "node:test";
 
 import {
   createMockSupabase,
-  mockActionCtx,
   formData,
+  mockActionCtx,
   mockMod,
   registerDefaultMocks,
   resolved,
@@ -49,9 +49,16 @@ mockMod("@/lib/revalidate", {
 
 // ─── Lazy-loaded module ──────────────────────────────────────────────
 
-let createReturn: (prev: undefined, fd: FormData) => Promise<Record<string, unknown> | undefined>;
-let completeReturn: (returnId: string) => Promise<Record<string, unknown> | undefined>;
-let cancelReturn: (returnId: string) => Promise<Record<string, unknown> | undefined>;
+let createReturn: (
+  prev: undefined,
+  fd: FormData,
+) => Promise<Record<string, unknown> | undefined>;
+let completeReturn: (
+  returnId: string,
+) => Promise<Record<string, unknown> | undefined>;
+let cancelReturn: (
+  returnId: string,
+) => Promise<Record<string, unknown> | undefined>;
 
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/returns/actions");
@@ -79,7 +86,11 @@ function makeReturnSupabase() {
         maybeSingle: mock.fn(() => resolved(null, null)),
         order: mock.fn(() => builder),
         limit: mock.fn(() => builder),
-        insert: mock.fn(() => ({ select: mock.fn(() => ({ single: mock.fn(() => resolved({ id: "ret-id" })) })) })),
+        insert: mock.fn(() => ({
+          select: mock.fn(() => ({
+            single: mock.fn(() => resolved({ id: "ret-id" })),
+          })),
+        })),
       };
 
       if (table === "returns") {
@@ -124,7 +135,11 @@ function makeReturnSupabase() {
 test("createReturn rejects missing type", async () => {
   resetMocks();
   mockCtx = mockActionCtx();
-  const fd = formData({ items: JSON.stringify([{ product_id: "p1", quantity: 1, unit_price: 1000 }]) });
+  const fd = formData({
+    items: JSON.stringify([
+      { product_id: "p1", quantity: 1, unit_price: 1000 },
+    ]),
+  });
   const result = await createReturn(undefined, fd);
   assert.ok(result && "error" in result, "should return error");
 });
@@ -145,18 +160,28 @@ test("createReturn calls insert with return items", async () => {
   const fd = formData({
     type: "sales_return",
     reference_id: "sale-1",
-    items: JSON.stringify([{ product_id: "prod-1", quantity: 2, unit_price: 5000 }]),
+    items: JSON.stringify([
+      { product_id: "prod-1", quantity: 2, unit_price: 5000 },
+    ]),
   });
 
   const result = await createReturn(undefined, fd);
   assert.ok(result, "should return a result");
 
   const fromCalls = supabase.from.mock.calls;
-  const tablesCalled = fromCalls.map((c: { arguments: [string] }) => c.arguments[0]);
+  const tablesCalled = fromCalls.map(
+    (c: { arguments: [string] }) => c.arguments[0],
+  );
   // First call is for sales reference validation, then returns
   assert.ok(tablesCalled.includes("returns"), "should call from('returns')");
-  assert.ok(tablesCalled.includes("sales"), "should call from('sales') for reference validation");
-  assert.ok(tablesCalled.includes("return_items"), "should call from('return_items')");
+  assert.ok(
+    tablesCalled.includes("sales"),
+    "should call from('sales') for reference validation",
+  );
+  assert.ok(
+    tablesCalled.includes("return_items"),
+    "should call from('return_items')",
+  );
 });
 
 // ─── Tests: completeReturn ──────────────────────────────────────────

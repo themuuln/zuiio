@@ -20,11 +20,11 @@ export function DrawerSkeletonLayout({
           className={
             isFullScreen
               ? "mx-auto grid w-full max-w-7xl items-start gap-4 px-4 py-4 xl:grid-cols-[minmax(0,1fr)_19rem]"
-              : "mx-auto w-full max-w-3xl space-y-4 px-4 py-4"
+              : "mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4"
           }
         >
           {/* Left column: services, parts */}
-          <div className={isFullScreen ? "space-y-4" : ""}>
+          <div className={isFullScreen ? "flex flex-col gap-4" : ""}>
             <div className="flex flex-col divide-y divide-border/40">
               {/* ── Services section skeleton ── */}
               <div className="rounded-xl bg-card/40 p-3">

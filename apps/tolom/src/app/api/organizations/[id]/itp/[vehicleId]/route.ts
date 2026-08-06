@@ -1,10 +1,10 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import {
-  getItpRecord,
-  updateItpRecord,
   getItpHistory,
+  getItpRecord,
   type ItpRecordInput,
+  updateItpRecord,
 } from "@/lib/services/itp-service";
 
 /**
@@ -68,13 +68,13 @@ export const PATCH = createRouteHandler(
     // Validate date formats if provided
     if (body.itp_expiry_date) {
       const d = new Date(body.itp_expiry_date);
-      if (isNaN(d.getTime())) {
+      if (Number.isNaN(d.getTime())) {
         return apiError("VALIDATION", "Invalid itp_expiry_date format", 400);
       }
     }
     if (body.itp_last_passed_date) {
       const d = new Date(body.itp_last_passed_date);
-      if (isNaN(d.getTime())) {
+      if (Number.isNaN(d.getTime())) {
         return apiError(
           "VALIDATION",
           "Invalid itp_last_passed_date format",

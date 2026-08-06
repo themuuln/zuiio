@@ -58,7 +58,11 @@ describe("GET /api/global-catalog/services", () => {
     const response = await (GET as any)({ request: req, supabase, user });
     const body = await response.json();
 
-    expect(searchGlobalServicesMock).toHaveBeenCalledWith(supabase, undefined, {});
+    expect(searchGlobalServicesMock).toHaveBeenCalledWith(
+      supabase,
+      undefined,
+      {},
+    );
     expect(body.data).toEqual(mockServices);
   });
 
@@ -80,16 +84,16 @@ describe("GET /api/global-catalog/services", () => {
     searchGlobalServicesMock.mockResolvedValue([mockServices[0]]);
 
     const req = new NextRequest(
-      new URL("http://localhost/api/global-catalog/services?category=Maintenance"),
+      new URL(
+        "http://localhost/api/global-catalog/services?category=Maintenance",
+      ),
     );
     const response = await (GET as any)({ request: req, supabase, user });
     const body = await response.json();
 
-    expect(searchGlobalServicesMock).toHaveBeenCalledWith(
-      supabase,
-      undefined,
-      { category: "Maintenance" },
-    );
+    expect(searchGlobalServicesMock).toHaveBeenCalledWith(supabase, undefined, {
+      category: "Maintenance",
+    });
     expect(body.data).toHaveLength(1);
   });
 

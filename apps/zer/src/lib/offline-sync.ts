@@ -1,8 +1,15 @@
 /**
- * Offline sync service — wires @zuiio/offline to POS operations
+ * Offline sync service — wires @zuiio/offline (IndexedDB mutation queue)
+ * to POS operations.
  */
 
 import { capture } from "@zuiio/capture";
+import {
+  enqueueMutation,
+  getMutationsByStatus,
+  getPendingCount,
+  removeMutation,
+} from "@zuiio/offline";
 
 export interface QueuedSale {
   id: string;
@@ -13,6 +20,16 @@ export interface QueuedSale {
   salesperson_id?: string;
   created_at: string;
 }
+
+export type OfflineAction = "sale" | "shop_sale";
+
+export type ReplayDispatch = (
+  op: OfflineAction,
+  fields: Record<string, string>,
+  idempotencyKey?: string,
+) => Promise<{ success: boolean; error?: string }>;
+
+// ─── Online status ────────────────────────────────────────────
 
 let isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
 let listeners: Array<(online: boolean) => void> = [];
@@ -41,51 +58,75 @@ if (typeof window !== "undefined") {
   });
 }
 
-const QUEUE_KEY = "zer-offline-sales";
+// ─── Queue operations ─────────────────────────────────────────
 
-export function getQueuedSales(): QueuedSale[] {
-  try {
-    const data = localStorage.getItem(QUEUE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
+/**
+ * Queue an offline mutation for later replay. Returns the mutation ID.
+ *
+ * `op` doubles as the replay endpoint ("sale" | "shop_sale"); the replay
+ * layer maps it back to the matching server action. `queryKeys` are the
+ * React Query keys invalidated once the action is replayed successfully.
+ */
+export async function queueOfflineAction(
+  op: OfflineAction,
+  fields: Record<string, string>,
+  queryKeys: string[][],
+): Promise<string> {
+  return enqueueMutation({
+    endpoint: op,
+    method: "POST",
+    body: fields,
+    queryKeysToInvalidate: queryKeys,
+    idempotencyKey: crypto.randomUUID(),
+  });
 }
 
-export function queueSale(sale: QueuedSale): void {
-  const queue = getQueuedSales();
-  queue.push(sale);
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+/** Number of actions waiting to be replayed. */
+export async function getPendingOfflineCount(): Promise<number> {
+  return getPendingCount();
 }
 
-export function removeSaleFromQueue(id: string): void {
-  const queue = getQueuedSales().filter((s) => s.id !== id);
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
-}
-
-export function getQueuedCount(): number {
-  return getQueuedSales().length;
-}
-
-export async function syncQueuedSales(
-  syncFn: (sale: QueuedSale) => Promise<boolean>,
+/**
+ * Replay all pending actions in FIFO order.
+ *
+ * Each action is passed to `dispatch` together with its client-generated
+ * idempotency key (the server actions dedupe on it, so a process death
+ * mid-replay cannot double-sell); on success it is removed from the queue,
+ * on failure it is left pending for the next reconnect. `onProgress`
+ * is called after each action with (done, total).
+ */
+export async function replayQueuedActions(
+  dispatch: ReplayDispatch,
+  onProgress?: (done: number, total: number) => void,
 ): Promise<{ synced: number; failed: number }> {
-  const queue = getQueuedSales();
+  const pending = await getMutationsByStatus("pending");
   let synced = 0;
   let failed = 0;
-  for (const sale of queue) {
+
+  for (const mutation of pending) {
+    const fields = (mutation.body ?? {}) as Record<string, string>;
     try {
-      const success = await syncFn(sale);
-      if (success) {
-        removeSaleFromQueue(sale.id);
+      const result = await dispatch(
+        mutation.endpoint as OfflineAction,
+        fields,
+        mutation.idempotencyKey,
+      );
+      if (result.success) {
+        await removeMutation(mutation.id);
         synced++;
       } else {
+        capture(new Error(result.error ?? "Replay failed"), {
+          context: "offline-replay",
+          mutationId: mutation.id,
+        });
         failed++;
       }
     } catch (error) {
-      capture(error, { context: "offline-sync-sale", saleId: sale.id });
+      capture(error, { context: "offline-replay", mutationId: mutation.id });
       failed++;
     }
+    onProgress?.(synced + failed, pending.length);
   }
+
   return { synced, failed };
 }

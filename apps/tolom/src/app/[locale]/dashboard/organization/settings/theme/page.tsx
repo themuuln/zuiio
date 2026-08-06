@@ -18,7 +18,7 @@ export default function ThemeSettingsPage() {
   }
 
   return (
-    <div className="px-4 pt-4 pb-6 md:px-6 space-y-6">
+    <div className="flex flex-col px-4 pt-4 pb-6 md:px-6 gap-y-6">
       <div>
         <Typography.H2>{t("title")}</Typography.H2>
         <Typography.Text className="text-muted-foreground">

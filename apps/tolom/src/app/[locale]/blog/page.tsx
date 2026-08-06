@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, Calendar, Clock, Wrench } from "lucide-react";
+import { ArrowRight, BookOpen, Calendar, Clock } from "lucide-react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
+import { LandingFooter } from "../_landing-footer";
 import { CategoryFilter } from "./_category-filter";
 
 const ARTICLES = [1, 2, 3, 4, 5, 6].map((n) => ({
@@ -38,10 +39,6 @@ async function BlogContent({ locale }: { locale: string }) {
   const t = (await getTranslations({
     locale: locale as "mn" | "en",
     namespace: "blog",
-  })) as (key: string, values?: Record<string, string | number>) => string;
-  const appT = (await getTranslations({
-    locale: locale as "mn" | "en",
-    namespace: "app",
   })) as (key: string, values?: Record<string, string | number>) => string;
 
   const categories = CATEGORIES.map((cat) => ({
@@ -143,23 +140,14 @@ async function BlogContent({ locale }: { locale: string }) {
                 render={<Link href="/pricing" />}
                 nativeButton={false}
               >
-                Үнийн санал
+                {t("ctaPricing")}
               </Button>
             </div>
           </div>
         </section>
       </main>
-      <footer className="border-t bg-background px-4 py-8 text-center text-xs text-muted-foreground sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-center gap-2">
-            <Wrench className="size-3" />
-            <span className="font-semibold text-foreground">
-              {appT("name")}
-            </span>
-          </div>
-          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
-        </div>
-      </footer>
+
+      <LandingFooter />
     </div>
   );
 }

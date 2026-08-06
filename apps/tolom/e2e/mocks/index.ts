@@ -127,9 +127,13 @@ export async function mockUpdateWorkOrder(
  * Mock the organization selector / list API
  */
 export async function mockOrganizations(page: Page) {
-  await page.route("**/api/organizations/**", (route) => {
-    // Only mock GET for org list — pass through others
-    if (route.request().method() === "GET") {
+  // Mock ONLY the org list endpoint (exact path). The old glob
+  // "**/api/organizations/**" swallowed every org-scoped API GET
+  // (customers, vehicles, ...) with an org-array response, breaking
+  // those pages. Nested endpoints now hit their real/more-specific mocks.
+  for (const pattern of ["**/api/organizations", "**/api/organizations?*"]) {
+    await page.route(pattern, (route) => {
+      if (route.request().method() !== "GET") return route.continue();
       return route.fulfill(
         ok([
           {
@@ -139,30 +143,93 @@ export async function mockOrganizations(page: Page) {
           },
         ]),
       );
-    }
-    return route.continue();
-  });
+    });
+  }
 }
 
 // ─── Auth / Profile ───────────────────────────────────────────────────────
 
 /**
+ * Mock the layout's usePrewarm() fetches — every dashboard page fires 6
+ * org-scoped queries (branches, services, customers 200, vehicles 200,
+ * inventory parts 200, service-reminders) on mount. Against the real backend
+ * that's ~30 heavy requests per page serialized by the dev server (~10-15s),
+ * which blew page-load timeouts under parallel runs. Empty data is fine for
+ * specs that mock their own page data.
+ */
+export async function mockPrewarm(page: Page) {
+  await page.route(`**/api/organizations/*/branches`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/organizations/*/services`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/organizations/*/customers*`, (r) =>
+    r.fulfill(ok({ data: [], total: 0 })),
+  );
+  await page.route(`**/api/organizations/*/vehicles*`, (r) =>
+    r.fulfill(ok({ data: [], total: 0 })),
+  );
+  await page.route(`**/api/organizations/*/inventory/parts*`, (r) =>
+    r.fulfill(ok({ data: [], total: 0 })),
+  );
+  await page.route(`**/api/organizations/*/service-reminders`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+}
+
+/**
  * Mock GET /api/profile
  */
-export async function mockProfile(page: Page) {
-  await page.route("**/api/profile", (route) => {
-    return route.fulfill(
+export async function mockProfile(
+  page: Page,
+  overrides?: {
+    organizationId?: string;
+    roleName?: string;
+    permissionNames?: string[];
+  },
+) {
+  if (!overrides) {
+    // Pass through to the real /api/profile. The old fixture response used
+    // snake_case keys (organization_id), but the app now reads camelCase
+    // (organizationId) from a unified profile shape — the fixture produced
+    // organizationId=null, leaving every page stuck in its loading state.
+    // With a real session the pass-through returns the real org, and all
+    // org-scoped endpoints work against the live backend.
+    await page.route("**/api/profile", (route) => route.continue());
+    return;
+  }
+  // Override mode — specs that need a fixture org id (mocked org-scoped
+  // endpoints) or a specific role. Must return the camelCase profile shape
+  // the app reads (useProfile).
+  await page.route("**/api/profile", (route) =>
+    route.fulfill(
       ok({
         id: "e2e-user-id",
         email: "themuuln4@gmail.com",
-        full_name: "E2E User",
-        organization_id: ORG_ID,
-        organizations: [
-          { id: ORG_ID, name: "TOLOM E2E Test", slug: "tolom-e2e-test" },
+        username: null,
+        phone: null,
+        fullName: "E2E User",
+        avatarUrl: null,
+        organizationId:
+          overrides.organizationId ??
+          "e2e-00000000-0000-0000-0000-000000000001",
+        organizationName: "TOLOM E2E Test",
+        branchId: null,
+        roleId: "role-owner",
+        roleName: overrides.roleName ?? "Org Owner",
+        permissionNames: overrides.permissionNames ?? [
+          "work_orders.read",
+          "work_orders.create",
+          "customers.read",
+          "customers.create",
+          "reports.read",
+          "inventory.read",
+          "invoices.read",
         ],
       }),
-    );
-  });
+    ),
+  );
 }
 
 // ─── Supabase REST bypass ─────────────────────────────────────────────────
@@ -204,7 +271,7 @@ export async function mockAppointments(
   await page.route("**/api/organizations/*/appointments", async (route) => {
     if (route.request().method() !== "GET") return route.fallback();
     const data = items ?? [appointmentFixture()];
-    await route.fulfill(ok(data));
+    await route.fulfill(ok({ data }));
   });
 }
 
@@ -300,7 +367,7 @@ export async function mockServiceReminders(
   await page.route(`**/organizations/*/service-reminders`, async (route) => {
     if (route.request().method() !== "GET") return route.fallback();
     const data = items ?? [serviceScheduleFixture()];
-    await route.fulfill(ok(data));
+    await route.fulfill(ok({ data }));
   });
 }
 
@@ -318,7 +385,12 @@ export async function mockCashRegister(
       );
       return;
     }
-    await route.fulfill(ok({ data: session ?? cashRegisterSessionFixture() }));
+    // undefined → default fixture; explicit null → NO session (Open Register)
+    await route.fulfill(
+      ok({
+        data: session === undefined ? cashRegisterSessionFixture() : session,
+      }),
+    );
   });
 }
 
@@ -329,6 +401,15 @@ export async function mockFinanceOverview(
   fixture?: FinanceOverviewFixture,
 ) {
   await page.route(`**/organizations/*/reports*`, async (route) => {
+    // Don't swallow the dashboard's reports?type=dashboard — fall through
+    // to the more specific dashboard mock (last-registered wins).
+    const url = new URL(route.request().url());
+    const type = url.searchParams.get("type");
+    if (type === "dashboard") return route.fallback();
+    // List-ish report endpoints (e.g. the top bar's mechanic selector
+    // fetches reports?type=mechanics and calls .find() on the array) must
+    // return an ARRAY, not the finance summary object.
+    if (type) return route.fulfill(ok({ data: [] }));
     await route.fulfill(ok({ data: fixture ?? financeOverviewFixture() }));
   });
   await page.route(`**/organizations/*/invoices*`, async (route) => {
@@ -430,16 +511,76 @@ export async function mockInventoryAll(page: Page) {
 
 export async function mockReports(page: Page, fixture?: ReportDataFixture) {
   await page.route(`**/organizations/*/reports*`, async (route) => {
-    const url = route.request().url();
-    // Mechanic hours/commissions endpoints
-    if (url.includes("mechanic-hours")) {
+    const url = new URL(route.request().url());
+    const type = url.searchParams.get("type");
+    // Dashboard + mechanic endpoints are array-shaped.
+    if (type === "dashboard") return route.fallback();
+    if (type === "mechanics") return route.fulfill(ok({ data: [] }));
+    // List-ish report endpoints the overview tab renders as arrays.
+    if (type === "insights") return route.fulfill(ok({ data: [] }));
+    if (type === "targets") return route.fulfill(ok({ data: [] }));
+    if (type === "service-breakdown") return route.fulfill(ok({ data: [] }));
+    if (type === "mechanic-leaderboard") return route.fulfill(ok({ data: [] }));
+    // Forecast can be null (card renders the empty state).
+    if (type === "forecast") return route.fulfill(ok({ data: null }));
+    // Object-shaped analytics endpoints.
+    if (type === "retention") {
+      return route.fulfill(
+        ok({
+          data: {
+            total_customers: 142,
+            retention_rate: 62.5,
+            returning_customers: 88,
+            new_customers: 54,
+            avg_visits_per_customer: 2.4,
+            avg_lifetime_value: 350000,
+            top_customers: [],
+          },
+        }),
+      );
+    }
+    if (type === "pnl") {
+      return route.fulfill(
+        ok({
+          data: {
+            revenue: {
+              service_revenue: 8300000,
+              parts_revenue: 4200000,
+              total: 12500000,
+            },
+            cogs: { total: 3100000 },
+            expenses: { total: 1500000, by_category: [] },
+            gross_profit: 5200000,
+            gross_margin_pct: 41.6,
+            net_profit: 3500000,
+          },
+        }),
+      );
+    }
+    if (type === "finance-summary") {
+      return route.fulfill(
+        ok({
+          data: {
+            total_revenue: 5000000,
+            total_expenses: 1500000,
+            net_profit: 3500000,
+            invoice_count: 12,
+            pending_invoices: 3,
+            paid_invoices: 9,
+            period: "month",
+          },
+        }),
+      );
+    }
+    if (url.pathname.includes("mechanic-hours")) {
       await route.fulfill(ok({ data: [] }));
       return;
     }
-    if (url.includes("mechanic-commissions")) {
+    if (url.pathname.includes("mechanic-commissions")) {
       await route.fulfill(ok({ data: [] }));
       return;
     }
+    // The main report (no type / the reportType param) — full fixture.
     await route.fulfill(ok({ data: fixture ?? reportDataFixture() }));
   });
 }
@@ -478,29 +619,69 @@ export async function mockMechanicsList(page: Page) {
 
 // ─── Settings ────────────────────────────────────────────────────────────
 
+/**
+ * Mock every endpoint the settings page fetches (it prefetches ~19 org-scoped
+ * lists for its sections). Returning empty data makes the page render in
+ * seconds instead of waiting on 30+ parallel prod queries — which under a
+ * parallel E2E run blew the 60s test timeout. The org detail itself is
+ * fulfilled with the fixture (the form needs a full org shape).
+ */
 export async function mockSettingsOrg(page: Page) {
-  await page.route("**/api/organizations/*", async (route) => {
-    const url = route.request().url();
-    // Sub-endpoints
-    if (url.includes("/branches")) {
-      await route.fulfill(ok({ data: [] }));
-      return;
-    }
-    if (url.includes("/commission-rules")) {
-      await route.fulfill(ok({ data: [] }));
-      return;
-    }
-    if (url.includes("/diagnosis-labels")) {
-      await route.fulfill(ok({ data: [] }));
-      return;
-    }
-    if (url.includes("/price-rules")) {
-      await route.fulfill(ok({ data: [] }));
-      return;
-    }
-    // Base org detail
-    await route.fulfill(ok({ data: organizationDetailFixture() }));
-  });
+  // Sub-endpoints first (they must win over the base detail route).
+  await page.route(`**/api/organizations/*/branches`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/organizations/*/inventory/parts*`, (r) =>
+    r.fulfill(ok({ data: [], total: 0 })),
+  );
+  await page.route(`**/api/organizations/*/inventory/suppliers*`, (r) =>
+    r.fulfill(ok({ data: [], total: 0 })),
+  );
+  await page.route(`**/api/organizations/*/expense-categories`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/organizations/*/inventory/purchase-orders*`, (r) =>
+    r.fulfill(ok({ data: [], total: 0 })),
+  );
+  await page.route(`**/api/organizations/*/work-orders*`, (r) =>
+    r.fulfill(ok({ data: [], total: 0 })),
+  );
+  await page.route(`**/api/organizations/*/reports*`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/organizations/*/subscription*`, (r) =>
+    r.fulfill(ok({ data: { plan_type: "pro", status: "active" } })),
+  );
+  await page.route(`**/api/organizations/*/features`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/organizations/*/services`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/organizations/*/customers*`, (r) =>
+    r.fulfill(ok({ data: [], total: 0 })),
+  );
+  await page.route(`**/api/organizations/*/vehicles*`, (r) =>
+    r.fulfill(ok({ data: [], total: 0 })),
+  );
+  await page.route(`**/api/organizations/*/service-reminders`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/organizations/*/commission-rules`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/organizations/*/price-rules`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/organizations/*/diagnosis-labels`, (r) =>
+    r.fulfill(ok({ data: [] })),
+  );
+  await page.route(`**/api/car-brands`, (r) => r.fulfill(ok({ data: [] })));
+  // The org detail itself — registered LAST (last-registered wins for the
+  // exact path) and the form needs the full org shape.
+  await page.route("**/api/organizations/*", (r) =>
+    r.fulfill(ok({ data: organizationDetailFixture() })),
+  );
 }
 
 // ─── Organization ────────────────────────────────────────────────────────
@@ -654,9 +835,13 @@ export async function mockOverviewDashboard(
   fixture?: import("../fixtures").OverviewDashboardFixture,
 ) {
   const data = fixture ?? overviewDashboardFixture();
-  await page.route("**/api/organizations/*/dashboard", (route) =>
-    route.fulfill(ok(data)),
-  );
+  // Dashboard data now lives under /reports?type=dashboard
+  await page.route("**/api/organizations/*/reports?*", (route) => {
+    const url = new URL(route.request().url());
+    if (url.searchParams.get("type") !== "dashboard") return route.continue();
+    // The dashboard query unwraps json.data — the fixture must be wrapped.
+    return route.fulfill(ok({ data }));
+  });
 }
 
 // ─── Vehicle Models ───────────────────────────────────────────────────────
@@ -688,7 +873,7 @@ export async function mockVehicleModels(
     }),
   ];
   await page.route("**/api/organizations/*/vehicle-models", (route) =>
-    route.fulfill(ok(data)),
+    route.fulfill(ok({ data })),
   );
 }
 
@@ -708,7 +893,7 @@ export async function mockOrgMembers(page: Page, items?: OrgMemberFixture[]) {
     }),
   ];
   await page.route("**/api/organizations/*/members", (route) =>
-    route.fulfill(ok(data)),
+    route.fulfill(ok({ data })),
   );
 }
 

@@ -15,14 +15,52 @@ export type PlatformSize = {
 };
 
 export const POSTER_STYLES: PosterStyle[] = [
-  { id: "minimal", label: "Минимал", prompt: "clean minimal design, lots of white space, elegant, product-focused" },
-  { id: "studio", label: "Studio", prompt: "professional studio photography, soft lighting, clean background, high-end product shot" },
-  { id: "elegant", label: "Elegant", prompt: "elegant luxury design, premium feel, sophisticated tones, refined" },
-  { id: "nature", label: "Байгалийн", prompt: "natural outdoor setting, green tones, organic feel, eco-friendly" },
-  { id: "gradient", label: "Gradient", prompt: "smooth gradient background, modern colorful design, trending gradient style" },
-  { id: "model_male", label: "Эрэгтэй загвар", prompt: "male model wearing or holding the product, lifestyle fashion photography" },
-  { id: "model_female", label: "Эмэгтэй загвар", prompt: "female model wearing or holding the product, lifestyle fashion photography" },
-  { id: "model_couple", label: "Хос загвар", prompt: "couple together with the product, lifestyle photography, warm and inviting" },
+  {
+    id: "minimal",
+    label: "Минимал",
+    prompt:
+      "clean minimal design, lots of white space, elegant, product-focused",
+  },
+  {
+    id: "studio",
+    label: "Studio",
+    prompt:
+      "professional studio photography, soft lighting, clean background, high-end product shot",
+  },
+  {
+    id: "elegant",
+    label: "Elegant",
+    prompt: "elegant luxury design, premium feel, sophisticated tones, refined",
+  },
+  {
+    id: "nature",
+    label: "Байгалийн",
+    prompt: "natural outdoor setting, green tones, organic feel, eco-friendly",
+  },
+  {
+    id: "gradient",
+    label: "Gradient",
+    prompt:
+      "smooth gradient background, modern colorful design, trending gradient style",
+  },
+  {
+    id: "model_male",
+    label: "Эрэгтэй загвар",
+    prompt:
+      "male model wearing or holding the product, lifestyle fashion photography",
+  },
+  {
+    id: "model_female",
+    label: "Эмэгтэй загвар",
+    prompt:
+      "female model wearing or holding the product, lifestyle fashion photography",
+  },
+  {
+    id: "model_couple",
+    label: "Хос загвар",
+    prompt:
+      "couple together with the product, lifestyle photography, warm and inviting",
+  },
   { id: "custom", label: "Тохируулах", prompt: "" },
 ];
 
@@ -34,15 +72,26 @@ export const PLATFORM_SIZES: Record<string, PlatformSize> = {
 };
 
 function escapeXml(str: string): string {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
 
-function getDimensions(platform: string): { width: number; height: number } | undefined {
+function getDimensions(
+  platform: string,
+): { width: number; height: number } | undefined {
   const size = PLATFORM_SIZES[platform];
   return size ? { width: size.width, height: size.height } : undefined;
 }
 
-function generateSvgOverlay(text: string, width: number, height: number): string {
+function generateSvgOverlay(
+  text: string,
+  width: number,
+  height: number,
+): string {
   const escaped = escapeXml(text);
   return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
   <style>
@@ -68,11 +117,21 @@ export interface GeneratePosterCoreResult {
   error?: string;
 }
 
-export async function generatePosterCore(params: GeneratePosterParams): Promise<GeneratePosterCoreResult> {
-  const { productName, productImageUrl, styleId, platform, customPrompt, promotionalText } = params;
+export async function generatePosterCore(
+  params: GeneratePosterParams,
+): Promise<GeneratePosterCoreResult> {
+  const {
+    productName,
+    productImageUrl,
+    styleId,
+    platform,
+    customPrompt,
+    promotionalText,
+  } = params;
 
   const style = POSTER_STYLES.find((s) => s.id === styleId);
-  const stylePrompt = styleId === "custom" && customPrompt ? customPrompt : (style?.prompt ?? "");
+  const stylePrompt =
+    styleId === "custom" && customPrompt ? customPrompt : (style?.prompt ?? "");
   const prompt = stylePrompt
     ? `A product poster for ${productName}, ${stylePrompt}, Mongolian market, ${platform}`
     : `A product poster for ${productName}, Mongolian market, ${platform}`;
@@ -82,7 +141,9 @@ export async function generatePosterCore(params: GeneratePosterParams): Promise<
   try {
     fal.config({ credentials: process.env.FAL_API_KEY });
   } catch {
-    return { error: "AI үйлчилгээний тохиргоо дутуу байна. FAL_API_KEY тохируулна уу." };
+    return {
+      error: "AI үйлчилгээний тохиргоо дутуу байна. FAL_API_KEY тохируулна уу.",
+    };
   }
 
   try {
@@ -109,20 +170,32 @@ export async function generatePosterCore(params: GeneratePosterParams): Promise<
 
     // Composite text overlay
     if (promotionalText && imageSize) {
-      const svgText = generateSvgOverlay(promotionalText, imageSize.width, imageSize.height);
+      const svgText = generateSvgOverlay(
+        promotionalText,
+        imageSize.width,
+        imageSize.height,
+      );
       imageBuffer = await sharp(imageBuffer)
-        .resize(imageSize.width, imageSize.height, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } })
+        .resize(imageSize.width, imageSize.height, {
+          fit: "contain",
+          background: { r: 255, g: 255, b: 255, alpha: 0 },
+        })
         .composite([{ input: Buffer.from(svgText), top: 0, left: 0 }])
         .webp({ quality: 85 })
         .toBuffer();
     } else {
       imageBuffer = await sharp(imageBuffer)
-        .resize(imageSize?.width, imageSize?.height, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } })
+        .resize(imageSize?.width, imageSize?.height, {
+          fit: "contain",
+          background: { r: 255, g: 255, b: 255, alpha: 0 },
+        })
         .webp({ quality: 85 })
         .toBuffer();
     }
 
-    return { posterUrl: `data:image/webp;base64,${imageBuffer.toString("base64")}` };
+    return {
+      posterUrl: `data:image/webp;base64,${imageBuffer.toString("base64")}`,
+    };
   } catch (e) {
     capture(e, { context: "generatePosterCore" });
     const message = e instanceof Error ? e.message : "Тодорхойгүй алдаа";
@@ -134,11 +207,17 @@ export async function generatePosterCore(params: GeneratePosterParams): Promise<
  * Generate a product image from a text description.
  * Uses Fal.ai Flux Pro text-to-image.
  */
-export async function generateProductImage(prompt: string): Promise<{ imageUrl?: string; error?: string }> {
+export async function generateProductImage(
+  prompt: string,
+): Promise<{ imageUrl?: string; error?: string }> {
   try {
     fal.config({ credentials: process.env.FAL_API_KEY });
     const result = await fal.run("fal-ai/flux-pro/v1.1", {
-      input: { prompt, image_size: { width: 1024, height: 1024 }, num_images: 1 },
+      input: {
+        prompt,
+        image_size: { width: 1024, height: 1024 },
+        num_images: 1,
+      },
     });
     const url = result.data?.images?.[0]?.url;
     return url ? { imageUrl: url } : { error: "Зураг үүсгэхэд алдаа гарлаа." };

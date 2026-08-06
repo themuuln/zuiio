@@ -78,7 +78,7 @@ test.describe("Finance (Mocked)", () => {
   test.describe("Sidebar Navigation", () => {
     test("has Finance link in sidebar", async ({ page }) => {
       await expect(
-        page.getByRole("link", { name: /finance/i }).first(),
+        page.getByRole("button", { name: /^finance$/i }).first(),
       ).toBeVisible();
     });
   });

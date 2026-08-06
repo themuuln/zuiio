@@ -97,6 +97,37 @@ export async function Footer() {
           </div>
           <div>
             <h3 className="mb-3 text-sm font-semibold text-foreground">
+              {t("legal")}
+            </h3>
+            <ul className="space-y-2.5">
+              <li>
+                <Link
+                  href="/privacy"
+                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {t("privacy")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {t("terms")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/data-deletion"
+                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {t("data-deletion")}
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-foreground">
               {t("company")}
             </h3>
             <ul className="space-y-2.5">
@@ -121,13 +152,22 @@ export async function Footer() {
         </div>
         <div className="mt-12 flex flex-col items-center gap-4 border-t border-border pt-6 text-sm text-muted-foreground md:flex-row md:justify-between">
           <div>
-            <p>
-              &copy; {new Date().getFullYear()} Zui Innovation LLC.
+            <p>&copy; {new Date().getFullYear()} Zui Innovation LLC.</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Unit 4, Building 30, Peace Avenue, 6th Khoroo, Bayangol District,
+              Ulaanbaatar, Mongolia
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Unit 4, Building 30, Peace Avenue, 6th Khoroo, Bayangol District, Ulaanbaatar, Mongolia
+              Phone: 88650115
             </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Phone: 88650115</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              <a
+                href="mailto:info@zuiiotech.com"
+                className="transition-colors hover:text-foreground"
+              >
+                info@zuiiotech.com
+              </a>
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-xs">{t("built-for")}</span>

@@ -4,6 +4,7 @@ import { capture } from "@zuiio/capture";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PRESET_CATEGORIES } from "@/lib/constants";
+import { templateForCompanyType } from "@/lib/dashboard-templates";
 import { revalidateEntities } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server-service";
@@ -35,7 +36,7 @@ export async function completeOnboarding(
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("organization_id")
+    .select("organization_id, organizations(company_type)")
     .eq("id", user.id)
     .single();
 
@@ -48,10 +49,21 @@ export async function completeOnboarding(
     return { error: "Байгууллага олдсонгүй." };
   }
 
+  // The company type was chosen during organization creation; derive the
+  // recommended dashboard template from it.
+  const orgRow = profile.organizations as
+    | { company_type?: string }
+    | { company_type?: string }[]
+    | null;
+  const companyType = Array.isArray(orgRow)
+    ? orgRow[0]?.company_type
+    : orgRow?.company_type;
+
   // Update organization with enabled features, supplier setting, and mark onboarding complete
   const { error: updateError } = await supabase
     .from("organizations")
     .update({
+      dashboard_template: templateForCompanyType(companyType),
       enabled_features: enabledFeatures,
       has_suppliers: hasSuppliers ?? true,
       has_inventory: hasInventory ?? true,

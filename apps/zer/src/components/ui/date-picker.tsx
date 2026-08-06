@@ -28,20 +28,22 @@ export function DatePicker({
 }: DatePickerProps) {
   return (
     <Popover>
-      <PopoverTrigger>
-        <Button
-          variant="outline"
-          disabled={disabled}
-          className={cn(
-            "w-full justify-start text-left font-normal h-9",
-            !value && "text-muted-foreground",
-            className,
-          )}
-        >
-          <CalendarIcon className="mr-2 size-4 shrink-0" />
-          {value ? format(value, "yyyy-MM-dd") : <span>{placeholder}</span>}
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            disabled={disabled}
+            className={cn(
+              "w-full justify-start text-left font-normal h-9",
+              !value && "text-muted-foreground",
+              className,
+            )}
+          >
+            <CalendarIcon className="mr-2 size-4 shrink-0" />
+            {value ? format(value, "yyyy-MM-dd") : <span>{placeholder}</span>}
+          </Button>
+        }
+      />
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar mode="single" selected={value} onSelect={onChange} />
       </PopoverContent>

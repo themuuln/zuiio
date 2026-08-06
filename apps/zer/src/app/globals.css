@@ -47,6 +47,8 @@
 }
 
 :root {
+  --header-height: 52px;
+  --shop-sidebar-width: 14rem;
   --background: oklch(0.98 0.01 95);
   --foreground: oklch(0.22 0.02 55);
   --card: oklch(0.995 0.01 95);

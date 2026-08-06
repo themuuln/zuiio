@@ -72,7 +72,7 @@ vi.mock("@/components/work-orders/wizard", () => ({
 vi.mock("@/components/ui/detail-drawer", () => {
   const DetailDrawer: any = ({
     open,
-    onOpenChange,
+    _onOpenChange,
     children,
   }: {
     open: boolean;

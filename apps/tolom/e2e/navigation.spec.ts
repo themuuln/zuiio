@@ -1,3 +1,4 @@
+import { clearAuthCookies, setEnglishLocale } from "./helpers";
 import { mockSupabaseREST } from "./mocks";
 import { expect, test } from "./test-extensions";
 
@@ -6,6 +7,10 @@ test.setTimeout(60_000);
 
 test.describe("Navigation", () => {
   test.beforeEach(async ({ page }) => {
+    // Landing page is public — drop the E2E session so the
+    // logged-in-user redirect to /dashboard does not fire.
+    await clearAuthCookies(page);
+    await setEnglishLocale(page);
     await mockSupabaseREST(page);
   });
 

@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod } from "./actions-helpers";
 
 // ─── resolve helper ──────────────────────────────────────────────────
 function resolved<T>(data: T, error: unknown = null) {
@@ -14,7 +14,7 @@ function resolved<T>(data: T, error: unknown = null) {
 // ─── Chain helpers (avoid esbuild depth limits) ──────────────────────
 
 /** Chain: select().eq().maybeSingle() → result */
-function selectEqMaybeSingle(result: unknown) {
+function _selectEqMaybeSingle(result: unknown) {
   return {
     select: mock.fn(() => ({
       eq: mock.fn(() => ({
@@ -34,7 +34,7 @@ function updateEq(result: unknown) {
 }
 
 /** Chain: insert() → result */
-function insertChain(result: unknown) {
+function _insertChain(result: unknown) {
   return {
     insert: mock.fn(() => result),
   };
@@ -66,16 +66,20 @@ function fallbackTable() {
 function makeSupabase(profiles: Record<string, unknown>) {
   return {
     from: mock.fn((table: string) =>
-      table === "profiles" ? { ...fallbackTable(), ...profiles } : fallbackTable(),
+      table === "profiles"
+        ? { ...fallbackTable(), ...profiles }
+        : fallbackTable(),
     ),
   };
 }
 
 // ─── Global mocks ────────────────────────────────────────────────────
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 const captureMock = mock.fn(() => {});
 mockMod("@zuiio/capture", {
   capture: captureMock,
@@ -90,7 +94,10 @@ mockMod("@/lib/revalidate", {
 });
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
@@ -327,5 +334,7 @@ test("removeMember: calls revalidateEntity on success", async () => {
   await removeMember(formData({ profile_id: "other-user-id" }));
 
   assert.equal(revalidateEntityMock.mock.callCount(), 1);
-  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, ["users"]);
+  assert.deepStrictEqual(revalidateEntityMock.mock.calls[0].arguments, [
+    "users",
+  ]);
 });

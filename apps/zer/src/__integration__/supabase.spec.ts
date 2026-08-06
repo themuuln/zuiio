@@ -9,8 +9,8 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  createAnonClient,
   createAdminClient,
+  createAnonClient,
   createTestClients,
   createTestOrg,
 } from "./helpers";
@@ -28,7 +28,10 @@ describe("Supabase connectivity", () => {
   });
 
   it("service-role client can query tables", async () => {
-    const { data, error } = await admin.from("organizations").select("id").limit(1);
+    const { data, error } = await admin
+      .from("organizations")
+      .select("id")
+      .limit(1);
     expect(error).toBeNull();
     expect(data).toBeDefined();
     expect(Array.isArray(data)).toBe(true);
@@ -72,7 +75,7 @@ describe("Organization CRUD", () => {
       .single();
     expect(error).toBeNull();
     expect(data).not.toBeNull();
-    expect(data!.id).toBe(orgId);
+    expect(data?.id).toBe(orgId);
   });
 
   it("can update an organization", async () => {
@@ -88,12 +91,15 @@ describe("Organization CRUD", () => {
       .select("name")
       .eq("id", orgId)
       .single();
-    expect(data!.name).toBe("Updated Org");
+    expect(data?.name).toBe("Updated Org");
   });
 
   it("can delete an organization", async () => {
     const { orgId } = await createTestOrg(admin);
-    const { error } = await admin.from("organizations").delete().eq("id", orgId);
+    const { error } = await admin
+      .from("organizations")
+      .delete()
+      .eq("id", orgId);
     expect(error).toBeNull();
 
     const { data } = await admin
@@ -122,7 +128,7 @@ describe("Products CRUD", () => {
       .select()
       .single();
     expect(error).toBeNull();
-    expect(data!.name).toBe("Test Product");
+    expect(data?.name).toBe("Test Product");
   });
 
   it("admin can update products", async () => {
@@ -140,7 +146,7 @@ describe("Products CRUD", () => {
     const { error } = await admin
       .from("products")
       .update({ name: "Updated Product" })
-      .eq("id", product!.id);
+      .eq("id", product?.id);
     expect(error).toBeNull();
   });
 });
@@ -148,11 +154,14 @@ describe("Products CRUD", () => {
 // ── RLS (basic anon isolation) ──────────────────────────────
 
 describe("Row Level Security (RLS)", () => {
-  const admin = createAdminClient();
+  const _admin = createAdminClient();
 
   it("anon cannot read protected tables (stock_movements)", async () => {
     const anon = createAnonClient();
-    const { data, error } = await anon.from("stock_movements").select("*").limit(1);
+    const { data, error } = await anon
+      .from("stock_movements")
+      .select("*")
+      .limit(1);
     if (error) {
       expect(error.code).toBe("42501");
     } else {
@@ -201,7 +210,7 @@ describe("Public RPC functions", () => {
 // ── Error handling ──────────────────────────────────────────
 
 describe("Database error handling", () => {
-  const admin = createAdminClient();
+  const _admin = createAdminClient();
 
   it("querying non-existent table returns PGRST error", async () => {
     const anon = createAnonClient();

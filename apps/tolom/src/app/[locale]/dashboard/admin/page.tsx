@@ -234,7 +234,7 @@ export default function AdminPage() {
                   key={`loading-org-${i}`}
                   className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_230px] gap-3 md:gap-4 px-6 py-4 items-center"
                 >
-                  <div className="min-w-0 space-y-1.5">
+                  <div className="min-w-0 flex flex-col gap-1.5">
                     <Skeleton className="h-4 w-40" />
                     <Skeleton className="h-3 w-24" />
                   </div>

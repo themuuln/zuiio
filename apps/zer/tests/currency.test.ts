@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { formatAmount, convertCurrency, toMNT, fromMNT, formatPrice, DEFAULT_CURRENCIES } from "@/lib/currency";
+import {
+  convertCurrency,
+  DEFAULT_CURRENCIES,
+  formatAmount,
+  formatPrice,
+  fromMNT,
+  toMNT,
+} from "@/lib/currency";
 
 // ─── DEFAULT_CURRENCIES ─────────────────────────────────────────────
 
@@ -53,11 +60,20 @@ test("formatPrice(1234.56) includes ₮ symbol", () => {
 test("formatAmount with currency object returns symbol + formatted amount", () => {
   const result = formatAmount(1234.56, { code: "USD", symbol: "$" });
   assert.ok(result.startsWith("$"), `Expected $ prefix in "${result}"`);
-  assert.ok(result.includes("1,234"), `Expected formatted number in "${result}"`);
+  assert.ok(
+    result.includes("1,234"),
+    `Expected formatted number in "${result}"`,
+  );
 });
 
 test("formatAmount without currency returns just formatted number", () => {
   const result = formatAmount(1234.56);
-  assert.ok(!result.startsWith("$"), `Should not have currency prefix in "${result}"`);
-  assert.ok(result.includes("1,234"), `Expected formatted number in "${result}"`);
+  assert.ok(
+    !result.startsWith("$"),
+    `Should not have currency prefix in "${result}"`,
+  );
+  assert.ok(
+    result.includes("1,234"),
+    `Expected formatted number in "${result}"`,
+  );
 });

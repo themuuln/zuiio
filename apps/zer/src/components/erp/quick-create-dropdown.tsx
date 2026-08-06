@@ -10,15 +10,6 @@ import {
   ReceiptIcon,
   UsersIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import {
-  DynamicCategoryCreateDrawer as CategoryCreateDrawer,
-  DynamicCustomerCreateDrawer as CustomerCreateDrawer,
-  DynamicExpenseCreateDrawer as ExpensesCreateDrawer,
-  DynamicInvoiceDrawer as InvoiceDrawer,
-  DynamicProductCreateDrawer as ProductCreateDrawer,
-  DynamicSaleDrawer as SaleDrawer,
-  DynamicSupplierCreateDrawer as SupplierCreateDrawer,
-} from "@/lib/dynamic-drawers";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +20,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  DynamicCategoryCreateDrawer as CategoryCreateDrawer,
+  DynamicCustomerCreateDrawer as CustomerCreateDrawer,
+  DynamicExpenseCreateDrawer as ExpensesCreateDrawer,
+  DynamicInvoiceDrawer as InvoiceDrawer,
+  DynamicProductCreateDrawer as ProductCreateDrawer,
+  DynamicSaleDrawer as SaleDrawer,
+  DynamicSupplierCreateDrawer as SupplierCreateDrawer,
+} from "@/lib/dynamic-drawers";
 
 type ActiveDrawer =
   | "product"

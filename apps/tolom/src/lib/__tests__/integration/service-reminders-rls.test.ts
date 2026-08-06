@@ -21,6 +21,7 @@ import {
   createTestUser,
   createTestVehicle,
   deleteRecord,
+  deleteTestOrg,
   signInAsUser,
 } from "./helpers";
 
@@ -60,20 +61,19 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!hasSupabase || !admin) return;
   // Clean up in reverse dependency order
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgAId},${userA.id}` as unknown as string,
-  );
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgBId},${userB.id}` as unknown as string,
-  );
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgAId,
+    user_id: userA.id,
+  });
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgBId,
+    user_id: userB.id,
+  });
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
-  await deleteRecord(admin, "organizations", orgAId);
-  await deleteRecord(admin, "organizations", orgBId);
+  await deleteTestOrg(admin, orgAId);
+
+  await deleteTestOrg(admin, orgBId);
 });
 
 // ── Vehicle Service Schedules RLS ────────────────────────────
@@ -197,7 +197,7 @@ describeWhenSupabase("Reminder Logs RLS — cross-org isolation", () => {
         customer_id: customerAId,
         service_name: `Test Reminder ${Date.now()}`,
         reminder_type: "service_due",
-        channel: "sms",
+        channel: "email",
         status: "pending",
       })
       .select()
@@ -215,7 +215,7 @@ describeWhenSupabase("Reminder Logs RLS — cross-org isolation", () => {
         customer_id: customerBId,
         service_name: `Test Reminder ${Date.now()}`,
         reminder_type: "service_due",
-        channel: "sms",
+        channel: "email",
         status: "pending",
       })
       .select()
@@ -228,12 +228,12 @@ describeWhenSupabase("Reminder Logs RLS — cross-org isolation", () => {
 
   afterAll(async () => {
     if (!admin) return;
-    await deleteRecord(admin!, "reminder_logs", logAId);
-    await deleteRecord(admin!, "reminder_logs", logBId);
-    await deleteRecord(admin!, "vehicles", vehicleAId);
-    await deleteRecord(admin!, "vehicles", vehicleBId);
-    await deleteRecord(admin!, "customers", customerAId);
-    await deleteRecord(admin!, "customers", customerBId);
+    await deleteRecord(admin, "reminder_logs", logAId);
+    await deleteRecord(admin, "reminder_logs", logBId);
+    await deleteRecord(admin, "vehicles", vehicleAId);
+    await deleteRecord(admin, "vehicles", vehicleBId);
+    await deleteRecord(admin, "customers", customerAId);
+    await deleteRecord(admin, "customers", customerBId);
   });
 
   it("User A sees only Org A reminder logs", async () => {

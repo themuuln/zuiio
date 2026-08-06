@@ -1,9 +1,9 @@
-import { describe, test } from "node:test";
 import assert from "node:assert/strict";
+import { describe, test } from "node:test";
 import {
+  DEFAULT_VERTICAL_CONFIG,
   getVerticalPreset,
   VERTICAL_PRESETS,
-  DEFAULT_VERTICAL_CONFIG,
   type VerticalConfig,
 } from "@/lib/vertical-config";
 
@@ -12,14 +12,26 @@ function assertPresetShape(preset: VerticalConfig) {
   assert.ok(preset.key.length > 0, "key must be non-empty");
   assert.equal(typeof preset.displayName, "string");
   assert.ok(preset.displayName.length > 0, "displayName must be non-empty");
-  assert.ok(["grid", "barcode", "hybrid"].includes(preset.selectionMode), "selectionMode must be a valid SelectionMode");
-  assert.ok(Array.isArray(preset.categoryPreset), "categoryPreset must be an array");
-  assert.ok(typeof preset.featureFlags === "object" && preset.featureFlags !== null, "featureFlags must be an object");
+  assert.ok(
+    ["grid", "barcode", "hybrid"].includes(preset.selectionMode),
+    "selectionMode must be a valid SelectionMode",
+  );
+  assert.ok(
+    Array.isArray(preset.categoryPreset),
+    "categoryPreset must be an array",
+  );
+  assert.ok(
+    typeof preset.featureFlags === "object" && preset.featureFlags !== null,
+    "featureFlags must be an object",
+  );
   assert.equal(typeof preset.featureFlags.creditLedger, "boolean");
   assert.equal(typeof preset.featureFlags.variants, "boolean");
   assert.equal(typeof preset.featureFlags.eBarimt, "boolean");
   assert.equal(typeof preset.featureFlags.shiftCashCount, "boolean");
-  assert.ok(typeof preset.terminology === "object" && preset.terminology !== null, "terminology must be an object");
+  assert.ok(
+    typeof preset.terminology === "object" && preset.terminology !== null,
+    "terminology must be an object",
+  );
 }
 
 describe("getVerticalPreset", () => {
@@ -28,7 +40,14 @@ describe("getVerticalPreset", () => {
     assert.equal(p.key, "religious-goods");
     assert.equal(p.displayName, "Шашны дэлгүүр");
     assert.equal(p.selectionMode, "grid");
-    assert.deepEqual(p.categoryPreset, ["Ном", "Эрхи", "Зул", "Санзай", "Хувцас", "Бусад"]);
+    assert.deepEqual(p.categoryPreset, [
+      "Ном",
+      "Эрхи",
+      "Зул",
+      "Санзай",
+      "Хувцас",
+      "Бусад",
+    ]);
     assert.equal(p.featureFlags.creditLedger, true);
     assert.equal(p.featureFlags.variants, true);
     assert.equal(p.featureFlags.eBarimt, false);
@@ -112,7 +131,11 @@ describe("VERTICAL_PRESETS", () => {
 
   test("every preset has the required fields and correct shape", () => {
     for (const [key, preset] of Object.entries(VERTICAL_PRESETS)) {
-      assert.equal(preset.key, key, `preset key "${key}" should match its object key`);
+      assert.equal(
+        preset.key,
+        key,
+        `preset key "${key}" should match its object key`,
+      );
       assertPresetShape(preset);
     }
   });

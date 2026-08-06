@@ -9,7 +9,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Global mocks ────────────────────────────────────────────────────
 
@@ -60,14 +60,14 @@ function makeSupabase() {
       return {
         select: mock.fn(() => ({
           eq: mock.fn(() => ({
-            single: mock.fn(
-              async () => resolved(null, new Error(`unexpected table: ${table}`)),
+            single: mock.fn(async () =>
+              resolved(null, new Error(`unexpected table: ${table}`)),
             ),
           })),
         })),
         update: mock.fn(() => ({
-          eq: mock.fn(
-            async () => resolved(null, new Error(`unexpected table: ${table}`)),
+          eq: mock.fn(async () =>
+            resolved(null, new Error(`unexpected table: ${table}`)),
           ),
         })),
       };
@@ -92,14 +92,8 @@ mockMod("@/lib/action-utils", {
 
 // ─── Lazy-loaded actions ─────────────────────────────────────────────
 
-let updateOrganization: (
-  prevState: unknown,
-  fd: FormData,
-) => Promise<unknown>;
-let toggleBrandPreset: (
-  prevState: unknown,
-  fd: FormData,
-) => Promise<unknown>;
+let updateOrganization: (prevState: unknown, fd: FormData) => Promise<unknown>;
+let toggleBrandPreset: (prevState: unknown, fd: FormData) => Promise<unknown>;
 let updateProfile: (prevState: unknown, fd: FormData) => Promise<unknown>;
 let updateOrgFeatureSetting: (
   prevState: unknown,
@@ -113,9 +107,7 @@ let updateOrgLogo: (logoUrl: string | null) => Promise<unknown>;
 let leaveOrganization: (fd: FormData) => Promise<unknown>;
 
 test.before(async () => {
-  const mod = await import(
-    "@/app/(dashboard)/settings/actions"
-  );
+  const mod = await import("@/app/(dashboard)/settings/actions");
   updateOrganization = mod.updateOrganization;
   toggleBrandPreset = mod.toggleBrandPreset;
   updateProfile = mod.updateProfile;
@@ -353,9 +345,7 @@ test("updateOrgFeatureSetting: updates successfully", async () => {
   // which for this function returns a Promise-like directly (no .eq()).
   mockFrom = {
     organizations: () => ({
-      update: mock.fn(() =>
-        Promise.resolve({ data: null, error: null }),
-      ),
+      update: mock.fn(() => Promise.resolve({ data: null, error: null })),
     }),
   };
   mockCtx = mockActionCtx({
@@ -471,7 +461,9 @@ test("updateOrgLogo: sets logo URL", async () => {
     organizations: () => ({
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
-          single: mock.fn(async () => resolved({ brand_config: existingBrandConfig })),
+          single: mock.fn(async () =>
+            resolved({ brand_config: existingBrandConfig }),
+          ),
         })),
       })),
       update: mock.fn((payload: unknown) => {
@@ -577,9 +569,7 @@ test("leaveOrganization: handles DB error on profile fetch", async () => {
     profiles: () => ({
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
-          single: mock.fn(async () =>
-            resolved(null, new Error("db fail")),
-          ),
+          single: mock.fn(async () => resolved(null, new Error("db fail"))),
         })),
       })),
     }),
@@ -634,5 +624,8 @@ test("leaveOrganization: leaves successfully and redirects", async () => {
     role: null,
   });
   assert.strictEqual(redirectMock.mock.callCount(), 1);
-  assert.strictEqual(redirectMock.mock.calls[0].arguments[0], "/organization/new");
+  assert.strictEqual(
+    redirectMock.mock.calls[0].arguments[0],
+    "/organization/new",
+  );
 });

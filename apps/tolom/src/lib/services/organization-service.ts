@@ -12,6 +12,29 @@ import type {
 import { buildUpdates, type FieldMap } from "./build-updates";
 import { trimField } from "./trim-field";
 
+/**
+ * JSON settings keys (organizations.settings, written by the settings UI)
+ * mapped to their organization_settings table columns. Server services
+ * (tax-service, payroll, einvoice) read the table — the UI's JSON-only
+ * writes never reached them before this sync.
+ */
+const SETTINGS_TO_COLUMNS: Record<string, string> = {
+  default_currency: "default_currency",
+  default_tax_rate: "default_tax_rate",
+  timezone: "timezone",
+  date_format: "date_format",
+  invoice_prefix: "invoice_prefix",
+  notification_email: "notification_email",
+  nuat_enabled: "nuat_enabled",
+  ndsh_enabled: "ndsh_enabled",
+  ndsh_employer_rate: "ndsh_employer_rate",
+  ndsh_employee_rate: "ndsh_employee_rate",
+  einvoice_enabled: "einvoice_enabled",
+  einvoice_api_key: "einvoice_api_key",
+  einvoice_merchant_id: "einvoice_merchant_id",
+  einvoice_endpoint: "einvoice_endpoint",
+};
+
 export async function createOrganization(
   db: SupabaseClient,
   params: CreateOrganizationParams,
@@ -242,6 +265,33 @@ export async function updateOrganization(
     organization_id: orgId,
     new_data: data as unknown as Record<string, unknown>,
   });
+
+  // Keep the server-side organization_settings table in sync with the
+  // settings JSON. Best-effort: a sync failure must not fail the save
+  // (the JSON is authoritative for the UI; next settings update retries).
+  if (params.settings && typeof params.settings === "object") {
+    try {
+      const settingsRow: Record<string, unknown> = {
+        organization_id: orgId,
+        updated_at: new Date().toISOString(),
+      };
+      let hasSyncedKeys = false;
+      for (const [jsonKey, column] of Object.entries(SETTINGS_TO_COLUMNS)) {
+        if (jsonKey in params.settings) {
+          const value = params.settings[jsonKey];
+          settingsRow[column] = value === undefined ? null : value;
+          hasSyncedKeys = true;
+        }
+      }
+      if (hasSyncedKeys) {
+        await supabase
+          .from("organization_settings")
+          .upsert(settingsRow, { onConflict: "organization_id" });
+      }
+    } catch (syncError) {
+      reportServerError("updateOrganization:syncSettings", syncError);
+    }
+  }
 
   revalidateTag(cacheTags.branches(orgId), "max");
 

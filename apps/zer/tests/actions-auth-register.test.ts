@@ -47,12 +47,9 @@ mockMod("@/lib/supabase/env", {
 });
 
 const signUpMock = mock.fn(
-  async () =>
-    ({ data: { user: {}, session: null }, error: null }) as never,
+  async () => ({ data: { user: {}, session: null }, error: null }) as never,
 );
-const resetPasswordMock = mock.fn(
-  async () => ({ error: null }) as never,
-);
+const resetPasswordMock = mock.fn(async () => ({ error: null }) as never);
 mockMod("@/lib/supabase/server", {
   createClient: mock.fn(async () => ({
     auth: {
@@ -64,24 +61,17 @@ mockMod("@/lib/supabase/server", {
 
 // ─── Lazy-loaded actions ─────────────────────────────────────────────
 
-let register: (
-  prevState: unknown,
-  fd: FormData,
-) => Promise<unknown>;
+let register: (prevState: unknown, fd: FormData) => Promise<unknown>;
 let requestPasswordReset: (
   prevState: unknown,
   fd: FormData,
 ) => Promise<unknown>;
 
 test.before(async () => {
-  const registerMod = await import(
-    "@/app/(auth)/register/actions"
-  );
+  const registerMod = await import("@/app/(auth)/register/actions");
   register = registerMod.register;
 
-  const forgotMod = await import(
-    "@/app/(auth)/forgot-password/actions"
-  );
+  const forgotMod = await import("@/app/(auth)/forgot-password/actions");
   requestPasswordReset = forgotMod.requestPasswordReset;
 });
 
@@ -105,8 +95,7 @@ function resetMocks() {
   });
   signUpMock.mock.resetCalls();
   signUpMock.mock.mockImplementation(
-    async () =>
-      ({ data: { user: {}, session: null }, error: null }) as never,
+    async () => ({ data: { user: {}, session: null }, error: null }) as never,
   );
   resetPasswordMock.mock.resetCalls();
   resetPasswordMock.mock.mockImplementation(

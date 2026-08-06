@@ -4,7 +4,6 @@ import { ArrowFatDown } from "@phosphor-icons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { capture, withDbCapture } from "@zuiio/capture";
 import { useState } from "react";
-import { productKeys, purchaseKeys } from "@/lib/query/keys";
 import { toast } from "sonner";
 import {
   receivePurchaseOrderItems,
@@ -23,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { productKeys, purchaseKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 
 const STATUS_LABELS: Record<string, string> = {

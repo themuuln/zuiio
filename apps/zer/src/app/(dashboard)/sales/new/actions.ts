@@ -12,6 +12,7 @@ import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import {
   checkLowStockAndNotify,
+  notifyWebPushEvent,
   sendTelegramNotification,
 } from "@/lib/notification";
 import { revalidateEntities } from "@/lib/revalidate";
@@ -43,7 +44,7 @@ export async function createSale(
 
   // Validate cross-org salesperson override
   if (salespersonId !== userId) {
-    const { data: salesperson, error: salespersonError } = await supabase
+    const { error: salespersonError } = await supabase
       .from("profiles")
       .select("id")
       .eq("id", salespersonId)
@@ -191,32 +192,123 @@ export async function createSale(
     createdContactId = result.id;
   }
 
-  // --- Step 3: Insert sale ---
-  const { data: sale, error: saleError } = await supabase
-    .from("sales")
-    .insert({
-      organization_id: organizationId,
-      branch_id: branchId!,
-      contact_id: contactId,
-      sale_date: getString(formData, "sale_date") || formatRouteDate(),
-      total_amount: totalAmount,
-      paid_amount: paidAmount,
-      payment_method: paymentMethod,
-      payment_splits: paymentSplits,
-      status,
-      notes: getString(formData, "notes") || null,
-      created_by: userId,
-      salesperson_id: salespersonId,
-    })
-    .select("id")
-    .single();
+  // --- Step 3: Insert sale (idempotency-aware) ---
+  // The offline queue stamps every queued action with a client-generated
+  // idempotency key; a replay retried after a process death must return the
+  // sale created by the first attempt, never create a duplicate. The unique
+  // (organization_id, dedupe_key) index makes the claim atomic.
+  const dedupeKey = getString(formData, "idempotency_key") || null;
+  const saleRow = {
+    organization_id: organizationId,
+    branch_id: branchId!,
+    contact_id: contactId,
+    sale_date: getString(formData, "sale_date") || formatRouteDate(),
+    total_amount: totalAmount,
+    paid_amount: paidAmount,
+    payment_method: paymentMethod,
+    payment_splits: paymentSplits,
+    status,
+    notes: getString(formData, "notes") || null,
+    created_by: userId,
+    salesperson_id: salespersonId,
+    ...(dedupeKey ? { dedupe_key: dedupeKey } : {}),
+  };
 
-  if (saleError) {
-    if (createdContactId) {
-      await supabase.from("contacts").delete().eq("id", createdContactId);
+  let sale: { id: string } | null = null;
+
+  if (dedupeKey) {
+    const { data: claimed, error: claimError } = await supabase
+      .from("sales")
+      .upsert(saleRow, {
+        onConflict: "organization_id,dedupe_key",
+        ignoreDuplicates: true,
+      })
+      .select("id")
+      .maybeSingle();
+
+    if (claimError) {
+      if (createdContactId) {
+        await supabase.from("contacts").delete().eq("id", createdContactId);
+      }
+      capture(claimError, { context: "createSale: claim dedupe key" });
+      return { error: claimError.message };
     }
-    capture(saleError, { context: "createSale: insert sale" });
-    return { error: saleError.message };
+
+    if (claimed) {
+      sale = claimed;
+    } else {
+      // Key already claimed: either a complete sale exists (return it) or a
+      // crashed attempt left a partial sale with no items (repair + re-run).
+      const { data: existing } = await supabase
+        .from("sales")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("dedupe_key", dedupeKey)
+        .maybeSingle();
+
+      if (!existing) {
+        capture(new Error("dedupe key claimed but no sale row"), {
+          context: "createSale: dedupe",
+        });
+        return { error: "Захиалга үүсгэхэд алдаа гарлаа. Дахин оролдоно уу." };
+      }
+
+      const { data: existingItems } = await supabase
+        .from("sale_items")
+        .select("id")
+        .eq("sale_id", existing.id)
+        .limit(1);
+
+      if (existingItems && existingItems.length > 0) {
+        // First attempt completed the sale — idempotent success, and the
+        // side effects (invoice, journal, notifications) ran there.
+        return {
+          success: true as const,
+          error: undefined,
+          sale: {
+            id: existing.id,
+            total_amount: totalAmount,
+            customer_name: customerName ?? null,
+          },
+        };
+      }
+
+      // Partial attempt (crash between insert and sale_items) — drop it and
+      // re-run the creation so the retry converges on one complete sale.
+      await supabase.from("sales").delete().eq("id", existing.id);
+      const { data: fresh, error: freshError } = await supabase
+        .from("sales")
+        .insert(saleRow)
+        .select("id")
+        .single();
+      if (freshError) {
+        if (createdContactId) {
+          await supabase.from("contacts").delete().eq("id", createdContactId);
+        }
+        capture(freshError, { context: "createSale: insert sale (retry)" });
+        return { error: freshError.message };
+      }
+      sale = fresh;
+    }
+  } else {
+    const { data, error: saleError } = await supabase
+      .from("sales")
+      .insert(saleRow)
+      .select("id")
+      .single();
+
+    if (saleError) {
+      if (createdContactId) {
+        await supabase.from("contacts").delete().eq("id", createdContactId);
+      }
+      capture(saleError, { context: "createSale: insert sale" });
+      return { error: saleError.message };
+    }
+    sale = data;
+  }
+
+  if (!sale) {
+    return { error: "Захиалга үүсгэхэд алдаа гарлаа. Дахин оролдоно уу." };
   }
 
   // --- Step 4: Insert sale_items ---
@@ -381,6 +473,15 @@ export async function createSale(
       `*${productNames}*\n\n` +
         `Нийт дүн: ${formatCurrency(totalAmount)}\n` +
         `Төлөв: Дууссан`,
+    );
+
+    notifyWebPushEvent(
+      supabase,
+      organizationId,
+      "new_sale",
+      "Шинэ борлуулалт",
+      `${productNames}\nНийт дүн: ${formatCurrency(totalAmount)}`,
+      "/sales",
     );
 
     // Check low stock for each unique product

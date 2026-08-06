@@ -5,7 +5,7 @@ import { loadPricingContext, quotePackage } from "@/lib/pricing/quote";
 import { getProvider, getProviderByName } from "@/lib/provider";
 import { runProvisioning } from "@/lib/provisioning";
 import { checkPayment, createInvoice } from "@/lib/qpay";
-import type { OrderRow, OrderStatus } from "@/lib/supabase/types";
+import type { Json, OrderRow, OrderStatus } from "@/lib/supabase/types";
 import { notifyNewSale } from "@/lib/telegram";
 
 /**
@@ -41,7 +41,7 @@ export async function createOrderWithInvoice(params: {
   const db = getDb();
 
   const pkg = await db.getPackageById(params.packageId);
-  if (!pkg || !pkg.is_enabled || pkg.is_archived) {
+  if (!pkg?.is_enabled || pkg.is_archived) {
     throw new Error("Package not available");
   }
   // Route to the provider that owns this package; fall back to default.
@@ -154,7 +154,7 @@ export async function settleOrderPayment(
   await db.updatePayment(payment.id, {
     status: "paid",
     paid_at: new Date().toISOString(),
-    raw: check.raw,
+    raw: check.raw as Json,
   });
 
   await db.enqueueProvisioningJob(order.id);

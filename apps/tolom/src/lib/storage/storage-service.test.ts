@@ -4,32 +4,31 @@ import type { StorageBackend, UploadParams } from "./storage-types";
 // ── Hoisted mock infrastructure ─────────────────────────────────────────
 // Stable mock return objects so the real code gets the same reference we configure.
 
-const { mockUpload, mockRemove, mockGetPublicUrlFn, mockSupabaseClient } =
-  vi.hoisted(() => {
-    const mockUpload = vi.fn();
-    const mockRemove = vi.fn();
-    const mockGetPublicUrlFn = vi.fn(
-      (path: string) =>
-        ({
-          data: {
-            publicUrl: `https://supabase.co/storage/v1/object/public/part-photos/${path}`,
-          },
-        }) as const,
-    );
+const { mockUpload, mockRemove, mockSupabaseClient } = vi.hoisted(() => {
+  const mockUpload = vi.fn();
+  const mockRemove = vi.fn();
+  const mockGetPublicUrlFn = vi.fn(
+    (path: string) =>
+      ({
+        data: {
+          publicUrl: `https://supabase.co/storage/v1/object/public/part-photos/${path}`,
+        },
+      }) as const,
+  );
 
-    const mockFromReturn = {
-      upload: mockUpload,
-      remove: mockRemove,
-      getPublicUrl: mockGetPublicUrlFn,
-    };
+  const mockFromReturn = {
+    upload: mockUpload,
+    remove: mockRemove,
+    getPublicUrl: mockGetPublicUrlFn,
+  };
 
-    const mockFrom = vi.fn(() => mockFromReturn);
-    const mockSupabaseClient = {
-      storage: { from: mockFrom },
-    };
+  const mockFrom = vi.fn(() => mockFromReturn);
+  const mockSupabaseClient = {
+    storage: { from: mockFrom },
+  };
 
-    return { mockUpload, mockRemove, mockGetPublicUrlFn, mockSupabaseClient };
-  });
+  return { mockUpload, mockRemove, mockGetPublicUrlFn, mockSupabaseClient };
+});
 
 vi.mock("@/lib/supabase/service-role", () => ({
   createServiceRoleClient: vi.fn(() => mockSupabaseClient),

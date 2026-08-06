@@ -42,10 +42,10 @@ export default function LoginPage() {
 function LoginFormSkeleton() {
   return (
     <div className="flex flex-col gap-4 animate-pulse" aria-hidden>
-      <div className="h-12 bg-muted/30 rounded-md" />
-      <div className="h-8 bg-muted/30 rounded-md" />
-      <div className="h-8 bg-muted/30 rounded-md" />
-      <div className="h-8 w-24 bg-muted/30 rounded-md mx-auto" />
+      <div className="h-12 bg-muted/30 rounded-lg" />
+      <div className="h-8 bg-muted/30 rounded-lg" />
+      <div className="h-8 bg-muted/30 rounded-lg" />
+      <div className="h-8 w-24 bg-muted/30 rounded-lg mx-auto" />
     </div>
   );
 }
@@ -102,16 +102,16 @@ function LoginForm() {
       {/* Card Header with Title and Language Switcher */}
       <div className="flex items-start justify-between border-b border-border pb-3">
         <div className="text-left">
-          <Typography.H2 className="text-sm font-bold tracking-tight text-foreground">
+          <Typography.H2 className="text-lg font-semibold tracking-tight text-foreground">
             {t("title")}
           </Typography.H2>
-          <Typography.Muted className="mt-0.5 text-[10px] text-muted-foreground">
+          <Typography.Muted className="mt-1 text-sm text-muted-foreground">
             {t("subtitle")}
           </Typography.Muted>
         </div>
 
         {/* Language Switcher */}
-        <div className="flex border border-border p-0.5 bg-muted/30">
+        <div className="flex rounded-lg border border-border p-0.5 bg-muted/30">
           <Button
             variant={locale === "mn" ? "default" : "ghost"}
             size="xs"
@@ -133,17 +133,12 @@ function LoginForm() {
         {redirectTo && (
           <input type="hidden" name="redirectTo" value={redirectTo} />
         )}
-        <FieldGroup className="gap-3.5">
+        <FieldGroup>
           {state?.formError && (
-            <FieldError className="border border-destructive/20 bg-destructive/5 px-2.5 py-1.5 text-[10px] font-mono">
-              {state.formError}
-            </FieldError>
+            <FieldError key={state.formError}>{state.formError}</FieldError>
           )}
           <Field className="gap-1">
-            <FieldLabel
-              htmlFor="identifier"
-              className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono font-bold"
-            >
+            <FieldLabel htmlFor="identifier">
               {t("identifierLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
@@ -156,17 +151,13 @@ function LoginForm() {
               onChange={(e) => setIdentifier(e.target.value)}
               placeholder={t("identifierPlaceholder")}
               aria-invalid={"identifier" in fieldErrors ? true : undefined}
-              className="font-mono text-xs bg-muted/10 focus-visible:bg-transparent h-8 min-h-0"
             />
             {"identifier" in fieldErrors && (
               <FieldError>{fieldErrors.identifier}</FieldError>
             )}
           </Field>
           <Field className="gap-1">
-            <FieldLabel
-              htmlFor="password"
-              className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono font-bold"
-            >
+            <FieldLabel htmlFor="password">
               {t("passwordLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <div className="relative">
@@ -180,7 +171,7 @@ function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t("passwordPlaceholder")}
                 aria-invalid={"password" in fieldErrors ? true : undefined}
-                className="font-mono text-xs bg-muted/10 focus-visible:bg-transparent h-8 min-h-0 pr-9"
+                className="pr-9"
               />
               <button
                 type="button"
@@ -201,7 +192,7 @@ function LoginForm() {
             )}
             <Link
               href="/auth/forgot-password"
-              className="text-[9px] text-muted-foreground hover:text-foreground underline-offset-4 hover:underline font-mono mt-1"
+              className="mt-1 text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
             >
               {t("forgotPassword")}
             </Link>
@@ -216,7 +207,7 @@ function LoginForm() {
             />
             <Label
               htmlFor="rememberMe"
-              className="text-[10px] font-mono text-muted-foreground cursor-pointer"
+              className="text-sm text-muted-foreground cursor-pointer"
             >
               {t("keepMeSignedIn")}
             </Label>
@@ -230,22 +221,19 @@ function LoginForm() {
           <Field className="mt-1">
             <Button
               type="submit"
-              size="sm"
-              className="w-full flex items-center justify-center gap-1.5 group/btn cursor-pointer h-8 min-h-0"
+              className="w-full group/btn"
               disabled={isPending}
             >
               {isPending ? (
-                <Loader2 className="size-3 animate-spin" />
+                <Loader2 className="animate-spin" />
               ) : (
-                <LogIn className="size-3 group-hover/btn:translate-x-0.5 transition-transform" />
+                <LogIn className="group-hover/btn:translate-x-0.5 transition-transform" />
               )}
-              <span className="uppercase tracking-wider font-mono text-[9px] font-bold">
-                {t("submit")}
-              </span>
+              {t("submit")}
             </Button>
-            <div className="relative flex items-center gap-3 my-2">
+            <div className="relative flex items-center gap-3 my-4">
               <div className="h-px flex-1 bg-border" />
-              <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">
                 {authT("orContinueWith")}
               </span>
               <div className="h-px flex-1 bg-border" />
@@ -261,21 +249,18 @@ function LoginForm() {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 disabled={ssoLoading}
                 onClick={() => setSsoLoading(true)}
-                className="w-full flex items-center justify-center gap-1.5 h-8 min-h-0 cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {ssoLoading ? (
                   <Loader2 className="size-3 animate-spin" />
                 ) : null}
-                <span className="uppercase tracking-wider font-mono text-[9px] font-bold">
-                  {authT("ssoLogin")}
-                </span>
+                {authT("ssoLogin")}
               </Button>
             </Link>
 
-            <Typography.Muted className="mt-3 text-center text-[10px] text-muted-foreground font-sans">
+            <Typography.Muted className="mt-4 text-center text-sm text-muted-foreground">
               {t("noAccount")}{" "}
               <Link
                 href={

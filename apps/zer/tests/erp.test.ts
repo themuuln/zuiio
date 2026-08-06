@@ -7,9 +7,7 @@ mockMod("@zuiio/capture", { capture: mock.fn(() => {}) });
 mockMod("@/lib/supabase/server", {
   createClient: mock.fn(async () => ({
     auth: {
-      getClaims: mock.fn(
-        async () => ({ data: { claims: {} }, error: null }),
-      ),
+      getClaims: mock.fn(async () => ({ data: { claims: {} }, error: null })),
     },
   })),
 });
@@ -82,8 +80,5 @@ test("checkPermission: missing permission → error string", () => {
 });
 
 test("checkPermission: empty array → error string", () => {
-  assert.equal(
-    checkPermission([], "products.read"),
-    "Танд эрх байхгүй байна.",
-  );
+  assert.equal(checkPermission([], "products.read"), "Танд эрх байхгүй байна.");
 });

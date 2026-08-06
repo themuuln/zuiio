@@ -96,6 +96,10 @@ export const cacheTags = {
   itp: (orgId: string) => `itp:${orgId}`,
   itpVehicle: (orgId: string, vehicleId: string) => `itp:${orgId}:${vehicleId}`,
 
+  // Part Images
+  partImages: (orgId: string, partId: string) =>
+    `part-images:${orgId}:${partId}`,
+
   // DVI (Digital Vehicle Inspection)
   dvi: (orgId: string) => `dvi:${orgId}`,
   dviInspection: (orgId: string, id: string) => `dvi:${orgId}:${id}`,

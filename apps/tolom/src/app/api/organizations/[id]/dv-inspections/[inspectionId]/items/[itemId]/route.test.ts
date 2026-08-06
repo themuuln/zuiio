@@ -45,7 +45,10 @@ describe("organizations/[id]/dv-inspections/[inspectionId]/items/[itemId]", () =
       const supabase = { from: vi.fn() };
       const request = new NextRequest(baseUrl, {
         method: "PATCH",
-        body: JSON.stringify({ item_name: "Front brake pads (updated)", condition: "good" }),
+        body: JSON.stringify({
+          item_name: "Front brake pads (updated)",
+          condition: "good",
+        }),
         headers: { "content-type": "application/json" },
       });
       const response = await (PATCH as any)({

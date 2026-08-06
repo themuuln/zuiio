@@ -5,14 +5,16 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Global mocks ────────────────────────────────────────────────────
 
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 mockMod("@zuiio/capture", {
   capture: mock.fn(() => {}),
   withDbCapture: withDbCaptureMock,
@@ -28,7 +30,10 @@ mockMod("@/lib/revalidate", {
 const logAuditEventMock = mock.fn(async () => {});
 mockMod("@/lib/audit", { logAuditEventWithClient: logAuditEventMock });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 mockMod("@/lib/validation", {
@@ -38,8 +43,12 @@ mockMod("@/lib/validation", {
   }),
 });
 
-const findOrCreateContactMock = mock.fn(async () => ({ id: "contact-from-find-or-create" }));
-mockMod("@/lib/contact-utils", { findOrCreateContact: findOrCreateContactMock });
+const findOrCreateContactMock = mock.fn(async () => ({
+  id: "contact-from-find-or-create",
+}));
+mockMod("@/lib/contact-utils", {
+  findOrCreateContact: findOrCreateContactMock,
+});
 
 mockMod("@/lib/public-share-token", {
   generateToken: mock.fn(() => "raw-token-value"),
@@ -47,7 +56,9 @@ mockMod("@/lib/public-share-token", {
   defaultExpiryDate: mock.fn(() => new Date("2026-12-31")),
 });
 
-mockMod("@/lib/branches", { withBranchFilter: mock.fn((query: unknown) => query) });
+mockMod("@/lib/branches", {
+  withBranchFilter: mock.fn((query: unknown) => query),
+});
 mockMod("next/navigation", {
   redirect: mock.fn(() => {
     throw new Error("NEXT_REDIRECT");
@@ -69,7 +80,10 @@ let createInvoice: (
 let createInvoiceShareLink: (prev: unknown, form: FormData) => Promise<unknown>;
 let rotateInvoiceShareLink: (prev: unknown, form: FormData) => Promise<unknown>;
 let revokeInvoiceShareLink: (prev: unknown, form: FormData) => Promise<unknown>;
-let updateInvoiceStatus: (invoiceId: string, status: string) => Promise<unknown>;
+let updateInvoiceStatus: (
+  invoiceId: string,
+  status: string,
+) => Promise<unknown>;
 
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/invoices/actions");
@@ -93,11 +107,13 @@ function resetMocks() {
  * Build a Supabase mock for createInvoice tests.
  * Supports simulating errors at RPC, invoice insert, or items insert stages.
  */
-function makeCreateInvoiceSupabase(opts: {
-  rpcError?: { message: string };
-  invoiceError?: { message: string };
-  itemsError?: { message: string };
-} = {}) {
+function makeCreateInvoiceSupabase(
+  opts: {
+    rpcError?: { message: string };
+    invoiceError?: { message: string };
+    itemsError?: { message: string };
+  } = {},
+) {
   return {
     from: mock.fn((table: string) => {
       if (table === "invoices") {
@@ -114,17 +130,13 @@ function makeCreateInvoiceSupabase(opts: {
       }
       if (table === "invoice_items") {
         return {
-          insert: mock.fn(() =>
-            resolved(null, opts.itemsError || null),
-          ),
+          insert: mock.fn(() => resolved(null, opts.itemsError || null)),
         };
       }
       return {};
     }),
     rpc: mock.fn(() =>
-      opts.rpcError
-        ? resolved(null, opts.rpcError)
-        : resolved("INV-001"),
+      opts.rpcError ? resolved(null, opts.rpcError) : resolved("INV-001"),
     ),
   };
 }
@@ -134,9 +146,7 @@ function makeCreateInvoiceSupabase(opts: {
  * The update chain returns the terminal result after two .eq() calls.
  */
 function makeShareLinkSupabase(updateError: { message: string } | null = null) {
-  const terminalResult = updateError
-    ? { error: updateError }
-    : { error: null };
+  const terminalResult = updateError ? { error: updateError } : { error: null };
   const eq2 = mock.fn(() => terminalResult);
   const eq1 = mock.fn(() => ({ eq: eq2 }));
   return {
@@ -152,10 +162,12 @@ function makeShareLinkSupabase(updateError: { message: string } | null = null) {
  * Supports both the fetch chain (.select().eq().eq().single()) and
  * the update chain (.update().eq().eq()).
  */
-function makeUpdateStatusSupabase(opts: {
-  fetchInvoice?: { status: string } | null;
-  updateError?: { message: string };
-} = {}) {
+function makeUpdateStatusSupabase(
+  opts: {
+    fetchInvoice?: { status: string } | null;
+    updateError?: { message: string };
+  } = {},
+) {
   const fetchResult =
     opts.fetchInvoice !== undefined
       ? resolved(opts.fetchInvoice)
@@ -197,7 +209,12 @@ function validInvoiceForm(overrides: Record<string, string> = {}) {
     due_date: "2026-02-15",
     notes: "Test invoice",
     items: JSON.stringify([
-      { product_id: "prod-1", description: "Widget", quantity: 2, unit_price: 100 },
+      {
+        product_id: "prod-1",
+        description: "Widget",
+        quantity: 2,
+        unit_price: 100,
+      },
     ]),
     ...overrides,
   });
@@ -286,7 +303,9 @@ test("createInvoice creates with findOrCreateContact", async () => {
 test("createInvoice handles RPC generate_invoice_number error", async () => {
   resetMocks();
   mockCtx = mockActionCtx({
-    supabase: makeCreateInvoiceSupabase({ rpcError: { message: "RPC failed" } }),
+    supabase: makeCreateInvoiceSupabase({
+      rpcError: { message: "RPC failed" },
+    }),
   });
   const result = await createInvoice(undefined, validInvoiceForm());
   assert.deepStrictEqual(result, {
@@ -297,7 +316,9 @@ test("createInvoice handles RPC generate_invoice_number error", async () => {
 test("createInvoice handles insert error", async () => {
   resetMocks();
   mockCtx = mockActionCtx({
-    supabase: makeCreateInvoiceSupabase({ invoiceError: { message: "insert failed" } }),
+    supabase: makeCreateInvoiceSupabase({
+      invoiceError: { message: "insert failed" },
+    }),
   });
   const result = await createInvoice(undefined, validInvoiceForm());
   assert.ok(result && typeof result === "object" && "error" in result);

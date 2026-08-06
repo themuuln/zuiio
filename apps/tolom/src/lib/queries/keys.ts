@@ -297,6 +297,8 @@ export const inventoryKeys = {
     branchId
       ? ([...inventoryKeys.all(orgId), "parts", branchId] as const)
       : ([...inventoryKeys.all(orgId), "parts"] as const),
+  partImages: (orgId: string, partId: string) =>
+    [...inventoryKeys.parts(orgId), partId, "images"] as const,
   movements: (orgId: string, branchId?: string | null) =>
     branchId
       ? ([...inventoryKeys.all(orgId), "movements", branchId] as const)
@@ -350,6 +352,18 @@ export const inventoryKeys = {
     [...inventoryKeys.all(orgId), "vehicle-model-parts", partId] as const,
   supplierPriceHistory: (orgId: string, partId: string) =>
     [...inventoryKeys.all(orgId), "supplier-price-history", partId] as const,
+  supplierParts: (orgId: string, supplierId: string) =>
+    [...inventoryKeys.all(orgId), "suppliers", supplierId, "parts"] as const,
+  partSuppliers: (orgId: string, partId: string) =>
+    [...inventoryKeys.all(orgId), "parts", partId, "suppliers"] as const,
+  reorderSuggestions: (orgId: string, branchId?: string | null) =>
+    branchId
+      ? ([
+          ...inventoryKeys.all(orgId),
+          "reorder-suggestions",
+          branchId,
+        ] as const)
+      : ([...inventoryKeys.all(orgId), "reorder-suggestions"] as const),
   /** Invalidate transfers + balances + movements together */
   transferInvalidations: (orgId: string) =>
     [
@@ -357,6 +371,14 @@ export const inventoryKeys = {
       inventoryKeys.balances(orgId),
       inventoryKeys.movements(orgId),
     ] as const,
+};
+
+export const stockCountKeys = {
+  all: (orgId: string) => ["organizations", orgId, "stock-counts"] as const,
+  sessions: (orgId: string, status?: string) =>
+    [...stockCountKeys.all(orgId), "sessions", status ?? "all"] as const,
+  session: (orgId: string, sessionId: string) =>
+    [...stockCountKeys.all(orgId), "session", sessionId] as const,
 };
 
 export const serviceReminderKeys = {
@@ -470,8 +492,7 @@ export const catalogVariantKeys = {
 };
 
 export const itpKeys = {
-  all: (orgId: string) =>
-    ["organizations", orgId, "itp"] as const,
+  all: (orgId: string) => ["organizations", orgId, "itp"] as const,
   list: (orgId: string, status?: string) =>
     [...itpKeys.all(orgId), "list", status ?? "all"] as const,
   expiring: (orgId: string, branchId?: string) =>
@@ -498,9 +519,14 @@ export const cashRegisterKeys = {
     ] as const,
 };
 
+export const workshopDisplayKeys = {
+  all: (orgId: string) => ["organizations", orgId, "workshop-display"] as const,
+  workOrders: (orgId: string) =>
+    [...workshopDisplayKeys.all(orgId), "work-orders"] as const,
+};
+
 export const dviKeys = {
-  all: (orgId: string) =>
-    ["organizations", orgId, "dv-inspections"] as const,
+  all: (orgId: string) => ["organizations", orgId, "dv-inspections"] as const,
   list: (orgId: string, status?: string) =>
     [...dviKeys.all(orgId), "list", status ?? "all"] as const,
   detail: (orgId: string, id: string) =>

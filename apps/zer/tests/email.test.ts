@@ -113,7 +113,12 @@ function makeSupabase() {
     throw new Error(`Unexpected table: ${table}`);
   });
 
-  return { from: fromMock, rpc: rpcMock, _insertMock: insertMock, _rpcMock: rpcMock };
+  return {
+    from: fromMock,
+    rpc: rpcMock,
+    _insertMock: insertMock,
+    _rpcMock: rpcMock,
+  };
 }
 
 function resetMocks() {
@@ -342,7 +347,10 @@ test("sendEmail returns error when nodemailer throws", async () => {
   assert.equal(result.success, false);
   assert.match(result.error!, /Connection refused/);
   assert.equal(captureMock.mock.callCount(), 1);
-  assert.equal(captureMock.mock.calls[0].arguments[0].message, "Connection refused");
+  assert.equal(
+    captureMock.mock.calls[0].arguments[0].message,
+    "Connection refused",
+  );
 });
 
 test("sendEmail calls increment_smtp_count RPC on success", async () => {
@@ -360,7 +368,9 @@ test("sendEmail calls increment_smtp_count RPC on success", async () => {
 
   assert.equal(sb._rpcMock.mock.callCount(), 1);
   assert.equal(sb._rpcMock.mock.calls[0].arguments[0], "increment_smtp_count");
-  assert.deepEqual(sb._rpcMock.mock.calls[0].arguments[1], { config_id: "cfg-1" });
+  assert.deepEqual(sb._rpcMock.mock.calls[0].arguments[1], {
+    p_config_id: "cfg-1",
+  });
 });
 
 test("sendEmail uses from_email only when from_name is null", async () => {
@@ -399,7 +409,11 @@ test("sendDailyReportEmail generates HTML and sends email", async () => {
     "Test Company",
     "boss@test.mn",
   );
-  assert.equal(result.success, true, `sendDailyReportEmail failed: ${result.error}`);
+  assert.equal(
+    result.success,
+    true,
+    `sendDailyReportEmail failed: ${result.error}`,
+  );
   assert.equal(getFinancialSummaryMock.mock.callCount(), 1);
   assert.equal(getPendingSalesMock.mock.callCount(), 1);
   assert.equal(getProductSalesBreakdownMock.mock.callCount(), 1);
@@ -408,7 +422,6 @@ test("sendDailyReportEmail generates HTML and sends email", async () => {
   assert.equal(sb._insertMock.mock.callCount(), 1);
   assert.equal(sb._insertMock.mock.calls[0].arguments[0].status, "sent");
 });
-
 
 test("sendDailyReportEmail logs failure when sendEmail fails", async () => {
   resetMocks();

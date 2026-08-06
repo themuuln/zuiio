@@ -1,5 +1,5 @@
-# SEO — zuiio.com
-Next.js 16 + next-intl. `mn` default (no prefix), `en` at `/en/`. Base: `https://zuiio.com`.
+# SEO — zuiiotech.com
+Next.js 16 + next-intl. `mn` default (no prefix), `en` at `/en/`. Base: `https://zuiiotech.com`.
 ## 1. Metadata & hreflang
 
 Root layout has `metadataBase`, `title.template`, `openGraph`. Each page has `generateMetadata`. Add per-page:
@@ -21,7 +21,7 @@ Create `app/sitemap.ts` listing both locales per route:
 
 ```ts
 import type { MetadataRoute } from "next";
-const base = "https://zuiio.com";
+const base = "https://zuiiotech.com";
 const routes = ["", "/about", "/pricing", "/products", "/blog", "/privacy", "/terms", "/data-deletion"];
 export default function sitemap(): MetadataRoute.Sitemap {
   return routes.flatMap((p) => [
@@ -40,7 +40,7 @@ import type { MetadataRoute } from "next";
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [{ userAgent: "Bytespider", disallow: "/" }, { userAgent: "*", allow: "/" }],
-    sitemap: "https://zuiio.com/sitemap.xml",
+    sitemap: "https://zuiiotech.com/sitemap.xml",
   };
 }
 ```

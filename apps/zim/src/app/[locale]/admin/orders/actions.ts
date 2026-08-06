@@ -5,6 +5,7 @@ import { assertAdmin } from "@/lib/admin";
 import { getDb } from "@/lib/db";
 import { getProvider } from "@/lib/provider";
 import { runProvisioning } from "@/lib/provisioning";
+import type { Json } from "@/lib/supabase/types";
 
 export async function retryProvisioningAction(
   orderCode: string,
@@ -66,7 +67,7 @@ export async function refreshEsimStatusAction(esimId: string): Promise<void> {
 
   const status = await getProvider().getEsimStatus(esim.provider_esim_id);
   await db.updateEsim(esim.id, {
-    provider_status_raw: status.raw ?? { status: status.status },
+    provider_status_raw: (status.raw ?? { status: status.status }) as Json,
     ...(status.status === "activated"
       ? { status: "activated", activated_at: new Date().toISOString() }
       : {}),

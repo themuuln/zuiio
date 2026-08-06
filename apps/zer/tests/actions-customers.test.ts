@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod } from "./actions-helpers";
 
 // ─── resolve helper (inline to avoid esbuild depth issues) ──────────
 function resolved<T>(data: T, error: unknown = null) {
@@ -30,7 +30,9 @@ function mockContacts(overrides: Record<string, unknown> = {}) {
   return {
     select: mock.fn(() => threeEq(resolved(null, null))),
     insert: mock.fn(() => ({
-      select: mock.fn(() => ({ single: mock.fn(() => resolved({ id: "new-id" })) })),
+      select: mock.fn(() => ({
+        single: mock.fn(() => resolved({ id: "new-id" })),
+      })),
     })),
     ...overrides,
   };
@@ -44,16 +46,20 @@ function otherTable() {
 /** Build supabase mock for createContact tests */
 function makeSupabase(contacts: ReturnType<typeof mockContacts>) {
   return {
-    from: mock.fn((table: string) => (table === "contacts" ? contacts : otherTable())),
+    from: mock.fn((table: string) =>
+      table === "contacts" ? contacts : otherTable(),
+    ),
     rpc: mock.fn(() => resolved({})),
   };
 }
 
 // ─── Global mocks ────────────────────────────────────────────────────
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 mockMod("@zuiio/capture", {
   capture: mock.fn(() => {}),
   withDbCapture: withDbCaptureMock,
@@ -68,7 +74,10 @@ mockMod("@/lib/revalidate", {
 });
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
@@ -78,11 +87,19 @@ mockMod("@/lib/action-utils", {
 });
 
 let mockValidationError: string | null = null;
-mockMod("@/lib/domain-rules", { validateContactInput: mock.fn(() => mockValidationError) });
+mockMod("@/lib/domain-rules", {
+  validateContactInput: mock.fn(() => mockValidationError),
+});
 
 // ─── Lazy-loaded module ──────────────────────────────────────────────
-let createContact: (prev: { error?: string } | undefined, form: FormData) => Promise<unknown>;
-let updateContact: (prev: { error?: string } | undefined, form: FormData) => Promise<unknown>;
+let createContact: (
+  prev: { error?: string } | undefined,
+  form: FormData,
+) => Promise<unknown>;
+let updateContact: (
+  prev: { error?: string } | undefined,
+  form: FormData,
+) => Promise<unknown>;
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/customers/actions");
   createContact = mod.createContact;
@@ -109,17 +126,13 @@ function updateSupabase(
       callIdx++;
       if (callIdx === 1) {
         return {
-          select: mock.fn(function () {
-            return {
-              eq: mock.fn(function () {
-                return {
-                  eq: mock.fn(function () {
-                    return { maybeSingle: mock.fn(() => existingContact) };
-                  }),
-                };
-              }),
-            };
-          }),
+          select: mock.fn(() => ({
+            eq: mock.fn(() => ({
+              eq: mock.fn(() => ({
+                maybeSingle: mock.fn(() => existingContact),
+              })),
+            })),
+          })),
           maybeSingle: mock.fn(() => existingContact),
         };
       }
@@ -129,7 +142,9 @@ function updateSupabase(
             eq: mock.fn(() => ({
               eq: mock.fn(() => ({
                 eq: mock.fn(() => ({
-                  neq: mock.fn(() => ({ maybeSingle: mock.fn(() => duplicateResult) })),
+                  neq: mock.fn(() => ({
+                    maybeSingle: mock.fn(() => duplicateResult),
+                  })),
                 })),
               })),
             })),
@@ -164,14 +179,26 @@ test("createContact checks for duplicate by name + type", async () => {
     select: mock.fn(() => threeEq(resolved({ id: "existing" }))),
   });
   mockCtx = mockActionCtx({ supabase: makeSupabase(contacts) });
-  const result = await createContact(undefined, formData({ name: "Болор", type: "customer" }));
+  const result = await createContact(
+    undefined,
+    formData({ name: "Болор", type: "customer" }),
+  );
   assert.ok(result && "error" in result);
 });
 
 test("createContact inserts with all fields", async () => {
   resetMocks();
   mockCtx = mockActionCtx({ supabase: makeSupabase(mockContacts()) });
-  const result = await createContact(undefined, formData({ name: "Болор", phone: "99112233", email: "b@test.mn", address: "УБ", type: "customer" }));
+  const result = await createContact(
+    undefined,
+    formData({
+      name: "Болор",
+      phone: "99112233",
+      email: "b@test.mn",
+      address: "УБ",
+      type: "customer",
+    }),
+  );
   assert.ok(result && "success" in result);
 });
 
@@ -194,11 +221,16 @@ test("createContact handles insert error", async () => {
   resetMocks();
   const contacts = mockContacts({
     insert: mock.fn(() => ({
-      select: mock.fn(() => ({ single: mock.fn(() => resolved(null, { message: "DB err" })) }) ),
+      select: mock.fn(() => ({
+        single: mock.fn(() => resolved(null, { message: "DB err" })),
+      })),
     })),
   });
   mockCtx = mockActionCtx({ supabase: makeSupabase(contacts) });
-  const result = await createContact(undefined, formData({ name: "Тест", type: "customer" }));
+  const result = await createContact(
+    undefined,
+    formData({ name: "Тест", type: "customer" }),
+  );
   assert.ok(result && "error" in result);
 });
 
@@ -221,22 +253,40 @@ test("updateContact updates with correct fields", async () => {
     resolved(null, null),
   );
   mockCtx = mockActionCtx({ supabase });
-  const result = await updateContact(undefined, formData({ id: "c1", name: "Шинэ нэр" }));
+  const result = await updateContact(
+    undefined,
+    formData({ id: "c1", name: "Шинэ нэр" }),
+  );
   assert.ok(result && "success" in result);
 });
 
 test("updateContact handles DB error", async () => {
   resetMocks();
-  const thenable = { then: (resolve: (v: unknown) => void) => resolve({ data: null, error: { message: "Update failed" } }) };
-  const supabase = updateSupabase(resolved({ type: "customer" }), resolved(null, null), thenable);
+  const thenable = {
+    // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are intentionally thenable in this test mock.
+    then: (resolve: (v: unknown) => void) =>
+      resolve({ data: null, error: { message: "Update failed" } }),
+  };
+  const supabase = updateSupabase(
+    resolved({ type: "customer" }),
+    resolved(null, null),
+    thenable,
+  );
   mockCtx = mockActionCtx({ supabase });
-  const result = await updateContact(undefined, formData({ id: "c1", name: "Тест" }));
+  const result = await updateContact(
+    undefined,
+    formData({ id: "c1", name: "Тест" }),
+  );
   assert.deepStrictEqual(result, { error: "Update failed" });
 });
 
 test("updateContact revalidates on success", async () => {
   resetMocks();
-  const supabase = updateSupabase(resolved({ type: "customer" }), resolved(null, null), resolved(null, null));
+  const supabase = updateSupabase(
+    resolved({ type: "customer" }),
+    resolved(null, null),
+    resolved(null, null),
+  );
   mockCtx = mockActionCtx({ supabase });
   revalidateEntitiesMock.mock.resetCalls();
   revalidateEntityTagMock.mock.resetCalls();
@@ -247,8 +297,15 @@ test("updateContact revalidates on success", async () => {
 
 test("updateContact returns duplicate error", async () => {
   resetMocks();
-  const supabase = updateSupabase(resolved({ type: "customer" }), resolved({ id: "dup" }), resolved(null, null));
+  const supabase = updateSupabase(
+    resolved({ type: "customer" }),
+    resolved({ id: "dup" }),
+    resolved(null, null),
+  );
   mockCtx = mockActionCtx({ supabase });
-  const result = await updateContact(undefined, formData({ id: "c1", name: "Давхар" }));
+  const result = await updateContact(
+    undefined,
+    formData({ id: "c1", name: "Давхар" }),
+  );
   assert.ok(result && "error" in result);
 });

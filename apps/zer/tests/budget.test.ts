@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  calculateBudgetSummary,
-  getBudgetStatusColor,
-  formatBudgetPeriod,
   type Budget,
+  calculateBudgetSummary,
+  formatBudgetPeriod,
+  getBudgetStatusColor,
 } from "@/lib/budget";
 
 // --- helpers: dates relative to "now" so dayLeft / dailyBurnRate stay deterministic ---
@@ -60,7 +60,11 @@ test("exactly at budget: percentage 100, isOverBudget false, isNearLimit respect
   assert.equal(s.isNearLimit, true);
 
   // with a high threshold that is NOT met
-  const strict = makeBudget({ amount: 1000, spent: 1000, alert_threshold: 999 });
+  const strict = makeBudget({
+    amount: 1000,
+    spent: 1000,
+    alert_threshold: 999,
+  });
   const s2 = calculateBudgetSummary(strict);
   assert.equal(s2.isNearLimit, false); // 100 < 999
 });

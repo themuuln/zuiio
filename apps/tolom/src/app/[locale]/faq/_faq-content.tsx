@@ -25,12 +25,25 @@ export function FaqContent({ categories }: { categories: Category[] }) {
   ) => string;
   const [searchQuery, setSearchQuery] = useState("");
 
+  const query = searchQuery.trim().toLowerCase();
+  const filteredCategories = categories
+    .map((category) => ({
+      ...category,
+      filtered: category.questions.filter((item) => {
+        if (!query) return true;
+        const qText = t(item.q).toLowerCase();
+        const aText = t(item.a).toLowerCase();
+        return qText.includes(query) || aText.includes(query);
+      }),
+    }))
+    .filter((category) => category.filtered.length > 0);
+
   return (
     <>
       <div className="relative mx-auto mt-8 max-w-md">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder={searchQuery ? "" : "Асуултаа бичнэ үү..."}
+          placeholder={t("searchPlaceholder")}
           className="pl-9"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -38,17 +51,7 @@ export function FaqContent({ categories }: { categories: Category[] }) {
       </div>
       <section className="px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-3xl">
-          {categories.map((category) => {
-            const filtered = category.questions.filter((item) => {
-              if (!searchQuery) return true;
-              const qText = t(item.q).toLowerCase();
-              const aText = t(item.a).toLowerCase();
-              const q = searchQuery.toLowerCase();
-              return qText.includes(q) || aText.includes(q);
-            });
-
-            if (filtered.length === 0) return null;
-
+          {filteredCategories.map((category) => {
             return (
               <div key={category.key} className="mb-10">
                 <div className="mb-4">
@@ -61,7 +64,7 @@ export function FaqContent({ categories }: { categories: Category[] }) {
                 </div>
 
                 <Accordion className="w-full">
-                  {filtered.map((item) => (
+                  {category.filtered.map((item) => (
                     <AccordionItem
                       key={item.q}
                       value={`${category.key}-${item.q}`}
@@ -84,10 +87,10 @@ export function FaqContent({ categories }: { categories: Category[] }) {
             );
           })}
 
-          {searchQuery && (
+          {query && filteredCategories.length === 0 && (
             <div className="py-12 text-center">
               <Typography.Muted className="text-muted-foreground">
-                Хайлтын үр дүн олдсонгүй. Өөр түлхүүр үгээр дахин хайна уу.
+                {t("noResults")}
               </Typography.Muted>
             </div>
           )}

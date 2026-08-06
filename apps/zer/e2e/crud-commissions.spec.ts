@@ -23,9 +23,18 @@ test.describe("Commissions module", () => {
   }) => {
     await page.goto("/commissions", { waitUntil: "domcontentloaded" });
 
-    // Check if commission data exists
-    const emptyState = page.getByText("Комиссын мэдээлэл байхгүй");
-    const emptyVisible = await emptyState.isVisible().catch(() => false);
+    const main = page.locator("main");
+    const emptyState = main
+      .getByRole("heading", { name: "Комиссын мэдээлэл байхгүй", exact: true })
+      .first();
+    const staffHeading = main
+      .getByRole("heading", { name: "Ажилтнуудын комисс", exact: true })
+      .first();
+    await expect(staffHeading.or(emptyState).first()).toBeVisible({
+      timeout: 15000,
+    });
+
+    const emptyVisible = await emptyState.isVisible();
 
     if (emptyVisible) {
       // No commission data — payout history section is not rendered

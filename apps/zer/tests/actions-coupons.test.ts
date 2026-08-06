@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod } from "./actions-helpers";
 
 // ─── resolve helper (inline to avoid esbuild depth issues) ──────────
 function resolved<T>(data: T, error: unknown = null) {
@@ -49,11 +49,13 @@ function defaultCouponRow(overrides: Partial<CouponRow> = {}): CouponRow {
 // ─── Supabase chain builders ────────────────────────────────────────
 
 /** Build a supabase mock for createCoupon with controllable insert + duplicate check */
-function makeCreateCouponSupabase(opts: {
-  couponId?: string;
-  insertError?: { message: string } | null;
-  duplicateCode?: boolean;
-} = {}) {
+function makeCreateCouponSupabase(
+  opts: {
+    couponId?: string;
+    insertError?: { message: string } | null;
+    duplicateCode?: boolean;
+  } = {},
+) {
   const {
     couponId = "new-coupon-id",
     insertError = null,
@@ -86,12 +88,14 @@ function makeCreateCouponSupabase(opts: {
 }
 
 /** Build a supabase mock for validateCouponCode with controllable coupon row + per-customer usage */
-function makeValidateCouponSupabase(opts: {
-  coupon?: CouponRow | null;
-  fetchError?: { message: string } | null;
-  perCustomerUsage?: number;
-  perCustomerError?: { message: string } | null;
-} = {}) {
+function makeValidateCouponSupabase(
+  opts: {
+    coupon?: CouponRow | null;
+    fetchError?: { message: string } | null;
+    perCustomerUsage?: number;
+    perCustomerError?: { message: string } | null;
+  } = {},
+) {
   const {
     coupon = defaultCouponRow(),
     fetchError = null,
@@ -133,11 +137,13 @@ function makeValidateCouponSupabase(opts: {
 }
 
 /** Build a supabase mock for toggleCouponActive */
-function makeToggleCouponSupabase(opts: {
-  coupon?: { code: string } | null;
-  fetchError?: { message: string } | null;
-  updateError?: { message: string } | null;
-} = {}) {
+function makeToggleCouponSupabase(
+  opts: {
+    coupon?: { code: string } | null;
+    fetchError?: { message: string } | null;
+    updateError?: { message: string } | null;
+  } = {},
+) {
   const {
     coupon = { code: "SUMMER20" },
     fetchError = null,
@@ -170,11 +176,13 @@ function makeToggleCouponSupabase(opts: {
 }
 
 /** Build a supabase mock for deleteCoupon */
-function makeDeleteCouponSupabase(opts: {
-  coupon?: { code: string } | null;
-  fetchError?: { message: string } | null;
-  deleteError?: { message: string } | null;
-} = {}) {
+function makeDeleteCouponSupabase(
+  opts: {
+    coupon?: { code: string } | null;
+    fetchError?: { message: string } | null;
+    deleteError?: { message: string } | null;
+  } = {},
+) {
   const {
     coupon = { code: "SUMMER20" },
     fetchError = null,
@@ -208,9 +216,11 @@ function makeDeleteCouponSupabase(opts: {
 
 // ─── Global mocks ───────────────────────────────────────────────────
 const captureMock = mock.fn(() => {});
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  return await query;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    return await query;
+  },
+);
 mockMod("@zuiio/capture", {
   capture: captureMock,
   withDbCapture: withDbCaptureMock,
@@ -225,10 +235,15 @@ mockMod("@/lib/revalidate", {
 
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 mockMod("@/lib/validation", {
-  getString: mock.fn((fd: FormData, key: string) => (fd.get(key) as string) ?? ""),
+  getString: mock.fn(
+    (fd: FormData, key: string) => (fd.get(key) as string) ?? "",
+  ),
 });
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
@@ -587,7 +602,12 @@ test("validateCouponCode passes per-customer check when usage is within limit", 
   });
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await validateCouponCode("OKLIMIT", "org-1", "contact-42", 1000);
+  const result = await validateCouponCode(
+    "OKLIMIT",
+    "org-1",
+    "contact-42",
+    1000,
+  );
   assert.strictEqual(result.valid, true);
   assert.ok(result.discount_amount > 0);
 });
@@ -603,7 +623,12 @@ test("validateCouponCode rejects when min purchase not met", async () => {
   });
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await validateCouponCode("MINPURCHASE", "org-1", undefined, 1000);
+  const result = await validateCouponCode(
+    "MINPURCHASE",
+    "org-1",
+    undefined,
+    1000,
+  );
   assert.deepStrictEqual(result, {
     valid: false,
     discount_amount: 0,
@@ -918,11 +943,7 @@ test("validateCouponCode rejects per_customer_limit exceeded for contact", async
   });
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await validateCouponCode(
-    "MULTICONTACT",
-    "org-1",
-    "contact-1",
-  );
+  const result = await validateCouponCode("MULTICONTACT", "org-1", "contact-1");
   assert.deepStrictEqual(result, {
     valid: false,
     discount_amount: 0,
@@ -1033,8 +1054,7 @@ test("Coupon code with whitespace (should trim)", async () => {
     validCreateData({ code: " SUMMER20 " }),
   );
   assert.deepStrictEqual(result, {
-    error:
-      "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно.",
+    error: "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно.",
   });
   assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 0);
 
@@ -1151,12 +1171,7 @@ test("validateCouponCode with null valid_until (no expiry = valid forever)", asy
   });
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await validateCouponCode(
-    "NOEXPIRY",
-    "org-1",
-    undefined,
-    1000,
-  );
+  const result = await validateCouponCode("NOEXPIRY", "org-1", undefined, 1000);
   assert.strictEqual(result.valid, true);
   assert.strictEqual(result.discount_amount, 200); // 20% of 1000
 });

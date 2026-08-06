@@ -8,8 +8,8 @@ import test, { mock } from "node:test";
 
 import {
   createMockSupabase,
-  mockActionCtx,
   formData,
+  mockActionCtx,
   mockMod,
   registerDefaultMocks,
   resolved,
@@ -39,15 +39,22 @@ mockMod("@/lib/action-utils", {
 
 // ─── Lazy-loaded module ──────────────────────────────────────────────
 
-let createAttributeDefinition: (...args: unknown[]) => Promise<Record<string, unknown>>;
-let updateAttributeDefinition: (...args: unknown[]) => Promise<Record<string, unknown>>;
+let createAttributeDefinition: (
+  ...args: unknown[]
+) => Promise<Record<string, unknown>>;
+let updateAttributeDefinition: (
+  ...args: unknown[]
+) => Promise<Record<string, unknown>>;
 let deleteAttributeDefinition: (id: string) => Promise<Record<string, unknown>>;
 
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/products/attributes/actions");
-  createAttributeDefinition = mod.createAttributeDefinition as typeof createAttributeDefinition;
-  updateAttributeDefinition = mod.updateAttributeDefinition as typeof updateAttributeDefinition;
-  deleteAttributeDefinition = mod.deleteAttributeDefinition as typeof deleteAttributeDefinition;
+  createAttributeDefinition =
+    mod.createAttributeDefinition as typeof createAttributeDefinition;
+  updateAttributeDefinition =
+    mod.updateAttributeDefinition as typeof updateAttributeDefinition;
+  deleteAttributeDefinition =
+    mod.deleteAttributeDefinition as typeof deleteAttributeDefinition;
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────

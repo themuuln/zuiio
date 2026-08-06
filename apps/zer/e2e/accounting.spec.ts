@@ -1,4 +1,21 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+
+async function selectTab(page: Page, name: string) {
+  const tab = page.getByRole("tab", { name });
+  await expect(tab).toBeVisible();
+  await expect
+    .poll(
+      async () => {
+        if ((await tab.getAttribute("aria-selected")) === "true") {
+          return true;
+        }
+        await tab.click();
+        return (await tab.getAttribute("aria-selected")) === "true";
+      },
+      { timeout: 15_000, intervals: [100, 250, 500] },
+    )
+    .toBe(true);
+}
 
 /**
  * E2E tests for the Accounting (Нягтлан бодох бүртгэл) feature.
@@ -63,13 +80,11 @@ test.describe("Accounting — Chart of Accounts", () => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     // Switch to chart of accounts tab
-    await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
+    await selectTab(page, "Дансны бүртгэл");
     await page.waitForTimeout(500);
 
-    // Should show the card title (CardTitle renders <div data-slot="card-title">, not <h>)
-    await expect(
-      page.locator("[data-slot='card-title']", { hasText: "Дансны бүртгэл" }),
-    ).toBeVisible({ timeout: 5000 });
+    // The populated state renders the account table directly without a card wrapper.
+    await expect(page.locator("table").first()).toBeVisible({ timeout: 5000 });
 
     // The seeded accounts should be visible (from seed_default_chart_of_accounts)
     // At minimum, the top-level groups should appear
@@ -82,7 +97,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   test("ACC-011: Account table has correct columns", async ({ page }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
+    await selectTab(page, "Дансны бүртгэл");
     await page.waitForTimeout(500);
 
     // Column headers should be visible
@@ -96,7 +111,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   test("ACC-012: Can open account create drawer", async ({ page }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
+    await selectTab(page, "Дансны бүртгэл");
     await page.waitForTimeout(500);
 
     // Click "Шинэ данс" button
@@ -119,7 +134,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   test("ACC-013: Can create a new account", async ({ page }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
+    await selectTab(page, "Дансны бүртгэл");
     await page.waitForTimeout(500);
 
     // Open create drawer
@@ -155,7 +170,8 @@ test.describe("Accounting — Chart of Accounts", () => {
     await page.getByRole("button", { name: "Данс үүсгэх" }).click();
     await page.waitForTimeout(3000);
 
-    // Verify the new account appears in the table
+    // Search the paginated account table so the newly created row is visible.
+    await page.getByPlaceholder("Данс хайх...").fill(accountName);
     await expect(page.getByText(accountName).first()).toBeVisible({
       timeout: 10000,
     });
@@ -169,7 +185,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
+    await selectTab(page, "Дансны бүртгэл");
     await page.waitForTimeout(500);
 
     // Open create drawer
@@ -188,7 +204,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   test("ACC-015: Account create drawer closes on cancel", async ({ page }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
+    await selectTab(page, "Дансны бүртгэл");
     await page.waitForTimeout(500);
 
     // Open drawer
@@ -215,7 +231,7 @@ test.describe("Accounting — Journal Entries", () => {
   }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Журналын бичилт" }).click();
+    await selectTab(page, "Журналын бичилт");
     await page.waitForTimeout(500);
 
     // Either empty state or table is visible
@@ -236,7 +252,7 @@ test.describe("Accounting — Journal Entries", () => {
   test("ACC-021: Journal entry table has correct columns", async ({ page }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Журналын бичилт" }).click();
+    await selectTab(page, "Журналын бичилт");
     await page.waitForTimeout(500);
 
     // Check column headers
@@ -248,7 +264,7 @@ test.describe("Accounting — Journal Entries", () => {
   test("ACC-022: Can open journal entry create drawer", async ({ page }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Журналын бичилт" }).click();
+    await selectTab(page, "Журналын бичилт");
     await page.waitForTimeout(500);
 
     // Click "Шинэ бичилт" button
@@ -272,7 +288,7 @@ test.describe("Accounting — Journal Entries", () => {
   }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Журналын бичилт" }).click();
+    await selectTab(page, "Журналын бичилт");
     await page.waitForTimeout(500);
 
     // Open create drawer
@@ -307,7 +323,7 @@ test.describe("Accounting — Journal Entries", () => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     // Open the journal entry create drawer
-    await page.getByRole("tab", { name: "Журналын бичилт" }).click();
+    await selectTab(page, "Журналын бичилт");
     await page.waitForTimeout(500);
 
     await page.getByRole("button", { name: "Шинэ бичилт" }).click();
@@ -411,7 +427,7 @@ test.describe("Accounting — Journal Entries", () => {
   }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Журналын бичилт" }).click();
+    await selectTab(page, "Журналын бичилт");
     await page.waitForTimeout(1000);
 
     // Check if there are journal entries
@@ -464,7 +480,7 @@ test.describe("Accounting — Journal Entries", () => {
   }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Журналын бичилт" }).click();
+    await selectTab(page, "Журналын бичилт");
     await page.waitForTimeout(1000);
 
     const hasTable = await page
@@ -510,7 +526,7 @@ test.describe("Accounting — Journal Entries", () => {
   }) => {
     await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
-    await page.getByRole("tab", { name: "Журналын бичилт" }).click();
+    await selectTab(page, "Журналын бичилт");
     await page.waitForTimeout(1000);
 
     const hasTable = await page

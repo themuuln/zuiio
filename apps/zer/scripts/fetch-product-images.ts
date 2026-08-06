@@ -37,25 +37,28 @@ function extractImages(html: string): string[] {
 
   const urls: string[] = [];
   for (const pattern of patterns) {
-    let match;
-    while ((match = pattern.exec(html)) !== null) {
+    let match = pattern.exec(html);
+    while (match !== null) {
       const url = match[1];
-      // Skip tiny icons, logos, tracking pixels
       if (
-        url.includes("logo") ||
-        url.includes("icon") ||
-        url.includes("favicon") ||
-        url.includes("tracking") ||
-        url.includes("pixel") ||
-        url.includes("facebook") ||
-        url.includes("google") ||
-        url.includes("analytics") ||
-        url.includes("1x1") ||
-        url.includes("badge") ||
-        url.includes("flag")
-      )
-        continue;
-      urls.push(url);
+        url &&
+        ![
+          "logo",
+          "icon",
+          "favicon",
+          "tracking",
+          "pixel",
+          "facebook",
+          "google",
+          "analytics",
+          "1x1",
+          "badge",
+          "flag",
+        ].some((token) => url.includes(token))
+      ) {
+        urls.push(url);
+      }
+      match = pattern.exec(html);
     }
   }
   return [...new Set(urls)];

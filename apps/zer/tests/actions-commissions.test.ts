@@ -28,6 +28,7 @@ function chain(result: { data: unknown; error: unknown }) {
   self.maybeSingle = mock.fn(() => resolved(result.data, result.error));
   // When the chain is awaited, it must resolve to { data, error }
   const thenable = {
+    // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are intentionally thenable in this test mock.
     then: (resolve: (v: unknown) => unknown) => resolve(result),
   };
   Object.assign(self, thenable);
@@ -45,7 +46,10 @@ mockMod("@/lib/revalidate", {
 });
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 mockMod("@/lib/branches", {
@@ -53,25 +57,35 @@ mockMod("@/lib/branches", {
 });
 
 mockMod("@/lib/commissions", {
-  buildStaffSummary: mock.fn((params: {
-    profileId: string;
-    fullName: string;
-    totalEarned: number;
-    totalPaid: number;
-  }) => ({
-    profileId: params.profileId,
-    fullName: params.fullName,
-    totalEarned: params.totalEarned,
-    totalPaid: params.totalPaid,
-    totalUnpaid: Math.max(0, params.totalEarned - params.totalPaid),
-  })),
-  calculatePayoutTotal: mock.fn((items: Array<{ commission_amount: number }>) =>
-    items.reduce((sum: number, item: { commission_amount: number }) => sum + Number(item.commission_amount), 0),
+  buildStaffSummary: mock.fn(
+    (params: {
+      profileId: string;
+      fullName: string;
+      totalEarned: number;
+      totalPaid: number;
+    }) => ({
+      profileId: params.profileId,
+      fullName: params.fullName,
+      totalEarned: params.totalEarned,
+      totalPaid: params.totalPaid,
+      totalUnpaid: Math.max(0, params.totalEarned - params.totalPaid),
+    }),
   ),
-  getAlreadyPaidIds: mock.fn((paidItems: Array<{ sale_item_id: string }>, selectedIds: string[]) => {
-    const paidIdSet = new Set(paidItems.map((pi: { sale_item_id: string }) => pi.sale_item_id));
-    return selectedIds.filter((id: string) => paidIdSet.has(id));
-  }),
+  calculatePayoutTotal: mock.fn((items: Array<{ commission_amount: number }>) =>
+    items.reduce(
+      (sum: number, item: { commission_amount: number }) =>
+        sum + Number(item.commission_amount),
+      0,
+    ),
+  ),
+  getAlreadyPaidIds: mock.fn(
+    (paidItems: Array<{ sale_item_id: string }>, selectedIds: string[]) => {
+      const paidIdSet = new Set(
+        paidItems.map((pi: { sale_item_id: string }) => pi.sale_item_id),
+      );
+      return selectedIds.filter((id: string) => paidIdSet.has(id));
+    },
+  ),
   validatePayoutRequest: mock.fn(() => null),
 });
 
@@ -90,17 +104,43 @@ mockMod("@/lib/erp", {
 });
 
 // ─── Module under test (lazy-loaded) ─────────────────────────────────
-let getCommissionSummary: (orgId: string) => Promise<Array<{
-  profileId: string; fullName: string; totalEarned: number; totalPaid: number; totalUnpaid: number;
-}>>;
-let getUnpaidItems: (orgId: string, profileId: string) => Promise<Array<{
-  id: string; sale_id: string; total_price: number; commission_amount: number; sale_date: string; sale_status: string | null;
-}>>;
-let getPayoutHistory: (orgId: string) => Promise<Array<{
-  id: string; profile_id: string; profile_name: string | null; paid_at: string; paid_by: string;
-  paid_by_name: string | null; total_amount: number; notes: string | null; status: string;
-  item_count: number; created_at: string | null;
-}>>;
+let getCommissionSummary: (orgId: string) => Promise<
+  Array<{
+    profileId: string;
+    fullName: string;
+    totalEarned: number;
+    totalPaid: number;
+    totalUnpaid: number;
+  }>
+>;
+let getUnpaidItems: (
+  orgId: string,
+  profileId: string,
+) => Promise<
+  Array<{
+    id: string;
+    sale_id: string;
+    total_price: number;
+    commission_amount: number;
+    sale_date: string;
+    sale_status: string | null;
+  }>
+>;
+let getPayoutHistory: (orgId: string) => Promise<
+  Array<{
+    id: string;
+    profile_id: string;
+    profile_name: string | null;
+    paid_at: string;
+    paid_by: string;
+    paid_by_name: string | null;
+    total_amount: number;
+    notes: string | null;
+    status: string;
+    item_count: number;
+    created_at: string | null;
+  }>
+>;
 
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/commissions/actions");
@@ -134,10 +174,12 @@ test("getCommissionSummary returns summary for profile with earned commissions",
         return chain(resolved([{ id: "sale-1" }, { id: "sale-2" }], null));
       }
       if (table === "sale_items") {
-        return chain(resolved([
-          { commission_amount: 100 },
-          { commission_amount: 200 },
-        ], null));
+        return chain(
+          resolved(
+            [{ commission_amount: 100 }, { commission_amount: 200 }],
+            null,
+          ),
+        );
       }
       if (table === "commission_payouts") {
         return chain(resolved([{ id: "pay-1" }], null));
@@ -163,10 +205,15 @@ test("getCommissionSummary filters out profiles with zero earned", async () => {
   currentMockSupabase = {
     from: mock.fn((table: string) => {
       if (table === "profiles") {
-        return chain(resolved([
-          { id: "p1", full_name: "Alice" },
-          { id: "p2", full_name: "Bob" },
-        ], null));
+        return chain(
+          resolved(
+            [
+              { id: "p1", full_name: "Alice" },
+              { id: "p2", full_name: "Bob" },
+            ],
+            null,
+          ),
+        );
       }
       // All other tables return empty → totalEarned = 0 for both
       return chain(resolved([], null));
@@ -210,17 +257,42 @@ test("getUnpaidItems returns unpaid items filtering out already-paid", async () 
   currentMockSupabase = {
     from: mock.fn((table: string) => {
       if (table === "sales") {
-        return chain(resolved([
-          { id: "sale-1", sale_date: "2025-01-15", status: "completed" },
-          { id: "sale-2", sale_date: "2025-02-10", status: "completed" },
-        ], null));
+        return chain(
+          resolved(
+            [
+              { id: "sale-1", sale_date: "2025-01-15", status: "completed" },
+              { id: "sale-2", sale_date: "2025-02-10", status: "completed" },
+            ],
+            null,
+          ),
+        );
       }
       if (table === "sale_items") {
-        return chain(resolved([
-          { id: "item-1", sale_id: "sale-1", total_price: 1000, commission_amount: 100 },
-          { id: "item-2", sale_id: "sale-1", total_price: 500, commission_amount: 50 },
-          { id: "item-3", sale_id: "sale-2", total_price: 2000, commission_amount: 200 },
-        ], null));
+        return chain(
+          resolved(
+            [
+              {
+                id: "item-1",
+                sale_id: "sale-1",
+                total_price: 1000,
+                commission_amount: 100,
+              },
+              {
+                id: "item-2",
+                sale_id: "sale-1",
+                total_price: 500,
+                commission_amount: 50,
+              },
+              {
+                id: "item-3",
+                sale_id: "sale-2",
+                total_price: 2000,
+                commission_amount: 200,
+              },
+            ],
+            null,
+          ),
+        );
       }
       if (table === "commission_payout_items") {
         // item-1 has already been paid
@@ -246,9 +318,12 @@ test("getUnpaidItems handles error gracefully", async () => {
   currentMockSupabase = {
     from: mock.fn((table: string) => {
       if (table === "sales") {
-        return chain(resolved([
-          { id: "sale-1", sale_date: "2025-01-15", status: "completed" },
-        ], null));
+        return chain(
+          resolved(
+            [{ id: "sale-1", sale_date: "2025-01-15", status: "completed" }],
+            null,
+          ),
+        );
       }
       if (table === "sale_items") {
         return chain(resolved(null, { message: "db error" }));
@@ -271,20 +346,25 @@ test("getPayoutHistory returns payout history with profile names", async () => {
   currentMockSupabase = {
     from: mock.fn((table: string) => {
       if (table === "commission_payouts") {
-        return chain(resolved([
-          {
-            id: "pay-1",
-            profile_id: "p1",
-            paid_at: "2025-03-01",
-            paid_by: "admin-1",
-            total_amount: 500,
-            notes: "March payout",
-            status: "completed",
-            created_at: "2025-03-01",
-            profile_profiles: { full_name: "Alice" },
-            payer_profiles: { full_name: "Admin" },
-          },
-        ], null));
+        return chain(
+          resolved(
+            [
+              {
+                id: "pay-1",
+                profile_id: "p1",
+                paid_at: "2025-03-01",
+                paid_by: "admin-1",
+                total_amount: 500,
+                notes: "March payout",
+                status: "completed",
+                created_at: "2025-03-01",
+                profile_profiles: { full_name: "Alice" },
+                payer_profiles: { full_name: "Admin" },
+              },
+            ],
+            null,
+          ),
+        );
       }
       if (table === "commission_payout_items") {
         // Count query: .select("id", {count:"exact",head:true}).eq("payout_id", id)
@@ -324,32 +404,37 @@ test("getPayoutHistory includes item count for each payout", async () => {
   currentMockSupabase = {
     from: mock.fn((table: string) => {
       if (table === "commission_payouts") {
-        return chain(resolved([
-          {
-            id: "pay-1",
-            profile_id: "p1",
-            paid_at: "2025-03-01",
-            paid_by: "admin-1",
-            total_amount: 300,
-            notes: null,
-            status: "completed",
-            created_at: "2025-03-01",
-            profile_profiles: { full_name: "Alice" },
-            payer_profiles: { full_name: "Admin" },
-          },
-          {
-            id: "pay-2",
-            profile_id: "p2",
-            paid_at: "2025-02-01",
-            paid_by: "admin-1",
-            total_amount: 700,
-            notes: "February payout",
-            status: "completed",
-            created_at: "2025-02-01",
-            profile_profiles: { full_name: "Bob" },
-            payer_profiles: { full_name: "Admin" },
-          },
-        ], null));
+        return chain(
+          resolved(
+            [
+              {
+                id: "pay-1",
+                profile_id: "p1",
+                paid_at: "2025-03-01",
+                paid_by: "admin-1",
+                total_amount: 300,
+                notes: null,
+                status: "completed",
+                created_at: "2025-03-01",
+                profile_profiles: { full_name: "Alice" },
+                payer_profiles: { full_name: "Admin" },
+              },
+              {
+                id: "pay-2",
+                profile_id: "p2",
+                paid_at: "2025-02-01",
+                paid_by: "admin-1",
+                total_amount: 700,
+                notes: "February payout",
+                status: "completed",
+                created_at: "2025-02-01",
+                profile_profiles: { full_name: "Bob" },
+                payer_profiles: { full_name: "Admin" },
+              },
+            ],
+            null,
+          ),
+        );
       }
       if (table === "commission_payout_items") {
         payoutCountCalls++;

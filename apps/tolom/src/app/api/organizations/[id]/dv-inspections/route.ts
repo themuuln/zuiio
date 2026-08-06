@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
-import {
-  createInspection,
-  getInspections,
-} from "@/lib/services/dvi-service";
+import { createInspection, getInspections } from "@/lib/services/dvi-service";
 
 /**
  * GET /api/organizations/[id]/dv-inspections

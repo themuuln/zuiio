@@ -47,6 +47,7 @@ function makeChain(
   const makeLink = (): Record<string, unknown> => {
     const link: Record<string, unknown> = {};
     // Thenable — `await link` resolves to result
+    // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are intentionally thenable in this test mock.
     link.then = (
       resolve: (value: unknown) => void,
       reject: (reason?: unknown) => void,
@@ -129,8 +130,7 @@ const createClientMock = mock.fn(async () => ({
 
 const createServiceClientMock = mock.fn(() => {
   const factory = serviceClientQueue.shift();
-  if (!factory)
-    throw new Error("createServiceClient called with empty queue");
+  if (!factory) throw new Error("createServiceClient called with empty queue");
   return factory();
 });
 
@@ -158,9 +158,7 @@ let completeOnboarding: (
 
 // Dynamic import required: mock.module() must register before the action module loads
 test.before(async () => {
-  const mod = await import(
-    "@/app/(onboarding)/onboarding/actions"
-  );
+  const mod = await import("@/app/(onboarding)/onboarding/actions");
   completeOnboarding = mod.completeOnboarding;
 });
 
@@ -172,7 +170,7 @@ function resetAll() {
   redirectMock.mock.resetCalls();
   createClientMock.mock.resetCalls();
   createServiceClientMock.mock.resetCalls();
-  Object.keys(insertLog).forEach((k) => delete insertLog[k]);
+  for (const key of Object.keys(insertLog)) delete insertLog[key];
   serviceClientQueue = [];
   currentGetUserResult = { data: { user: { id: USER_ID } }, error: null };
   currentClientRoutes = {};
@@ -200,9 +198,7 @@ test("rejects when no user", async () => {
 test("rejects when profile fetch fails", async () => {
   resetAll();
   currentClientRoutes = {
-    profiles: [
-      { data: null, error: { message: "DB connection lost" } },
-    ],
+    profiles: [{ data: null, error: { message: "DB connection lost" } }],
   };
 
   const result = await completeOnboarding(["feat1"]);
@@ -225,12 +221,8 @@ test("rejects when no organization_id", async () => {
 test("rejects when org update fails", async () => {
   resetAll();
   currentClientRoutes = {
-    profiles: [
-      { data: { organization_id: ORG_ID }, error: null },
-    ],
-    organizations: [
-      { data: null, error: { message: "Permission denied" } },
-    ],
+    profiles: [{ data: { organization_id: ORG_ID }, error: null }],
+    organizations: [{ data: null, error: { message: "Permission denied" } }],
   };
 
   const result = await completeOnboarding(["feat1"]);
@@ -242,9 +234,7 @@ test("rejects when org update fails", async () => {
 test("completes minimal path without brands or categories", async () => {
   resetAll();
   currentClientRoutes = {
-    profiles: [
-      { data: { organization_id: ORG_ID }, error: null },
-    ],
+    profiles: [{ data: { organization_id: ORG_ID }, error: null }],
     organizations: [
       { data: null, error: null }, // main update
       { data: null, error: null }, // POS update
@@ -265,19 +255,18 @@ test("completes minimal path without brands or categories", async () => {
     ),
   );
   assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 1);
-  assert.deepStrictEqual(
-    revalidateEntitiesMock.mock.calls[0].arguments[0],
-    ["settings", "products", "categories"],
-  );
+  assert.deepStrictEqual(revalidateEntitiesMock.mock.calls[0].arguments[0], [
+    "settings",
+    "products",
+    "categories",
+  ]);
   assert.strictEqual(createServiceClientMock.mock.callCount(), 0);
 });
 
 test("completes with brand import", async () => {
   resetAll();
   currentClientRoutes = {
-    profiles: [
-      { data: { organization_id: ORG_ID }, error: null },
-    ],
+    profiles: [{ data: { organization_id: ORG_ID }, error: null }],
     organizations: [
       { data: null, error: null },
       { data: null, error: null },
@@ -337,9 +326,7 @@ test("completes with brand import", async () => {
 test("captures POS update error but continues", async () => {
   resetAll();
   currentClientRoutes = {
-    profiles: [
-      { data: { organization_id: ORG_ID }, error: null },
-    ],
+    profiles: [{ data: { organization_id: ORG_ID }, error: null }],
     organizations: [
       { data: null, error: null }, // main update: OK
       {
@@ -374,9 +361,7 @@ test("captures POS update error but continues", async () => {
 test("seeds preset categories when hasCategories is true", async () => {
   resetAll();
   currentClientRoutes = {
-    profiles: [
-      { data: { organization_id: ORG_ID }, error: null },
-    ],
+    profiles: [{ data: { organization_id: ORG_ID }, error: null }],
     organizations: [
       { data: null, error: null },
       { data: null, error: null },
@@ -386,9 +371,7 @@ test("seeds preset categories when hasCategories is true", async () => {
   serviceClientQueue = [
     () => ({
       from: makeFromRouter({
-        organizations: [
-          { data: { company_type: "other" }, error: null },
-        ],
+        organizations: [{ data: { company_type: "other" }, error: null }],
         categories: [
           { data: [], error: null }, // no existing → seed all
           { data: null, error: null }, // insert result
@@ -420,9 +403,7 @@ test("seeds preset categories when hasCategories is true", async () => {
 test("skips category seeding when hasCategories is false", async () => {
   resetAll();
   currentClientRoutes = {
-    profiles: [
-      { data: { organization_id: ORG_ID }, error: null },
-    ],
+    profiles: [{ data: { organization_id: ORG_ID }, error: null }],
     organizations: [
       { data: null, error: null },
       { data: null, error: null },
@@ -449,9 +430,7 @@ test("skips category seeding when hasCategories is false", async () => {
 test("preserves existing categories during seeding", async () => {
   resetAll();
   currentClientRoutes = {
-    profiles: [
-      { data: { organization_id: ORG_ID }, error: null },
-    ],
+    profiles: [{ data: { organization_id: ORG_ID }, error: null }],
     organizations: [
       { data: null, error: null },
       { data: null, error: null },
@@ -461,9 +440,7 @@ test("preserves existing categories during seeding", async () => {
   serviceClientQueue = [
     () => ({
       from: makeFromRouter({
-        organizations: [
-          { data: { company_type: "other" }, error: null },
-        ],
+        organizations: [{ data: { company_type: "other" }, error: null }],
         categories: [
           { data: [{ name: "Cat1" }], error: null }, // Cat1 exists
           { data: null, error: null }, // insert result

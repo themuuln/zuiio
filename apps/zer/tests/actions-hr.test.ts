@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Shared mock helpers ────────────────────────────────────────────
 /** Chain of .update().eq().eq() returning the given result */
@@ -30,10 +30,12 @@ function deleteChain(result: unknown) {
 }
 
 // ─── Global mocks ───────────────────────────────────────────────────
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 mockMod("@zuiio/capture", {
   capture: mock.fn(() => {}),
   withDbCapture: withDbCaptureMock,
@@ -47,7 +49,10 @@ mockMod("@/lib/revalidate", {
 });
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
@@ -106,7 +111,10 @@ test("createEmployee — creates employee successfully", async () => {
 
   assert.deepEqual(result, { success: true });
   assert.equal(insertMock.mock.callCount(), 1);
-  const insertArg = insertMock.mock.calls[0].arguments[0] as Record<string, unknown>;
+  const insertArg = insertMock.mock.calls[0].arguments[0] as Record<
+    string,
+    unknown
+  >;
   assert.equal(insertArg.full_name, "Бат-Эрдэнэ");
   assert.equal(insertArg.base_salary, 1200000);
   assert.equal(insertArg.organization_id, "test-org-id");
@@ -144,9 +152,7 @@ test("updateEmployee — updates employee successfully", async () => {
   revalidateEntityMock.mock.resetCalls();
   const chain = updateChain(resolved({ id: "emp-1" }));
   const supabase = {
-    from: mock.fn((table: string) =>
-      table === "employees" ? chain : {},
-    ),
+    from: mock.fn((table: string) => (table === "employees" ? chain : {})),
     rpc: mock.fn(() => resolved({})),
   };
   mockCtx = { ...mockActionCtx(), supabase };
@@ -166,9 +172,7 @@ test("updateEmployee — updates employee successfully", async () => {
 test("updateEmployee — handles DB error", async () => {
   const chain = updateChain(resolved(null, { message: "db failure" }));
   const supabase = {
-    from: mock.fn((table: string) =>
-      table === "employees" ? chain : {},
-    ),
+    from: mock.fn((table: string) => (table === "employees" ? chain : {})),
     rpc: mock.fn(() => resolved({})),
   };
   mockCtx = { ...mockActionCtx(), supabase };
@@ -192,9 +196,7 @@ test("updateEmployee — only includes provided fields in updates", async () => 
     }),
   };
   const supabase = {
-    from: mock.fn((table: string) =>
-      table === "employees" ? chain : {},
-    ),
+    from: mock.fn((table: string) => (table === "employees" ? chain : {})),
     rpc: mock.fn(() => resolved({})),
   };
   mockCtx = { ...mockActionCtx(), supabase };
@@ -222,9 +224,7 @@ test("deleteEmployee — rejects missing id", async () => {
 test("deleteEmployee — deletes employee successfully", async () => {
   const chain = deleteChain(resolved(null));
   const supabase = {
-    from: mock.fn((table: string) =>
-      table === "employees" ? chain : {},
-    ),
+    from: mock.fn((table: string) => (table === "employees" ? chain : {})),
     rpc: mock.fn(() => resolved({})),
   };
   mockCtx = { ...mockActionCtx(), supabase };
@@ -238,9 +238,7 @@ test("deleteEmployee — deletes employee successfully", async () => {
 test("deleteEmployee — handles DB error", async () => {
   const chain = deleteChain(resolved(null, { message: "not found" }));
   const supabase = {
-    from: mock.fn((table: string) =>
-      table === "employees" ? chain : {},
-    ),
+    from: mock.fn((table: string) => (table === "employees" ? chain : {})),
     rpc: mock.fn(() => resolved({})),
   };
   mockCtx = { ...mockActionCtx(), supabase };
@@ -254,9 +252,7 @@ test("deleteEmployee — handles DB error", async () => {
 test("deleteEmployee — calls revalidateEntity on success", async () => {
   const chain = deleteChain(resolved(null));
   const supabase = {
-    from: mock.fn((table: string) =>
-      table === "employees" ? chain : {},
-    ),
+    from: mock.fn((table: string) => (table === "employees" ? chain : {})),
     rpc: mock.fn(() => resolved({})),
   };
   mockCtx = { ...mockActionCtx(), supabase };

@@ -32,9 +32,7 @@ mockMod("@/lib/domain-rules", {
 const rateLimitMock = mock.fn(() => ({ error: null }));
 mockMod("@zuiio/core", { rateLimit: rateLimitMock });
 
-const updateUserMock = mock.fn(
-  async () => ({ error: null }) as never,
-);
+const updateUserMock = mock.fn(async () => ({ error: null }) as never);
 mockMod("@/lib/supabase/server", {
   createClient: mock.fn(async () => ({
     auth: {
@@ -45,24 +43,17 @@ mockMod("@/lib/supabase/server", {
 
 // ─── Lazy-loaded actions ─────────────────────────────────────────────
 
-let resetUpdatePassword: (
-  prevState: unknown,
-  fd: FormData,
-) => Promise<unknown>;
+let resetUpdatePassword: (prevState: unknown, fd: FormData) => Promise<unknown>;
 let settingsUpdatePassword: (
   prevState: unknown,
   fd: FormData,
 ) => Promise<unknown>;
 
 test.before(async () => {
-  const resetMod = await import(
-    "@/app/(auth)/reset-password/actions"
-  );
+  const resetMod = await import("@/app/(auth)/reset-password/actions");
   resetUpdatePassword = resetMod.updatePassword;
 
-  const settingsMod = await import(
-    "@/app/update-password/actions"
-  );
+  const settingsMod = await import("@/app/update-password/actions");
   settingsUpdatePassword = settingsMod.updatePassword;
 });
 
@@ -118,8 +109,7 @@ test("reset-password/updatePassword: rate limited → returns error", async () =
 test("reset-password/updatePassword: updateUser error → captures and returns error", async () => {
   resetMocks();
   updateUserMock.mock.mockImplementation(
-    async () =>
-      ({ error: { message: "Session expired" } }) as never,
+    async () => ({ error: { message: "Session expired" } }) as never,
   );
 
   const result = await resetUpdatePassword(
@@ -210,8 +200,7 @@ test("update-password: rejects password shorter than 8 chars", async () => {
 test("update-password: updateUser error → returns error message", async () => {
   resetMocks();
   updateUserMock.mock.mockImplementation(
-    async () =>
-      ({ error: { message: "Not authenticated" } }) as never,
+    async () => ({ error: { message: "Not authenticated" } }) as never,
   );
 
   const result = await settingsUpdatePassword(

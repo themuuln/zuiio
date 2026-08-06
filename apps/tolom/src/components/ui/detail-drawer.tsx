@@ -69,7 +69,18 @@ interface DetailDrawerRootProps {
    * Maps to Tailwind `max-w-*` with `!important` to override the base 90vw.
    * `undefined` (default) keeps the base 90vw — backward compatible.
    */
-  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "7xl" | "1/2" | "full";
+  size?:
+    | "sm"
+    | "md"
+    | "lg"
+    | "xl"
+    | "2xl"
+    | "3xl"
+    | "4xl"
+    | "5xl"
+    | "7xl"
+    | "1/2"
+    | "full";
 }
 
 /** Raw CSS values for the drawer max-width — used via inline style

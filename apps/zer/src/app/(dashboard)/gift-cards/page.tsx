@@ -14,8 +14,14 @@ async function DataFetcher() {
   const gcDb = supabase as unknown as {
     from(table: "gift_cards"): {
       select(columns: string): {
-        eq(col: string, val: string): {
-          order(col: string, opts?: { ascending?: boolean }): Promise<{
+        eq(
+          col: string,
+          val: string,
+        ): {
+          order(
+            col: string,
+            opts?: { ascending?: boolean },
+          ): Promise<{
             data: Array<Record<string, unknown>> | null;
             error: unknown;
           }>;
@@ -37,7 +43,9 @@ async function DataFetcher() {
     rawQuery,
   );
 
-  const giftCardRows: GiftCardRow[] = ((giftCards ?? []) as Record<string, unknown>[]).map((d) => ({
+  const giftCardRows: GiftCardRow[] = (
+    (giftCards ?? []) as Record<string, unknown>[]
+  ).map((d) => ({
     id: String(d.id ?? ""),
     code: String(d.code ?? ""),
     initial_balance: Number(d.initial_balance ?? 0),

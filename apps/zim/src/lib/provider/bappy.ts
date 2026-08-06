@@ -79,11 +79,6 @@ interface BappyLinkStatus {
   activations: unknown[];
 }
 
-interface BappyErrorResponse {
-  success: boolean;
-  error?: BappyErrorDetail;
-}
-
 // ---------------------------------------------------------------------------
 // Token cache
 // ---------------------------------------------------------------------------
@@ -142,7 +137,10 @@ export class BappyProvider implements EsimProvider {
   // -------------------------------------------------------------------------
 
   private async getAccessToken(): Promise<string> {
-    if (this.tokenCache && Date.now() < this.tokenCache.expiresAt - TOKEN_REFRESH_BUFFER_MS) {
+    if (
+      this.tokenCache &&
+      Date.now() < this.tokenCache.expiresAt - TOKEN_REFRESH_BUFFER_MS
+    ) {
       return this.tokenCache.accessToken;
     }
     return this.refreshToken();
@@ -214,7 +212,7 @@ export class BappyProvider implements EsimProvider {
       const retryInit: RequestInit = {
         ...init,
         headers: {
-          ...init.headers as Record<string, string>,
+          ...(init.headers as Record<string, string>),
           Authorization: `Bearer ${newToken}`,
         },
       };
@@ -363,8 +361,7 @@ export class BappyProvider implements EsimProvider {
       const remainingMb = data.data_remaining_mb;
 
       // null remaining = unlimited
-      const totalMb =
-        remainingMb !== null ? usedMb + remainingMb : null;
+      const totalMb = remainingMb !== null ? usedMb + remainingMb : null;
 
       return {
         usedMb,

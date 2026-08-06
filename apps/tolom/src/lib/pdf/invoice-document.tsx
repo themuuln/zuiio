@@ -301,7 +301,7 @@ export function InvoiceDocument({
             {invoice.tax_total > 0 && (
               <View style={sharedStyles.totalRow}>
                 <Text style={sharedStyles.totalRowLabel}>
-                  {locale === "mn" ? "НӨАТ" : "VAT"}
+                  {t(locale, "vatAbbr")}
                 </Text>
                 <Text style={sharedStyles.totalRowValue}>
                   {formatAmount(invoice.tax_total, currency)}

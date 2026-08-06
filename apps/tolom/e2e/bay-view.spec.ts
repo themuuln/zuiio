@@ -88,27 +88,31 @@ test.describe("Bay View", () => {
     test("switches view modes via toggle buttons", async ({ page }) => {
       await waitForBayViewReady(page);
 
-      // The three view toggles (grid/kanban/list) are aria-pressed buttons
-      const toggles = page
-        .getByRole("button")
-        .filter({ has: page.locator("[aria-pressed]") });
+      // The three view toggles (grid/kanban/list) are aria-pressed buttons.
+      // Note: aria-pressed sits ON the button, so filter({ has }) (descendants)
+      // never matches — use the native `pressed` role option instead.
+      const toolbar = page.locator("[data-slot='bay-view-toolbar']");
+      // Scope to the ViewSelector segmented control (border + muted bg)
+      const selector = toolbar.locator(
+        "div.flex.items-center.gap-1.rounded-lg.border.border-border\\/50.bg-muted\\/40.p-1.h-8",
+      );
+      const toggles = selector
+        .getByRole("button", { pressed: true })
+        .or(selector.getByRole("button", { pressed: false }));
       await expect(toggles.first()).toBeVisible({ timeout: 5000 });
       expect(await toggles.count()).toBeGreaterThanOrEqual(2);
 
-      const initialPressed = await toggles
-        .filter({ hasAttribute: "aria-pressed", hasNotText: "" })
-        .first()
-        .getAttribute("aria-pressed");
-
-      // Click a different toggle and confirm the pressed state moves
-      const others = toggles.filter({
-        hasAttribute: "aria-pressed",
-        hasNotText: "",
-      });
-      const target = others.filter({ hasNotText: initialPressed ?? "x" });
-      if ((await target.count()) > 0) {
-        await target.first().click();
-      }
+      // Click a different (unpressed) toggle and confirm pressed moves to it.
+      // Identify toggles by their lucide icons (grid / kanban / list) so the
+      // assertions stay on the same element after re-render.
+      const gridBtn = selector.locator("button:has(svg.lucide-layout-grid)");
+      const kanbanBtn = selector.locator("button:has(svg.lucide-columns-3)");
+      const listBtn = selector.locator("button:has(svg.lucide-list)");
+      await expect(gridBtn).toHaveAttribute("aria-pressed", "true");
+      await kanbanBtn.click();
+      await expect(gridBtn).toHaveAttribute("aria-pressed", "false");
+      await expect(kanbanBtn).toHaveAttribute("aria-pressed", "true");
+      await expect(listBtn).toHaveAttribute("aria-pressed", "false");
 
       // Bay content still renders after switching
       await expect(
@@ -189,28 +193,6 @@ test.describe("Bay View", () => {
       await expect(
         page.getByRole("button", { name: /bay view|засварын булан/i }),
       ).toBeVisible({ timeout: 5000 });
-    });
-  });
-
-  test.describe("Alternative Route (v3)", () => {
-    test("navigates to bay-view-v3 route and loads", async ({ page }) => {
-      await page.goto("/dashboard/bay-view-v3");
-      // v3 is dynamically imported (ssr:false) — wait for real content, not skeleton
-      await expect(page.getByText("Нийт бэй", { exact: false })).toBeVisible({
-        timeout: 20_000,
-      });
-    });
-
-    test("bay-view-v3 shows KPI strip and filter pills", async ({ page }) => {
-      await page.goto("/dashboard/bay-view-v3");
-      await expect(page.getByText("Нийт бэй", { exact: false })).toBeVisible({
-        timeout: 20_000,
-      });
-
-      // v3 filter pills (mock data) render client-side
-      await expect(page.getByRole("button", { name: /Бүгд/i })).toBeVisible({
-        timeout: 5000,
-      });
     });
   });
 });

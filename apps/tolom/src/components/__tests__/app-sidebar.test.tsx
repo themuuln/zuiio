@@ -17,6 +17,7 @@ vi.mock("next-intl", () => ({
 // Mock i18n navigation
 vi.mock("@/lib/i18n/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+  usePathname: () => "/dashboard",
 }));
 
 // Mock useNavigation
@@ -26,6 +27,7 @@ vi.mock("@/hooks/use-navigation", () => ({
     groups: [],
     primaryItems: [],
     settingsItems: [],
+    searchItems: [],
     roleLoading: false,
   }),
 }));

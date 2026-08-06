@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: "Bytespider", disallow: "/" },
       { userAgent: "*", allow: "/" },
     ],
-    sitemap: "https://zuiio.com/sitemap.xml",
+    sitemap: "https://zuiiotech.com/sitemap.xml",
   };
 }

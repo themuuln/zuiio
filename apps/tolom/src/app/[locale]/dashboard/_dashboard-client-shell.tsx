@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { AiChatDrawer } from "@/components/ai/ai-chat-drawer";
 import { AppSidebar } from "@/components/app-sidebar";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -56,12 +57,18 @@ export default function DashboardClientShell({
 }) {
   const isMobile = useIsMobile();
   const sidebarDefaultOpen = useMemo(() => !isMobile, [isMobile]);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
 
   return (
     <AuthWrapper>
       <PageHeaderProvider>
         <SidebarProvider defaultOpen={sidebarDefaultOpen}>
           <GlobalDialogs />
+          <AiChatDrawer
+            open={aiChatOpen}
+            onOpenChange={setAiChatOpen}
+            showFloatingButton
+          />
           <div className="flex flex-1 min-h-0">
             <AppSidebar />
             <SidebarInset className="min-h-0 min-w-0 w-auto overflow-hidden">

@@ -5,14 +5,16 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Global mocks ────────────────────────────────────────────────────
 
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  const result = await query;
-  return result;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    const result = await query;
+    return result;
+  },
+);
 mockMod("@zuiio/capture", {
   capture: mock.fn(() => {}),
   withDbCapture: withDbCaptureMock,
@@ -26,7 +28,10 @@ mockMod("@/lib/revalidate", {
 
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 const generateTokenMock = mock.fn(() => "raw-token");
@@ -69,9 +74,7 @@ function resetMocks() {
  * The update chain returns the terminal result after two .eq() calls.
  */
 function makeShareLinkSupabase(updateError: { message: string } | null = null) {
-  const terminalResult = updateError
-    ? { error: updateError }
-    : { error: null };
+  const terminalResult = updateError ? { error: updateError } : { error: null };
   const eq2 = mock.fn(() => terminalResult);
   const eq1 = mock.fn(() => ({ eq: eq2 }));
   return {
@@ -101,11 +104,18 @@ test("createReceiptShareLink creates share link successfully", async () => {
   const supabase = makeShareLinkSupabase();
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await createReceiptShareLink(undefined, formData({
-    invoice_id: "inv-001",
-  }));
+  const result = await createReceiptShareLink(
+    undefined,
+    formData({
+      invoice_id: "inv-001",
+    }),
+  );
 
-  assert.equal(generateTokenMock.mock.callCount(), 1, "generateToken called once");
+  assert.equal(
+    generateTokenMock.mock.callCount(),
+    1,
+    "generateToken called once",
+  );
   assert.equal(hashTokenMock.mock.callCount(), 1, "hashToken called once");
   assert.deepStrictEqual(result, { token: "raw-token", success: true });
 });
@@ -115,9 +125,12 @@ test("createReceiptShareLink handles update error", async () => {
   const supabase = makeShareLinkSupabase({ message: "db failure" });
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await createReceiptShareLink(undefined, formData({
-    invoice_id: "inv-001",
-  }));
+  const result = await createReceiptShareLink(
+    undefined,
+    formData({
+      invoice_id: "inv-001",
+    }),
+  );
 
   assert.ok("error" in result, "should return error");
   assert.match(
@@ -146,11 +159,18 @@ test("rotateReceiptShareLink rotates share link successfully", async () => {
   const supabase = makeShareLinkSupabase();
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await rotateReceiptShareLink(undefined, formData({
-    invoice_id: "inv-002",
-  }));
+  const result = await rotateReceiptShareLink(
+    undefined,
+    formData({
+      invoice_id: "inv-002",
+    }),
+  );
 
-  assert.equal(generateTokenMock.mock.callCount(), 1, "generateToken called once");
+  assert.equal(
+    generateTokenMock.mock.callCount(),
+    1,
+    "generateToken called once",
+  );
   assert.equal(hashTokenMock.mock.callCount(), 1, "hashToken called once");
   assert.deepStrictEqual(result, { token: "raw-token", success: true });
 });
@@ -160,9 +180,12 @@ test("rotateReceiptShareLink handles update error", async () => {
   const supabase = makeShareLinkSupabase({ message: "update failed" });
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await rotateReceiptShareLink(undefined, formData({
-    invoice_id: "inv-002",
-  }));
+  const result = await rotateReceiptShareLink(
+    undefined,
+    formData({
+      invoice_id: "inv-002",
+    }),
+  );
 
   assert.ok("error" in result, "should return error");
   assert.match(
@@ -191,9 +214,12 @@ test("revokeReceiptShareLink revokes share link successfully", async () => {
   const supabase = makeShareLinkSupabase();
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await revokeReceiptShareLink(undefined, formData({
-    invoice_id: "inv-003",
-  }));
+  const result = await revokeReceiptShareLink(
+    undefined,
+    formData({
+      invoice_id: "inv-003",
+    }),
+  );
 
   assert.deepStrictEqual(result, { success: true });
 });
@@ -203,9 +229,12 @@ test("revokeReceiptShareLink handles update error", async () => {
   const supabase = makeShareLinkSupabase({ message: "revoke failed" });
   mockCtx = mockActionCtx({ supabase });
 
-  const result = await revokeReceiptShareLink(undefined, formData({
-    invoice_id: "inv-003",
-  }));
+  const result = await revokeReceiptShareLink(
+    undefined,
+    formData({
+      invoice_id: "inv-003",
+    }),
+  );
 
   assert.ok("error" in result, "should return error");
   assert.match(

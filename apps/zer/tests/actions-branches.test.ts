@@ -5,10 +5,12 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
-/** Shape of a mock.fn() result for accessing mock.callCount / mock.calls. */
-type MockFn = { mock: { callCount: () => number; calls: Array<{ arguments: unknown[] }> } };
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
+/** Shape of a mock.fn() result for accessing mock.callCount / mock.calls. */
+type MockFn = {
+  mock: { callCount: () => number; calls: Array<{ arguments: unknown[] }> };
+};
 
 // ─── Global mocks ────────────────────────────────────────────────────
 
@@ -16,7 +18,10 @@ const withDbCaptureMock = mock.fn(async (_name: string, query: unknown) => {
   return await (query as Promise<unknown>);
 });
 const captureMock = mock.fn(() => {});
-mockMod("@zuiio/capture", { capture: captureMock, withDbCapture: withDbCaptureMock });
+mockMod("@zuiio/capture", {
+  capture: captureMock,
+  withDbCapture: withDbCaptureMock,
+});
 
 const revalidateEntitiesMock = mock.fn(() => {});
 const revalidateEntityTagMock = mock.fn(() => {});
@@ -29,7 +34,10 @@ mockMod("@/lib/revalidate", {
 
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => unknown) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 // ─── Branch-specific mocks ───────────────────────────────────────────
@@ -49,10 +57,15 @@ mockMod("@/lib/format", { slugify: slugifyMock });
  */
 function chain(resolve: { data: unknown; error: unknown; count?: number }) {
   const self: Record<string, unknown> = {};
-  const result = { data: resolve.data, error: resolve.error, count: resolve.count };
+  const result = {
+    data: resolve.data,
+    error: resolve.error,
+    count: resolve.count,
+  };
   self.single = mock.fn(() => resolved(resolve.data, resolve.error));
   self.maybeSingle = mock.fn(() => resolved(resolve.data, resolve.error));
   // Make the chain a thenable so `await chain(...)` resolves to { data, error, count }
+  // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are intentionally thenable in this test mock.
   self.then = (onfulfilled?: (v: unknown) => unknown) => onfulfilled?.(result);
   self.eq = mock.fn(() => self);
   self.neq = mock.fn(() => self);
@@ -100,29 +113,43 @@ function selectChain(result: unknown, error: unknown = null) {
 
 // ─── Context supabase builder ────────────────────────────────────────
 
-type BranchTable = "branches" | "sales" | "expenses" | "invoices" | "purchase_orders" | "quotations" | "returns" | "stock_movements" | "discounts" | "commission_payouts" | "journal_entries" | "profiles";
+type BranchTable =
+  | "branches"
+  | "sales"
+  | "expenses"
+  | "invoices"
+  | "purchase_orders"
+  | "quotations"
+  | "returns"
+  | "stock_movements"
+  | "discounts"
+  | "commission_payouts"
+  | "journal_entries"
+  | "profiles";
 
 /**
  * Build the ctx.supabase mock for branch action tests.
  * Tracks call count per table to return different results on repeated calls.
  */
-function buildCtxSupabase(opts: {
-  /** What the first .from("branches") call returns for .select().eq().eq().maybeSingle() */
-  duplicateCheckData?: unknown;
-  /** What the second .from("branches") call returns for .insert().select().single() */
-  insertData?: { id: string; name: string; slug: string } | null;
-  insertError?: { message: string; code?: string } | null;
-  /** Count to return for transactional table checks (used in deleteBranch). */
-  countResult?: number;
-  /** If true, the unset-default update returns an error. */
-  unsetDefaultError?: { message: string } | null;
-  /** If true, the set-default update returns an error. */
-  setDefaultError?: { message: string } | null;
-  /** If true, the branch delete returns an error. */
-  branchDeleteError?: { message: string } | null;
-  /** Profile update error for assignUserBranch. */
-  profileUpdateError?: { message: string } | null;
-} = {}) {
+function buildCtxSupabase(
+  opts: {
+    /** What the first .from("branches") call returns for .select().eq().eq().maybeSingle() */
+    duplicateCheckData?: unknown;
+    /** What the second .from("branches") call returns for .insert().select().single() */
+    insertData?: { id: string; name: string; slug: string } | null;
+    insertError?: { message: string; code?: string } | null;
+    /** Count to return for transactional table checks (used in deleteBranch). */
+    countResult?: number;
+    /** If true, the unset-default update returns an error. */
+    unsetDefaultError?: { message: string } | null;
+    /** If true, the set-default update returns an error. */
+    setDefaultError?: { message: string } | null;
+    /** If true, the branch delete returns an error. */
+    branchDeleteError?: { message: string } | null;
+    /** Profile update error for assignUserBranch. */
+    profileUpdateError?: { message: string } | null;
+  } = {},
+) {
   const branchesCalls = { count: 0 };
 
   const fromMock = mock.fn((table: BranchTable) => {
@@ -161,7 +188,14 @@ function buildCtxSupabase(opts: {
           sel.select = mock.fn(() => {
             const s: Record<string, unknown> = {};
             s.single = mock.fn(() =>
-              resolved(opts.insertData ?? { id: "br-test", name: "Test Branch", slug: "test-branch" }, null),
+              resolved(
+                opts.insertData ?? {
+                  id: "br-test",
+                  name: "Test Branch",
+                  slug: "test-branch",
+                },
+                null,
+              ),
             );
             return s;
           });
@@ -192,16 +226,24 @@ function buildCtxSupabase(opts: {
             const eq3: Record<string, unknown> = {};
             // For count checks: .select("*", {count: "exact", head: true}).eq("branch_id", branchId)
             // For setDefaultBranch: .select("id, is_default").eq("id", branchId).eq("organization_id", orgId).single()
-            if (opts.insertData === undefined && opts.duplicateCheckData === undefined) {
+            if (
+              opts.insertData === undefined &&
+              opts.duplicateCheckData === undefined
+            ) {
               // setDefaultBranch path
               eq3.single = mock.fn(() =>
-                resolved(opts.insertData ?? { id: "br-test", is_default: false }, null),
+                resolved(
+                  opts.insertData ?? { id: "br-test", is_default: false },
+                  null,
+                ),
               );
             }
             eq3.delete = mock.fn(() => chain({ data: null, error: null }));
             return eq3;
           });
-          eq2.delete = mock.fn(() => chain({ data: null, error: opts.branchDeleteError }));
+          eq2.delete = mock.fn(() =>
+            chain({ data: null, error: opts.branchDeleteError }),
+          );
           return eq2;
         });
         return inner;
@@ -211,8 +253,15 @@ function buildCtxSupabase(opts: {
 
     // ── Transactional tables for deleteBranch count checks ──
     const transactionalTables = [
-      "sales", "expenses", "invoices", "purchase_orders", "quotations",
-      "returns", "stock_movements", "discounts", "commission_payouts",
+      "sales",
+      "expenses",
+      "invoices",
+      "purchase_orders",
+      "quotations",
+      "returns",
+      "stock_movements",
+      "discounts",
+      "commission_payouts",
       "journal_entries",
     ];
     if (transactionalTables.includes(table)) {
@@ -220,7 +269,9 @@ function buildCtxSupabase(opts: {
       const self: Record<string, unknown> = {};
       self.select = mock.fn(() => {
         const inner: Record<string, unknown> = {};
-        inner.eq = mock.fn(() => chain({ data: null, error: null, count: countResult }));
+        inner.eq = mock.fn(() =>
+          chain({ data: null, error: null, count: countResult }),
+        );
         return inner;
       });
       return self;
@@ -245,16 +296,18 @@ function buildCtxSupabase(opts: {
 /**
  * Build the serviceClient mock (returned by createServiceClient).
  */
-function buildServiceClient(opts: {
-  /** If true, warehouse insert returns an error. */
-  warehouseError?: { message: string } | null;
-  /** If set, chart_of_accounts root insert returns an error. */
-  chartRootError?: { message: string } | null;
-  /** If set, chart_of_accounts child insert returns an error. */
-  chartChildError?: { message: string } | null;
-  /** Root accounts to return from seedChartOfAccounts root insert. */
-  rootAccountResults?: Array<{ id: string; code: string }>;
-} = {}) {
+function buildServiceClient(
+  opts: {
+    /** If true, warehouse insert returns an error. */
+    warehouseError?: { message: string } | null;
+    /** If set, chart_of_accounts root insert returns an error. */
+    chartRootError?: { message: string } | null;
+    /** If set, chart_of_accounts child insert returns an error. */
+    chartChildError?: { message: string } | null;
+    /** Root accounts to return from seedChartOfAccounts root insert. */
+    rootAccountResults?: Array<{ id: string; code: string }>;
+  } = {},
+) {
   const chartCalls = { count: 0 };
 
   const fromMock = mock.fn((table: string) => {
@@ -336,7 +389,10 @@ let createBranch: (formData: FormData) => Promise<unknown>;
 let updateBranch: (branchId: string, formData: FormData) => Promise<unknown>;
 let setDefaultBranch: (branchId: string) => Promise<unknown>;
 let deleteBranch: (branchId: string) => Promise<unknown>;
-let assignUserBranch: (profileId: string, branchId: string | null) => Promise<unknown>;
+let assignUserBranch: (
+  profileId: string,
+  branchId: string | null,
+) => Promise<unknown>;
 
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/settings/branches/actions");
@@ -377,12 +433,16 @@ test("createBranch: rejects duplicate slug", async () => {
   serviceClientInstance = buildServiceClient();
   mockCtx = {
     ...mockActionCtx(),
-    supabase: buildCtxSupabase({ duplicateCheckData: { id: "existing-branch" } }),
+    supabase: buildCtxSupabase({
+      duplicateCheckData: { id: "existing-branch" },
+    }),
   };
 
   const result = await createBranch(formData({ name: "Existing Branch" }));
 
-  assert.deepStrictEqual(result, { error: "Энэ нэртэй салбар бүртгэгдсэн байна." });
+  assert.deepStrictEqual(result, {
+    error: "Энэ нэртэй салбар бүртгэгдсэн байна.",
+  });
 });
 
 test("createBranch: creates branch, warehouse, and seeds chart of accounts", async () => {
@@ -397,7 +457,12 @@ test("createBranch: creates branch, warehouse, and seeds chart of accounts", asy
   };
 
   const result = await createBranch(
-    formData({ name: "New Branch", address: "123 Main St", phone: "1234", email: "b@test.com" }),
+    formData({
+      name: "New Branch",
+      address: "123 Main St",
+      phone: "1234",
+      email: "b@test.com",
+    }),
   );
 
   assert.deepStrictEqual(result, {
@@ -500,7 +565,10 @@ test("updateBranch: rejects when branch not found", async () => {
     supabase: buildCtxSupabase({ duplicateCheckData: null }), // null = branch not found
   };
 
-  const result = await updateBranch("br-missing", formData({ name: "Updated Name" }));
+  const result = await updateBranch(
+    "br-missing",
+    formData({ name: "Updated Name" }),
+  );
 
   assert.deepStrictEqual(result, { error: "Салбар олдсонгүй." });
 });
@@ -667,11 +735,18 @@ test("deleteBranch: deletes when no transactional data", async () => {
   serviceClientInstance = buildServiceClient();
 
   // Build ctx supabase with count=0 for all 10 tables, then branch delete
-  let callCount = 0;
+  let _callCount = 0;
   const fromMock = mock.fn((table: string) => {
     const transactionalTables = [
-      "sales", "expenses", "invoices", "purchase_orders", "quotations",
-      "returns", "stock_movements", "discounts", "commission_payouts",
+      "sales",
+      "expenses",
+      "invoices",
+      "purchase_orders",
+      "quotations",
+      "returns",
+      "stock_movements",
+      "discounts",
+      "commission_payouts",
       "journal_entries",
     ];
 
@@ -687,7 +762,7 @@ test("deleteBranch: deletes when no transactional data", async () => {
     }
 
     if (table === "branches") {
-      callCount++;
+      _callCount++;
       // The final branch delete: .delete().eq().eq()
       const self: Record<string, unknown> = {};
       self.delete = mock.fn(() => {
@@ -758,7 +833,8 @@ test("deleteBranch: returns error when transactional data exists", async () => {
   const result = await deleteBranch("br-del");
 
   assert.deepStrictEqual(result, {
-    error: "Энэ салбар дээр өгөгдөл байна. Өгөгдөлтэй салбарыг устгах боломжгүй.",
+    error:
+      "Энэ салбар дээр өгөгдөл байна. Өгөгдөлтэй салбарыг устгах боломжгүй.",
   });
 
   // No revalidation (early return)

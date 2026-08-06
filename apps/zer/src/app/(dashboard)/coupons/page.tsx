@@ -33,7 +33,10 @@ async function DataFetcher() {
     usage_limit: d.usage_limit,
     used_count: d.used_count,
     per_customer_limit: d.per_customer_limit,
-    applies_to: d.applies_to as "all" | "selected_products" | "selected_categories",
+    applies_to: d.applies_to as
+      | "all"
+      | "selected_products"
+      | "selected_categories",
     is_active: d.is_active,
     description: d.description,
     created_at: d.created_at ?? new Date().toISOString(),

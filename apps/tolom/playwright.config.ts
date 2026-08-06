@@ -78,9 +78,9 @@ export default defineConfig({
   ],
 
   /* Use dev server for E2E — faster startup than production build.
-     For CI, switch back to: npm run build && npm run start */
+     For CI, switch back to: pnpm build && pnpm start */
   webServer: {
-    command: `PORT=${PORT} npm run dev`,
+    command: `PORT=${PORT} pnpm dev`,
     url: baseURL,
     timeout: 60_000,
     reuseExistingServer: true,

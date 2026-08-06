@@ -23,7 +23,7 @@ export function ContactForm() {
         setSubmitted(true);
         form.reset();
       } else {
-        const text = await res.text();
+        const _text = await res.text();
         // Fallback to mailto on error
         const name = formData.get("name") as string;
         const email = formData.get("email") as string;

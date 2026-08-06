@@ -705,7 +705,7 @@ describe("useInvoicePayments", () => {
   it("does not fetch when invoiceId is null", () => {
     const fetchSpy = vi.spyOn(global, "fetch");
 
-    const { result } = renderHook(() => useInvoicePayments("org-1", null), {
+    renderHook(() => useInvoicePayments("org-1", null), {
       wrapper: createWrapper(),
     });
 

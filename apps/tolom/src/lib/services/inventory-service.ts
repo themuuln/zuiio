@@ -484,6 +484,13 @@ export async function createMovement(
 // ── Re-exports for backward compatibility ──────────────────────
 
 export {
+  addPartImage,
+  getPartImages,
+  removePartImage,
+  setPrimaryImage,
+} from "./part-images-service";
+
+export {
   createPurchaseOrder,
   getPurchaseOrderItems,
   getPurchaseOrders,

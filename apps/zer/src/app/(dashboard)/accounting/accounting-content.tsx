@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBranchContext } from "@/lib/branch-context";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { useOrgSettings } from "@/lib/org-settings-context";
+import { accountKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 import {
   actionsColumn,
@@ -149,12 +150,7 @@ export function AccountingContent({
     enabled: !!organizationId,
   });
   const accountsQuery = useQuery({
-    queryKey: [
-      "accounting",
-      "chart-of-accounts",
-      organizationId,
-      effectiveBranchId,
-    ],
+    queryKey: [...accountKeys.lists(organizationId ?? ""), effectiveBranchId],
     queryFn: async () => {
       const supabase = createClient();
       let query = supabase

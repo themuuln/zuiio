@@ -10,8 +10,8 @@ test.describe("Warehouses module", () => {
       timeout: 10000,
     });
 
-    // Should show either "Агуулахын жагсаалт" title or empty state
-    const listTitle = page.getByText("Агуулахын жагсаалт");
+    // Should show either the warehouse table or the empty state.
+    const listTitle = page.locator("table").first();
     const emptyState = page.getByText("Агуулах бүртгэгдээгүй");
     await expect(listTitle.or(emptyState).first()).toBeVisible({
       timeout: 10000,

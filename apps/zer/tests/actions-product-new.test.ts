@@ -7,8 +7,8 @@ import test, { mock } from "node:test";
 
 import {
   createMockSupabase,
-  mockActionCtx,
   formData,
+  mockActionCtx,
   mockMod,
   registerDefaultMocks,
   resolved,
@@ -359,7 +359,8 @@ test("handles duplicate sku error (code 23505)", async () => {
       data: null,
       error: {
         code: "23505",
-        message: 'duplicate key value violates unique constraint "products_sku_org_key"',
+        message:
+          'duplicate key value violates unique constraint "products_sku_org_key"',
       },
     },
   });
@@ -407,19 +408,20 @@ test("category create error is captured but product still created", async () => 
   // Product creation still succeeds (categoryId stays null)
   assert.equal(result.success, true);
   // capture was called for the category create error
-  const catCreateCapture = captureSpy.mock.calls.find(
-    (c) => {
-      const args = c.arguments;
-      return (
-        typeof args[1] === "object" &&
-        args[1] !== null &&
-        "context" in args[1] &&
-        (args[1] as Record<string, unknown>).context ===
-          "createProduct: create category"
-      );
-    },
+  const catCreateCapture = captureSpy.mock.calls.find((c) => {
+    const args = c.arguments;
+    return (
+      typeof args[1] === "object" &&
+      args[1] !== null &&
+      "context" in args[1] &&
+      (args[1] as Record<string, unknown>).context ===
+        "createProduct: create category"
+    );
+  });
+  assert.ok(
+    catCreateCapture,
+    "capture should be called for category create error",
   );
-  assert.ok(catCreateCapture, "capture should be called for category create error");
 });
 
 test("sets has_variants false when no variant data provided", async () => {

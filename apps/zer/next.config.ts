@@ -14,10 +14,6 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   reactCompiler: true,
-  // TypeScript validation is handled by `pnpm validate` before build.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   experimental: {
     useTypeScriptCli: true,
     inlineCss: true,
@@ -55,11 +51,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/embed(.*?)",
+        // Embed pages must be frameable — the /embed/report iframe is
+        // rendered on third-party sites. X-Frame-Options: DENY would block
+        // that; CSP frame-ancestors * is the explicit allowlist equivalent.
+        source: "/embed/:path*",
         headers: [
           {
-            key: "X-Frame-Options",
-            value: "DENY",
+            key: "Content-Security-Policy",
+            value: "frame-ancestors *",
           },
         ],
       },
@@ -89,8 +88,8 @@ export default withSentryConfig(nextConfig, {
   // Bypass ad-blockers by proxying Sentry events through a Next.js route
   tunnelRoute: "/monitoring",
 
-  webpack: {
-    // Hidden source maps are only uploaded when SENTRY_UPLOAD is explicitly set
-    hiddenSourceMap: process.env.SENTRY_UPLOAD !== "true",
+  // Only upload source maps when explicitly enabled for a release.
+  sourcemaps: {
+    disable: process.env.SENTRY_UPLOAD !== "true",
   },
 });

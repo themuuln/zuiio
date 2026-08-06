@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 import { login } from "./actions";
 
 const DEV_EMAIL = "themuuln1@gmail.com";
@@ -22,14 +23,15 @@ export function LoginForm({
   error?: string;
   detail?: string;
 }) {
+  const { t } = useI18n();
   const [state, action, pending] = useActionState(login, undefined);
   const isDev = process.env.NODE_ENV === "development";
 
   const ssoError =
     error === "sso_failed"
-      ? "Гуравдагч нэвтрэх үйлчилгээ (Google) амжилтгүй боллоо. Дахин оролдоно уу."
+      ? t("auth.error.sso")
       : error === "auth_callback_failed"
-        ? "Нэвтрэх баталгаажуулалт амжилтгүй боллоо. Дахин оролдоно уу."
+        ? t("auth.error.callback")
         : null;
   const urlErrorMessage = ssoError
     ? detail
@@ -38,12 +40,15 @@ export function LoginForm({
     : null;
 
   return (
-    <AuthCard title="Нэвтрэх" description="Имэйл хаяг, нууц үгээ оруулна уу">
+    <AuthCard
+      title={t("auth.login.title")}
+      description={t("auth.login.description")}
+    >
       <form action={action} className="flex flex-col gap-4">
         <input type="hidden" name="next" value={next} />
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="email">Имэйл</FieldLabel>
+            <FieldLabel htmlFor="email">{t("auth.email")}</FieldLabel>
             <div className="relative">
               <Envelope className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -59,7 +64,7 @@ export function LoginForm({
             </div>
           </Field>
           <Field>
-            <FieldLabel htmlFor="password">Нууц үг</FieldLabel>
+            <FieldLabel htmlFor="password">{t("auth.password")}</FieldLabel>
             <div className="relative">
               <Lock className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -79,7 +84,7 @@ export function LoginForm({
               href="/forgot-password"
               className="text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
             >
-              Нууц үгээ мартсан?
+              {t("auth.forgotPassword")}
             </Link>
           </div>
         </FieldGroup>
@@ -87,14 +92,14 @@ export function LoginForm({
         <ErrorBanner error={state?.error} />
 
         <Button type="submit" disabled={pending} className="w-full">
-          Нэвтрэх
+          {t("auth.login.submit")}
           <ArrowRight data-icon="inline-end" />
         </Button>
 
         <div className="relative flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
           <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Эсвэл
+            {t("common.or")}
           </span>
           <div className="h-px flex-1 bg-border" />
         </div>
@@ -102,17 +107,17 @@ export function LoginForm({
         <Link href={`/sso?next=${encodeURIComponent(next)}`}>
           <Button type="button" variant="outline" className="w-full gap-2">
             <GoogleLogo className="size-4" weight="bold" />
-            Google-р нэвтрэх
+            {t("auth.login.google")}
           </Button>
         </Link>
 
         <p className="text-center text-sm text-muted-foreground">
-          Бүртгэлгүй юу?{" "}
+          {t("auth.login.noAccount")}{" "}
           <Link
             href="/register"
             className="font-medium text-foreground underline-offset-4 hover:text-primary hover:underline"
           >
-            Бүртгүүлэх
+            {t("auth.register")}
           </Link>
         </p>
       </form>

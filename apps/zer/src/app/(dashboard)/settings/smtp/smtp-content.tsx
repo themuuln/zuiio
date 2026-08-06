@@ -40,7 +40,7 @@ const columns: ColumnDef<SmtpConfig>[] = [
     enableSorting: false,
     enableHiding: false,
     cell: ({ row }) => (
-      <span onClick={(e) => e.stopPropagation()}>
+      <span onClick={(e) => e.stopPropagation()} role="none">
         <ToggleButton
           configId={row.original.id}
           isActive={row.original.is_active ?? false}
@@ -79,7 +79,7 @@ const columns: ColumnDef<SmtpConfig>[] = [
     enableSorting: false,
     enableHiding: false,
     cell: ({ row }) => (
-      <span onClick={(e) => e.stopPropagation()}>
+      <span onClick={(e) => e.stopPropagation()} role="none">
         <DeleteButton configId={row.original.id} />
       </span>
     ),

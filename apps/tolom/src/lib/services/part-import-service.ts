@@ -22,19 +22,6 @@ interface ParsedRow {
   location?: string;
 }
 
-const _EXPECTED_HEADERS = [
-  "name",
-  "name_mn",
-  "part_number",
-  "barcode",
-  "category",
-  "description",
-  "unit",
-  "default_price",
-  "purchase_price",
-  "location",
-] as const;
-
 function hasRequiredField(row: ParsedRow): boolean {
   return !!(row.name?.trim() || row.name_mn?.trim());
 }

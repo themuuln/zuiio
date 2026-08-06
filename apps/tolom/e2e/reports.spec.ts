@@ -1,5 +1,5 @@
 import { setEnglishLocale } from "./helpers";
-import { mockReports, mockSupabaseREST } from "./mocks";
+import { mockPrewarm, mockReports, mockSupabaseREST } from "./mocks";
 import { expect, test } from "./test-extensions";
 
 test.setTimeout(60_000);
@@ -9,6 +9,7 @@ test.describe("Reports (Mocked)", () => {
     await setEnglishLocale(page);
     await mockSupabaseREST(page);
     await mockReports(page);
+    await mockPrewarm(page);
     await page.goto("/dashboard/reports");
   });
 
@@ -31,7 +32,7 @@ test.describe("Reports (Mocked)", () => {
   test.describe("Sidebar Navigation", () => {
     test("has Reports link in sidebar", async ({ page }) => {
       await expect(
-        page.getByRole("link", { name: /report/i }).first(),
+        page.getByRole("button", { name: /^reports$/i }).first(),
       ).toBeVisible();
     });
   });

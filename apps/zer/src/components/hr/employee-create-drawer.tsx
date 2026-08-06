@@ -156,7 +156,9 @@ export function EmployeeCreateDrawer() {
               <Label>Гэрээний төрөл</Label>
               <Select
                 defaultValue="permanent"
-                onValueChange={(v) => setValue("contract_type", v)}
+                onValueChange={(value) =>
+                  setValue("contract_type", value ?? "permanent")
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -188,7 +190,9 @@ export function EmployeeCreateDrawer() {
               <Label>Цалингийн төрөл</Label>
               <Select
                 defaultValue="monthly"
-                onValueChange={(v) => setValue("salary_type", v)}
+                onValueChange={(value) =>
+                  setValue("salary_type", value ?? "monthly")
+                }
               >
                 <SelectTrigger>
                   <SelectValue />

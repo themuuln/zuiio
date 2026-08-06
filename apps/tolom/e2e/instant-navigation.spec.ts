@@ -4,6 +4,7 @@ import {
   mockFinanceOverview,
   mockOrganizations,
   mockOverviewDashboard,
+  mockPrewarm,
   mockProfile,
   mockSupabaseREST,
 } from "./mocks";
@@ -19,6 +20,7 @@ test.describe("Instant Navigation", () => {
     await mockOrganizations(page);
     // Mock data for all pages we'll visit
     await mockOverviewDashboard(page);
+    await mockPrewarm(page);
     await mockFinanceOverview(page);
     await mockEstimates(page);
   });

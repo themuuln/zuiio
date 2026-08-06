@@ -37,7 +37,7 @@ export function VehicleFitment({ fitments, isPending }: VehicleFitmentProps) {
         <CardHeader>
           <Skeleton className="h-5 w-40" />
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="flex flex-col gap-y-2">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
         </CardContent>
@@ -62,7 +62,7 @@ export function VehicleFitment({ fitments, isPending }: VehicleFitmentProps) {
             {t("noVehicleFitment")}
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="flex flex-col gap-y-2">
             {fitments.map((f) => (
               <div
                 key={f.id}

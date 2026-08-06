@@ -2,7 +2,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getDb } from "@/lib/db";
 import type { OrderDetail } from "@/lib/db/types";
 import { formatData } from "@/lib/format";
@@ -166,8 +165,9 @@ export default async function UsagePage({
   const usageMap = new Map<string, EsimUsage>();
   await Promise.all(
     detail.esims
-      .filter((esim): esim is typeof esim & { provider_esim_id: string } =>
-        esim.provider_esim_id !== null,
+      .filter(
+        (esim): esim is typeof esim & { provider_esim_id: string } =>
+          esim.provider_esim_id !== null,
       )
       .map(async (esim) => {
         try {
@@ -231,7 +231,7 @@ export default async function UsagePage({
                           {formatData(card.usedMb) ?? "0 MB"}
                           {" / "}
                           {card.totalMb !== null
-                            ? formatData(card.totalMb) ?? "—"
+                            ? (formatData(card.totalMb) ?? "—")
                             : t("unlimited")}
                         </span>
                       </div>

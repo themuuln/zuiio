@@ -22,6 +22,7 @@ import {
   createTestPart,
   createTestUser,
   deleteRecord,
+  deleteTestOrg,
   signInAsUser,
 } from "./helpers";
 
@@ -61,20 +62,19 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!hasSupabase || !admin) return;
   // Clean up in reverse dependency order
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgAId},${userA.id}` as unknown as string,
-  );
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgBId},${userB.id}` as unknown as string,
-  );
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgAId,
+    user_id: userA.id,
+  });
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgBId,
+    user_id: userB.id,
+  });
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
-  await deleteRecord(admin, "organizations", orgAId);
-  await deleteRecord(admin, "organizations", orgBId);
+  await deleteTestOrg(admin, orgAId);
+
+  await deleteTestOrg(admin, orgBId);
 });
 
 // ── Inventory Balances RLS ───────────────────────────────────
@@ -82,8 +82,6 @@ afterAll(async () => {
 describeWhenSupabase("Inventory Balances RLS — org-scoped", () => {
   let partAId: string;
   let partBId: string;
-  let balanceAId: string;
-  let balanceBId: string;
 
   beforeAll(async () => {
     if (!admin) return;
@@ -95,40 +93,44 @@ describeWhenSupabase("Inventory Balances RLS — org-scoped", () => {
     partBId = pb.partId;
 
     // Create inventory balances via admin
-    const ba = await createTestInventoryBalance(admin, orgAId, partAId);
-    balanceAId = ba.inventoryBalanceId;
-    const bb = await createTestInventoryBalance(admin, orgBId, partBId);
-    balanceBId = bb.inventoryBalanceId;
+    await createTestInventoryBalance(admin, orgAId, partAId);
+    await createTestInventoryBalance(admin, orgBId, partBId);
   });
 
   afterAll(async () => {
     if (!admin) return;
-    await deleteRecord(admin!, "inventory_balances", balanceAId);
-    await deleteRecord(admin!, "inventory_balances", balanceBId);
-    await deleteRecord(admin!, "parts_catalog", partAId);
-    await deleteRecord(admin!, "parts_catalog", partBId);
+    await deleteRecord(admin, "inventory_balances", {
+      organization_id: orgAId,
+      part_id: partAId,
+    });
+    await deleteRecord(admin, "inventory_balances", {
+      organization_id: orgBId,
+      part_id: partBId,
+    });
+    await deleteRecord(admin, "parts_catalog", partAId);
+    await deleteRecord(admin, "parts_catalog", partBId);
   });
 
   it("User A sees only Org A balances", async () => {
     const ua = await signInAsUser(userA.email, userA.password);
-    const { data } = await ua.from("inventory_balances").select("id");
+    const { data } = await ua.from("inventory_balances").select("part_id");
     expect(data).toHaveLength(1);
-    expect(data?.[0].id).toBe(balanceAId);
+    expect(data?.[0].part_id).toBe(partAId);
   });
 
   it("User B sees only Org B balances", async () => {
     const ub = await signInAsUser(userB.email, userB.password);
-    const { data } = await ub.from("inventory_balances").select("id");
+    const { data } = await ub.from("inventory_balances").select("part_id");
     expect(data).toHaveLength(1);
-    expect(data?.[0].id).toBe(balanceBId);
+    expect(data?.[0].part_id).toBe(partBId);
   });
 
   it("Cross-org blocked — User A cannot see Org B balances", async () => {
     const ua = await signInAsUser(userA.email, userA.password);
     const { data } = await ua
       .from("inventory_balances")
-      .select("id")
-      .eq("id", balanceBId);
+      .select("part_id")
+      .eq("part_id", partBId);
     expect(data).toHaveLength(0);
   });
 

@@ -5,7 +5,9 @@ const NAME = `SUP-${Date.now()}`;
 
 test.describe("Suppliers CRUD", () => {
   test("create supplier via drawer", async ({ page }) => {
-    await page.goto("/suppliers", { waitUntil: "domcontentloaded" });
+    await page.goto(`/suppliers?refresh=${Date.now()}`, {
+      waitUntil: "domcontentloaded",
+    });
 
     await openDrawerByText(page, "Нийлүүлэгч бүртгэх");
     await expect(page.locator('input[name="name"]')).toBeVisible({
@@ -18,12 +20,20 @@ test.describe("Suppliers CRUD", () => {
 
     await submitDrawerForm(page, "supplier-form");
 
-    await page.goto("/suppliers", { waitUntil: "domcontentloaded" });
-    await expect(page.locator("main")).toContainText(NAME, { timeout: 10000 });
+    await page.goto(`/suppliers?refresh=${Date.now()}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(page.locator("main").last()).toContainText(NAME, {
+      timeout: 10000,
+    });
   });
 
   test("created supplier visible in list", async ({ page }) => {
-    await page.goto("/suppliers", { waitUntil: "domcontentloaded" });
-    await expect(page.locator("main")).toContainText(NAME, { timeout: 15000 });
+    await page.goto(`/suppliers?refresh=${Date.now()}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(page.locator("main").last()).toContainText(NAME, {
+      timeout: 15000,
+    });
   });
 });

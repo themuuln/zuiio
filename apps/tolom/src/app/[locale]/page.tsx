@@ -1,17 +1,18 @@
 import {
   ArrowRight,
-  BadgeCheck,
   BarChart3,
   Building2,
   ClipboardList,
   Code2,
   CreditCard,
-  Globe,
-  MessageSquare,
+  Hash,
+  Languages,
+  MessageCircle,
   MessageSquareText,
   Package,
-  Smartphone,
+  ShieldCheck,
   Sparkles,
+  Tablet,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -33,6 +34,7 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { HomeClientContent } from "./_home-client";
+import { LandingProductPreview } from "./_landing-product-preview";
 
 // Lazy-load below-the-fold sections — they only load when scrolled into view
 const HowItWorksSection = dynamic(
@@ -149,6 +151,23 @@ const FEATURES = [
   },
 ];
 
+const TRUST_ITEMS = [
+  {
+    key: "trustCompliance",
+    icon: ShieldCheck,
+    accentColor: "text-emerald-500",
+  },
+  { key: "trustPayments", icon: CreditCard, accentColor: "text-primary" },
+  { key: "trustPlates", icon: Hash, accentColor: "text-sky-500" },
+  {
+    key: "trustNotifications",
+    icon: MessageCircle,
+    accentColor: "text-blue-500",
+  },
+  { key: "trustLanguage", icon: Languages, accentColor: "text-amber-500" },
+  { key: "trustTablet", icon: Tablet, accentColor: "text-violet-500" },
+] as const;
+
 export default async function HomePage({
   params,
 }: {
@@ -184,62 +203,83 @@ async function HomeContent({ locale }: { locale: string }) {
             <div className="absolute top-[-20%] left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
           </div>
 
-          <div className="mx-auto max-w-4xl text-center">
-            <Badge variant="outline" className="mb-6 text-xs font-medium">
-              {appT("tagline")}
-            </Badge>
-            <Typography.H1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              {t("heroTitle")}
-            </Typography.H1>
-            <Typography.Muted className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
-              {t("heroSubtitle")}
-            </Typography.Muted>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button
-                size="lg"
-                render={<Link href="/auth/signup" />}
-                nativeButton={false}
-                className="w-full sm:w-auto"
-              >
-                {t("heroCtaPrimary")}
-                <ArrowRight className="ml-2 size-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                render={<Link href="#features" />}
-                nativeButton={false}
-                className="w-full sm:w-auto"
-              >
-                {t("heroCtaSecondary")}
-              </Button>
+          <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.9fr)] lg:gap-16">
+            <div className="max-w-2xl">
+              <Badge variant="outline" className="mb-6 text-xs font-medium">
+                {appT("tagline")}
+              </Badge>
+              <Typography.H1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                {t("heroTitle")}
+              </Typography.H1>
+              <Typography.Muted className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+                {t("heroSubtitle")}
+              </Typography.Muted>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button
+                  size="lg"
+                  render={<Link href="/auth/signup" />}
+                  nativeButton={false}
+                  className="w-full sm:w-auto"
+                >
+                  {t("heroCtaPrimary")}
+                  <ArrowRight className="ml-2 size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  render={<Link href="#features" />}
+                  nativeButton={false}
+                  className="w-full sm:w-auto"
+                >
+                  {t("heroCtaSecondary")}
+                </Button>
+              </div>
             </div>
 
-            {/* Social proof */}
-            <div className="mt-12 grid grid-cols-3 gap-6 border-t pt-8 sm:mt-16 sm:pt-10">
-              <div className="text-center">
-                <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                  <AnimatedCounter end={12} suffix="+" />
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  {t("heroSocialShops")}
-                </div>
+            <LandingProductPreview
+              appName={appT("name")}
+              title={t("productPreviewTitle")}
+              liveLabel={t("productPreviewLive")}
+              openJobsLabel={t("productPreviewOpenJobs")}
+              readyLabel={t("productPreviewReady")}
+              revenueLabel={t("productPreviewRevenue")}
+              workOrdersLabel={t("featureWorkOrders")}
+              customersLabel={t("featureCustomers")}
+              inventoryLabel={t("featureInventory")}
+              workOrderDetail={t("productPreviewWorkOrderDetail")}
+              customerDetail={t("productPreviewCustomerDetail")}
+              inventoryDetail={t("productPreviewInventoryDetail")}
+              inProgressLabel={t("productPreviewInProgress")}
+              readyStatusLabel={t("productPreviewReadyStatus")}
+              awaitingLabel={t("productPreviewAwaiting")}
+              viewAllLabel={t("productPreviewViewAll")}
+            />
+          </div>
+
+          {/* Social proof */}
+          <div className="mx-auto mt-14 grid max-w-6xl grid-cols-3 gap-6 border-t pt-8 sm:mt-16 sm:gap-8 sm:pt-10">
+            <div className="text-center">
+              <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+                <AnimatedCounter end={12} suffix="+" />
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                  <AnimatedCounter end={130} suffix="+" />
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  {t("heroSocialVehicles")}
-                </div>
+              <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                {t("heroSocialShops")}
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                  <AnimatedCounter end={98} suffix="%" />
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  {t("heroSocialSatisfaction")}
-                </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+                <AnimatedCounter end={130} suffix="+" />
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                {t("heroSocialVehicles")}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+                <AnimatedCounter end={98} suffix="%" />
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                {t("heroSocialSatisfaction")}
               </div>
             </div>
           </div>
@@ -303,51 +343,22 @@ async function HomeContent({ locale }: { locale: string }) {
         <section className="border-t bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-4xl text-center">
             <Typography.Muted className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Built for Mongolian auto shops
+              {t("trustTitle")}
             </Typography.Muted>
             <div className="flex flex-wrap justify-center gap-3">
-              <Badge
-                variant="outline"
-                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-              >
-                <BadgeCheck className="size-3.5 text-emerald-500" />
-                Хуульд нийцсэн
-              </Badge>
-              <Badge
-                variant="outline"
-                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-              >
-                <CreditCard className="size-3.5 text-primary" />
-                Төлбөрийн систем
-              </Badge>
-              <Badge
-                variant="outline"
-                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-              >
-                <Globe className="size-3.5 text-sky-500" />
-                Монгол дугаар
-              </Badge>
-              <Badge
-                variant="outline"
-                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-              >
-                <MessageSquare className="size-3.5 text-blue-500" />
-                Telegram мэдэгдэл
-              </Badge>
-              <Badge
-                variant="outline"
-                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-              >
-                <Globe className="size-3.5 text-amber-500" />
-                Монгол хэл
-              </Badge>
-              <Badge
-                variant="outline"
-                className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
-              >
-                <Smartphone className="size-3.5 text-violet-500" />
-                Таблет тохиромжтой
-              </Badge>
+              {TRUST_ITEMS.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Badge
+                    key={item.key}
+                    variant="outline"
+                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+                  >
+                    <Icon className={`size-3.5 ${item.accentColor}`} />
+                    {t(item.key)}
+                  </Badge>
+                );
+              })}
             </div>
           </div>
         </section>

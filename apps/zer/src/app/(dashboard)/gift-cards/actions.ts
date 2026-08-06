@@ -39,7 +39,9 @@ export async function createGiftCard(
   }
 
   if (!/^[A-Za-z0-9_-]+$/.test(code)) {
-    return { error: "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно." };
+    return {
+      error: "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно.",
+    };
   }
 
   if (initialBalance <= 0) {
@@ -58,7 +60,9 @@ export async function createGiftCard(
   );
 
   if (existing) {
-    return { error: `"${code}" кодтой бэлгийн карт аль хэдийн бүртгэгдсэн байна.` };
+    return {
+      error: `"${code}" кодтой бэлгийн карт аль хэдийн бүртгэгдсэн байна.`,
+    };
   }
 
   // Insert gift card
@@ -155,7 +159,9 @@ export async function updateGiftCard(
   }
 
   if (!/^[A-Za-z0-9_-]+$/.test(code)) {
-    return { error: "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно." };
+    return {
+      error: "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно.",
+    };
   }
 
   // Check for duplicate code within organization (exclude current)
@@ -171,7 +177,9 @@ export async function updateGiftCard(
   );
 
   if (existing) {
-    return { error: `"${code}" кодтой бэлгийн карт аль хэдийн бүртгэгдсэн байна.` };
+    return {
+      error: `"${code}" кодтой бэлгийн карт аль хэдийн бүртгэгдсэн байна.`,
+    };
   }
 
   const { error: gcError } = await withDbCapture(

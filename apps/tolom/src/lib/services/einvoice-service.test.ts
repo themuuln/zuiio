@@ -9,11 +9,7 @@ vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 const mockClient = createMockSupabaseClient();
 
 // Helper to make a chain resolve like a Supabase query
-function chainableResolve(
-  // biome-ignore lint/suspicious/noExplicitAny: test mock
-  obj: Record<string, any>,
-  result: unknown,
-) {
+function chainableResolve(obj: Record<string, any>, result: unknown) {
   for (const key of [
     "select",
     "insert",
@@ -40,7 +36,6 @@ function chainableResolve(
   }
   obj.single = vi.fn().mockResolvedValue({ data: result, error: null });
   obj.maybeSingle = vi.fn().mockResolvedValue({ data: result, error: null });
-  // biome-ignore lint/suspicious/noThenProperty: intentional thenable for Supabase mock chain
   obj.then = vi.fn().mockImplementation((resolve: (v: unknown) => unknown) =>
     resolve({
       data: result,

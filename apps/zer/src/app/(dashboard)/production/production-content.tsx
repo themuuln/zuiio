@@ -370,7 +370,10 @@ export function ProductionContent() {
         description="Үйлдвэрлэлийн захиалгын жагсаалт"
         actions={
           <div className="flex items-center gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value ?? "all")}
+            >
               <SelectTrigger className="w-[160px]" aria-label="Төлөвөөр шүүх">
                 <SelectValue placeholder="Бүх төлөв" />
               </SelectTrigger>

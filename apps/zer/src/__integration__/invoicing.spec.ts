@@ -9,10 +9,10 @@ import { describe, expect, it } from "vitest";
 import {
   createAdminClient,
   createAnonClient,
-  createTestOrg,
   createTestBranch,
-  createTestProduct,
   createTestContact,
+  createTestOrg,
+  createTestProduct,
   trackCleanup,
 } from "./helpers";
 
@@ -46,7 +46,7 @@ describe("Invoice CRUD", () => {
         status: "pending",
         notes: "Test invoice",
         branch_id: branchId!,
-      } as any)
+      })
       .select()
       .single();
 
@@ -74,7 +74,9 @@ describe("Invoice CRUD", () => {
   it("can update invoice payment status", async () => {
     const { orgId } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { data: invNum } = await admin.rpc("generate_invoice_number", { p_org_id: orgId });
+    const { data: invNum } = await admin.rpc("generate_invoice_number", {
+      p_org_id: orgId,
+    });
 
     const { data: invoice } = await admin
       .from("invoices")
@@ -85,24 +87,40 @@ describe("Invoice CRUD", () => {
         paid_amount: 30000,
         status: "pending",
         branch_id: branchId!,
-      } as any)
+      })
       .select()
       .single();
     trackCleanup("invoices", invoice!.id);
 
-    await admin.from("invoices").update({ status: "paid" }).eq("id", invoice!.id);
-    const { data: check } = await admin.from("invoices").select("status").eq("id", invoice!.id).single();
+    await admin
+      .from("invoices")
+      .update({ status: "paid" })
+      .eq("id", invoice!.id);
+    const { data: check } = await admin
+      .from("invoices")
+      .select("status")
+      .eq("id", invoice!.id)
+      .single();
     expect(check!.status).toBe("paid");
 
-    await admin.from("invoices").update({ status: "cancelled" }).eq("id", invoice!.id);
-    const { data: check2 } = await admin.from("invoices").select("status").eq("id", invoice!.id).single();
+    await admin
+      .from("invoices")
+      .update({ status: "cancelled" })
+      .eq("id", invoice!.id);
+    const { data: check2 } = await admin
+      .from("invoices")
+      .select("status")
+      .eq("id", invoice!.id)
+      .single();
     expect(check2!.status).toBe("cancelled");
   });
 
   it("can create invoice with branch_id", async () => {
     const { orgId } = await createTestOrg(admin);
     const { branchId } = await createTestBranch(admin, orgId);
-    const { data: invNum } = await admin.rpc("generate_invoice_number", { p_org_id: orgId });
+    const { data: invNum } = await admin.rpc("generate_invoice_number", {
+      p_org_id: orgId,
+    });
 
     const { data: invoice } = await admin
       .from("invoices")
@@ -112,7 +130,7 @@ describe("Invoice CRUD", () => {
         branch_id: branchId!,
         total_amount: 10000,
         status: "pending",
-      } as any)
+      })
       .select()
       .single();
     expect(invoice!.branch_id).toBe(branchId);
@@ -158,7 +176,7 @@ describe("Invoice RLS", () => {
       invoice_number: "INVALID",
       total_amount: 1000,
       branch_id: "00000000-0000-0000-0000-000000000000",
-    } as any);
+    });
     expect(error).not.toBeNull();
   });
 

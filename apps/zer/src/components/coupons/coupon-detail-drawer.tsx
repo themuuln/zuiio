@@ -78,8 +78,7 @@ export function CouponDetailDrawer({
             </p>
           )}
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {DISCOUNT_TYPE_LABELS[coupon.discount_type] ??
-              coupon.discount_type}
+            {DISCOUNT_TYPE_LABELS[coupon.discount_type] ?? coupon.discount_type}
           </p>
         </div>
 
@@ -118,9 +117,7 @@ export function CouponDetailDrawer({
           </div>
           {coupon.max_discount_amount !== null && (
             <div className="flex items-center justify-between px-4 py-3 text-sm">
-              <span className="text-muted-foreground">
-                Хямдралын дээд дүн
-              </span>
+              <span className="text-muted-foreground">Хямдралын дээд дүн</span>
               <span className="font-medium">
                 {formatCurrency(coupon.max_discount_amount)}
               </span>
@@ -131,9 +128,7 @@ export function CouponDetailDrawer({
               <CalendarBlank className="size-4" />
               Хүчинтэй эхлэх
             </span>
-            <span className="font-medium">
-              {formatDate(coupon.valid_from)}
-            </span>
+            <span className="font-medium">{formatDate(coupon.valid_from)}</span>
           </div>
           <div className="flex items-center justify-between px-4 py-3 text-sm">
             <span className="text-muted-foreground">Хүчинтэй дуусах</span>
@@ -153,16 +148,12 @@ export function CouponDetailDrawer({
             <span className="text-muted-foreground">Ашигласан</span>
             <span className="font-medium">
               {coupon.used_count}
-              {coupon.usage_limit !== null
-                ? ` / ${coupon.usage_limit}`
-                : ""}
+              {coupon.usage_limit !== null ? ` / ${coupon.usage_limit}` : ""}
             </span>
           </div>
           <div className="flex items-center justify-between px-4 py-3 text-sm">
             <span className="text-muted-foreground">Үүсгэсэн</span>
-            <span className="font-medium">
-              {formatDate(coupon.created_at)}
-            </span>
+            <span className="font-medium">{formatDate(coupon.created_at)}</span>
           </div>
           {coupon.description && (
             <div className="px-4 py-3 text-sm">

@@ -22,6 +22,7 @@ vi.mock("@zuiio/ui", () => ({
     autoFocus?: boolean;
   }) => (
     <button
+      type="button"
       data-testid="inline-editable-field"
       data-value={value}
       data-type={type}

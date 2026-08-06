@@ -112,7 +112,6 @@ export function PayPanel({
 
       <div className="rounded-xl border bg-white p-4">
         {qrImage ? (
-          // biome-ignore lint/performance/noImgElement: base64 payload from QPay
           <img
             src={`data:image/png;base64,${qrImage}`}
             alt="QPay QR"
@@ -128,10 +127,7 @@ export function PayPanel({
         <Button
           variant="outline"
           nativeButton={false}
-          render={
-            // biome-ignore lint/a11y/useAnchorContent: content via Button children
-            <a href={shortUrl} target="_blank" rel="noreferrer" />
-          }
+          render={<a href={shortUrl} target="_blank" rel="noreferrer" />}
         >
           {t("openBankApp")}
         </Button>

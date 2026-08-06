@@ -19,15 +19,19 @@ type ProductOption = {
   unit: string | null;
   barcode: string | null;
   image_url: string | null;
+  has_variants: boolean;
 };
 
 export function SalesCreateDrawer({
   products,
+  hasReceiptPrinter,
   open: externalOpen,
   onOpenChangeAction: externalOnOpenChangeAction,
   onOpenDetailAction,
 }: {
   products: ProductOption[];
+  /** Org setting: auto-print the receipt after each sale. */
+  hasReceiptPrinter: boolean;
   open?: boolean;
   onOpenChangeAction?: (open: boolean) => void;
   onOpenDetailAction?: (saleId: string) => void;
@@ -61,6 +65,7 @@ export function SalesCreateDrawer({
       <SaleForm
         formId="sale-form"
         products={products}
+        hasReceiptPrinter={hasReceiptPrinter}
         onSuccess={() => setOpen(false)}
         onOpenDetail={onOpenDetailAction}
         onReopenForm={() => setOpen(true)}

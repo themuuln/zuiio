@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type {
-  ProviderWebhookEvent,
   ProviderEsimStatus,
+  ProviderWebhookEvent,
   ProvisionedEsim,
 } from "./types";
 
@@ -156,26 +156,21 @@ function normalizeRoamicWebhook(
   payload: unknown,
   _options?: WebhookNormalizeOptions,
 ): ProviderWebhookEvent {
-  console.log(
-    "[webhook:roamic] received passthrough event (format undocumented)",
-  );
-
   const body = payload as Record<string, unknown>;
   const esimStatus =
     typeof body?.esimStatus === "string" && body.esimStatus.length > 0
       ? body.esimStatus
       : undefined;
   const eventType: ProviderWebhookEvent["type"] =
-    (esimStatus != null && ROAMIC_STATUS_MAP[esimStatus]) || "esim.status_changed";
+    (esimStatus != null && ROAMIC_STATUS_MAP[esimStatus]) ||
+    "esim.status_changed";
 
   // Construct a stable eventId from whatever identifier fields exist
   const idKeys = ["id", "eventId", "event_id", "orderId", "order_id"];
   const foundKey = idKeys.find(
     (k) => typeof body?.[k] === "string" && (body[k] as string).length > 0,
   );
-  const eventId = foundKey
-    ? String(body[foundKey])
-    : `roamic:${Date.now()}`;
+  const eventId = foundKey ? String(body[foundKey]) : `roamic:${Date.now()}`;
 
   return {
     provider: "roamic",
@@ -221,8 +216,7 @@ function normalizeBappyWebhook(
 
   return {
     provider: "bappy",
-    eventId:
-      body.data?.id ?? `${body.data?.iccid ?? "unknown"}:${body.event}`,
+    eventId: body.data?.id ?? `${body.data?.iccid ?? "unknown"}:${body.event}`,
     type: eventType,
     status: BAPPY_STATUS_MAP[body.event],
     raw: payload,
@@ -242,9 +236,7 @@ interface MockWebhookPayload {
 function normalizeMockWebhook(payload: unknown): ProviderWebhookEvent {
   const body = payload as MockWebhookPayload;
   if (!body?.event_id || !body?.type || !body?.provider_order_id) {
-    throw new Error(
-      "mock webhook: missing event_id/type/provider_order_id",
-    );
+    throw new Error("mock webhook: missing event_id/type/provider_order_id");
   }
   return {
     provider: "mock",

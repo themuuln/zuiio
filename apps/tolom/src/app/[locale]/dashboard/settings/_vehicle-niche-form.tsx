@@ -442,7 +442,7 @@ function BrandRow({
 
       {/* Expanded model list */}
       {selected && expanded && (
-        <div className="ml-8 mt-1 flex flex-col gap-1 border-l-2 border-muted pl-3">
+        <div className="ml-8 mt-1 flex flex-col gap-1 border-l border-muted pl-3">
           {modelsLoading ? (
             <div className="flex flex-col gap-1 py-2">
               {Array.from({ length: 3 }).map((_, i) => (

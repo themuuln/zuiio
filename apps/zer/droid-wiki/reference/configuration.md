@@ -26,8 +26,8 @@ Active contributors: themuuln
 
 The Supabase CLI configuration for local development:
 
-- **API**: Enabled on port 54321, schemas include `public`, `storage`, `graphql_public`.
-- **Database**: Default port 54322.
+- **API**: Enabled on port 54326, schemas include `public`, `storage`, `graphql_public`.
+- **Database**: Port 54328. Zer uses a dedicated port block so its local stack can run alongside other apps' stacks (which use the default 54321/54322).
 - **Auth**: Enabled with email confirmations required.
 - **Storage**: Enabled with 50MB file size limit.
   - Custom bucket: `brand_assets` — public, 2MB limit, allowed MIME types: image/png, image/jpeg, image/webp, image/svg+xml.

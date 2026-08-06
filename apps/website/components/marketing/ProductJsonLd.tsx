@@ -20,7 +20,7 @@ export function ProductJsonLd({
           "@type": "SoftwareApplication",
           name,
           description,
-          url: `https://zuiio.com${url}`,
+          url: `https://zuiiotech.com${url}`,
           applicationCategory: category,
           operatingSystem: "Web, iOS, Android",
           offers: {
@@ -32,7 +32,7 @@ export function ProductJsonLd({
           provider: {
             "@type": "Organization",
             name: "Zuiio",
-            url: "https://zuiio.com",
+            url: "https://zuiiotech.com",
           },
         }),
       }}

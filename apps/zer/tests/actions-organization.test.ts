@@ -5,7 +5,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Chain helpers (avoid esbuild depth limits) ──────────────────────
 /** Chain: .update().eq() → result (single eq, used by updateReportEmailSettings) */
@@ -32,7 +32,10 @@ const withDbCaptureMock = mock.fn(
   },
 );
 const captureMock = mock.fn(() => {});
-mockMod("@zuiio/capture", { capture: captureMock, withDbCapture: withDbCaptureMock });
+mockMod("@zuiio/capture", {
+  capture: captureMock,
+  withDbCapture: withDbCaptureMock,
+});
 
 const revalidateEntityMock = mock.fn(() => {});
 const revalidateEntitiesMock = mock.fn(() => {});
@@ -44,7 +47,10 @@ mockMod("@/lib/revalidate", {
 });
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
@@ -54,7 +60,10 @@ mockMod("@/lib/action-utils", {
 });
 
 // ─── Lazy-loaded module ──────────────────────────────────────────────
-let updateReportEmailSettings: (prevState: unknown, fd: FormData) => Promise<unknown>;
+let updateReportEmailSettings: (
+  prevState: unknown,
+  fd: FormData,
+) => Promise<unknown>;
 let updatePublicProfile: (prevState: unknown, fd: FormData) => Promise<unknown>;
 
 test.before(async () => {
@@ -92,7 +101,9 @@ test("updateReportEmailSettings — rejects invalid time format", async () => {
   });
 
   const result = await updateReportEmailSettings(undefined, fd);
-  assert.deepEqual(result, { error: "Цагийн формат буруу байна. (Жишээ: 18:00)" });
+  assert.deepEqual(result, {
+    error: "Цагийн формат буруу байна. (Жишээ: 18:00)",
+  });
 });
 
 test("updateReportEmailSettings — enables report email with valid time and recipient", async () => {

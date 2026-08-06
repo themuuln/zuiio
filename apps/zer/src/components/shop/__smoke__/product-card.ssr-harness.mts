@@ -15,14 +15,6 @@ import { JSDOM } from "jsdom";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-type JSDOMWindow = {
-  document: Document;
-  HTMLElement: typeof HTMLElement;
-  Node: typeof Node;
-  MouseEvent: typeof MouseEvent;
-  getComputedStyle: typeof getComputedStyle;
-};
-
 const require = createRequire(import.meta.url);
 const Module = require("node:module");
 const originalLoad = Module._load;

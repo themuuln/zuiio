@@ -2,7 +2,7 @@
 -- Contact statuses: pending (default), called-scheduled, called-no-answer, skipped
 
 ALTER TABLE vehicle_service_schedules
-ADD COLUMN contact_status TEXT NOT NULL DEFAULT 'pending'
+ADD COLUMN contact_status TEXT NOT NULL DEFAULT 'pending',
 ADD COLUMN contacted_at TIMESTAMPTZ;
 
 -- Add check constraint for valid contact statuses

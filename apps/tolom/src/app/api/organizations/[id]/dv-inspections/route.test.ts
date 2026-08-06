@@ -85,9 +85,9 @@ describe("organizations/[id]/dv-inspections route", () => {
 
       const supabase = { from: vi.fn() };
       const request = new NextRequest(baseUrl);
-      await expect(
-        (GET as any)({ request, orgId, supabase }),
-      ).rejects.toThrow("DB error");
+      await expect((GET as any)({ request, orgId, supabase })).rejects.toThrow(
+        "DB error",
+      );
     });
   });
 

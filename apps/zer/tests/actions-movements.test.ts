@@ -6,8 +6,8 @@ import assert from "node:assert/strict";
 import test, { mock } from "node:test";
 
 import {
-  mockActionCtx,
   formData,
+  mockActionCtx,
   mockMod,
   registerDefaultMocks,
   resolved,
@@ -162,9 +162,7 @@ function makeSupabase(
     }
     if (table === "stock_movements") {
       return {
-        ...stockMovementsInsertChain(
-          stockInsert ?? resolved(null, null),
-        ),
+        ...stockMovementsInsertChain(stockInsert ?? resolved(null, null)),
         ...stockMovementsDeleteChain(),
       };
     }

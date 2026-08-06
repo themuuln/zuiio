@@ -19,6 +19,9 @@ export async function createOrganization(
   const raw = {
     organizationName:
       (formData.get("organizationName") as string)?.trim() || "",
+    businessType: (formData.get("businessType") as string) || "",
+    enablePartSuggestions:
+      (formData.get("enablePartSuggestions") as string) || "on",
   };
 
   const parsed = createOrganizationSchema.safeParse(raw);
@@ -29,7 +32,7 @@ export async function createOrganization(
     };
   }
 
-  const { organizationName } = parsed.data;
+  const { organizationName, businessType, enablePartSuggestions } = parsed.data;
 
   try {
     const supabase = await createClient();
@@ -42,7 +45,11 @@ export async function createOrganization(
       };
     }
 
-    await finalizeSignup(supabase, { orgName: organizationName });
+    await finalizeSignup(supabase, {
+      orgName: organizationName,
+      businessType,
+      enablePartSuggestions,
+    });
   } catch (error) {
     reportServerError("Failed to create organization:", error);
     return {

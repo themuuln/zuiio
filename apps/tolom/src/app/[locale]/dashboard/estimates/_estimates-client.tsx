@@ -82,10 +82,10 @@ function EstimateCard({
     <button
       type="button"
       onClick={() => onOpen(estimate.id)}
-      className="w-full rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/30"
+      className="w-full rounded-2xl border border-border/60 bg-card p-4 text-left transition-colors hover:bg-muted/30"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0 flex-1 space-y-3">
+        <div className="min-w-0 flex-1 gap-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Typography.Text className="font-mono text-sm font-semibold">
               {estimate.estimate_number}

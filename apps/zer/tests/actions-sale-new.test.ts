@@ -8,7 +8,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Global mocks ────────────────────────────────────────────────────
 
@@ -36,9 +36,7 @@ mockMod("next/cache", {
 mockMod("server-only", {});
 
 mockMod("@/lib/validation", {
-  getString: mock.fn(
-    (fd: FormData, key: string) => String(fd.get(key) ?? ""),
-  ),
+  getString: mock.fn((fd: FormData, key: string) => String(fd.get(key) ?? "")),
 });
 
 mockMod("@/lib/erp", {
@@ -56,17 +54,25 @@ const postSaleToJournalMock = mock.fn(() => Promise.resolve());
 mockMod("@/lib/accounting", { postSaleToJournal: postSaleToJournalMock });
 
 const createInvoiceFromSaleMock = mock.fn(async () => {});
-mockMod("@/lib/invoicing", { createInvoiceFromSale: createInvoiceFromSaleMock });
+mockMod("@/lib/invoicing", {
+  createInvoiceFromSale: createInvoiceFromSaleMock,
+});
 
 const sendTelegramNotificationMock = mock.fn(() => {});
 const checkLowStockAndNotifyMock = mock.fn(() => {});
+const notifyWebPushEventMock = mock.fn(() => {});
 mockMod("@/lib/notification", {
   sendTelegramNotification: sendTelegramNotificationMock,
   checkLowStockAndNotify: checkLowStockAndNotifyMock,
+  notifyWebPushEvent: notifyWebPushEventMock,
 });
 
-const findOrCreateContactMock = mock.fn(async () => ({ id: "test-contact-id" }));
-mockMod("@/lib/contact-utils", { findOrCreateContact: findOrCreateContactMock });
+const findOrCreateContactMock = mock.fn(async () => ({
+  id: "test-contact-id",
+}));
+mockMod("@/lib/contact-utils", {
+  findOrCreateContact: findOrCreateContactMock,
+});
 
 mockMod("@/lib/format", {
   formatCurrency: mock.fn((v: number) => `${v}₮`),
@@ -85,10 +91,7 @@ mockMod("@/lib/action-utils", {
 // ─── Stock utils mocks ───────────────────────────────────────────────
 
 const defaultProductMap = new Map([
-  [
-    "p1",
-    { id: "p1", name: "Product A", current_stock: 100, min_stock: 10 },
-  ],
+  ["p1", { id: "p1", name: "Product A", current_stock: 100, min_stock: 10 }],
 ]);
 
 const fetchProductsForStockMock = mock.fn(async () => defaultProductMap);
@@ -149,12 +152,12 @@ function resetMocks() {
     async () => defaultProductMap,
   );
   fetchVariantsForStockMock.mock.mockImplementation(async () => new Map());
-  createStockMovementsMock.mock.mockImplementation(
-    async () => ({ error: null }),
-  );
-  findOrCreateContactMock.mock.mockImplementation(
-    async () => ({ id: "test-contact-id" }),
-  );
+  createStockMovementsMock.mock.mockImplementation(async () => ({
+    error: null,
+  }));
+  findOrCreateContactMock.mock.mockImplementation(async () => ({
+    id: "test-contact-id",
+  }));
   createInvoiceFromSaleMock.mock.mockImplementation(async () => {});
   postSaleToJournalMock.mock.mockImplementation(() => Promise.resolve());
   calculateCommissionMock.mock.mockImplementation(() => 0);
@@ -163,18 +166,20 @@ function resetMocks() {
 /**
  * Build a supabase mock supporting the full createSale flow.
  */
-function buildSupabase(opts: {
-  saleInsertError?: { message: string } | null;
-  itemsInsertError?: { message: string } | null;
-  rpcResult?: unknown;
-  rpcError?: { message: string } | null;
-  lowStockProduct?: {
-    current_stock: number;
-    min_stock: number;
-    name: string;
-  } | null;
-  profilesError?: { message: string } | null;
-} = {}) {
+function buildSupabase(
+  opts: {
+    saleInsertError?: { message: string } | null;
+    itemsInsertError?: { message: string } | null;
+    rpcResult?: unknown;
+    rpcError?: { message: string } | null;
+    lowStockProduct?: {
+      current_stock: number;
+      min_stock: number;
+      name: string;
+    } | null;
+    profilesError?: { message: string } | null;
+  } = {},
+) {
   const saleInsertResult = opts.saleInsertError
     ? resolved(null, opts.saleInsertError)
     : resolved({ id: "sale-test-id" }, null);
@@ -361,10 +366,7 @@ test("rejects insufficient stock", async () => {
   resetMocks();
   fetchProductsForStockMock.mock.mockImplementation(async () => {
     return new Map([
-      [
-        "p1",
-        { id: "p1", name: "Product A", current_stock: 5, min_stock: 1 },
-      ],
+      ["p1", { id: "p1", name: "Product A", current_stock: 5, min_stock: 1 }],
     ]);
   });
   const items = JSON.stringify([
@@ -426,8 +428,7 @@ test("creates sale with customer (findOrCreateContact)", async () => {
   });
   assertDelta(before, "findOrCreateContact", findOrCreateContactMock, 1);
   const lastIdx = findOrCreateContactMock.mock.callCount() - 1;
-  const contactArgs =
-    findOrCreateContactMock.mock.calls[lastIdx].arguments;
+  const contactArgs = findOrCreateContactMock.mock.calls[lastIdx].arguments;
   assert.equal(contactArgs[2], "customer");
   assert.equal(contactArgs[3], "Test Customer");
   assert.equal(contactArgs[4], "99001234");
@@ -482,7 +483,7 @@ test("rejects variant with insufficient stock", async () => {
 
   assert.ok(result && typeof result === "object" && "error" in result);
   assert.ok(
-    ((result as { error: string }).error).includes(
+    (result as { error: string }).error.includes(
       "Вариантын үлдэгдэл хүрэлцэхгүй",
     ),
   );
@@ -606,7 +607,10 @@ test("handles stock decrement RPC returning malformed result", async () => {
 
   assert.ok(result && typeof result === "object" && "error" in result);
   const err = (result as { error: string }).error;
-  assert.ok(err.length > 0, "Should return an error message for malformed RPC result");
+  assert.ok(
+    err.length > 0,
+    "Should return an error message for malformed RPC result",
+  );
 });
 
 test("handles cancelled status (skips stock, no customer)", async () => {

@@ -71,6 +71,7 @@ RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
+AS $$
 BEGIN
   INSERT INTO public.permissions (organization_id, name, resource, action, description)
   VALUES

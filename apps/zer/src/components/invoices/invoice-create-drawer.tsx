@@ -391,10 +391,7 @@ export function InvoiceCreateDrawer({
                 onProductSelect={(product, i) => {
                   if (product) {
                     setValue(`items.${i}.description`, product.name);
-                    setValue(
-                      `items.${i}.unit_price`,
-                      (product as any).sale_price ?? 0,
-                    );
+                    setValue(`items.${i}.unit_price`, product.sale_price ?? 0);
                   }
                 }}
                 onVariantSelect={(variant, i) => {

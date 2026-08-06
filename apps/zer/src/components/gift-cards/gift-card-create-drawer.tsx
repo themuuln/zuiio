@@ -29,7 +29,10 @@ const giftCardSchema = z.object({
   code: z
     .string()
     .min(1, "Код шаардлагатай")
-    .regex(/^[a-zA-Z0-9]+$/, "Код зөвхөн үсэг, тоо орно"),
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно",
+    ),
   initial_balance: z.number().min(0.01, "Үлдэгдэл 0-ээс их байх ёстой"),
   currency_code: z.enum(["MNT", "USD"]).default("MNT"),
   recipient_name: z.string().optional().default(""),
@@ -161,14 +164,9 @@ export function GiftCardCreateDrawer({
         <FieldGroup>
           <Field>
             <FieldLabel>Код</FieldLabel>
-            <Input
-              placeholder="Жишээ: GIFT2024"
-              {...register("code")}
-            />
+            <Input placeholder="Жишээ: GIFT2024" {...register("code")} />
             {errors.code && (
-              <p className="text-xs text-destructive">
-                {errors.code.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.code.message}</p>
             )}
           </Field>
 
@@ -178,10 +176,7 @@ export function GiftCardCreateDrawer({
               control={control}
               name="initial_balance"
               render={({ field }) => (
-                <CurrencyInput
-                  value={field.value}
-                  onChange={field.onChange}
-                />
+                <CurrencyInput value={field.value} onChange={field.onChange} />
               )}
             />
             {errors.initial_balance && (

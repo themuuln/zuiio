@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Clock,
   Construction,
-  Wrench,
 } from "lucide-react";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
@@ -22,6 +21,8 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Typography } from "@/components/ui/typography";
+
+import { LandingFooter } from "../_landing-footer";
 
 const INTEGRATIONS = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -75,10 +76,6 @@ async function IntegrationsContent({ locale }: { locale: string }) {
   const t = (await getTranslations({
     locale: locale as "mn" | "en",
     namespace: "integrations",
-  })) as (key: string, values?: Record<string, string | number>) => string;
-  const appT = (await getTranslations({
-    locale: locale as "mn" | "en",
-    namespace: "app",
   })) as (key: string, values?: Record<string, string | number>) => string;
 
   return (
@@ -159,24 +156,14 @@ async function IntegrationsContent({ locale }: { locale: string }) {
                 render={<Link href="/pricing" />}
                 nativeButton={false}
               >
-                Үнийн санал
+                {t("ctaPricing")}
               </Button>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t bg-background px-4 py-8 text-center text-xs text-muted-foreground sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-center gap-2">
-            <Wrench className="size-3" />
-            <span className="font-semibold text-foreground">
-              {appT("name")}
-            </span>
-          </div>
-          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 }

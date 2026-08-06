@@ -1,43 +1,24 @@
-# Vercel upload excludes for the zuiio monorepo.
-# Local `vercel deploy` uploads from the git root and caps at 15000 files / chokes
-# on huge files. agent-gateway only needs:
-#   - apps/agent-gateway            (the app itself)
-#   - packages/*                    (its @zuiio/* workspace deps)
-#   - root config (package.json, pnpm-lock.yaml, pnpm-workspace.yaml)
-# Sibling apps (zer, tolom, onoo, website, tamga, ...) are NOT dependencies of
-# agent-gateway, so we exclude them from the upload to stay under the 15000-file
-# cap. Vercel reinstalls dependencies during the build, so node_modules is excluded.
+# Root-level ignore for `vercel deploy` run from the monorepo root.
+# This repo's root deploys build apps/tolom only (project Root Directory =
+# apps/tolom), so sibling apps' sources are excluded from uploads.
+# Workspace members' package.json files are kept so `pnpm install` at the
+# root can resolve every project in pnpm-lock.yaml.
 
-# Dependencies (reinstalled by Vercel during build)
-**/node_modules/
-# Sibling applications (not part of agent-gateway's build graph)
-apps/tamga/
-apps/zuiio-id/
-apps/website/
-apps/zraf-web/
-apps/tumurch/
-apps/zunch/
-apps/zill/
-apps/zatly/
-apps/zraf/
-apps/card/
-apps/zim/
-apps/side/
-apps/zerbu/
-apps/sms-pay/
-apps/zoa/
-apps/zer-app/
-apps/tumurch-rn/
-apps/tolom-mobile/
-apps/tamga-web/
-apps/sakhuu/
-apps/onoo-app/
+# --- Heavy / generated (also gitignored, kept here for the tgz archive path) ---
+**/node_modules
+**/.next
+**/coverage
+**/test-results
+**/playwright-report
+**/.turbo
+**/logs
+**/*.tsbuildinfo
+**/*.log
+**/.env
+**/.env.*
 
-# Flutter / build caches that may slip through
-**/build/
-**/.dart_tool/
-**/.next/
-**/dist/
-**/CompilationCache.noindex/
-.turbo/
-**/test-results/
+# --- Sibling apps: keep only their package.json for workspace resolution ---
+apps/*
+!apps/tolom/
+!apps/tolom/**
+!apps/*/package.json

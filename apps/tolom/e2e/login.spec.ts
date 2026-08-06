@@ -1,6 +1,10 @@
 import { setEnglishLocale } from "./helpers";
 import { expect, test } from "./test-extensions";
 
+// Real login attempts hit prod Supabase auth — running them in parallel
+// triggers rate limits (429) and cascading retries. Serialize the file.
+test.describe.configure({ mode: "serial" });
+
 test.describe("Login Flow", () => {
   test.describe("Form Rendering", () => {
     // Use fresh context without auth cookies so we see the login form
@@ -20,7 +24,9 @@ test.describe("Login Flow", () => {
       await expect(
         page.getByRole("textbox", { name: "Password *" }),
       ).toBeVisible();
-      await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Sign in", exact: true }),
+      ).toBeVisible();
     });
 
     test("shows signup link for new users", async ({ page }) => {
@@ -84,7 +90,7 @@ test.describe("Login Flow", () => {
     test("blocks submit when fields are empty", async ({ page }) => {
       await page.goto("/auth/login");
       const url = page.url();
-      await page.getByRole("button", { name: "Sign in" }).click();
+      await page.getByRole("button", { name: "Sign in", exact: true }).click();
       await expect(page).toHaveURL(url);
     });
 
@@ -94,7 +100,7 @@ test.describe("Login Flow", () => {
       await page
         .getByRole("textbox", { name: "Password *" })
         .fill("somepassword");
-      await page.getByRole("button", { name: "Sign in" }).click();
+      await page.getByRole("button", { name: "Sign in", exact: true }).click();
       await expect(page).toHaveURL(/\/auth\/login/);
     });
   });
@@ -115,7 +121,7 @@ test.describe("Login Flow", () => {
       await page
         .getByRole("textbox", { name: "Password *" })
         .fill("WrongPassword123!");
-      await page.getByRole("button", { name: "Sign in" }).click();
+      await page.getByRole("button", { name: "Sign in", exact: true }).click();
 
       // Login shows inline error + toast — use getByRole('alert') to be specific
       await expect(
@@ -131,7 +137,7 @@ test.describe("Login Flow", () => {
       await page
         .getByRole("textbox", { name: "Password *" })
         .fill("SomePassword123!");
-      await page.getByRole("button", { name: "Sign in" }).click();
+      await page.getByRole("button", { name: "Sign in", exact: true }).click();
 
       await expect(
         page.getByRole("alert").filter({ hasText: /invalid|incorrect|wrong/i }),
@@ -157,7 +163,7 @@ test.describe("Login Flow", () => {
       await page
         .getByRole("textbox", { name: "Password *" })
         .fill("TolomAdmin2025!");
-      await page.getByRole("button", { name: "Sign in" }).click();
+      await page.getByRole("button", { name: "Sign in", exact: true }).click();
 
       await expect(page).toHaveURL(
         /\/auth\/(select-organization|login)|\/dashboard/,
@@ -194,7 +200,7 @@ test.describe("Login Flow", () => {
       await page
         .getByRole("textbox", { name: "Password *" })
         .fill("TolomAdmin2025!");
-      await page.getByRole("button", { name: "Sign in" }).click();
+      await page.getByRole("button", { name: "Sign in", exact: true }).click();
 
       await expect(page).toHaveURL(
         /\/auth\/(select-organization)|\/dashboard/,
@@ -219,7 +225,7 @@ test.describe("Login Flow", () => {
       await page
         .getByRole("textbox", { name: "Password *" })
         .fill("TolomAdmin2025!");
-      await page.getByRole("button", { name: "Sign in" }).click();
+      await page.getByRole("button", { name: "Sign in", exact: true }).click();
       await expect(page).toHaveURL(
         /\/auth\/(select-organization)|\/dashboard/,
         { timeout: 15000 },

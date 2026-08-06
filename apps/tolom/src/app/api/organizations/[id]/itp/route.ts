@@ -1,12 +1,12 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
+  getExpiringItpRecords,
   getItpRecords,
   getItpStats,
-  getExpiringItpRecords,
-  recordItpInspection,
   getVehiclesNeedingReminder,
   type ItpInspectionParams,
+  recordItpInspection,
 } from "@/lib/services/itp-service";
 
 /**
@@ -94,23 +94,14 @@ export const POST = createRouteHandler(
     const expiryDate = new Date(body.itp_expiry_date);
     const passedDate = new Date(body.itp_last_passed_date);
 
-    if (isNaN(expiryDate.getTime())) {
+    if (Number.isNaN(expiryDate.getTime())) {
       return apiError("VALIDATION", "Invalid itp_expiry_date format", 400);
     }
-    if (isNaN(passedDate.getTime())) {
-      return apiError(
-        "VALIDATION",
-        "Invalid itp_last_passed_date format",
-        400,
-      );
+    if (Number.isNaN(passedDate.getTime())) {
+      return apiError("VALIDATION", "Invalid itp_last_passed_date format", 400);
     }
 
-    const result = await recordItpInspection(
-      supabase,
-      orgId,
-      user.id,
-      body,
-    );
+    const result = await recordItpInspection(supabase, orgId, user.id, body);
 
     return created(result);
   },

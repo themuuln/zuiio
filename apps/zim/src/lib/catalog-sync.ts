@@ -1,6 +1,11 @@
 import "server-only";
 import { getDb } from "@/lib/db";
-import { getProvider, getEnabledProviders, type EsimProvider } from "@/lib/provider";
+import {
+  type EsimProvider,
+  getEnabledProviders,
+  getProvider,
+} from "@/lib/provider";
+import type { Json } from "@/lib/supabase/types";
 import { notifyRepricingNeeded } from "@/lib/telegram";
 
 export interface SyncResult {
@@ -76,7 +81,7 @@ export async function syncCatalogFor(
       validity_days: pkg.validityDays,
       coverage_countries: pkg.coverageCountries,
       cost_usd: pkg.costUsd,
-      provider_meta: pkg.meta ?? {},
+      provider_meta: (pkg.meta ?? {}) as Json,
       is_archived: false,
       needs_repricing: current.needs_repricing || costChanged,
       synced_at: now,
@@ -108,7 +113,6 @@ export async function syncCatalogFor(
 export async function syncCatalog(): Promise<SyncResult> {
   return syncCatalogFor(getProvider());
 }
-
 
 /**
  * Sync catalog from ALL enabled providers.

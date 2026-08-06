@@ -1,18 +1,17 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+// ValidationError is used for input validation checks — import the real class
+// via the mock so we can assert with .rejects.toThrow(ValidationError).
+import { ValidationError } from "@/lib/errors";
 import {
   createMockSupabaseClient,
   type MockSupabaseClient,
 } from "@/test/mocks/supabase";
 
-// ValidationError is used for input validation checks — import the real class
-// via the mock so we can assert with .rejects.toThrow(ValidationError).
-import { ValidationError } from "@/lib/errors";
-
 import {
-  searchGlobalParts,
   getGlobalPartById,
-  searchGlobalServices,
   importGlobalPartsToOrg,
+  searchGlobalParts,
+  searchGlobalServices,
 } from "../global-catalog-service";
 
 const ORG_ID = "org-1";
@@ -142,9 +141,9 @@ describe("getGlobalPartById", () => {
       error: { message: "No rows found", code: "PGRST116" },
     });
 
-    await expect(
-      getGlobalPartById(db, "nonexistent"),
-    ).rejects.toThrow("Global part not found");
+    await expect(getGlobalPartById(db, "nonexistent")).rejects.toThrow(
+      "Global part not found",
+    );
   });
 });
 
@@ -188,7 +187,11 @@ describe("importGlobalPartsToOrg", () => {
   it("imports global parts to org catalog", async () => {
     const globalParts = [
       makeGlobalPart({ id: "gp-1" }),
-      makeGlobalPart({ id: "gp-2", name: "Oil Filter", part_number: "OF-2001" }),
+      makeGlobalPart({
+        id: "gp-2",
+        name: "Oil Filter",
+        part_number: "OF-2001",
+      }),
     ];
 
     // 1. Fetch global parts

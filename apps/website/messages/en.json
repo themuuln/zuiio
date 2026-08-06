@@ -347,6 +347,7 @@
     "legal": "Legal",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
+    "data-deletion": "Data Deletion",
     "contact": "Contact",
     "copyright": "All rights reserved.",
     "built-for": "Built for Mongolia"
@@ -415,10 +416,10 @@
     "section-6-p0": "We use administrative, technical, and organizational safeguards designed to protect information against unauthorized access, loss, misuse, alteration, or disclosure. No system is perfectly secure, so customers should also protect passwords, devices, and workspace permissions.",
     "section-7-id": "children",
     "section-7-title": "8. Children",
-    "section-7-p0": "Zuiio services are for businesses and are not directed to children. If you believe a child provided personal information to us, contact sales@zuiio.com so we can review and delete it where appropriate.",
+    "section-7-p0": "Zuiio services are for businesses and are not directed to children. If you believe a child provided personal information to us, contact info@zuiiotech.com so we can review and delete it where appropriate.",
     "section-8-id": "contact",
     "section-8-title": "9. Contact",
-    "section-8-p0": "For privacy questions, data requests, or platform review inquiries, email sales@zuiio.com with the subject line “Privacy request.”"
+    "section-8-p0": "For privacy questions, data requests, or platform review inquiries, email info@zuiiotech.com with the subject line “Privacy request.”"
   },
   "TermsPage": {
     "eyebrow": "Terms of Service",
@@ -473,7 +474,7 @@
     "section-10-p0": "These terms are governed by the laws of Mongolia, except where mandatory consumer or data protection laws require otherwise.",
     "section-11-id": "contact",
     "section-11-title": "12. Contact",
-    "section-11-p0": "Questions about these terms can be sent to sales@zuiio.com with the subject line “Terms question.”"
+    "section-11-p0": "Questions about these terms can be sent to info@zuiiotech.com with the subject line “Terms question.”"
   },
   "DataDeletionPage": {
     "eyebrow": "Data Deletion",
@@ -489,7 +490,7 @@
     "section-0-b3": "Account profile information associated with your Zuiio user account.",
     "section-1-id": "email-request",
     "section-1-title": "2. Email request",
-    "section-1-p0": "Send an email to sales@zuiio.com with the subject line “Data deletion request.” Include enough information for us to identify the data without asking for unnecessary sensitive details.",
+    "section-1-p0": "Send an email to info@zuiiotech.com with the subject line “Data deletion request.” Include enough information for us to identify the data without asking for unnecessary sensitive details.",
     "section-1-b0": "Your name and the email or phone number used with Zuiio, if applicable.",
     "section-1-b1": "The product or channel: Zer, Tolom, website, Facebook/Instagram chatbot, or another Zuiio chatbot.",
     "section-1-b2": "The organization or workspace name, if the request concerns business records.",
@@ -515,6 +516,6 @@
     "section-5-b3": "Backups that are deleted on their normal rotation schedule and are not used for new product activity.",
     "section-6-id": "contact",
     "section-6-title": "7. Contact",
-    "section-6-p0": "For deletion requests, email sales@zuiio.com with the subject line “Data deletion request.”"
+    "section-6-p0": "For deletion requests, email info@zuiiotech.com with the subject line “Data deletion request.”"
   }
 }

@@ -29,7 +29,7 @@ export function BayCardDragPreview({ bay }: { bay: BayCardProps["bay"] }) {
   return (
     <div
       className={cn(
-        "relative flex h-full min-h-[180px] flex-col gap-0 overflow-hidden rounded-xl border border-border/70 bg-card py-0 shadow-2xl",
+        "relative flex h-full min-h-[180px] flex-col gap-0 overflow-hidden rounded-xl border border-border/70 bg-card py-0",
       )}
     >
       <div className="flex select-none items-center justify-between py-2.5 pl-5 pr-3">

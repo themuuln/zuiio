@@ -496,6 +496,89 @@ export async function sendReminderEmail(
   return { id };
 }
 
+// ── ITP Reminder Email ────────────────────────────────────────────
+
+export interface SendItpReminderEmailParams {
+  recipientEmail: string;
+  orgName: string;
+  vehicleLabel: string;
+  itpExpiryDate: string;
+  customerName: string;
+}
+
+function renderItpReminderEmailHtml(
+  params: SendItpReminderEmailParams,
+): string {
+  return `
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Машины үзлэгийн сануулга</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
+          <tr>
+            <td style="background-color:#ffffff;border-radius:12px;padding:40px 32px;text-align:center;">
+              <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#111827;">Машины үзлэгийн хугацаа ойртлоо</h1>
+              <p style="margin:0 0 24px;font-size:15px;color:#6b7280;">${params.orgName}</p>
+              <div style="background-color:#f3f4f6;border-radius:8px;padding:20px;margin-bottom:24px;text-align:left;">
+                <p style="margin:0 0 12px;font-size:13px;color:#6b7280;">Эрхэм <strong style="color:#111827;">${params.customerName}</strong> танд,</p>
+                <p style="margin:0 0 12px;font-size:14px;color:#374151;line-height:1.5;">
+                  Таны тээврийн хэрэгслийн техникийн үзлэгийн (ITP) хугацаа дуусах дөхөж байгааг сануулж байна:
+                </p>
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Машин</td>
+                    <td style="padding:6px 0;font-weight:600;color:#111827;text-align:right;">${params.vehicleLabel}</td>
+                  </tr>
+                </table>
+              </div>
+              <div style="background-color:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+                <p style="margin:0 0 4px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#c2410c;">Үзлэгийн хугацаа дуусах огноо</p>
+                <p style="margin:0;font-size:22px;font-weight:700;color:#c2410c;">${formatDate(params.itpExpiryDate)}</p>
+              </div>
+              <p style="margin:0 0 0;font-size:13px;color:#9ca3af;">
+                Машины үзлэгээ хугацаанд нь хийлгэхийг хүсвэл бидэнтэй холбогдоно уу.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#9ca3af;">${params.orgName} &middot; TOLOM систем</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * Send an ITP (техникийн үзлэг) expiry reminder email to a customer.
+ * The email highlights the vehicle's ITP expiry date.
+ */
+export async function sendItpReminderEmail(
+  params: SendItpReminderEmailParams,
+): Promise<{ id: string }> {
+  const html = renderItpReminderEmailHtml(params);
+
+  const { id } = await sendEmail({
+    from: `${params.orgName} <${getFromEmail()}>`,
+    to: [params.recipientEmail],
+    subject: `Сануулга: Машины үзлэгийн хугацаа дуусах гэж байна — ${params.vehicleLabel}`,
+    html,
+  });
+
+  return { id };
+}
+
 // ── Booking Request Email ───────────────────────────────────────
 
 export interface SendBookingRequestEmailParams {
@@ -592,7 +675,7 @@ export async function sendBookingRequestEmail(
 export async function testEmailConfig(): Promise<boolean> {
   try {
     parseAccounts();
-    for (const transporter of _transporters!) {
+    for (const transporter of _transporters ?? []) {
       await transporter.verify();
     }
     return true;

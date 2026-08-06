@@ -3,13 +3,16 @@
 import {
   BarChart3,
   Bell,
+  Bot,
   Building2,
   CalendarDays,
+  Car,
   ClipboardList,
   DollarSign,
   LayoutDashboard,
   LayoutGrid,
   type LucideIcon,
+  Monitor,
   Package,
   Sparkles,
   Users,
@@ -92,6 +95,12 @@ const navGroups: NavGroup[] = [
         icon: CalendarDays,
         requiredPermission: { resource: "appointments", action: "read" },
       },
+      {
+        labelKey: "nav.workshopDisplay",
+        href: "/dashboard/display",
+        icon: Monitor,
+        requiredPermission: { resource: "work_orders", action: "read" },
+      },
     ],
     isCollapsible: false,
   },
@@ -111,6 +120,12 @@ const navGroups: NavGroup[] = [
         href: "/dashboard/service-reminders",
         icon: Bell,
         requiredPermission: { resource: "service_reminders", action: "read" },
+      },
+      {
+        labelKey: "nav.vehicles",
+        href: "/dashboard/vehicles",
+        icon: Car,
+        requiredPermission: { resource: "vehicles", action: "read" },
       },
     ],
     isCollapsible: false,
@@ -134,6 +149,11 @@ const navGroups: NavGroup[] = [
           {
             labelKey: "nav.inventoryAlerts",
             href: "/dashboard/inventory/alerts",
+            requiredPermission: { resource: "inventory", action: "read" },
+          },
+          {
+            labelKey: "nav.inventoryReorder",
+            href: "/dashboard/inventory/reorder",
             requiredPermission: { resource: "inventory", action: "read" },
           },
           {
@@ -164,6 +184,11 @@ const navGroups: NavGroup[] = [
           {
             labelKey: "nav.inventoryValuation",
             href: "/dashboard/inventory/valuation",
+            requiredPermission: { resource: "inventory", action: "read" },
+          },
+          {
+            labelKey: "nav.inventoryStockCounts",
+            href: "/dashboard/inventory/stock-counts",
             requiredPermission: { resource: "inventory", action: "read" },
           },
         ],
@@ -279,7 +304,13 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-const utilityItems: NavItem[] = [];
+const utilityItems: NavItem[] = [
+  {
+    labelKey: "nav.aiAssistant",
+    href: "/dashboard/ai",
+    icon: Bot,
+  },
+];
 
 const settingsItems: NavItem[] = [
   {

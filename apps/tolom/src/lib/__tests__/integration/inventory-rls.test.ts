@@ -20,6 +20,7 @@ import {
   createTestPart,
   createTestUser,
   deleteRecord,
+  deleteTestOrg,
   signInAsUser,
 } from "./helpers";
 
@@ -59,20 +60,19 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!hasSupabase || !admin) return;
   // Clean up in reverse dependency order
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgAId},${userA.id}` as unknown as string,
-  );
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgBId},${userB.id}` as unknown as string,
-  );
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgAId,
+    user_id: userA.id,
+  });
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgBId,
+    user_id: userB.id,
+  });
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
-  await deleteRecord(admin, "organizations", orgAId);
-  await deleteRecord(admin, "organizations", orgBId);
+  await deleteTestOrg(admin, orgAId);
+
+  await deleteTestOrg(admin, orgBId);
 });
 
 // ── Parts Catalog RLS ────────────────────────────────────────
@@ -82,20 +82,22 @@ describeWhenSupabase("Parts Catalog RLS — cross-org isolation", () => {
   let partBId: string;
 
   beforeAll(async () => {
-    const pa = await createTestPart(admin!, orgAId);
+    const pa = await createTestPart(admin, orgAId);
     partAId = pa.partId;
-    const pb = await createTestPart(admin!, orgBId);
+    const pb = await createTestPart(admin, orgBId);
     partBId = pb.partId;
   });
 
   afterAll(async () => {
-    await deleteRecord(admin!, "parts_catalog", partAId);
-    await deleteRecord(admin!, "parts_catalog", partBId);
+    await deleteRecord(admin, "parts_catalog", partAId);
+    await deleteRecord(admin, "parts_catalog", partBId);
   });
 
   it("Admin user can create + read parts", async () => {
-    const { data } = await admin
-      ?.from("parts_catalog")
+    const { data } = await (
+      admin as import("@supabase/supabase-js").SupabaseClient<Database>
+    )
+      .from("parts_catalog")
       .select("id, name, organization_id");
     expect(data?.length).toBeGreaterThanOrEqual(2);
     const ids = data?.map((r: { id: string }) => r.id);
@@ -147,19 +149,21 @@ describeWhenSupabase("Inventory Movements RLS — org-scoped", () => {
 
   beforeAll(async () => {
     // Create branches and parts for each org
-    const branchA = await createTestBranch(admin!, orgAId);
+    const branchA = await createTestBranch(admin, orgAId);
     branchAId = branchA.branchId;
-    const branchB = await createTestBranch(admin!, orgBId);
+    const branchB = await createTestBranch(admin, orgBId);
     branchBId = branchB.branchId;
 
-    const pa = await createTestPart(admin!, orgAId);
+    const pa = await createTestPart(admin, orgAId);
     partAId = pa.partId;
-    const pb = await createTestPart(admin!, orgBId);
+    const pb = await createTestPart(admin, orgBId);
     partBId = pb.partId;
 
     // Create inventory movements via admin
-    const ma = await admin
-      ?.from("inventory_movements")
+    const ma = await (
+      admin as import("@supabase/supabase-js").SupabaseClient<Database>
+    )
+      .from("inventory_movements")
       .insert({
         organization_id: orgAId,
         branch_id: branchAId,
@@ -176,8 +180,10 @@ describeWhenSupabase("Inventory Movements RLS — org-scoped", () => {
       throw new Error(`Failed to create movement A: ${ma.error.message}`);
     movementAId = ma.data.id;
 
-    const mb = await admin
-      ?.from("inventory_movements")
+    const mb = await (
+      admin as import("@supabase/supabase-js").SupabaseClient<Database>
+    )
+      .from("inventory_movements")
       .insert({
         organization_id: orgBId,
         branch_id: branchBId,
@@ -197,16 +203,20 @@ describeWhenSupabase("Inventory Movements RLS — org-scoped", () => {
 
   afterAll(async () => {
     // Clean up in reverse dependency order
-    await deleteRecord(admin!, "inventory_movements", movementAId);
-    await deleteRecord(admin!, "inventory_movements", movementBId);
-    await deleteRecord(admin!, "parts_catalog", partAId);
-    await deleteRecord(admin!, "parts_catalog", partBId);
-    await deleteRecord(admin!, "branches", branchAId);
-    await deleteRecord(admin!, "branches", branchBId);
+    await deleteRecord(admin, "inventory_movements", movementAId);
+    await deleteRecord(admin, "inventory_movements", movementBId);
+    await deleteRecord(admin, "parts_catalog", partAId);
+    await deleteRecord(admin, "parts_catalog", partBId);
+    await deleteRecord(admin, "branches", branchAId);
+    await deleteRecord(admin, "branches", branchBId);
   });
 
   it("Admin can read movements from both orgs", async () => {
-    const { data } = await admin?.from("inventory_movements").select("id");
+    const { data } = await (
+      admin as import("@supabase/supabase-js").SupabaseClient<Database>
+    )
+      .from("inventory_movements")
+      .select("id");
     expect(data?.length).toBeGreaterThanOrEqual(2);
     const ids = data?.map((r: { id: string }) => r.id);
     expect(ids).toContain(movementAId);

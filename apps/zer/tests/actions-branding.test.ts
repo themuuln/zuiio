@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod, resolved } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod, resolved } from "./actions-helpers";
 
 // ─── Global mocks ────────────────────────────────────────────────────
 
@@ -59,10 +59,12 @@ mockMod("@/lib/branding", {
  * - fetchResult: data returned by .from("organizations").select(...).eq(...).single()
  * - updateResult: data/error returned by .from("organizations").update(...).eq(...)
  */
-function buildSupabase(opts: {
-  fetchResult?: { data: unknown; error: unknown };
-  updateResult?: { data: unknown; error: unknown };
-} = {}) {
+function buildSupabase(
+  opts: {
+    fetchResult?: { data: unknown; error: unknown };
+    updateResult?: { data: unknown; error: unknown };
+  } = {},
+) {
   const fetch = opts.fetchResult ?? { data: null, error: null };
   const update = opts.updateResult ?? { data: null, error: null };
 
@@ -98,15 +100,10 @@ mockMod("@/lib/action-utils", {
 
 // ─── Lazy-loaded action ──────────────────────────────────────────────
 
-let updateBrandConfig: (
-  prevState: unknown,
-  fd: FormData,
-) => Promise<unknown>;
+let updateBrandConfig: (prevState: unknown, fd: FormData) => Promise<unknown>;
 
 test.before(async () => {
-  const mod = await import(
-    "@/app/(dashboard)/settings/branding/actions"
-  );
+  const mod = await import("@/app/(dashboard)/settings/branding/actions");
   updateBrandConfig = mod.updateBrandConfig;
 });
 
@@ -236,7 +233,10 @@ test("updateBrandConfig: rejects invalid font_heading", async () => {
 test("updateBrandConfig: updates brand config successfully with all fields", async () => {
   resetMocks();
   supabase = buildSupabase({
-    fetchResult: { data: { brand_config: { logo_url: "existing.png" } }, error: null },
+    fetchResult: {
+      data: { brand_config: { logo_url: "existing.png" } },
+      error: null,
+    },
   });
   buildCtx(supabase);
 

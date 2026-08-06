@@ -9,8 +9,8 @@ import { describe, expect, it } from "vitest";
 import {
   createAdminClient,
   createAnonClient,
-  createTestOrg,
   createTestBranch,
+  createTestOrg,
   trackCleanup,
 } from "./helpers";
 
@@ -110,7 +110,10 @@ describe("Bank Accounts CRUD", () => {
       .select()
       .single();
 
-    const { error } = await admin.from("bank_accounts").delete().eq("id", ba!.id);
+    const { error } = await admin
+      .from("bank_accounts")
+      .delete()
+      .eq("id", ba!.id);
     expect(error).toBeNull();
   });
 });
@@ -135,7 +138,7 @@ describe("seed_default_bank_accounts RPC", () => {
     expect(queryErr).toBeNull();
     expect(accounts!.length).toBe(3);
 
-    const names = accounts!.map((a: any) => a.name);
+    const names = accounts!.map((a) => a.name);
     expect(names).toContain("Бэлэн мөнгө");
     expect(names).toContain("Хаан банк");
     expect(names).toContain("Хас банк");

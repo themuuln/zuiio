@@ -11,6 +11,7 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { COMPANY_TYPES } from "@/lib/constants";
+import { useI18n } from "@/lib/i18n";
 import { updateOrganization } from "./actions";
 import { useRegisterSave, useSettings } from "./settings-context";
 
@@ -39,6 +40,7 @@ export function OrgInfoForm({
   initialSlug,
   initialCompanyType,
 }: OrgInfoFormProps) {
+  const { t } = useI18n();
   const { notify } = useSettings();
   const initial = useRef({
     name: initialName,
@@ -138,11 +140,13 @@ export function OrgInfoForm({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field>
-          <FieldLabel htmlFor="org-type">Байгууллагын төрөл</FieldLabel>
+          <FieldLabel htmlFor="org-type">
+            {t("settings.organizationType")}
+          </FieldLabel>
           <NativeSelect id="org-type" {...register("company_type")}>
             {COMPANY_TYPES.map((ct) => (
               <NativeSelectOption key={ct.value} value={ct.value}>
-                {ct.label}
+                {t(ct.labelKey)}
               </NativeSelectOption>
             ))}
           </NativeSelect>

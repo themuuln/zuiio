@@ -6,14 +6,17 @@ import {
   ClipboardList,
   Cog,
   DollarSign,
+  Keyboard,
   Package,
   Plus,
   SearchIcon,
   Truck,
   UserPlus,
+  Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { isEditingActive } from "@/components/search-input";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -46,6 +49,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigation } from "@/hooks/use-navigation";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { Link, usePathname, useRouter } from "@/lib/i18n/navigation";
+import { useGlobalSearch } from "@/lib/queries/use-global-search";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 export interface PageTab {
   value: string;
@@ -60,6 +65,16 @@ interface PageHeaderProps {
 }
 
 // ── Breadcrumb helpers ───────────────────────────────
+// Maps work order status values to i18n key suffixes (camelCase, no spaces).
+const WO_STATUS_KEY: Record<string, string> = {
+  New: "statusNew",
+  Diagnosing: "statusDiagnosing",
+  "In Progress": "statusInProgress",
+  "Ready for Pickup": "statusReadyForPickup",
+  Completed: "statusCompleted",
+  Cancelled: "statusCancelled",
+};
+
 const NAV_LABEL_KEYS: Record<string, string> = {
   dashboard: "nav.dashboard",
   "work-orders": "nav.workOrders",
@@ -105,6 +120,12 @@ export function PageHeader({
   const { push } = useRouter();
   const { searchItems } = useNavigation();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [helpOpen, setHelpOpen] = useState(false);
+  const { data: org } = useCurrentOrg();
+  const globalSearch = useGlobalSearch(org?.orgId, searchQuery);
+  const searchResults = globalSearch.data;
+  const isSearching = searchQuery.trim().length >= 2;
 
   const {
     setNewCustomerDialogOpen,
@@ -117,7 +138,10 @@ export function PageHeader({
     setNewPartsCarSheetOpen,
   } = usePageHeader();
 
-  const openSearch = useCallback(() => setSearchOpen(true), []);
+  const openSearch = useCallback(() => {
+    setSearchQuery("");
+    setSearchOpen(true);
+  }, []);
 
   const handleSelect = useCallback(
     (href: string) => {
@@ -128,6 +152,39 @@ export function PageHeader({
   );
 
   const commandItems = useMemo(() => searchItems, [searchItems]);
+
+  // ── Jump targets for global search hits ──
+  const jumpToCustomers = useCallback(
+    (term: string) => {
+      setSearchOpen(false);
+      push(`/dashboard/customers?customers-search=${encodeURIComponent(term)}`);
+    },
+    [push],
+  );
+
+  const jumpToVehicles = useCallback(
+    (term: string) => {
+      setSearchOpen(false);
+      push(`/dashboard/vehicles?vehicles-search=${encodeURIComponent(term)}`);
+    },
+    [push],
+  );
+
+  const jumpToInventory = useCallback(
+    (term: string) => {
+      setSearchOpen(false);
+      push(`/dashboard/inventory?q=${encodeURIComponent(term)}`);
+    },
+    [push],
+  );
+
+  const jumpToWorkOrder = useCallback(
+    (id: string) => {
+      setSearchOpen(false);
+      push(`/dashboard/work-orders/${id}`);
+    },
+    [push],
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -145,6 +202,24 @@ export function PageHeader({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Global daily-action shortcuts: N = new work order, ? = shortcut help.
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isEditingActive()) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key.toLowerCase() === "n") {
+        event.preventDefault();
+        setNewWorkOrderSheetOpen(true);
+      } else if (event.key === "?") {
+        event.preventDefault();
+        setHelpOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [setNewWorkOrderSheetOpen]);
 
   const pathname = usePathname();
 
@@ -294,103 +369,242 @@ export function PageHeader({
 
       <CommandDialog
         open={searchOpen}
-        onOpenChange={setSearchOpen}
+        onOpenChange={(open) => {
+          setSearchOpen(open);
+          if (!open) setSearchQuery("");
+        }}
         title={t("common.search")}
       >
-        <Command>
-          <CommandInput placeholder={t("common.search")} />
+        <Command shouldFilter={!isSearching}>
+          <CommandInput
+            placeholder={t("globalSearch.searchPrompt")}
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
           <CommandList>
             <CommandEmpty>{t("common.noResults")}</CommandEmpty>
-            <CommandGroup heading={t("common.quickCreate")}>
-              {[
-                {
-                  icon: ClipboardList,
-                  label: t("dashboard.newWorkOrder"),
-                  onSelect: () => {
-                    setSearchOpen(false);
-                    setNewWorkOrderSheetOpen(true);
-                  },
-                },
-                {
-                  icon: UserPlus,
-                  label: t("dashboard.newCustomer"),
-                  onSelect: () => {
-                    setSearchOpen(false);
-                    setNewCustomerDialogOpen(true);
-                  },
-                },
-                {
-                  icon: Car,
-                  label: t("dashboard.newVehicle"),
-                  onSelect: () => {
-                    setSearchOpen(false);
-                    setNewVehicleDialogOpen(true);
-                  },
-                },
-                {
-                  icon: DollarSign,
-                  label: t("expenses.addExpense"),
-                  onSelect: () => {
-                    setSearchOpen(false);
-                    setNewExpenseSheetOpen(true);
-                  },
-                },
-                {
-                  icon: Truck,
-                  label: t("inventory.newSupplier"),
-                  onSelect: () => {
-                    setSearchOpen(false);
-                    setNewSupplierSheetOpen(true);
-                  },
-                },
-                {
-                  icon: Package,
-                  label: t("inventory.newPurchaseOrder"),
-                  onSelect: () => {
-                    setSearchOpen(false);
-                    setNewPOSheetOpen(true);
-                  },
-                },
-                {
-                  icon: CalendarPlus,
-                  label: t("appointments.newAppointment"),
-                  onSelect: () => {
-                    setSearchOpen(false);
-                    setNewAppointmentSheetOpen(true);
-                  },
-                },
-                {
-                  icon: Car,
-                  label: t("partsCars.newCar"),
-                  onSelect: () => {
-                    setSearchOpen(false);
-                    setNewPartsCarSheetOpen(true);
-                  },
-                },
-              ].map((item, _i) => {
-                const Icon = item.icon;
-                return (
-                  <CommandItem key={item.label} onSelect={item.onSelect}>
-                    <Icon className="size-4" />
-                    <span>{item.label}</span>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-            <CommandGroup heading={t("nav.dashboard")}>
-              {commandItems.map((item) => {
-                const Icon = item.icon;
+            {isSearching ? (
+              <>
+                {searchResults?.customers.length ? (
+                  <CommandGroup heading={t("globalSearch.customers")}>
+                    {searchResults.customers.map((c) => (
+                      <CommandItem
+                        key={`customer-${c.id}`}
+                        onSelect={() => jumpToCustomers(searchQuery)}
+                      >
+                        <Users className="size-4" />
+                        <span>{c.name}</span>
+                        {c.phone ? (
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            {c.phone}
+                          </span>
+                        ) : null}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ) : null}
+                {searchResults?.vehicles.length ? (
+                  <CommandGroup heading={t("globalSearch.vehicles")}>
+                    {searchResults.vehicles.map((v) => (
+                      <CommandItem
+                        key={`vehicle-${v.id}`}
+                        onSelect={() =>
+                          jumpToVehicles(v.plateNumber ?? searchQuery)
+                        }
+                      >
+                        <Car className="size-4" />
+                        <span>
+                          {[v.make, v.model, v.plateNumber]
+                            .filter(Boolean)
+                            .join(" ") || "—"}
+                        </span>
+                        {v.ownerName ? (
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            {v.ownerName}
+                          </span>
+                        ) : null}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ) : null}
+                {searchResults?.workOrders.length ? (
+                  <CommandGroup heading={t("globalSearch.workOrders")}>
+                    {searchResults.workOrders.map((wo) => (
+                      <CommandItem
+                        key={`wo-${wo.id}`}
+                        onSelect={() => jumpToWorkOrder(wo.id)}
+                      >
+                        <ClipboardList className="size-4" />
+                        <span>
+                          {[wo.plateNumber, wo.customerName]
+                            .filter(Boolean)
+                            .join(" · ") || `#${wo.id.slice(0, 8)}`}
+                        </span>
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {t(
+                            `workOrders.${WO_STATUS_KEY[wo.status] ?? "statusNew"}`,
+                          )}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ) : null}
+                {searchResults?.parts.length ? (
+                  <CommandGroup heading={t("globalSearch.parts")}>
+                    {searchResults.parts.map((p) => (
+                      <CommandItem
+                        key={`part-${p.id ?? p.partNumber ?? p.name}`}
+                        onSelect={() => jumpToInventory(p.name ?? searchQuery)}
+                      >
+                        <Package className="size-4" />
+                        <span>{p.name ?? "—"}</span>
+                        {p.partNumber ? (
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            {p.partNumber}
+                          </span>
+                        ) : null}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <CommandGroup heading={t("common.quickCreate")}>
+                  {[
+                    {
+                      icon: ClipboardList,
+                      label: t("dashboard.newWorkOrder"),
+                      onSelect: () => {
+                        setSearchOpen(false);
+                        setNewWorkOrderSheetOpen(true);
+                      },
+                    },
+                    {
+                      icon: UserPlus,
+                      label: t("dashboard.newCustomer"),
+                      onSelect: () => {
+                        setSearchOpen(false);
+                        setNewCustomerDialogOpen(true);
+                      },
+                    },
+                    {
+                      icon: Car,
+                      label: t("dashboard.newVehicle"),
+                      onSelect: () => {
+                        setSearchOpen(false);
+                        setNewVehicleDialogOpen(true);
+                      },
+                    },
+                    {
+                      icon: DollarSign,
+                      label: t("expenses.addExpense"),
+                      onSelect: () => {
+                        setSearchOpen(false);
+                        setNewExpenseSheetOpen(true);
+                      },
+                    },
+                    {
+                      icon: Truck,
+                      label: t("inventory.newSupplier"),
+                      onSelect: () => {
+                        setSearchOpen(false);
+                        setNewSupplierSheetOpen(true);
+                      },
+                    },
+                    {
+                      icon: Package,
+                      label: t("inventory.newPurchaseOrder"),
+                      onSelect: () => {
+                        setSearchOpen(false);
+                        setNewPOSheetOpen(true);
+                      },
+                    },
+                    {
+                      icon: CalendarPlus,
+                      label: t("appointments.newAppointment"),
+                      onSelect: () => {
+                        setSearchOpen(false);
+                        setNewAppointmentSheetOpen(true);
+                      },
+                    },
+                    {
+                      icon: Car,
+                      label: t("partsCars.newCar"),
+                      onSelect: () => {
+                        setSearchOpen(false);
+                        setNewPartsCarSheetOpen(true);
+                      },
+                    },
+                    {
+                      icon: Keyboard,
+                      label: t("shortcuts.title"),
+                      onSelect: () => {
+                        setSearchOpen(false);
+                        setHelpOpen(true);
+                      },
+                    },
+                  ].map((item, _i) => {
+                    const Icon = item.icon;
+                    return (
+                      <CommandItem key={item.label} onSelect={item.onSelect}>
+                        <Icon className="size-4" />
+                        <span>{item.label}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+                <CommandGroup heading={t("nav.dashboard")}>
+                  {commandItems.map((item) => {
+                    const Icon = item.icon;
 
-                return (
-                  <CommandItem
-                    key={item.href}
-                    onSelect={() => handleSelect(item.href)}
-                  >
-                    <Icon className="size-4" />
-                    <span>{t(item.labelKey)}</span>
-                  </CommandItem>
-                );
-              })}
+                    return (
+                      <CommandItem
+                        key={item.href}
+                        onSelect={() => handleSelect(item.href)}
+                      >
+                        <Icon className="size-4" />
+                        <span>{t(item.labelKey)}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </>
+            )}
+          </CommandList>
+        </Command>
+      </CommandDialog>
+
+      {/* Keyboard shortcut help overlay */}
+      <CommandDialog
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+        title={t("shortcuts.title")}
+      >
+        <Command>
+          <CommandList>
+            <CommandEmpty>{t("common.noResults")}</CommandEmpty>
+            <CommandGroup heading={t("shortcuts.description")}>
+              {[
+                { keys: ["⌘", "K"], label: t("shortcuts.search") },
+                { keys: ["⌘", "B"], label: t("shortcuts.toggleSidebar") },
+                { keys: ["N"], label: t("shortcuts.newWorkOrder") },
+                { keys: ["?"], label: t("shortcuts.help") },
+              ].map((s) => (
+                <CommandItem key={s.label} onSelect={() => setHelpOpen(false)}>
+                  <span>{s.label}</span>
+                  <span className="ml-auto flex items-center gap-0.5">
+                    {s.keys.map((k) => (
+                      <kbd
+                        key={k}
+                        className="inline-flex h-4 items-center rounded-md border border-border/60 bg-background px-1 font-mono text-[10px] font-medium text-muted-foreground/70"
+                      >
+                        {k}
+                      </kbd>
+                    ))}
+                  </span>
+                </CommandItem>
+              ))}
             </CommandGroup>
           </CommandList>
         </Command>

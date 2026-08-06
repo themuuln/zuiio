@@ -1,9 +1,73 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { openDrawerByText } from "./helpers";
 
 const UNIQUE_CODE = `E2E-${Date.now()}`;
 const FIXED_CODE = `FIX-${Date.now()}`;
 const TOPUP_CODE = `TOP-${Date.now()}`;
+async function addFirstProductToCart(page: Page) {
+  await page.goto("/shop", { waitUntil: "domcontentloaded" });
+  const addBtn = page.getByRole("button", { name: "Нэмэх" }).first();
+  await expect(addBtn).toBeVisible({ timeout: 15_000 });
+  await expect
+    .poll(
+      async () => {
+        const readCartLength = async () =>
+          page.evaluate(() => {
+            const raw = sessionStorage.getItem("zer-shop-cart");
+            if (!raw) return 0;
+            const parsed: unknown = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed.length : 0;
+          });
+        const currentLength = await readCartLength();
+        if (currentLength > 0) return currentLength;
+        await addBtn.click({ timeout: 1_000 }).catch(() => {});
+        return readCartLength();
+      },
+      { timeout: 10_000, intervals: [100, 250, 500] },
+    )
+    .toBeGreaterThan(0);
+}
+
+async function createGiftCard(page: Page, code: string, balance: string) {
+  await page.goto("/gift-cards", { waitUntil: "domcontentloaded" });
+  await openDrawerByText(page, "Шинэ бэлгийн карт");
+  const drawer = page.locator("[data-drawer-popup]:visible").first();
+  await expect(drawer).toBeVisible();
+
+  await drawer.getByPlaceholder("Жишээ: GIFT2024").fill(code);
+  await drawer.locator('input[inputmode="decimal"]').fill(balance);
+  const submitButton = drawer.getByRole("button", { name: "Хадгалах" });
+  await expect(submitButton).toBeEnabled();
+  await submitButton.click();
+
+  await expect(
+    page.locator("[data-sonner-toast]:visible").first(),
+  ).toContainText("Бэлгийн карт амжилттай үүсгэгдсэн.", { timeout: 30_000 });
+  await expect(drawer).toBeHidden({ timeout: 30_000 });
+}
+
+async function openGiftCardDetail(page: Page, code: string) {
+  await page.goto(`/gift-cards?refresh=${Date.now()}`, {
+    waitUntil: "domcontentloaded",
+  });
+  const cardRow = page.locator("main").getByText(code).first();
+  await expect(cardRow).toBeVisible({ timeout: 10_000 });
+  await cardRow.click();
+
+  const drawer = page.locator("[data-drawer-popup]:visible").last();
+  await expect(drawer).toBeVisible({ timeout: 10_000 });
+  return drawer;
+}
+
+async function assertGiftCardBalance(
+  drawer: Locator,
+  code: string,
+  balance: string,
+) {
+  await expect(drawer).toContainText(code);
+  await expect(drawer.getByText("Үлдэгдэл").first()).toBeVisible();
+  await expect(drawer).toContainText(balance);
+}
 
 test.describe("Gift cards module", () => {
   test("page loads and shows content", async ({ page }) => {
@@ -23,9 +87,7 @@ test.describe("Gift cards module", () => {
     await expect(page.getByText("Код").first()).toBeVisible({ timeout: 5000 });
     await expect(page.getByText("Анхны үлдэгдэл").first()).toBeVisible();
     await expect(page.getByText("Валют").first()).toBeVisible();
-    await expect(
-      page.getByText("Хүлээн авагчийн нэр").first(),
-    ).toBeVisible();
+    await expect(page.getByText("Хүлээн авагчийн нэр").first()).toBeVisible();
     await expect(
       page.getByText("Хүлээн авагчийн и-мэйл").first(),
     ).toBeVisible();
@@ -36,258 +98,57 @@ test.describe("Gift cards module", () => {
   });
 
   test("create a gift card successfully", async ({ page }) => {
-    await page.goto("/gift-cards", { waitUntil: "domcontentloaded" });
-
-    await openDrawerByText(page, "Шинэ бэлгийн карт");
-    await page.waitForTimeout(1500);
-
-    // Fill gift card code using placeholder
-    const codeInput = page.getByPlaceholder("Жишээ: GIFT2024").first();
-    const codeVisible = await codeInput.isVisible().catch(() => false);
-    if (codeVisible) {
-      await codeInput.fill(UNIQUE_CODE);
-    } else {
-      // Fallback: try input[name="code"]
-      const codeByName = page.locator('input[name="code"]').first();
-      if (await codeByName.isVisible().catch(() => false)) {
-        await codeByName.fill(UNIQUE_CODE);
-      }
-    }
-
-    // Set initial balance via the currency input
-    const balanceInput = page.locator('input[type="text"]').first();
-    if (await balanceInput.isVisible().catch(() => false)) {
-      await balanceInput.fill("50000");
-    }
-
-    // Submit via the drawer submit button
-    const submitBtn = page.getByText("Хадгалах").first();
-    if (await submitBtn.isVisible().catch(() => false)) {
-      await submitBtn.click();
-      await page.waitForTimeout(2000);
-
-      // Check for success toast
-      const toast = page.locator("[data-sonner-toast]").first();
-      const toastVisible = await toast.isVisible().catch(() => false);
-      if (toastVisible) {
-        await expect(toast).toContainText(
-          "Бэлгийн карт амжилттай үүсгэгдсэн.",
-          { timeout: 5000 },
-        );
-      }
-    }
+    await createGiftCard(page, UNIQUE_CODE, "50000");
   });
 
   test("create a fixed gift card and verify in list", async ({ page }) => {
-    await page.goto("/gift-cards", { waitUntil: "domcontentloaded" });
+    await createGiftCard(page, FIXED_CODE, "100000");
 
-    await openDrawerByText(page, "Шинэ бэлгийн карт");
-    await page.waitForTimeout(1500);
-
-    // Fill gift card code
-    const codeInput = page.getByPlaceholder("Жишээ: GIFT2024").first();
-    if (await codeInput.isVisible().catch(() => false)) {
-      await codeInput.fill(FIXED_CODE);
-    }
-
-    // Set initial balance
-    const balanceInput = page.locator('input[type="text"]').first();
-    if (await balanceInput.isVisible().catch(() => false)) {
-      await balanceInput.fill("100000");
-    }
-
-    // Submit
-    const submitBtn = page.getByText("Хадгалах").first();
-    if (await submitBtn.isVisible().catch(() => false)) {
-      await submitBtn.click();
-      await page.waitForTimeout(2000);
-
-      // Check for success toast
-      const toast = page.locator("[data-sonner-toast]").first();
-      const toastVisible = await toast.isVisible().catch(() => false);
-      if (toastVisible) {
-        await expect(toast).toContainText(
-          "Бэлгийн карт амжилттай үүсгэгдсэн.",
-          { timeout: 5000 },
-        );
-      }
-    }
-
-    // Navigate back to list and verify the fixed gift card appears
-    await page.goto("/gift-cards", { waitUntil: "domcontentloaded" });
+    await page.goto(`/gift-cards?refresh=${Date.now()}`, {
+      waitUntil: "domcontentloaded",
+    });
     await expect(page.locator("main")).toContainText(FIXED_CODE, {
-      timeout: 10000,
+      timeout: 10_000,
     });
   });
 
   test("gift card detail shows balance", async ({ page }) => {
-    // First create a gift card we can inspect
     const detailCode = `DTL-${Date.now()}`;
+    await createGiftCard(page, detailCode, "75000");
 
-    await page.goto("/gift-cards", { waitUntil: "domcontentloaded" });
-    await openDrawerByText(page, "Шинэ бэлгийн карт");
-    await page.waitForTimeout(1500);
-
-    const codeInput = page.getByPlaceholder("Жишээ: GIFT2024").first();
-    if (await codeInput.isVisible().catch(() => false)) {
-      await codeInput.fill(detailCode);
-    }
-    const balanceInput = page.locator('input[type="text"]').first();
-    if (await balanceInput.isVisible().catch(() => false)) {
-      await balanceInput.fill("75000");
-    }
-    const submitBtn = page.getByText("Хадгалах").first();
-    if (await submitBtn.isVisible().catch(() => false)) {
-      await submitBtn.click();
-      await page.waitForTimeout(2000);
-    }
-
-    // Navigate to gift cards list and click on the created card
-    await page.goto("/gift-cards", { waitUntil: "domcontentloaded" });
-
-    // Click the row containing our gift card code
-    const cardRow = page.locator("main").getByText(detailCode).first();
-    await expect(cardRow).toBeVisible({ timeout: 10000 });
-
-    // Click on the row to open detail drawer
-    // Try clicking the cell directly
-    await cardRow.click();
-    await page.waitForTimeout(1500);
-
-    // Wait for the detail drawer to appear
-    await page
-      .waitForSelector('[data-drawer-popup]', { timeout: 5000 })
-      .catch(() => {});
-
-    // Check the detail drawer shows balance information
-    const balanceLabel = page.getByText("Үлдэгдэл").first();
-    const balanceVisible = await balanceLabel.isVisible().catch(() => false);
-    if (balanceVisible) {
-      await expect(balanceLabel).toBeVisible({ timeout: 5000 });
-    }
-
-    // Verify the code is visible in the drawer header
-    const detailTitle = page.getByText(detailCode).first();
-    const titleVisible = await detailTitle.isVisible().catch(() => false);
-    if (titleVisible) {
-      await expect(detailTitle).toBeVisible({ timeout: 5000 });
-    }
+    const drawer = await openGiftCardDetail(page, detailCode);
+    await assertGiftCardBalance(drawer, detailCode, "75,000");
   });
 
   test("top up a gift card and verify balance", async ({ page }) => {
-    // Create a gift card with initial balance
-    await page.goto("/gift-cards", { waitUntil: "domcontentloaded" });
+    await createGiftCard(page, TOPUP_CODE, "20000");
 
-    await openDrawerByText(page, "Шинэ бэлгийн карт");
-    await page.waitForTimeout(1500);
-
-    const codeInput = page.getByPlaceholder("Жишээ: GIFT2024").first();
-    if (await codeInput.isVisible().catch(() => false)) {
-      await codeInput.fill(TOPUP_CODE);
-    }
-
-    // Set initial balance of 20000
-    const balanceInput = page.locator('input[type="text"]').first();
-    if (await balanceInput.isVisible().catch(() => false)) {
-      await balanceInput.fill("20000");
-    }
-
-    const submitBtn = page.getByText("Хадгалах").first();
-    if (await submitBtn.isVisible().catch(() => false)) {
-      await submitBtn.click();
-      await page.waitForTimeout(2000);
-    }
-
-    // Navigate to list and verify card exists with balance
-    await page.goto("/gift-cards", { waitUntil: "domcontentloaded" });
-    await expect(page.locator("main")).toContainText(TOPUP_CODE, {
-      timeout: 10000,
-    });
-
-    // Click to open detail drawer
-    const cardRow = page.locator("main").getByText(TOPUP_CODE).first();
-    await cardRow.click();
-    await page.waitForTimeout(1500);
-
-    await page
-      .waitForSelector('[data-drawer-popup]', { timeout: 5000 })
-      .catch(() => {});
-
-    // Verify balance section is visible
-    const balanceLabel = page.getByText("Үлдэгдэл").first();
-    if (await balanceLabel.isVisible().catch(() => false)) {
-      await expect(balanceLabel).toBeVisible({ timeout: 5000 });
-    }
-
-    // Verify issuance transaction appears in transaction history
-    const issuanceLabel = page.getByText("Олгосон").first();
-    if (await issuanceLabel.isVisible().catch(() => false)) {
-      await expect(issuanceLabel).toBeVisible({ timeout: 5000 });
-    }
+    const drawer = await openGiftCardDetail(page, TOPUP_CODE);
+    await assertGiftCardBalance(drawer, TOPUP_CODE, "20,000");
+    await expect(drawer.getByText("Олгосон").first()).toBeVisible();
   });
 
   test("invalid gift card code in checkout shows error", async ({ page }) => {
-    // Add product to cart first
-    await page.goto("/shop", { waitUntil: "domcontentloaded" });
+    await addFirstProductToCart(page);
 
-    const addBtn = page
-      .getByRole("button", { name: "Нэмэх" })
-      .first();
-    const addBtnVisible = await addBtn.isVisible().catch(() => false);
-
-    if (!addBtnVisible) {
-      test.skip();
-      return;
-    }
-
-    await addBtn.click();
-    await page
-      .waitForResponse(
-        (resp) => resp.url().includes("/api/") && resp.status() < 400,
-      )
-      .catch(() => {});
-
-    // Go to cart and open checkout
     await page.goto("/shop/cart", { waitUntil: "domcontentloaded" });
-
-    const checkoutBtn = page
-      .getByRole("button", { name: "Төлбөр тооцоо" })
-      .first();
-    if (!(await checkoutBtn.isVisible().catch(() => false))) {
-      test.skip();
-      return;
-    }
-
+    const checkoutBtn = page.getByRole("button", { name: "Төлбөр тооцоо" });
+    await expect(checkoutBtn).toBeVisible({ timeout: 10_000 });
     await checkoutBtn.click();
-    await page.waitForTimeout(1500);
-    await page
-      .waitForSelector('[data-drawer-popup]', { timeout: 5000 })
-      .catch(() => {});
 
-    // Enter a non-existent gift card code
-    const giftCardInput = page.getByPlaceholder("Картын код оруулах").first();
-    if (!(await giftCardInput.isVisible().catch(() => false))) {
-      test.skip();
-      return;
-    }
-
+    const checkoutDrawer = page.locator("[data-drawer-popup]:visible").last();
+    const giftCardInput = checkoutDrawer.getByPlaceholder("Картын код оруулах");
+    await expect(giftCardInput).toBeVisible({ timeout: 10_000 });
     await giftCardInput.fill("INVALIDGIFT999");
-
-    const applyBtn = page
+    const applyButton = checkoutDrawer
       .getByRole("button", { name: "Хэрэглэх" })
-      .first();
-    if (await applyBtn.isVisible().catch(() => false)) {
-      await applyBtn.click();
-      await page.waitForTimeout(2000);
+      .last();
+    await expect(applyButton).toBeEnabled();
+    await applyButton.click();
 
-      // Verify error toast appears with "Бэлгийн карт олдсонгүй."
-      const errorToast = page.locator("[data-sonner-toast]").first();
-      const toastVisible = await errorToast.isVisible().catch(() => false);
-      if (toastVisible) {
-        await expect(errorToast).toContainText("Бэлгийн карт олдсонгүй.", {
-          timeout: 5000,
-        });
-      }
-    }
+    const errorToast = page.locator("[data-sonner-toast]:visible").first();
+    await expect(errorToast).toContainText("Бэлгийн карт олдсонгүй.", {
+      timeout: 10_000,
+    });
   });
 });

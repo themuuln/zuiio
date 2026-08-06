@@ -568,7 +568,7 @@ function InspectionItemCard({
   isMutating: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card p-3 transition-colors hover:bg-muted/20">
+    <div className="rounded-xl border border-border/60 bg-card p-3 transition-colors hover:bg-muted/20">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">

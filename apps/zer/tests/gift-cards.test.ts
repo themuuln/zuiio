@@ -51,12 +51,13 @@ test("redeemable amount is zero when balance is zero or negative", () => {
 });
 
 test("balance after topup is balance_before + amount", () => {
-  const testCases: Array<{ before: number; amount: number; expected: number }> = [
-    { before: 0, amount: 10000, expected: 10000 },
-    { before: 50000, amount: 25000, expected: 75000 },
-    { before: 100, amount: 1, expected: 101 },
-    { before: 1000000, amount: 500000, expected: 1500000 },
-  ];
+  const testCases: Array<{ before: number; amount: number; expected: number }> =
+    [
+      { before: 0, amount: 10000, expected: 10000 },
+      { before: 50000, amount: 25000, expected: 75000 },
+      { before: 100, amount: 1, expected: 101 },
+      { before: 1000000, amount: 500000, expected: 1500000 },
+    ];
 
   for (const { before, amount, expected } of testCases) {
     const balanceAfter = before + amount;
@@ -74,7 +75,11 @@ test("balance after topup equals balance_before + amount (integer precision)", (
   for (const amount of topups) {
     balance += amount;
     expected += amount;
-    assert.strictEqual(balance, expected, `after cumulative topup of ${expected}`);
+    assert.strictEqual(
+      balance,
+      expected,
+      `after cumulative topup of ${expected}`,
+    );
   }
 });
 
@@ -105,7 +110,11 @@ test("transaction amount preserves sign convention", () => {
 });
 
 test("redeemable amount is min(current_balance, sale_total) for valid card", () => {
-  const testCases: Array<{ balance: number; saleTotal: number; expected: number }> = [
+  const testCases: Array<{
+    balance: number;
+    saleTotal: number;
+    expected: number;
+  }> = [
     { balance: 50000, saleTotal: 30000, expected: 30000 },
     { balance: 50000, saleTotal: 75000, expected: 50000 },
     { balance: 50000, saleTotal: 50000, expected: 50000 },
@@ -115,7 +124,11 @@ test("redeemable amount is min(current_balance, sale_total) for valid card", () 
 
   for (const { balance, saleTotal, expected } of testCases) {
     const redeemable = Math.min(balance, saleTotal);
-    assert.strictEqual(redeemable, expected, `balance=${balance}, sale=${saleTotal}`);
+    assert.strictEqual(
+      redeemable,
+      expected,
+      `balance=${balance}, sale=${saleTotal}`,
+    );
   }
 });
 
@@ -135,7 +148,10 @@ test("current_balance after full redemption is balance - redeemable_amount", () 
       Math.max(0, balance - saleTotal),
       `remaining after redeem: balance=${balance}, sale=${saleTotal}`,
     );
-    assert.ok(remaining >= 0, `remaining should not be negative, got ${remaining}`);
+    assert.ok(
+      remaining >= 0,
+      `remaining should not be negative, got ${remaining}`,
+    );
     assert.ok(
       remaining <= balance,
       `remaining ${remaining} should not exceed balance ${balance}`,
@@ -150,17 +166,29 @@ test("transaction balance_after invariants", () => {
 
   // issuance
   const issAmount = 50000;
-  assert.strictEqual(0 + issAmount, issAmount, "issuance: balance_after = amount");
+  assert.strictEqual(
+    0 + issAmount,
+    issAmount,
+    "issuance: balance_after = amount",
+  );
 
   // topup
   const before = 30000;
   const topupAmount = 20000;
-  assert.strictEqual(before + topupAmount, 50000, "topup: balance_after = before + amount");
+  assert.strictEqual(
+    before + topupAmount,
+    50000,
+    "topup: balance_after = before + amount",
+  );
 
   // redeem
   const redeemAmount = 15000;
   const redeemBefore = 50000;
-  assert.strictEqual(redeemBefore - redeemAmount, 35000, "redeem: balance_after = before - amount");
+  assert.strictEqual(
+    redeemBefore - redeemAmount,
+    35000,
+    "redeem: balance_after = before - amount",
+  );
 });
 
 test("multiple consecutive topups match cumulative total", () => {

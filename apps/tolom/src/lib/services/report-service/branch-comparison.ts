@@ -138,14 +138,16 @@ export async function getBranchComparison(
   for (const s of servicesData.data ?? []) {
     const bid = woBranchMap.get(s.work_order_id);
     if (!bid) continue;
-    const rev = branchRevenue.get(bid)!;
+    const rev = branchRevenue.get(bid);
+    if (!rev) continue;
     rev.serviceRev += Number(s.final_price);
     rev.serviceCost += Number(s.unit_cost ?? 0) * Number(s.quantity);
   }
   for (const p of partsData.data ?? []) {
     const bid = woBranchMap.get(p.work_order_id);
     if (!bid) continue;
-    const rev = branchRevenue.get(bid)!;
+    const rev = branchRevenue.get(bid);
+    if (!rev) continue;
     rev.partsRev += Number(p.final_price);
     rev.partsCost += Number(p.unit_cost ?? 0) * Number(p.quantity);
   }

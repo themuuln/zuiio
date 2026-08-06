@@ -25,7 +25,7 @@ test.describe("Registration Flow", () => {
         page.getByRole("textbox", { name: /full name/i }),
       ).toBeVisible();
       await expect(
-        page.getByRole("textbox", { name: /shop.*business name/i }),
+        page.getByRole("textbox", { name: /email.*phone.*username/i }),
       ).toBeVisible();
       await expect(page.getByRole("textbox", { name: /email/i })).toBeVisible();
       await expect(
@@ -126,7 +126,7 @@ test.describe("Registration Flow", () => {
     test("rejects short password (< 8 characters)", async ({ page }) => {
       await page.getByRole("textbox", { name: /full name/i }).fill(TEST_NAME);
       await page
-        .getByRole("textbox", { name: /shop.*business name/i })
+        .getByRole("textbox", { name: /email.*phone.*username/i })
         .fill(TEST_ORG);
       await page.getByRole("textbox", { name: /email/i }).fill(TEST_EMAIL);
       await page
@@ -146,7 +146,7 @@ test.describe("Registration Flow", () => {
     test("rejects mismatched passwords", async ({ page }) => {
       await page.getByRole("textbox", { name: /full name/i }).fill(TEST_NAME);
       await page
-        .getByRole("textbox", { name: /shop.*business name/i })
+        .getByRole("textbox", { name: /email.*phone.*username/i })
         .fill(TEST_ORG);
       await page.getByRole("textbox", { name: /email/i }).fill(TEST_EMAIL);
       await page
@@ -165,7 +165,7 @@ test.describe("Registration Flow", () => {
     test("rejects invalid email format", async ({ page }) => {
       await page.getByRole("textbox", { name: /full name/i }).fill(TEST_NAME);
       await page
-        .getByRole("textbox", { name: /shop.*business name/i })
+        .getByRole("textbox", { name: /email.*phone.*username/i })
         .fill(TEST_ORG);
       await page.getByRole("textbox", { name: /email/i }).fill("not-an-email");
       await page
@@ -200,7 +200,7 @@ test.describe("Registration Flow", () => {
         .getByRole("textbox", { name: /full name/i })
         .fill("E2E Test User");
       await page
-        .getByRole("textbox", { name: /shop.*business name/i })
+        .getByRole("textbox", { name: /email.*phone.*username/i })
         .fill("E2E Auto Shop");
       await page.getByRole("textbox", { name: /email/i }).fill(uniqueEmail);
       await page
@@ -215,7 +215,7 @@ test.describe("Registration Flow", () => {
       // Should redirect to confirm-email (if email confirmation enabled)
       // or select-organization (if immediate session)
       await expect(page).toHaveURL(
-        /\/auth\/(confirm-email|select-organization)/,
+        /\/auth\/(confirm-email|select-organization|setup-organization)/,
         { timeout: 15000 },
       );
     });
@@ -236,7 +236,7 @@ test.describe("Registration Flow", () => {
       // Use the known test account email
       await page.getByRole("textbox", { name: /full name/i }).fill("Test User");
       await page
-        .getByRole("textbox", { name: /shop.*business name/i })
+        .getByRole("textbox", { name: /email.*phone.*username/i })
         .fill("Test Shop");
       await page
         .getByRole("textbox", { name: /email/i })
@@ -250,11 +250,9 @@ test.describe("Registration Flow", () => {
 
       await page.getByRole("button", { name: "Create account" }).click();
 
-      // Should show error about already registered email (inline error)
+      // The duplicate-email error is shown as a toast (formError → toast.error)
       await expect(
-        page
-          .getByRole("alert")
-          .filter({ hasText: /already registered|already exists/i }),
+        page.getByText(/already (been )?(registered|exists|in use)/i).first(),
       ).toBeVisible({ timeout: 15000 });
     });
   });

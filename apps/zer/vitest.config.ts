@@ -8,6 +8,9 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
+    // Several action/section suites mock module-level Supabase clients. Keep
+    // files serial so those mocks cannot contend across worker processes.
+    fileParallelism: false,
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
       "packages/**/*.{test,spec}.{ts,tsx}",

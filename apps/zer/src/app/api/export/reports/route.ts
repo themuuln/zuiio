@@ -1,4 +1,5 @@
 import { capture } from "@zuiio/capture";
+import { connection } from "next/server";
 import { toCsv } from "@/lib/csv";
 import { requireAppContext } from "@/lib/erp";
 import type { ExportColumn, ExportFormat } from "@/lib/export";
@@ -68,6 +69,7 @@ const commissionStaffCols: ExportColumn[] = [
 // ── Router ───────────────────────────────────────────────────────────
 
 export async function GET(request: Request) {
+  await connection();
   try {
     const { supabase, organizationId } = await requireAppContext();
 

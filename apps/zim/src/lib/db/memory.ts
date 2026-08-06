@@ -2,6 +2,7 @@ import type {
   CustomerRow,
   EsimRow,
   FxRateRow,
+  Json,
   OrderItemRow,
   OrderRow,
   OrderStatus,
@@ -182,6 +183,7 @@ export class MemoryDb implements Db {
     const row: PackageRow = {
       id: uuid(state),
       ...data,
+      provider_meta: data.provider_meta as Json,
       is_enabled: false,
       is_archived: false,
       needs_repricing: false,
@@ -466,7 +468,7 @@ export class MemoryDb implements Db {
       status: "created",
       qpay_payment_id: null,
       paid_at: null,
-      raw: data.raw ?? null,
+      raw: (data.raw ?? null) as Json,
       created_at: nowIso(),
     };
     state.payments.push(row);
@@ -588,7 +590,7 @@ export class MemoryDb implements Db {
       id: uuid(state),
       provider,
       event_id: eventId,
-      payload,
+      payload: payload as Json,
       processed_at: null,
       created_at: nowIso(),
     });

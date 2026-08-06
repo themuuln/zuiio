@@ -1,10 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { APP_PERMISSIONS, PERMISSION_GROUPS, PERMISSION_LABELS } from "@/lib/permissions";
+import {
+  APP_PERMISSIONS,
+  PERMISSION_GROUPS,
+  PERMISSION_LABELS,
+} from "@/lib/permissions";
 
 // APP_PERMISSIONS is the canonical enum from supabase types
 test("APP_PERMISSIONS is a non-empty array", () => {
-  assert.ok(Array.isArray(APP_PERMISSIONS), "APP_PERMISSIONS should be an array");
+  assert.ok(
+    Array.isArray(APP_PERMISSIONS),
+    "APP_PERMISSIONS should be an array",
+  );
   assert.ok(APP_PERMISSIONS.length > 0, "APP_PERMISSIONS should not be empty");
 });
 

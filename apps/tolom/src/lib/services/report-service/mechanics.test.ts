@@ -38,7 +38,6 @@ function makeBuilder<T = unknown>(data?: T) {
     lte: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
-    // biome-ignore lint/suspicious/noThenProperty: necessary to mock thenable Supabase query builder
     then: vi.fn((resolve: (v: typeof resolved) => void) => resolve(resolved)),
   };
   // single() — terminal method. Delegates to then() so mockResolvedValueOnce on

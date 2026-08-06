@@ -81,7 +81,7 @@ async function registerVehicle(page: Page, bayNumber: number, plate: string) {
   await expect(dialog).toBeVisible({ timeout: 15_000 });
 
   // ── Enter plate number and click Lookup ──
-  const plateInput = dialog.getByPlaceholder(/улсын дугаар|enter plate/i);
+  const plateInput = dialog.getByPlaceholder(/plate number|улсын дугаар/i);
   await expect(plateInput).toBeVisible({ timeout: 5_000 });
   await plateInput.fill(plate);
 

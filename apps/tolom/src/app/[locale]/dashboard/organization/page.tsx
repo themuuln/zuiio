@@ -20,11 +20,7 @@ import {
 
 const orgEditSchema = z.object({
   name: z.string().min(1, "Organization name is required"),
-  logoUrl: z
-    .string()
-    .url("Must be a valid URL")
-    .or(z.literal(""))
-    .optional(),
+  logoUrl: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
 });
 
 const fetchOrgDetail = createOrgQuery<Organization>("");

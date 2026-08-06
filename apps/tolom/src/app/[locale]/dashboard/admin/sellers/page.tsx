@@ -216,7 +216,7 @@ export default function SellersPage() {
                 >
                   <div className="flex items-center gap-3">
                     <Building2 className="size-4 text-muted-foreground" />
-                    <div className="space-y-2">
+                    <div className="flex flex-col gap-2">
                       <Skeleton className="h-4 w-40" />
                       <Skeleton className="h-3 w-24" />
                     </div>

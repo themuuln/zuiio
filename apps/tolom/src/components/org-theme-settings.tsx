@@ -89,13 +89,13 @@ export function BrandSettings({ orgId }: { orgId: string }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
       {/* Settings Panel */}
-      <div className="space-y-6">
+      <div className="flex flex-col gap-y-6">
         {/* Theme Presets */}
         <Card>
           <CardHeader>
             <CardTitle>Theme Preset</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-y-4">
             {/* Zuiio Default — visually distinct */}
             {defaultTheme && (
               <button
@@ -158,9 +158,9 @@ export function BrandSettings({ orgId }: { orgId: string }) {
           <CardHeader>
             <CardTitle>Custom Colors</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-y-4">
             {(["primary", "secondary", "accent"] as const).map((key) => (
-              <div key={key} className="space-y-2">
+              <div key={key} className="flex flex-col gap-y-2">
                 <label className="text-sm font-medium capitalize">
                   {key} Color
                 </label>
@@ -219,8 +219,8 @@ export function BrandSettings({ orgId }: { orgId: string }) {
           <CardHeader>
             <CardTitle>Fonts</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+          <CardContent className="flex flex-col gap-y-4">
+            <div className="flex flex-col gap-y-2">
               <label className="text-sm font-medium">Body Font</label>
               <select
                 value={localConfig.font_body ?? ""}
@@ -237,7 +237,7 @@ export function BrandSettings({ orgId }: { orgId: string }) {
                 ))}
               </select>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-y-2">
               <label className="text-sm font-medium">Heading Font</label>
               <select
                 value={localConfig.font_heading ?? ""}
@@ -277,13 +277,13 @@ export function BrandSettings({ orgId }: { orgId: string }) {
       </div>
 
       {/* Live Preview */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-y-4">
         <Typography.Text className="text-sm font-medium text-muted-foreground">
           Live Preview
         </Typography.Text>
 
         <div className="rounded-lg border bg-background p-6 shadow-sm">
-          <div className="space-y-4">
+          <div className="flex flex-col gap-y-4">
             {/* Buttons */}
             <div className="flex gap-2">
               <Button>Primary</Button>

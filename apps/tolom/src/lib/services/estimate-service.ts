@@ -163,9 +163,45 @@ export async function getEstimates(
   if (params?.date_to) query = query.lte("created_at", params.date_to);
   if (params?.search?.trim()) {
     const term = `%${params.search.trim()}%`;
-    query = query.or(
-      `estimate_number.ilike.${term},customer.first_name.ilike.${term},customer.last_name.ilike.${term},vehicle.plate_number.ilike.${term}`,
-    );
+    // PostgREST or() rejects embedded-resource refs — resolve matching
+    // customers/vehicles first, then filter estimates by their ids.
+    const [customerRows, vehicleRows] = await Promise.all([
+      db
+        .from("customers")
+        .select("id")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .or(
+          `first_name.ilike.${term},last_name.ilike.${term},full_name.ilike.${term},company_name.ilike.${term},contact_person.ilike.${term},phone.ilike.${term},email.ilike.${term}`,
+        )
+        .limit(50),
+      db
+        .from("vehicles")
+        .select("id")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .or(
+          `plate_number.ilike.${term},vin.ilike.${term},make.ilike.${term},model.ilike.${term}`,
+        )
+        .limit(50),
+    ]);
+
+    const conditions: string[] = [];
+    const customerIds = (customerRows.data ?? []).map((row) => row.id);
+    if (customerIds.length > 0) {
+      conditions.push(`customer_id.in.(${customerIds.join(",")})`);
+    }
+    const vehicleIds = (vehicleRows.data ?? []).map((row) => row.id);
+    if (vehicleIds.length > 0) {
+      conditions.push(`vehicle_id.in.(${vehicleIds.join(",")})`);
+    }
+
+    // estimate_number is a top-level column, so it can join the or() directly.
+    const estimateCondition = `estimate_number.ilike.${term}`;
+    query =
+      conditions.length > 0
+        ? query.or(`${estimateCondition},${conditions.join(",")}`)
+        : query.or(estimateCondition);
   }
 
   if (usePagination) {

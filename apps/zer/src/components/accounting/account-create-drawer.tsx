@@ -188,9 +188,11 @@ export function AccountCreateDrawer({
             <FieldLabel>Төрөл</FieldLabel>
             <Select
               value={selectedType}
-              onValueChange={(value: string) =>
-                setValue("type", value as AccountValues["type"])
-              }
+              onValueChange={(value) => {
+                if (value !== null) {
+                  setValue("type", value as AccountValues["type"]);
+                }
+              }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Төрөл сонгох" />
@@ -217,9 +219,7 @@ export function AccountCreateDrawer({
             </FieldLabel>
             <Select
               value={watch("parent_id") ?? ""}
-              onValueChange={(value: string) =>
-                setValue("parent_id", value || "")
-              }
+              onValueChange={(value) => setValue("parent_id", value ?? "")}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Эх данс сонгох" />

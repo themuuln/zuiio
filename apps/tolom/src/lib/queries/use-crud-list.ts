@@ -171,7 +171,9 @@ export function createCrudHooks<
             ]
           : undefined,
         successMessage: msgs?.create,
-        errorMessage: "Failed to create",
+        // No generic errorMessage override — let the server's specific
+        // message (e.g. ConflictError "A category with this name already
+        // exists") surface via useOrgMutation's error.message fallback.
         onError: (err) => reportServerError(`create${config.path}`, err),
       });
     },
@@ -199,7 +201,7 @@ export function createCrudHooks<
                 ctx,
               ),
         successMessage: msgs?.update,
-        errorMessage: "Failed to update",
+        // No generic errorMessage override — surface the server's message.
         onError: (err) => reportServerError(`update${config.path}`, err),
       });
     },
@@ -215,7 +217,7 @@ export function createCrudHooks<
           _ctx: OptimisticContext,
         ) => cached.filter((item) => item.id !== id),
         successMessage: msgs?.delete ?? "Deleted",
-        errorMessage: msgs?.deleteError ?? "Failed to delete",
+        errorMessage: msgs?.deleteError,
         onError: (err) => reportServerError(`delete${config.path}`, err),
       });
     },

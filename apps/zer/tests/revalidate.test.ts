@@ -43,14 +43,19 @@ test("revalidateEntity('sales') calls revalidatePath for '/' and '/sales'", () =
   assert.deepEqual(paths, ["/", "/sales"]);
 });
 
-test("revalidateEntity('inventory') calls revalidatePath for 3 paths", () => {
+test("revalidateEntity('inventory') calls revalidatePath for 4 paths", () => {
   revalidateEntity("inventory");
 
   const paths = revalidatePathSpy.mock.calls.map(
     (c: { arguments: unknown[] }) => String(c.arguments[0]),
   );
-  assert.deepEqual(paths, ["/inventory", "/inventory/movements", "/products"]);
-  assert.equal(paths.length, 3);
+  assert.deepEqual(paths, [
+    "/inventory",
+    "/inventory/movements",
+    "/inventory/transfers",
+    "/products",
+  ]);
+  assert.equal(paths.length, 4);
 });
 
 test("revalidateEntity('categories') calls revalidatePath for 1 path", () => {
@@ -95,34 +100,42 @@ test("ENTITY_PATHS has all expected entity keys", () => {
   const keys = Object.keys(ENTITY_PATHS);
   const expected = [
     "accounting",
+    "blog",
     "branding",
     "branches",
     "categories",
     "commissions",
     "coupons",
     "customers",
+    "dashboard",
+    "deliveries",
     "discounts",
+    "embed",
     "expenses",
+    "gift_cards",
     "hr",
     "invoices",
     "inventory",
     "products",
     "production",
+    "promotions",
     "purchases",
     "quality",
     "quotations",
     "returns",
+    "reviews",
     "roles",
     "sales",
     "settings",
     "shop",
     "suppliers",
     "users",
+    "webhooks",
   ];
   assert.deepEqual(keys.sort(), expected.sort());
 });
 
 test("ENTITY_PATHS['production'] has 2 entries", () => {
-  assert.equal(ENTITY_PATHS["production"].length, 2);
-  assert.deepEqual(ENTITY_PATHS["production"], ["/production", "/quality"]);
+  assert.equal(ENTITY_PATHS.production.length, 2);
+  assert.deepEqual(ENTITY_PATHS.production, ["/production", "/quality"]);
 });

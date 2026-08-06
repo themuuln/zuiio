@@ -68,7 +68,7 @@ vi.mock("exceljs", () => {
             },
           });
         }
-        return rows.get(r)!;
+        return rows.get(r) ?? { getCell: () => ({ value: undefined }) };
       },
       mergeCells: () => {},
       getColumn: () => ({ width: 0 }),

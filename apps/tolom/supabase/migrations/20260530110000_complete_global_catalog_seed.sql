@@ -9,7 +9,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Oil Pan Gasket', 'Тосны савны жийргэвч', NULL, 'Engine', 'Oil pan seal', 'piece'),
   ('Oil Pressure Sensor', 'Тосны даралтын мэдрэгч', '83530-YZZ01', 'Engine', 'Oil pressure sending unit', 'piece'),
   ('Oil Level Sensor', 'Тосны түвшний мэдрэгч', NULL, 'Engine', 'Electronic oil level sensor', 'piece'),
-  ('Oil Cooler Assembly', 'Тосны хөргүүр', NULL, 'Engine', 'Engine oil cooler', 'piece');
+  ('Oil Cooler Assembly', 'Тосны хөргүүр', NULL, 'Engine', 'Engine oil cooler', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Engine Air Intake
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -20,7 +21,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('MAP Sensor', 'Үнэмлэхүй даралтын мэдрэгч', NULL, 'Engine', 'Manifold absolute pressure sensor', 'piece'),
   ('Throttle Body', 'Тохируулагч хаалт', NULL, 'Engine', 'Throttle body assembly', 'piece'),
   ('Throttle Position Sensor', 'Тохируулагч хаалтын мэдрэгч', NULL, 'Engine', 'TP sensor', 'piece'),
-  ('Idle Air Control Valve', 'Тэнцвэрийн агаарын тохируулагч', NULL, 'Engine', 'IAC valve', 'piece');
+  ('Idle Air Control Valve', 'Тэнцвэрийн агаарын тохируулагч', NULL, 'Engine', 'IAC valve', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Engine Ignition
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -30,7 +32,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Ignition Coil', 'Очлуурны ороомог', NULL, 'Engine', 'Single ignition coil pack', 'piece'),
   ('Ignition Coil Set (4)', 'Очлуурны ороомог багц (4ш)', NULL, 'Engine', 'Set of 4 ignition coils', 'set'),
   ('Distributor Cap', 'Дистрибьюторын таг', NULL, 'Engine', 'Distributor cap', 'piece'),
-  ('Spark Plug Wire Set', 'Очлуурны утас багц', NULL, 'Engine', 'Ignition wire set', 'set');
+  ('Spark Plug Wire Set', 'Очлуурны утас багц', NULL, 'Engine', 'Ignition wire set', 'set')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Engine Valvetrain & Timing
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -41,7 +44,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Timing Chain', 'Цагийн гинж', NULL, 'Engine', 'Camshaft timing chain', 'piece'),
   ('Timing Chain Tensioner', 'Цагийн гинжний чангалагч', NULL, 'Engine', 'Timing chain tensioner', 'piece'),
   ('Serpentine Belt', 'Поли V бүс', NULL, 'Engine', 'Drive serpentine belt', 'piece'),
-  ('Accessory Belt Tensioner', 'Бүсний чангалагч', NULL, 'Engine', 'Belt tensioner assembly', 'piece');
+  ('Accessory Belt Tensioner', 'Бүсний чангалагч', NULL, 'Engine', 'Belt tensioner assembly', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Engine Cooling
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -54,7 +58,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Radiator Fan Motor', 'Радиаторын сэнсний мотор', NULL, 'Engine', 'Cooling fan motor', 'piece'),
   ('Coolant Hose Upper', 'Хөргөлтийн шланг Дээд', NULL, 'Engine', 'Upper radiator hose', 'piece'),
   ('Coolant Hose Lower', 'Хөргөлтийн шланг Доод', NULL, 'Engine', 'Lower radiator hose', 'piece'),
-  ('Heater Hose', 'Халаагуурын шланг', NULL, 'Engine', 'Heater core hose', 'piece');
+  ('Heater Hose', 'Халаагуурын шланг', NULL, 'Engine', 'Heater core hose', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Engine Fuel System
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -64,7 +69,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Fuel Pressure Regulator', 'Түлшний даралт тохируулагч', NULL, 'Engine', 'Fuel rail regulator', 'piece'),
   ('Fuel Cap', 'Түлшний таг', NULL, 'Engine', 'Gas cap', 'piece'),
   ('Fuel Hose', 'Түлшний шланг', NULL, 'Engine', 'Fuel line hose per meter', 'meter'),
-  ('EVAP Purge Valve', 'EVAP цэвэрлэгч хавхлага', NULL, 'Engine', 'Evaporative emission purge valve', 'piece');
+  ('EVAP Purge Valve', 'EVAP цэвэрлэгч хавхлага', NULL, 'Engine', 'Evaporative emission purge valve', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Engine Gaskets & Sensors
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -77,7 +83,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Crankshaft Position Sensor', 'Тахир голын байрлалын мэдрэгч', NULL, 'Engine', 'CKP sensor', 'piece'),
   ('Knock Sensor', 'Тогших мэдрэгч', NULL, 'Engine', 'Knock detonation sensor', 'piece'),
   ('EGR Valve', 'EGR хавхлага', NULL, 'Engine', 'Exhaust gas recirculation valve', 'piece'),
-  ('PCV Valve', 'PCV хавхлага', NULL, 'Engine', 'Positive crankcase ventilation valve', 'piece');
+  ('PCV Valve', 'PCV хавхлага', NULL, 'Engine', 'Positive crankcase ventilation valve', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Engine Mounts & Turbo
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -91,7 +98,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Engine Mount Left', 'Хөдөлгүүрийн суурь Зүүн', NULL, 'Engine', 'Left engine mount', 'piece'),
   ('Engine Mount Right', 'Хөдөлгүүрийн суурь Баруун', NULL, 'Engine', 'Right engine mount', 'piece'),
   ('Transmission Mount', 'Дамжуулагчийн суурь', NULL, 'Engine', 'Transmission support mount', 'piece'),
-  ('Torque Strut Mount', 'Эргүүлэх моментийн суурь', NULL, 'Engine', 'Torque strut mount', 'piece');
+  ('Torque Strut Mount', 'Эргүүлэх моментийн суурь', NULL, 'Engine', 'Torque strut mount', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Brakes Pads & Rotors
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -103,7 +111,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Brake Rotor Front Drilled', 'Тоормосны диск Урд Цоолбор', NULL, 'Brakes', 'Front drilled brake rotor', 'piece'),
   ('Brake Rotor Rear Standard', 'Тоормосны диск Арын Энгийн', '42431-YZZ12', 'Brakes', 'Rear standard brake disc', 'piece'),
   ('Brake Drum Rear', 'Тоормосны бөмбөр Арын', NULL, 'Brakes', 'Rear brake drum', 'piece'),
-  ('Brake Shoe Set Rear', 'Тоормосны дотор дэвсгэр багц Арын', NULL, 'Brakes', 'Rear brake shoe set', 'set');
+  ('Brake Shoe Set Rear', 'Тоормосны дотор дэвсгэр багц Арын', NULL, 'Brakes', 'Rear brake shoe set', 'set')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Brakes Calipers & Hydraulics
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -114,7 +123,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Brake Master Cylinder', 'Тоормосны үндсэн шахуурга', NULL, 'Brakes', 'Brake master cylinder', 'piece'),
   ('Brake Booster', 'Тоормосны өсгөгч', NULL, 'Brakes', 'Brake vacuum booster', 'piece'),
   ('ABS Sensor Front', 'ABS мэдрэгч Урд', NULL, 'Brakes', 'Front ABS wheel speed sensor', 'piece'),
-  ('ABS Sensor Rear', 'ABS мэдрэгч Арын', NULL, 'Brakes', 'Rear ABS wheel speed sensor', 'piece');
+  ('ABS Sensor Rear', 'ABS мэдрэгч Арын', NULL, 'Brakes', 'Rear ABS wheel speed sensor', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Suspension Shocks & Struts
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -126,7 +136,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Coil Spring Rear', 'Пүрх Арын', NULL, 'Suspension', 'Rear coil spring', 'piece'),
   ('Lowering Spring Set', 'Багасгасан пүрх багц', NULL, 'Suspension', 'Lowering spring set 4', 'set'),
   ('Air Spring Rear', 'Агаарын пүрх Арын', NULL, 'Suspension', 'Rear air suspension bag', 'piece'),
-  ('Air Suspension Compressor', 'Агаарын компрессор', NULL, 'Suspension', 'Air suspension pump', 'piece');
+  ('Air Suspension Compressor', 'Агаарын компрессор', NULL, 'Suspension', 'Air suspension pump', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Suspension Arms & Joints
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -140,7 +151,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Wheel Bearing Front', 'Дугуйн холхивч Урд', NULL, 'Suspension', 'Front wheel bearing', 'piece'),
   ('Wheel Bearing Rear', 'Дугуйн холхивч Арын', NULL, 'Suspension', 'Rear wheel bearing', 'piece'),
   ('Wheel Hub Assembly Front', 'Дугуйн аяга Урд', NULL, 'Suspension', 'Front wheel hub with bearing', 'piece'),
-  ('Wheel Hub Assembly Rear', 'Дугуйн аяга Арын', NULL, 'Suspension', 'Rear wheel hub with bearing', 'piece');
+  ('Wheel Hub Assembly Rear', 'Дугуйн аяга Арын', NULL, 'Suspension', 'Rear wheel hub with bearing', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Steering
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -151,7 +163,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Power Steering Hose Return', 'Удирдлагын шланг Буцах', NULL, 'Steering', 'Low pressure PS return hose', 'piece'),
   ('Steering Column', 'Удирдлагын багана', NULL, 'Steering', 'Steering column assembly', 'piece'),
   ('Clock Spring', 'Клок спринг', NULL, 'Steering', 'Steering wheel clock spring', 'piece'),
-  ('Steering Angle Sensor', 'Жолооны өнцгийн мэдрэгч', NULL, 'Steering', 'Steering angle sensor', 'piece');
+  ('Steering Angle Sensor', 'Жолооны өнцгийн мэдрэгч', NULL, 'Steering', 'Steering angle sensor', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Electrical Battery & Charging
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -163,7 +176,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Battery Terminal Set', 'Аккумуляторын терминал багц', NULL, 'Electrical', 'Battery terminal connectors', 'set'),
   ('Alternator 90A', 'Генератор 90A', '27060-YZZ01', 'Electrical', '90 Amp alternator', 'piece'),
   ('Alternator 120A', 'Генератор 120A', NULL, 'Electrical', '120 Amp alternator', 'piece'),
-  ('Starter Motor', 'Эхлүүлэгч мотор', NULL, 'Electrical', 'Starter motor', 'piece');
+  ('Starter Motor', 'Эхлүүлэгч мотор', NULL, 'Electrical', 'Starter motor', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Electrical Motors & Actuators
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -176,7 +190,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Door Lock Actuator Rear Left', 'Хаалганы түгжээ Арын зүүн', NULL, 'Electrical', 'Rear left door lock actuator', 'piece'),
   ('Door Lock Actuator Rear Right', 'Хаалганы түгжээ Арын баруун', NULL, 'Electrical', 'Rear right door lock actuator', 'piece'),
   ('Wiper Motor Front', 'Арчигчийн мотор Урд', NULL, 'Electrical', 'Front wiper motor', 'piece'),
-  ('Heater Blower Motor', 'Халаагуурын сэнсний мотор', NULL, 'Electrical', 'HVAC blower motor', 'piece');
+  ('Heater Blower Motor', 'Халаагуурын сэнсний мотор', NULL, 'Electrical', 'HVAC blower motor', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Electrical Relays Fuses Switches
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -189,7 +204,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Relay Assortment Kit', 'Реле багц', NULL, 'Electrical', 'Set of common relays', 'set'),
   ('Ignition Switch', 'Гал асаах унтраалга', NULL, 'Electrical', 'Ignition switch assembly', 'piece'),
   ('Brake Light Switch', 'Тоормосны гэрлийн унтраалга', NULL, 'Electrical', 'Stop lamp switch', 'piece'),
-  ('Parking Sensor Set', 'Зогсоолын мэдрэгч багц', NULL, 'Electrical', 'Rear parking sensor kit 4', 'set');
+  ('Parking Sensor Set', 'Зогсоолын мэдрэгч багц', NULL, 'Electrical', 'Rear parking sensor kit 4', 'set')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Lighting
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -207,7 +223,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Fog Light Assembly Left', 'Манангийн гэрэл Зүүн', NULL, 'Lighting', 'Left fog light assembly', 'piece'),
   ('Fog Light Assembly Right', 'Манангийн гэрэл Баруун', NULL, 'Lighting', 'Right fog light assembly', 'piece'),
   ('Dome Interior Light', 'Савлонны гэрэл', NULL, 'Lighting', 'Interior dome light', 'piece'),
-  ('License Plate Light Assembly', 'Регистрийн дугаарын гэрэл', NULL, 'Lighting', 'License plate light', 'piece');
+  ('License Plate Light Assembly', 'Регистрийн дугаарын гэрэл', NULL, 'Lighting', 'License plate light', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - AC System
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -222,7 +239,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Heater Core', 'Халаагуурын гол', NULL, 'AC System', 'Heater core assembly', 'piece'),
   ('Blower Motor Resistor', 'Сэнсний резистор', NULL, 'AC System', 'Blower motor resistor module', 'piece'),
   ('AC Refrigerant R134a 13oz', 'Хөргөлтийн шингэн R134a', NULL, 'AC System', 'R134a refrigerant 13oz can', 'can'),
-  ('AC Refrigerant R1234yf 10oz', 'Хөргөлтийн шингэн R1234yf', NULL, 'AC System', 'R1234yf refrigerant can', 'can');
+  ('AC Refrigerant R1234yf 10oz', 'Хөргөлтийн шингэн R1234yf', NULL, 'AC System', 'R1234yf refrigerant can', 'can')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Transmission & Drivetrain
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -239,14 +257,16 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('CV Axle Left', 'CV тэнхлэг Зүүн', NULL, 'Transmission', 'Left drive axle shaft', 'piece'),
   ('CV Axle Right', 'CV тэнхлэг Баруун', NULL, 'Transmission', 'Right drive axle shaft', 'piece'),
   ('CV Joint Boot Kit', 'CV холбоосын бүрээс багц', NULL, 'Transmission', 'CV boot with clamps', 'set'),
-  ('Differential Oil 75W-90 1L', 'Дифференциалын тос 75W-90', NULL, 'Transmission', 'LSD gear oil 75W-90', 'liter');
+  ('Differential Oil 75W-90 1L', 'Дифференциалын тос 75W-90', NULL, 'Transmission', 'LSD gear oil 75W-90', 'liter')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Cooling System
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
   ('Coolant Antifreeze Ready-mix 5L', 'Антифриз Бэлэн 5L', NULL, 'Cooling', 'Ready-to-use coolant 5L', 'container'),
   ('Coolant Toyota SLLC Pink 5L', 'Антифриз Toyota SLLC 5L', NULL, 'Cooling', 'Toyota Super Long Life Coolant', 'container'),
   ('Coolant Expansion Tank', 'Хөргөлтийн тэлэлтийн сав', NULL, 'Cooling', 'Coolant overflow tank', 'piece'),
-  ('Intercooler', 'Интеркулер', NULL, 'Cooling', 'Turbo intercooler', 'piece');
+  ('Intercooler', 'Интеркулер', NULL, 'Cooling', 'Turbo intercooler', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Exhaust
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -255,7 +275,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Muffler Performance', 'Дуу намсгагч Спорт', NULL, 'Exhaust', 'Performance muffler', 'piece'),
   ('Flex Pipe', 'Уян угаарын хоолой', NULL, 'Exhaust', 'Flexible exhaust pipe', 'piece'),
   ('Exhaust Manifold', 'Угаарын коллектор', NULL, 'Exhaust', 'Exhaust manifold', 'piece'),
-  ('Exhaust Hanger Kit', 'Угаарын өлгүүр багц', NULL, 'Exhaust', 'Rubber exhaust hangers set', 'set');
+  ('Exhaust Hanger Kit', 'Угаарын өлгүүр багц', NULL, 'Exhaust', 'Rubber exhaust hangers set', 'set')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Wheels Tires
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -276,7 +297,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Wheel Lug Nut Set 20pcs', 'Дугуйн толгой багц 20ш', NULL, 'Wheels & Tires', 'Lug nut set', 'set'),
   ('Wheel Center Cap Set 4', 'Дугуйн тогтоош багц 4ш', NULL, 'Wheels & Tires', 'Center caps set', 'set'),
   ('TPMS Sensor Universal', 'Даралтын мэдрэгч', NULL, 'Wheels & Tires', 'Programmable TPMS sensor', 'piece'),
-  ('Tire Pressure Gauge', 'Дугуйн даралт хэмжигч', NULL, 'Wheels & Tires', 'Digital tire pressure gauge', 'piece');
+  ('Tire Pressure Gauge', 'Дугуйн даралт хэмжигч', NULL, 'Wheels & Tires', 'Digital tire pressure gauge', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Body
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -293,7 +315,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Trunk Strut', 'Тээшийн өргөгч', NULL, 'Body', 'Trunk gas strut pair', 'piece'),
   ('Mud Flap Set', 'Шавар хамгаалах дэвсгэр 4ш', NULL, 'Body', 'Set of 4 mud flaps', 'set'),
   ('Door Weatherstrip', 'Хаалганы чигжээс', NULL, 'Body', 'Door rubber seal', 'piece'),
-  ('Hood Insulation Pad', 'Мотоны дулаалга', NULL, 'Body', 'Under-hood insulation pad', 'piece');
+  ('Hood Insulation Pad', 'Мотоны дулаалга', NULL, 'Body', 'Under-hood insulation pad', 'piece')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Fluids Chemicals
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -311,7 +334,8 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Brake Parts Cleaner', 'Тоормосны цэвэрлэгч', NULL, 'Fluids & Chemicals', 'Aerosol brake cleaner', 'can'),
   ('Fuel Injector Cleaner', 'Түлшний цацагч цэвэрлэгч', NULL, 'Fluids & Chemicals', 'Fuel injector cleaner', 'bottle'),
   ('Penetrating Oil WD-40', 'Нэвтрэх тос WD-40', NULL, 'Fluids & Chemicals', 'Multi-purpose lubricant', 'can'),
-  ('Dielectric Grease', 'Диэлектрик тос', NULL, 'Fluids & Chemicals', 'Dielectric grease for connectors', 'tube');
+  ('Dielectric Grease', 'Диэлектрик тос', NULL, 'Fluids & Chemicals', 'Dielectric grease for connectors', 'tube')
+ON CONFLICT DO NOTHING;
 
 -- Parts - Consumables
 INSERT INTO global_parts_catalog (name, name_mn, part_number, category, description, unit) VALUES
@@ -321,4 +345,5 @@ INSERT INTO global_parts_catalog (name, name_mn, part_number, category, descript
   ('Anti-seize Compound', 'Наалдалтаас сэргийлэгч', NULL, 'Consumables', 'Copper anti-seize', 'tube'),
   ('Zip Tie Assortment', 'Холбогч багц', NULL, 'Consumables', 'Assorted zip ties', 'set'),
   ('Electrical Tape', 'Цахилгаан тууз', NULL, 'Consumables', 'PVC electrical tape', 'roll'),
-  ('Nitrile Gloves L', 'Нийтрил бээлий L', NULL, 'Consumables', 'Disposable gloves large', 'box');
+  ('Nitrile Gloves L', 'Нийтрил бээлий L', NULL, 'Consumables', 'Disposable gloves large', 'box')
+ON CONFLICT DO NOTHING;

@@ -106,6 +106,26 @@ export const giftCardKeys = {
   detail: (id: string) => ["gift_cards", "detail", id] as const,
 };
 
+export const reviewKeys = {
+  all: () => ["reviews"] as const,
+  lists: (orgId: string) => ["reviews", "list", orgId] as const,
+  detail: (id: string) => ["reviews", "detail", id] as const,
+};
+
+export const blogKeys = {
+  all: () => ["blog_posts"] as const,
+  lists: (orgId: string) => ["blog_posts", "list", orgId] as const,
+  detail: (id: string) => ["blog_posts", "detail", id] as const,
+};
+
+export const webhookKeys = {
+  all: () => ["webhook_subscriptions"] as const,
+  lists: (orgId: string) => ["webhook_subscriptions", "list", orgId] as const,
+  detail: (id: string) => ["webhook_subscriptions", "detail", id] as const,
+  deliveries: (subscriptionId: string) =>
+    ["webhook_deliveries", "list", subscriptionId] as const,
+};
+
 export const quotationKeys = {
   all: () => ["quotations"] as const,
   lists: (orgId: string) => ["quotations", "list", orgId] as const,

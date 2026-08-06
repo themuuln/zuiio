@@ -1,14 +1,19 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EnvelopeSimple, TelegramLogo } from "@phosphor-icons/react";
+import {
+  BellSimple,
+  EnvelopeSimple,
+  TelegramLogo,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { capture } from "@zuiio/capture";
 import Link from "next/link";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { usePush } from "@/components/push/push-provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +27,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { useRegisterSave, useSettings } from "./settings-context";
 
@@ -71,20 +77,27 @@ async function fetchTelegramConfig(orgId: string) {
   if (orgId) {
     const { data: orgConfig } = await supabase
       .from("notification_configs")
-      .select("chat_id,config_data,enabled,event_types")
+      .select("config_data,enabled")
       .eq("organization_id", orgId)
       .eq("channel", "telegram")
       .maybeSingle();
 
     if (orgConfig) {
-      chatId =
-        orgConfig.chat_id ??
-        (orgConfig.config_data as { chat_id?: string })?.chat_id ??
-        "";
+      const configData = orgConfig.config_data as {
+        chat_id?: string;
+        event_types?: unknown;
+      };
+      chatId = configData.chat_id ?? "";
       enabled = orgConfig.enabled ?? true;
-      const et = orgConfig.event_types as string[];
-      if (Array.isArray(et) && et.length > 0) {
-        eventTypes = et;
+      const configuredEventTypes = configData.event_types;
+      if (
+        Array.isArray(configuredEventTypes) &&
+        configuredEventTypes.every(
+          (event): event is string => typeof event === "string",
+        ) &&
+        configuredEventTypes.length > 0
+      ) {
+        eventTypes = configuredEventTypes;
       }
     }
   }
@@ -123,10 +136,11 @@ async function saveTelegramConfig(values: TelegramValues, orgId: string) {
   const payload = {
     organization_id: orgId,
     channel: "telegram",
-    chat_id: values.chat_id,
     enabled: values.enabled,
-    event_types: values.event_types,
-    config_data: { chat_id: values.chat_id },
+    config_data: {
+      chat_id: values.chat_id,
+      event_types: values.event_types,
+    },
   };
 
   if (existing) {
@@ -159,21 +173,27 @@ async function fetchEmailConfig(orgId: string) {
   if (orgId) {
     const { data: orgConfig } = await supabase
       .from("notification_configs")
-      .select("chat_id,config_data,enabled,event_types")
+      .select("config_data,enabled")
       .eq("organization_id", orgId)
       .eq("channel", "email")
       .maybeSingle();
 
     if (orgConfig) {
-      recipientEmail =
-        orgConfig.chat_id ??
-        (orgConfig.config_data as { recipient_email?: string })
-          ?.recipient_email ??
-        "";
+      const configData = orgConfig.config_data as {
+        recipient_email?: string;
+        event_types?: unknown;
+      };
+      recipientEmail = configData.recipient_email ?? "";
       enabled = orgConfig.enabled ?? true;
-      const et = orgConfig.event_types as string[];
-      if (Array.isArray(et) && et.length > 0) {
-        eventTypes = et;
+      const configuredEventTypes = configData.event_types;
+      if (
+        Array.isArray(configuredEventTypes) &&
+        configuredEventTypes.every(
+          (event): event is string => typeof event === "string",
+        ) &&
+        configuredEventTypes.length > 0
+      ) {
+        eventTypes = configuredEventTypes;
       }
     }
   }
@@ -200,10 +220,11 @@ async function saveEmailConfig(values: EmailValues, orgId: string) {
   const payload = {
     organization_id: orgId,
     channel: "email",
-    chat_id: values.recipient_email,
     enabled: values.enabled,
-    event_types: values.event_types,
-    config_data: { recipient_email: values.recipient_email },
+    config_data: {
+      recipient_email: values.recipient_email,
+      event_types: values.event_types,
+    },
   };
 
   if (existing) {
@@ -220,7 +241,73 @@ async function saveEmailConfig(values: EmailValues, orgId: string) {
   }
 }
 
-export function NotificationSettings({ isSuperAdmin: _isSuperAdmin, organizationId }: Props) {
+function WebPushSettingsCard() {
+  const { t } = useI18n();
+  const push = usePush();
+  const [busy, setBusy] = useState(false);
+
+  if (!push.supported) return null;
+
+  const handleToggle = async (checked: boolean) => {
+    setBusy(true);
+    try {
+      if (checked) {
+        const ok = await push.enable();
+        if (!ok) {
+          toast.error(t("push.permissionDenied"));
+        } else {
+          toast.success(t("push.enabled"));
+        }
+      } else {
+        await push.disable();
+        toast.success(t("push.disabled"));
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <BellSimple className="size-5" />
+          {t("push.title")}
+        </CardTitle>
+        <CardDescription>{t("push.description")}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <FieldGroup>
+            <div className="flex items-center justify-between">
+              <div>
+                <FieldLabel>{t("push.enableLabel")}</FieldLabel>
+                <p className="text-sm text-muted-foreground">
+                  {t("push.hint")}
+                </p>
+              </div>
+              <Switch
+                checked={push.enabled}
+                disabled={busy}
+                onCheckedChange={(checked) => void handleToggle(checked)}
+              />
+            </div>
+            {push.permission === "denied" && (
+              <p className="text-xs text-destructive">
+                {t("push.permissionDenied")}
+              </p>
+            )}
+          </FieldGroup>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function NotificationSettings({
+  isSuperAdmin: _isSuperAdmin,
+  organizationId,
+}: Props) {
   const queryClient = useQueryClient();
   const { notify } = useSettings();
 
@@ -259,7 +346,8 @@ export function NotificationSettings({ isSuperAdmin: _isSuperAdmin, organization
   }, []);
 
   const saveMutation = useMutation({
-    mutationFn: (values: TelegramValues) => saveTelegramConfig(values, organizationId),
+    mutationFn: (values: TelegramValues) =>
+      saveTelegramConfig(values, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["notification_config", "telegram"],
@@ -348,7 +436,8 @@ export function NotificationSettings({ isSuperAdmin: _isSuperAdmin, organization
   }, []);
 
   const emailSaveMutation = useMutation({
-    mutationFn: (values: EmailValues) => saveEmailConfig(values, organizationId),
+    mutationFn: (values: EmailValues) =>
+      saveEmailConfig(values, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["notification_config", "email"],
@@ -604,6 +693,9 @@ export function NotificationSettings({ isSuperAdmin: _isSuperAdmin, organization
           </div>
         </CardContent>
       </Card>
+
+      {/* Web Push Notification Card */}
+      <WebPushSettingsCard />
     </>
   );
 }

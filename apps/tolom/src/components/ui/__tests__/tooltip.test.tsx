@@ -9,7 +9,7 @@ import {
 
 describe("Tooltip", () => {
   it("renders TooltipProvider wrapping children", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger>Hover me</TooltipTrigger>

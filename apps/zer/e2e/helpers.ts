@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 /**
  * Opens a drawer by clicking the trigger button that contains the given text.
@@ -6,18 +6,28 @@ import type { Page } from "@playwright/test";
  * Waits for the dialog to appear instead of a hardcoded timeout.
  */
 export async function openDrawerByText(page: Page, text: string) {
-  // Wait for the target button to become visible (handles async data loading)
-  const btn = page.locator("button").filter({ hasText: text }).first();
-  await btn.waitFor({ state: "visible", timeout: 15000 });
+  const btn = page.locator("button:visible").filter({ hasText: text }).first();
+  const drawer = page
+    .locator(
+      '[data-drawer-popup]:visible, [role="dialog"]:visible:not([data-nextjs-dialog])',
+    )
+    .first();
 
-  // Use Playwright's click for reliable event handling through Base UI + Radix Slot
-  await btn.click();
-
-  // Wait for Base UI drawer: data-drawer-popup appears in portal after animation
-  // Also support Radix UI dialogs with role="dialog" as fallback
-  await page.waitForSelector('[data-drawer-popup], [role="dialog"]', {
-    timeout: 5000,
-  });
+  await btn.waitFor({ state: "visible", timeout: 15_000 });
+  await expect
+    .poll(
+      async () => {
+        if (await drawer.isVisible()) return true;
+        try {
+          await btn.click({ timeout: 1_000 });
+        } catch {
+          // The trigger can be temporarily inert while the page hydrates.
+        }
+        return await drawer.isVisible();
+      },
+      { timeout: 15_000, intervals: [100, 250, 500] },
+    )
+    .toBe(true);
 }
 
 /**
@@ -35,17 +45,20 @@ export async function submitDrawerForm(page: Page, formId: string) {
     const prevented = !form.dispatchEvent(evt);
     return { ok: true, prevented };
   }, formId);
-  if (!result.ok)
-    // Wait for dialog to close after form submit
-    // Support both Base UI (data-drawer-popup) and Radix UI (role="dialog")
-    await page
-      .waitForSelector('[data-drawer-popup], [role="dialog"]', {
-        state: "hidden",
-        timeout: 10000,
-      })
-      .catch(() => {
-        // Dialog may not close if there's a validation error — that's OK
-      });
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+
+  // Wait for dialog to close after form submit
+  // Support both Base UI (data-drawer-popup) and Radix UI (role="dialog")
+  await page
+    .waitForSelector('[data-drawer-popup], [role="dialog"]', {
+      state: "hidden",
+      timeout: 10000,
+    })
+    .catch(() => {
+      // Dialog may not close if there's a validation error — that's OK
+    });
 }
 
 /**
@@ -82,5 +95,7 @@ export async function clickInsideDrawer(page: Page, selector: string) {
     );
     return { ok: true };
   }, selector);
-  if (!result.ok)
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
 }

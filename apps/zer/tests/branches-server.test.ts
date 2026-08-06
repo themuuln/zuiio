@@ -15,8 +15,6 @@ mock.module("@/lib/supabase/server", {
   exports: { createClient: mock.fn(async () => mockSupabase) },
 });
 
-import { resolved } from "./actions-helpers";
-
 let profileResult = { data: null, error: null };
 let branchQueryResult = { data: [], error: null };
 
@@ -47,22 +45,44 @@ function makeSupabase() {
 }
 
 let getUserBranches: (userId: string) => Promise<unknown[]>;
-let getAccessibleBranches: (orgId: string, userId: string) => Promise<unknown[]>;
+let _getAccessibleBranches: (
+  orgId: string,
+  userId: string,
+) => Promise<unknown[]>;
 
 test.before(async () => {
   const mod = await import("@/lib/branches-server");
   getUserBranches = mod.getUserBranches;
-  getAccessibleBranches = mod.getAccessibleBranches;
+  _getAccessibleBranches = mod.getAccessibleBranches;
 });
 
 test.beforeEach(() => {
   captureSpy.mock.resetCalls();
   mockSupabase = makeSupabase() as unknown as Record<string, unknown>;
-  profileResult = { data: { organization_id: "org-123", branch_id: null }, error: null };
+  profileResult = {
+    data: { organization_id: "org-123", branch_id: null },
+    error: null,
+  };
   branchQueryResult = {
     data: [
-      { id: "b1", name: "Салбар 1", slug: "salbar-1", address: null, phone: null, email: null, is_default: true },
-      { id: "b2", name: "Салбар 2", slug: "salbar-2", address: null, phone: null, email: null, is_default: false },
+      {
+        id: "b1",
+        name: "Салбар 1",
+        slug: "salbar-1",
+        address: null,
+        phone: null,
+        email: null,
+        is_default: true,
+      },
+      {
+        id: "b2",
+        name: "Салбар 2",
+        slug: "salbar-2",
+        address: null,
+        phone: null,
+        email: null,
+        is_default: false,
+      },
     ],
     error: null,
   };
@@ -80,7 +100,10 @@ test("getUserBranches returns empty array on profile error", async () => {
 });
 
 test("getUserBranches returns empty array when no org", async () => {
-  profileResult = { data: { organization_id: null as unknown as string, branch_id: null }, error: null };
+  profileResult = {
+    data: { organization_id: null as unknown as string, branch_id: null },
+    error: null,
+  };
   const branches = await getUserBranches("user-1");
   assert.equal(branches.length, 0);
 });

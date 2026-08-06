@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Toaster } from "@/components/ui/sonner";
 import { Typography } from "@/components/ui/typography";
+import { AuthShowcaseMock } from "./_auth-showcase";
 
 // Route renders user-specific content — legitimate cache opt-out.
 export const instant = false;
@@ -16,43 +17,56 @@ export default async function AuthLayout({
   children: React.ReactNode;
 }) {
   const t = await getTranslations("app");
+  const s = await getTranslations("auth.showcase");
+
   return (
     <div className="h-dvh flex flex-col md:grid md:grid-cols-12 bg-background select-none overscroll-none">
-      {/* Left side showcase - visible on desktop */}
-      <div className="hidden md:flex md:col-span-7 lg:col-span-8 bg-zinc-950 border-r border-zinc-900 flex-col p-10 relative overflow-hidden h-full">
-        {/* Abstract futuristic grid background overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1f23_1.5px,transparent_1.5px),linear-gradient(to_bottom,#1f1f23_1.5px,transparent_1.5px)] bg-[size:4rem_4rem] opacity-35" />
+      {/* Left showcase — brand panel, desktop only */}
+      <aside className="relative hidden md:flex md:col-span-7 lg:col-span-8 flex-col justify-between overflow-hidden bg-zinc-950 p-10 lg:p-14">
+        {/* Ambient brand glow (violet identity + teal accent) */}
+        <div className="pointer-events-none absolute -top-32 -left-32 size-[28rem] rounded-full bg-[radial-gradient(circle,var(--brand-violet-glow),transparent_65%)]" />
+        <div className="pointer-events-none absolute -right-40 -bottom-40 size-[30rem] rounded-full bg-[radial-gradient(circle,var(--brand-teal-glow),transparent_65%)]" />
 
-        {/* Glow points for high tech aesthetic */}
-        <div className="absolute top-10 left-10 size-[300px] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-10 right-10 size-[300px] rounded-full bg-sky-500/5 blur-[120px] pointer-events-none" />
-
-        {/* Content wrapper */}
-        <div className="relative z-10 flex h-full flex-col justify-center items-center">
-          <div className="mx-auto mb-3 flex size-14 items-center justify-center border border-zinc-800 bg-zinc-900">
-            <span className="font-heading text-2xl font-bold tracking-widest text-white">
-              T
-            </span>
+        {/* Header */}
+        <header className="relative z-10 flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--brand-violet)] to-[var(--brand-teal)] shadow-brand">
+            <span className="font-heading text-lg font-bold text-white">T</span>
           </div>
-          <Typography.H1 className="text-2xl font-bold tracking-tight text-white">
+          <span className="font-heading text-base font-bold tracking-[0.18em] text-white">
             {t("name")}
-          </Typography.H1>
-          <Typography.Muted className="mt-2 text-sm text-zinc-500">
-            {t("tagline")}
-          </Typography.Muted>
+          </span>
+        </header>
+
+        {/* Hero + product mock */}
+        <div className="relative z-10 flex flex-col gap-10">
+          <div className="max-w-md">
+            <h2 className="text-3xl lg:text-[2.5rem] font-bold leading-[1.15] tracking-tight text-white">
+              {s("headline")}
+            </h2>
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-zinc-400">
+              {s("subline")}
+            </p>
+          </div>
+          <AuthShowcaseMock appName={t("name")} />
         </div>
-      </div>
 
-      {/* Right side form card */}
-      <div className="flex-1 flex col-span-12 md:col-span-5 lg:col-span-4 flex-col items-center md:justify-center justify-start p-6 sm:p-12 bg-gradient-to-br from-background via-muted/20 to-muted/40 relative overflow-y-auto min-h-dvh">
-        {/* Subtle grid lines background overlay for card side */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,18,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,18,0.02)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+        {/* Footer */}
+        <footer className="relative z-10 flex items-center gap-2 text-xs text-zinc-500">
+          <span className="size-1.5 rounded-full bg-emerald-400" />
+          <span>{s("trust")}</span>
+        </footer>
+      </aside>
 
-        <div className="w-full max-w-sm relative z-10">
-          {/* Brand Header for Mobile Screen only (hidden on desktop) */}
+      {/* Right side — form */}
+      <main className="relative flex-1 flex col-span-12 md:col-span-5 lg:col-span-4 flex-col items-center justify-start md:justify-center p-6 sm:p-10 overflow-y-auto min-h-dvh">
+        {/* Soft brand wash behind the card */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_40%,var(--brand-gradient-subtle),transparent_70%)]" />
+
+        <div className="w-full max-w-sm relative">
+          {/* Brand header for mobile only (hidden on desktop) */}
           <div className="mb-8 text-center md:hidden">
-            <div className="mx-auto mb-3 flex size-12 items-center justify-center border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
-              <span className="font-heading text-lg font-bold tracking-widest text-foreground">
+            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--brand-violet)] to-[var(--brand-teal)] shadow-brand">
+              <span className="font-heading text-lg font-bold text-white">
                 T
               </span>
             </div>
@@ -65,17 +79,11 @@ export default async function AuthLayout({
           </div>
 
           {/* Form wrapper */}
-          <div className="border border-border bg-card p-4 sm:p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative group/card">
-            {/* Tech styling corner accents */}
-            <div className="absolute -top-px -left-px size-2 border-t border-l border-zinc-500 opacity-30 group-hover/card:opacity-75 transition-opacity" />
-            <div className="absolute -top-px -right-px size-2 border-t border-r border-zinc-500 opacity-30 group-hover/card:opacity-75 transition-opacity" />
-            <div className="absolute -bottom-px -left-px size-2 border-b border-l border-zinc-500 opacity-30 group-hover/card:opacity-75 transition-opacity" />
-            <div className="absolute -bottom-px -right-px size-2 border-b border-r border-zinc-500 opacity-30 group-hover/card:opacity-75 transition-opacity" />
-
+          <div className="rounded-xl border border-border bg-card p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]">
             {children}
           </div>
         </div>
-      </div>
+      </main>
       <Toaster />
     </div>
   );

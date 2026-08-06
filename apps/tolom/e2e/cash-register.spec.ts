@@ -64,7 +64,16 @@ test.describe("Cash Register (Mocked)", () => {
       await mockSupabaseREST(page);
       await mockCashRegister(page, null);
       await page.goto("/dashboard/cash-register");
-
+      // The previous test's active-session query is in the fresh cache
+      // (30s staleTime). Wipe the persisted query cache and reload so the
+      // null-session mock actually renders.
+      await page.evaluate(() => {
+        return new Promise<void>((resolve) => {
+          const req = indexedDB.deleteDatabase("zuiio-query-cache");
+          req.onsuccess = req.onerror = req.onblocked = () => resolve();
+        });
+      });
+      await page.reload();
       await expect(
         page.getByRole("button", { name: /open register/i }).first(),
       ).toBeVisible({ timeout: 10_000 });

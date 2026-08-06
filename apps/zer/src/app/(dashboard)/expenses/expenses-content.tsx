@@ -9,7 +9,6 @@ import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { ExpenseCreateDrawer } from "@/components/expenses/expense-create-drawer";
-import { buttonVariants } from "@/components/ui/button";
 import { useBranchContext } from "@/lib/branch-context";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
@@ -94,14 +93,10 @@ export function ExpensesContent() {
           title="Зарлага бүртгэгдээгүй"
           description="Шинэ зарлага нэмж, зардлын мэдээллээ хянана уу."
           action={
-            <button
-              type="button"
-              className={buttonVariants({ variant: "default" })}
-              onClick={() => setCreateOpen(true)}
-            >
-              <Coins className="size-4" />
-              Шинэ зарлага
-            </button>
+            <ExpenseCreateDrawer
+              open={createOpen}
+              onOpenChange={setCreateOpen}
+            />
           }
         />
       ) : (

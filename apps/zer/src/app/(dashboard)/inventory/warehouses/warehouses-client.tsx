@@ -65,7 +65,10 @@ async function fetchWarehouses(): Promise<Warehouse[]> {
   return data ?? [];
 }
 
-async function createWarehouseAction(values: WarehouseValues, organizationId: string | null) {
+async function createWarehouseAction(
+  values: WarehouseValues,
+  organizationId: string | null,
+) {
   if (!organizationId) throw new Error("Байгууллага олдсонгүй");
   const supabase = createClient();
   const { error } = await supabase.from("warehouses").insert({
@@ -99,7 +102,8 @@ export default function WarehousesPage() {
 
   const { organizationId } = useOrgSettings();
   const createMutation = useMutation({
-    mutationFn: (data: WarehouseValues) => createWarehouseAction(data, organizationId),
+    mutationFn: (data: WarehouseValues) =>
+      createWarehouseAction(data, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
       reset();

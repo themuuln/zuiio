@@ -74,7 +74,7 @@ describe("Dialog", () => {
   });
 
   it("renders overlay", () => {
-    const { $ } = renderDialog(<TestDialog open />);
+    renderDialog(<TestDialog open />);
     const overlay = document.querySelector("[data-slot='dialog-overlay']");
     expect(overlay).toBeInTheDocument();
   });

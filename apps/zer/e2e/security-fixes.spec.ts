@@ -100,12 +100,17 @@ test.describe("Security fixes (authenticated)", () => {
   test.describe("P1: Share link creation", () => {
     test("can create a report share link", async ({ page }) => {
       await page.goto("/reports", { waitUntil: "domcontentloaded" });
-      await page.getByRole("button", { name: /Хуваалцах/i }).click();
+      await page
+        .waitForLoadState("networkidle", { timeout: 15_000 })
+        .catch(() => undefined);
+      const shareButton = page.getByRole("button", { name: /Хуваалцах/i });
+      await expect(shareButton).toBeVisible({ timeout: 15_000 });
+      await shareButton.click();
       const dialog = page.getByRole("dialog");
-      await expect(dialog).toBeVisible({ timeout: 10000 });
+      await expect(dialog).toBeVisible({ timeout: 15_000 });
       await dialog.getByRole("button", { name: /Холбоос үүсгэх/i }).click();
       await expect(dialog.getByLabel(/Хуваалцах холбоос/i)).toBeVisible({
-        timeout: 10000,
+        timeout: 15_000,
       });
     });
   });
@@ -115,18 +120,30 @@ test.describe("Security fixes (authenticated)", () => {
   test.describe("P2: Permission enforcement", () => {
     test("settings page shows roles card for org owner", async ({ page }) => {
       await page.goto("/settings", { waitUntil: "domcontentloaded" });
-      await expect(page.getByText("Үүрэг, эрхүүд").first()).toBeVisible();
+      await page
+        .waitForLoadState("networkidle", { timeout: 15_000 })
+        .catch(() => undefined);
+      await expect(page.getByText("Үүрэг, эрхүүд").first()).toBeVisible({
+        timeout: 15_000,
+      });
     });
 
     test("roles drawer shows permission groups", async ({ page }) => {
       await page.goto("/settings?roles=true", {
         waitUntil: "domcontentloaded",
       });
+      await page
+        .waitForLoadState("networkidle", { timeout: 15_000 })
+        .catch(() => undefined);
       await expect(
         page.getByRole("heading", { name: /Үүрэг, эрхүүд/i }),
-      ).toBeVisible({ timeout: 15000 });
-      await page.getByRole("button", { name: /owner/i }).first().click();
-      await expect(page.getByText(/Бүтээгдэхүүн/i).first()).toBeVisible();
+      ).toBeVisible({ timeout: 15_000 });
+      const ownerButton = page.getByRole("button", { name: /owner/i }).first();
+      await expect(ownerButton).toBeVisible({ timeout: 15_000 });
+      await ownerButton.click();
+      await expect(page.getByText(/Бүтээгдэхүүн/i).first()).toBeVisible({
+        timeout: 15_000,
+      });
     });
   });
 

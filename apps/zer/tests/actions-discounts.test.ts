@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 import test, { mock } from "node:test";
-import { mockActionCtx, formData, mockMod } from "./actions-helpers";
+import { formData, mockActionCtx, mockMod } from "./actions-helpers";
 
 // ─── resolve helper (inline to avoid esbuild depth issues) ──────────
 function resolved<T>(data: T, error: unknown = null) {
@@ -14,11 +14,13 @@ function resolved<T>(data: T, error: unknown = null) {
 // ─── Shared supabase chain builders ─────────────────────────────────
 
 /** Build a supabase mock for createDiscount with controllable insert + condition results */
-function makeCreateSupabase(opts: {
-  discountId?: string;
-  insertError?: { message: string } | null;
-  condInsertError?: { message: string } | null;
-} = {}) {
+function makeCreateSupabase(
+  opts: {
+    discountId?: string;
+    insertError?: { message: string } | null;
+    condInsertError?: { message: string } | null;
+  } = {},
+) {
   const {
     discountId = "new-discount-id",
     insertError = null,
@@ -49,11 +51,13 @@ function makeCreateSupabase(opts: {
 }
 
 /** Build a supabase mock for updateDiscount with controllable update + condition results */
-function makeUpdateSupabase(opts: {
-  updateError?: { message: string } | null;
-  condInsertError?: { message: string } | null;
-  isBranchScoped?: boolean;
-} = {}) {
+function makeUpdateSupabase(
+  opts: {
+    updateError?: { message: string } | null;
+    condInsertError?: { message: string } | null;
+    isBranchScoped?: boolean;
+  } = {},
+) {
   const {
     updateError = null,
     condInsertError = null,
@@ -108,12 +112,14 @@ function makeUpdateSupabase(opts: {
 }
 
 /** Build a supabase mock for toggleDiscountActive */
-function makeToggleSupabase(opts: {
-  discount?: { name: string; branch_id: string } | null;
-  fetchError?: { message: string } | null;
-  updateError?: { message: string } | null;
-  isBranchScoped?: boolean;
-} = {}) {
+function makeToggleSupabase(
+  opts: {
+    discount?: { name: string; branch_id: string } | null;
+    fetchError?: { message: string } | null;
+    updateError?: { message: string } | null;
+    isBranchScoped?: boolean;
+  } = {},
+) {
   const {
     discount = { name: "Test Discount", branch_id: "test-branch-id" },
     fetchError = null,
@@ -171,9 +177,11 @@ function makeToggleSupabase(opts: {
 }
 
 // ─── Global mocks ───────────────────────────────────────────────────
-const withDbCaptureMock = mock.fn(async (_name: string, query: Promise<unknown>) => {
-  return await query;
-});
+const withDbCaptureMock = mock.fn(
+  async (_name: string, query: Promise<unknown>) => {
+    return await query;
+  },
+);
 mockMod("@zuiio/capture", {
   capture: mock.fn(() => {}),
   withDbCapture: withDbCaptureMock,
@@ -189,11 +197,16 @@ mockMod("@/lib/revalidate", {
 
 mockMod("@/lib/audit", { logAuditEventWithClient: mock.fn(async () => {}) });
 mockMod("next/server", { after: (fn: () => void) => fn() });
-mockMod("next/cache", { revalidatePath: mock.fn(() => {}), revalidateTag: mock.fn(() => {}) });
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
+});
 mockMod("server-only", {});
 mockMod("@/lib/branches", { withBranchFilter: mock.fn((_q: unknown) => _q) });
 mockMod("@/lib/validation", {
-  getString: mock.fn((fd: FormData, key: string) => (fd.get(key) as string) ?? ""),
+  getString: mock.fn(
+    (fd: FormData, key: string) => (fd.get(key) as string) ?? "",
+  ),
 });
 
 let mockCtx: Record<string, unknown> = mockActionCtx();
@@ -279,7 +292,10 @@ test("createDiscount rejects missing name", async () => {
 test("createDiscount rejects zero value", async () => {
   resetMocks();
   mockCtx = mockActionCtx();
-  const result = await createDiscount(undefined, validCreateData({ value: "0" }));
+  const result = await createDiscount(
+    undefined,
+    validCreateData({ value: "0" }),
+  );
   assert.deepStrictEqual(result, { error: "Утга 0-ээс их байх ёстой." });
 });
 
@@ -425,10 +441,7 @@ test("createDiscount rejects missing branchId", async () => {
 test("updateDiscount rejects missing id", async () => {
   resetMocks();
   mockCtx = mockActionCtx();
-  const result = await updateDiscount(
-    undefined,
-    validUpdateData({ id: "" }),
-  );
+  const result = await updateDiscount(undefined, validUpdateData({ id: "" }));
   assert.deepStrictEqual(result, {
     error: "Хямдралын ID олдсонгүй.",
   });
@@ -437,10 +450,7 @@ test("updateDiscount rejects missing id", async () => {
 test("updateDiscount rejects missing name", async () => {
   resetMocks();
   mockCtx = mockActionCtx();
-  const result = await updateDiscount(
-    undefined,
-    validUpdateData({ name: "" }),
-  );
+  const result = await updateDiscount(undefined, validUpdateData({ name: "" }));
   assert.deepStrictEqual(result, { error: "Нэр шаардлагатай." });
 });
 
@@ -512,7 +522,10 @@ test("updateDiscount replaces conditions for selected_products", async () => {
 
   // discounts (update) + discount_conditions (delete existing) + discount_conditions (insert new) = 3
   assert.strictEqual(supabase.from.mock.callCount(), 3);
-  assert.strictEqual(supabase.from.mock.calls[1].arguments[0], "discount_conditions");
+  assert.strictEqual(
+    supabase.from.mock.calls[1].arguments[0],
+    "discount_conditions",
+  );
 });
 
 test("updateDiscount deletes all conditions when applies_to is all", async () => {
@@ -528,7 +541,10 @@ test("updateDiscount deletes all conditions when applies_to is all", async () =>
 
   // Should have called from for discounts and discount_conditions (delete)
   assert.strictEqual(supabase.from.mock.callCount(), 2);
-  assert.strictEqual(supabase.from.mock.calls[1].arguments[0], "discount_conditions");
+  assert.strictEqual(
+    supabase.from.mock.calls[1].arguments[0],
+    "discount_conditions",
+  );
 });
 
 // ═══════════════════════════════════════════════════════════════════

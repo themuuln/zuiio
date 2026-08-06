@@ -1,8 +1,42 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { runWithTools } from "@zuiio/ai-agent";
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 import { createAllAgentTools } from "@/lib/agent-tools";
 import { createServiceClient } from "@/lib/supabase/server-service";
+import type { Database } from "@/lib/supabase/types";
+
+type MessengerAgentLinkTable = {
+  Row: {
+    organization_id: string;
+    user_id: string;
+    psid: string;
+    last_active_at: string | null;
+  };
+  Insert: {
+    organization_id: string;
+    user_id: string;
+    psid: string;
+    last_active_at?: string | null;
+  };
+  Update: {
+    organization_id?: string;
+    user_id?: string;
+    psid?: string;
+    last_active_at?: string | null;
+  };
+  Relationships: [];
+};
+
+type MessengerDatabase = Omit<Database, "public"> & {
+  public: Omit<Database["public"], "Tables"> & {
+    Tables: Database["public"]["Tables"] & {
+      messenger_agent_links: MessengerAgentLinkTable;
+    };
+  };
+};
+
+type ServiceSupabaseClient = SupabaseClient<Database>;
 
 const _WELCOME_MESSAGE = `Сайн байна уу! 👋 Би Zer-ийн Facebook Messenger туслах.
 
@@ -98,6 +132,8 @@ export async function POST(request: Request) {
 
 async function handleMessage(senderPsid: string, messageText: string) {
   const supabase = createServiceClient();
+  const messengerClient =
+    supabase as unknown as SupabaseClient<MessengerDatabase>;
 
   const pageAccessToken = await getPageAccessToken(supabase);
   if (!pageAccessToken) {
@@ -106,7 +142,7 @@ async function handleMessage(senderPsid: string, messageText: string) {
   }
 
   // Look up messenger_agent_links by PSID
-  const { data: link } = await (supabase as any)
+  const { data: link } = await messengerClient
     .from("messenger_agent_links")
     .select("organization_id, user_id")
     .eq("psid", senderPsid)
@@ -118,7 +154,7 @@ async function handleMessage(senderPsid: string, messageText: string) {
   }
 
   // Update last_active_at
-  await (supabase as any)
+  await messengerClient
     .from("messenger_agent_links")
     .update({ last_active_at: new Date().toISOString() })
     .eq("psid", senderPsid);
@@ -151,7 +187,7 @@ async function handleMessage(senderPsid: string, messageText: string) {
 }
 
 async function getPageAccessToken(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: ServiceSupabaseClient,
 ): Promise<string | null> {
   // Try DB first, fall back to env var
   const { data } = await supabase

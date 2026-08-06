@@ -110,7 +110,7 @@ async function AboutContent({ locale }: { locale: string }) {
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("storyTitle")}
             </Typography.H2>
-            <div className="mt-6 space-y-4 text-muted-foreground leading-relaxed">
+            <div className="mt-6 flex flex-col gap-4 text-muted-foreground leading-relaxed">
               <Typography.Text>{t("storyBody1")}</Typography.Text>
               <Typography.Text>{t("storyBody2")}</Typography.Text>
             </div>
@@ -160,7 +160,7 @@ async function AboutContent({ locale }: { locale: string }) {
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("approachTitle")}
             </Typography.H2>
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 flex flex-col gap-3">
               {APPROACH_BULLETS.map((key) => (
                 <div key={key} className="flex items-start gap-3">
                   <Check className="mt-0.5 size-5 shrink-0 text-emerald-500" />

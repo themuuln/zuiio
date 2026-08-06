@@ -72,7 +72,7 @@ export default async function Image() {
           textAlign: "center",
         }}
       >
-        zuiio.com
+        zuiiotech.com
       </div>
     </div>,
     {

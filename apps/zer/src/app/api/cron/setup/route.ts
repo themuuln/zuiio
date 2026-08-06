@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   try {
     const supabase = createServiceClient();
     const { data, error } = await supabase.rpc("schedule_daily_report_cron", {
-      app_url: siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`,
+      p_app_url: siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`,
     });
     if (error)
       capture(error, { context: "[cron/setup] schedule_daily_report_cron" });

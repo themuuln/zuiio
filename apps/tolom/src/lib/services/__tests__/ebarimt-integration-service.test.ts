@@ -213,11 +213,7 @@ describe("createEbarimtInvoice", () => {
       makeSettings({ enabled: false, apiKey: null, merchantId: null }),
     );
 
-    const result = await createEbarimtInvoice(
-      db as never,
-      INVOICE_ID,
-      ORG_ID,
-    );
+    const result = await createEbarimtInvoice(db as never, INVOICE_ID, ORG_ID);
 
     expect(result.status).toBe("skipped");
     expect(result.error).toContain("not configured");
@@ -238,11 +234,7 @@ describe("createEbarimtInvoice", () => {
       error: null,
     });
 
-    const result = await createEbarimtInvoice(
-      db as never,
-      INVOICE_ID,
-      ORG_ID,
-    );
+    const result = await createEbarimtInvoice(db as never, INVOICE_ID, ORG_ID);
 
     expect(result.status).toBe("registered");
     expect(result.registrationId).toBe("REG-001");
@@ -266,11 +258,7 @@ describe("createEbarimtInvoice", () => {
       status: "registered",
     });
 
-    const result = await createEbarimtInvoice(
-      db as never,
-      INVOICE_ID,
-      ORG_ID,
-    );
+    const result = await createEbarimtInvoice(db as never, INVOICE_ID, ORG_ID);
 
     expect(result.status).toBe("registered");
     expect(result.registrationId).toBe("REG-123");
@@ -299,11 +287,7 @@ describe("createEbarimtInvoice", () => {
       error: "API returned 500",
     });
 
-    const result = await createEbarimtInvoice(
-      db as never,
-      INVOICE_ID,
-      ORG_ID,
-    );
+    const result = await createEbarimtInvoice(db as never, INVOICE_ID, ORG_ID);
 
     expect(result.status).toBe("failed");
     expect(result.error).toBe("API returned 500");
@@ -424,7 +408,10 @@ describe("testEbarimtConnection", () => {
   it("returns failure on timeout", async () => {
     mockGetSettings.mockResolvedValue(makeSettings());
     // Simulate a DOMException-style TimeoutError (what AbortSignal.timeout throws)
-    const timeoutError = new DOMException("The operation was aborted due to timeout", "TimeoutError");
+    const timeoutError = new DOMException(
+      "The operation was aborted due to timeout",
+      "TimeoutError",
+    );
     vi.mocked(fetch).mockRejectedValue(timeoutError);
 
     const result = await testEbarimtConnection(db as never, ORG_ID);

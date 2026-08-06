@@ -299,13 +299,36 @@ describe("getEstimates", () => {
     expect(mockWithBranchFilter).toHaveBeenCalled();
   });
 
-  it("applies search filter", async () => {
-    db.__qb.resolveWith({ data: [makeEstimate()], count: 1, error: null });
+  it("applies search filter via matching customer/vehicle ids", async () => {
+    // customers match
+    db.__qb.resolveOnce({ data: [{ id: "cust-1" }], error: null });
+    // vehicles match
+    db.__qb.resolveOnce({ data: [{ id: "veh-1" }], error: null });
+    // estimates (main query)
+    db.__qb.resolveOnce({ data: [makeEstimate()], count: 1, error: null });
 
     await getEstimates(db as never, ORG_ID, { search: "John" });
 
+    expect(db.from).toHaveBeenCalledWith("customers");
+    expect(db.from).toHaveBeenCalledWith("vehicles");
     const qb = db.from.mock.results[0]?.value;
-    expect(qb.or).toHaveBeenCalled();
+    expect(qb.or).toHaveBeenCalledWith(
+      "estimate_number.ilike.%John%,customer_id.in.(cust-1),vehicle_id.in.(veh-1)",
+    );
+  });
+
+  it("searches by estimate_number alone when no customer/vehicle matches", async () => {
+    // customers no match
+    db.__qb.resolveOnce({ data: [], error: null });
+    // vehicles no match
+    db.__qb.resolveOnce({ data: [], error: null });
+    // estimates (main query)
+    db.__qb.resolveOnce({ data: [makeEstimate()], count: 1, error: null });
+
+    await getEstimates(db as never, ORG_ID, { search: "EST-42" });
+
+    const qb = db.from.mock.results[0]?.value;
+    expect(qb.or).toHaveBeenCalledWith("estimate_number.ilike.%EST-42%");
   });
 
   it("captures error and returns empty", async () => {

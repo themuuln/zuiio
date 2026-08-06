@@ -279,8 +279,8 @@ export function JournalEntryCreateDrawer({
                 <FieldLabel className="mb-1 text-xs">Данс</FieldLabel>
                 <Select
                   value={watch(`lines.${index}.account_id`)}
-                  onValueChange={(value: string) =>
-                    setValue(`lines.${index}.account_id`, value)
+                  onValueChange={(value) =>
+                    setValue(`lines.${index}.account_id`, value ?? "")
                   }
                 >
                   <SelectTrigger className="w-full">

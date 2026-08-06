@@ -38,7 +38,7 @@ async function SalesDataFetcher({
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();
 
-  const [salesResult, productsResult] = await Promise.all([
+  const [salesResult, productsResult, orgResult] = await Promise.all([
     withDbCapture(
       "page:sales",
       withBranchFilter(
@@ -59,13 +59,34 @@ async function SalesDataFetcher({
       "page:sales",
       supabase
         .from("products")
-        .select("id, name, sale_price, current_stock, unit, barcode, image_url")
+        .select(
+          "id, name, sale_price, current_stock, unit, barcode, image_url, has_variants",
+        )
         .eq("organization_id", organizationId)
         .is("deleted_at", null)
         .order("name")
         .limit(1000),
     ),
+    // has_receipt_printer is a Wave 2 column not yet in the generated types
+    // — cast the table name like domain-resolve does for new columns.
+    withDbCapture(
+      "page:sales:org",
+      supabase
+        .from("organizations" as never)
+        .select("has_receipt_printer")
+        .eq("id" as never, organizationId)
+        .single(),
+    ),
   ]);
+
+  // Auto-print receipts for shops with a receipt printer attached.
+  // Defaults to false (the column is NOT NULL DEFAULT false).
+  const hasReceiptPrinter =
+    (
+      orgResult.data as unknown as {
+        has_receipt_printer: boolean | null;
+      } | null
+    )?.has_receipt_printer === true;
 
   const sales: SaleRow[] =
     (salesResult.data ?? []).map((sale) => ({
@@ -78,7 +99,13 @@ async function SalesDataFetcher({
       payment_method: sale.payment_method,
     })) ?? [];
 
-  return <SalesContent sales={sales} products={productsResult.data ?? []} />;
+  return (
+    <SalesContent
+      sales={sales}
+      products={productsResult.data ?? []}
+      hasReceiptPrinter={hasReceiptPrinter}
+    />
+  );
 }
 
 export default async function SalesPage({

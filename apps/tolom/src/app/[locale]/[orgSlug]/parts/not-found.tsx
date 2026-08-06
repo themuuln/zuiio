@@ -13,7 +13,7 @@ export default function StorefrontNotFound() {
       </p>
       <Link
         href="/"
-        className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+        className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-8 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
       >
         Go Home
       </Link>

@@ -4,6 +4,8 @@ import Script from "next/script";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
+import { I18nProvider } from "@/lib/i18n/provider";
+import { OfflineProvider } from "@/lib/offline/offline-provider";
 import { QueryProvider } from "@/lib/query/provider";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -144,11 +146,15 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <ErrorHandler />
-          <QueryProvider>
-            {children}
-            <Toaster />
-          </QueryProvider>
+          <I18nProvider>
+            <ErrorHandler />
+            <QueryProvider>
+              <OfflineProvider>
+                {children}
+                <Toaster />
+              </OfflineProvider>
+            </QueryProvider>
+          </I18nProvider>
         </ThemeProvider>
         <Script
           id="register-sw"

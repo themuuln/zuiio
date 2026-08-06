@@ -89,7 +89,10 @@ describe("useRealtimeSubscriptions", () => {
 
     const { tables } = mockUseRealtimeMulti.mock.calls[0][0];
 
-    expect(tables[0].queryKeys).toEqual([["products", "list", ORG_ID]]);
+    expect(tables[0].queryKeys).toEqual([
+      ["products", "list", ORG_ID],
+      ["shop_products"],
+    ]);
     expect(tables[1].queryKeys).toEqual([["sales", "list", ORG_ID]]);
     expect(tables[2].queryKeys).toEqual([["contacts", "list", ORG_ID]]);
     expect(tables[3].queryKeys).toEqual([["expenses", "list", ORG_ID]]);

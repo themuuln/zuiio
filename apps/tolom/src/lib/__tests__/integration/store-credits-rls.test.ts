@@ -23,6 +23,7 @@ import {
   createTestStoreCredit,
   createTestUser,
   deleteRecord,
+  deleteTestOrg,
   signInAsUser,
 } from "./helpers";
 
@@ -62,20 +63,19 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!hasSupabase || !admin) return;
   // Clean up in reverse dependency order
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgAId},${userA.id}` as unknown as string,
-  );
-  await deleteRecord(
-    admin!,
-    "organization_users",
-    `${orgBId},${userB.id}` as unknown as string,
-  );
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgAId,
+    user_id: userA.id,
+  });
+  await deleteRecord(admin, "organization_users", {
+    organization_id: orgBId,
+    user_id: userB.id,
+  });
   await admin.auth.admin.deleteUser(userA.id);
   await admin.auth.admin.deleteUser(userB.id);
-  await deleteRecord(admin, "organizations", orgAId);
-  await deleteRecord(admin, "organizations", orgBId);
+  await deleteTestOrg(admin, orgAId);
+
+  await deleteTestOrg(admin, orgBId);
 });
 
 // ── Store Credit Balances RLS ────────────────────────────────
@@ -104,10 +104,10 @@ describeWhenSupabase("Store Credit Balances RLS — cross-org isolation", () => 
 
   afterAll(async () => {
     if (!admin) return;
-    await deleteRecord(admin!, "store_credit_balances", creditAId);
-    await deleteRecord(admin!, "store_credit_balances", creditBId);
-    await deleteRecord(admin!, "customers", customerAId);
-    await deleteRecord(admin!, "customers", customerBId);
+    await deleteRecord(admin, "store_credit_balances", creditAId);
+    await deleteRecord(admin, "store_credit_balances", creditBId);
+    await deleteRecord(admin, "customers", customerAId);
+    await deleteRecord(admin, "customers", customerBId);
   });
 
   it("User A sees only Org A store credits", async () => {
@@ -143,11 +143,13 @@ describeWhenSupabase("Store Credit Balances RLS — cross-org isolation", () => 
 
   it("User A can insert a store credit balance into Org A", async () => {
     const ua = await signInAsUser(userA.email, userA.password);
+    // A fresh customer — store_credit_balances has a unique (customer_id, organization_id) constraint
+    const fresh = await createTestCustomer(admin, orgAId);
     const { data, error } = await ua
       .from("store_credit_balances")
       .insert({
         organization_id: orgAId,
-        customer_id: customerAId,
+        customer_id: fresh.customerId,
         balance: 50000,
       })
       .select()
@@ -157,7 +159,8 @@ describeWhenSupabase("Store Credit Balances RLS — cross-org isolation", () => 
     expect(data?.organization_id).toBe(orgAId);
 
     // Clean up
-    await deleteRecord(admin!, "store_credit_balances", data?.id);
+    await deleteRecord(admin, "store_credit_balances", data?.id);
+    await deleteRecord(admin, "customers", fresh.customerId);
   });
 });
 
@@ -212,10 +215,10 @@ describeWhenSupabase(
 
     afterAll(async () => {
       if (!admin) return;
-      await deleteRecord(admin!, "store_credit_transactions", txnAId);
-      await deleteRecord(admin!, "store_credit_transactions", txnBId);
-      await deleteRecord(admin!, "customers", customerAId);
-      await deleteRecord(admin!, "customers", customerBId);
+      await deleteRecord(admin, "store_credit_transactions", txnAId);
+      await deleteRecord(admin, "store_credit_transactions", txnBId);
+      await deleteRecord(admin, "customers", customerAId);
+      await deleteRecord(admin, "customers", customerBId);
     });
 
     it("User A sees only Org A store credit transactions", async () => {
@@ -268,7 +271,7 @@ describeWhenSupabase(
       expect(data?.organization_id).toBe(orgAId);
 
       // Clean up
-      await deleteRecord(admin!, "store_credit_transactions", data?.id);
+      await deleteRecord(admin, "store_credit_transactions", data?.id);
     });
   },
 );

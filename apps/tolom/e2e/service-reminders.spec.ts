@@ -1,5 +1,5 @@
 import { setEnglishLocale } from "./helpers";
-import { mockServiceReminders, mockSupabaseREST } from "./mocks";
+import { mockPrewarm, mockServiceReminders, mockSupabaseREST } from "./mocks";
 import { expect, test } from "./test-extensions";
 
 test.setTimeout(60_000);
@@ -9,6 +9,8 @@ test.describe("Service Reminders (Mocked)", () => {
     await mockSupabaseREST(page);
     await setEnglishLocale(page);
     await mockServiceReminders(page);
+    await mockPrewarm(page);
+    await page.goto("/dashboard/service-reminders");
   });
 
   test.describe("Page Structure", () => {
@@ -65,7 +67,7 @@ test.describe("Service Reminders (Mocked)", () => {
   test.describe("Sidebar Navigation", () => {
     test("has Service Reminders link in sidebar", async ({ page }) => {
       await expect(
-        page.getByRole("link", { name: /service reminder|reminder/i }).first(),
+        page.getByRole("button", { name: /^service reminders$/i }).first(),
       ).toBeVisible();
     });
   });

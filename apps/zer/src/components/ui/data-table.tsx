@@ -316,17 +316,17 @@ export function DataTable<TData, TValue>({
           {enableColumnVisibility && (
             <DropdownMenu>
               <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-xs sm:text-sm"
-                >
-                  <SlidersHorizontal className="size-3.5 sm:size-4" />
-                  <span className="hidden sm:inline">Баганууд</span>
-                </Button>
-              }
-            />
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs sm:text-sm"
+                  >
+                    <SlidersHorizontal className="size-3.5 sm:size-4" />
+                    <span className="hidden sm:inline">Баганууд</span>
+                  </Button>
+                }
+              />
               <DropdownMenuContent align="end">
                 {table
                   .getAllColumns()

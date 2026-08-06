@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
-import {
-  getInspection,
-  updateInspection,
-} from "@/lib/services/dvi-service";
+import { getInspection, updateInspection } from "@/lib/services/dvi-service";
 
 /**
  * GET /api/organizations/[id]/dv-inspections/[inspectionId]
@@ -53,11 +50,7 @@ export const PATCH = createRouteHandler(
       body.fuel_level === undefined &&
       body.technician_notes === undefined
     ) {
-      return apiError(
-        "VALIDATION",
-        "At least one field must be provided",
-        400,
-      );
+      return apiError("VALIDATION", "At least one field must be provided", 400);
     }
 
     const result = await updateInspection(

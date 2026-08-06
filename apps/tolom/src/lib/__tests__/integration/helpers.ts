@@ -126,6 +126,30 @@ export async function addUserToOrg(
   });
 
   if (error) throw new Error(`Failed to add user to org: ${error.message}`);
+
+  // Profiles are not auto-created on auth signup in this schema — they are
+  // created by the invite/signup flows. Ensure a profile exists so FKs
+  // (e.g. cash_register_sessions.opened_by → profiles.id) resolve.
+  const { error: profileError } = await admin
+    .from("profiles")
+    .upsert(
+      { id: userId, organization_id: orgId, is_active: true },
+      { onConflict: "id" },
+    );
+  if (profileError)
+    throw new Error(
+      `Failed to create profile for user: ${profileError.message}`,
+    );
+}
+
+/**
+ * Delete a test organization and its auto-seeded role/permission rows
+ * (created by the org seed trigger) in FK-safe order.
+ */
+export async function deleteTestOrg(admin: SupabaseClient, orgId: string) {
+  await deleteRecord(admin, "roles", { organization_id: orgId });
+  await deleteRecord(admin, "permissions", { organization_id: orgId });
+  await deleteRecord(admin, "organizations", orgId);
 }
 
 /**
@@ -231,17 +255,34 @@ export async function createTestPart(admin: SupabaseClient, orgId: string) {
 }
 
 /**
- * Clean up a created record by id (admin/service-role client bypasses RLS).
+ * Clean up a created record (admin/service-role client bypasses RLS).
+ *
+ * Pass a plain id for tables with an `id` primary key, or a column→value
+ * map for composite-key tables (e.g. organization_users, inventory_balances).
  */
 export async function deleteRecord(
   admin: SupabaseClient,
   table: string,
-  id: string,
+  id: string | Record<string, string> | null | undefined,
 ) {
+  if (id === null || id === undefined) {
+    console.warn(`deleteRecord ${table}: skipped (no id)`);
+    return;
+  }
   // Admin client bypasses RLS via service_role key
-  const { error } = await admin.from(table).delete().eq("id", id);
+  let query = admin.from(table).delete();
+  if (typeof id === "string") {
+    query = query.eq("id", id);
+  } else {
+    for (const [column, value] of Object.entries(id)) {
+      query = query.eq(column, value);
+    }
+  }
+  const { error } = await query;
   if (error) {
-    console.warn(`deleteRecord ${table}/${id}: ${error.message}`);
+    console.warn(
+      `deleteRecord ${table}/${JSON.stringify(id)}: ${error.message}`,
+    );
   }
 }
 
@@ -279,7 +320,7 @@ export async function createTestAppointment(
 export async function createTestServiceSchedule(
   admin: SupabaseClient,
   orgId: string,
-  customerId: string,
+  _customerId: string,
   vehicleId: string,
 ) {
   const { data, error } = await admin
@@ -289,12 +330,15 @@ export async function createTestServiceSchedule(
       vehicle_id: vehicleId,
       service_name: `Test Service ${Date.now()}`,
       interval_months: 6,
-      next_due_date: new Date(Date.now() + 180 * 86400000).toISOString().split("T")[0],
+      next_due_date: new Date(Date.now() + 180 * 86400000)
+        .toISOString()
+        .split("T")[0],
     })
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to create service schedule: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to create service schedule: ${error.message}`);
   return { serviceScheduleId: data.id };
 }
 
@@ -343,14 +387,17 @@ export async function createTestInvoice(
 /**
  * Create a test price rule for an organization.
  */
-export async function createTestPriceRule(admin: SupabaseClient, orgId: string) {
+export async function createTestPriceRule(
+  admin: SupabaseClient,
+  orgId: string,
+) {
   const { data, error } = await admin
     .from("price_rules")
     .insert({
       organization_id: orgId,
       name: `Test Price Rule ${Date.now()}`,
-      apply_to: "parts",
-      operator: "fixed",
+      apply_to: "part",
+      operator: "add_fixed",
       value: Math.floor(Math.random() * 50000) + 5000,
       priority: 1,
     })
@@ -379,8 +426,10 @@ export async function createTestInventoryBalance(
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to create inventory balance: ${error.message}`);
-  return { inventoryBalanceId: data.id };
+  if (error)
+    throw new Error(`Failed to create inventory balance: ${error.message}`);
+  // inventory_balances has no `id` column — identity is (organization_id, part_id)
+  return { inventoryBalanceId: data.part_id };
 }
 
 /**
@@ -418,7 +467,9 @@ export async function createTestPayrollRecord(
     .insert({
       organization_id: orgId,
       mechanic_id: userId,
-      period_start: new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0],
+      period_start: new Date(Date.now() - 30 * 86400000)
+        .toISOString()
+        .split("T")[0],
       period_end: new Date().toISOString().split("T")[0],
       total_hours: 160,
       hourly_rate: 15000,
@@ -427,7 +478,8 @@ export async function createTestPayrollRecord(
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to create payroll record: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to create payroll record: ${error.message}`);
   return { payrollRecordId: data.id };
 }
 
@@ -478,7 +530,8 @@ export async function createTestCustomerNote(
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to create customer note: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to create customer note: ${error.message}`);
   return { customerNoteId: data.id };
 }
 
@@ -504,7 +557,8 @@ export async function createTestStockTransfer(
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to create stock transfer: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to create stock transfer: ${error.message}`);
   return { transferId: data.id };
 }
 
@@ -524,7 +578,8 @@ export async function createTestCatalogVariantGroup(
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to create variant group: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to create variant group: ${error.message}`);
   return { variantGroupId: data.id };
 }
 
@@ -546,7 +601,8 @@ export async function createTestCatalogVariantOption(
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to create variant option: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to create variant option: ${error.message}`);
   return { variantOptionId: data.id };
 }
 

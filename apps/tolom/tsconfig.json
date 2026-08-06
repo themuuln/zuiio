@@ -24,7 +24,8 @@
       "@tolom/supabase": ["./packages/supabase/src/index.ts"],
       "@zuiio/core": ["./src/lib/zuiio/core.ts"],
       "@zuiio/hooks": ["./src/lib/zuiio/hooks.ts"],
-      "@zuiio/query": ["./src/lib/zuiio/query.ts"]
+      "@zuiio/query": ["./src/lib/zuiio/query.ts"],
+      "@zuiio/ai-agent": ["../../packages/ai-agent/src/index.ts"]
     }
   },
   "include": [

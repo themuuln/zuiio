@@ -54,7 +54,7 @@ test.describe("Expenses (Mocked)", () => {
   test.describe("Sidebar Navigation", () => {
     test("has Expenses link in sidebar", async ({ page }) => {
       await expect(
-        page.getByRole("link", { name: /expense/i }).first(),
+        page.getByRole("button", { name: /^expenses$/i }).first(),
       ).toBeVisible();
     });
   });

@@ -237,7 +237,7 @@ export default function CategoriesPage() {
                     style={{ backgroundColor: cat.color }}
                   />
                   <CardHeader>
-                    <div className="space-y-2">
+                    <div className="flex flex-col gap-y-2">
                       <div className="flex items-center gap-2">
                         <span
                           className="size-2.5 rounded-full"

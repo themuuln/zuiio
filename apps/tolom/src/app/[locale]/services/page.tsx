@@ -22,6 +22,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Typography } from "@/components/ui/typography";
 
+import { LandingFooter } from "../_landing-footer";
+
 const FEATURES = [
   { key: "PricingMemory", icon: Tag },
   { key: "Categories", icon: List },
@@ -50,10 +52,6 @@ async function ServicesContent({ locale }: { locale: string }) {
   const t = (await getTranslations({
     locale: locale as "mn" | "en",
     namespace: "services",
-  })) as (key: string, values?: Record<string, string | number>) => string;
-  const appT = (await getTranslations({
-    locale: locale as "mn" | "en",
-    namespace: "app",
   })) as (key: string, values?: Record<string, string | number>) => string;
 
   return (
@@ -130,16 +128,16 @@ async function ServicesContent({ locale }: { locale: string }) {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 font-medium text-muted-foreground">
-                      Үйлчилгээ
+                      {t("tableService")}
                     </th>
                     <th className="px-4 py-3 font-medium text-muted-foreground">
-                      Ангилал
+                      {t("tableCategory")}
                     </th>
                     <th className="px-4 py-3 font-medium text-muted-foreground">
-                      Үнэ
+                      {t("tablePrice")}
                     </th>
                     <th className="px-4 py-3 font-medium text-muted-foreground">
-                      Интервал
+                      {t("tableInterval")}
                     </th>
                   </tr>
                 </thead>
@@ -206,24 +204,14 @@ async function ServicesContent({ locale }: { locale: string }) {
                 render={<Link href="/pricing" />}
                 nativeButton={false}
               >
-                Үнийн санал
+                {t("ctaPricing")}
               </Button>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t bg-background px-4 py-8 text-center text-xs text-muted-foreground sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-center gap-2">
-            <Wrench className="size-3" />
-            <span className="font-semibold text-foreground">
-              {appT("name")}
-            </span>
-          </div>
-          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 }

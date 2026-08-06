@@ -85,7 +85,7 @@ describe("createOrganizationSchema", () => {
     expect(
       createOrganizationSchema.safeParse({
         organizationName: "My Shop",
-        organizationEmail: "shop@example.com",
+        businessType: "general_repair",
       }).success,
     ).toBe(true);
   });
@@ -94,9 +94,60 @@ describe("createOrganizationSchema", () => {
     expect(
       createOrganizationSchema.safeParse({
         organizationName: "",
-        organizationEmail: "shop@example.com",
+        businessType: "general_repair",
       }).success,
     ).toBe(false);
+  });
+
+  it("rejects missing business type", () => {
+    expect(
+      createOrganizationSchema.safeParse({
+        organizationName: "My Shop",
+        businessType: "",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects invalid business type", () => {
+    expect(
+      createOrganizationSchema.safeParse({
+        organizationName: "My Shop",
+        businessType: "invalid_type",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("defaults enablePartSuggestions to true when omitted", () => {
+    const result = createOrganizationSchema.safeParse({
+      organizationName: "My Shop",
+      businessType: "general_repair",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.enablePartSuggestions).toBe(true);
+    }
+  });
+
+  it("parses enablePartSuggestions checkbox value", () => {
+    const on = createOrganizationSchema.safeParse({
+      organizationName: "My Shop",
+      businessType: "general_repair",
+      enablePartSuggestions: "on",
+    });
+    expect(on.success).toBe(true);
+    if (on.success) {
+      expect(on.data.enablePartSuggestions).toBe(true);
+    }
+
+    const off = createOrganizationSchema.safeParse({
+      organizationName: "My Shop",
+      businessType: "general_repair",
+      enablePartSuggestions: "off",
+    });
+    expect(off.success).toBe(true);
+    if (off.success) {
+      expect(off.data.enablePartSuggestions).toBe(false);
+    }
   });
 });
 

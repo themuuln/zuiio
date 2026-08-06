@@ -12,8 +12,8 @@ export function LandingFooter() {
 
   return (
     <footer className="border-t bg-background">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,minmax(0,1fr))]">
           {/* Brand */}
           <div className="flex flex-col gap-3">
             <Link
@@ -25,7 +25,7 @@ export function LandingFooter() {
               </div>
               <span>{appT("name")}</span>
             </Link>
-            <Typography.Muted className="text-xs text-muted-foreground">
+            <Typography.Muted className="max-w-xs text-sm leading-6 text-muted-foreground">
               {t("footerTagline")}
             </Typography.Muted>
             <div className="mt-2">
@@ -35,7 +35,7 @@ export function LandingFooter() {
 
           {/* Product */}
           <div className="flex flex-col gap-3">
-            <Typography.H4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Typography.H4 className="text-sm font-semibold text-foreground">
               {t("footerProduct")}
             </Typography.H4>
             <ul className="flex flex-col gap-2">
@@ -48,7 +48,7 @@ export function LandingFooter() {
                           ? "/pricing"
                           : item === "Integrations"
                             ? "/integrations"
-                            : "#features"
+                            : "/#features"
                       }
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
@@ -62,7 +62,7 @@ export function LandingFooter() {
 
           {/* Company */}
           <div className="flex flex-col gap-3">
-            <Typography.H4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Typography.H4 className="text-sm font-semibold text-foreground">
               {t("footerCompany")}
             </Typography.H4>
             <ul className="flex flex-col gap-2">
@@ -74,7 +74,7 @@ export function LandingFooter() {
                         ? "/about"
                         : item === "Blog"
                           ? "/blog"
-                          : "/auth/login"
+                          : "mailto:hello@tolom.app"
                     }
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
@@ -87,7 +87,7 @@ export function LandingFooter() {
 
           {/* Support */}
           <div className="flex flex-col gap-3">
-            <Typography.H4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Typography.H4 className="text-sm font-semibold text-foreground">
               {t("footerSupport")}
             </Typography.H4>
             <ul className="flex flex-col gap-2">

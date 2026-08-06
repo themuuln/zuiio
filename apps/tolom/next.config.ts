@@ -1,4 +1,4 @@
-import withPWAInit from "@ducanh2912/next-pwa";
+import { withSerwist } from "@serwist/turbopack";
 
 const withBundleAnalyzer =
   process.env.ANALYZE === "true"
@@ -38,6 +38,7 @@ const nextConfig: NextConfig = {
     "100.102.22.106",
     "192.168.1.121",
     "192.168.1.126",
+    "192.168.1.138",
     "127.0.0.1",
     "localhost",
   ],
@@ -68,6 +69,9 @@ const nextConfig: NextConfig = {
 
   // ── Next.js 16.3: Instant Navigations ──────────────────────
   cacheComponents: true,
+
+  // esbuild bundles the service worker (via the /serwist/[path] route).
+  serverExternalPackages: ["esbuild"],
 
   // ── Cache lifetime profiles (used with 'use cache' directive) ──
   cacheLife: {
@@ -120,14 +124,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-const withPWA = withPWAInit({
-  dest: "public",
-  register: true,
-  disable: process.env.NODE_ENV === "development",
-});
-
 export default withBA(
-  withPWA(
+  withSerwist(
     withSentryConfig(withNextIntl(nextConfig), {
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,

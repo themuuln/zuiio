@@ -360,7 +360,7 @@ export function BayViewV2Client() {
                 <BayCardDragPreview bay={bayViewData.activeDrag.previewBay} />
               </div>
             ) : (
-              <div className="flex items-center gap-2 rounded-full border-2 border-primary/40 bg-card px-4 py-2 text-sm font-semibold shadow-xl">
+              <div className="flex items-center gap-2 rounded-full border-2 border-primary/40 bg-card px-4 py-2 text-sm font-semibold">
                 <GripVertical className="size-4 text-muted-foreground/40" />
                 {bayViewData.activeDrag.label}
               </div>

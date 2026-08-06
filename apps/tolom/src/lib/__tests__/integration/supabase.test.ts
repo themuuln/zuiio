@@ -100,11 +100,10 @@ describeWhenSupabase("Organization CRUD", () => {
   });
 
   afterAll(async () => {
-    await deleteRecord(
-      admin!,
-      "organization_users",
-      `${orgId},${testUser.id}` as unknown as string, // composite key
-    );
+    await deleteRecord(admin, "organization_users", {
+      organization_id: orgId,
+      user_id: testUser.id,
+    });
     await admin.auth.admin.deleteUser(testUser.id);
     await deleteRecord(admin, "organizations", orgId);
   });
@@ -173,11 +172,10 @@ describeWhenSupabase("Customers CRUD", () => {
   });
 
   afterAll(async () => {
-    await deleteRecord(
-      admin!,
-      "organization_users",
-      `${orgId},${testUser.id}` as unknown as string, // composite key
-    );
+    await deleteRecord(admin, "organization_users", {
+      organization_id: orgId,
+      user_id: testUser.id,
+    });
     await admin.auth.admin.deleteUser(testUser.id);
     await deleteRecord(admin, "organizations", orgId);
   });

@@ -34,10 +34,9 @@ mockMod("next/server", { after: (fn: () => void) => fn() });
 mockMod("server-only", {});
 mockMod("next/navigation", { redirect: mock.fn(() => {}) });
 
-const revalidateEntityMock = mock.fn(() => {});
+const revalidateEntityMock = mock.fn((_entity: string) => {});
 mockMod("@/lib/revalidate", { revalidateEntity: revalidateEntityMock });
-
-let mockCtx = mockActionCtx();
+const mockCtx = mockActionCtx();
 mockMod("@/lib/action-utils", {
   requireActionContext: mock.fn(async () => mockCtx),
   requireAppContext: mock.fn(async () => mockCtx),
@@ -46,19 +45,33 @@ mockMod("@/lib/action-utils", {
 // ─── Mutable service client mock ──────────────────────────────────
 // Each test reassigns mockFrom to control per-table chain behavior.
 
-let mockFrom: Record<string, any> = {};
-let mockServiceClient = {
-  from: mock.fn((table: string) => mockFrom[table] ?? {}),
+type MockCall = {
+  mock: {
+    callCount: () => number;
+  };
+};
+type MockTable = Record<string, MockCall>;
+
+let mockFrom: Record<string, MockTable> = {};
+const mockServiceClient = {
+  from: mock.fn((table: string): MockTable => mockFrom[table] ?? {}),
 };
 mockMod("@/lib/supabase/server-service", {
   createServiceClient: mock.fn(() => mockServiceClient),
 });
 
-// ─── Lazy-loaded module ───────────────────────────────────────────
+type SettingsActionResult = {
+  success?: boolean;
+  count?: number;
+  name?: string;
+  error?: string;
+};
 
-let importBrandPresets: (formData: FormData) => Promise<any>;
-let importProductPreset: (formData: FormData) => Promise<any>;
-let importProductPresetsByIds: (presetIds: string[]) => Promise<any>;
+let importBrandPresets: (formData: FormData) => Promise<SettingsActionResult>;
+let importProductPreset: (formData: FormData) => Promise<SettingsActionResult>;
+let importProductPresetsByIds: (
+  presetIds: string[],
+) => Promise<SettingsActionResult>;
 
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/settings/actions");
@@ -148,8 +161,14 @@ test("importBrandPresets imports presets for a brand successfully", async () => 
 
   assert.deepStrictEqual(result, { success: true, count: 1 });
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 2);
-  assert.strictEqual(revalidateEntityMock.mock.calls[0].arguments[0], "products");
-  assert.strictEqual(revalidateEntityMock.mock.calls[1].arguments[0], "settings");
+  assert.strictEqual(
+    revalidateEntityMock.mock.calls[0].arguments[0],
+    "products",
+  );
+  assert.strictEqual(
+    revalidateEntityMock.mock.calls[1].arguments[0],
+    "settings",
+  );
 });
 
 test("importBrandPresets uses existing brand and category", async () => {
@@ -178,7 +197,9 @@ test("importBrandPresets uses existing brand and category", async () => {
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
           eq: mock.fn(() => ({
-            maybeSingle: mock.fn(async () => resolved({ id: "existing-brand" })),
+            maybeSingle: mock.fn(async () =>
+              resolved({ id: "existing-brand" }),
+            ),
           })),
         })),
       })),
@@ -222,7 +243,9 @@ test("importBrandPresets handles fetch error", async () => {
     product_presets: {
       select: mock.fn(() => ({
         eq: mock.fn(() => ({
-          order: mock.fn(async () => resolved(null, { message: "DB connection failed" })),
+          order: mock.fn(async () =>
+            resolved(null, { message: "DB connection failed" }),
+          ),
         })),
       })),
     },
@@ -347,7 +370,9 @@ test("importProductPreset handles SKU duplicate", async () => {
         eq: mock.fn(() => ({
           eq: mock.fn(() => ({
             is: mock.fn(() => ({
-              maybeSingle: mock.fn(async () => resolved({ id: "existing-prod" })),
+              maybeSingle: mock.fn(async () =>
+                resolved({ id: "existing-prod" }),
+              ),
             })),
           })),
         })),
@@ -359,7 +384,9 @@ test("importProductPreset handles SKU duplicate", async () => {
   fd.set("preset_id", "preset-dup");
   const result = await importProductPreset(fd);
 
-  assert.ok("error" in result);
+  if (typeof result.error !== "string") {
+    throw new Error("Expected duplicate SKU error");
+  }
   assert.ok(result.error.includes("DUP-SKU"));
   // Early return — no revalidation
   assert.strictEqual(revalidateEntityMock.mock.callCount(), 0);
@@ -570,7 +597,9 @@ test("importProductPresetsByIds handles SKU duplicates by skipping", async () =>
               maybeSingle: mock.fn(async () => {
                 skuCheckCount++;
                 // First check (Y1) → exists, second (Y2) → not found
-                return resolved(skuCheckCount === 1 ? { id: "existing-y1" } : null);
+                return resolved(
+                  skuCheckCount === 1 ? { id: "existing-y1" } : null,
+                );
               }),
             })),
           })),

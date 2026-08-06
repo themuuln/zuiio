@@ -232,9 +232,9 @@ export default function PayrollPage() {
 
   return (
     <div className="flex flex-col gap-6 pb-8 px-4 pt-4 pb-6 md:px-6">
-      <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
+      <div className="rounded-3xl border border-border/60 bg-card p-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-3">
+          <div className="flex flex-col gap-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary" className="rounded-full px-2.5 py-0.5">
                 <Calculator className="mr-1 size-3.5" />
@@ -471,6 +471,16 @@ export default function PayrollPage() {
             {t("payroll.payrollRecords")}
           </CardTitle>
           <CardDescription>{t("payroll.recordsDescription")}</CardDescription>
+          {recordsQuery.isPending ? (
+            <Skeleton className="h-4 w-72" />
+          ) : records[0]?.ndsh_enabled ? (
+            <Typography.Muted className="text-xs text-muted-foreground">
+              {t("payroll.ndshRatesInfo", {
+                employerRate: records[0].ndsh_employer_rate,
+                employeeRate: records[0].ndsh_employee_rate,
+              })}
+            </Typography.Muted>
+          ) : null}
         </CardHeader>
         <CardContent>
           {recordsQuery.isPending ? (
@@ -499,6 +509,8 @@ export default function PayrollPage() {
                   <TableHead>{t("payroll.totalHours")}</TableHead>
                   <TableHead>{t("payroll.hourlyRate")}</TableHead>
                   <TableHead>{t("payroll.grossPay")}</TableHead>
+                  <TableHead>{t("payroll.ndshEmployer")}</TableHead>
+                  <TableHead>{t("payroll.ndshEmployee")}</TableHead>
                   <TableHead>{t("payroll.status")}</TableHead>
                   <TableHead className="w-[150px]" />
                 </TableRow>
@@ -516,6 +528,16 @@ export default function PayrollPage() {
                       <TableCell>{formatMNT(record.hourly_rate)}</TableCell>
                       <TableCell className="font-semibold">
                         {formatMNT(record.gross_pay)}
+                      </TableCell>
+                      <TableCell>
+                        {record.ndsh_enabled
+                          ? formatMNT(record.ndsh_employer_amount)
+                          : "\u2014"}
+                      </TableCell>
+                      <TableCell>
+                        {record.ndsh_enabled
+                          ? formatMNT(record.ndsh_employee_amount)
+                          : "\u2014"}
                       </TableCell>
                       <TableCell>
                         <Badge

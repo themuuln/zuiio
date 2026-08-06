@@ -77,6 +77,47 @@ $$;
 grant execute on function lookup_user_by_email to authenticated;
 
 -- ============================================================
+-- 4b. RPC: lookup pending invite by token (SECURITY DEFINER)
+-- ============================================================
+create or replace function lookup_invite_by_token(invite_token text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  result jsonb;
+begin
+  select jsonb_build_object(
+    'id', oi.id,
+    'organization_id', oi.organization_id,
+    'email', oi.email,
+    'role_id', oi.role_id,
+    'token', oi.token,
+    'status', oi.status,
+    'invited_by', oi.invited_by,
+    'message', oi.message,
+    'expires_at', oi.expires_at,
+    'created_at', oi.created_at,
+    'updated_at', oi.updated_at,
+    'organization_name', o.name,
+    'inviter_name', p.full_name
+  )
+  from public.org_invites oi
+  join public.organizations o on o.id = oi.organization_id
+  left join public.profiles p on p.id = oi.invited_by
+  where oi.token = invite_token
+    and oi.status = 'pending'
+    and oi.expires_at > now()
+  into result;
+
+  return result;
+end;
+$$;
+
+grant execute on function lookup_invite_by_token(text) to authenticated;
+
+-- ============================================================
 -- 5. Function: create default subscription for new org
 -- ============================================================
 create or replace function create_default_subscription(target_org_id uuid)

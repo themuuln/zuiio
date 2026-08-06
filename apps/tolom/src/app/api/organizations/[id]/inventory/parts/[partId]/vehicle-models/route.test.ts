@@ -19,7 +19,7 @@ vi.mock("@/lib/api-response", () => ({
   ),
 }));
 
-const { GET, ...rest } = await import("./route");
+const { GET } = await import("./route");
 
 describe("GET /api/organizations/[id]/inventory/parts/[partId]/vehicle-models", () => {
   const orgId = "org-1";

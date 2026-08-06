@@ -73,8 +73,8 @@ test("getPublicCatalog returns null on RPC error", async () => {
 });
 
 test("getPublicCatalog applies page and pageSize options", async () => {
-  let capturedParams: Record<string, unknown> | null = null;
-  const originalRpc = makeSupabase().rpc;
+  const _capturedParams: Record<string, unknown> | null = null;
+  const _originalRpc = makeSupabase().rpc;
   // Override rpc to capture params
   rpcResult = resolved({
     organization: { id: "org-1", name: "Test", slug: "test" },
@@ -107,7 +107,14 @@ test("getPublicCategories returns empty on error", async () => {
 test("getPublicProduct returns product with details", async () => {
   rpcResult = resolved({
     organization: { id: "org-1", name: "Test Shop", slug: "test-shop" },
-    product: { id: "p1", name: "Product 1", price: 1000, description: "A product", category_name: "Cat 1", images: [] },
+    product: {
+      id: "p1",
+      name: "Product 1",
+      price: 1000,
+      description: "A product",
+      category_name: "Cat 1",
+      images: [],
+    },
   });
 
   const result = await getPublicProduct(makeSupabase(), "test-shop", "p1");

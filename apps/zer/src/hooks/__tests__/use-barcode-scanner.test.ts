@@ -1,7 +1,7 @@
 /**
  * Tests for useBarcodeScanner hook.
  */
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useBarcodeScanner } from "../use-barcode-scanner";
 
@@ -12,9 +12,7 @@ vi.mock("next/dynamic", () => ({
 
 describe("useBarcodeScanner", () => {
   it("returns initial state with isOpen false", () => {
-    const { result } = renderHook(() =>
-      useBarcodeScanner({ onScan: vi.fn() }),
-    );
+    const { result } = renderHook(() => useBarcodeScanner({ onScan: vi.fn() }));
 
     expect(result.current.isOpen).toBe(false);
     expect(typeof result.current.open).toBe("function");
@@ -23,9 +21,7 @@ describe("useBarcodeScanner", () => {
   });
 
   it("open sets isOpen to true", () => {
-    const { result } = renderHook(() =>
-      useBarcodeScanner({ onScan: vi.fn() }),
-    );
+    const { result } = renderHook(() => useBarcodeScanner({ onScan: vi.fn() }));
 
     act(() => {
       result.current.open();
@@ -35,9 +31,7 @@ describe("useBarcodeScanner", () => {
   });
 
   it("close sets isOpen to false", () => {
-    const { result } = renderHook(() =>
-      useBarcodeScanner({ onScan: vi.fn() }),
-    );
+    const { result } = renderHook(() => useBarcodeScanner({ onScan: vi.fn() }));
 
     act(() => {
       result.current.open();

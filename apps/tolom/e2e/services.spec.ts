@@ -43,7 +43,7 @@ test.describe("Services (Mocked)", () => {
   test.describe("Sidebar Navigation", () => {
     test("has Services link in sidebar", async ({ page }) => {
       await expect(
-        page.getByRole("link", { name: /service/i }).first(),
+        page.getByRole("button", { name: /^services$/i }).first(),
       ).toBeVisible();
     });
   });

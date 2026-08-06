@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretDown, GearSix, SignOut } from "@phosphor-icons/react/dist/ssr";
+import { CaretDown, GearSix } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { logout } from "@/app/(dashboard)/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -18,6 +18,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useI18n } from "@/lib/i18n";
 
 type NavUserProps = {
   user: {
@@ -35,6 +36,7 @@ type NavUserProps = {
  * adapted to existing Radix-based UI components and app auth.
  */
 export function NavUser({ user }: NavUserProps) {
+  const { locale, setLocale, t } = useI18n();
   const { isMobile } = useSidebar();
 
   return (
@@ -79,10 +81,17 @@ export function NavUser({ user }: NavUserProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setLocale(locale === "mn" ? "en" : "mn")}
+            >
+              {t("common.language")}:{" "}
+              {locale === "mn" ? t("common.english") : t("common.mongolian")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem>
               <Link href="/settings">
                 <GearSix className="size-4" />
-                Тохиргоо
+                {t("common.settings")}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -92,8 +101,7 @@ export function NavUser({ user }: NavUserProps) {
                   type="submit"
                   className="flex w-full cursor-pointer items-center gap-2 px-2 py-1.5"
                 >
-                  <SignOut className="size-4" />
-                  Гарах
+                  {t("common.logout")}
                 </button>
               </form>
             </DropdownMenuItem>

@@ -5,7 +5,6 @@ import { Controller, type Resolver, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { updateGiftCard } from "@/app/(dashboard)/gift-cards/actions";
-import { CurrencyInput } from "@/components/ui/currency-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   DrawerCancel,
@@ -95,8 +94,7 @@ export function GiftCardEditDrawer({
       initial_balance: giftCard.initial_balance,
       current_balance: giftCard.current_balance,
       currency_code:
-        (formData.get("currency_code")?.toString() as "MNT" | "USD") ??
-        "MNT",
+        (formData.get("currency_code")?.toString() as "MNT" | "USD") ?? "MNT",
       is_active: formData.get("is_active") === "true",
       recipient_name: formData.get("recipient_name")?.toString() ?? null,
       recipient_email: formData.get("recipient_email")?.toString() ?? null,
@@ -178,14 +176,9 @@ export function GiftCardEditDrawer({
 
           <Field>
             <FieldLabel>Код</FieldLabel>
-            <Input
-              placeholder="Жишээ: GIFT2024"
-              {...register("code")}
-            />
+            <Input placeholder="Жишээ: GIFT2024" {...register("code")} />
             {errors.code && (
-              <p className="text-xs text-destructive">
-                {errors.code.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.code.message}</p>
             )}
           </Field>
 

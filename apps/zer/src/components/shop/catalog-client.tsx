@@ -52,7 +52,52 @@ const CameraScanner = dynamic(
   { ssr: false },
 );
 
+const PAGE_SIZE = 50;
+const RECENT_SEARCHES_KEY = "zer:shop:recent-searches";
+const BARCODE_STATUS_DURATION = 2000;
+const CAMERA_AUTO_CLOSE_DELAY = 1200;
+const MAX_RECENT_SEARCHES = 8;
+const MIN_SEARCH_LENGTH = 2;
+
 const ProductCreateDrawer = DynamicProductCreateDrawer;
+
+/**
+ * Infinite scroll sentinel — observes a sentinel element and calls onIntersect
+ * when the element enters the viewport, then disconnects.
+ */
+function InfiniteScrollSentinel({
+  isFetching,
+  onIntersect,
+}: {
+  isFetching: boolean;
+  onIntersect: () => void;
+}) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && !isFetching) {
+          onIntersect();
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, [isFetching, onIntersect]);
+
+  return (
+    <div ref={sentinelRef} className="flex justify-center py-4">
+      {isFetching && <Skeleton className="h-8 w-32 rounded-lg" />}
+    </div>
+  );
+}
 
 /**
  * Product grid — isolated from CatalogClient so cart mutations
@@ -80,9 +125,10 @@ const ProductGrid = memo(function ProductGrid({
   return (
     <div
       className={cn(
+        "gap-5",
         viewMode === "list"
-          ? "flex flex-col gap-1.5"
-          : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5",
+          ? "flex flex-col"
+          : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5",
       )}
     >
       {products.map((product) => (
@@ -90,7 +136,7 @@ const ProductGrid = memo(function ProductGrid({
           key={product.id}
           style={{
             contentVisibility: "auto",
-            containIntrinsicSize: viewMode === "list" ? "0 56px" : "0 280px",
+            containIntrinsicSize: viewMode === "list" ? "0 72px" : "0 280px",
           }}
         >
           <ProductCard
@@ -157,19 +203,22 @@ export function CatalogClient({
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [recentSearches, setRecentSearches] = useLocalStorage<string[]>(
-    "zer:shop:recent-searches",
+    RECENT_SEARCHES_KEY,
     [],
   );
 
   const recordSearch = (term: string) => {
     const q = term.trim();
-    if (q.length < 2) return;
+    if (q.length < MIN_SEARCH_LENGTH) return;
     setRecentSearches((prev) => {
-      const next = [q, ...prev.filter((p) => p !== q)].slice(0, 8);
+      const next = [q, ...prev.filter((p) => p !== q)].slice(
+        0,
+        MAX_RECENT_SEARCHES,
+      );
       return next;
     });
   };
-  const debouncedQuery = useDebounce(searchQuery, 300);
+  const debouncedQuery = useDebounce(searchQuery, 300); // 300ms debounce for search
   const { trackStock } = useOrgSettings();
 
   // Auto-focus on mount
@@ -182,7 +231,7 @@ export function CatalogClient({
     clearTimeout(timeoutRef.current ?? undefined);
     timeoutRef.current = setTimeout(() => {
       setBarcodeStatus({ type: "idle" });
-    }, 2000);
+    }, BARCODE_STATUS_DURATION);
   };
 
   const barcodeMap = useLookup(
@@ -204,7 +253,7 @@ export function CatalogClient({
     queryFn: ({ pageParam }) => fetchProductsPage(pageParam),
     initialPageParam: initialProducts.length,
     getNextPageParam: (lastPage, allPages) =>
-      lastPage.hasMore ? allPages.length * 50 : undefined,
+      lastPage.hasMore ? allPages.length * PAGE_SIZE : undefined,
     initialData: {
       pages: [{ products: initialProducts, hasMore: initialHasMore }],
       pageParams: [0],
@@ -252,17 +301,19 @@ export function CatalogClient({
     return false;
   };
 
-  const handleCameraScan = (barcode: string) => {
+  const handleCameraScan = (
+    barcode: string,
+  ): { found: true } | { found: false; error?: string } => {
     const product = barcodeMap.get(barcode.toLowerCase()) ?? undefined;
 
-    if (!product) return { found: false } as const;
+    if (!product) return { found: false };
 
     const stock = Number(product.current_stock ?? 0);
     if (trackStock && stock <= 0) {
       return {
         found: false,
         error: `"${product.name}" дууссан байна.`,
-      } as const;
+      };
     }
 
     addItem({
@@ -277,9 +328,9 @@ export function CatalogClient({
     setTimeout(() => {
       setIsCameraOpen(false);
       setBarcodeStatus({ type: "idle" });
-    }, 1200);
+    }, CAMERA_AUTO_CLOSE_DELAY);
 
-    return { found: true } as const;
+    return { found: true };
   };
 
   const filteredProducts = useMemo(() => {
@@ -323,9 +374,9 @@ export function CatalogClient({
   const showStatus = barcodeStatus.type !== "idle";
 
   return (
-    <div className="lg:flex lg:items-start lg:gap-5">
-      {/* Desktop category sidebar — fixed so it never moves */}
-      <aside className="fixed top-[52px] bottom-0 hidden w-56 overflow-y-auto border-r border-border/60 bg-background lg:block">
+    <div className="lg:grid lg:grid-cols-[14rem_1fr] lg:gap-6">
+      {/* Desktop category sidebar */}
+      <aside className="hidden overflow-y-auto lg:block">
         <div className="flex flex-col gap-1 pt-4">
           <p className="px-2 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Ангилал
@@ -360,9 +411,9 @@ export function CatalogClient({
         </div>
       </aside>
       {/* Left pane: search + categories + product grid */}
-      <div className="flex min-w-0 flex-1 flex-col gap-4 pb-20 lg:pb-6 lg:pl-60">
+      <div className="flex min-w-0 flex-col gap-4 pb-20 lg:pb-6">
         {/* Unified search + barcode input */}
-        <div className="sticky top-[52px] z-20 bg-background pb-2 pt-4">
+        <div className="sticky top-[var(--header-height,52px)] z-20 bg-background pb-2 pt-4">
           <div className="relative flex items-center gap-2">
             <div className="relative flex-1">
               <MagnifyingGlass className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -535,7 +586,7 @@ export function CatalogClient({
                 aria-pressed={viewMode === "grid"}
                 onClick={() => setViewMode("grid")}
                 className={cn(
-                  "flex size-7 items-center justify-center rounded transition-colors",
+                  "flex size-8 items-center justify-center rounded transition-colors",
                   viewMode === "grid"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -549,7 +600,7 @@ export function CatalogClient({
                 aria-pressed={viewMode === "list"}
                 onClick={() => setViewMode("list")}
                 className={cn(
-                  "flex size-7 items-center justify-center rounded transition-colors",
+                  "flex size-8 items-center justify-center rounded transition-colors",
                   viewMode === "list"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -593,28 +644,11 @@ export function CatalogClient({
               selectionMode={selectionMode}
               viewMode={viewMode}
             />
-            {/* Infinite scroll sentinel */}
             {hasNextPage && !serverResults && (
-              <div
-                ref={(el) => {
-                  if (!el) return;
-                  const observer = new IntersectionObserver(
-                    ([entry]) => {
-                      if (entry?.isIntersecting && !isFetchingNextPage) {
-                        fetchNextPage();
-                        observer.disconnect();
-                      }
-                    },
-                    { rootMargin: "200px" },
-                  );
-                  observer.observe(el);
-                }}
-                className="flex justify-center py-4"
-              >
-                {isFetchingNextPage && (
-                  <Skeleton className="h-8 w-32 rounded-lg" />
-                )}
-              </div>
+              <InfiniteScrollSentinel
+                isFetching={isFetchingNextPage}
+                onIntersect={fetchNextPage}
+              />
             )}
           </>
         )}

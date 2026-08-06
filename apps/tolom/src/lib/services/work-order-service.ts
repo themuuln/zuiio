@@ -88,9 +88,45 @@ export async function getWorkOrders(
   }
   if (filters?.search?.trim()) {
     const term = `%${filters.search.trim()}%`;
-    query = query.or(
-      `id::text.ilike.${term},customer.full_name.ilike.${term},vehicle.plate_number.ilike.${term}`,
-    );
+    // PostgREST or() rejects embedded-resource refs and casts, so search
+    // matching customers/vehicles first, then filter work orders by their ids.
+    const [customerRows, vehicleRows] = await Promise.all([
+      supabase
+        .from("customers")
+        .select("id")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .or(
+          `first_name.ilike.${term},last_name.ilike.${term},full_name.ilike.${term},company_name.ilike.${term},contact_person.ilike.${term},phone.ilike.${term},email.ilike.${term}`,
+        )
+        .limit(50),
+      supabase
+        .from("vehicles")
+        .select("id")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .or(
+          `plate_number.ilike.${term},vin.ilike.${term},make.ilike.${term},model.ilike.${term}`,
+        )
+        .limit(50),
+    ]);
+
+    const conditions: string[] = [];
+    const customerIds = (customerRows.data ?? []).map((row) => row.id);
+    if (customerIds.length > 0) {
+      conditions.push(`customer_id.in.(${customerIds.join(",")})`);
+    }
+    const vehicleIds = (vehicleRows.data ?? []).map((row) => row.id);
+    if (vehicleIds.length > 0) {
+      conditions.push(`vehicle_id.in.(${vehicleIds.join(",")})`);
+    }
+
+    if (conditions.length > 0) {
+      query = query.or(conditions.join(","));
+    } else {
+      // No customer or vehicle matched — force an empty result set.
+      query = query.eq("id", "00000000-0000-0000-0000-000000000000");
+    }
   }
   if (filters?.branchId) query = withBranchFilter(query, filters.branchId);
 

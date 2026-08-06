@@ -46,9 +46,9 @@ export function LeaveOrganizationDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger>
-        <Button variant="destructive">Байгууллагаас гарах</Button>
-      </AlertDialogTrigger>
+      <AlertDialogTrigger
+        render={<Button variant="destructive">Байгууллагаас гарах</Button>}
+      />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">

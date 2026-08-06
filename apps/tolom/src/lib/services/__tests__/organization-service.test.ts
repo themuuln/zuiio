@@ -378,4 +378,55 @@ describe("updateOrganization", () => {
     const updateArgs = db.from("organizations").update.mock.calls;
     expect(updateArgs[0]?.[0]).toHaveProperty("logo_url", null);
   });
+
+  it("syncs known settings keys into organization_settings", async () => {
+    db.__qb.resolveOnce({ data: orgRow, error: null });
+
+    await updateOrganization(
+      db as never,
+      ORG_ID,
+      {
+        name: "Updated Org",
+        settings: {
+          ndsh_enabled: true,
+          ndsh_employer_rate: 11.5,
+          einvoice_api_key: undefined,
+          custom_key: "ignored",
+        },
+      },
+      USER_ID,
+    );
+
+    expect(db.from).toHaveBeenCalledWith("organization_settings");
+    const upsertArgs = db.from("organization_settings").upsert.mock.calls;
+    expect(upsertArgs[0]?.[0]).toMatchObject({
+      organization_id: ORG_ID,
+      ndsh_enabled: true,
+      ndsh_employer_rate: 11.5,
+      einvoice_api_key: null, // undefined → null (key cleared)
+    });
+    expect(upsertArgs[0]?.[0]).not.toHaveProperty("custom_key");
+    expect(upsertArgs[0]?.[1]).toEqual({ onConflict: "organization_id" });
+  });
+
+  it("does not touch organization_settings when settings has no known keys", async () => {
+    db.__qb.resolveOnce({ data: orgRow, error: null });
+
+    await updateOrganization(
+      db as never,
+      ORG_ID,
+      { name: "X", settings: { custom_key: "v" } },
+      USER_ID,
+    );
+
+    expect(db.from("organization_settings").upsert).not.toHaveBeenCalled();
+  });
+
+  it("does not touch organization_settings when settings omitted", async () => {
+    db.__qb.resolveOnce({ data: orgRow, error: null });
+
+    await updateOrganization(db as never, ORG_ID, { name: "X" }, USER_ID);
+
+    expect(db.from("organization_settings").upsert).not.toHaveBeenCalled();
+  });
 });

@@ -30,7 +30,10 @@ const couponSchema = z.object({
   code: z
     .string()
     .min(1, "Код шаардлагатай")
-    .regex(/^[a-zA-Z0-9]+$/, "Код зөвхөн үсэг, тоо орно"),
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      "Код зөвхөн үсэг, тоо, зураас, доогуур зураас агуулж болно",
+    ),
   discount_type: z.enum(["percentage", "fixed_amount"]),
   discount_value: z.number().min(0.01, "Утга 0-ээс их байх ёстой"),
   min_purchase_amount: z.number().min(0).default(0),
@@ -38,7 +41,10 @@ const couponSchema = z.object({
   valid_from: z.string().min(1, "Хүчинтэй эхлэх огноо шаардлагатай"),
   valid_until: z.string().optional(),
   usage_limit: z.number().min(0).optional(),
-  per_customer_limit: z.number().min(1, "Хязгаар 1-ээс багагүй байх ёстой").default(1),
+  per_customer_limit: z
+    .number()
+    .min(1, "Хязгаар 1-ээс багагүй байх ёстой")
+    .default(1),
   applies_to: z.enum(["all", "selected_products", "selected_categories"]),
   is_active: z.boolean().default(true),
   description: z.string().optional(),
@@ -97,8 +103,9 @@ export function CouponCreateDrawer({
       id: `opt-${Date.now()}`,
       code: formData.get("code")?.toString() ?? "",
       discount_type:
-        (formData.get("discount_type")?.toString() as "percentage" | "fixed_amount") ??
-        "percentage",
+        (formData.get("discount_type")?.toString() as
+          | "percentage"
+          | "fixed_amount") ?? "percentage",
       discount_value: Number(formData.get("discount_value") ?? 0),
       applies_to:
         (formData.get("applies_to")?.toString() as
@@ -123,10 +130,7 @@ export function CouponCreateDrawer({
       data.max_discount_amount !== undefined &&
       data.max_discount_amount > 0
     ) {
-      formData.append(
-        "max_discount_amount",
-        String(data.max_discount_amount),
-      );
+      formData.append("max_discount_amount", String(data.max_discount_amount));
     }
     formData.append("valid_from", data.valid_from);
     formData.append("valid_until", data.valid_until ?? "");
@@ -179,14 +183,9 @@ export function CouponCreateDrawer({
         <FieldGroup>
           <Field>
             <FieldLabel>Код</FieldLabel>
-            <Input
-              placeholder="Жишээ: SUMMER2024"
-              {...register("code")}
-            />
+            <Input placeholder="Жишээ: SUMMER2024" {...register("code")} />
             {errors.code && (
-              <p className="text-xs text-destructive">
-                {errors.code.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.code.message}</p>
             )}
           </Field>
 
@@ -215,10 +214,7 @@ export function CouponCreateDrawer({
                     htmlFor="cc-type-fixed"
                     className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm has-[data-checked]:border-primary has-[data-checked]:bg-primary/5"
                   >
-                    <RadioGroupItem
-                      value="fixed_amount"
-                      id="cc-type-fixed"
-                    />
+                    <RadioGroupItem value="fixed_amount" id="cc-type-fixed" />
                     Тогтмол дүн
                   </label>
                 </RadioGroup>
@@ -298,9 +294,7 @@ export function CouponCreateDrawer({
                 >
                   <option value="all">Бүх бараа</option>
                   <option value="selected_products">Сонгосон бараа</option>
-                  <option value="selected_categories">
-                    Сонгосон ангилал
-                  </option>
+                  <option value="selected_categories">Сонгосон ангилал</option>
                 </NativeSelect>
               )}
             />
@@ -362,7 +356,10 @@ export function CouponCreateDrawer({
               min="0"
               step="1"
               placeholder="Хязгааргүй"
-              {...register("usage_limit", { valueAsNumber: true })}
+              {...register("usage_limit", {
+                setValueAs: (value) =>
+                  value === "" ? undefined : Number(value),
+              })}
             />
           </Field>
 

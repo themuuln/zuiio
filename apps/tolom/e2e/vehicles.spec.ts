@@ -1,5 +1,10 @@
 import { setEnglishLocale } from "./helpers";
-import { mockOrganizations, mockProfile, mockSupabaseREST } from "./mocks";
+import {
+  mockOrganizations,
+  mockPrewarm,
+  mockProfile,
+  mockSupabaseREST,
+} from "./mocks";
 import { expect, test } from "./test-extensions";
 
 // Mocked APIs — fast, no cold starts. 10s is generous.
@@ -14,6 +19,7 @@ test.describe("Vehicle Management", () => {
       await mockSupabaseREST(page);
       await mockOrganizations(page);
       await mockProfile(page);
+      await mockPrewarm(page);
       await page.goto("/dashboard/vehicles");
       await page
         .locator('h1, [data-slot="empty"]')
@@ -41,21 +47,22 @@ test.describe("Vehicle Management", () => {
     });
   });
 
-  test.describe("New Vehicle Form", () => {
+  test.describe("add vehicle Form", () => {
     test.beforeEach(async ({ page }) => {
       await setEnglishLocale(page);
       await mockSupabaseREST(page);
       await mockOrganizations(page);
       await mockProfile(page);
+      await mockPrewarm(page);
       await page.goto("/dashboard/vehicles/new");
       await page
-        .getByRole("heading", { name: /new vehicle/i })
+        .getByRole("heading", { name: /add vehicle/i })
         .waitFor({ timeout: 5000 });
     });
 
-    test("renders the new vehicle page heading", async ({ page }) => {
+    test("renders the add vehicle page heading", async ({ page }) => {
       await expect(
-        page.getByRole("heading", { name: /new vehicle/i }),
+        page.getByRole("heading", { name: /add vehicle/i }),
       ).toBeVisible();
     });
 
@@ -81,11 +88,13 @@ test.describe("Vehicle Management", () => {
     });
 
     test("renders optional fields", async ({ page }) => {
-      await expect(page.getByLabel(/vin/i)).toBeVisible();
-      await expect(page.getByLabel(/year/i)).toBeVisible();
-      await expect(page.getByLabel(/odometer/i)).toBeVisible();
-      await expect(page.getByLabel(/engine/i)).toBeVisible();
-      await expect(page.getByLabel(/notes/i)).toBeVisible();
+      // Field labels are not htmlFor-associated — assert the label text.
+      // VIN's label renders "VIN (optional)" (label + optional badge).
+      await expect(page.getByText(/^vin/i).first()).toBeVisible();
+      await expect(page.getByText(/^year$/i).first()).toBeVisible();
+      await expect(page.getByText(/odometer/i).first()).toBeVisible();
+      await expect(page.getByText(/^engine$/i).first()).toBeVisible();
+      await expect(page.getByText(/^notes$/i).first()).toBeVisible();
     });
 
     test("renders dropdown selects for vehicle specs", async ({ page }) => {
@@ -117,7 +126,11 @@ test.describe("Vehicle Management", () => {
       });
       await createButton.click();
 
-      await expect(page.getByText(/select a customer/i)).toBeVisible({
+      // The submit handler validates the owner first — submitting with no
+      // customer shows the selectCustomerFirst error before brand/model.
+      await expect(
+        page.getByText(/search for an existing customer first/i),
+      ).toBeVisible({
         timeout: 5000,
       });
     });
@@ -138,14 +151,16 @@ test.describe("Vehicle Management", () => {
       await mockSupabaseREST(page);
       await mockOrganizations(page);
       await mockProfile(page);
+      await mockPrewarm(page);
       await page.goto("/dashboard");
 
-      // Dashboard may show as h2 or sidebar nav — look for the sidebar link
-      const vehiclesLink = page.getByRole("link", { name: /vehicles/i });
-      await expect(vehiclesLink).toBeVisible({ timeout: 5000 });
-      await vehiclesLink.click();
-
-      await expect(page).toHaveURL(/\/dashboard\/vehicles/, { timeout: 5000 });
+      await page.getByRole("button", { name: "Vehicles", exact: true }).click();
+      await expect(page).toHaveURL(/\/dashboard\/vehicles$/, {
+        timeout: 10000,
+      });
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+        timeout: 10000,
+      });
     });
   });
 
@@ -155,9 +170,10 @@ test.describe("Vehicle Management", () => {
       await mockSupabaseREST(page);
       await mockOrganizations(page);
       await mockProfile(page);
+      await mockPrewarm(page);
       await page.goto("/dashboard/vehicles/new");
       await page
-        .getByRole("heading", { name: /new vehicle/i })
+        .getByRole("heading", { name: /add vehicle/i })
         .waitFor({ timeout: 5000 });
     });
 

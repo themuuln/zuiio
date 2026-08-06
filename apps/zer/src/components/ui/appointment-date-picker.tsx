@@ -90,22 +90,24 @@ export function AppointmentDatePicker({
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger>
-        <Button
-          variant="outline"
-          className={cn(
-            "w-full justify-between text-left font-normal h-9 px-3 gap-2",
-            !value && "text-muted-foreground",
-            className,
-          )}
-        >
-          <span className="flex items-center gap-2 truncate">
-            <CalendarIcon className="size-4 text-muted-foreground shrink-0" />
-            <span>{getDisplayText()}</span>
-          </span>
-          <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-between text-left font-normal h-9 px-3 gap-2",
+              !value && "text-muted-foreground",
+              className,
+            )}
+          >
+            <span className="flex items-center gap-2 truncate">
+              <CalendarIcon className="size-4 text-muted-foreground shrink-0" />
+              <span>{getDisplayText()}</span>
+            </span>
+            <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
+          </Button>
+        }
+      />
       <PopoverContent
         className="w-auto p-0 flex flex-col md:flex-row overflow-hidden"
         align="start"

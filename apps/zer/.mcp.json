@@ -2,35 +2,30 @@
   "mcpServers": {
     "next-devtools": {
       "command": "npx",
-      "args": [
-        "next-devtools-mcp"
-      ]
+      "args": ["next-devtools-mcp"]
     },
     "vercel": {
       "type": "http",
       "url": "https://mcp.vercel.com",
       "headers": {
-        "Authorization": "Bearer vcp_5eebPe50XzUzgX9uyAYkR63UGqNjoLEAat8n4ifCo4KmHaR1Vp2AJn0w"
-      }
+        "Authorization": "Bearer ${VERCEL_MCP_TOKEN}"
+      },
+      "enabled": false
     },
     "github": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
+      "args": ["-y", "@modelcontextprotocol/server-github"],
       "env": {
         "GITHUB_TOKEN": "{GITHUB_TOKEN}"
       }
     },
     "sentry": {
       "command": "npx",
-      "args": [
-        "@sentry/mcp-server@latest"
-      ],
+      "args": ["@sentry/mcp-server@latest"],
       "env": {
         "SENTRY_ACCESS_TOKEN": "${SENTRY_ACCESS_TOKEN}"
-      }
+      },
+      "enabled": false
     },
     "supabase-zer": {
       "type": "http",
@@ -38,24 +33,15 @@
     },
     "react-grab-mcp": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@react-grab/mcp",
-        "--stdio"
-      ]
+      "args": ["-y", "@react-grab/mcp", "--stdio"]
     },
     "playwright": {
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ]
+      "args": ["@playwright/mcp@latest"]
     },
     "shadcn": {
       "command": "npx",
-      "args": [
-        "shadcn@latest",
-        "mcp"
-      ]
+      "args": ["shadcn@latest", "mcp"]
     }
   }
 }
