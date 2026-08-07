@@ -39,6 +39,7 @@
     "zerbu":         { "vercel": "zerone" },
     "onoo":          { "vercel": "zerone",   "supabase_ref": "iyhujghadlymroihxyiy" },
     "onoo-app":      { "vercel": "zerone",   "supabase_ref": "iyhujghadlymroihxyiy" },
+    "unegui-deals":  { "vercel": "zerone",   "supabase_profile": "unegui" },
     "khosuud":       { "vercel": "zerone" },
     "zatly":         { "vercel": "zerone" },
     "zunch":         { "vercel": "zerone" },

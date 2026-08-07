@@ -77,9 +77,12 @@ See `.cli-profiles.json` for the full mapping of each app to its Vercel account 
 
 ### Troubleshooting
 
-- Vercel tokens are stored in pass (`personal/vercel/<name>`) and loaded at shell start via `.zshrc`
-- Supabase profiles are stored in native keychain, managed via `supabase login --name <profile>`
-- If a profile is missing: run `source ~/.zshrc` then check with `v-<name> whoami` or `supabase --profile <name> projects list`
+- Vercel tokens are stored in `~/.cache/zsh/tokens.zsh` (`__v_<account>`) and loaded via `.zshrc` `__lazy_load_secrets`
+- Supabase tokens are stored per account in `~/.cache/zsh/supabase-tokens.sh` (`__sb_<account>`), injected as `SUPABASE_ACCESS_TOKEN` by the `s-<app>` / `as-<app>` aliases
+- The native keychain is NOT used on this machine (headless keychain writes fail with "User interaction is not allowed"), and the CLI's `--profile` flag does not work here — it always falls back to `~/.supabase/access-token`
+- `~/.supabase/access-token` holds one legacy token (last `supabase login`); plain `supabase` without an alias uses it
+- If a token is missing: add the account's token to `~/.cache/zsh/supabase-tokens.sh` (get it from `https://supabase.com/dashboard/account/tokens` or copy from `~/.supabase/access-token` right after `supabase login`), then `source ~/.zshrc`
+- Check with `v-<name> whoami` or `s-<app> projects list`
 
 ---
 
