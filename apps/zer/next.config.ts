@@ -30,7 +30,6 @@ const nextConfig: NextConfig = {
       "cmdk",
     ],
     turbopackFileSystemCacheForBuild: true,
-    viewTransition: true,
   },
   cacheLife: {
     realtime: { stale: 120, revalidate: 60, expire: 300 },
