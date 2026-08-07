@@ -1,0 +1,11 @@
+packages:
+  - "apps/onoo"
+  - "apps/onoo/packages/*"
+  - "packages/branding"
+  - "packages/capture"
+  - "packages/core"
+  - "packages/hooks"
+  - "packages/offline"
+  - "packages/query"
+  - "packages/realtime"
+  - "packages/ui"

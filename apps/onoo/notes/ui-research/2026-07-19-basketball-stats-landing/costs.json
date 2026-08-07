@@ -1,0 +1,18 @@
+{
+  "research_date": "2026-07-19",
+  "product": "Onoo",
+  "depth": "standard",
+  "competitors": 4,
+  "operations": {
+    "firecrawl_scrapes": { "count": 11, "estimated_credits": 22 },
+    "firecrawl_searches": { "count": 0, "estimated_credits": 0 },
+    "browser_sessions": { "count": 4, "estimated_credits": 0 },
+    "screenshots": { "count": 2, "estimated_credits": 0 }
+  },
+  "total": {
+    "estimated_credits": 22,
+    "actual_credits": null,
+    "variance": "N/A — actual credits not measured via API"
+  },
+  "note": "Firecrawl MCP was used directly rather than CLI, so credit usage is estimated from operation count (2 credits per scrape). Browser operations are free."
+}

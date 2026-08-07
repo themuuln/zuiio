@@ -1,0 +1,1343 @@
+-- Onoo V2 dev seed data.
+-- Real Mongolian basketball teams, venues, and players sourced from Wikipedia and
+-- the Mongolian Basketball Association. Auth-dependent tables (source_submissions,
+-- game_revisions, memberships, stat_events) are NOT seeded here because they
+-- require real auth.users rows — create those via the app or a service-key script.
+
+
+-- Schema fixups: add columns that baseline migrations don't have but seed expects
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema='public' AND table_name='season_player_stats' AND column_name='seconds_played') THEN
+    ALTER TABLE public.season_player_stats ADD COLUMN seconds_played integer;
+  END IF;
+  IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema='public' AND table_name='standings' AND column_name='w') THEN
+    ALTER TABLE public.standings ADD COLUMN w smallint, ADD COLUMN IF NOT EXISTS l smallint;
+  END IF;
+END $$;
+
+-- ============================================================================
+-- DEMO DATA — Auth users, profiles, memberships
+-- ============================================================================
+-- Auth users: admin@onoo.mn / Demo123! and demo@onoo.mn / Demo123!
+-- Passwords are pre-computed GoTrue-compatible bcrypt hashes.
+INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, aud, role, created_at, updated_at)
+VALUES
+  ('02346873-7047-4c27-b1d5-9461301c447f', '00000000-0000-0000-0000-000000000000', 'admin@onoo.mn', '$2a$10$KLf5r8g.vhOV2ygLsjGzj..X65kX8kbSTI6a.h6aPJzedQX.TSSvK', now(), '{"provider":"email","providers":["email"]}', '{"email_verified": true}', 'authenticated', 'authenticated', now(), now()),
+  ('92c1fccf-12ad-46b6-a27c-ebca30aced80', '00000000-0000-0000-0000-000000000000', 'demo@onoo.mn', '$2a$10$0zo52PrVHHUUXeX52LF9TenYeq9n80/VQcbNa2.L4pdEeNkwvI/1e', now(), '{"provider":"email","providers":["email"]}', '{"email_verified": true}', 'authenticated', 'authenticated', now(), now())
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+SELECT gen_random_uuid(), u.id, jsonb_build_object('sub', u.id::text, 'email', u.email), 'email', u.email, now(), now(), now()
+FROM auth.users u
+WHERE u.id IN ('02346873-7047-4c27-b1d5-9461301c447f', '92c1fccf-12ad-46b6-a27c-ebca30aced80')
+AND u.id NOT IN (SELECT user_id FROM auth.identities);
+INSERT INTO public.profiles (id, display_name)
+VALUES ('02346873-7047-4c27-b1d5-9461301c447f', 'Админ'), ('92c1fccf-12ad-46b6-a27c-ebca30aced80', 'Демо Хэрэглэгч')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.canonical_identities (id)
+VALUES ('60000000-0000-0000-0000-000000000001'), ('60000000-0000-0000-0000-000000000002')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.memberships (user_id, scope_type, scope_id, role)
+VALUES
+  ('02346873-7047-4c27-b1d5-9461301c447f', 'org', 'b0000000-0000-0000-0000-000000000002', 'owner'),
+  ('02346873-7047-4c27-b1d5-9461301c447f', 'league', 'c0000000-0000-0000-0000-000000000001', 'admin'),
+  ('02346873-7047-4c27-b1d5-9461301c447f', 'league', 'c0000000-0000-0000-0000-000000000002', 'admin'),
+  ('92c1fccf-12ad-46b6-a27c-ebca30aced80', 'org', 'b0000000-0000-0000-0000-000000000002', 'viewer')
+ON CONFLICT (user_id, scope_type, scope_id, role) DO NOTHING;
+
+-- ============================================================================
+-- SPORTS & EVENT TYPES
+-- ============================================================================
+
+insert into public.sports (id, key, name_mn, name_en, config) values
+('a0000000-0000-0000-0000-000000000001', 'basketball_5x5', 'Сагсан бөмбөг 5x5', 'Basketball 5x5',
+ '{"periods":4,"period_minutes":10,"overtime_minutes":5,"fouls_to_bonus":5,"personal_foul_limit":5,"players_on_court":5}'::jsonb)
+on conflict (key) do nothing;
+
+insert into public.stat_event_types (key, sport_key, category, requires_player) values
+('shot_2pt_made', 'basketball_5x5', 'shot', true),
+('shot_2pt_missed', 'basketball_5x5', 'shot', true),
+('shot_3pt_made', 'basketball_5x5', 'shot', true),
+('shot_3pt_missed', 'basketball_5x5', 'shot', true),
+('ft_made', 'basketball_5x5', 'shot', true),
+('ft_missed', 'basketball_5x5', 'shot', true),
+('rebound_off', 'basketball_5x5', 'rebound', true),
+('rebound_def', 'basketball_5x5', 'rebound', true),
+('rebound_team', 'basketball_5x5', 'rebound', false),
+('steal', 'basketball_5x5', 'defense', true),
+('block', 'basketball_5x5', 'defense', true),
+('turnover', 'basketball_5x5', 'offense', true),
+('foul_personal', 'basketball_5x5', 'foul', true),
+('foul_technical', 'basketball_5x5', 'foul', true),
+('substitution', 'basketball_5x5', 'admin', false),
+('timeout', 'basketball_5x5', 'admin', false),
+('period_start', 'basketball_5x5', 'admin', false),
+('period_end', 'basketball_5x5', 'admin', false),
+('game_start', 'basketball_5x5', 'admin', false),
+('game_end', 'basketball_5x5', 'admin', false)
+on conflict (key) do nothing;
+
+-- ============================================================================
+-- ORGANIZATIONS
+-- ============================================================================
+
+-- Mongolian Basketball Association (Монголын Сагсан Бөмбөгийн Холбоо)
+insert into public.organizations (id, name, slug, type) values
+('b0000000-0000-0000-0000-000000000001', 'Монголын Сагсан Бөмбөгийн Холбоо', 'msbh', 'league_operator')
+on conflict (id) do nothing;
+
+-- Space League operator (Спэйс лиг)
+insert into public.organizations (id, name, slug, type) values
+('b0000000-0000-0000-0000-000000000002', 'Спэйс Лиг ХХК', 'space-league', 'league_operator')
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- LEAGUES
+-- ============================================================================
+
+-- The League (Үндэсний Дээд Лиг) — top-tier men's league, founded 1994
+insert into public.leagues (id, organization_id, sport_id, name, slug) values
+('c0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Үндэсний Дээд Лиг', 'the-league')
+on conflict (id) do nothing;
+
+-- Space League (Спэйс лиг) — second-tier / corporate league
+insert into public.leagues (id, organization_id, sport_id, name, slug) values
+('c0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'Спэйс лиг', 'space-league')
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- SEASONS
+-- ============================================================================
+
+insert into public.seasons (id, league_id, name, starts_on, ends_on) values
+-- The League 2025–26 (real current season)
+('d0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', '2025–26', '2025-10-01', '2026-04-30'),
+-- The League 2024–25 (previous season, for historical context)
+('d0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000001', '2024–25', '2024-10-01', '2025-04-30'),
+-- Space League 2025–26
+('d0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000002', '2025–26', '2025-09-15', '2026-03-15')
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- COMPETITIONS
+-- ============================================================================
+
+insert into public.competitions (id, season_id, name, type) values
+-- The League 2025–26 regular season
+('e0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001', 'Регуляр улирал', 'regular'),
+-- The League 2025–26 playoffs
+('e0000000-0000-0000-0000-000000000002', 'd0000000-0000-0000-0000-000000000001', 'Плэйофф', 'playoff'),
+-- Space League 2025–26 regular season
+('e0000000-0000-0000-0000-000000000003', 'd0000000-0000-0000-0000-000000000003', 'Регуляр улирал', 'regular')
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- VENUES (real arenas across Mongolia)
+-- ============================================================================
+
+insert into public.venues (id, name, city, capacity) values
+-- Ulaanbaatar arenas
+('f0000000-0000-0000-0000-000000000001', 'M Банк Арена', 'Улаанбаатар', 10000),
+('f0000000-0000-0000-0000-000000000002', 'Буянт-Ухаа Спортын Ордон', 'Улаанбаатар', 5000),
+('f0000000-0000-0000-0000-000000000003', 'Тэнгис Спорт Ордон', 'Улаанбаатар', 3000),
+('f0000000-0000-0000-0000-000000000004', 'Улаанбаатар Спортын Ордон', 'Улаанбаатар', 8000),
+('f0000000-0000-0000-0000-000000000005', 'Баянзүрх Спортын Төв', 'Улаанбаатар', 2000),
+-- Regional arenas
+('f0000000-0000-0000-0000-000000000006', 'Эрдэнэт Спортын Ордон', 'Эрдэнэт', 3500),
+('f0000000-0000-0000-0000-000000000007', 'Дархан Спортын Ордон', 'Дархан', 2500),
+('f0000000-0000-0000-0000-000000000008', 'Ховд Спортын Ордон', 'Ховд', 1500),
+('f0000000-0000-0000-0000-000000000009', 'Сүхбаатар Спортын Төв', 'Сүхбаатар', 1200),
+('f0000000-0000-0000-0000-000000000010', 'Улиастай Спортын Төв', 'Улиастай', 800),
+('f0000000-0000-0000-0000-000000000011', 'Багануур Спортын Ордон', 'Улаанбаатар', 1500)
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- BASKETBALL RULESETS
+-- ============================================================================
+
+insert into public.basketball_rulesets (id, league_id, version, name, rules, effective_from) values
+-- The League standard rules
+('90000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', '2025.1', 'Дээд Лиг 5x5 Стандарт',
+ '{"periods":4,"period_minutes":10,"overtime_minutes":5,"personal_foul_limit":5,"fouls_to_bonus":5,"players_on_court":5,"shot_clock_seconds":24,"timeout_limit_per_half":2}'::jsonb, '2025-10-01'),
+-- Space League rules (slightly different — shorter games)
+('90000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002', '2025.1', 'Спэйс Лиг 5x5',
+ '{"periods":4,"period_minutes":8,"overtime_minutes":5,"personal_foul_limit":5,"fouls_to_bonus":5,"players_on_court":5,"shot_clock_seconds":30,"timeout_limit_per_half":1}'::jsonb, '2025-09-15')
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- THE LEAGUE (ҮНДЭСНИЙ ДЭЭД ЛИГ) — 10 REAL TEAMS
+-- All teams from the 2025-26 season. Source: Wikipedia "The League (Mongolia)"
+-- ============================================================================
+
+insert into public.teams (id, league_id, name, short_code, slug, primary_color) values
+-- Khasin Khuleguud / Хасын Хүлэгүүд — 10x champions, XacBank sponsored
+('10000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'Хасын Хүлэгүүд', 'KHU', 'khasin-khuleguud', '#f62e2e'),
+-- SG Apes (formerly IHC Apes)
+('10000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000001', 'SG Apes', 'APE', 'sg-apes', '#2d8a4e'),
+-- BCH Knights (formerly BCH Garid)
+('10000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000001', 'BCH Knights', 'BCH', 'bch-knights', '#1a3c6e'),
+-- Selenge Bodons
+('10000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000001', 'Сэлэнгэ Бодонс', 'SEL', 'selenge-bodons', '#8b4513'),
+-- Erdenet Miners — 2022-23 champions
+('10000000-0000-0000-0000-000000000005', 'c0000000-0000-0000-0000-000000000001', 'Эрдэнэтийн Уурхайчид', 'MIN', 'erdenet-miners', '#daa520'),
+-- Khovd Falcons
+('10000000-0000-0000-0000-000000000006', 'c0000000-0000-0000-0000-000000000001', 'Ховд Фалконс', 'KHO', 'khovd-falcons', '#4169e1'),
+-- Darkhan United
+('10000000-0000-0000-0000-000000000007', 'c0000000-0000-0000-0000-000000000001', 'Дархан Юнайтед', 'DAR', 'darkhan-united', '#dc143c'),
+-- Zavkhan Brothers
+('10000000-0000-0000-0000-000000000008', 'c0000000-0000-0000-0000-000000000001', 'Завхан Ахан дүүс', 'ZAV', 'zavkhan-brothers', '#228b22'),
+-- BurenScore Mongolians
+('10000000-0000-0000-0000-000000000009', 'c0000000-0000-0000-0000-000000000001', 'БүрэнСкор Монголчууд', 'MON', 'burenscore-mongolians', '#ff8c00'),
+-- Bishrelt Metal — 2x runner-up (2023, 2024)
+('10000000-0000-0000-0000-000000000010', 'c0000000-0000-0000-0000-000000000001', 'Бишрэлт Металл', 'MET', 'bishrelt-metal', '#09088e')
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- SPACE LEAGUE (СПЭЙС ЛИГ) — 8 TEAMS
+-- ============================================================================
+
+insert into public.teams (id, league_id, name, short_code, slug, primary_color) values
+('10000000-0000-0000-0000-000000000020', 'c0000000-0000-0000-0000-000000000002', 'Мөрөөдлийн Одод', 'MOD', 'muruudliin-odod', '#9370db'),
+('10000000-0000-0000-0000-000000000021', 'c0000000-0000-0000-0000-000000000002', 'Хүрэн Морьт', 'KHM', 'khuren-mor', '#8b0000'),
+('10000000-0000-0000-0000-000000000022', 'c0000000-0000-0000-0000-000000000002', 'Тэнгэрийн Зүүд', 'TEN', 'tengeriin-zuud', '#00bfff'),
+('10000000-0000-0000-0000-000000000023', 'c0000000-0000-0000-0000-000000000002', 'Ган Тэмүүлэн', 'GAN', 'gan-temuulen', '#2f4f4f'),
+('10000000-0000-0000-0000-000000000024', 'c0000000-0000-0000-0000-000000000002', 'Цагдаагийн Спортын Дугуйлан', 'TSG', 'tsagaadgiin-sport', '#000080'),
+('10000000-0000-0000-0000-000000000025', 'c0000000-0000-0000-0000-000000000002', 'МУИС Багш нар', 'MUIS', 'muis-bagsh', '#4682b4'),
+('10000000-0000-0000-0000-000000000026', 'c0000000-0000-0000-0000-000000000002', 'ХААИС Алаг芝', 'HAAIS', 'haais-alag', '#006400'),
+('10000000-0000-0000-0000-000000000027', 'c0000000-0000-0000-0000-000000000002', 'Монгол Шуудан', 'MS', 'mongol-shuudan', '#ffd700')
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- TEAM SEASONS (The League 2025–26 regular season)
+-- ============================================================================
+
+insert into public.team_seasons (id, team_id, competition_id) values
+-- The League 2025-26 regular season teams (all 10)
+('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001'), -- Khuleguud
+('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001'), -- SG Apes
+('30000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001'), -- BCH Knights
+('30000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000001'), -- Selenge Bodons
+('30000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000005', 'e0000000-0000-0000-0000-000000000001'), -- Erdenet Miners
+('30000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000006', 'e0000000-0000-0000-0000-000000000001'), -- Khovd Falcons
+('30000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000007', 'e0000000-0000-0000-0000-000000000001'), -- Darkhan United
+('30000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000008', 'e0000000-0000-0000-0000-000000000001'), -- Zavkhan Brothers
+('30000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000009', 'e0000000-0000-0000-0000-000000000001'), -- BurenScore Mongolians
+('30000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000010', 'e0000000-0000-0000-0000-000000000001'), -- Bishrelt Metal
+-- Space League 2025-26 regular season teams (all 8)
+('30000000-0000-0000-0000-000000000020', '10000000-0000-0000-0000-000000000020', 'e0000000-0000-0000-0000-000000000003'),
+('30000000-0000-0000-0000-000000000021', '10000000-0000-0000-0000-000000000021', 'e0000000-0000-0000-0000-000000000003'),
+('30000000-0000-0000-0000-000000000022', '10000000-0000-0000-0000-000000000022', 'e0000000-0000-0000-0000-000000000003'),
+('30000000-0000-0000-0000-000000000023', '10000000-0000-0000-0000-000000000023', 'e0000000-0000-0000-0000-000000000003'),
+('30000000-0000-0000-0000-000000000024', '10000000-0000-0000-0000-000000000024', 'e0000000-0000-0000-0000-000000000003'),
+('30000000-0000-0000-0000-000000000025', '10000000-0000-0000-0000-000000000025', 'e0000000-0000-0000-0000-000000000003'),
+('30000000-0000-0000-0000-000000000026', '10000000-0000-0000-0000-000000000026', 'e0000000-0000-0000-0000-000000000003'),
+('30000000-0000-0000-0000-000000000027', '10000000-0000-0000-0000-000000000027', 'e0000000-0000-0000-0000-000000000003')
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- PLAYERS — The League teams (real national team players + realistic names)
+-- Source: Wikipedia "Mongolia men's national basketball team" depth chart
+-- ============================================================================
+
+-- === Хасын Хүлэгүүд (Khasin Khuleguud) — defending champions ===
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000001', 'Болор-Эрдэнэ Ганцолмон', 'Bolor-erdene Gantsolmon', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000002', 'Дулгуун Ганхуяг', 'Dulguun Gankhuyag', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000003', 'Билгүүн Баттувшин', 'Bilguun Battuvshin', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000004', 'Туяа Мөнх-Оргил', 'Tuya Munkh-Orgil', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000005', 'Тэмүүлэн Чингэс', 'Temuulen Chinges', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000006', 'Баасанбат Эрдэнэбаяр', 'Baasambat Erdenebayar', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000007', 'Оргил Хишигбаатар', 'Orgil Khishigbaatar', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000008', 'Ананд Ариунболд', 'Anand Ariunbold', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000009', 'Барсболд Баатар-Эрдэнэ', 'Barsbold Baatarerdene', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000010', 'Одбаяр Ганзориг', 'Odbayar Ganzorig', 'SG', 'MN'),
+-- Foreign import
+('50000000-0000-0000-0000-000000000011', 'Дивайн Майлс', 'Divine Myles', 'PG', 'US')
+on conflict (id) do nothing;
+
+-- === SG Apes ===
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000020', 'Содном-Очир Баярмаа', 'Sodnom-Ochir Bayarmaa', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000021', 'Эрдэнэцогт Очирбат', 'Erdenetsogt Ochirbat', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000022', 'Маргад Эрдэнэцэцэг', 'Margad Erdenetsetseg', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000023', 'Галбадрахийн Нямдорж', 'Galbadrakh Nyamdorj', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000024', 'Цэрэнбат Даваажаргал', 'Tserenbat Davaajargal', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000025', 'Азбаяр Алтангэрэл', 'Azbayar Altangerel', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000026', 'Түгдэрсэдбазар', 'Tuguldur Sedbazar', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000027', 'Энхбаярсгалан Амарбаясгалан', 'Enkhbayarsgalan Amarbayasgalan', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000028', 'Наранболд Сүрэн', 'Naranbold Suren', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000029', 'Тэмүүжин Бат-Очир', 'Temuujin Bat-Ochir', 'SG', 'MN')
+on conflict (id) do nothing;
+
+-- === BCH Knights ===
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000030', 'Батсүрэн Хүрэлбат', 'Batsuren Khurelbat', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000031', 'Оюунцэцэг Даваа', 'Oyuntsetseg Davaa', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000032', 'Ганбаатар Нямжав', 'Ganbaatar Nyamjav', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000033', 'Түмэнбаяр Батсүрэн', 'Tumenbayar Batsuren', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000034', 'Цогтбаяр Мөнхцэцэг', 'Tsogtbayar Munkhtsetseg', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000035', 'Нямдорж Баярмаа', 'Nyamdorj Bayarmaa', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000036', 'Эрдэнэбат Зоригт', 'Erdenebat Zorigt', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000037', 'Даваахүү Мөнхтөр', 'Davaakhuu Munkhtur', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000038', 'Сүхбат Батжаргал', 'Sukhbat Batjargal', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000039', 'Ууганбаяр Оюунчимэг', 'Uuganbayar Oyuunchimeg', 'SG', 'MN')
+on conflict (id) do nothing;
+
+-- === Сэлэнгэ Бодонс (Selenge Bodons) ===
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000040', 'Бат-Эрдэнэ Цолмон', 'Bat-Erdene Tsolmon', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000041', 'Мөнх-Түвшин Сүрэн', 'Munkh-Tuvshin Suren', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000042', 'Баярсайхан Даваа', 'Bayarsaikhan Davaa', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000043', 'Хүрэлбат Ганбаатар', 'Khurelbat Ganbaatar', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000044', 'Сүрэнжав Оюун-Эрдэнэ', 'Surenjav Oyun-Erdene', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000045', 'Дорж Түмэнбаяр', 'Dorj Tumenbayar', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000046', 'Наранцэцэг Дорж', 'Narantsetseg Dorj', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000047', 'Энхбаяр Бат-Очир', 'Enkhbayar Bat-Ochir', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000048', 'Болд Цогт', 'Bold Tsogt', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000049', 'Хасбаяр Алтанцэцэг', 'Khasbayar Altantsetseg', 'C', 'MN')
+on conflict (id) do nothing;
+
+-- === Эрдэнэтийн Уурхайчид (Erdenet Miners) ===
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000050', 'Түмэнбаатар Мөнхцэцэг', 'Tumenbaatar Munkhtsetseg', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000051', 'Ганзориг Батбаяр', 'Ganzorig Batbayar', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000052', 'Батбаяр Мэндбаяр', 'Batbayar Mendbayar', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000053', 'Даваасүрэн Бат-Эрдэнэ', 'Davaasuren Bat-Erdene', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000054', 'Ууганбаяр Түмэнбаяр', 'Uuganbayar Tumenbayar', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000055', 'Пендарвис Вилльямс', 'Pendarvis Williams', 'SF', 'US'),
+('50000000-0000-0000-0000-000000000056', 'Одбаяр Энхбаяр', 'Odbayar Enkhbayar', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000057', 'Мэндбаяр Дорж', 'Mendbayar Dorj', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000058', 'Батмөнх Ганбаатар', 'Batmunkh Ganbaatar', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000059', 'Сүхбат Нямжав', 'Sukhbat Nyamjav', 'C', 'MN')
+on conflict (id) do nothing;
+
+-- === Ховд Фалконс (Khovd Falcons) ===
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000060', 'Баттүмэн Зоригт', 'Battumen Zorigt', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000061', 'Ганчимэг Баярмаа', 'Ganchimeg Bayarmaa', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000062', 'Даваахүү Тэмүүлэн', 'Davaakhuu Temuulen', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000063', 'Түмэнцэцэг Батбаяр', 'Tumentssetseg Batbayar', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000064', 'Мөнхбат Оюунцэцэг', 'Munkhat Oyuntsetseg', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000065', 'Наранбат Сүрэн', 'Naranbat Suren', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000066', 'Баярсүрэн Даваажаргал', 'Bayarsuren Davaajargal', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000067', 'Цэрэнбат Мөнхцэцэг', 'Tserenbat Munkhtsetseg', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000068', 'Галбадрах Нямдорж', 'Galbadrakh Nyamdorj', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000069', 'Билгүүн Бат-Эрдэнэ', 'Bilguun Bat-Erdene', 'SG', 'MN')
+on conflict (id) do nothing;
+
+-- === Дархан Юнайтед (Darkhan United) ===
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000070', 'Эрдэнэбат Батсүрэн', 'Erdenebat Batsuren', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000071', 'Тэмүүжин Мөнхцэцэг', 'Temuujin Munkhtsetseg', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000072', 'Ганбаатар Даваа', 'Ganbaatar Davaa', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000073', 'Баярсайхан Нямжав', 'Bayarsaikhan Nyamjav', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000074', 'Хүрэлбат Оюунцэцэг', 'Khurelbat Oyuntsetseg', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000075', 'Сүрэнжав Зоригт', 'Surenjav Zorigt', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000076', 'Дорж Бат-Очир', 'Dorj Bat-Ochir', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000077', 'Наранцэцэг Түмэнбаяр', 'Narantsetseg Tumenbayar', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000078', 'Энхбаяр Сүрэн', 'Enkhbayar Suren', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000079', 'Болд Мэндбаяр', 'Bold Mendbayar', 'C', 'MN')
+on conflict (id) do nothing;
+
+-- === Завхан Ахан дүүс (Zavkhan Brothers) ===
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000080', 'Батмөнх Баярсүрэн', 'Batmunkh Bayarsuren', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000081', 'Цогт Мөнх-Түвшин', 'Tsogt Munkh-Tuvshin', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000082', 'Ганцолмон Хүрэлбат', 'Gantsolmon Khurelbat', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000083', 'Түмэнцэцэг Баярсайхан', 'Tumentssetseg Bayarsaikhan', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000084', 'Сүхбат Даваахүү', 'Sukhbat Davaakhuu', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000085', 'Мэндбаяр Оюун-Эрдэнэ', 'Mendbayar Oyun-Erdene', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000086', 'Нямжав Ганбаатар', 'Nyamjav Ganbaatar', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000087', 'Даваажаргал Сүрэнжав', 'Davaajargal Surenjav', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000088', 'Бат-Эрдэнэ Хүрэл', 'Bat-Erdene Khurel', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000089', 'Оюунцэцэг Нямдорж', 'Oyuntsetseg Nyamdorj', 'C', 'MN')
+on conflict (id) do nothing;
+
+-- === БүрэнСкор Монголчууд (BurenScore Mongolians) ===
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000090', 'Түмэнбаяр Ганчимэг', 'Tumenbayar Ganchimeg', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000091', 'Батбаяр Даваасүрэн', 'Batbayar Davaasuren', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000092', 'Энхбаяр Тэмүүлэн', 'Enkhbayar Temuulen', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000093', 'Ганбаатар Батмөнх', 'Ganbaatar Batmunkh', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000094', 'Баярсайхан Цогтбаяр', 'Bayarsaikhan Tsogtbayar', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000095', 'Сүрэн Наран', 'Suren Naran', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000096', 'Даваа Билгүүн', 'Davaa Bilguun', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000097', 'Оюунцэцэг Хүрэлбат', 'Oyuntsetseg Khurelbat', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000098', 'Тэмүүжин Сүрэнжав', 'Temuujin Surenjav', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000099', 'Нямдорж Дорж', 'Nyamdorj Dorj', 'C', 'MN')
+on conflict (id) do nothing;
+
+-- === Бишрэлт Металл (Bishrelt Metal) — 2x runner-up ===
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000100', 'Бат-Эрдэнэ Сүрэн', 'Bat-Erdene Suren', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000101', 'Мөнх-Түвшин Батбаяр', 'Munkh-Tuvshin Batbayar', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000102', 'Баярсайхан Мэндбаяр', 'Bayarsaikhan Mendbayar', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000103', 'Хүрэлбат Одбаяр', 'Khurelbat Odbayar', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000104', 'Сүрэнжав Энхбаяр', 'Surenjav Enkhbayar', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000105', 'Дорж Батсүрэн', 'Dorj Batsuren', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000106', 'Наранцэцэг Мөнхцэцэг', 'Narantsetseg Munkhtsetseg', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000107', 'Энхбаяр Даваа', 'Enkhbayar Davaa', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000108', 'Болд Хүрэл', 'Bold Khurel', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000109', 'Хасбаяр Нямжав', 'Khasbayar Nyamjav', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000110', 'Дивайн Майлс', 'Divine Myles', 'PG', 'US')
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- SPACE LEAGUE PLAYERS (8 teams × 8 players each)
+-- ============================================================================
+
+-- Мөрөөдлийн Одод
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000120', 'Цэрэндаш Батбаяр', 'Tserendash Batbayar', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000121', 'Батмөнх Мэндбаяр', 'Batmunkh Mendbayar', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000122', 'Ганбаатар Одбаяр', 'Ganbaatar Odbayar', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000123', 'Эрдэнэбат Нямжав', 'Erdenebat Nyamjav', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000124', 'Түмэнбаяр Хүрэлбат', 'Tumenbayar Khurelbat', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000125', 'Наранцэцэг Сүрэн', 'Narantsetseg Suren', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000126', 'Баярсайхан Дорж', 'Bayarsaikhan Dorj', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000127', 'Сүрэнжав Оюунцэцэг', 'Surenjav Oyuntsetseg', 'SF', 'MN')
+on conflict (id) do nothing;
+
+-- Хүрэн Морьт
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000128', 'Бат-Эрдэнэ Даваа', 'Bat-Erdene Davaa', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000129', 'Мөнхцэцэг Батсүрэн', 'Munkhtsetseg Batsuren', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000130', 'Даваахүү Ганцолмон', 'Davaakhuu Gantsolmon', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000131', 'Хүрэл Түмэнцэцэг', 'Khurel Tumentssetseg', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000132', 'Сүхбат Баярсүрэн', 'Sukhbat Bayarsuren', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000133', 'Оюун-Эрдэнэ Мэндбаяр', 'Oyun-Erdene Mendbayar', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000134', 'Ганчимэг Нямжав', 'Ganchimeg Nyamjav', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000135', 'Батмөнх Сүрэнжав', 'Batmunkh Surenjav', 'SF', 'MN')
+on conflict (id) do nothing;
+
+-- Тэнгэрийн Зүүд
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000136', 'Зоригт Бат-Эрдэнэ', 'Zorigt Bat-Erdene', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000137', 'Даваажаргал Мөнх-Түвшин', 'Davaajargal Munkh-Tuvshin', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000138', 'Нямжав Баярсайхан', 'Nyamjav Bayarsaikhan', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000139', 'Түмэнцэцэг Хүрэлбат', 'Tumentssetseg Khurelbat', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000140', 'Оюунцэцэг Сүрэнжав', 'Oyuntsetseg Surenjav', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000141', 'Батсүрэн Дорж', 'Batsuren Dorj', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000142', 'Мэндбаяр Наран', 'Mendbayar Naran', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000143', 'Энхбаяр Ганбаатар', 'Enkhbayar Ganbaatar', 'SF', 'MN')
+on conflict (id) do nothing;
+
+-- Ган Тэмүүлэн
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000144', 'Бат-Очир Болд', 'Bat-Ochir Bold', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000145', 'Даваасүрэн Наран', 'Davaasuren Naran', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000146', 'Тэмүүлэн Цогт', 'Temuulen Tsogt', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000147', 'Хүрэлбат Батбаяр', 'Khurelbat Batbayar', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000148', 'Сүрэнжав Мэндбаяр', 'Surenjav Mendbayar', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000149', 'Нямжав Одбаяр', 'Nyamjav Odbayar', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000150', 'Баярсайхан Энхбаяр', 'Bayarsaikhan Enkhbayar', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000151', 'Ганбаатар Хасбаяр', 'Ganbaatar Khasbayar', 'SF', 'MN')
+on conflict (id) do nothing;
+
+-- Цагдаагийн Спортын Дугуйлан
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000152', 'Эрдэнэ-Бат Мөнхбат', 'Erdene-Bat Munkhat', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000153', 'Батбаяр Даваахүү', 'Batbayar Davaakhuu', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000154', 'Нямдорж Батмөнх', 'Nyamdorj Batmunkh', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000155', 'Даваа Түмэнцэцэг', 'Davaa Tumentssetseg', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000156', 'Сүрэн Баярсүрэн', 'Suren Bayarsuren', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000157', 'Оюунцэцэг Ганцолмон', 'Oyuntsetseg Gantsolmon', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000158', 'Хүрэл Мэндбаяр', 'Khurel Mendbayar', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000159', 'Болд Сүрэнжав', 'Bold Surenjav', 'SF', 'MN')
+on conflict (id) do nothing;
+
+-- МУИС Багш нар
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000160', 'Түмэнбаяр Наранцэцэг', 'Tumenbayar Narantsetseg', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000161', 'Баярсайхан Энхбаяр', 'Bayarsaikhan Enkhbayar', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000162', 'Даваажаргал Болд', 'Davaajargal Bold', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000163', 'Ганцолмон Нямжав', 'Gantsolmon Nyamjav', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000164', 'Хүрэлбат Сүрэн', 'Khurelbat Suren', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000165', 'Батсүрэн Дорж', 'Batsuren Dorj', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000166', 'Тэмүүлэн Бат-Эрдэнэ', 'Temuulen Bat-Erdene', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000167', 'Мөнхцэцэг Хүрэл', 'Munkhtsetseg Khurel', 'SF', 'MN')
+on conflict (id) do nothing;
+
+-- ХААИС Алаг芝
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000168', 'Оюун-Эрдэнэ Батбаяр', 'Oyun-Erdene Batbayar', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000169', 'Мэндбаяр Даваасүрэн', 'Mendbayar Davaasuren', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000170', 'Одбаяр Ганбаатар', 'Odbayar Ganbaatar', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000171', 'Нямжав Эрдэнэбат', 'Nyamjav Erdenebat', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000172', 'Сүрэнжав Түмэнбаяр', 'Surenjav Tumenbayar', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000173', 'Дорж Баярсайхан', 'Dorj Bayarsaikhan', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000174', 'Наранцэцэг Хүрэлбат', 'Narantsetseg Khurelbat', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000175', 'Болд Сүрэнжав', 'Bold Surenjav', 'SF', 'MN')
+on conflict (id) do nothing;
+
+-- Монгол Шуудан
+insert into public.players (id, canonical_name, name_latin, position, nationality) values
+('50000000-0000-0000-0000-000000000176', 'Бат-Эрдэнэ Тэмүүлэн', 'Bat-Erdene Temuulen', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000177', 'Мөнх-Түвшин Даваа', 'Munkh-Tuvshin Davaa', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000178', 'Баярсайхан Ганчимэг', 'Bayarsaikhan Ganchimeg', 'SF', 'MN'),
+('50000000-0000-0000-0000-000000000179', 'Хүрэлбат Батмөнх', 'Khurelbat Batmunkh', 'PF', 'MN'),
+('50000000-0000-0000-0000-000000000180', 'Сүрэнжав Энхбаяр', 'Surenjav Enkhbayar', 'C', 'MN'),
+('50000000-0000-0000-0000-000000000181', 'Дорж Нямжав', 'Dorj Nyamjav', 'PG', 'MN'),
+('50000000-0000-0000-0000-000000000182', 'Наран Оюунцэцэг', 'Naran Oyuntsetseg', 'SG', 'MN'),
+('50000000-0000-0000-0000-000000000183', 'Энхбаяр Бат-Эрдэнэ', 'Enkhbayar Bat-Erdene', 'SF', 'MN')
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- ROSTER ENTRIES — The League 2025-26 (10 players per team, jersey numbers)
+-- ============================================================================
+
+-- Хасын Хүлэгүүд
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', 1, 'PG'),
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000002', 2, 'C'),
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000003', 3, 'SF'),
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000004', 4, 'SG'),
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000005', 5, 'PF'),
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000006', 6, 'PG'),
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000007', 7, 'C'),
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000008', 8, 'SG'),
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000009', 9, 'SF'),
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000010', 10, 'SG'),
+('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000011', 11, 'PG')
+on conflict (team_season_id, player_id) do nothing;
+
+-- SG Apes
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000020', 1, 'PG'),
+('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000021', 3, 'SF'),
+('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000022', 5, 'SG'),
+('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000023', 12, 'C'),
+('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000024', 14, 'PF'),
+('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000025', 15, 'PF'),
+('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000026', 21, 'C'),
+('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000027', 22, 'PF'),
+('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000028', 23, 'PG'),
+('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000029', 24, 'SG')
+on conflict (team_season_id, player_id) do nothing;
+
+-- BCH Knights
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000030', 1, 'PG'),
+('30000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000031', 2, 'SG'),
+('30000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000032', 3, 'SF'),
+('30000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000033', 4, 'PF'),
+('30000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000034', 5, 'C'),
+('30000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000035', 10, 'PG'),
+('30000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000036', 11, 'SF'),
+('30000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000037', 12, 'PF'),
+('30000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000038', 13, 'C'),
+('30000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000039', 14, 'SG')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Сэлэнгэ Бодонс
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000040', 1, 'PG'),
+('30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000041', 2, 'SG'),
+('30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000042', 3, 'SF'),
+('30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000043', 4, 'PF'),
+('30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000044', 5, 'C'),
+('30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000045', 10, 'PG'),
+('30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000046', 11, 'SG'),
+('30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000047', 12, 'SF'),
+('30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000048', 13, 'PF'),
+('30000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000049', 14, 'C')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Эрдэнэтийн Уурхайчид
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000050', 1, 'PG'),
+('30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000051', 2, 'SG'),
+('30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000052', 3, 'SF'),
+('30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000053', 4, 'PF'),
+('30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000054', 5, 'C'),
+('30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000055', 33, 'SF'),
+('30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000056', 10, 'PG'),
+('30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000057', 11, 'SG'),
+('30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000058', 12, 'PF'),
+('30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000059', 13, 'C')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Ховд Фалконс
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000060', 1, 'PG'),
+('30000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000061', 2, 'SG'),
+('30000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000062', 3, 'SF'),
+('30000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000063', 4, 'PF'),
+('30000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000064', 5, 'C'),
+('30000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000065', 10, 'PG'),
+('30000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000066', 11, 'SF'),
+('30000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000067', 12, 'PF'),
+('30000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000068', 13, 'C'),
+('30000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000069', 14, 'SG')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Дархан Юнайтед
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000070', 1, 'PG'),
+('30000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000071', 2, 'SG'),
+('30000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000072', 3, 'SF'),
+('30000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000073', 4, 'PF'),
+('30000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000074', 5, 'C'),
+('30000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000075', 10, 'PG'),
+('30000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000076', 11, 'SG'),
+('30000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000077', 12, 'SF'),
+('30000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000078', 13, 'PF'),
+('30000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000079', 14, 'C')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Завхан Ахан дүүс
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000080', 1, 'PG'),
+('30000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000081', 2, 'SG'),
+('30000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000082', 3, 'SF'),
+('30000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000083', 4, 'PF'),
+('30000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000084', 5, 'C'),
+('30000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000085', 10, 'PG'),
+('30000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000086', 11, 'SG'),
+('30000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000087', 12, 'SF'),
+('30000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000088', 13, 'PF'),
+('30000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000089', 14, 'C')
+on conflict (team_season_id, player_id) do nothing;
+
+-- БүрэнСкор Монголчууд
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000090', 1, 'PG'),
+('30000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000091', 2, 'SG'),
+('30000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000092', 3, 'SF'),
+('30000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000093', 4, 'PF'),
+('30000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000094', 5, 'C'),
+('30000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000095', 10, 'PG'),
+('30000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000096', 11, 'SG'),
+('30000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000097', 12, 'SF'),
+('30000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000098', 13, 'PF'),
+('30000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000099', 14, 'C')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Бишрэлт Металл
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000100', 1, 'PG'),
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000101', 2, 'SG'),
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000102', 3, 'SF'),
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000103', 4, 'PF'),
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000104', 5, 'C'),
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000105', 10, 'PG'),
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000106', 11, 'SG'),
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000107', 12, 'SF'),
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000108', 13, 'PF'),
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000109', 14, 'C'),
+('30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000110', 22, 'PG')
+on conflict (team_season_id, player_id) do nothing;
+
+-- ============================================================================
+-- ROSTER ENTRIES — Space League (8 players per team)
+-- ============================================================================
+
+-- Мөрөөдлийн Одод
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000020', '50000000-0000-0000-0000-000000000120', 1, 'PG'),
+('30000000-0000-0000-0000-000000000020', '50000000-0000-0000-0000-000000000121', 2, 'SG'),
+('30000000-0000-0000-0000-000000000020', '50000000-0000-0000-0000-000000000122', 3, 'SF'),
+('30000000-0000-0000-0000-000000000020', '50000000-0000-0000-0000-000000000123', 4, 'PF'),
+('30000000-0000-0000-0000-000000000020', '50000000-0000-0000-0000-000000000124', 5, 'C'),
+('30000000-0000-0000-0000-000000000020', '50000000-0000-0000-0000-000000000125', 10, 'PG'),
+('30000000-0000-0000-0000-000000000020', '50000000-0000-0000-0000-000000000126', 11, 'SG'),
+('30000000-0000-0000-0000-000000000020', '50000000-0000-0000-0000-000000000127', 12, 'SF')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Хүрэн Морьт
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000021', '50000000-0000-0000-0000-000000000128', 1, 'PG'),
+('30000000-0000-0000-0000-000000000021', '50000000-0000-0000-0000-000000000129', 2, 'SG'),
+('30000000-0000-0000-0000-000000000021', '50000000-0000-0000-0000-000000000130', 3, 'SF'),
+('30000000-0000-0000-0000-000000000021', '50000000-0000-0000-0000-000000000131', 4, 'PF'),
+('30000000-0000-0000-0000-000000000021', '50000000-0000-0000-0000-000000000132', 5, 'C'),
+('30000000-0000-0000-0000-000000000021', '50000000-0000-0000-0000-000000000133', 10, 'PG'),
+('30000000-0000-0000-0000-000000000021', '50000000-0000-0000-0000-000000000134', 11, 'SG'),
+('30000000-0000-0000-0000-000000000021', '50000000-0000-0000-0000-000000000135', 12, 'SF')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Тэнгэрийн Зүүд
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000022', '50000000-0000-0000-0000-000000000136', 1, 'PG'),
+('30000000-0000-0000-0000-000000000022', '50000000-0000-0000-0000-000000000137', 2, 'SG'),
+('30000000-0000-0000-0000-000000000022', '50000000-0000-0000-0000-000000000138', 3, 'SF'),
+('30000000-0000-0000-0000-000000000022', '50000000-0000-0000-0000-000000000139', 4, 'PF'),
+('30000000-0000-0000-0000-000000000022', '50000000-0000-0000-0000-000000000140', 5, 'C'),
+('30000000-0000-0000-0000-000000000022', '50000000-0000-0000-0000-000000000141', 10, 'PG'),
+('30000000-0000-0000-0000-000000000022', '50000000-0000-0000-0000-000000000142', 11, 'SG'),
+('30000000-0000-0000-0000-000000000022', '50000000-0000-0000-0000-000000000143', 12, 'SF')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Ган Тэмүүлэн
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000023', '50000000-0000-0000-0000-000000000144', 1, 'PG'),
+('30000000-0000-0000-0000-000000000023', '50000000-0000-0000-0000-000000000145', 2, 'SG'),
+('30000000-0000-0000-0000-000000000023', '50000000-0000-0000-0000-000000000146', 3, 'SF'),
+('30000000-0000-0000-0000-000000000023', '50000000-0000-0000-0000-000000000147', 4, 'PF'),
+('30000000-0000-0000-0000-000000000023', '50000000-0000-0000-0000-000000000148', 5, 'C'),
+('30000000-0000-0000-0000-000000000023', '50000000-0000-0000-0000-000000000149', 10, 'PG'),
+('30000000-0000-0000-0000-000000000023', '50000000-0000-0000-0000-000000000150', 11, 'SG'),
+('30000000-0000-0000-0000-000000000023', '50000000-0000-0000-0000-000000000151', 12, 'SF')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Цагдаагийн Спортын Дугуйлан
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000024', '50000000-0000-0000-0000-000000000152', 1, 'PG'),
+('30000000-0000-0000-0000-000000000024', '50000000-0000-0000-0000-000000000153', 2, 'SG'),
+('30000000-0000-0000-0000-000000000024', '50000000-0000-0000-0000-000000000154', 3, 'SF'),
+('30000000-0000-0000-0000-000000000024', '50000000-0000-0000-0000-000000000155', 4, 'PF'),
+('30000000-0000-0000-0000-000000000024', '50000000-0000-0000-0000-000000000156', 5, 'C'),
+('30000000-0000-0000-0000-000000000024', '50000000-0000-0000-0000-000000000157', 10, 'PG'),
+('30000000-0000-0000-0000-000000000024', '50000000-0000-0000-0000-000000000158', 11, 'SG'),
+('30000000-0000-0000-0000-000000000024', '50000000-0000-0000-0000-000000000159', 12, 'SF')
+on conflict (team_season_id, player_id) do nothing;
+
+-- МУИС Багш нар
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000025', '50000000-0000-0000-0000-000000000160', 1, 'PG'),
+('30000000-0000-0000-0000-000000000025', '50000000-0000-0000-0000-000000000161', 2, 'SG'),
+('30000000-0000-0000-0000-000000000025', '50000000-0000-0000-0000-000000000162', 3, 'SF'),
+('30000000-0000-0000-0000-000000000025', '50000000-0000-0000-0000-000000000163', 4, 'PF'),
+('30000000-0000-0000-0000-000000000025', '50000000-0000-0000-0000-000000000164', 5, 'C'),
+('30000000-0000-0000-0000-000000000025', '50000000-0000-0000-0000-000000000165', 10, 'PG'),
+('30000000-0000-0000-0000-000000000025', '50000000-0000-0000-0000-000000000166', 11, 'SG'),
+('30000000-0000-0000-0000-000000000025', '50000000-0000-0000-0000-000000000167', 12, 'SF')
+on conflict (team_season_id, player_id) do nothing;
+
+-- ХААИС Алаг芝
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000026', '50000000-0000-0000-0000-000000000168', 1, 'PG'),
+('30000000-0000-0000-0000-000000000026', '50000000-0000-0000-0000-000000000169', 2, 'SG'),
+('30000000-0000-0000-0000-000000000026', '50000000-0000-0000-0000-000000000170', 3, 'SF'),
+('30000000-0000-0000-0000-000000000026', '50000000-0000-0000-0000-000000000171', 4, 'PF'),
+('30000000-0000-0000-0000-000000000026', '50000000-0000-0000-0000-000000000172', 5, 'C'),
+('30000000-0000-0000-0000-000000000026', '50000000-0000-0000-0000-000000000173', 10, 'PG'),
+('30000000-0000-0000-0000-000000000026', '50000000-0000-0000-0000-000000000174', 11, 'SG'),
+('30000000-0000-0000-0000-000000000026', '50000000-0000-0000-0000-000000000175', 12, 'SF')
+on conflict (team_season_id, player_id) do nothing;
+
+-- Монгол Шуудан
+insert into public.roster_entries (team_season_id, player_id, jersey_number, position) values
+('30000000-0000-0000-0000-000000000027', '50000000-0000-0000-0000-000000000176', 1, 'PG'),
+('30000000-0000-0000-0000-000000000027', '50000000-0000-0000-0000-000000000177', 2, 'SG'),
+('30000000-0000-0000-0000-000000000027', '50000000-0000-0000-0000-000000000178', 3, 'SF'),
+('30000000-0000-0000-0000-000000000027', '50000000-0000-0000-0000-000000000179', 4, 'PF'),
+('30000000-0000-0000-0000-000000000027', '50000000-0000-0000-0000-000000000180', 5, 'C'),
+('30000000-0000-0000-0000-000000000027', '50000000-0000-0000-0000-000000000181', 10, 'PG'),
+('30000000-0000-0000-0000-000000000027', '50000000-0000-0000-0000-000000000182', 11, 'SG'),
+('30000000-0000-0000-0000-000000000027', '50000000-0000-0000-0000-000000000183', 12, 'SF')
+on conflict (team_season_id, player_id) do nothing;
+
+-- ============================================================================
+-- GAMES — The League 2025-26 Regular Season
+-- Mix of: official (completed), live_provisional (in-progress), scheduled (future)
+-- Dates set in Oct–Dec 2025 for realism
+-- ============================================================================
+
+insert into public.games (id, competition_id, ruleset_id, home_team_season_id, away_team_season_id, venue_id, scheduled_at, status, current_period, home_score, away_score, published_at) values
+-- OFFICIAL games (completed with final scores)
+('70000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000005', 'f0000000-0000-0000-0000-000000000001',
+ '2025-10-15T18:00:00+08:00', 'official', 4, 85, 78, '2025-10-15T20:30:00+08:00'),
+('70000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000003', 'f0000000-0000-0000-0000-000000000004',
+ '2025-10-18T15:00:00+08:00', 'official', 4, 92, 88, '2025-10-18T17:30:00+08:00'),
+('70000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000004', 'f0000000-0000-0000-0000-000000000001',
+ '2025-10-22T19:00:00+08:00', 'official', 4, 74, 71, '2025-10-22T21:30:00+08:00'),
+('70000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000007', '30000000-0000-0000-0000-000000000008', 'f0000000-0000-0000-0000-000000000007',
+ '2025-10-25T14:00:00+08:00', 'official', 4, 69, 73, '2025-10-25T16:30:00+08:00'),
+('70000000-0000-0000-0000-000000000005', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000006', '30000000-0000-0000-0000-000000000009', 'f0000000-0000-0000-0000-000000000008',
+ '2025-11-01T16:00:00+08:00', 'official', 4, 81, 84, '2025-11-01T18:30:00+08:00'),
+
+-- LIVE PROVISIONAL games (in-progress, Q3/Q4)
+('70000000-0000-0000-0000-000000000010', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000010', 'f0000000-0000-0000-0000-000000000001',
+ '2025-12-05T19:00:00+08:00', 'live_provisional', 3, 58, 52, null),
+('70000000-0000-0000-0000-000000000011', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000007', 'f0000000-0000-0000-0000-000000000009',
+ '2025-12-06T15:00:00+08:00', 'live_provisional', 4, 67, 64, null),
+
+-- SCHEDULED games (future)
+('70000000-0000-0000-0000-000000000020', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000005', '30000000-0000-0000-0000-000000000003', 'f0000000-0000-0000-0000-000000000006',
+ '2025-12-13T18:00:00+08:00', 'scheduled', 0, null, null, null),
+('70000000-0000-0000-0000-000000000021', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000008', '30000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000010',
+ '2025-12-14T14:00:00+08:00', 'scheduled', 0, null, null, null),
+('70000000-0000-0000-0000-000000000022', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000009', '30000000-0000-0000-0000-000000000006', 'f0000000-0000-0000-0000-000000000011',
+ '2025-12-20T19:00:00+08:00', 'scheduled', 0, null, null, null),
+('70000000-0000-0000-0000-000000000023', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000001',
+ '2025-12-21T16:00:00+08:00', 'scheduled', 0, null, null, null)
+on conflict (id) do nothing;
+
+-- Additional The League games (round 2+ for richer player stats)
+insert into public.games (id, competition_id, ruleset_id, home_team_season_id, away_team_season_id, venue_id, scheduled_at, status, current_period, home_score, away_score, published_at, current_revision_number) values
+('70000000-0000-0000-0000-000000000060', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000005', '30000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000001',
+ '2025-11-08T18:00:00+08:00', 'official', 4, 79, 82, '2025-11-08T20:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000061', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000004',
+ '2025-11-12T19:00:00+08:00', 'official', 4, 88, 91, '2025-11-12T21:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000062', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000006', 'f0000000-0000-0000-0000-000000000001',
+ '2025-11-15T16:00:00+08:00', 'official', 4, 72, 68, '2025-11-15T18:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000063', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000009', 'f0000000-0000-0000-0000-000000000007',
+ '2025-11-19T18:00:00+08:00', 'official', 4, 85, 80, '2025-11-19T20:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000064', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000008', '30000000-0000-0000-0000-000000000007', 'f0000000-0000-0000-0000-000000000008',
+ '2025-11-22T15:00:00+08:00', 'official', 4, 76, 71, '2025-11-22T17:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000065', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000006', 'f0000000-0000-0000-0000-000000000001',
+ '2025-11-26T19:00:00+08:00', 'official', 4, 90, 85, '2025-11-26T21:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000066', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000010', 'f0000000-0000-0000-0000-000000000004',
+ '2025-11-29T16:00:00+08:00', 'official', 4, 78, 83, '2025-11-29T18:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000067', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000009', '30000000-0000-0000-0000-000000000005', 'f0000000-0000-0000-0000-000000000011',
+ '2025-12-03T18:00:00+08:00', 'official', 4, 74, 77, '2025-12-03T20:30:00+08:00', 1)
+on conflict (id) do nothing;
+
+
+-- ============================================================================
+-- GAMES — Space League 2025-26 Regular Season
+-- ============================================================================
+
+insert into public.games (id, competition_id, ruleset_id, home_team_season_id, away_team_season_id, venue_id, scheduled_at, status, current_period, home_score, away_score, published_at) values
+-- OFFICIAL
+('70000000-0000-0000-0000-000000000030', 'e0000000-0000-0000-0000-000000000003', '90000000-0000-0000-0000-000000000002',
+ '30000000-0000-0000-0000-000000000020', '30000000-0000-0000-0000-000000000021', 'f0000000-0000-0000-0000-000000000002',
+ '2025-10-05T17:00:00+08:00', 'official', 4, 62, 58, '2025-10-05T19:10:00+08:00'),
+('70000000-0000-0000-0000-000000000031', 'e0000000-0000-0000-0000-000000000003', '90000000-0000-0000-0000-000000000002',
+ '30000000-0000-0000-0000-000000000024', '30000000-0000-0000-0000-000000000025', 'f0000000-0000-0000-0000-000000000004',
+ '2025-10-08T18:30:00+08:00', 'official', 4, 55, 61, '2025-10-08T20:40:00+08:00'),
+-- LIVE PROVISIONAL
+('70000000-0000-0000-0000-000000000032', 'e0000000-0000-0000-0000-000000000003', '90000000-0000-0000-0000-000000000002',
+ '30000000-0000-0000-0000-000000000022', '30000000-0000-0000-0000-000000000026', 'f0000000-0000-0000-0000-000000000003',
+ '2025-12-04T19:30:00+08:00', 'live_provisional', 2, 28, 31, null),
+-- SCHEDULED
+('70000000-0000-0000-0000-000000000033', 'e0000000-0000-0000-0000-000000000003', '90000000-0000-0000-0000-000000000002',
+ '30000000-0000-0000-0000-000000000027', '30000000-0000-0000-0000-000000000023', 'f0000000-0000-0000-0000-000000000005',
+ '2025-12-11T18:00:00+08:00', 'scheduled', 0, null, null, null)
+on conflict (id) do nothing;
+
+-- ============================================================================
+-- GAME ROSTERS — starters for official games (5 starters per team per game)
+-- ============================================================================
+
+-- Game 001: Khuleguud vs Miners (official)
+insert into public.game_rosters (game_id, team_season_id, player_id, is_starter) values
+-- Khuleguud starters
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', true),  -- Gantsolmon
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000004', true),  -- Munkh-Orgil
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000003', true),  -- Battuvshin
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000005', true),  -- Chinges
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000002', true),  -- Gankhuyag
+-- Khuleguud bench
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000011', false), -- Myles
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000007', false), -- Khishigbaatar
+-- Miners starters
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000050', true),  -- Tumenbaatar
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000051', true),  -- Ganzorig
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000055', true),  -- Williams
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000053', true),  -- Davaasuren
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000054', true),  -- Uuganbayar
+-- Miners bench
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000056', false), -- Odbayar
+('70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000059', false)  -- Nyamjav
+on conflict (game_id, player_id) do nothing;
+
+-- Game 010: Khuleguud vs Metal (live provisional)
+insert into public.game_rosters (game_id, team_season_id, player_id, is_starter) values
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', true),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000004', true),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000003', true),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000005', true),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000002', true),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000011', false),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000100', true),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000101', true),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000102', true),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000103', true),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000104', true),
+('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000110', false)
+on conflict (game_id, player_id) do nothing;
+-- ============================================================================
+-- ROSTERS & BOX SCORES for earlier official games (001–005)
+-- ============================================================================
+
+-- Generate game_revisions for games 001–005 so box scores can link to them
+DO $$ DECLARE
+  gid uuid;
+  admin_id uuid := '02346873-7047-4c27-b1d5-9461301c447f';
+  rev_id uuid;
+  src_id uuid;
+BEGIN
+  FOR gid IN
+    SELECT id FROM public.games
+    WHERE id IN (
+      '70000000-0000-0000-0000-000000000001',
+      '70000000-0000-0000-0000-000000000002',
+      '70000000-0000-0000-0000-000000000003',
+      '70000000-0000-0000-0000-000000000004',
+      '70000000-0000-0000-0000-000000000005'
+    )
+  LOOP
+    src_id := gen_random_uuid();
+    rev_id := gen_random_uuid();
+    INSERT INTO public.source_submissions (id, game_id, source_type, submitted_by, submitted_at, normalized_payload, status, reviewed_by, reviewed_at)
+    VALUES (src_id, gid, 'tracker_journal', admin_id, NOW(), '{"periods":4}'::jsonb, 'approved', admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    INSERT INTO public.game_revisions (id, game_id, revision_number, source_submission_id, state, journal, projection, validation_warnings, created_by, created_at, approved_by, approved_at)
+    VALUES (rev_id, gid, 1, src_id, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, admin_id, NOW(), admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    UPDATE public.games SET current_revision_number = 1 WHERE id = gid;
+  END LOOP;
+END $$;
+
+-- Generate rosters from roster_entries for games that don't have them yet
+-- Game 002: Bears vs Eagles
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000002', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000003') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+-- Game 003: Falcons vs Dragons
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000003', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000010','30000000-0000-0000-0000-000000000004') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+-- Game 004: Wolves vs Lions
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000004', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000007','30000000-0000-0000-0000-000000000008') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+-- Game 005: Riders vs Bulls
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000005', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000006','30000000-0000-0000-0000-000000000009') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+
+-- Box scores for games 001–005 (realistic basketball stats)
+INSERT INTO public.game_player_stats (game_id, player_id, team_season_id, revision_id, seconds_played, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf)
+SELECT gr.game_id, gr.player_id, gr.team_season_id, gr2.id,
+(1600 + random() * 1400)::int,
+(random() * 22 + 4)::int,
+(random() * 8 + 1)::int,
+(random() * 14 + 2)::int,
+(random() * 3)::int,
+(random() * 6)::int,
+(random() * 4)::int,
+(random() * 6)::int,
+(random() * 3)::int,
+(random() * 6 + 1)::int,
+(random() * 5)::int,
+(random() * 2)::int,
+(random() * 2)::int,
+(random() * 3)::int,
+(random() * 3 + 1)::int
+FROM public.game_rosters gr
+JOIN public.game_revisions gr2 ON gr2.game_id = gr.game_id AND gr2.revision_number = 1
+WHERE gr.game_id IN (
+  '70000000-0000-0000-0000-000000000001',
+  '70000000-0000-0000-0000-000000000002',
+  '70000000-0000-0000-0000-000000000003',
+  '70000000-0000-0000-0000-000000000004',
+  '70000000-0000-0000-0000-000000000005'
+)
+ON CONFLICT DO NOTHING;
+
+-- Also add rosters + box scores for Space League official games
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000030', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000020','30000000-0000-0000-0000-000000000021') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000031', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000024','30000000-0000-0000-0000-000000000025') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+
+-- Game revisions for Space League games
+DO $$ DECLARE
+  gid uuid;
+  admin_id uuid := '02346873-7047-4c27-b1d5-9461301c447f';
+  rev_id uuid;
+  src_id uuid;
+BEGIN
+  FOR gid IN
+    SELECT id FROM public.games
+    WHERE id IN ('70000000-0000-0000-0000-000000000030','70000000-0000-0000-0000-000000000031')
+  LOOP
+    src_id := gen_random_uuid();
+    rev_id := gen_random_uuid();
+    INSERT INTO public.source_submissions (id, game_id, source_type, submitted_by, submitted_at, normalized_payload, status, reviewed_by, reviewed_at)
+    VALUES (src_id, gid, 'tracker_journal', admin_id, NOW(), '{"periods":4}'::jsonb, 'approved', admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    INSERT INTO public.game_revisions (id, game_id, revision_number, source_submission_id, state, journal, projection, validation_warnings, created_by, created_at, approved_by, approved_at)
+    VALUES (rev_id, gid, 1, src_id, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, admin_id, NOW(), admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    UPDATE public.games SET current_revision_number = 1 WHERE id = gid;
+  END LOOP;
+END $$;
+
+-- Box scores for Space League official games
+INSERT INTO public.game_player_stats (game_id, player_id, team_season_id, revision_id, seconds_played, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf)
+SELECT gr.game_id, gr.player_id, gr.team_season_id, gr2.id,
+(1600 + random() * 1400)::int,
+(random() * 22 + 4)::int,
+(random() * 8 + 1)::int,
+(random() * 14 + 2)::int,
+(random() * 3)::int,
+(random() * 6)::int,
+(random() * 4)::int,
+(random() * 6)::int,
+(random() * 3)::int,
+(random() * 6 + 1)::int,
+(random() * 5)::int,
+(random() * 2)::int,
+(random() * 2)::int,
+(random() * 3)::int,
+(random() * 3 + 1)::int
+FROM public.game_rosters gr
+JOIN public.game_revisions gr2 ON gr2.game_id = gr.game_id AND gr2.revision_number = 1
+WHERE gr.game_id IN ('70000000-0000-0000-0000-000000000030','70000000-0000-0000-0000-000000000031')
+ON CONFLICT DO NOTHING;
+
+
+-- ============================================================================
+-- TODAY'S GAMES (dynamic dates so the website shows data)
+-- ============================================================================
+
+-- Official games for today
+INSERT INTO public.games (id, competition_id, ruleset_id, home_team_season_id, away_team_season_id, venue_id, scheduled_at, status, current_period, home_score, away_score, current_revision_number) VALUES
+('70000000-0000-0000-0000-000000000100', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000001',
+ (CURRENT_DATE || 'T18:00:00+08:00')::timestamptz, 'official', 4, 88, 76, 1),
+('70000000-0000-0000-0000-000000000101', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000004', 'f0000000-0000-0000-0000-000000000004',
+ (CURRENT_DATE || 'T19:00:00+08:00')::timestamptz, 'official', 4, 91, 85, 1),
+-- Live game
+('70000000-0000-0000-0000-000000000102', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000005', '30000000-0000-0000-0000-000000000006', 'f0000000-0000-0000-0000-000000000006',
+ (CURRENT_DATE || 'T20:00:00+08:00')::timestamptz, 'live_provisional', 3, 54, 49, 0),
+-- Scheduled tomorrow
+('70000000-0000-0000-0000-000000000103', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000007', '30000000-0000-0000-0000-000000000008', 'f0000000-0000-0000-0000-000000000007',
+ (CURRENT_DATE + 1 || 'T15:00:00+08:00')::timestamptz, 'scheduled', 0, null, null, 0),
+('70000000-0000-0000-0000-000000000104', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000009', '30000000-0000-0000-0000-000000000010', 'f0000000-0000-0000-0000-000000000001',
+ (CURRENT_DATE + 1 || 'T18:00:00+08:00')::timestamptz, 'scheduled', 0, null, null, 0),
+-- Scheduled day after
+('70000000-0000-0000-0000-000000000105', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000010', 'f0000000-0000-0000-0000-000000000001',
+ (CURRENT_DATE + 2 || 'T19:00:00+08:00')::timestamptz, 'scheduled', 0, null, null, 0)
+on conflict (id) do nothing;
+
+-- Approval chain for today's official games
+DO $$ DECLARE a uuid := '02346873-7047-4c27-b1d5-9461301c447f'; s1 uuid := gen_random_uuid(); r1 uuid := gen_random_uuid(); s2 uuid := gen_random_uuid(); r2 uuid := gen_random_uuid(); BEGIN
+INSERT INTO public.source_submissions (id, game_id, source_type, submitted_by, submitted_at, normalized_payload, status, reviewed_by, reviewed_at) VALUES
+(s1, '70000000-0000-0000-0000-000000000100', 'tracker_journal', a, NOW(), '{"periods":4}'::jsonb, 'approved', a, NOW()),
+(s2, '70000000-0000-0000-0000-000000000101', 'tracker_journal', a, NOW(), '{"periods":4}'::jsonb, 'approved', a, NOW()) ON CONFLICT DO NOTHING;
+INSERT INTO public.game_revisions (id, game_id, revision_number, source_submission_id, state, journal, projection, validation_warnings, created_by, created_at, approved_by, approved_at) VALUES
+(r1, '70000000-0000-0000-0000-000000000100', 1, s1, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, a, NOW(), a, NOW()),
+(r2, '70000000-0000-0000-0000-000000000101', 1, s2, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, a, NOW(), a, NOW()) ON CONFLICT DO NOTHING;
+UPDATE public.games SET published_at = NOW() WHERE id IN ('70000000-0000-0000-0000-000000000100', '70000000-0000-0000-0000-000000000101');
+END $$;
+
+-- Game rosters for today's official games
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000100', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000002') AND re.left_at IS NULL
+on conflict (game_id, player_id) do nothing;
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000101', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000003','30000000-0000-0000-0000-000000000004') AND re.left_at IS NULL
+on conflict (game_id, player_id) do nothing;
+
+-- Box scores for today's official games
+INSERT INTO public.game_player_stats (game_id, player_id, team_season_id, revision_id, seconds_played, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf)
+SELECT gr.game_id, gr.player_id, gr.team_season_id, gr2.id,
+(1600 + random() * 1400)::int, (random() * 22 + 4)::int, (random() * 8 + 1)::int, (random() * 14 + 2)::int,
+(random() * 3)::int, (random() * 6)::int, (random() * 4)::int, (random() * 6)::int,
+(random() * 3)::int, (random() * 6 + 1)::int, (random() * 5)::int, (random() * 2)::int,
+(random() * 2)::int, (random() * 3)::int, (random() * 3 + 1)::int
+FROM public.game_rosters gr
+JOIN public.game_revisions gr2 ON gr2.game_id = gr.game_id AND gr2.revision_number = (SELECT current_revision_number FROM public.games WHERE id = gr.game_id)
+WHERE gr.game_id IN ('70000000-0000-0000-0000-000000000100','70000000-0000-0000-0000-000000000101')
+on conflict do nothing;
+
+-- Rosters + box scores for additional The League games (060–067)
+DO $$ DECLARE
+  game_rec record;
+  admin_id uuid := '02346873-7047-4c27-b1d5-9461301c447f';
+  rev_id uuid;
+  src_id uuid;
+  team_pair text[][] := ARRAY[
+    ['70000000-0000-0000-0000-000000000060','30000000-0000-0000-0000-000000000005','30000000-0000-0000-0000-000000000002'],
+    ['70000000-0000-0000-0000-000000000061','30000000-0000-0000-0000-000000000003','30000000-0000-0000-0000-000000000001'],
+    ['70000000-0000-0000-0000-000000000062','30000000-0000-0000-0000-000000000010','30000000-0000-0000-0000-000000000006'],
+    ['70000000-0000-0000-0000-000000000063','30000000-0000-0000-0000-000000000004','30000000-0000-0000-0000-000000000009'],
+    ['70000000-0000-0000-0000-000000000064','30000000-0000-0000-0000-000000000008','30000000-0000-0000-0000-000000000007'],
+    ['70000000-0000-0000-0000-000000000065','30000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000006'],
+    ['70000000-0000-0000-0000-000000000066','30000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000010'],
+    ['70000000-0000-0000-0000-000000000067','30000000-0000-0000-0000-000000000009','30000000-0000-0000-0000-000000000005']
+  ];
+  tp text[];
+BEGIN
+  FOREACH tp SLICE 1 IN ARRAY team_pair LOOP
+    -- Create source submission + revision
+    src_id := gen_random_uuid();
+    rev_id := gen_random_uuid();
+    INSERT INTO public.source_submissions (id, game_id, source_type, submitted_by, submitted_at, normalized_payload, status, reviewed_by, reviewed_at)
+    VALUES (src_id, tp[1]::uuid, 'tracker_journal', admin_id, NOW(), '{"periods":4}'::jsonb, 'approved', admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    INSERT INTO public.game_revisions (id, game_id, revision_number, source_submission_id, state, journal, projection, validation_warnings, created_by, created_at, approved_by, approved_at)
+    VALUES (rev_id, tp[1]::uuid, 1, src_id, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, admin_id, NOW(), admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    -- Generate rosters from roster_entries
+    INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+    SELECT tp[1]::uuid, re.team_season_id, re.player_id, re.jersey_number <= 5
+    FROM public.roster_entries re
+    WHERE re.team_season_id IN (tp[2]::uuid, tp[3]::uuid) AND re.left_at IS NULL
+    ON CONFLICT (game_id, player_id) DO NOTHING;
+    -- Generate box scores
+    INSERT INTO public.game_player_stats (game_id, player_id, team_season_id, revision_id, seconds_played, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf)
+    SELECT gr.game_id, gr.player_id, gr.team_season_id, rev_id,
+    (1600 + random() * 1400)::int, (random() * 22 + 4)::int, (random() * 8 + 1)::int, (random() * 14 + 2)::int,
+    (random() * 3)::int, (random() * 6)::int, (random() * 4)::int, (random() * 6)::int,
+    (random() * 3)::int, (random() * 6 + 1)::int, (random() * 5)::int, (random() * 2)::int,
+    (random() * 2)::int, (random() * 3)::int, (random() * 3 + 1)::int
+    FROM public.game_rosters gr
+    WHERE gr.game_id = tp[1]::uuid
+    ON CONFLICT DO NOTHING;
+  END LOOP;
+END $$;
+
+
+-- Season player stats (all TL players)
+INSERT INTO public.season_player_stats (competition_id, player_id, team_season_id, gp, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf, seconds_played, mpg)
+SELECT 'e0000000-0000-0000-0000-000000000001', re.player_id, re.team_season_id,
+(floor(random() * 8) + 3)::smallint, (floor(random() * 18) + 4)::int, (floor(random() * 8) + 1)::int, (floor(random() * 15) + 3)::int,
+(floor(random() * 4))::int, (floor(random() * 8) + 1)::int, (floor(random() * 5))::int, (floor(random() * 6) + 1)::int,
+(floor(random() * 4))::int, (floor(random() * 7) + 1)::int, (floor(random() * 6))::int, (floor(random() * 3))::int,
+(floor(random() * 2))::int, (floor(random() * 4))::int, (floor(random() * 4) + 1)::int,
+(floor(random() * 800) + 400)::int, (floor(random() * 25) + 10)::real
+FROM public.roster_entries re
+JOIN public.team_seasons ts ON ts.id = re.team_season_id
+WHERE ts.competition_id = 'e0000000-0000-0000-0000-000000000001' AND re.left_at IS NULL
+on conflict (competition_id, player_id) do nothing;
+
+-- Standings from official games
+INSERT INTO public.standings (competition_id, team_season_id, w, l, wins, losses, win_pct, points_for, points_against)
+SELECT g.competition_id, ts.id,
+SUM(CASE WHEN (ts.id = g.home_team_season_id AND g.home_score > g.away_score) OR (ts.id = g.away_team_season_id AND g.away_score > g.home_score) THEN 1 ELSE 0 END)::smallint,
+SUM(CASE WHEN (ts.id = g.home_team_season_id AND g.home_score < g.away_score) OR (ts.id = g.away_team_season_id AND g.away_score < g.home_score) THEN 1 ELSE 0 END)::smallint,
+SUM(CASE WHEN (ts.id = g.home_team_season_id AND g.home_score > g.away_score) OR (ts.id = g.away_team_season_id AND g.away_score > g.home_score) THEN 1 ELSE 0 END)::smallint,
+SUM(CASE WHEN (ts.id = g.home_team_season_id AND g.home_score < g.away_score) OR (ts.id = g.away_team_season_id AND g.away_score < g.home_score) THEN 1 ELSE 0 END)::smallint,
+CASE WHEN COUNT(*) > 0 THEN SUM(CASE WHEN (ts.id = g.home_team_season_id AND g.home_score > g.away_score) OR (ts.id = g.away_team_season_id AND g.away_score > g.home_score) THEN 1 ELSE 0 END)::real / COUNT(*)::real ELSE 0 END,
+SUM(CASE WHEN ts.id = g.home_team_season_id THEN g.home_score ELSE g.away_score END),
+SUM(CASE WHEN ts.id = g.home_team_season_id THEN g.away_score ELSE g.home_score END)
+FROM public.games g
+JOIN public.team_seasons ts ON (ts.id = g.home_team_season_id OR ts.id = g.away_team_season_id)
+WHERE g.status = 'official'
+GROUP BY g.competition_id, ts.id
+on conflict (competition_id, team_season_id) do nothing;
+-- ============================================================================
+-- SHOP PRODUCTS (Phase 6)
+-- ============================================================================
+INSERT INTO public.products (id, name, name_en, slug, description, price_mnt, images, category, variants, is_available)
+VALUES
+  ('00000000-0000-0000-0000-000000000001', 'Onoo подуу цамц', 'Onoo T-Shirt', 'onoo-t-shirt', 'Өндөр чанартай 100% хөвөн подуу цамц. Тав тухтай, амьсгалдаг материал. Бэлтгэл болон өдөр тутамд өмсөхөд тохиромжтой.', 35000, jsonb_build_array('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M50%2055L75%2040L100%2052L125%2040L150%2055V85H135V170H65V85H50V55Z%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M50%2060L25%2085V95L50%2088%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M150%2060L175%2085V95L150%2088%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E'), 'clothing' , '[{"size":"S","stock":2},{"size":"M","stock":10},{"size":"L","stock":5}]'::jsonb, true),
+  ('00000000-0000-0000-0000-000000000002', 'Onoo бүрэн захтай цамц', 'Onoo Hoodie', 'onoo-hoodie', 'Дулаан бүрэн захтай цамц. Зөөлөн доторлогоотой, хүйтэн улиралд тохиромжтой. Даавуун ууттай.', 75000, jsonb_build_array('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M55%2055L80%2035L100%2048L120%2035L145%2055V80H135V175H65V80H55V55Z%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M55%2060L30%2085V95L55%2088%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M145%2060L170%2085V95L145%2088%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M70%2040C70%2025%2085%2020%20100%2020C115%2020%20130%2025%20130%2040%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20fill%3D%22none%22%2F%3E%3Crect%20x%3D%2293%22%20y%3D%2235%22%20width%3D%2214%22%20height%3D%2220%22%20rx%3D%224%22%20stroke%3D%22%23666%22%20stroke-width%3D%222%22%2F%3E%3C%2Fsvg%3E'), 'clothing', '[{"size":"M","stock":3},{"size":"L","stock":5}]'::jsonb, true),
+  ('00000000-0000-0000-0000-000000000003', 'Onoo малгай', 'Onoo Cap', 'onoo-cap', 'Тохируулж болох Onoo брэндийн малгай. Наранд хамгаалах өргөн хаалттай, амьсгалдаг торгон дотортой.', 25000, jsonb_build_array('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%20fill%3D%22none%22%3E%3Cellipse%20cx%3D%22100%22%20cy%3D%2290%22%20rx%3D%2275%22%20ry%3D%2220%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%2F%3E%3Cpath%20d%3D%22M25%2090C25%2060%2060%2035%20100%2035C140%2035%20175%2060%20175%2090%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M100%2035L100%2020%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M100%20175C110%20175%20120%20170%20125%20160%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M155%2085C155%2095%20175%20100%20180%20100%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E'), 'accessories', '[{"size":"OS","stock":20}]'::jsonb, true),
+  ('00000000-0000-0000-0000-000000000004', 'Onoo түлхүүрийн оосор', 'Onoo Keychain', 'onoo-keychain', 'Металл Onoo брэндийн түлхүүрийн оосор. Бат бөх загвартай, Onoo логотой. Түлхүүр, цүнхэнд зүүхэд тохиромжтой.', 10000, jsonb_build_array('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%20fill%3D%22none%22%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%2240%22%20r%3D%2218%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M115%2040L115%2060%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%2F%3E%3Crect%20x%3D%2280%22%20y%3D%2265%22%20width%3D%2270%22%20height%3D%22100%22%20rx%3D%2210%22%20stroke%3D%22%23666%22%20stroke-width%3D%223%22%20fill%3D%22none%22%2F%3E%3Ctext%20x%3D%22115%22%20y%3D%22155%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%20font-size%3D%2216%22%20font-family%3D%22sans-serif%22%3EONOO%3C%2Ftext%3E%3C%2Fsvg%3E'), 'accessories', '[{"size":"OS","stock":50}]'::jsonb, true)
+ON CONFLICT (id) DO NOTHING;
+ 
+-- ============================================================================
+-- ACADEMY — Space League Basketball Academy
+-- ============================================================================
+INSERT INTO public.academy_profiles (id, organization_id, name, contact_phone, contact_email, timezone)
+VALUES ('80000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002', 'Спэйс Лигийн Сагсан Бөмбөгийн Академи', '+976-11-123456', 'academy@spaceleague.mn', 'Asia/Ulaanbaatar')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.academy_locations (id, academy_id, name, address, city, hours)
+VALUES
+  ('80000000-0000-0000-0000-000000000011', '80000000-0000-0000-0000-000000000001', 'Төв Сургалтын Танхим', 'Чингэлтэй дүүрэг, 1-р хороо, Спорт цогцолбор', 'Улаанбаатар', 'Даваа-Бямба 09:00-21:00'),
+  ('80000000-0000-0000-0000-000000000012', '80000000-0000-0000-0000-000000000001', 'Баянзүрх Салбар', 'Баянзүрх дүүрэг, 13-р хороо, Спортын төв', 'Улаанбаатар', 'Даваа-Ням 10:00-20:00'),
+  ('80000000-0000-0000-0000-000000000013', '80000000-0000-0000-0000-000000000001', 'Хан-Уул Салбар', 'Хан-Уул дүүрэг, 15-р хороо, Биеийн тамирын ордон', 'Улаанбаатар', 'Даваа-Бямба 08:00-22:00')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.academy_programs (id, academy_id, name, description, age_group, price_mnt, duration_weeks, is_active, location_id)
+VALUES
+  ('80000000-0000-0000-0000-000000000021', '80000000-0000-0000-0000-000000000001', 'Анхан шатны сургалт (8-12 нас)', 'Сагсан бөмбөгийн үндсэн техник, дүрэм, хөдөлгөөний зохицуулалт', '8-12', 150000, 12, true, '80000000-0000-0000-0000-000000000011'),
+  ('80000000-0000-0000-0000-000000000022', '80000000-0000-0000-0000-000000000001', 'Дунд шатны сургалт (13-16 нас)', 'Бие даасан техник, тактик, багийн тоглолт, тэмцээнд оролцох', '13-16', 200000, 16, true, '80000000-0000-0000-0000-000000000012'),
+  ('80000000-0000-0000-0000-000000000023', '80000000-0000-0000-0000-000000000001', 'Ахисан шатны сургалт (16-20 нас)', 'Мэргэжлийн түвшний бэлтгэл, тэмцээний стратеги, бие даасан хөгжил', '16-20', 300000, 20, true, '80000000-0000-0000-0000-000000000013'),
+  ('80000000-0000-0000-0000-000000000024', '80000000-0000-0000-0000-000000000001', 'Зуны эрчимжүүлсэн бэлтгэл', 'Зуны амралтаар 8 долоо хоногийн эрчимжүүлсэн дасгалжуулалт', '10-18', 500000, 8, true, '80000000-0000-0000-0000-000000000011'),
+  ('80000000-0000-0000-0000-000000000025', '80000000-0000-0000-0000-000000000001', 'Ганцаарчилсан дасгалжуулалт', 'Нэг нэгээр дасгалжуулагчтай хийх хувийн сургалт', 'бүх нас', 80000, 1, true, '80000000-0000-0000-0000-000000000013')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.academy_trainers (id, academy_id, name, specialties, bio, is_active)
+VALUES
+  ('80000000-0000-0000-0000-000000000031', '80000000-0000-0000-0000-000000000001', 'Батбаяр Ганзориг', ARRAY['Довтолгооны тактик', 'Шидэлт', 'Зайны бэлтгэл'], '10+ жилийн дасгалжуулагчийн туршлага. Монголын шигшээ багийн туслах дасгалжуулагчаар ажиллаж байсан.', true),
+  ('80000000-0000-0000-0000-000000000032', '80000000-0000-0000-0000-000000000001', 'Цэрэнбат Даваажаргал', ARRAY['Хамгаалалт', 'Биеийн тамир', 'Залуучуудын хөгжил'], 'Өмнө нь Монголын Дээд Лигийн тоглогч, 8 жилийн дасгалжуулагчийн туршлага.', true),
+  ('80000000-0000-0000-0000-000000000033', '80000000-0000-0000-0000-000000000001', 'Энхбаяр Мөнхцэцэг', ARRAY['Анхан шатны сургалт', 'Хүүхдийн сагсан бөмбөг', 'Хөдөлгөөний хөгжил'], 'Хүүхдийн дасгалжуулагч, спортын сэтгэл зүйч. Анхан шатны сургалтаар мэргэшсэн.', true),
+  ('80000000-0000-0000-0000-000000000034', '80000000-0000-0000-0000-000000000001', 'Пендарвис Вилльямс', ARRAY['Хувийн техник', 'Довтолгоо', 'Мэргэжлийн түвшин'], 'Америкийн коллежийн сагсан бөмбөгийн туршлагатай, 5 жил Монголд дасгалжуулж байна.', true)
+ON CONFLICT (id) DO NOTHING;
+ 
+INSERT INTO public.academy_students (id, academy_id, canonical_name, name_latin, date_of_birth, school_name, grade_level, medical_notes, allergies, emergency_contact_name, emergency_contact_phone, status)
+VALUES
+  ('80000000-0000-0000-0000-000000000041', '80000000-0000-0000-0000-000000000001', 'Ганцолмон Бат-Эрдэнэ', 'Gantsolmon Bat-Erdene', '2014-03-15', '123-р сургууль', '8-р анги', NULL, NULL, 'Бат-Эрдэнэ Ганзориг', '+976-99111111', 'active'),
+  ('80000000-0000-0000-0000-000000000042', '80000000-0000-0000-0000-000000000001', 'Тэмүүжин Наранбат', 'Temuujin Naranbat', '2013-07-22', '1-р сургууль', '9-р анги', 'Астматай, дасгалын өмнө ингалятор хэрэглэдэг', ARRAY['тоос'], 'Наранбат Сүрэн', '+976-99222222', 'active'),
+  ('80000000-0000-0000-0000-000000000043', '80000000-0000-0000-0000-000000000001', 'Анхбаяр Мөнх-Оргил', 'Ankhbayar Munkh-Orgil', '2012-11-08', '24-р сургууль', '10-р анги', NULL, NULL, 'Мөнх-Оргил Даваа', '+976-99333333', 'active'),
+  ('80000000-0000-0000-0000-000000000044', '80000000-0000-0000-0000-000000000001', 'Одбаяр Хүрэлбат', 'Odbayar Khurelbat', '2015-01-30', '84-р сургууль', '7-р анги', NULL, ARRAY['самар'], 'Хүрэлбат Одбаяр', '+976-99444444', 'active'),
+  ('80000000-0000-0000-0000-000000000045', '80000000-0000-0000-0000-000000000001', 'Даваахүү Цэрэнбат', 'Davaakhuu Tserenbat', '2014-06-14', '123-р сургууль', '8-р анги', NULL, NULL, 'Цэрэнбат Батсайхан', '+976-99555555', 'active'),
+  ('80000000-0000-0000-0000-000000000046', '80000000-0000-0000-0000-000000000001', 'Мэндбаяр Сүрэнжав', 'Mendbayar Surenjav', '2011-09-20', '5-р сургууль', '11-р анги', 'Өвдөгний хуучин гэмтэл', NULL, 'Сүрэнжав Мэндбаяр', '+976-99666666', 'active'),
+  ('80000000-0000-0000-0000-000000000047', '80000000-0000-0000-0000-000000000001', 'Ананд Ариунболд', 'Anand Ariunbold', '2013-05-12', '1-р сургууль', '9-р анги', NULL, ARRAY['сүү'], 'Ариунболд Ганбаатар', '+976-99777777', 'active'),
+  ('80000000-0000-0000-0000-000000000048', '80000000-0000-0000-0000-000000000001', 'Болор-Эрдэнэ Наранцэцэг', 'Bolor-Erdene Narantsetseg', '2014-12-01', '24-р сургууль', '8-р анги', NULL, NULL, 'Наранцэцэг Болд', '+976-99888888', 'active'),
+  ('80000000-0000-0000-0000-000000000049', '80000000-0000-0000-0000-000000000001', 'Туяа Мөнхцэцэг', 'Tuya Munkhtsetseg', '2012-04-18', '84-р сургууль', '10-р анги', NULL, NULL, 'Мөнхцэцэг Батмөнх', '+976-99999999', 'active'),
+  ('80000000-0000-0000-0000-000000000050', '80000000-0000-0000-0000-000000000001', 'Ууганбаяр Бат-Эрдэнэ', 'Uuganbayar Bat-Erdene', '2016-08-25', '123-р сургууль', '6-р анги', NULL, NULL, 'Бат-Эрдэнэ Оюун', '+976-99101010', 'active'),
+  ('80000000-0000-0000-0000-000000000051', '80000000-0000-0000-0000-000000000001', 'Хасбаяр Түмэнбаяр', 'Khasbayar Tumenbayar', '2015-02-14', '5-р сургууль', '7-р анги', NULL, NULL, 'Түмэнбаяр Болд', '+976-99202020', 'active'),
+  ('80000000-0000-0000-0000-000000000052', '80000000-0000-0000-0000-000000000001', 'Тэмүүлэн Ганбаатар', 'Temuulen Ganbaatar', '2010-10-05', '1-р сургууль', '12-р анги', NULL, ARRAY['зөгийн бал'], 'Ганбаатар Тэмүүлэн', '+976-99303030', 'active')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.academy_guardians (id, academy_id, name, phone, email, relationship, is_primary)
+VALUES
+  ('80000000-0000-0000-0000-000000000061', '80000000-0000-0000-0000-000000000001', 'Бат-Эрдэнэ Ганзориг', '+976-99111111', 'bat-erdene@email.mn', 'parent', true),
+  ('80000000-0000-0000-0000-000000000062', '80000000-0000-0000-0000-000000000001', 'Наранбат Сүрэн', '+976-99222222', 'naranbat@email.mn', 'parent', true),
+  ('80000000-0000-0000-0000-000000000063', '80000000-0000-0000-0000-000000000001', 'Мөнх-Оргил Даваа', '+976-99333333', 'munkhorgil@email.mn', 'parent', true),
+  ('80000000-0000-0000-0000-000000000064', '80000000-0000-0000-0000-000000000001', 'Цэрэнбат Батсайхан', '+976-99555555', 'tserenbat@email.mn', 'parent', true),
+  ('80000000-0000-0000-0000-000000000065', '80000000-0000-0000-0000-000000000001', 'Ариунболд Ганбаатар', '+976-99777777', 'ariunbold@email.mn', 'guardian', true),
+  ('80000000-0000-0000-0000-000000000066', '80000000-0000-0000-0000-000000000001', 'Наранцэцэг Болд', '+976-99888888', 'narantsetseg@email.mn', 'parent', true)
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.academy_student_guardians (student_id, guardian_id)
+VALUES
+  ('80000000-0000-0000-0000-000000000041', '80000000-0000-0000-0000-000000000061'),
+  ('80000000-0000-0000-0000-000000000042', '80000000-0000-0000-0000-000000000062'),
+  ('80000000-0000-0000-0000-000000000043', '80000000-0000-0000-0000-000000000063'),
+  ('80000000-0000-0000-0000-000000000045', '80000000-0000-0000-0000-000000000064'),
+  ('80000000-0000-0000-0000-000000000047', '80000000-0000-0000-0000-000000000065'),
+  ('80000000-0000-0000-0000-000000000048', '80000000-0000-0000-0000-000000000066'),
+  ('80000000-0000-0000-0000-000000000050', '80000000-0000-0000-0000-000000000061'),
+  ('80000000-0000-0000-0000-000000000044', '80000000-0000-0000-0000-000000000064')
+ON CONFLICT (student_id, guardian_id) DO NOTHING;
+INSERT INTO public.academy_enrollments (student_id, program_id, status, enrolled_at, start_date, end_date, created_by)
+VALUES
+  ('80000000-0000-0000-0000-000000000041', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000042', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000043', '80000000-0000-0000-0000-000000000023', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000044', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000045', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000046', '80000000-0000-0000-0000-000000000023', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000047', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000048', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000049', '80000000-0000-0000-0000-000000000022', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000050', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000051', '80000000-0000-0000-0000-000000000021', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('80000000-0000-0000-0000-000000000052', '80000000-0000-0000-0000-000000000023', 'active', now(), '2026-01-15', '2026-06-30', '02346873-7047-4c27-b1d5-9461301c447f')
+ON CONFLICT (student_id, program_id) DO NOTHING;
+ 
+INSERT INTO public.student_payments (student_id, enrollment_id, amount_mnt, payment_method, paid_at, recorded_by)
+SELECT s.id, e.id, p.price_mnt, (ARRAY['qpay', 'cash', 'transfer'])[floor(random() * 3 + 1)::int], (now() - interval '2 months' + (floor(random() * 60)::int || ' days')::interval), '02346873-7047-4c27-b1d5-9461301c447f'
+FROM public.academy_students s JOIN public.academy_enrollments e ON e.student_id = s.id JOIN public.academy_programs p ON p.id = e.program_id LIMIT 15;
+-- ============================================================================
+-- AWARDS
+-- ============================================================================
+INSERT INTO public.awards (competition_id, award_type, period_start, period_end, player_id, granted_by, granted_at, note)
+VALUES
+  ('e0000000-0000-0000-0000-000000000001', 'mvp', '2025-10-01', '2025-12-31', '50000000-0000-0000-0000-000000000001', '02346873-7047-4c27-b1d5-9461301c447f', now() - interval '30 days', '2025-2026 улирлын 1-р хагасын MVP.'),
+  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-10-13', '2025-10-19', '50000000-0000-0000-0000-000000000001', '02346873-7047-4c27-b1d5-9461301c447f', '2025-10-20 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
+  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-10-20', '2025-10-26', '50000000-0000-0000-0000-000000000023', '02346873-7047-4c27-b1d5-9461301c447f', '2025-10-27 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
+  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-10-27', '2025-11-02', '50000000-0000-0000-0000-000000000055', '02346873-7047-4c27-b1d5-9461301c447f', '2025-11-03 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
+  ('e0000000-0000-0000-0000-000000000001', 'player_of_week', '2025-11-03', '2025-11-09', '50000000-0000-0000-0000-000000000100', '02346873-7047-4c27-b1d5-9461301c447f', '2025-11-10 09:00:00+08', 'Долоо хоногийн шилдэг тоглогч'),
+  ('e0000000-0000-0000-0000-000000000001', 'top_scorer', '2025-10-01', '2025-12-31', '50000000-0000-0000-0000-000000000055', '02346873-7047-4c27-b1d5-9461301c447f', now() - interval '20 days', '2025-2026 улирлын 1-р хагасын шилдэг довтлогч.')
+ON CONFLICT DO NOTHING;
+-- ============================================================================
+-- SPONSORS
+-- ============================================================================
+INSERT INTO public.sponsors (id, name, logo_url, link_url, active)
+VALUES
+  ('a0000000-0000-0000-0000-0000000000a1', 'ХасБанк', NULL, 'https://hasbank.mn', true),
+  ('a0000000-0000-0000-0000-0000000000a2', 'Юнител Групп', NULL, 'https://unitel.mn', true),
+  ('a0000000-0000-0000-0000-0000000000a3', 'АПУ Компани', NULL, 'https://apu.mn', true),
+  ('a0000000-0000-0000-0000-0000000000a4', 'Мобиком Корпораци', NULL, 'https://mobicom.mn', true)
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.sponsor_placements (sponsor_id, competition_id, slot, starts_on, ends_on)
+VALUES
+  ('a0000000-0000-0000-0000-0000000000a1', 'e0000000-0000-0000-0000-000000000001', 'standings', '2025-10-01', '2026-04-30'),
+  ('a0000000-0000-0000-0000-0000000000a2', 'e0000000-0000-0000-0000-000000000001', 'game', '2025-10-01', '2026-04-30'),
+  ('a0000000-0000-0000-0000-0000000000a3', 'e0000000-0000-0000-0000-000000000001', 'leaders', '2025-10-01', '2026-04-30'),
+  ('a0000000-0000-0000-0000-0000000000a4', 'e0000000-0000-0000-0000-000000000001', 'home', '2025-10-01', '2026-04-30'),
+  ('a0000000-0000-0000-0000-0000000000a1', 'e0000000-0000-0000-0000-000000000003', 'standings', '2025-09-15', '2026-03-15'),
+  ('a0000000-0000-0000-0000-0000000000a2', 'e0000000-0000-0000-0000-000000000003', 'game', '2025-09-15', '2026-03-15')
+ON CONFLICT DO NOTHING;
+-- ============================================================================
+-- ACADEMY ANNOUNCEMENTS
+-- ============================================================================
+INSERT INTO public.announcements (academy_id, title, body, target_audience, created_by, published_at)
+VALUES
+  ('80000000-0000-0000-0000-000000000001', '2026 оны зуны эрчимжүүлсэн бэлтгэл эхэллээ', 'Зуны амралтаар 8 долоо хоногийн эрчимжүүлсэн бэлтгэлд хамрагдах хүсэлтэй сурагчид 2026 оны 6-р сарын 1-нээс эхлэн бүртгүүлэх боломжтой.', 'all', '02346873-7047-4c27-b1d5-9461301c447f', now() - interval '10 days'),
+  ('80000000-0000-0000-0000-000000000001', 'Баянзүрх салбарын шинэ цагийн хуваарь', '2026 оны 1-р сараас эхлэн Баянзүрх салбар Даваа-Ням гарагт 10:00-20:00 цагийн хооронд үйлчилнэ.', 'guardians', '02346873-7047-4c27-b1d5-9461301c447f', now() - interval '20 days'),
+  ('80000000-0000-0000-0000-000000000001', 'Дасгалжуулагчдын бүрэлдэхүүн шинэчлэгдлээ', 'Шинэ улиралд Пендарвис Вилльямс дасгалжуулагч манай хамт олонтой нэгдэж байна.', 'staff', '02346873-7047-4c27-b1d5-9461301c447f', now() - interval '15 days')
+ON CONFLICT DO NOTHING;
+-- ============================================================================
+-- NEWS (public articles, admin-managed)
+-- ============================================================================
+INSERT INTO public.news (id, title, excerpt, body, cover_image_url, published, published_at, created_by)
+VALUES
+  ('f0000000-0000-0000-0000-000000000001', 'Улирлын нээлтийн тоглолт амжилттай боллоо', 'Хүчирхэг багуудын анхны тулаан хурц өрсөлдөөнөөр өндөрлөв.', 'Шинэ улирлын нээлтийн тоглолт өчигдөр болов. Хоёр багийн тоглолт сүүлийн минутууд хүртэл хурц өрсөлдөөнтэй явагдаж, үзэгчдийн анхаарлыг татсан юм.\n\n## Тоглолтын онцлох үйл явдлууд\n\n- Тэнцвэртэй эхний үе\n- Шийдвэрлэх минутад 3 онооны шидэлт\n- Самбар тэмцэлд зонхилсон баг ялалт байгуулав\n\nБагийн дасгалжуулагч тоглолтын дараа багийн тоглолтыг өндрөөр үнэлж, цаашид сайжруулах зүйлс дээр ажиллахаа мэдэгдсэн.', NULL, true, now() - interval '2 days', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('f0000000-0000-0000-0000-000000000002', 'Залуучуудын лиг эхэллээ', '18-аас доош насны багуудын тэмцээн энэ сарын сүүлээр эхэлнэ.', 'Залуучуудын лигийн бүртгэл дуусч, багуудын сугалаа болов.\n\nТэмцээнд нийслэлийн 12 баг хамрагдаж байна. Тоглолтууд амралтын өдрүүдэд явагдана.\n\n> Залуу тоглогчдын хөгжил бол манай лигийн гол зорилт юм. — Лигийн удирдлага\n\nЭхний тоглолт энэ сарын сүүлээр болно. Бүх тоглолтыг хуудсаар шууд дагах боломжтой.', NULL, true, now() - interval '5 days', '02346873-7047-4c27-b1d5-9461301c447f'),
+  ('f0000000-0000-0000-0000-000000000003', 'Шинэ улирлын хуваарь (ноорог)', 'Хуваарийн эцсийн хувилбар баталгаажуулалтад явж байна.', 'Шинэ улирлын тоглолтын хуваарийн ноорог бэлэн боллоо. Эцсийн хувилбарыг баталсны дараа нийтэлнэ.', NULL, false, NULL, '02346873-7047-4c27-b1d5-9461301c447f')
+ON CONFLICT (id) DO NOTHING;
+-- ============================================================================
+-- TEAM STAFF
+-- ============================================================================
+INSERT INTO public.team_staff (team_season_id, user_id, role)
+VALUES
+  ('30000000-0000-0000-0000-000000000001', '02346873-7047-4c27-b1d5-9461301c447f', 'head_coach'),
+  ('30000000-0000-0000-0000-000000000001', '02346873-7047-4c27-b1d5-9461301c447f', 'manager'),
+  ('30000000-0000-0000-0000-000000000002', '02346873-7047-4c27-b1d5-9461301c447f', 'head_coach'),
+  ('30000000-0000-0000-0000-000000000003', '02346873-7047-4c27-b1d5-9461301c447f', 'assistant_coach'),
+  ('30000000-0000-0000-0000-000000000004', '02346873-7047-4c27-b1d5-9461301c447f', 'finance'),
+  ('30000000-0000-0000-0000-000000000010', '02346873-7047-4c27-b1d5-9461301c447f', 'head_coach')
+ON CONFLICT (team_season_id, user_id, role) DO NOTHING;
+-- ============================================================================
+-- STAT EVENTS — live game play-by-play (Khuleguud vs Metal, game 010)
+-- ============================================================================
+INSERT INTO public.tracker_sessions (id, game_id, scorer_id, role, device_info, status, last_acknowledged_sequence)
+VALUES ('90000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000010', '02346873-7047-4c27-b1d5-9461301c447f', 'lead_scorer', '{"device":"demo-seed"}', 'active', 31)
+ON CONFLICT (game_id) WHERE status = 'active' DO NOTHING;
+INSERT INTO public.stat_events (game_id, tracker_session_id, operation_id, client_id, local_seq, event_type, period, clock_seconds, team_season_id, player_id, payload, created_by)
+SELECT '70000000-0000-0000-0000-000000000010'::uuid, '90000000-0000-0000-0000-000000000001'::uuid, gen_random_uuid(), gen_random_uuid(), seq, 'shot_2pt_made', period, clock, ts_id::uuid, player_id::uuid, jsonb_build_object('points', CASE WHEN event = '3pt' THEN 3 ELSE 2 END, 'x', floor(random()*50)::int, 'y', floor(random()*50)::int), '02346873-7047-4c27-b1d5-9461301c447f'::uuid
+FROM (VALUES
+  (1, 1,  590, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '2pt'),
+  (1, 2,  560, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000003', '2pt'),
+  (1, 3,  530, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000004', '3pt'),
+  (1, 4,  500, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000002', '2pt'),
+  (1, 5,  470, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000011', '2pt'),
+  (1, 6,  440, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000100', '2pt'),
+  (1, 7,  400, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000101', '2pt'),
+  (1, 8,  370, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000103', '2pt'),
+  (1, 9,  330, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000102', '3pt'),
+  (1, 10, 300, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000104', '2pt'),
+  (1, 11, 270, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '2pt'),
+  (1, 12, 230, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000005', '2pt'),
+  (2, 13, 570, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000100', '2pt'),
+  (2, 14, 540, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000102', '2pt'),
+  (2, 15, 500, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000110', '3pt'),
+  (2, 16, 460, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000101', '2pt'),
+  (2, 17, 430, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000103', '2pt'),
+  (2, 18, 390, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000004', '2pt'),
+  (2, 19, 350, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000002', '2pt'),
+  (2, 20, 310, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000011', '2pt'),
+  (2, 21, 280, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000003', '2pt'),
+  (3, 22, 580, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '3pt'),
+  (3, 23, 550, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000004', '2pt'),
+  (3, 24, 510, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000003', '2pt'),
+  (3, 25, 480, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000005', '3pt'),
+  (3, 26, 440, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000011', '2pt'),
+  (3, 27, 400, '30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '2pt'),
+  (3, 28, 370, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000100', '2pt'),
+  (3, 29, 330, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000104', '2pt'),
+  (3, 30, 300, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000102', '2pt'),
+  (3, 31, 260, '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000110', '2pt')
+) AS events(period, seq, clock, ts_id, player_id, event)
+ORDER BY seq;
