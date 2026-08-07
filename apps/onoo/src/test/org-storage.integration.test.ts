@@ -52,7 +52,7 @@ afterAll(async () => {
     [SEED_ORG_ID],
   );
   await client.query("DELETE FROM auth.users WHERE id = $1", [otherUserId]);
-  await client.end();
+  client.release();
   await pool.end();
 });
 

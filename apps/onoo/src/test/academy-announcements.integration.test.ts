@@ -97,7 +97,7 @@ afterAll(async () => {
     staffUserId,
     otherUserId,
   ]);
-  await client.end();
+  client.release();
   await pool.end();
 });
 

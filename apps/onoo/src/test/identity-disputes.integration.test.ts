@@ -87,7 +87,7 @@ afterAll(async () => {
     "DELETE FROM public.identity_disputes WHERE player_id = $1",
     [SEED_HOME_PLAYER],
   );
-  await client?.end();
+  client.release();
   await pool?.end();
 });
 

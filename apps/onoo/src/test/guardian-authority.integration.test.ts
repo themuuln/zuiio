@@ -95,7 +95,7 @@ afterAll(async () => {
     guardianUserId,
     otherUserId,
   ]);
-  await client.end();
+  client.release();
   await pool.end();
 });
 

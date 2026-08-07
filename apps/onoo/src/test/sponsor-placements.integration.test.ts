@@ -41,7 +41,7 @@ afterAll(async () => {
     "DELETE FROM public.sponsors WHERE name LIKE 'Тест Ивээн Тэтгэгч%' OR name LIKE 'Шинэчлэгдсэн%'",
   );
   await client.query("DELETE FROM auth.users WHERE id = $1", [otherUserId]);
-  await client.end();
+  client.release();
   await pool.end();
 });
 

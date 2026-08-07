@@ -1919,13 +1919,47 @@ export interface NewsArticle {
   created_at: string;
 }
 
+/**
+ * Minimal query surface for v_public_news. The generated Database type does
+ * not know this view yet (it is regenerated from the live schema), so the
+ * client is narrowed locally instead of casting every row.
+ */
+interface NewsQueryClient {
+  from: (table: "v_public_news") => {
+    select: () => {
+      order: (
+        column: "published_at",
+        opts?: { ascending?: boolean },
+      ) => {
+        limit: (n: number) => Promise<{
+          data: unknown[] | null;
+          error: unknown;
+        }>;
+        eq: (
+          column: "id",
+          value: string,
+        ) => {
+          maybeSingle: () => Promise<{
+            data: unknown | null;
+            error: unknown;
+          }>;
+        };
+      };
+    };
+  };
+}
+
+function newsClient(): NewsQueryClient {
+  return createPublicClient() as unknown as NewsQueryClient;
+}
+
 /** Latest published news, newest first. Used by the home page strip. */
 export const getLatestNews = cache(
   async (limit = 3): Promise<NewsArticle[]> => {
-    const supabase = createPublicClient();
+    const supabase = newsClient();
     const { data, error } = await supabase
       .from("v_public_news")
-      .select("*")
+      .select()
       .order("published_at", { ascending: false })
       .limit(limit);
     if (error || !data) {
@@ -1938,10 +1972,10 @@ export const getLatestNews = cache(
 
 /** All published news, newest first — powers the /news archive page. */
 export const getNewsList = cache(async (limit = 50): Promise<NewsArticle[]> => {
-  const supabase = createPublicClient();
+  const supabase = newsClient();
   const { data, error } = await supabase
     .from("v_public_news")
-    .select("*")
+    .select()
     .order("published_at", { ascending: false })
     .limit(limit);
   if (error || !data) {
@@ -1954,10 +1988,11 @@ export const getNewsList = cache(async (limit = 50): Promise<NewsArticle[]> => {
 /** Single published news article by id, or null when missing/unpublished. */
 export const getNewsById = cache(
   async (id: string): Promise<NewsArticle | null> => {
-    const supabase = createPublicClient();
+    const supabase = newsClient();
     const { data, error } = await supabase
       .from("v_public_news")
-      .select("*")
+      .select()
+      .order("published_at", { ascending: false })
       .eq("id", id)
       .maybeSingle();
     if (error || !data) {

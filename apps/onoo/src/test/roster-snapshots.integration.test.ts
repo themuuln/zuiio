@@ -58,7 +58,7 @@ afterAll(async () => {
     "DELETE FROM auth.users WHERE email LIKE '%@roster-test.mn' AND id != $1",
     [SEED_ADMIN_ID],
   );
-  await client.end();
+  client.release();
   await pool.end();
 });
 

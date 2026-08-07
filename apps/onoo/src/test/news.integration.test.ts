@@ -69,7 +69,7 @@ afterAll(async () => {
     outsiderId,
   ]);
   await client.query("DELETE FROM auth.users WHERE id = $1", [outsiderId]);
-  await client.end();
+  client.release();
   await pool.end();
 });
 

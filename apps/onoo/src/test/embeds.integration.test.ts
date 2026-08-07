@@ -35,7 +35,7 @@ afterAll(async () => {
     [anonUserId],
   );
   await client.query("DELETE FROM auth.users WHERE id = $1", [anonUserId]);
-  await client.end();
+  client.release();
   await pool.end();
 });
 

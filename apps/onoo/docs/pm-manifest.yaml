@@ -629,6 +629,17 @@ phases:
         effort: S
         dependsOn: [T-11.1]
 
+  - id: phase-11b
+    name: Content — news articles
+    status: complete
+    tasks:
+      - id: T-11b.1
+        name: News articles (admin CRUD + public pages + home strip)
+        status: done
+        priority: P2
+        effort: M
+        dependsOn: []
+
   - id: horizon-c
     name: Unified basketball network
     status: not-started

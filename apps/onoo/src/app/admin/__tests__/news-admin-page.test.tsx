@@ -1,5 +1,5 @@
 /// <reference types="@testing-library/jest-dom/vitest" />
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Shared Mocks ──────────────────────────────────────────────────────────────
@@ -371,7 +371,7 @@ describe("AdminNewsPage", () => {
     const Page = (await import("../news/page")).default;
     render(<Page />);
     expect(screen.queryByTestId("dialog")).not.toBeInTheDocument();
-    screen.getByText("Шинэ мэдээ").click();
+    fireEvent.click(screen.getByText("Шинэ мэдээ"));
     expect(screen.getByTestId("dialog")).toBeInTheDocument();
     expect(screen.getByTestId("dialog-title")).toHaveTextContent("Шинэ мэдээ");
   });
@@ -379,7 +379,7 @@ describe("AdminNewsPage", () => {
   it("opens edit dialog with edit title", async () => {
     const Page = (await import("../news/page")).default;
     render(<Page />);
-    screen.getAllByTitle("Засах")[0]!.click();
+    fireEvent.click(screen.getAllByTitle("Засах").at(0) as HTMLElement);
     expect(screen.getByTestId("dialog")).toBeInTheDocument();
     expect(screen.getByTestId("dialog-title")).toHaveTextContent("Мэдээ засах");
   });

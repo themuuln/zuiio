@@ -31,7 +31,7 @@ afterAll(async () => {
     "DELETE FROM public.academy_guardians WHERE academy_id = $1",
     [academyId],
   );
-  await client.end();
+  client.release();
   await pool.end();
 });
 

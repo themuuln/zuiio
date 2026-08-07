@@ -61,6 +61,7 @@ vi.mock("lucide-react", () => {
     UserPlus: icon,
     MessageSquareText: icon,
     Layers: icon,
+    Newspaper: icon,
   };
 });
 
@@ -106,6 +107,7 @@ const NAV_LABELS = [
   "Үзэгчид",
   "Улирлууд",
   "Ивээн тэтгэгчид",
+  "Мэдээ",
 ];
 
 function getNavLink(label: string): HTMLAnchorElement {

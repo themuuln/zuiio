@@ -175,7 +175,11 @@ _All Horizon A tasks (Phases 1–7) are complete. Academy Phase 10a foundation i
 | T-11.4 | Announcements & reminders | P3 | ✅ | S | T-11.1 | Notifications |
 | T-11.3 | Registration & consent management | P3 | ⬜ | M | T-10b.4 | Self-service consent |
 
+### Phase 11b — Content & editorial
 
-_Last updated: 2026-07-22_
+| ID | Task | Priority | Status | Effort | Deps | Spec |
+|----|------|----------|--------|--------|------|------|
+| T-11b.1 | News articles (admin CRUD + public pages + home strip) | P2 | ✅ | M | — | [spec](../tasks/T-11b.1-news.md) |
 
-_Last updated: 2026-07-22_
+
+_Last updated: 2026-08-07_

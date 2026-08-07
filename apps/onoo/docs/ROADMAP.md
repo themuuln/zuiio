@@ -136,6 +136,10 @@ Phase 1–7 нь Оноо-ийн одоогийн хэрэгжих замын з
 - [x] Basketball-specific announcements and reminders.
 - [ ] Subscription and entitlement model.
 
+### Phase 11b — Content & editorial
+
+- [x] News articles: admin CRUD (draft/publish), public listing + detail pages, latest-news strip on the home page.
+
 ## Horizon C — Unified basketball network
 
 > Баг эсвэл академийн модулиуд renew хийж, cross-domain identity/privacy/support metrics батлагдсаны дараа л эхэлнэ.
