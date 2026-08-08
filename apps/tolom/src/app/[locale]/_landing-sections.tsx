@@ -249,7 +249,7 @@ export function TestimonialsSection() {
   );
 }
 
-const MONTHLY_PRICES = [299000, 699000, 1790000];
+const MONTHLY_PRICES = [199000, 499000, 999000];
 
 export function PricingSection() {
   const t = useTranslations("home");

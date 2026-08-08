@@ -14,7 +14,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
 type FeatureStatus = boolean | "addon";
@@ -52,9 +51,15 @@ function FeatureIcon({
     );
   }
   return status ? (
-    <Check className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+    <Check
+      aria-hidden="true"
+      className="mt-0.5 size-4 shrink-0 text-emerald-500"
+    />
   ) : (
-    <X className="mt-0.5 size-4 shrink-0 text-muted-foreground/50" />
+    <X
+      aria-hidden="true"
+      className="mt-0.5 size-4 shrink-0 text-muted-foreground/50"
+    />
   );
 }
 
@@ -65,85 +70,99 @@ export function PricingCards({ plans, translations }: PricingCardsProps) {
 
   return (
     <>
-      <div className="mt-8 flex items-center justify-center gap-2">
-        <span className={cn("text-sm", !annual && "font-semibold")}>
+      <div className="mt-8 flex items-center justify-center gap-3">
+        <span
+          className={cn(
+            "text-base transition-colors",
+            !annual ? "font-semibold text-foreground" : "text-muted-foreground",
+          )}
+        >
           {translations.monthly}
         </span>
-        <Switch checked={annual} onCheckedChange={setAnnual} />
-        <span className={cn("text-sm", annual && "font-semibold")}>
+        <Switch
+          checked={annual}
+          onCheckedChange={setAnnual}
+          aria-label={translations.toggleLabel}
+        />
+        <span
+          className={cn(
+            "text-base transition-colors",
+            annual ? "font-semibold text-foreground" : "text-muted-foreground",
+          )}
+        >
           {translations.annual}
         </span>
         {annual && (
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="whitespace-nowrap text-xs">
             {translations.annualSave}
           </Badge>
         )}
       </div>
 
-      {/* Card Grid: Business | Complete ★ | Core */}
-      <div className="mx-auto mt-12 grid max-w-5xl gap-4 sm:gap-6 lg:grid-cols-3">
+      {/* Card Grid: Core | Complete ★ | Business */}
+      <div className="mx-auto mt-12 grid max-w-5xl gap-5 sm:gap-6 lg:grid-cols-3">
         {gridPlans.map((plan) => {
           const isCore = plan.key === "core";
-          const price = annual
-            ? `${plan.annualPrice}${translations.perYear}`
-            : `${plan.monthlyPrice}${translations.perMonth}`;
-          const perUnit =
+          const priceValue =
             annual && plan.annualPerMonth
-              ? `${plan.annualPerMonth}${translations.perMonth}`
-              : null;
+              ? plan.annualPerMonth
+              : plan.monthlyPrice;
 
           return (
             <Card
               key={plan.key}
-              size="sm"
               className={cn(
                 "relative flex flex-col transition-all duration-300",
                 plan.popular
-                  ? "overflow-visible ring-2 ring-primary shadow-md"
-                  : "",
+                  ? "overflow-visible ring-2 ring-primary hover:-translate-y-1 hover:ring-primary"
+                  : "hover:-translate-y-1 hover:ring-2 hover:ring-foreground/10",
               )}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
                   <Badge className="pointer-events-none whitespace-nowrap bg-primary text-primary-foreground">
-                    <Star className="mr-1 size-3" />
+                    <Star aria-hidden="true" className="mr-1 size-3.5" />
                     {translations.mostPopular}
                   </Badge>
                 </div>
               )}
 
               <CardHeader>
-                <CardTitle className="text-lg">
+                <CardTitle className="text-xl font-semibold">
                   {translations[`${plan.key}Name`]}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-[15px]">
                   {translations[`${plan.key}Desc`]}
                 </CardDescription>
 
-                <div className="mt-4">
-                  <span
-                    key={price}
-                    className="text-3xl font-semibold tracking-tight transition-all duration-200"
-                  >
-                    {price}
-                  </span>
-                  {perUnit && (
-                    <Typography.Muted className="mt-1 text-xs text-muted-foreground">
-                      ~{perUnit} — {translations.annualSave}
-                    </Typography.Muted>
-                  )}
-                  {!perUnit && plan.key === "complete" && !annual && (
-                    <Typography.Muted className="mt-1 text-xs text-muted-foreground">
-                      {translations.startTrial}
-                    </Typography.Muted>
+                <div className="mt-5">
+                  <div className="flex items-baseline gap-1.5">
+                    <span
+                      key={priceValue}
+                      className="text-[2.5rem] leading-none font-bold tracking-tight tabular-nums transition-all duration-200"
+                    >
+                      {priceValue}
+                    </span>
+                    <span className="text-base text-muted-foreground">
+                      {translations.perMonth}
+                    </span>
+                  </div>
+                  {annual && plan.annualPerMonth && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {translations.billedAnnually} · {plan.annualPrice}
+                      {translations.perYear}
+                    </p>
                   )}
                 </div>
               </CardHeader>
 
               <CardContent className="flex-1">
-                <ul className="flex flex-col gap-2.5">
+                <ul className="flex flex-col gap-3">
                   {plan.features.map((f) => (
-                    <li key={f.key} className="flex items-start gap-2 text-sm">
+                    <li
+                      key={f.key}
+                      className="flex items-start gap-2.5 text-[15px] leading-snug"
+                    >
                       <FeatureIcon
                         status={f.included}
                         addonLabel={translations.valueAddon}
@@ -160,7 +179,7 @@ export function PricingCards({ plans, translations }: PricingCardsProps) {
                 </ul>
               </CardContent>
 
-              <CardFooter className="flex-col gap-2">
+              <CardFooter className="flex-col gap-2.5">
                 <Button
                   variant={plan.ctaVariant}
                   className="w-full"
@@ -169,7 +188,7 @@ export function PricingCards({ plans, translations }: PricingCardsProps) {
                   {isCore ? translations.getStarted : translations.startTrial}
                   <ArrowRight className="ml-1 size-4" />
                 </Button>
-                <p className="text-[11px] text-muted-foreground text-center">
+                <p className="text-center text-[13px] text-muted-foreground">
                   {translations.trialCta}
                 </p>
               </CardFooter>
@@ -181,34 +200,40 @@ export function PricingCards({ plans, translations }: PricingCardsProps) {
       {/* Enterprise Strip */}
       {enterprisePlan && (
         <div className="mx-auto mt-8 max-w-5xl">
-          <div className="relative isolate overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/20 bg-gradient-to-r from-muted/30 via-background to-muted/30 p-6 sm:p-8">
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+          <div className="relative isolate overflow-hidden rounded-xl border bg-gradient-to-r from-muted/30 via-background to-muted/30 p-6 sm:p-8">
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute -top-24 right-0 h-56 w-56 rounded-full bg-[var(--brand-violet-glow)] blur-3xl" />
+            </div>
+            <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
               <div className="text-center sm:text-left">
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-xl font-semibold">
                   {translations.enterpriseName}
                 </h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1.5 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
                   {translations.enterpriseDesc}
                 </p>
-                <div className="mt-2 flex flex-wrap gap-3">
+                <div className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2.5 sm:justify-start">
                   {enterprisePlan.features.slice(0, 4).map((f) => (
                     <span
                       key={f.key}
-                      className="inline-flex items-center gap-1 text-xs text-muted-foreground"
+                      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
                     >
-                      <Check className="size-3 text-emerald-500" />
+                      <Check
+                        aria-hidden="true"
+                        className="size-4 shrink-0 text-emerald-500"
+                      />
                       {translations[f.key]}
                     </span>
                   ))}
                 </div>
               </div>
-              <div className="text-center sm:text-right shrink-0">
-                <div className="text-2xl font-semibold">
+              <div className="shrink-0 text-center sm:text-right">
+                <div className="text-3xl font-bold tracking-tight">
                   {translations.customPrice}
                 </div>
                 <Button
                   variant="outline"
-                  className="mt-2"
+                  className="mt-3"
                   render={<Link href="mailto:hello@tolom.app" />}
                 >
                   {translations.contactSales}

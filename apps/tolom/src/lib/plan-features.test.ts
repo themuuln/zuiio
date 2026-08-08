@@ -70,6 +70,37 @@ describe("isPlanFeatureEnabled", () => {
     );
     expect(isPlanFeatureEnabled("enterprise", FEATURE_KEYS.PAYROLL)).toBe(true);
   });
+
+  it("tier boundaries follow pricing-strategy-v2: base ops on starter", () => {
+    // Estimates, appointments, and EOD close are base operations (entry tier).
+    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.ESTIMATES)).toBe(true);
+    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.APPOINTMENTS)).toBe(
+      true,
+    );
+    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.EOD_CLOSE)).toBe(true);
+  });
+
+  it("tier boundaries follow pricing-strategy-v2: inventory/messaging/pricing rules are the Pro gate", () => {
+    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.INVENTORY)).toBe(false);
+    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.TELEGRAM)).toBe(false);
+    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.PRICE_RULES)).toBe(
+      false,
+    );
+    expect(isPlanFeatureEnabled("pro", FEATURE_KEYS.INVENTORY)).toBe(true);
+    expect(isPlanFeatureEnabled("pro", FEATURE_KEYS.TELEGRAM)).toBe(true);
+    expect(isPlanFeatureEnabled("pro", FEATURE_KEYS.PRICE_RULES)).toBe(true);
+  });
+
+  it("tier boundaries follow pricing-strategy-v2: advanced inventory is the Business gate", () => {
+    expect(isPlanFeatureEnabled("pro", FEATURE_KEYS.PURCHASE_ORDERS)).toBe(
+      false,
+    );
+    expect(isPlanFeatureEnabled("pro", FEATURE_KEYS.SUPPLIERS)).toBe(false);
+    expect(isPlanFeatureEnabled("business", FEATURE_KEYS.PURCHASE_ORDERS)).toBe(
+      true,
+    );
+    expect(isPlanFeatureEnabled("business", FEATURE_KEYS.SUPPLIERS)).toBe(true);
+  });
 });
 
 describe("getNextPlanWithFeature", () => {

@@ -52,14 +52,15 @@ export function FaqContent({ categories }: { categories: Category[] }) {
       <section className="px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-3xl">
           {filteredCategories.map((category) => {
+            const catKey = `cat${category.key.charAt(0).toUpperCase()}${category.key.slice(1)}`;
             return (
               <div key={category.key} className="mb-10">
                 <div className="mb-4">
                   <Typography.H2 className="text-lg font-semibold">
-                    {t(`cat${category.key}`)}
+                    {t(catKey)}
                   </Typography.H2>
                   <Typography.Muted className="text-sm text-muted-foreground">
-                    {t(`cat${category.key}Desc`)}
+                    {t(`${catKey}Desc`)}
                   </Typography.Muted>
                 </div>
 

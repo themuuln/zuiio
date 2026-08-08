@@ -54,6 +54,13 @@ export type FeatureKey = (typeof FEATURE_KEYS)[keyof typeof FEATURE_KEYS];
  * Features available in each plan tier.
  * Starter = essentials only. Enterprise = everything ("all").
  */
+// Tier logic (pricing-strategy-v2.md §2.2):
+// - Starter = base operations: work orders, bay view, CRM, finance basics,
+//   estimates, appointments, EOD close. No inventory, no messaging.
+// - Pro = "control" tier: inventory + messaging (Telegram/SMS) + mechanic
+//   accountability + payroll + pricing rules (vehicle-class).
+// - Business = "scale" tier: advanced inventory (POs, suppliers, valuation,
+//   alerts), commission rules, data sharing.
 const STARTER_FEATURES: FeatureKey[] = [
   FEATURE_KEYS.WORK_ORDERS,
   FEATURE_KEYS.BAY_VIEW,
@@ -65,31 +72,31 @@ const STARTER_FEATURES: FeatureKey[] = [
   FEATURE_KEYS.REPORTS,
   FEATURE_KEYS.DIAGNOSIS_LABELS,
   FEATURE_KEYS.SETTINGS,
+  FEATURE_KEYS.ESTIMATES,
+  FEATURE_KEYS.APPOINTMENTS,
+  FEATURE_KEYS.EOD_CLOSE,
 ];
 
 const PRO_FEATURES: FeatureKey[] = [
   ...STARTER_FEATURES,
   FEATURE_KEYS.MECHANIC_PERFORMANCE,
   FEATURE_KEYS.SERVICE_REMINDERS,
-  FEATURE_KEYS.ESTIMATES,
-  FEATURE_KEYS.APPOINTMENTS,
   FEATURE_KEYS.INVENTORY,
   FEATURE_KEYS.PAYROLL,
   FEATURE_KEYS.VEHICLE_MODELS,
+  FEATURE_KEYS.TELEGRAM,
+  FEATURE_KEYS.PRICE_RULES,
 ];
 
 const BUSINESS_FEATURES: FeatureKey[] = [
   ...PRO_FEATURES,
-  FEATURE_KEYS.EOD_CLOSE,
   FEATURE_KEYS.PURCHASE_ORDERS,
   FEATURE_KEYS.SUPPLIERS,
   FEATURE_KEYS.PARTS_CARS,
   FEATURE_KEYS.INVENTORY_VALUATION,
   FEATURE_KEYS.INVENTORY_ALERTS,
-  FEATURE_KEYS.PRICE_RULES,
   FEATURE_KEYS.COMMISSION_RULES,
   FEATURE_KEYS.DATA_SHARING,
-  FEATURE_KEYS.TELEGRAM,
 ];
 
 const ALL_FEATURES: FeatureKey[] = Object.values(FEATURE_KEYS);

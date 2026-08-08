@@ -6,6 +6,15 @@
 > **Тэмдэглэл:** Энэхүү баримт бичигт "Core" гэж нэрлэгдсэн төлөвлөгөө нь системийн админ самбарт **"Starter"** нэртэй харагдана. Доорх хүснэгтэд үүнийг тусгасан болно.
 **Exchange rate reference**: ~₮3,576 = $1 USD (Bank of Mongolia, May 2026)
 
+> **UPDATE (2026-08-07) — v2 pricing is live in the app.** Public prices moved to
+> Core ₮199k / Complete ₮499k / Business ₮999k per month (annual = 10×), work
+> orders are unlimited on every plan, and implementation fees were cut
+> (Core/Pro ₮0, Business ₮5M+ optional). Plan/feature gates were rebalanced per
+> the research in `docs/pricing-strategy-v2.md` — read that doc for the full
+> feature→tier matrix, evidence, and the first-customer launch plan. The
+> psychology sections below still apply. Sections 2 and 3 below show the v2
+> numbers; the one-time license and add-on tables (section 4) are unchanged.
+
 ---
 
 ## Contents
@@ -28,8 +37,8 @@ TOLOM pricing is designed around how Mongolian garage owners actually make decis
 
 Humans judge prices **relatively**, not absolutely.
 
-- If the first number seen is ₮10M+, then ₮699k feels cheap
-- If the first number seen is ₮99k, then ₮699k feels expensive
+- If the first number seen is ₮10M+, then ₮499k feels cheap
+- If the first number seen is ₮99k, then ₮499k feels expensive
 
 **Application**: Enterprise pricing exists psychologically to make Pro feel reasonable.
 
@@ -92,8 +101,8 @@ Too many choices reduce conversions.
 
 ```
 ┌─────────────┬─────────────┬─────────────┬─────────────┐
-│  Enterprise │  Business   │  Pro ★      │    Core     │
-│  Custom     │ From ₮1.59M │  ₮699k/mo   │  ₮299k/mo   │
+│  Enterprise │  Business   │  Complete ★ │    Core     │
+│  Custom     │  ₮999k/mo   │  ₮499k/mo   │  ₮199k/mo   │
 │             │             │  MOST       │             │
 │             │             │  POPULAR    │             │
 └─────────────┴─────────────┴─────────────┴─────────────┘
@@ -118,45 +127,48 @@ Too many choices reduce conversions.
 
 ### Plan Comparison
 
-| | **Core** | **Pro** ★ | **Business** | **Enterprise** |
+| | **Core** | **Complete** ★ | **Business** | **Enterprise** |
 |---|---|---|---|---|
-| **Monthly** | ₮299,000 | ₮699,000 | From ₮1,590,000 | Custom |
-| **Annual** | ₮2,990,000 | ₮6,990,000 | Custom | Custom |
+| **Monthly** | ₮199,000 | ₮499,000 | ₮999,000 | Custom |
+| **Annual** | ₮1,990,000 | ₮4,990,000 | ₮9,990,000 | Custom |
 | **Branches** | 1 | 1 | 3+ | Unlimited |
 | **Users** | 3 | 10 | 25+ | Custom |
-| **Work orders/mo** | 300 | 1,500 | 5,000+ | Unlimited |
-| **Customers** | 1,000 | 10,000 | 50,000+ | Unlimited |
+| **Work orders/mo** | Unlimited | Unlimited | Unlimited | Unlimited |
+| **Customers** | 2,000 | 20,000 | 100,000 | Unlimited |
 | **Storage** | 1 GB | 10 GB | 50 GB+ | Custom |
 
 ### What Each Plan Actually Means
 
-**Core — ₮299k/month**
+**Core — ₮199k/month**
 *For small garages just starting out.*
 
-- 1 branch, 3 users, 300 work orders/month
+- 1 branch, 3 users, unlimited work orders
 - Tablet workflow, CRM, work orders, service history
-- Basic reports, email support
-- **Psychological role**: Safe entry point. Not too cheap (₮99k attracts weak customers).
+- Estimates & appointments, mechanic reports, basic finance & reports
+- Email support, self-serve onboarding
+- **Psychological role**: Safe entry point. Believable "cheap" that makes Complete the compromise choice.
 
-**Pro — ₮699k/month (MOST POPULAR)**
-*For serious garages that want control.*
+**Complete — ₮499k/month (MOST POPULAR)**
+*For growing shops that want control.*
 
 Everything in Core, plus:
-- 10 users, 1,500 work orders/month
+- 10 users, unlimited work orders
 - Inventory management & stock control
-- SMS reminders
-- Dashboard analytics & priority support
+- Telegram & SMS messaging, service reminders
+- Mechanic accountability, payroll, vehicle-class pricing rules
+- Dashboard analytics & priority support, guided onboarding
 - **Psychological role**: The compromise choice. Most buyers land here.
 
-**Business — From ₮1.59M/month**
+**Business — ₮999k/month**
 *For multi-branch service centers.*
 
-Everything in Pro, plus:
+Everything in Complete, plus:
 - 3+ branches, 25+ users
 - Multi-branch dashboard & inventory transfer
-- Advanced BI, API access, approval workflows
+- Advanced inventory (purchase orders, suppliers, stock alerts, valuation)
+- Advanced BI, API access, approval workflows, AI assistant
 - Dedicated onboarding
-- **Psychological role**: Premium anchor. "From" pricing increases enterprise lead quality.
+- **Psychological role**: Premium anchor. Makes Complete feel reasonable.
 
 **Enterprise — Custom**
 *For chains, dealerships, fleets.*
@@ -165,44 +177,37 @@ Everything in Pro, plus:
 - Dedicated database option, advanced API
 - Fleet management, SLA, custom workflows
 - Custom implementation & reporting
-- **Psychological role**: Value ceiling anchor. Makes Pro feel reasonable.
+- **Psychological role**: Value ceiling anchor. Makes Complete feel reasonable.
 
 ---
 
 ## 3. Hybrid Pricing (Implementation + Monthly)
 
-**This is the default model.** Mongolian customers want "implementation," but you need recurring revenue.
+**Launch model (2026-08-07):** implementation is folded into the monthly price for Core/Complete — no upfront barrier. Implementation is an *optional* paid service for Business+ and for large migrations.
 
-| Plan | Implementation | Monthly |
+| Plan | Implementation (optional) | Monthly |
 |------|---------------|---------|
-| **Core** | ₮2M | ₮299k |
-| **Pro** | ₮8M | ₮699k |
-| **Business** | ₮20M+ | From ₮1.59M |
+| **Core** | ₮0 | ₮199k |
+| **Complete** | ₮0–₮2M (migration/training only) | ₮499k |
+| **Business** | ₮5M+ | ₮999k |
 | **Enterprise** | Custom | Custom |
 
-### What Implementation Includes
+First-20-shops founding cohort: implementation ₮0 on all plans, launch prices locked 12 months.
 
-**Core (₮2M)**:
-- System deployment & configuration
-- Tablet-first onboarding
-- Service catalog setup
-- Basic staff training
-- Data import template
+### What Implementation Includes (optional paid)
 
-**Pro (₮8M)**:
-- Everything in Core
-- Inventory system setup
-- Mechanic workflow configuration
-- SMS integration setup
+**Complete (₮0–₮2M)**:
+- Data migration (customer, vehicle, service history)
+- Service catalog & pricing setup
+- Staff training sessions
 - Report configuration
-- Initial data migration
 
-**Business (₮20M+)**:
-- Everything in Pro
+**Business (₮5M+)**:
+- Everything in Complete
 - Multi-branch setup & configuration
 - Branch inventory & transfer workflows
 - Advanced permissions & approval workflows
-- BI dashboard setup
+…
 - Custom invoice templates
 - Dedicated onboarding specialist
 
@@ -292,7 +297,7 @@ These are NOT shown on the public website. They are presented during sales conve
 - Inventory control
 - Better throughput
 - Structured operations
-- **Cost: ₮699k/month**
+- **Cost: ₮499k/month**
 
 This framing changes "software expense" into "profit protection."
 
@@ -300,15 +305,15 @@ This framing changes "software expense" into "profit protection."
 
 | Plan | Monthly | Est. Cost | Gross Margin |
 |------|---------|-----------|:------------:|
-| Core | ₮299k | ₮60k–₮90k | 70–80% |
-| Pro | ₮699k | ₮120k–₮200k | 71–83% |
-| Business | ₮1.59M+ | ₮300k–₮500k | 68–81% |
+| Core | ₮199k | ₮40k–₮70k | 65–80% |
+| Complete | ₮499k | ₮90k–₮150k | 70–82% |
+| Business | ₮999k | ₮200k–₮350k | 65–80% |
 | Enterprise | Custom | Variable | 70%+ |
 
 ### Revenue Scaling Path
 
-1. **SaaS**: 100 garages × ₮699k = ₮69.9M/mo → ₮838.8M/yr (~$234k ARR)
-2. **Enterprise**: 20 business × ₮1.59M + 10 enterprise × ₮5M = ₮81.8M/mo → ~$275k ARR
+1. **SaaS**: 100 garages × ₮499k = ₮49.9M/mo → ₮598.8M/yr (~$166k ARR)
+2. **Enterprise**: 20 business × ₮999k + 10 enterprise × ₮5M = ₮69.9M/mo → ~$233k ARR
 3. **Regional SaaS**: 10,000 garages × $149/mo = ~$17.88M ARR
 4. **Platform**: SaaS + parts marketplace + fleet + API + AI → $100M ARR target
 
@@ -327,7 +332,7 @@ High-quality customers:
 ### Discount Rules
 
 - **Never discount monthly heavily** — protect recurring revenue
-- **Discount implementation instead** (e.g., ₮8M → ₮5M, monthly stays ₮699k)
+- **Discount implementation instead** (e.g., ₮2M migration → ₮1M, monthly stays ₮499k)
 - Annual = pay 10 months, get 12 (~17% savings)
 - Recurring revenue is the asset
 
