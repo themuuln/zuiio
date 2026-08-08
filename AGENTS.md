@@ -138,15 +138,23 @@ Deeper docs are in `docs/` — load only when relevant:
 
 This monorepo uses multiple Supabase and Vercel accounts. **Do NOT use plain `vercel` or `supabase`** — always use the profile aliases.
 
+- **Vercel**: `v` / `v-tolom` / `v-themuuln6` aliases (tokens in pass `zuiio/vercel/*`, loaded by `.zshrc`).
+- **Supabase**: use **`supa`** (`~/.local/bin/supa`) — one profile per account. The official CLI's `--profile` silently falls back to one keychain token in headless contexts, so it lies about which account it used. `supa run <profile> <cmd>` injects the right token per command.
+
 ### Quick reference
 
-| App / task | Vercel | Supabase profile |
-|------------|--------|-----------------|
-| Most apps | `v` (zerone) | `s` (zerone) |
-| tolom, tolom-mobile | `v-tolom` | `s-themuln` |
-| zuiio-id | `v-themuuln6` | `s` (zerone) |
+| App / task | Vercel | Supabase (`supa run <profile>`) |
+|------------|--------|---------------------------------|
+| zer, agent-gateway | `v` (zerone) | `yesprice` |
+| onoo | `v` (zerone) | `zuiio` (org Onoo; project `iyhujghadlymroihxyiy`) |
+| tolom, tolom-mobile | `v-tolom` | `themuuln4` |
+| tamga, tamga-web | `v` (zerone) | `themuuln1` (project `xwgcdqpunsuuxbyqbqik`) |
+| zatly | self-hosted | `themuuln0` (project `ijeuxmgktfqtukpmnenh`) |
+| zuiio-id | `v-themuuln6` | `themuuln6` (ref unconfirmed) |
 
-Full command reference, per-app mapping, and troubleshooting: `docs/agent-reference.md#cli-multi-account-profiles--details`
+Profiles: `yesprice`, `themuuln0`, `themuuln1`, `themuuln2`, `themuuln3`, `themuuln4`, `themuuln11`. Supabase account tokens live in pass `zuiio/supabase/<name>` (agent-pass readable — allowlist is `zuiio/*`); `supa` profiles are registered via `supa login <name>`.
+
+Full per-app mapping with confirmed project refs: `docs/agent-reference.md#per-app-mapping`
 
 
 ## Log-Based Debugging

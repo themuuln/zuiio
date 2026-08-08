@@ -120,7 +120,7 @@ export default withMermaid(
       socialLinks: [{ icon: "github", link: "#" }],
       footer: {
         message: "Generated with Documentizer",
-        copyright: "${new Date().getFullYear()} zer",
+        copyright: `${new Date().getFullYear()} zer`,
       },
     },
   }),

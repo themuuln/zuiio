@@ -73,7 +73,34 @@ v whoami        # themuuln
 
 ### Per-app mapping
 
-See `.cli-profiles.json` for the full mapping of each app to its Vercel account and Supabase project ref.
+Source of truth: `.cli-profiles.json` (machine-readable) + this table (human-readable). Supabase accounts are `themuuln<N>` + `yesprice` — **one token per account, not per project** (a Supabase access token is account-scoped).
+
+| Supabase account | Products | Supabase refs |
+|---|---|---|
+| yesprice | zer | `krrkhozadforrydffegg` ✅ confirmed (org "themuuln", Tokyo) |
+| themuuln4 | tolom, tolom-mobile, damjuulagch | tolom `fhzuolncswccxkcqzclg` ✅ (Singapore) · damjuulagch `agpthoyxdfbkqcwypcuq` ✅ (Seoul) |
+| themuuln1 | tamga, tamga-web, zunch (org only, no project) | tamga **`xwgcdqpunsuuxbyqbqik`** ✅ (Seoul) — `dgoqhlcqhpabbthamtrj` was a dead ref (400 removed) · sandbox `sfgfiztvnnizjhrlhsyd` |
+| themuuln0 | zatly, zargo, zuch | zatly **`ijeuxmgktfqtukpmnenh`** ✅ (Singapore) · zargo `qikjhzxnaztfmmnxlyed` (Singapore) · zuch `stltvwanqlrelmkfguht` (Sydney) — **user: zuch = tamga** ⚠️ (older/other tamga? see themuuln1 row) |
+| themuuln2 | tumurch, zraf | tumurch `oxnvbgdlhrgzzuyrnebf` ✅ (Tokyo) · zraf `lfapdupkwzznsbqjvnyc` ✅ (Tokyo) |
+| themuuln3 | naadam, khosuud | naadam `ragiqcisavdryiqckrrb` ✅ · khosuud `rjzrnuddfjwbmxacclga` ✅ |
+| themuuln11 | zurhaich (org "Zurhaich", project "Astrology") | zurhaich `iwokuddobkrzegauxkpy` ✅ (Tokyo) · ⚠️ **second zatly project** `bjjmykvmxiwhttotkrxo` (Tokyo) — `.env.local` + user mapping use themuuln0's `ijeuxmgk…`; confirm which is live |
+| themuuln6 | zuiio-id, sso | zuiio-sso **`qjezndzwgoqmsduvzfqa`** ✅ (Singapore) — this is org `vvkksezoffientiyupqk`, the old "zuiio" org; serves zuiio-id auth too (no separate zuiio-id project) |
+| themuuln7 | black-yak | black-yak **`jkwvsehoszxnddoenrdf`** ✅ (Seoul) |
+| zuiio (org "Onoo") | onoo, zim | onoo `iyhujghadlymroihxyiy` ✅ (Singapore) · zim `cvqwdscitkpwlwnpajjd` (INACTIVE) — token found in pass `zuiio/onoo/supabase/cli` |
+
+**Vercel side** (swept 2026-08-07 via REST API, tokens in pass `zuiio/vercel/*`):
+
+| Vercel account | pass token | Projects |
+|---|---|---|
+| themuuln (zerone) | `zuiio/vercel/zerone` | onoo, onoo-staging, onoo-docs, tani, zer, tolom*, agent-gateway (agent.zuiiotech.com), tamga, damjuulagch, zargo, zraf-web, black-yak-adventure, zuiio-website, zuiio, tol, ott-web, unegui-deals, + ~35 experiments |
+| themulnofficial-9829 | `zuiio/vercel/tolom` | tolom, zuiio-tolom, zuiio, zuiio-zer |
+| themuuln6-3708 | `zuiio/vercel/themuuln6` | zuiio-id |
+| yespricemn-5678 | `zuiio/vercel/yesprice` | zer |
+| (dup of themulnofficial-9829) | `zuiio/vercel/themuln.official` | same 4 as tolom — duplicate token, keep only if the email login is used |
+
+Notes: `tolom` exists on BOTH zerone and themulnofficial-9829 — the live one per `.cli-profiles.json` is themulnofficial-9829 (v-tolom). zatly has no Vercel (self-hosted). onoo's Supabase = `zuiio` profile (org Onoo).
+
+**`supa` profiles — one per Supabase account (10/10 registered ✅):** `yesprice`, `themuuln0`, `themuuln1`, `themuuln2`, `themuuln3`, `themuuln4`, `themuuln6`, `themuuln7`, `themuuln11`, `zuiio`. Tokens in pass `zuiio/supabase/*` (agent-pass readable). Every project ref above is confirmed via `projects list`.
 
 ### Troubleshooting
 
@@ -83,6 +110,10 @@ See `.cli-profiles.json` for the full mapping of each app to its Vercel account 
 - `~/.supabase/access-token` holds one legacy token (last `supabase login`); plain `supabase` without an alias uses it
 - If a token is missing: add the account's token to `~/.cache/zsh/supabase-tokens.sh` (get it from `https://supabase.com/dashboard/account/tokens` or copy from `~/.supabase/access-token` right after `supabase login`), then `source ~/.zshrc`
 - Check with `v-<name> whoami` or `s-<app> projects list`
+- Vercel tokens: pass `zuiio/vercel/<name>` (agent-pass readable — allowlist is `zuiio/*`), loaded at shell start via `.zshrc` token cache.
+- Supabase multi-account: use **`supa`** (`~/.local/bin/supa`, github.com/themuuln/supabase-profiles) — the official CLI's `--profile` silently falls back to one keychain token in headless contexts, which makes per-account work lie. `supa login <profile> --token sbp_...` then `supa run <profile> <cmd>` injects the right token per command. Tokens are plaintext in `~/.config/supa/profiles.json` (mode 600).
+- Pass structure rule: `zuiio/` = project secrets (agent-readable via `agent-pass`); `personal/`, `work/` = private, denied.
+- If a profile is missing: run `source ~/.zshrc` then check with `v-<name> whoami` or `supa run <name> projects list`.
 
 ---
 

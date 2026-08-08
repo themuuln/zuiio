@@ -5,12 +5,12 @@
   "profiles": {
     "zerone": {
       "vercel_account": "themuuln",
-      "vercel_token_path": "personal/vercel/zerone",
+      "vercel_token_path": "zuiio/vercel/zerone",
       "supabase_org": "zuiio (vvkksezoffientiyupqk)"
     },
     "tolom": {
       "vercel_account": "themulnofficial-9829",
-      "vercel_token_path": "personal/vercel/tolom",
+      "vercel_token_path": "zuiio/vercel/tolom",
       "supabase_profile": "themuln"
     },
     "themuln": {
@@ -18,12 +18,12 @@
     },
     "themuuln6": {
       "vercel_account": "themuuln6-3708",
-      "vercel_token_path": "personal/vercel/6",
+      "vercel_token_path": "zuiio/vercel/themuuln6",
       "supabase_profile": "themuuln6@gmail.com"
     },
     "yesprice": {
       "vercel_account": "yespricemn-5678",
-      "vercel_token_path": "personal/vercel/yesprice"
+      "vercel_token_path": "zuiio/vercel/yesprice"
     }
   },
 
