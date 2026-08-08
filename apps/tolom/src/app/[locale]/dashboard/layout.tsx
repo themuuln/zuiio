@@ -3,7 +3,7 @@
 // with appropriate staleTime (5 min profile, 5 min dashboard, 2 min subscription).
 // The BrandThemeLoader is wrapped in Suspense so org branding streams in.
 export const instant = true;
-export const prefetch = "allow-runtime";
+export const prefetch = "partial";
 
 import { generateBrandCSS } from "@zuiio/branding";
 import { connection } from "next/server";
