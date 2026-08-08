@@ -503,21 +503,50 @@ describe("GET /api/cron/refresh-meta-tokens", () => {
 		expect(body.refreshed).toBe(0);
 	});
 
-	it("exchanges expiring tokens and re-encrypts the result", async () => {
+	it("refreshes page tokens via user-token exchange + /me/accounts", async () => {
 		const sb = makeSupabase({
 			channel_connections: () => ({
 				data: [
-					{ id: "c1", page_access_token: "enc:secret" },
-					{ id: "c2", page_access_token: null },
+					{
+						id: "c1",
+						page_id: "page-1",
+						page_access_token: "enc:secret",
+						metadata: { user_access_token: "enc:user-token" },
+					},
+					{
+						// Page no longer managed by the user → /me/accounts has no
+						// matching page → row fails but the cron keeps going.
+						id: "c2",
+						page_id: "page-2",
+						page_access_token: "enc:secret-2",
+						metadata: { user_access_token: "enc:user-token-2" },
+					},
 				],
 				error: null,
 			}),
 		});
 		mockCreateServiceClient.mockReturnValue(sb);
-		const mockFetch = vi.fn(async () => ({
+		const accountsResponse = {
 			ok: true,
-			json: async () => ({ access_token: "new-token", expires_in: 5184000 }),
-		}));
+			json: async () => ({
+				data: [{ id: "page-1", access_token: "new-page-token" }],
+			}),
+		};
+		const mockFetch = vi
+			.fn()
+			// c1: fb_exchange_token on the user token.
+			.mockResolvedValueOnce({
+				ok: true,
+				json: async () => ({ access_token: "user-token-2" }),
+			})
+			// c1: /me/accounts with the fresh user token.
+			.mockResolvedValueOnce(accountsResponse)
+			// c2: exchange ok, but page-2 is missing from the accounts list.
+			.mockResolvedValueOnce({
+				ok: true,
+				json: async () => ({ access_token: "user-token-3" }),
+			})
+			.mockResolvedValueOnce(accountsResponse);
 		vi.stubGlobal("fetch", mockFetch);
 		const { GET } = await import("@/app/api/cron/refresh-meta-tokens/route");
 		const res = await GET(
@@ -526,10 +555,10 @@ describe("GET /api/cron/refresh-meta-tokens", () => {
 		const body = await res.json();
 		expect(body.processed).toBe(2);
 		expect(body.refreshed).toBe(1);
-		// null page_access_token rows count as failures
 		expect(body.failed).toBe(1);
-		expect(mockDecryptSecret).toHaveBeenCalledWith("enc:secret");
-		expect(mockEncryptSecret).toHaveBeenCalledWith("new-token");
+		// The refreshed page token is re-encrypted, plus the refreshed user token.
+		expect(mockEncryptSecret).toHaveBeenCalledWith("new-page-token");
+		expect(mockEncryptSecret).toHaveBeenCalledWith("user-token-2");
 		const updateChain = sb.from.mock.results
 			.map((r: { value: { update?: unknown } }) => r.value)
 			.find((v: { update?: unknown }) => v.update);
@@ -539,7 +568,14 @@ describe("GET /api/cron/refresh-meta-tokens", () => {
 	it("counts failed exchanges and keeps going", async () => {
 		const sb = makeSupabase({
 			channel_connections: () => ({
-				data: [{ id: "c1", page_access_token: "enc:bad" }],
+				data: [
+					{
+						id: "c1",
+						page_id: "page-1",
+						page_access_token: "enc:bad",
+						metadata: { user_access_token: "enc:user" },
+					},
+				],
 				error: null,
 			}),
 		});
@@ -556,6 +592,33 @@ describe("GET /api/cron/refresh-meta-tokens", () => {
 		const body = await res.json();
 		expect(body.refreshed).toBe(0);
 		expect(body.failed).toBe(1);
+	});
+
+	it("skips connections without a stored user token (pre-migration rows)", async () => {
+		const sb = makeSupabase({
+			channel_connections: () => ({
+				data: [
+					{
+						id: "c-old",
+						page_id: "page-1",
+						page_access_token: "enc:secret",
+						metadata: {},
+					},
+				],
+				error: null,
+			}),
+		});
+		mockCreateServiceClient.mockReturnValue(sb);
+		vi.stubGlobal("fetch", vi.fn());
+		const { GET } = await import("@/app/api/cron/refresh-meta-tokens/route");
+		const res = await GET(
+			new Request("http://localhost/api/cron/refresh-meta-tokens"),
+		);
+		const body = await res.json();
+		expect(body.processed).toBe(1);
+		expect(body.skipped).toBe(1);
+		expect(body.refreshed).toBe(0);
+		expect(vi.mocked(fetch)).not.toHaveBeenCalled();
 	});
 
 	it("returns error status when the query fails", async () => {

@@ -130,19 +130,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			// It also serves as the stable session-chat key per channel.
 			const pageId = entryId;
 
-			// Handle text messages
-			if (event.message?.text) {
-				await handleMessage(supabase, {
-					pageId,
-					senderId,
-					channel,
-					text: event.message.text,
-					pageAccessToken,
-					orgId: connection.organization_id,
-					userId: connection.user_id ?? senderId,
-					productType: connection.product_type as "tolom" | "zer",
-				});
-			}
+			// Dispatch the event. A Meta messaging event carries exactly one of:
+			// postback (button click), quick_reply payload, or plain text — but a
+			// quick reply ALSO carries message.text (the displayed label), so
+			// these branches MUST be exclusive or the message is processed twice
+			// (double agent call, double reply, double rate-limit/budget spend).
 
 			// Handle postbacks (button clicks)
 			if (event.postback?.payload) {
@@ -156,15 +148,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					userId: connection.user_id ?? senderId,
 					productType: connection.product_type as "tolom" | "zer",
 				});
-			}
-
-			// Handle quick reply payloads
-			if (event.message?.quick_reply?.payload) {
+			} else if (event.message?.quick_reply?.payload) {
+				// Handle quick reply payloads
 				await handleQuickReply(supabase, {
 					pageId,
 					senderId,
 					channel,
 					payload: event.message.quick_reply.payload,
+					pageAccessToken,
+					orgId: connection.organization_id,
+					userId: connection.user_id ?? senderId,
+					productType: connection.product_type as "tolom" | "zer",
+				});
+			} else if (event.message?.text) {
+				// Handle text messages
+				await handleMessage(supabase, {
+					pageId,
+					senderId,
+					channel,
+					text: event.message.text,
 					pageAccessToken,
 					orgId: connection.organization_id,
 					userId: connection.user_id ?? senderId,

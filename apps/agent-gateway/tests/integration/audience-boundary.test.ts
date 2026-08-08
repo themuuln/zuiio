@@ -70,10 +70,10 @@ describe("Audience-based tool selection", () => {
 		expect(tools.length).toBeGreaterThan(0);
 	});
 
-	it("returns empty Zer tools for customer audience", () => {
+	it("gives Zer customers exactly the read-only product search tool", () => {
 		const tools = getProductTools("zer", customerCtx);
 		expect(Array.isArray(tools)).toBe(true);
-		expect(tools.length).toBe(0);
+		expect(tools.map((t) => t.name)).toEqual(["searchProducts"]);
 	});
 });
 

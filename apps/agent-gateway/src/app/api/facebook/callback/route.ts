@@ -162,6 +162,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 			maxAge: 600, // 10 minutes
 		});
 
+		// Carry the user's long-lived token to the select step so the page
+		// connection can later refresh its page token via /me/accounts (Meta
+		// rejects fb_exchange_token on page tokens — the old cron path).
+		response.cookies.set("fb_user_token", userAccessToken, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "lax",
+			path: "/",
+			maxAge: 600, // 10 minutes
+		});
+
 		// Clear state cookie
 		response.cookies.set("fb_oauth_state", "", {
 			httpOnly: true,

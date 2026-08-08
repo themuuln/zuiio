@@ -3,6 +3,7 @@ import { capture } from "@zuiio/capture";
 import "server-only";
 
 import { createCustomerMemoryTools } from "@/gateway/customer-memory-tool";
+import { createCustomerProductTool } from "@/gateway/customer-product-tool";
 import { createReadDataTool } from "@/gateway/read-data-tool";
 import { createWriteDataTool } from "@/gateway/write-data-tool";
 import { getRedis } from "@/lib/redis";
@@ -345,7 +346,9 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					>();
 
 					for (const wo of workOrders ?? []) {
-						const v = wo.vehicles;
+						// PostgREST to-one embeds are typed as arrays by supabase-js —
+						// the runtime value is a single object.
+						const v = Array.isArray(wo.vehicles) ? wo.vehicles[0] : wo.vehicles;
 						const vid = wo.vehicle_id ?? "unknown";
 						const existing = vehicleMap.get(vid);
 						const revenue = Number(wo.total) || 0;
@@ -472,8 +475,15 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						0,
 					);
 					const expensesByCategory: Record<string, number> = {};
-					for (const r of expenseRows) {
-						const cat = r.expense_categories?.name ?? "Бусад";
+					for (const r of expenseRows as Array<{
+						amount?: unknown;
+						expense_categories?: { name?: string } | { name?: string }[] | null;
+					}>) {
+						// PostgREST to-one embed typed as array by supabase-js.
+						const cat =
+							(Array.isArray(r.expense_categories)
+								? r.expense_categories[0]?.name
+								: r.expense_categories?.name) ?? "Бусад";
 						expensesByCategory[cat] =
 							(expensesByCategory[cat] ?? 0) + (Number(r.amount) || 0);
 					}
@@ -989,9 +999,23 @@ function zerTools(context: ToolContext): GatewayTool[] {
 						string,
 						{ totalRevenue: number; totalQuantity: number; itemCount: number }
 					>();
-					for (const item of items) {
+					for (const item of items as Array<{
+						quantity?: unknown;
+						unit_price?: unknown;
+						total_price?: unknown;
+						products?: {
+							name?: string;
+							category_id?: string;
+							categories?: { name?: string } | { name?: string }[] | null;
+						} | null;
+					}>) {
+						// PostgREST to-one embeds (products, categories) are typed
+						// as arrays by supabase-js — the runtime values are objects.
 						const prod = item.products;
-						const catName = prod?.categories?.name ?? "Бусад";
+						const catName =
+							(Array.isArray(prod?.categories)
+								? prod?.categories[0]?.name
+								: prod?.categories?.name) ?? "Бусад";
 						const existing = byCategory.get(catName) ?? {
 							totalRevenue: 0,
 							totalQuantity: 0,
@@ -1039,8 +1063,13 @@ export function getProductTools(
 ): GatewayTool[] {
 	// Zatly has no tools yet — return empty set
 	if (productType === "zatly") return [];
-	// Customer audience gets NO internal business tools — fail closed.
-	if (context.audience === "customer") return [];
+	// Customer audience gets NO internal business tools — fail closed. The one
+	// exception is a read-only product catalog search for Zer (the gateway
+	// shares Zer's project), so Messenger/Instagram customers can ask about
+	// products without any access to sales, invoices, or internal data.
+	if (context.audience === "customer") {
+		return productType === "zer" ? [createCustomerProductTool(context)] : [];
+	}
 	const audienceKey = context.audience ?? "internal";
 	const cacheKey = `${productType}:${context.orgId}:${audienceKey}:${options?.readOnly ?? false}`;
 	const cached = toolCache.get(cacheKey);

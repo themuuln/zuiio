@@ -17,12 +17,12 @@ interface FacebookContextValue {
 	/** Auth response available when `status === "connected"` */
 	authResponse: FacebookAuthResponse | null;
 	/**
-	 * Full Page connection flow:
-	 * 1. `FB.login()` popup with pages_messaging scope
-	 * 2. On success, POST the short-lived user token to the server callback
-	 * 3. Server exchanges for a long-lived page token, stores in org_channels
+	 * Full Page connection flow is SERVER-side: the product app mints a
+	 * compact link token, asks the gateway for a verified OAuth dialog URL
+	 * (/api/facebook/start), and the browser navigates there. The dialog
+	 * cookie lives on the gateway origin, so a client-side SDK popup cannot
+	 * participate. See zer's settings > facebook-actions.ts.
 	 */
-	connectPage: (options?: FacebookLoginOptions) => Promise<void>;
 	/** Trigger `FB.login()` popup (raw, no server exchange) */
 	login: (options?: FacebookLoginOptions) => Promise<FacebookLoginResponse>;
 	/** Trigger `FB.logout()` */
@@ -35,7 +35,6 @@ const FacebookContext = createContext<FacebookContextValue>({
 	ready: false,
 	status: null,
 	authResponse: null,
-	connectPage: async () => {},
 	login: async () => ({ status: "unknown", authResponse: null }),
 	logout: async () => {},
 	fb: null,
@@ -125,61 +124,12 @@ export function FacebookProvider({
 		[],
 	);
 
-	// --- Connect Page (full flow: login → server exchange) ---
-	const connectPage = useCallback(
-		async (options?: FacebookLoginOptions): Promise<void> => {
-			const { scope, ...rest } = options ?? {};
-
-			const response = await new Promise<FacebookLoginResponse>((resolve) => {
-				window.FB?.login(resolve, {
-					scope:
-						scope ??
-						"pages_messaging,pages_manage_metadata,pages_show_list,pages_read_engagement",
-					...rest,
-				});
-			});
-
-			if (response.status !== "connected" || !response.authResponse) {
-				throw new Error(
-					response.status === "not_authorized"
-						? "You must authorize the app to connect your Page."
-						: "Facebook login was cancelled.",
-				);
-			}
-
-			setStatus(response.status);
-			setAuthResponse(response.authResponse);
-
-			// Read orgId from the URL — set by Zer/Tolom when redirecting here
-			const params = new URLSearchParams(window.location.search);
-			const orgId = params.get("orgId");
-
-			// Exchange short-lived user token for long-lived page token on the server
-			const res = await fetch("/api/facebook/callback", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					accessToken: response.authResponse.accessToken,
-					userId: response.authResponse.userID,
-					orgId,
-				}),
-			});
-
-			if (!res.ok) {
-				const err = (await res.json().catch(() => ({}))) as { error?: string };
-				throw new Error(err.error ?? "Failed to exchange Facebook token.");
-			}
-		},
-		[],
-	);
-
 	return (
 		<FacebookContext.Provider
 			value={{
 				ready,
 				status,
 				authResponse,
-				connectPage,
 				login,
 				logout,
 				fb: typeof window !== "undefined" ? (window.FB ?? null) : null,

@@ -67,6 +67,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 		const supabase = createServiceClient();
 
+		// The callback carries the user's long-lived token here; it is stored
+		// encrypted in metadata so the refresh cron can re-fetch page tokens
+		// via /me/accounts when they near expiry (Meta rejects
+		// fb_exchange_token on page tokens directly).
+		const userToken = request.cookies.get("fb_user_token")?.value;
+		const metadata = userToken
+			? { user_access_token: encryptSecret(userToken) }
+			: {};
+
 		// Store connection in channel_connections
 		const { error: insertError } = await supabase
 			.from("channel_connections")
@@ -85,6 +94,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					).toISOString(), // 60 days
 					product_type: productType || "zer",
 					is_active: true,
+					metadata,
 				},
 				{
 					onConflict: "organization_id,channel,channel_chat_id,channel_user_id",
@@ -129,6 +139,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 					).toISOString(),
 					product_type: productType || "zer",
 					is_active: true,
+					metadata,
 				},
 				{
 					onConflict: "organization_id,channel,channel_chat_id,channel_user_id",
@@ -136,7 +147,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 			);
 		}
 
-		// Clear pages cookie
+		// Clear pages + user-token cookies
 		// Server-controlled return destination (env per product) — never from
 		// client input, so no open-redirect surface.
 		const returnUrls: Record<string, string> = {
@@ -152,6 +163,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		});
 
 		response.cookies.set("fb_pages", "", {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "lax",
+			path: "/",
+			maxAge: 0,
+		});
+
+		response.cookies.set("fb_user_token", "", {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === "production",
 			sameSite: "lax",
