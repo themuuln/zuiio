@@ -50,6 +50,7 @@ import { RolesDrawer } from "./roles-drawer";
 import { SettingsShell } from "./settings-shell";
 import { ShopPosSettings } from "./shop-pos-settings";
 import { SmtpSettings } from "./smtp-settings";
+import { getTelegramLinkCode } from "./telegram-actions";
 
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
 
@@ -348,7 +349,9 @@ export function SettingsContent() {
     };
   }, [hasBrands]);
 
-  // Telegram link code generation
+  // Telegram link code generation — proxied through a server action because
+  // /api/link/code is x-api-key protected (server-to-server only; the shared
+  // secret must never reach the browser).
   const [linkCode, setLinkCode] = useState<LinkCode | null>(null);
   const [linkCodeLoading, setLinkCodeLoading] = useState(false);
   useEffect(() => {
@@ -357,20 +360,9 @@ export function SettingsContent() {
       let cancelled = false;
       const fetchCode = async () => {
         try {
-          const res = await fetch(`${GATEWAY_URL}/api/link/code`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orgId: organizationId,
-              userId: data.userId,
-              productType: "zer",
-            }),
-          });
-          if (res.ok) {
-            const result = await res.json();
-            if (!cancelled && result.code && result.formatted) {
-              setLinkCode({ formatted: result.formatted });
-            }
+          const code = await getTelegramLinkCode();
+          if (!cancelled && code) {
+            setLinkCode({ formatted: code.formatted });
           }
         } catch (e) {
           capture(e, { context: "telegram: fetch link code" });
@@ -383,7 +375,7 @@ export function SettingsContent() {
         cancelled = true;
       };
     }
-  }, [data?.telegramLink, data?.userId, organizationId]);
+  }, [data?.telegramLink, data?.userId]);
 
   // ───── Loading state ─────
   if (isLoading || !data) {
