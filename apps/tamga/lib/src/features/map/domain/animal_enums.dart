@@ -58,26 +58,6 @@ enum HorseBreed {
   final String displayName;
 }
 
-// ── TravelDirection ────────────────────────────────────────────────
-
-/// Хөдөлсөн зүг — likely direction of travel for a lost animal.
-/// Mirrors the зүг field used in Mongolian lost-livestock notices.
-enum TravelDirection {
-  north('Хойд'),
-  northEast('Зүүн хойд'),
-  east('Зүүн'),
-  southEast('Зүүн урд'),
-  south('Урд'),
-  southWest('Баруун урд'),
-  west('Баруун'),
-  northWest('Баруун хойд');
-
-  const TravelDirection(this.displayName);
-
-  /// Mongolian display name for this direction.
-  final String displayName;
-}
-
 // ── LostHorsePricingTier ────────────────────────────────────────────
 
 /// Үнийн түвшин — pricing tiers for lost horse reports.

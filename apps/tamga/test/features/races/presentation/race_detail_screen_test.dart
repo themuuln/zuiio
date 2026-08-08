@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/error/result.dart';
 import 'package:tamga/src/core/widgets/widgets.dart';
 import 'package:tamga/src/features/auth/application/auth_providers.dart';
@@ -19,6 +18,7 @@ import 'package:tamga/src/features/races/domain/race_entry.dart';
 import 'package:tamga/src/features/races/presentation/race_detail_screen.dart';
 import 'package:tamga/src/shared/domain/horse.dart';
 import '../../../helpers/test_helpers.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Fake Auth State Notifier ────────────────────────────────────────
 
@@ -110,7 +110,7 @@ Widget createRaceDetailScreen({
         horsesProvider.overrideWith((ref) async => horses),
       ],
       child: MaterialApp(
-        theme: AppTheme.light(),
+        theme: TamgaDesignSystem.buildThemeData(Brightness.light),
         home: RaceDetailScreen(raceId: raceId),
       ),
     );
@@ -130,7 +130,7 @@ Widget createRaceDetailScreen({
       horsesProvider.overrideWith((ref) async => horses),
     ],
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: RaceDetailScreen(raceId: raceId),
     ),
   );
@@ -154,7 +154,7 @@ void main() {
             ).overrideWith((ref) => raceDetailCompleter.future),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const RaceDetailScreen(raceId: 'test-race-1'),
           ),
         ),
@@ -504,7 +504,7 @@ void main() {
               ),
             ],
             child: MaterialApp(
-              theme: AppTheme.light(),
+              theme: TamgaDesignSystem.buildThemeData(Brightness.light),
               home: const RaceDetailScreen(raceId: 'race-1'),
             ),
           ),
@@ -581,7 +581,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const RaceDetailScreen(raceId: 'race-1'),
           ),
         ),

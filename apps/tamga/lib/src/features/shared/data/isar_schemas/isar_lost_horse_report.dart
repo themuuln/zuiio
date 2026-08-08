@@ -45,7 +45,6 @@ class IsarLostHorseReport {
   String? breed; // stored as string from HorseBreed.name
   String? coatColor;
   late int lostCount;
-  late int sightingCount;
 
   // ── New: Media ──
   List<String>? photoUrls;
@@ -54,10 +53,6 @@ class IsarLostHorseReport {
   // ── New: Tamga / Identification ──
   String? tamgaImageUrl;
   String? earMarkDescription;
-  String? travelDirection; // stored as string from TravelDirection.name
-
-  // ── New: Verification ──
-  String? privateVerificationDetail;
 
   // ── New: Contact ──
   String? contactPhone;
@@ -66,24 +61,6 @@ class IsarLostHorseReport {
   late String pricingTier; // stored as string from LostHorsePricingTier.name
   DateTime? expiresAt;
   late bool renewalRequested;
-
-  // ── Public sharing ──
-  /// SHA-256 digest of the public share token. The raw token is never persisted.
-  String? publicTokenHash;
-  late bool publicAccessEnabled;
-  late String publicLocationPrecision;
-  late String publicContactMode;
-
-  /// Authenticated account that owns this local cache row.
-  String? accountId;
-
-  String? resolutionType;
-  String? resolutionNote;
-  DateTime? resolvedAt;
-  String? resolvedBy;
-  String? verifiedSightingId;
-  DateTime? reviewedAt;
-  String? reviewedBy;
 
   factory IsarLostHorseReport.fromDomain(LostHorseReport report) {
     return IsarLostHorseReport()
@@ -111,7 +88,6 @@ class IsarLostHorseReport {
       ..gender = report.gender?.name
       ..breed = report.breed?.name
       ..coatColor = report.coatColor
-      ..sightingCount = report.sightingCount
       ..lostCount = report.lostCount
       // ── Media ──
       ..photoUrls = report.photoUrls.isEmpty ? null : report.photoUrls
@@ -119,28 +95,12 @@ class IsarLostHorseReport {
       // ── Tamga / Identification ──
       ..tamgaImageUrl = report.tamgaImageUrl
       ..earMarkDescription = report.earMarkDescription
-      ..travelDirection = report.travelDirection?.name
-      // ── Verification ──
-      ..privateVerificationDetail = report.privateVerificationDetail
       // ── Contact ──
       ..contactPhone = report.contactPhone
       // ── Pricing ──
       ..pricingTier = report.pricingTier.name
       ..expiresAt = report.expiresAt
-      ..renewalRequested = report.renewalRequested
-      // ── Public sharing ──
-      ..publicTokenHash = report.publicTokenHash
-      ..publicAccessEnabled = report.publicAccessEnabled
-      ..publicLocationPrecision = report.publicLocationPrecision
-      ..publicContactMode = report.publicContactMode
-      ..accountId = report.ownerId
-      ..resolutionType = report.resolutionType?.name
-      ..resolutionNote = report.resolutionNote
-      ..resolvedAt = report.resolvedAt
-      ..resolvedBy = report.resolvedBy
-      ..verifiedSightingId = report.verifiedSightingId
-      ..reviewedAt = report.reviewedAt
-      ..reviewedBy = report.reviewedBy;
+      ..renewalRequested = report.renewalRequested;
   }
 
   LostHorseReport toDomain() {
@@ -193,20 +153,12 @@ class IsarLostHorseReport {
           : null,
       coatColor: coatColor,
       lostCount: lostCount,
-      sightingCount: sightingCount,
+      // ── Media ──
       photoUrls: photoUrls ?? [],
       videoUrls: videoUrls ?? [],
       // ── Tamga / Identification ──
       tamgaImageUrl: tamgaImageUrl,
       earMarkDescription: earMarkDescription,
-      travelDirection: travelDirection != null
-          ? TravelDirection.values.firstWhere(
-              (e) => e.name == travelDirection,
-              orElse: () => TravelDirection.north,
-            )
-          : null,
-      // ── Verification ──
-      privateVerificationDetail: privateVerificationDetail,
       // ── Contact ──
       contactPhone: contactPhone,
       // ── Pricing ──
@@ -216,23 +168,6 @@ class IsarLostHorseReport {
       ),
       expiresAt: expiresAt,
       renewalRequested: renewalRequested,
-      // ── Public sharing ──
-      publicTokenHash: publicTokenHash,
-      publicAccessEnabled: publicAccessEnabled,
-      publicLocationPrecision: publicLocationPrecision,
-      publicContactMode: publicContactMode,
-      resolutionType: resolutionType != null
-          ? LostHorseResolutionType.values.firstWhere(
-              (e) => e.name == resolutionType,
-              orElse: () => LostHorseResolutionType.withdrawn,
-            )
-          : null,
-      resolutionNote: resolutionNote,
-      resolvedAt: resolvedAt,
-      resolvedBy: resolvedBy,
-      verifiedSightingId: verifiedSightingId,
-      reviewedAt: reviewedAt,
-      reviewedBy: reviewedBy,
     );
   }
 }

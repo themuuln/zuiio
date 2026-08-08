@@ -1,10 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 
 import '../error/result.dart';
 import '../sync/sync_queue.dart';
 import '../../features/shared/data/isar_storage.dart';
-import '../../features/shared/data/isar_sync_storage.dart';
 
 /// Abstract base class for local Isar-backed repositories.
 ///
@@ -28,43 +26,13 @@ import '../../features/shared/data/isar_sync_storage.dart';
 /// method(s) while calling `super` where the base logic is still applicable.
 abstract class LocalRepository<T, TIsar> {
   /// Creates a local repository backed by [storage] and [syncQueue].
-  ///
-  /// When [syncStorage] is provided, every [save]/[delete] also enqueues the
-  /// sync intent into the durable Isar-backed queue that [CloudSyncCoordinator]
-  /// processes — without it, offline writes never reach the cloud.
-  LocalRepository({
-    required this.storage,
-    required this.syncQueue,
-    this.syncStorage,
-  });
+  LocalRepository({required this.storage, required this.syncQueue});
 
   /// The Isar storage used for database operations.
   final IsarStorage storage;
 
   /// The sync queue used for offline synchronization.
   final SyncQueue syncQueue;
-
-  /// Durable Isar-backed queue (optional). When set, [save]/[delete] persist
-  /// the enqueued sync intent so it survives restarts and reaches the
-  /// coordinator.
-  final IsarSyncStorage? syncStorage;
-
-  /// Persist a sync intent to the durable queue (no-op when not wired).
-  ///
-  /// A queue write failure must never fail the user-visible local save — the
-  /// local write already succeeded, so the intent is logged instead.
-  Future<void> persistEnqueue(SyncQueueItem item) async {
-    final store = syncStorage;
-    if (store == null) return;
-    try {
-      await store.enqueue(item);
-    } catch (e) {
-      debugPrint(
-        '[LocalRepository] Failed to persist queue item '
-        '(${item.entityType}/${item.entityId}): $e',
-      );
-    }
-  }
 
   // ── Abstract sub-class contract ──────────────────────────────────
 
@@ -140,15 +108,15 @@ abstract class LocalRepository<T, TIsar> {
         await collection.put(isarObj);
       });
 
-      final syncItem = SyncQueueItem(
-        entityType: entityType,
-        entityId: id,
-        action: isNew ? SyncAction.create : SyncAction.update,
-        data: toDataJson(item),
-        timestamp: DateTime.now(),
+      syncQueue.enqueue(
+        SyncQueueItem(
+          entityType: entityType,
+          entityId: id,
+          action: isNew ? SyncAction.create : SyncAction.update,
+          data: toDataJson(item),
+          timestamp: DateTime.now(),
+        ),
       );
-      syncQueue.enqueue(syncItem);
-      await persistEnqueue(syncItem);
 
       return item;
     });
@@ -166,15 +134,15 @@ abstract class LocalRepository<T, TIsar> {
         await collection.isar.writeTxn(() async {
           await collection.delete(isarId);
         });
-        final item = SyncQueueItem(
-          entityType: entityType,
-          entityId: domainId,
-          action: SyncAction.delete,
-          data: {},
-          timestamp: DateTime.now(),
+        syncQueue.enqueue(
+          SyncQueueItem(
+            entityType: entityType,
+            entityId: domainId,
+            action: SyncAction.delete,
+            data: {},
+            timestamp: DateTime.now(),
+          ),
         );
-        syncQueue.enqueue(item);
-        await persistEnqueue(item);
       }
     });
   }

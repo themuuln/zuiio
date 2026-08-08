@@ -2,15 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/theme/design_tokens.dart';
-import '../../../core/widgets/widgets.dart';
-import '../../map/application/lost_horse_providers.dart';
+import '../../../app/theme/app_spacing.dart';
 import '../../map/presentation/active_reports_screen.dart';
-import '../../map/presentation/lost_horse_alert_preferences_screen.dart';
 import '../../map/presentation/map_screen.dart';
-import '../../map/presentation/my_lost_reports_screen.dart';
 import '../../map/presentation/report_lost_horse_screen.dart';
 
 /// Эрэл хайгуул — хаяж морь хайх, бүртгүүлэх хуудас.
@@ -44,42 +39,20 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          TamgaSliverHeader(
-            title: 'Эрэл хайгуул',
-            subtitle: 'Олж, мэдээлж, хамгаалъя',
+          SliverAppBar(
+            title: const Text('Эрэл хайгуул'),
             pinned: true,
             floating: true,
             actions: [
               IconButton(
-                tooltip: 'Мэдэгдэл / Alerts',
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const LostHorseAlertPreferencesScreen(),
-                  ),
-                ),
-                icon: const Icon(Icons.notifications_none_outlined),
-              ),
-              PopupMenuButton<String>(
-                tooltip: 'Нэмэлт үйлдэл',
-                onSelected: (value) {
-                  if (value == 'premium') _showTierSheet(context);
-                  if (value == 'active') _tabController.animateTo(0);
-                  if (value == 'mine') _openMyReports(context);
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(
-                    value: 'active',
-                    child: Text('Идэвхтэй тайлангууд'),
-                  ),
-                  PopupMenuItem(value: 'mine', child: Text('Миний зарууд')),
-                  PopupMenuItem(
-                    value: 'premium',
-                    child: Text('Premium боломжууд'),
-                  ),
-                ],
+                tooltip: 'Premium нэмэх',
+                onPressed: () => _showTierSheet(context),
+                icon: const Icon(Icons.workspace_premium_outlined),
               ),
             ],
             bottom: TabBar(
@@ -91,7 +64,6 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
               ],
             ),
           ),
-          SliverToBoxAdapter(child: const _UrgencyHero()),
         ],
         body: TabBarView(
           controller: _tabController,
@@ -102,25 +74,19 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const ReportLostHorseScreen()),
         ),
-        backgroundColor: TamgaColors.of(context).error,
-        foregroundColor: TamgaColors.of(context).onError,
+        backgroundColor: theme.colorScheme.error,
+        foregroundColor: theme.colorScheme.onError,
         icon: const Icon(Icons.search_off, size: 20),
-        label: const Text('Алга болсон морь бүртгэх'),
+        label: const Text('Хаяж морь бүртгэх'),
       ),
     );
-  }
-
-  void _openMyReports(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const MyLostReportsScreen()));
   }
 
   void _showTierSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       builder: (context) => Padding(
-        padding: const EdgeInsets.all(TamgaSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,15 +95,12 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
               'Зэрэглэл сонгох',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: TamgaSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             ListTile(
               leading: const Icon(Icons.free_cancellation),
               title: const Text('Үнэгүй'),
               subtitle: const Text('Хаяж морьдыг харах, газрын зураг нээх'),
-              trailing: Icon(
-                Icons.check_circle,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              trailing: const Icon(Icons.check_circle, color: Colors.green),
             ),
             ListTile(
               leading: Icon(
@@ -152,192 +115,8 @@ class _LostHorseFinderScreenState extends ConsumerState<LostHorseFinderScreen>
                 context.push('/payment');
               },
             ),
-            const SizedBox(height: TamgaSpacing.md),
+            const SizedBox(height: AppSpacing.md),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Urgent hero — live active-report count with a call to help.
-class _UrgencyHero extends ConsumerWidget {
-  const _UrgencyHero();
-
-  @override
-  Widget build(BuildContext context, WidgetRef widgetRef) {
-    final colors = TamgaColors.of(context);
-    final reportsAsync = widgetRef.watch(activeLostHorsesStreamProvider);
-    final count = reportsAsync.valueOrNull?.length ?? 0;
-    final isLoading = reportsAsync.isLoading;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        TamgaSpacing.lg,
-        TamgaSpacing.md,
-        TamgaSpacing.lg,
-        TamgaSpacing.sm,
-      ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colors.error.withValues(alpha: 0.14),
-              Theme.of(
-                context,
-              ).colorScheme.errorContainer.withValues(alpha: 0.35),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadius),
-          border: Border.all(color: colors.error.withValues(alpha: 0.28)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(TamgaSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: colors.error.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.radar_outlined, color: colors.error),
-                  ),
-                  const SizedBox(width: TamgaSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Идэвхтэй зар',
-                          style: TamgaTypography.caption1(
-                            color: colors.onSurfaceVariant,
-                            weight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        AnimatedSwitcher(
-                          duration: TamgaMotion.durationNormal,
-                          child: isLoading
-                              ? const SizedBox(
-                                  width: 120,
-                                  height: 24,
-                                  child: LinearProgressIndicator(minHeight: 4),
-                                )
-                              : Text(
-                                  '$count зар',
-                                  key: ValueKey(count),
-                                  style: TamgaTypography.headline(
-                                    color: colors.error,
-                                    weight: FontWeight.w800,
-                                  ),
-                                ),
-                        ),
-                        const SizedBox(height: TamgaSpacing.xs),
-                        Text(
-                          'Ойр орчмын хаяж малаа шалгаж, харсан зүйлээ мэдээлээрэй.',
-                          style: TamgaTypography.footnote(
-                            color: colors.onSurface,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: TamgaSpacing.md),
-              Wrap(
-                spacing: TamgaSpacing.sm,
-                runSpacing: TamgaSpacing.sm,
-                children: [
-                  _HeroAction(
-                    icon: Icons.inbox_outlined,
-                    label: 'Миний зарууд',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const MyLostReportsScreen(),
-                      ),
-                    ),
-                  ),
-                  _HeroAction(
-                    icon: Icons.notifications_active_outlined,
-                    label: 'Мэдэгдэл тохируулах',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const LostHorseAlertPreferencesScreen(),
-                      ),
-                    ),
-                  ),
-                  _HeroAction(
-                    icon: Icons.support_agent_outlined,
-                    label: '109 дуудах',
-                    onTap: () => _call109(context),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _call109(BuildContext context) async {
-    final uri = Uri.parse('tel:109');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else if (context.mounted) {
-      TamgaToast.showError(context, 'Утас нээхэд алдаа гарлаа');
-    }
-  }
-}
-
-class _HeroAction extends StatelessWidget {
-  const _HeroAction({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
-    return Material(
-      color: colors.surfaceContainerLowest.withValues(alpha: 0.8),
-      shape: StadiumBorder(side: BorderSide(color: colors.outlineVariant)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: TamgaSpacing.md,
-            vertical: TamgaSpacing.sm,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: colors.primary),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TamgaTypography.caption1(
-                  color: colors.onSurface,
-                  weight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

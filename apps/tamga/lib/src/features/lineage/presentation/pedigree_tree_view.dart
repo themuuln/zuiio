@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_spacing.dart';
-import '../../../core/widgets/widgets.dart';
 import '../application/pedigree_layout.dart';
 import 'pedigree_tree_content.dart';
 
@@ -44,12 +43,7 @@ class _PedigreeTreeViewState extends State<PedigreeTreeView> {
   @override
   Widget build(BuildContext context) {
     if (widget.layout.nodes.isEmpty) {
-      return const EmptyState(
-        compact: true,
-        icon: Icons.account_tree_outlined,
-        title: 'Угшил байхгүй',
-        description: 'Энэ модонд харуулах зангилаа байхгүй байна.',
-      );
+      return const SizedBox.shrink();
     }
 
     return LayoutBuilder(

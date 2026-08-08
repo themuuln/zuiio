@@ -14,8 +14,7 @@ class ConnectionMonitor {
   ConnectionMonitor._();
   static final ConnectionMonitor instance = ConnectionMonitor._();
 
-  StreamController<ConnectionStatus> _controller =
-      StreamController<ConnectionStatus>.broadcast();
+  final _controller = StreamController<ConnectionStatus>.broadcast();
 
   /// Сүлжээний төлөвийн stream.
   Stream<ConnectionStatus> get status => _controller.stream;
@@ -29,10 +28,6 @@ class ConnectionMonitor {
 
   /// Мониторыг эхлүүлэх — эхний утга + өөрчлөлтүүдийг stream-д нэмнэ.
   Future<void> start() async {
-    // stop()-ийн дараа дахин эхлүүлэх боломжтой байлгах (controller closed → re-create).
-    if (_controller.isClosed) {
-      _controller = StreamController<ConnectionStatus>.broadcast();
-    }
     final connectivity = Connectivity();
 
     _subscription = connectivity.onConnectivityChanged.listen((results) {
@@ -49,10 +44,7 @@ class ConnectionMonitor {
   /// Мониторыг зогсоох.
   void stop() {
     _subscription?.cancel();
-    _subscription = null;
-    if (!_controller.isClosed) {
-      _controller.close();
-    }
+    _controller.close();
   }
 
   ConnectionStatus _resolveStatus(List<ConnectivityResult> results) {

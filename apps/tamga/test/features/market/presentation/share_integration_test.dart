@@ -35,9 +35,9 @@ void main() {
       const listingId = 'listing-789';
 
       final url = 'https://tamga.mn/market/$listingId';
-      final text = 'Tamga дээрх энэ морийг үзээрэй: $url';
+      final text = 'Check out this horse on Tamga: $url';
 
-      expect(text, contains('Tamga дээрх энэ морийг үзээрэй:'));
+      expect(text, contains('Check out this horse on Tamga:'));
       expect(text, contains('https://tamga.mn/market/listing-789'));
     });
 
@@ -45,9 +45,9 @@ void main() {
       const horseId = 'horse-012';
 
       final url = 'https://tamga.mn/horse/$horseId';
-      final text = 'Tamga дээрх энэ морийг үзээрэй: $url';
+      final text = 'Check out this horse on Tamga: $url';
 
-      expect(text, contains('Tamga дээрх энэ морийг үзээрэй:'));
+      expect(text, contains('Check out this horse on Tamga:'));
       expect(text, contains('https://tamga.mn/horse/horse-012'));
     });
 
@@ -92,9 +92,9 @@ void main() {
 
       // Verify Share.share() is called instead of Clipboard
       expect(
-        source.contains('SharePlus.instance.share(ShareParams('),
+        source.contains('Share.share('),
         isTrue,
-        reason: 'ListingDetailScreen should call SharePlus.instance.share()',
+        reason: 'ListingDetailScreen should call Share.share()',
       );
 
       // Verify URL format
@@ -106,9 +106,9 @@ void main() {
 
       // Verify share text (uses $url variable in string interpolation)
       expect(
-        source.contains("'Tamga дээрх энэ морийг үзээрэй: \$url'"),
+        source.contains("'Check out this horse on Tamga: \$url'"),
         isTrue,
-        reason: 'Share text should use "Tamga дээрх энэ морийг үзээрэй: \$url"',
+        reason: 'Share text should use "Check out this horse on Tamga: \$url"',
       );
 
       // Verify share subject
@@ -163,10 +163,9 @@ void main() {
 
         // Verify Share.share() is called
         expect(
-          source.contains('SharePlus.instance.share('),
+          source.contains('Share.share('),
           isTrue,
-          reason:
-              'PublicHorseProfileScreen should call SharePlus.instance.share()',
+          reason: 'PublicHorseProfileScreen should call Share.share()',
         );
 
         // Verify URL format for horse
@@ -178,10 +177,10 @@ void main() {
 
         // Verify share text (uses $url variable in string interpolation)
         expect(
-          source.contains("'Tamga дээрх энэ морийг үзээрэй: \$url'"),
+          source.contains("'Check out this horse on Tamga: \$url'"),
           isTrue,
           reason:
-              'Share text should use "Tamga дээрх энэ морийг үзээрэй: \$url"',
+              'Share text should use "Check out this horse on Tamga: \$url"',
         );
 
         // Verify share subject

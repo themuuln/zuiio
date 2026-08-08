@@ -14,92 +14,68 @@ extension GetIsarBreedingRecordCollection on Isar {
       this.collection();
 }
 
-final IsarBreedingRecordSchema = CollectionSchema(
+const IsarBreedingRecordSchema = CollectionSchema(
   name: r'IsarBreedingRecord',
-  id: int.parse('458482297470456438'),
+  id: 458482297470456438,
   properties: {
     r'actualFoalingDate': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'actualFoalingDate',
       type: IsarType.dateTime,
     ),
     r'breedingDate': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'breedingDate',
       type: IsarType.dateTime,
     ),
     r'createdAt': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'damId': PropertySchema(
-      id: int.parse('3'),
-      name: r'damId',
-      type: IsarType.string,
-    ),
-    r'damName': PropertySchema(
-      id: int.parse('4'),
-      name: r'damName',
-      type: IsarType.string,
-    ),
+    r'damId': PropertySchema(id: 3, name: r'damId', type: IsarType.string),
+    r'damName': PropertySchema(id: 4, name: r'damName', type: IsarType.string),
     r'domainId': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'expectedFoalingDate': PropertySchema(
-      id: int.parse('6'),
+      id: 6,
       name: r'expectedFoalingDate',
       type: IsarType.dateTime,
     ),
     r'foalColor': PropertySchema(
-      id: int.parse('7'),
+      id: 7,
       name: r'foalColor',
       type: IsarType.string,
     ),
     r'foalGender': PropertySchema(
-      id: int.parse('8'),
+      id: 8,
       name: r'foalGender',
       type: IsarType.string,
     ),
-    r'foalId': PropertySchema(
-      id: int.parse('9'),
-      name: r'foalId',
-      type: IsarType.string,
-    ),
+    r'foalId': PropertySchema(id: 9, name: r'foalId', type: IsarType.string),
     r'foalName': PropertySchema(
-      id: int.parse('10'),
+      id: 10,
       name: r'foalName',
       type: IsarType.string,
     ),
     r'herdLabel': PropertySchema(
-      id: int.parse('11'),
+      id: 11,
       name: r'herdLabel',
       type: IsarType.string,
     ),
-    r'notes': PropertySchema(
-      id: int.parse('12'),
-      name: r'notes',
-      type: IsarType.string,
-    ),
-    r'sireId': PropertySchema(
-      id: int.parse('13'),
-      name: r'sireId',
-      type: IsarType.string,
-    ),
+    r'notes': PropertySchema(id: 12, name: r'notes', type: IsarType.string),
+    r'sireId': PropertySchema(id: 13, name: r'sireId', type: IsarType.string),
     r'sireName': PropertySchema(
-      id: int.parse('14'),
+      id: 14,
       name: r'sireName',
       type: IsarType.string,
     ),
-    r'status': PropertySchema(
-      id: int.parse('15'),
-      name: r'status',
-      type: IsarType.string,
-    ),
+    r'status': PropertySchema(id: 15, name: r'status', type: IsarType.string),
     r'updatedAt': PropertySchema(
-      id: int.parse('16'),
+      id: 16,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -111,7 +87,7 @@ final IsarBreedingRecordSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -124,7 +100,7 @@ final IsarBreedingRecordSchema = CollectionSchema(
       ],
     ),
     r'sireId': IndexSchema(
-      id: int.parse('-1156203555194561420'),
+      id: -1156203555194561420,
       name: r'sireId',
       unique: false,
       replace: false,
@@ -137,7 +113,7 @@ final IsarBreedingRecordSchema = CollectionSchema(
       ],
     ),
     r'damId': IndexSchema(
-      id: int.parse('6504086851974029461'),
+      id: 6504086851974029461,
       name: r'damId',
       unique: false,
       replace: false,
@@ -150,7 +126,7 @@ final IsarBreedingRecordSchema = CollectionSchema(
       ],
     ),
     r'status': IndexSchema(
-      id: int.parse('-107785170620420283'),
+      id: -107785170620420283,
       name: r'status',
       unique: false,
       replace: false,

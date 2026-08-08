@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_spacing.dart';
-import '../../../core/widgets/widgets.dart';
 import '../application/pedigree_layout.dart';
 import '../domain/lineage_tree_edge.dart';
 
@@ -47,12 +46,7 @@ class PedigreeTreeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (layout.nodes.isEmpty) {
-      return const EmptyState(
-        compact: true,
-        icon: Icons.account_tree_outlined,
-        title: 'Угшил байхгүй',
-        description: 'Энэ модонд харуулах зангилаа байхгүй байна.',
-      );
+      return const SizedBox.shrink();
     }
 
     final colorScheme = Theme.of(context).colorScheme;
@@ -208,10 +202,7 @@ class PedigreeNodeCard extends StatelessWidget {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -250,36 +241,30 @@ class PedigreeNodeCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 SizedBox(
                   width: double.infinity,
-                  child: FittedBox(
-                    alignment: Alignment.centerLeft,
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
+                  child: Row(
+                    children: [
+                      NodeBadge(
+                        label: node.isOwnedByHousehold ? 'Өрхийн' : 'Гаднах',
+                        color: node.isOwnedByHousehold
+                            ? colorScheme.tertiaryContainer
+                            : colorScheme.secondaryContainer,
+                      ),
+                      if (node.tamgaNo != null) ...[
+                        const SizedBox(width: AppSpacing.xs),
                         NodeBadge(
-                          label: node.isOwnedByHousehold ? 'Өрхийн' : 'Гаднах',
-                          color: node.isOwnedByHousehold
-                              ? colorScheme.tertiaryContainer
-                              : colorScheme.secondaryContainer,
+                          label: node.tamgaNo!,
+                          color: colorScheme.primaryContainer,
+                          textColor: colorScheme.onPrimaryContainer,
                         ),
-                        if (node.tamgaNo != null) ...[
-                          const SizedBox(width: AppSpacing.xs),
-                          NodeBadge(
-                            label: node.tamgaNo!,
-                            color: colorScheme.primaryContainer,
-                            textColor: colorScheme.onPrimaryContainer,
-                          ),
-                        ],
-                        if (node.hiddenBranchCount > 0) ...[
-                          const SizedBox(width: AppSpacing.xs),
-                          NodeBadge(
-                            label: '+${node.hiddenBranchCount}',
-                            color: colorScheme.primary,
-                            textColor: colorScheme.onPrimary,
-                          ),
-                        ],
                       ],
-                    ),
+                      const Spacer(),
+                      if (node.hiddenBranchCount > 0)
+                        NodeBadge(
+                          label: '+${node.hiddenBranchCount}',
+                          color: colorScheme.primary,
+                          textColor: colorScheme.onPrimary,
+                        ),
+                    ],
                   ),
                 ),
               ],

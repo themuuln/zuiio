@@ -1,12 +1,14 @@
-import 'package:uuid/uuid.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
-import '../../../core/error/error_helpers.dart';
 import '../../../app/supabase_bootstrap.dart';
+import '../../../core/error/error_helpers.dart';
+import '../../../core/storage/cloud/media_storage_providers.dart';
+import '../../../core/storage/cloud/media_storage_service.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/map_providers.dart';
@@ -22,32 +24,6 @@ class SightingFormScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<SightingFormScreen> createState() => _SightingFormScreenState();
-}
-
-/// Section title with leading icon for the sighting form.
-class _SightingSectionTitle extends StatelessWidget {
-  const _SightingSectionTitle(this.title, this.icon);
-
-  final String title;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: colors.primary),
-        const SizedBox(width: 6),
-        Text(
-          title,
-          style: TamgaTypography.footnote(
-            weight: FontWeight.w600,
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
@@ -122,11 +98,32 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      // Step 1: Upload photo if present.
+      String? photoUrl;
+      if (_photo != null) {
+        final storage = ref.read(mediaStorageProvider);
+        final path =
+            'lost-horse-sightings/${widget.reportId}'
+            '/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+        final uploadResult = await storage.upload(
+          file: _photo!,
+          path: path,
+          category: MediaCategory.photo,
+        );
+
+        uploadResult.when(
+          onSuccess: (upload) => photoUrl = upload.url,
+          onFailure: (error) {
+            TamgaToast.showError(context, friendlyErrorMessage(error));
+          },
+        );
+      }
+
+      // Step 2: Build the sighting report.
       final now = DateTime.now();
-      final sightingId = const Uuid().v4();
       final sighting = SightingReport(
-        id: sightingId,
-        clientId: sightingId,
+        id: '',
         reportId: widget.reportId,
         reporterId: userId,
         lat: pos.latitude,
@@ -137,12 +134,14 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
         description: _descriptionController.text.trim().isNotEmpty
             ? _descriptionController.text.trim()
             : null,
-        photoUrl: _photo?.path,
+        photoUrl: photoUrl,
         isAnonymous: _isAnonymous,
         createdAt: now,
       );
 
+      // Step 3: Submit to backend.
       await ref.read(reportSightingProvider(sighting).future);
+
       if (!mounted) return;
       TamgaToast.showSuccess(context, 'Мэдээлэл амжилттай илгээгдлээ');
       Navigator.of(context).pop(true);
@@ -160,6 +159,7 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
   Widget build(BuildContext context) {
     final colors = TamgaColors.of(context);
     final currentPos = ref.watch(currentPositionProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -173,21 +173,36 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
           padding: const EdgeInsets.all(TamgaSpacing.lg),
           children: [
             // ── Photo section ────────────────────────────────────
-            _SightingSectionTitle('Зураг (заавал биш)', Icons.photo_outlined),
+            Text(
+              'Зураг (заавал биш)',
+              style: TamgaTypography.footnote(
+                weight: FontWeight.w600,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: TamgaSpacing.sm),
             _buildPhotoSection(colors),
             const SizedBox(height: TamgaSpacing.xl),
 
             // ── GPS location ─────────────────────────────────────
-            _SightingSectionTitle('Байршил', Icons.my_location_outlined),
+            Text(
+              l10n.mapSightingLocationLabel,
+              style: TamgaTypography.footnote(
+                weight: FontWeight.w600,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: TamgaSpacing.sm),
             _buildLocationPreview(currentPos, colors),
             const SizedBox(height: TamgaSpacing.xl),
 
             // ── Location description ─────────────────────────────
-            _SightingSectionTitle(
+            Text(
               'Газрын нэр (заавал биш)',
-              Icons.place_outlined,
+              style: TamgaTypography.footnote(
+                weight: FontWeight.w600,
+                color: colors.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: TamgaSpacing.sm),
             TextFormField(
@@ -208,7 +223,13 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
             const SizedBox(height: TamgaSpacing.xl),
 
             // ── Description / Notes ──────────────────────────────
-            _SightingSectionTitle('Тайлбар (заавал биш)', Icons.notes_outlined),
+            Text(
+              'Тайлбар (заавал биш)',
+              style: TamgaTypography.footnote(
+                weight: FontWeight.w600,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: TamgaSpacing.sm),
             TextFormField(
               controller: _descriptionController,
@@ -233,7 +254,7 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
               contentPadding: EdgeInsets.zero,
               title: Text('Нууцлан мэдээлэх', style: TamgaTypography.body()),
               subtitle: Text(
-                'Таны нэр нууцлаг хэрэглэгч хэлбэрээр харагдана',
+                'Таны нэр нууцлаг хэрэглэгч болон харагдана',
                 style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
               ),
               value: _isAnonymous,
@@ -297,27 +318,18 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
           Positioned(
             top: TamgaSpacing.sm,
             right: TamgaSpacing.sm,
-            child: Tooltip(
-              message: 'Устгах',
-              child: Semantics(
-                label: 'Устгах',
-                button: true,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _removePhoto,
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: colors.destructive,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.close,
-                      size: 24,
-                      color: colors.destructiveForeground,
-                    ),
-                  ),
+            child: GestureDetector(
+              onTap: _removePhoto,
+              child: Container(
+                padding: const EdgeInsets.all(TamgaSpacing.xs),
+                decoration: BoxDecoration(
+                  color: colors.destructive,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.close,
+                  size: 18,
+                  color: colors.destructiveForeground,
                 ),
               ),
             ),
@@ -330,7 +342,7 @@ class _SightingFormScreenState extends ConsumerState<SightingFormScreen> {
       children: [
         Expanded(
           child: _buildPhotoActionButton(
-            icon: Icons.photo_camera_outlined,
+            icon: Icons.camera_alt_outlined,
             label: 'Камера',
             onTap: _pickFromCamera,
             colors: colors,

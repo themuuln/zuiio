@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/error/app_exception.dart';
 import 'package:tamga/src/core/error/result.dart';
 import 'package:tamga/src/features/auth/application/auth_providers.dart';
@@ -17,6 +16,7 @@ import 'package:tamga/src/features/teams/domain/team.dart';
 import 'package:tamga/src/features/teams/domain/team_invitation.dart';
 import 'package:tamga/src/features/teams/domain/team_member.dart';
 import 'package:tamga/src/features/teams/presentation/team_invite_screen.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Fake Auth State Notifier ────────────────────────────────────────
 
@@ -226,7 +226,10 @@ Widget createTeamInviteScreen({
             isStableTier ? SubscriptionTier.stable : SubscriptionTier.free,
       ),
     ],
-    child: MaterialApp(theme: AppTheme.light(), home: const TeamInviteScreen()),
+    child: MaterialApp(
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+      home: const TeamInviteScreen(),
+    ),
   );
 }
 

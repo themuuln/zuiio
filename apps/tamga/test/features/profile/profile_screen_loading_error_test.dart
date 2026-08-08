@@ -8,10 +8,13 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 import 'package:tamga/src/core/error/app_exception.dart';
 import 'package:tamga/src/core/error/result.dart';
 import 'package:tamga/src/core/widgets/loading_state.dart';
@@ -24,21 +27,56 @@ import 'package:tamga/src/features/events/application/events_providers.dart';
 import 'package:tamga/src/shared/domain/event.dart';
 import 'package:tamga/src/features/profile/presentation/profile_screen.dart';
 
+class _Placeholder extends StatelessWidget {
+  const _Placeholder(this.label);
+  final String label;
+  @override
+  Widget build(BuildContext context) => Scaffold(body: Text(label));
+}
+
+/// A controlled AuthStateNotifier that stays loading forever (never yields).
+class _LoadingAuthNotifier extends AuthStateNotifier {
+  @override
+  Stream<AuthState> build() async* {
+    // Never yield — stays in loading state with null value
+    await Completer<void>().future;
+  }
+}
+
+/// A controlled AuthStateNotifier that throws on build (error state).
+class _ErrorAuthNotifier extends AuthStateNotifier {
+  @override
+  Stream<AuthState> build() async* {
+    throw AppException(message: 'Auth error', code: 'AUTH_ERR');
+  }
+}
+
+GoRouter _testRouter() {
+  return GoRouter(
+    initialLocation: '/test',
+    routes: [
+      GoRoute(path: '/test', builder: (_, _) => const ProfileScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const _Placeholder('Login')),
+      GoRoute(
+        path: '/lineage',
+        builder: (_, _) => const _Placeholder('Lineage'),
+      ),
+    ],
+  );
+}
+
 // ── Helper: set a large viewport to prevent RenderFlex overflow ────
 // Error cards in the header take extra vertical space, so the default
 // 800×600 test viewport can cause HorsesTab empty state to overflow.
-
 extension on WidgetTester {
   Future<void> setLargeViewport() async {
     addTearDown(() {
       view.physicalSize = const Size(800, 600);
       view.devicePixelRatio = 1.0;
     });
-    await binding.setSurfaceSize(const Size(800, 1200));
+    await binding.setSurfaceSize(const Size(800, 1400));
   }
 }
-
-// ── Mock AuthRepository: never completes (loading state) ────────────
 
 class _LoadingAuthRepository implements AuthRepository {
   @override
@@ -193,15 +231,16 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
-              authRepositoryProvider.overrideWithValue(
-                _LoadingAuthRepository(),
-              ),
+              authStateProvider.overrideWith(() => _LoadingAuthNotifier()),
               horsesProvider.overrideWith((ref) => horsesCompleter.future),
               eventsProvider.overrideWith((ref) => eventsCompleter.future),
             ],
-            child: MaterialApp(
-              theme: AppTheme.light(),
-              home: const ProfileScreen(),
+            child: MaterialApp.router(
+              theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+              locale: const Locale('mn'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: _testRouter(),
             ),
           ),
         );
@@ -281,7 +320,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
-              authRepositoryProvider.overrideWithValue(_ErrorAuthRepository()),
+              authStateProvider.overrideWith(() => _ErrorAuthNotifier()),
               horsesProvider.overrideWith(
                 (ref) => Future.error(
                   AppException(message: 'Horses error', code: 'H_ERR'),
@@ -293,9 +332,12 @@ void main() {
                 ),
               ),
             ],
-            child: MaterialApp(
-              theme: AppTheme.light(),
-              home: const ProfileScreen(),
+            child: MaterialApp.router(
+              theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+              locale: const Locale('mn'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: _testRouter(),
             ),
           ),
         );
@@ -353,13 +395,16 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
-              authRepositoryProvider.overrideWithValue(errorRepo),
+              authStateProvider.overrideWith(() => _ErrorAuthNotifier()),
               horsesProvider.overrideWith((ref) => <HorseRecord>[]),
               eventsProvider.overrideWith((ref) => <Event>[]),
             ],
-            child: MaterialApp(
-              theme: AppTheme.light(),
-              home: const ProfileScreen(),
+            child: MaterialApp.router(
+              theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+              locale: const Locale('mn'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: _testRouter(),
             ),
           ),
         );
@@ -398,13 +443,16 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
-              authRepositoryProvider.overrideWithValue(_ErrorAuthRepository()),
+              authStateProvider.overrideWith(() => _ErrorAuthNotifier()),
               horsesProvider.overrideWith((ref) => <HorseRecord>[]),
               eventsProvider.overrideWith((ref) => <Event>[]),
             ],
-            child: MaterialApp(
-              theme: AppTheme.light(),
-              home: const ProfileScreen(),
+            child: MaterialApp.router(
+              theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+              locale: const Locale('mn'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: _testRouter(),
             ),
           ),
         );

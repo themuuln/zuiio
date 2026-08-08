@@ -6,12 +6,13 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
 import '../../../app/supabase_bootstrap.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/storage/cloud/media_storage_service.dart';
 import '../../../core/storage/cloud/supabase_media_storage.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../shared/domain/event.dart';
 import 'widgets/event_location_picker.dart';
@@ -219,14 +220,14 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   Widget build(BuildContext ctx) {
     final theme = Theme.of(ctx);
     final totalPhotos = _localPhotos.length + _uploadedUrls.length;
+    final l10n = AppLocalizations.of(ctx)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Арга хэмжээ засах' : 'Арга хэмжээ нэмэх'),
+        title: Text(_isEditing ? 'Event засах' : 'Event нэмэх'),
         leading: IconButton(
-          tooltip: 'Буцах',
           onPressed: () => Navigator.of(ctx).pop(),
-          icon: const Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(PhosphorIconsRegular.caretLeft),
         ),
       ),
       body: Form(
@@ -236,10 +237,10 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
           children: [
             // ── Header ──
             Text(
-              _isEditing
-                  ? 'Арга хэмжээний мэдээлэл засах'
-                  : 'Шинэ арга хэмжээний мэдээлэл',
-              style: TamgaTypography.title3(weight: FontWeight.w600),
+              _isEditing ? 'Event мэдээлэл засах' : 'Шинэ event-ийн мэдээлэл',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
@@ -253,8 +254,8 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             // ── Event type (required) ──
             DropdownButtonFormField<EventType>(
               initialValue: _selectedType,
-              decoration: const InputDecoration(
-                labelText: 'Төрөл *',
+              decoration: InputDecoration(
+                labelText: l10n.eventFormTypeLabel,
                 hintText: 'Төрөл сонгоно уу',
               ),
               items: kEventTypes
@@ -274,7 +275,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               },
               validator: (val) {
                 if (val == null) {
-                  return 'Төрөл заавал сонгоно уу';
+                  return 'Event төрөл заавал сонгоно уу';
                 }
                 return null;
               },
@@ -302,10 +303,10 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             InkWell(
               onTap: _pickDate,
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Огноо *',
+                decoration: InputDecoration(
+                  labelText: l10n.eventFormDateLabel,
                   hintText: 'Огноо сонгоно уу',
-                  suffixIcon: Icon(Icons.calendar_today_outlined),
+                  suffixIcon: Icon(PhosphorIconsRegular.calendarBlank),
                 ),
                 child: Text(_formatDate(_selectedDate)),
               ),
@@ -316,8 +317,8 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             TextFormField(
               controller: _locationController,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Байршил',
+              decoration: InputDecoration(
+                labelText: l10n.eventFormLocationLabel,
                 hintText: 'Жишээ: Баянхонгор аймаг',
               ),
             ),
@@ -348,10 +349,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             const SizedBox(height: AppSpacing.lg),
 
             // ─── Organizer fields ──
-            Text(
-              'Зохион байгуулагч',
-              style: TamgaTypography.title3(weight: FontWeight.w600),
-            ),
+            Text('Зохион байгуулагч', style: theme.textTheme.titleMedium),
             const SizedBox(height: AppSpacing.sm),
 
             TextFormField(
@@ -440,8 +438,8 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               textCapitalization: TextCapitalization.sentences,
               minLines: 3,
               maxLines: 5,
-              decoration: const InputDecoration(
-                labelText: 'Тэмдэглэл',
+              decoration: InputDecoration(
+                labelText: l10n.eventDetailNotes,
                 hintText: 'Нэмэлт мэдээлэл...',
                 alignLabelWithHint: true,
               ),
@@ -449,10 +447,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             const SizedBox(height: AppSpacing.lg),
 
             // ── Photos ──
-            Text(
-              'Зургууд',
-              style: TamgaTypography.title3(weight: FontWeight.w600),
-            ),
+            Text(l10n.eventFormPhotoLabel, style: theme.textTheme.titleMedium),
             const SizedBox(height: AppSpacing.sm),
 
             // Photo grid
@@ -500,7 +495,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                                   errorWidget: (_, _, _) => Container(
                                     color: theme.colorScheme.errorContainer,
                                     child: Icon(
-                                      Icons.error_outline,
+                                      PhosphorIconsRegular.warningCircle,
                                       color: theme.colorScheme.error,
                                     ),
                                   ),
@@ -509,27 +504,18 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                         Positioned(
                           top: 4,
                           right: 4,
-                          child: Semantics(
-                            button: true,
-                            label: 'Зураг устгах',
-                            child: Tooltip(
-                              message: 'Зураг устгах',
-                              child: GestureDetector(
-                                onTap: () => _removePhoto(index),
-                                child: Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.error,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  padding: const EdgeInsets.all(AppSpacing.xs),
-                                  child: Icon(
-                                    Icons.close,
-                                    size: 16,
-                                    color: theme.colorScheme.onError,
-                                  ),
-                                ),
+                          child: GestureDetector(
+                            onTap: () => _removePhoto(index),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.error,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(AppSpacing.xs),
+                              child: Icon(
+                                PhosphorIconsRegular.xCircle,
+                                size: 14,
+                                color: theme.colorScheme.onError,
                               ),
                             ),
                           ),
@@ -565,22 +551,16 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _pickImage(ImageSource.gallery),
-                      icon: const Icon(Icons.photo_library_outlined),
-                      label: const Text('Галерээ'),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(44),
-                      ),
+                      icon: const Icon(PhosphorIconsRegular.images),
+                      label: Text(l10n.horseDetailPhotoGallery),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _pickImage(ImageSource.camera),
-                      icon: const Icon(Icons.camera_alt_outlined),
-                      label: const Text('Камер'),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(44),
-                      ),
+                      icon: const Icon(PhosphorIconsRegular.camera),
+                      label: Text(l10n.horseDetailPhotoCamera),
                     ),
                   ),
                 ],
@@ -604,26 +584,20 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: _isSaving ? null : () => Navigator.of(ctx).pop(),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
-                    ),
-                    child: const Text('Цуцлах'),
+                    child: Text(l10n.generalCancel),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: FilledButton(
                     onPressed: _isSaving || _isUploading ? null : _save,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
-                    ),
                     child: _isSaving
                         ? const SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text(_isEditing ? 'Хадгалах' : 'Нэмэх'),
+                        : Text(_isEditing ? l10n.generalSave : 'Нэмэх'),
                   ),
                 ),
               ],

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/sync/sync_conflict.dart';
-import '../../../core/theme/design_tokens.dart';
-import '../../../core/widgets/widgets.dart';
 import '../../profile/application/cloud_sync_coordinator.dart';
 import '../application/sync_providers.dart';
 
@@ -31,30 +29,27 @@ class ConflictResolutionScreen extends ConsumerWidget {
         final conflicts = coordinator.pendingConflicts;
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Зөрчилдөөн шийдвэрлэх'),
+            title: Text(AppLocalizations.of(context)!.conflictTitle),
             actions: [
               if (conflicts.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(right: TamgaSpacing.md),
+                  padding: const EdgeInsets.only(right: 12),
                   child: Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: TamgaSpacing.sm,
+                        horizontal: 8,
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.error.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(
-                          TamgaSpacing.cornerRadiusPill,
-                        ),
+                        color: Colors.red.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '${conflicts.length}',
-                        style: TamgaTypography.caption1(
-                          weight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.error,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -63,11 +58,30 @@ class ConflictResolutionScreen extends ConsumerWidget {
             ],
           ),
           body: conflicts.isEmpty
-              ? EmptyState(
-                  icon: Icons.check_circle_outline,
-                  title: 'Зөрчилдөөн байхгүй',
-                  description: 'Бүх өгөгдөл синк хийгдсэн',
-                  iconColor: AppColors.success,
+              ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline,
+                        size: 64,
+                        color: Colors.green,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'Зөрчилдөөн байхгүй',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Бүх өгөгдөл синк хийгдсэн',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(AppSpacing.lg),
@@ -82,11 +96,10 @@ class ConflictResolutionScreen extends ConsumerWidget {
         );
       },
       loading: () =>
-          const Scaffold(body: Center(child: LoadingIndicator(size: 28))),
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, _) => Scaffold(
-        body: TamgaErrorWidget(
-          message: 'Алдаа: $err',
-          onRetry: () => ref.invalidate(cloudSyncCoordinatorProvider),
+        body: Center(
+          child: Text('${AppLocalizations.of(context)!.generalError}: $err'),
         ),
       ),
     );
@@ -115,7 +128,7 @@ class _ConflictCardState extends State<_ConflictCard> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
+    final theme = Theme.of(context);
     final conflict = widget.conflict;
 
     return Card(
@@ -132,14 +145,14 @@ class _ConflictCardState extends State<_ConflictCard> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: colors.error.withValues(alpha: 0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(
                       AppSpacing.cornerRadiusSmall,
                     ),
                   ),
                   child: Icon(
                     Icons.warning_amber_rounded,
-                    color: colors.error,
+                    color: Colors.red.shade400,
                     size: 22,
                   ),
                 ),
@@ -150,17 +163,17 @@ class _ConflictCardState extends State<_ConflictCard> {
                     children: [
                       Text(
                         _entityTypeLabel(conflict.entityType),
-                        style: TamgaTypography.subheadline(
-                          weight: FontWeight.w600,
-                          color: colors.onSurface,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'ID: ${conflict.entityId}',
-                        style: TamgaTypography.subheadline(
-                          color: colors.onSurfaceVariant,
-                        ).copyWith(fontFamily: 'monospace'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontFamily: 'monospace',
+                        ),
                       ),
                     ],
                   ),
@@ -201,7 +214,9 @@ class _ConflictCardState extends State<_ConflictCard> {
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 child: Text(
                   'Талбарууд ижил байна',
-                  style: TamgaTypography.body(color: colors.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               )
             else ...[
@@ -215,23 +230,25 @@ class _ConflictCardState extends State<_ConflictCard> {
                 child: Row(
                   children: [
                     const SizedBox(width: 80),
-                    Expanded(
+                    const Expanded(
                       child: Text(
                         'Local',
                         textAlign: TextAlign.center,
-                        style: TamgaTypography.caption1(
-                          weight: FontWeight.w600,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
                           color: Colors.blue,
                         ),
                       ),
                     ),
-                    const SizedBox(width: TamgaSpacing.sm),
-                    Expanded(
+                    const SizedBox(width: 8),
+                    const Expanded(
                       child: Text(
                         'Remote',
                         textAlign: TextAlign.center,
-                        style: TamgaTypography.caption1(
-                          weight: FontWeight.w600,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
                           color: Colors.orange,
                         ),
                       ),
@@ -259,8 +276,9 @@ class _ConflictCardState extends State<_ConflictCard> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _keepLocal(context),
-                    icon: const Icon(Icons.phone_android_outlined, size: 18),
-                    label: const Text('Keep Local'),
+                    label: Text(
+                      AppLocalizations.of(context)!.conflictKeepLocal,
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.blue,
                       side: const BorderSide(color: Colors.blue),
@@ -271,8 +289,9 @@ class _ConflictCardState extends State<_ConflictCard> {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => _keepRemote(context),
-                    icon: const Icon(Icons.cloud_outlined, size: 18),
-                    label: const Text('Keep Remote'),
+                    label: Text(
+                      AppLocalizations.of(context)!.conflictKeepRemote,
+                    ),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.orange,
                     ),
@@ -292,10 +311,11 @@ class _ConflictCardState extends State<_ConflictCard> {
       resolvedData: widget.conflict.localData,
     );
     if (!context.mounted) return;
-    TamgaToast.show(
-      context,
-      'Local хувилбар хадгалагдлаа',
-      icon: Icons.phone_android_outlined,
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Local хувилбар хадгалагдлаа'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -305,10 +325,11 @@ class _ConflictCardState extends State<_ConflictCard> {
       resolvedData: widget.conflict.remoteData,
     );
     if (!context.mounted) return;
-    TamgaToast.show(
-      context,
-      'Remote хувилбар хадгалагдлаа',
-      icon: Icons.cloud_outlined,
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Remote хувилбар хадгалагдлаа'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -342,31 +363,29 @@ class _TimestampChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: TamgaSpacing.sm,
-          vertical: TamgaSpacing.xs,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: colors.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadiusSmall),
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               '$label: ',
-              style: TamgaTypography.caption1(
-                weight: FontWeight.w600,
-                color: colors.onSurface,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
             ),
             Text(
               _formatTimestamp(timestamp),
-              style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -400,19 +419,16 @@ class _DiffFieldRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
+    final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: TamgaSpacing.sm,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
             color: isLast
                 ? Colors.transparent
-                : colors.outlineVariant.withValues(alpha: 0.3),
+                : theme.dividerColor.withValues(alpha: 0.3),
           ),
         ),
       ),
@@ -423,49 +439,45 @@ class _DiffFieldRow extends StatelessWidget {
             width: 80,
             child: Text(
               _formatFieldName(fieldName),
-              style: TamgaTypography.subheadline(
-                weight: FontWeight.w500,
-                color: colors.onSurfaceVariant,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: TamgaSpacing.xs),
+          const SizedBox(width: 4),
           // Local value
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: Colors.blue.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(
-                  TamgaSpacing.cornerRadiusSmall,
-                ),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 _formatValue(localValue),
-                style: TamgaTypography.subheadline(
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: Colors.blue.shade700,
-                  weight: FontWeight.w500,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: TamgaSpacing.xs),
+          const SizedBox(width: 4),
           // Remote value
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: Colors.orange.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(
-                  TamgaSpacing.cornerRadiusSmall,
-                ),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 _formatValue(remoteValue),
-                style: TamgaTypography.subheadline(
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: Colors.orange.shade800,
-                  weight: FontWeight.w500,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),

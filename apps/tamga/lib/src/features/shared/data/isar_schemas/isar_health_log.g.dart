@@ -13,58 +13,42 @@ extension GetIsarHealthLogCollection on Isar {
   IsarCollection<IsarHealthLog> get isarHealthLogs => this.collection();
 }
 
-final IsarHealthLogSchema = CollectionSchema(
+const IsarHealthLogSchema = CollectionSchema(
   name: r'IsarHealthLog',
-  id: int.parse('2980641072404148757'),
+  id: 2980641072404148757,
   properties: {
-    r'cost': PropertySchema(
-      id: int.parse('0'),
-      name: r'cost',
-      type: IsarType.double,
-    ),
+    r'cost': PropertySchema(id: 0, name: r'cost', type: IsarType.double),
     r'createdAt': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'date': PropertySchema(
-      id: int.parse('2'),
-      name: r'date',
-      type: IsarType.dateTime,
-    ),
+    r'date': PropertySchema(id: 2, name: r'date', type: IsarType.dateTime),
     r'domainId': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'farrierName': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'farrierName',
       type: IsarType.string,
     ),
-    r'horseId': PropertySchema(
-      id: int.parse('5'),
-      name: r'horseId',
-      type: IsarType.string,
-    ),
+    r'horseId': PropertySchema(id: 5, name: r'horseId', type: IsarType.string),
     r'logType': PropertySchema(
-      id: int.parse('6'),
+      id: 6,
       name: r'logType',
       type: IsarType.byte,
       enumMap: _IsarHealthLoglogTypeEnumValueMap,
     ),
     r'medicament': PropertySchema(
-      id: int.parse('7'),
+      id: 7,
       name: r'medicament',
       type: IsarType.string,
     ),
-    r'notes': PropertySchema(
-      id: int.parse('8'),
-      name: r'notes',
-      type: IsarType.string,
-    ),
+    r'notes': PropertySchema(id: 8, name: r'notes', type: IsarType.string),
     r'updatedAt': PropertySchema(
-      id: int.parse('9'),
+      id: 9,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -76,7 +60,7 @@ final IsarHealthLogSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -89,7 +73,7 @@ final IsarHealthLogSchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: int.parse('-4681125749579367450'),
+      id: -4681125749579367450,
       name: r'horseId',
       unique: false,
       replace: false,
@@ -102,7 +86,7 @@ final IsarHealthLogSchema = CollectionSchema(
       ],
     ),
     r'logType': IndexSchema(
-      id: int.parse('-1575070705662519133'),
+      id: -1575070705662519133,
       name: r'logType',
       unique: false,
       replace: false,

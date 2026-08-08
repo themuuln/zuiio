@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/error/result.dart';
 import 'package:tamga/src/features/services/application/booking_providers.dart';
 import 'package:tamga/src/features/services/data/services_repository.dart';
 import 'package:tamga/src/features/services/presentation/booking_screen.dart';
 import 'package:tamga/src/features/services/domain/service_booking.dart';
 import 'package:tamga/src/features/services/domain/service_provider_type.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 /// Helper to create a ProviderScope wrapping BookingScreen.
 Widget createBookingScreen({
@@ -22,7 +22,7 @@ Widget createBookingScreen({
       }),
     ],
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: BookingScreen(providerType: providerType, providerId: providerId),
     ),
   );

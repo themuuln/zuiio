@@ -105,7 +105,7 @@ CREATE INDEX idx_lost_horses_status ON lost_horses(status);
 CREATE INDEX idx_lost_horses_owner ON lost_horses(owner_id);
 CREATE INDEX idx_co_owners_horse ON co_owners(horse_id);
 CREATE INDEX idx_co_owners_user ON co_owners(user_id);
-CREATE INDEX IF NOT EXISTS idx_certificates_horse_id ON certificates(horse_id);
+CREATE INDEX idx_certificates_horse ON certificates(horse_id);
 CREATE INDEX idx_tournament_profiles_user ON tournament_profiles(user_id);
 CREATE INDEX idx_tournament_profiles_horse ON tournament_profiles(horse_id);
 CREATE INDEX idx_listing_boosts_listing ON listing_boosts(listing_id);

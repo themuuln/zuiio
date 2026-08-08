@@ -1,3 +1,4 @@
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../theme/design_tokens.dart';
 
@@ -22,7 +23,7 @@ class TamgaConfirmDialog extends StatelessWidget {
     required this.title,
     this.message,
     required this.confirmLabel,
-    this.cancelLabel = 'Цуцлах',
+    this.cancelLabel = '',
     this.onConfirm,
     this.onCancel,
     this.isDestructive = false,
@@ -36,13 +37,12 @@ class TamgaConfirmDialog extends StatelessWidget {
   final VoidCallback? onCancel;
   final bool isDestructive;
 
-  /// Convenience method to show the dialog as a modal.
   static Future<bool?> show(
     BuildContext context, {
     required String title,
     String? message,
     required String confirmLabel,
-    String cancelLabel = 'Цуцлах',
+    String cancelLabel = '',
     VoidCallback? onConfirm,
     VoidCallback? onCancel,
     bool isDestructive = false,
@@ -64,6 +64,9 @@ class TamgaConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = TamgaColors.of(context);
+    final effectiveCancel = cancelLabel.isNotEmpty
+        ? cancelLabel
+        : AppLocalizations.of(context)!.confirmDialogCancel;
 
     return Semantics(
       label: title,
@@ -81,7 +84,7 @@ class TamgaConfirmDialog extends StatelessWidget {
               onCancel?.call();
               Navigator.of(context).pop(false);
             },
-            child: Text(cancelLabel),
+            child: Text(effectiveCancel),
           ),
           TextButton(
             onPressed: () {

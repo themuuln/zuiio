@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/widgets/tamga_error_widget.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 /// Wraps the given widget in a MaterialApp with proper Tamga theme.
 Widget wrapInApp(Widget widget) {
-  return MaterialApp(theme: AppTheme.light(), home: widget);
+  return MaterialApp(
+    locale: const Locale('mn'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+    home: widget,
+  );
 }
 
 /// TamgaErrorWidget-ийн widget тестүүд.
@@ -24,8 +31,11 @@ void main() {
         await tester.pumpWidget(wrapInApp(const TamgaErrorWidget()));
 
         // Default bilingual message should be visible (combined in one string)
+        // Default error message should be visible
         expect(find.textContaining('Алдаа гарлаа'), findsOneWidget);
-        expect(find.textContaining('Something went wrong'), findsOneWidget);
+        // Subtitle explanation should be visible
+        expect(find.textContaining('Уучлаарай'), findsOneWidget);
+        expect(find.textContaining('unexpected error'), findsOneWidget);
 
         // Error icon should be visible
         expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);

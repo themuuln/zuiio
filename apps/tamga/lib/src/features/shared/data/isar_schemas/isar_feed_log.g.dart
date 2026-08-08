@@ -13,52 +13,36 @@ extension GetIsarFeedLogCollection on Isar {
   IsarCollection<IsarFeedLog> get isarFeedLogs => this.collection();
 }
 
-final IsarFeedLogSchema = CollectionSchema(
+const IsarFeedLogSchema = CollectionSchema(
   name: r'IsarFeedLog',
-  id: int.parse('-6246406141933013311'),
+  id: -6246406141933013311,
   properties: {
     r'amountGiven': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'amountGiven',
       type: IsarType.double,
     ),
     r'createdAt': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'date': PropertySchema(
-      id: int.parse('2'),
-      name: r'date',
-      type: IsarType.dateTime,
-    ),
+    r'date': PropertySchema(id: 2, name: r'date', type: IsarType.dateTime),
     r'domainId': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'horseId': PropertySchema(
-      id: int.parse('4'),
-      name: r'horseId',
-      type: IsarType.string,
-    ),
-    r'notes': PropertySchema(
-      id: int.parse('5'),
-      name: r'notes',
-      type: IsarType.string,
-    ),
+    r'horseId': PropertySchema(id: 4, name: r'horseId', type: IsarType.string),
+    r'notes': PropertySchema(id: 5, name: r'notes', type: IsarType.string),
     r'scheduleId': PropertySchema(
-      id: int.parse('6'),
+      id: 6,
       name: r'scheduleId',
       type: IsarType.string,
     ),
-    r'skipped': PropertySchema(
-      id: int.parse('7'),
-      name: r'skipped',
-      type: IsarType.bool,
-    ),
+    r'skipped': PropertySchema(id: 7, name: r'skipped', type: IsarType.bool),
     r'updatedAt': PropertySchema(
-      id: int.parse('8'),
+      id: 8,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -70,7 +54,7 @@ final IsarFeedLogSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -83,7 +67,7 @@ final IsarFeedLogSchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: int.parse('-4681125749579367450'),
+      id: -4681125749579367450,
       name: r'horseId',
       unique: false,
       replace: false,
@@ -96,7 +80,7 @@ final IsarFeedLogSchema = CollectionSchema(
       ],
     ),
     r'date': IndexSchema(
-      id: int.parse('-7552997827385218417'),
+      id: -7552997827385218417,
       name: r'date',
       unique: false,
       replace: false,

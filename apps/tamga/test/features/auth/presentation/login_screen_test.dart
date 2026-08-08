@@ -9,17 +9,26 @@ import 'package:tamga/src/features/auth/data/auth_repository.dart';
 import 'package:tamga/src/features/auth/domain/auth_state.dart';
 import 'package:tamga/src/features/auth/presentation/login_screen.dart';
 import 'package:tamga/src/core/error/result.dart';
-
+import 'package:tamga/l10n/generated/app_localizations.dart';
 // ── Mock ────────────────────────────────────────────────────────────────
+
+/// Overrides [AuthStateNotifier.build] to bypass kDebugMode shortcut in tests.
+class _TestAuthNotifier extends AuthStateNotifier {
+  @override
+  Stream<AuthState> build() async* {
+    final repo = ref.read(authRepositoryProvider);
+    final result = await repo.getCurrentUser();
+    yield result.isSuccess ? result.value : const AuthState.unauthenticated();
+    yield* repo.authStateChanges;
+  }
+}
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 void main() {
   late MockAuthRepository mockRepo;
-
   setUp(() {
     mockRepo = MockAuthRepository();
-    // Default: unauthenticated, empty state changes stream
     when(
       () => mockRepo.getCurrentUser(),
     ).thenAnswer((_) async => const Result.ok(AuthState.unauthenticated()));
@@ -31,11 +40,16 @@ void main() {
   Widget buildApp({AuthRepository? repository}) {
     return ProviderScope(
       overrides: [
-        // Override the authRepositoryProvider
         if (repository != null)
           authRepositoryProvider.overrideWithValue(repository),
+        authStateProvider.overrideWith(() => _TestAuthNotifier()),
       ],
-      child: const MaterialApp(home: LoginScreen()),
+      child: MaterialApp(
+        locale: const Locale('mn'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const LoginScreen(),
+      ),
     );
   }
 

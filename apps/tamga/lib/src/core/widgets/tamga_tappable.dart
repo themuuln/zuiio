@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/design_tokens.dart';
 
 /// iOS-style tap feedback — dims opacity on press instead of Material ripple.
 ///
@@ -83,20 +82,18 @@ class _TamgaTappableState extends State<TamgaTappable> {
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final duration = reduceMotion ? Duration.zero : TamgaMotion.durationFast;
     Widget child = AnimatedOpacity(
       opacity: _pressed ? widget.pressedOpacity : 1.0,
-      duration: duration,
-      curve: TamgaMotion.easingEnter,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.easeOut,
       child: widget.child,
     );
 
     if (widget.scaleOnPress) {
       child = AnimatedScale(
         scale: _pressed ? widget.pressedScale : 1.0,
-        duration: duration,
-        curve: TamgaMotion.easingEnter,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
         child: child,
       );
     }

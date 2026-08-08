@@ -10,11 +10,7 @@ import 'health_repository.dart';
 /// Local-first HealthRepository implementation backed by Isar.
 class LocalHealthRepository extends LocalRepository<HealthLog, IsarHealthLog>
     implements HealthRepository {
-  LocalHealthRepository({
-    required super.storage,
-    required super.syncQueue,
-    super.syncStorage,
-  });
+  LocalHealthRepository({required super.storage, required super.syncQueue});
 
   @override
   IsarCollection<IsarHealthLog> get collection => storage.healthLogs;

@@ -252,7 +252,7 @@
 | `008_notifications.sql` | Notification infrastructure |
 | `009_boost_system.sql` | Boost/featured listing system |
 | `010_map_features.sql` | `lost_horse_reports`, `search_areas`, `horse_locations`, `geofence_alerts` tables |
-| `042_payment_notifications.sql` | Payment notification triggers (renumbered from `010_payment_notifications` — the CLI keys migrations on the numeric prefix, so duplicate prefixes collide) |
+| `010_payment_notifications.sql` | Payment notification triggers |
 | `011_horse_owner_stamp.sql` | Ownership stamp/tamga |
 | `012_storage_buckets.sql` | Storage bucket policies |
 | `013_rls_policies.sql` | RLS policy updates |

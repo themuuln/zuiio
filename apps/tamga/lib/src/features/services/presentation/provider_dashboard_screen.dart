@@ -48,9 +48,9 @@ class _ProviderDashboardScreenState
           // ── Удахгүй болох захиалгууд / Upcoming ──
           Text(
             'Удахгүй болох / Upcoming Bookings',
-            style: TamgaTypography.headline(
+            style: TextStyle(
               fontSize: 18,
-              weight: FontWeight.w700,
+              fontWeight: FontWeight.w700,
               color: tc.onSurface,
             ),
           ),
@@ -70,10 +70,11 @@ class _ProviderDashboardScreenState
               if (bookings.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: TamgaSpacing.xxl),
-                  child: InlineEmptyState(
-                    icon: Icons.event_available_outlined,
-                    title:
-                        'Удахгүй болох захиалга байхгүй / No upcoming bookings',
+                  child: Center(
+                    child: Text(
+                      'Удахгүй болох захиалга байхгүй / No upcoming bookings',
+                      style: TextStyle(fontSize: 14),
+                    ),
                   ),
                 );
               }
@@ -99,9 +100,9 @@ class _ProviderDashboardScreenState
           // ── Өнгөрсөн захиалгууд / Past ──
           Text(
             'Өнгөрсөн / Past Bookings',
-            style: TamgaTypography.headline(
+            style: TextStyle(
               fontSize: 18,
-              weight: FontWeight.w700,
+              fontWeight: FontWeight.w700,
               color: tc.onSurface,
             ),
           ),
@@ -121,9 +122,11 @@ class _ProviderDashboardScreenState
               if (bookings.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: TamgaSpacing.xxl),
-                  child: InlineEmptyState(
-                    icon: Icons.history_outlined,
-                    title: 'Өнгөрсөн захиалга байхгүй / No past bookings',
+                  child: Center(
+                    child: Text(
+                      'Өнгөрсөн захиалга байхгүй / No past bookings',
+                      style: TextStyle(fontSize: 14),
+                    ),
                   ),
                 );
               }
@@ -151,91 +154,106 @@ class _ProviderDashboardScreenState
     final providerAsync = ref.watch(myServiceProviderProfileProvider);
 
     return providerAsync.when(
-      loading: () => const SkeletonCard(height: 90),
-      error: (error, _) => TamgaCard(
-        child: Row(
-          children: [
-            Icon(Icons.error_outline, color: tc.error),
-            const SizedBox(width: TamgaSpacing.md),
-            Expanded(
-              child: Text(
+      loading: () => const Card(
+        child: Padding(
+          padding: EdgeInsets.all(TamgaSpacing.lg),
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (error, _) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(TamgaSpacing.lg),
+          child: Row(
+            children: [
+              Icon(Icons.error_outline, color: tc.error),
+              const SizedBox(width: TamgaSpacing.md),
+              Text(
                 'Профайл ачаалахад алдаа гарлаа',
-                style: TamgaTypography.body(color: tc.error),
+                style: TextStyle(color: tc.error),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       data: (provider) {
         if (provider == null) {
-          return TamgaCard(
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(TamgaSpacing.lg),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: tc.primary),
+                  const SizedBox(width: TamgaSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Үйлчилгээ үзүүлэгч биш / Not a Provider',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: tc.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Та үйлчилгээ үзүүлэгчээр бүртгүүлээгүй байна.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: tc.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(TamgaSpacing.lg),
             child: Row(
               children: [
-                Icon(Icons.info_outline, color: tc.primary),
+                CircleAvatar(
+                  backgroundColor: tc.primaryContainer,
+                  child: Icon(
+                    provider.providerType == ServiceProviderType.photographer
+                        ? Icons.camera_alt
+                        : Icons.local_hospital,
+                    color: tc.onPrimaryContainer,
+                  ),
+                ),
                 const SizedBox(width: TamgaSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Үйлчилгээ үзүүлэгч биш / Not a Provider',
-                        style: TamgaTypography.body(
-                          weight: FontWeight.w600,
+                        provider.businessName ?? 'Миний профайл',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           color: tc.onSurface,
                         ),
                       ),
-                      const SizedBox(height: 4),
                       Text(
-                        'Та үйлчилгээ үзүүлэгчээр бүртгүүлээгүй байна.',
-                        style: TamgaTypography.caption1(
+                        provider.providerType.label,
+                        style: TextStyle(
+                          fontSize: 13,
                           color: tc.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
                 ),
+                if (provider.isVerified)
+                  Icon(Icons.verified, color: tc.tertiary),
               ],
             ),
-          );
-        }
-
-        return TamgaCard(
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: tc.primaryContainer,
-                child: Icon(
-                  provider.providerType == ServiceProviderType.photographer
-                      ? Icons.camera_alt
-                      : Icons.local_hospital,
-                  color: tc.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: TamgaSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      provider.businessName ?? 'Миний профайл',
-                      style: TamgaTypography.body(
-                        weight: FontWeight.w600,
-                        color: tc.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      provider.providerType.label,
-                      style: TamgaTypography.caption1(
-                        color: tc.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (provider.isVerified) Icon(Icons.verified, color: tc.tertiary),
-            ],
           ),
         );
       },
@@ -315,8 +333,8 @@ class _BookingCard extends StatelessWidget {
     final tc = TamgaColors.of(context);
 
     final statusColor = switch (booking.status) {
-      ServiceBookingStatus.pending => tc.primary,
-      ServiceBookingStatus.confirmed => tc.tertiary,
+      ServiceBookingStatus.pending => Colors.orange,
+      ServiceBookingStatus.confirmed => Colors.green,
       ServiceBookingStatus.completed => tc.onSurfaceVariant,
       ServiceBookingStatus.cancelled => tc.error,
     };
@@ -328,114 +346,125 @@ class _BookingCard extends StatelessWidget {
       ServiceBookingStatus.cancelled => 'Цуцалсан / Cancelled',
     };
 
-    return TamgaCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // Төлөвийн badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: TamgaTypography.caption2(
-                    weight: FontWeight.w600,
-                    color: statusColor,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              if (booking.totalAmount != null)
-                Text(
-                  '${booking.totalAmount}₮',
-                  style: TamgaTypography.body(
-                    weight: FontWeight.w700,
-                    color: tc.primary,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: TamgaSpacing.md),
-
-          // Үйлчилгээний төрөл
-          Text(
-            '${booking.serviceType} (${booking.providerType.label})',
-            style: TamgaTypography.body(
-              weight: FontWeight.w600,
-              color: tc.onSurface,
-            ),
-          ),
-          const SizedBox(height: TamgaSpacing.sm),
-
-          // Огноо
-          Row(
-            children: [
-              Icon(Icons.calendar_today, size: 14, color: tc.onSurfaceVariant),
-              const SizedBox(width: 4),
-              Text(
-                '${booking.bookingDate.year}-${booking.bookingDate.month.toString().padLeft(2, '0')}-${booking.bookingDate.day.toString().padLeft(2, '0')}',
-                style: TamgaTypography.caption1(color: tc.onSurfaceVariant),
-              ),
-              if (booking.locationAimag != null) ...[
-                const SizedBox(width: TamgaSpacing.lg),
-                Icon(Icons.location_on, size: 14, color: tc.onSurfaceVariant),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    booking.locationAimag!,
-                    style: TamgaTypography.caption1(color: tc.onSurfaceVariant),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ],
-          ),
-
-          // Морьдын тоо
-          if (booking.horseIds.isNotEmpty) ...[
-            const SizedBox(height: TamgaSpacing.sm),
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(TamgaSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Row(
               children: [
-                Icon(Icons.pets, size: 14, color: tc.onSurfaceVariant),
-                const SizedBox(width: 4),
-                Text(
-                  '${booking.horseIds.length} морь(д)',
-                  style: TamgaTypography.caption1(color: tc.onSurfaceVariant),
+                // Төлөвийн badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: statusColor,
+                    ),
+                  ),
                 ),
+                const Spacer(),
+                if (booking.totalAmount != null)
+                  Text(
+                    '${booking.totalAmount}₮',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: tc.primary,
+                    ),
+                  ),
               ],
             ),
-          ],
-
-          // Тэмдэглэл
-          if (booking.notes != null && booking.notes!.isNotEmpty) ...[
-            const SizedBox(height: TamgaSpacing.sm),
-            Text(
-              booking.notes!,
-              style: TamgaTypography.caption1(
-                color: tc.onSurfaceVariant,
-              ).copyWith(fontStyle: FontStyle.italic),
-            ),
-          ],
-
-          // Дуусгах товч (зөвхөн ирээдүйн захиалгуудад)
-          if (isUpcoming && onComplete != null) ...[
             const SizedBox(height: TamgaSpacing.md),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: onComplete,
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Дуусгах / Mark Complete'),
+
+            // Үйлчилгээний төрөл
+            Text(
+              '${booking.serviceType} (${booking.providerType.label})',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: tc.onSurface,
               ),
             ),
+            const SizedBox(height: TamgaSpacing.sm),
+
+            // Огноо
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 14,
+                  color: tc.onSurfaceVariant,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${booking.bookingDate.year}-${booking.bookingDate.month.toString().padLeft(2, '0')}-${booking.bookingDate.day.toString().padLeft(2, '0')}',
+                  style: TextStyle(fontSize: 13, color: tc.onSurfaceVariant),
+                ),
+                if (booking.locationAimag != null) ...[
+                  const SizedBox(width: TamgaSpacing.lg),
+                  Icon(Icons.location_on, size: 14, color: tc.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text(
+                    booking.locationAimag!,
+                    style: TextStyle(fontSize: 13, color: tc.onSurfaceVariant),
+                  ),
+                ],
+              ],
+            ),
+
+            // Морьдын тоо
+            if (booking.horseIds.isNotEmpty) ...[
+              const SizedBox(height: TamgaSpacing.sm),
+              Row(
+                children: [
+                  Icon(Icons.pets, size: 14, color: tc.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${booking.horseIds.length} морь(д)',
+                    style: TextStyle(fontSize: 13, color: tc.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ],
+
+            // Тэмдэглэл
+            if (booking.notes != null && booking.notes!.isNotEmpty) ...[
+              const SizedBox(height: TamgaSpacing.sm),
+              Text(
+                booking.notes!,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: tc.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+
+            // Дуусгах товч (зөвхөн ирээдүйн захиалгуудад)
+            if (isUpcoming && onComplete != null) ...[
+              const SizedBox(height: TamgaSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: onComplete,
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('Дуусгах / Mark Complete'),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

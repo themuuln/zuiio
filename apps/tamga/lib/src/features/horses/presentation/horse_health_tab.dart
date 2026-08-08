@@ -198,9 +198,7 @@ class _LastEventRow extends StatelessWidget {
     final now = DateTime.now();
     final daysAgo = now.difference(date).inDays;
 
-    return Wrap(
-      spacing: AppSpacing.xs,
-      runSpacing: AppSpacing.xs,
+    return Row(
       children: [
         Text(
           label,
@@ -208,19 +206,22 @@ class _LastEventRow extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
+        const SizedBox(width: AppSpacing.xs),
         Text(
           _formatDate(date),
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
-        if (daysAgo > 0)
+        if (daysAgo > 0) ...[
+          const SizedBox(width: AppSpacing.xs),
           Text(
             '($daysAgo хоногийн өмнө)',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+        ],
       ],
     );
   }

@@ -171,8 +171,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             // ── Үйлчилгээний төрөл / Service Type ──
             Text(
               'Үйлчилгээний төрөл / Service Type',
-              style: TamgaTypography.callout(
-                weight: FontWeight.w600,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: tc.onSurface,
               ),
             ),
@@ -206,8 +207,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             // ── Үйлчилгээний дэд төрөл / Sub Service Type ──
             Text(
               'Үйлчилгээний дэлгэрэнгүй / Service Detail',
-              style: TamgaTypography.callout(
-                weight: FontWeight.w600,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: tc.onSurface,
               ),
             ),
@@ -270,8 +272,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             // ── Морьдын тоо / Horse Count ──
             Text(
               'Морьдын тоо / Number of Horses',
-              style: TamgaTypography.callout(
-                weight: FontWeight.w600,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: tc.onSurface,
               ),
             ),
@@ -284,13 +287,13 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                       setState(() => _horseIds.removeLast());
                     }
                   },
-                  tooltip: 'Морь хасах',
                   icon: const Icon(Icons.remove_circle_outline),
                 ),
                 Text(
                   '${_horseIds.length}',
-                  style: TamgaTypography.headline(
+                  style: TextStyle(
                     fontSize: 18,
+                    fontWeight: FontWeight.w600,
                     color: tc.onSurface,
                   ),
                 ),
@@ -302,7 +305,6 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                       );
                     }
                   },
-                  tooltip: 'Морь нэмэх',
                   icon: const Icon(Icons.add_circle_outline),
                 ),
               ],
@@ -312,8 +314,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             // ── Огноо / Date ──
             Text(
               'Огноо / Date',
-              style: TamgaTypography.callout(
-                weight: FontWeight.w600,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: tc.onSurface,
               ),
             ),
@@ -324,9 +327,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 padding: const EdgeInsets.all(TamgaSpacing.md),
                 decoration: BoxDecoration(
                   border: Border.all(color: tc.outline),
-                  borderRadius: BorderRadius.circular(
-                    TamgaSpacing.cornerRadiusSmall,
-                  ),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
@@ -334,7 +335,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                     const SizedBox(width: TamgaSpacing.md),
                     Text(
                       '${_bookingDate.year}-${_bookingDate.month.toString().padLeft(2, '0')}-${_bookingDate.day.toString().padLeft(2, '0')}',
-                      style: TamgaTypography.body(color: tc.onSurface),
+                      style: TextStyle(fontSize: 16, color: tc.onSurface),
                     ),
                   ],
                 ),
@@ -345,8 +346,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             // ── Байршил / Location ──
             Text(
               'Байршил / Location',
-              style: TamgaTypography.callout(
-                weight: FontWeight.w600,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: tc.onSurface,
               ),
             ),
@@ -389,8 +391,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             // ── Үнийн мэдээлэл / Pricing ──
             Text(
               'Үнийн мэдээлэл / Pricing',
-              style: TamgaTypography.callout(
-                weight: FontWeight.w600,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: tc.onSurface,
               ),
             ),
@@ -445,10 +448,20 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             SizedBox(
               width: double.infinity,
               height: 48,
-              child: LoadingButton(
-                isLoading: createState == CreateBookingState.submitting,
-                onPressed: _submit,
-                child: const Text('Захиалах / Book Now'),
+              child: FilledButton(
+                onPressed: createState == CreateBookingState.submitting
+                    ? null
+                    : _submit,
+                child: createState == CreateBookingState.submitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Захиалах / Book Now'),
               ),
             ),
             const SizedBox(height: TamgaSpacing.lg),

@@ -1,27 +1,17 @@
 #!/bin/bash
-# ── Tamga dev helper — loads local `.env` without Dart defines ──
+# ── Tamga dev helper — loads secrets from macOS Keychain via keychain-env ──
 # Usage: ./dev.sh [flutter args...]
 #
-# The generated asset is removed when Flutter exits. It must contain only
-# public client configuration; never put a service-role/secret key in `.env`.
+# Generates a dart_defines.json from Keychain secrets and passes it to
+# `flutter run` via --dart-define-from-file.
+#
+# Requires: keychain-env (see ~/.local/bin/)
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
-if [[ ! -f .env ]]; then
-  echo "Missing .env. Copy .env.example to .env and fill in Supabase values."
-  exit 1
-fi
+echo "🔑 Loading secrets from macOS Keychain..."
+keychain-env dart-define tamga dart_defines.json
 
-generated_env="assets/config/generated.env"
-cp .env "$generated_env"
-
-cleanup() {
-  rm -f "$generated_env"
-}
-
-trap cleanup EXIT
-trap 'cleanup; exit 143' INT TERM
-
-echo "🚀 Running Flutter with .env..."
-flutter run "$@"
+echo "🚀 Running Flutter..."
+keychain-env run tamga -- flutter run --dart-define-from-file=dart_defines.json "$@"

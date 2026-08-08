@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # Tamga pre-commit hook
 #
-# Fast path: only checks staged files.
-# - Format check (full project — fast, just checks for dirty files)
-# - Static analysis on staged files only
-# - Tests matching staged changes only
+# Matches the CI quality gate: format check → strict analysis → test.
+# Uses a fast path for tests (changed files only) instead of full suite.
 #
 # Install: git config core.hooksPath .githooks
 # Run manually: .githooks/pre-commit
@@ -13,7 +11,7 @@ set -euo pipefail
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-NC='\033[0m'
+NC='\033[0m' # No Color
 PASS="${GREEN}✓${NC}"
 FAIL="${RED}✗${NC}"
 
@@ -30,42 +28,38 @@ else
   FAILED=1
 fi
 
-# 2. Static analysis + tests — fast path on staged files only
-CHANGED_DART=$(git diff --cached --name-only --diff-filter=ACM | grep '\.dart$' || true)
-
-if [ -z "$CHANGED_DART" ]; then
-  echo "  Analysis    — (no staged dart files)"
-  echo "  Tests       — (no staged dart files)"
+# 2. Static analysis (strict — infos as errors)
+echo -n "  Analysis    "
+if dart analyze --fatal-infos 2>/dev/null; then
+  echo -e "$PASS"
 else
-  # 2a. Analyze only changed files (much faster than full project)
-  echo -n "  Analysis    "
-  if dart analyze --fatal-infos $CHANGED_DART 2>/dev/null; then
-    echo -e "$PASS"
-  else
-    echo -e "$FAIL"
-    FAILED=1
-  fi
+  echo -e "$FAIL"
+  FAILED=1
+fi
 
-  # 2b. Run only tests that cover the changed files
-  TEST_TARGETS=""
+# 3. Tests — fast path on changed files
+echo -n "  Tests       "
+CHANGED_DART=$(git diff --cached --name-only --diff-filter=ACM | grep '\.dart$' || true)
+TEST_TARGETS=""
+if [ -n "$CHANGED_DART" ]; then
   for f in $CHANGED_DART; do
+    # Map lib/.../foo.dart → test/.../foo_test.dart
     base="${f#lib/}"
     base="${base#test/}"
     test_file="test/${base%.dart}_test.dart"
     [ -f "$test_file" ] && TEST_TARGETS="$TEST_TARGETS $test_file"
   done
+fi
 
-  if [ -n "$TEST_TARGETS" ]; then
-    echo -n "  Tests       "
-    if flutter test --timeout 60s $TEST_TARGETS 2>/dev/null; then
-      echo -e "$PASS"
-    else
-      echo -e "$FAIL"
-      FAILED=1
-    fi
+if [ -n "$TEST_TARGETS" ]; then
+  if flutter test $TEST_TARGETS 2>/dev/null; then
+    echo -e "$PASS"
   else
-    echo "  Tests       — (no matching tests)"
+    echo -e "$FAIL"
+    FAILED=1
   fi
+else
+  echo "— (no matching tests)"
 fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━"

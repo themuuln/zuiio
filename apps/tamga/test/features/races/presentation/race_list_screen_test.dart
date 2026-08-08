@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/widgets/widgets.dart';
 import 'package:tamga/src/features/races/application/race_providers.dart';
 import 'package:tamga/src/features/races/domain/race.dart';
 import 'package:tamga/src/features/races/presentation/race_list_screen.dart';
 import 'package:tamga/src/features/races/presentation/race_detail_screen.dart';
 import '../../../helpers/test_helpers.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Helper to create a ProviderScope wrapper ────────────────────────
 
@@ -26,7 +26,10 @@ Widget createRaceListScreen({List<Race>? races, bool simulateError = false}) {
           throw Exception('Test network error');
         }),
       ],
-      child: MaterialApp(theme: AppTheme.light(), home: const RaceListScreen()),
+      child: MaterialApp(
+        theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+        home: const RaceListScreen(),
+      ),
     );
   }
 
@@ -36,7 +39,10 @@ Widget createRaceListScreen({List<Race>? races, bool simulateError = false}) {
         return races ?? [];
       }),
     ],
-    child: MaterialApp(theme: AppTheme.light(), home: const RaceListScreen()),
+    child: MaterialApp(
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+      home: const RaceListScreen(),
+    ),
   );
 }
 
@@ -55,7 +61,7 @@ void main() {
         ProviderScope(
           overrides: [racesProvider.overrideWith((ref) => completer.future)],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const RaceListScreen(),
           ),
         ),

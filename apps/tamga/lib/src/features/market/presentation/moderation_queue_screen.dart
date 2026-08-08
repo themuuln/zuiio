@@ -387,8 +387,8 @@ class _ReportCard extends StatelessWidget {
                           ),
                           label: const Text('Батлах'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: theme.colorScheme.tertiary,
-                            side: BorderSide(color: theme.colorScheme.tertiary),
+                            foregroundColor: Colors.green,
+                            side: const BorderSide(color: Colors.green),
                           ),
                         ),
                       ),

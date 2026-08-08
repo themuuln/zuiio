@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/error/crash_reporter.dart';
 import 'package:tamga/src/core/error/error_boundary.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 /// Error boundary тохируулгын тестүүд.
 ///
@@ -102,12 +103,20 @@ void main() {
 
       // Widget-ийг MaterialApp дотор харуулах (Tamga theme-тэй)
       await tester.pumpWidget(
-        MaterialApp(theme: AppTheme.light(), home: builtWidget),
+        MaterialApp(
+          locale: const Locale('mn'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+          home: builtWidget,
+        ),
       );
 
-      // TamgaErrorWidget-ийн default bilingual мессеж харагдах ёстой
+      // TamgaErrorWidget-ийн default мессеж харагдах ёстой
       expect(find.textContaining('Алдаа гарлаа'), findsOneWidget);
-      expect(find.textContaining('Something went wrong'), findsOneWidget);
+      expect(find.textContaining('Уучлаарай'), findsOneWidget);
+      expect(find.textContaining('Sorry'), findsOneWidget);
+      expect(find.textContaining('unexpected error'), findsOneWidget);
 
       // Stack trace харагдахгүй байх ёстой
       expect(find.textContaining('Exception'), findsNothing);
@@ -130,7 +139,13 @@ void main() {
         final builtWidget = ErrorWidget.builder(details);
 
         await tester.pumpWidget(
-          MaterialApp(theme: AppTheme.light(), home: builtWidget),
+          MaterialApp(
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+            home: builtWidget,
+          ),
         );
 
         // Retry товч харагдах ёстой

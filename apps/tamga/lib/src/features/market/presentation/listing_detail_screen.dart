@@ -3,17 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'package:tamga/l10n/generated/app_localizations.dart';
-
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/sync/connection_status.dart';
 import '../../../core/widgets/widgets.dart';
-import '../../map/application/lost_horse_providers.dart';
-import '../../map/domain/lost_horse_report.dart';
-import '../../map/domain/map_enums.dart';
-import '../../map/presentation/lost_horse_detail_screen.dart';
 import '../../shared/application/sync_providers.dart';
-import '../../horses/domain/horse_record.dart' show Horse;
 import '../application/contract_providers.dart';
 import '../application/market_providers.dart';
 import '../application/message_providers.dart';
@@ -44,9 +37,6 @@ class ListingDetailScreen extends ConsumerWidget {
     final item = listingsMap[listingId];
     final safety = ref.watch(marketSafetySummaryProvider(listingId));
     final theme = Theme.of(context);
-    // Belt-and-braces: the server flag plus a live check for an active public
-    // report on the listed horse (covers stale cached flags).
-    final activeReports = ref.watch(activeLostHorsesProvider);
 
     return catalog.when(
       data: (data) {
@@ -56,21 +46,6 @@ class ListingDetailScreen extends ConsumerWidget {
 
         final listing = item.listing;
         final horse = item.horse;
-        final conflictReport = activeReports.when(
-          data: (reports) => horse == null
-              ? null
-              : reports
-                    .where(
-                      (r) =>
-                          r.horseId == horse.id &&
-                          r.status == LostHorseStatus.active,
-                    )
-                    .firstOrNull,
-          loading: () => null,
-          error: (_, _) => null,
-        );
-        final showConflict =
-            listing.lostReportConflict || conflictReport != null;
         final certificateAsync = horse != null
             ? ref.watch(digitalCertificateProvider(horse.id))
             : null;
@@ -109,11 +84,6 @@ class ListingDetailScreen extends ConsumerWidget {
                 ),
                 sliver: SliverList.list(
                   children: [
-                    // Эрэл хайгуулын зөрчил — safety banner first
-                    if (showConflict)
-                      _LostReportConflictBanner(report: conflictReport),
-                    if (showConflict) const SizedBox(height: AppSpacing.md),
-
                     // Үндсэн мэдээлэл
                     Card(
                       child: Padding(
@@ -147,9 +117,9 @@ class ListingDetailScreen extends ConsumerWidget {
                               spacing: AppSpacing.sm,
                               runSpacing: AppSpacing.sm,
                               children: [
-                                _Badge(label: 'Итгэл ${listing.trustScore}%'),
+                                _Badge(label: 'Trust ${listing.trustScore}%'),
                                 if (listing.isSellerVerified)
-                                  const _Badge(label: 'Баталгаатай'),
+                                  const _Badge(label: 'Verified seller'),
                                 _Badge(label: listing.status.label),
                               ],
                             ),
@@ -162,50 +132,13 @@ class ListingDetailScreen extends ConsumerWidget {
                     // Морийн мэдээлэл
                     if (horse != null) ...[
                       Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(AppSpacing.xl),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Морины нотолгоо: ${horse.name}',
-                                style: theme.textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Text(
-                                '${horse.relationLabel} • ${horse.coat} • ${horse.birthYear}\n'
-                                'Шагнал ${horse.awardCount} • Үр төл ${horse.offspringCount} • ${horse.notes}',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              if (horse.tamgaVerified ||
-                                  horse.stateVerified) ...[
-                                const SizedBox(height: AppSpacing.md),
-                                Wrap(
-                                  spacing: AppSpacing.sm,
-                                  runSpacing: AppSpacing.sm,
-                                  children: [
-                                    if (horse.tamgaVerified)
-                                      _ProvenanceBadge(
-                                        label: AppLocalizations.of(
-                                          context,
-                                        )!.marketTamgaVerified,
-                                        icon: Icons.branding_watermark,
-                                      ),
-                                    if (horse.stateVerified)
-                                      _ProvenanceBadge(
-                                        label: AppLocalizations.of(
-                                          context,
-                                        )!.marketStateVerified,
-                                        icon: Icons.verified_user_outlined,
-                                      ),
-                                  ],
-                                ),
-                              ],
-                              ..._provenanceRows(context, horse),
-                            ],
+                        child: ListTile(
+                          title: Text('Horse evidence: ${horse.name}'),
+                          subtitle: Text(
+                            '${horse.relationLabel} • ${horse.coat} • ${horse.birthYear}\n'
+                            'Шагнал ${horse.awardCount} • Үр төл ${horse.offspringCount} • ${horse.notes}',
                           ),
+                          isThreeLine: true,
                         ),
                       ),
                       if (certificateAsync != null)
@@ -317,7 +250,7 @@ class ListingDetailScreen extends ConsumerWidget {
                     OutlinedButton.icon(
                       onPressed: () => _generateContract(context, ref, listing),
                       icon: const Icon(Icons.description_outlined),
-                      label: const Text('Гэрээ үүсгэх'),
+                      label: const Text('Гэрээ үүсгэх / Generate Contract'),
                     ),
                     const SizedBox(height: AppSpacing.sm),
 
@@ -328,9 +261,9 @@ class ListingDetailScreen extends ConsumerWidget {
                       label: Text(
                         safety.maybeWhen(
                           data: (summary) => summary.localBuyerInquiry == null
-                              ? 'Худалдагчтай холбогдох'
-                              : 'Асуулт: ${summary.localBuyerInquiry!.status.label}',
-                          orElse: () => 'Худалдагчтай холбогдох',
+                              ? 'Seller-тэй холбогдох'
+                              : 'Inquiry: ${summary.localBuyerInquiry!.status.label}',
+                          orElse: () => 'Seller-тэй холбогдох',
                         ),
                       ),
                     ),
@@ -347,9 +280,9 @@ class ListingDetailScreen extends ConsumerWidget {
                       label: Text(
                         safety.maybeWhen(
                           data: (summary) => summary.hasLocalReport
-                              ? 'Мэдээлэгдсэн (${summary.reportCount})'
-                              : 'Зар мэдээлэх',
-                          orElse: () => 'Зар мэдээлэх',
+                              ? 'Report submitted (${summary.reportCount})'
+                              : 'Report listing',
+                          orElse: () => 'Report listing',
                         ),
                       ),
                     ),
@@ -437,8 +370,8 @@ class ListingDetailScreen extends ConsumerWidget {
     TamgaToast.show(
       context,
       wasExisting
-          ? 'Асуулт аль хэдийн үүссэн: ${inquiry.status.label}.'
-          : 'Асуулт үүссэн: ${inquiry.status.label}.',
+          ? 'Inquiry already exists: ${inquiry.status.label}.'
+          : 'Inquiry created: ${inquiry.status.label}.',
     );
 
     // Navigate to conversation
@@ -453,9 +386,9 @@ class ListingDetailScreen extends ConsumerWidget {
     MarketListing listing,
   ) async {
     final url = 'https://tamga.mn/market/${listing.id}';
-    final text = 'Tamga дээрх энэ морийг үзээрэй: $url';
+    final text = 'Check out this horse on Tamga: $url';
     final subject = 'Tamga — ${listing.title}';
-    await SharePlus.instance.share(ShareParams(text: text, subject: subject));
+    await Share.share(text, subject: subject);
   }
 
   Future<void> _generateContract(
@@ -498,7 +431,7 @@ class ListingDetailScreen extends ConsumerWidget {
     if (!context.mounted) {
       return;
     }
-    TamgaToast.show(context, 'Мэдээлэгдсэн: ${report.status.label}.');
+    TamgaToast.show(context, 'Report ${report.status.label.toLowerCase()}.');
   }
 
   Future<String?> _askReportReason(BuildContext context) async {
@@ -507,26 +440,25 @@ class ListingDetailScreen extends ConsumerWidget {
       final reason = await showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Зар мэдээлэх'),
+          title: const Text('Report listing'),
           content: TextField(
             controller: controller,
             autofocus: true,
             minLines: 2,
             maxLines: 4,
             decoration: const InputDecoration(
-              labelText: 'Шалтгаан',
-              hintText:
-                  'Хардлагатай мэдээлэл, алга болсон баримт, аюулгүй бус хүсэлт...',
+              labelText: 'Reason',
+              hintText: 'Suspicious details, missing docs, unsafe request...',
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Цуцлах'),
+              child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(controller.text),
-              child: const Text('Илгээх'),
+              child: const Text('Submit'),
             ),
           ],
         ),
@@ -547,21 +479,21 @@ class ListingDetailScreen extends ConsumerWidget {
       final recipientId = await showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Гэрчилгээ шилжүүлэх'),
+          title: const Text('Transfer Ownership Certificate'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Та морины дижитал өмчлөлийн гэрчилгээг шилжүүлж байна (ID: ${certificate.horseId}).',
+                'You are transferring the digital ownership certificate for the horse (ID: ${certificate.horseId}).',
               ),
               const SizedBox(height: AppSpacing.lg),
               TextField(
                 controller: controller,
                 autofocus: true,
                 decoration: const InputDecoration(
-                  labelText: 'Хүлээн авагчийн ID',
-                  hintText: 'жиш: seller-tamga, local-buyer',
+                  labelText: 'Recipient ID',
+                  hintText: 'e.g., seller-tamga, local-buyer',
                 ),
               ),
             ],
@@ -569,11 +501,11 @@ class ListingDetailScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Цуцлах'),
+              child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(controller.text),
-              child: const Text('Шилжүүлэх'),
+              child: const Text('Transfer'),
             ),
           ],
         ),
@@ -594,7 +526,7 @@ class ListingDetailScreen extends ConsumerWidget {
       if (!context.mounted) return;
       TamgaToast.showSuccess(
         context,
-        'Гэрчилгээг ${recipientId.trim()} хэрэглэгчид шилжүүллээ.',
+        'Certificate successfully transferred to ${recipientId.trim()}.',
       );
     } finally {
       controller.dispose();
@@ -630,7 +562,7 @@ class _CertificateCard extends StatelessWidget {
                 Icon(Icons.verified, color: theme.colorScheme.primary),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
-                  'Дижитал гарал үүслийн гэрчилгээ',
+                  'Digital Pedigree Certificate',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -639,23 +571,23 @@ class _CertificateCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             _CertificateDetailRow(
-              label: 'Төлөв',
-              value: certificate.isVerified ? 'Баталгаажсан' : 'Баталгаажаагүй',
+              label: 'Status',
+              value: certificate.isVerified ? 'Verified' : 'Unverified',
               valueColor: certificate.isVerified
                   ? theme.colorScheme.tertiary
                   : theme.colorScheme.primary,
             ),
-            _CertificateDetailRow(label: 'Гаргагч', value: certificate.issuer),
+            _CertificateDetailRow(label: 'Issuer', value: certificate.issuer),
             _CertificateDetailRow(
-              label: 'Гаргасан огноо',
+              label: 'Issue Date',
               value: certificate.issueDate.toLocal().toString().split(' ')[0],
             ),
             _CertificateDetailRow(
-              label: 'Эзэмшигч ID',
+              label: 'Owner ID',
               value: certificate.ownerId,
             ),
             _CertificateDetailRow(
-              label: 'Хэш',
+              label: 'Hash',
               value: certificate.certificateHash,
               isHash: true,
             ),
@@ -669,7 +601,7 @@ class _CertificateCard extends StatelessWidget {
                   ),
                   onPressed: onTransfer,
                   icon: const Icon(Icons.send),
-                  label: const Text('Гэрчилгээ шилжүүлэх'),
+                  label: const Text('Transfer Certificate'),
                 ),
               ),
             ],
@@ -745,15 +677,12 @@ class _SellerTrustCard extends ConsumerWidget {
           data: (summary) {
             final profile = summary.sellerProfile;
             if (profile == null) {
-              return const Text('Худалдагчийн профайл байхгүй.');
+              return const Text('Seller profile unavailable.');
             }
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Худалдагчийн итгэлцлийн профайл',
-                  style: theme.textTheme.titleLarge,
-                ),
+                Text('Seller trust profile', style: theme.textTheme.titleLarge),
                 const SizedBox(height: AppSpacing.md),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -946,12 +875,12 @@ class _InquiryStatusCard extends StatelessWidget {
             leading: const Icon(Icons.mark_chat_unread_outlined),
             title: Text(
               inquiry == null
-                  ? 'Асуулт алга байна'
-                  : 'Таны асуулт: ${inquiry.status.label}',
+                  ? 'No inquiry yet'
+                  : 'Your inquiry: ${inquiry.status.label}',
             ),
             subtitle: Text(
-              'Асуултууд ${summary.inquiryCount} • Мэдээллүүд ${summary.reportCount}'
-              '${summary.hasLocalReport ? ' • Мэдээлэгдсэн' : ''}',
+              'Inquiries ${summary.inquiryCount} • Reports ${summary.reportCount}'
+              '${summary.hasLocalReport ? ' • Report submitted' : ''}',
             ),
           ),
         );
@@ -1149,7 +1078,7 @@ class _InsightRow extends StatelessWidget {
 }
 
 String _formatCurrency(int value) {
-  return '${value.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ',')} MNT';
+  return '${value.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ',')} ₮';
 }
 
 String _formatDate(DateTime date) {
@@ -1219,13 +1148,7 @@ class _SellerOfferSection extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, _) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: TamgaErrorWidget(
-          message: 'Ирсэн саналууд ачаалахад алдаа гарлаа',
-          onRetry: () => ref.invalidate(offersForListingProvider(listingId)),
-        ),
-      ),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -1245,7 +1168,7 @@ class _SellerOfferItem extends ConsumerWidget {
       MarketOfferStatus.pending => theme.colorScheme.primary,
       MarketOfferStatus.accepted => theme.colorScheme.tertiary,
       MarketOfferStatus.declined => theme.colorScheme.error,
-      MarketOfferStatus.countered => theme.colorScheme.secondary,
+      MarketOfferStatus.countered => Colors.orange,
     };
 
     return Container(
@@ -1275,7 +1198,7 @@ class _SellerOfferItem extends ConsumerWidget {
                 Text(
                   '→ ${_formatCurrency(offer.counterAmount!)}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.secondary,
+                    color: Colors.orange,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1378,7 +1301,7 @@ class _SellerOfferItem extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Алдаа: ${apiResult.error.message}'),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -1437,166 +1360,4 @@ class _RatingBadge extends StatelessWidget {
       ],
     );
   }
-}
-
-// ── Lost-report conflict banner ─────────────────────────────────────
-
-/// Warning banner shown when the listed horse has an active recovery report.
-///
-/// The server flags listings via `lost_report_conflict`; this banner also
-/// renders when a live active report is found for the horse (belt-and-braces).
-class _LostReportConflictBanner extends ConsumerWidget {
-  const _LostReportConflictBanner({required this.report});
-
-  /// The active report, when known from the live recovery feed.
-  final LostHorseReport? report;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-
-    return Card(
-      color: theme.colorScheme.errorContainer,
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              color: theme.colorScheme.onErrorContainer,
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.marketLostReportConflictTitle,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: theme.colorScheme.onErrorContainer,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    l10n.marketLostReportConflictBody,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onErrorContainer,
-                    ),
-                  ),
-                  if (report != null) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    TextButton.icon(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              LostHorseDetailScreen(report: report!),
-                        ),
-                      ),
-                      icon: const Icon(Icons.open_in_new, size: 16),
-                      label: Text(l10n.marketLostReportView),
-                      style: TextButton.styleFrom(
-                        foregroundColor: theme.colorScheme.onErrorContainer,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Provenance badges and rows ─────────────────────────────────────
-
-/// Small verified badge chip (tamga / state registration).
-class _ProvenanceBadge extends StatelessWidget {
-  const _ProvenanceBadge({required this.label, required this.icon});
-
-  final String label;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Chip(
-      avatar: Icon(icon, size: 16),
-      label: Text(label),
-      visualDensity: VisualDensity.compact,
-      backgroundColor: theme.colorScheme.secondaryContainer,
-      labelStyle: theme.textTheme.labelSmall?.copyWith(
-        color: theme.colorScheme.onSecondaryContainer,
-      ),
-    );
-  }
-}
-
-/// Identity/document rows shown on the horse card when the data exists.
-List<Widget> _provenanceRows(BuildContext context, Horse horse) {
-  final theme = Theme.of(context);
-  final l10n = AppLocalizations.of(context)!;
-
-  final rows = <(String, String)>[
-    if (horse.tamgaBrandClan != null && horse.tamgaBrandClan!.isNotEmpty)
-      (l10n.marketTamgaClan, horse.tamgaBrandClan!),
-    if (horse.tamgaBrandGeneration != null)
-      (l10n.marketTamgaGeneration, '${horse.tamgaBrandGeneration}'),
-    if (horse.registrationNo != null && horse.registrationNo!.isNotEmpty)
-      (l10n.marketRegistrationNo, horse.registrationNo!),
-    if (horse.microchipId != null && horse.microchipId!.isNotEmpty)
-      (l10n.marketMicrochipId, horse.microchipId!),
-    if (horse.coatColor != null)
-      (l10n.marketCoatColor, horse.coatColor!.displayName),
-    if (horse.breedLineage != null)
-      (l10n.marketBreedLineage, horse.breedLineage!.displayName),
-    if (horse.region != null && horse.region!.isNotEmpty)
-      (l10n.marketRegion, horse.region!),
-    if (horse.sum != null && horse.sum!.isNotEmpty)
-      (l10n.marketSum, horse.sum!),
-  ];
-  if (rows.isEmpty) return const [];
-
-  return [
-    const SizedBox(height: AppSpacing.md),
-    Text(
-      l10n.marketProvenanceTitle,
-      style: theme.textTheme.labelLarge?.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
-    ),
-    const SizedBox(height: AppSpacing.xs),
-    ...rows.map(
-      (row) => Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 2,
-              child: Text(
-                row.$1,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 3,
-              child: Text(
-                row.$2,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  ];
 }

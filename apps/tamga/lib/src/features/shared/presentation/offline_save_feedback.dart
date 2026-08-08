@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
 import '../../../core/sync/connection_status.dart';
 import '../../../core/widgets/widgets.dart';
@@ -27,12 +28,14 @@ void showOfflineAwareSaveFeedback(
   BuildContext context,
   ConnectionStatus currentStatus, {
   String onSavedMessage = 'Хадгалагдлаа',
-  String offlineMessage = 'Сүлжээнд холбогдсон үед синк хийгдэнэ',
+  String? offlineMessage,
 }) {
+  final effectiveOffline =
+      offlineMessage ?? AppLocalizations.of(context)!.offlineSaveQueued;
   if (currentStatus == ConnectionStatus.offline) {
     TamgaToast.show(
       context,
-      '$onSavedMessage — $offlineMessage',
+      '$onSavedMessage — $effectiveOffline',
       icon: Icons.cloud_upload_outlined,
     );
   } else {

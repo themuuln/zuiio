@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:tamga/src/features/auth/application/auth_providers.dart';
 import 'package:tamga/src/features/auth/data/auth_repository.dart';
 import 'package:tamga/src/features/auth/domain/auth_state.dart';
@@ -17,6 +19,13 @@ import 'package:tamga/src/features/events/application/events_providers.dart';
 import 'package:tamga/src/shared/domain/event.dart';
 import 'package:tamga/src/core/error/app_exception.dart';
 import 'package:tamga/src/core/error/result.dart';
+
+class _Placeholder extends StatelessWidget {
+  const _Placeholder(this.label);
+  final String label;
+  @override
+  Widget build(BuildContext context) => Scaffold(body: Text(label));
+}
 
 /// A minimal auth repository mock for testing sign-out.
 class _MockAuthRepository implements AuthRepository {
@@ -114,6 +123,20 @@ void main() {
     });
 
     Future<void> pumpProfile(WidgetTester tester) async {
+      final goRouter = GoRouter(
+        initialLocation: '/test',
+        routes: [
+          GoRoute(path: '/test', builder: (_, _) => const ProfileScreen()),
+          GoRoute(
+            path: '/login',
+            builder: (_, _) => const _Placeholder('Login'),
+          ),
+          GoRoute(
+            path: '/lineage',
+            builder: (_, _) => const _Placeholder('Lineage'),
+          ),
+        ],
+      );
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -125,9 +148,12 @@ void main() {
             horsesProvider.overrideWith((ref) => <HorseRecord>[]),
             eventsProvider.overrideWith((ref) => <Event>[]),
           ],
-          child: MaterialApp(
-            theme: AppTheme.light(),
-            home: const ProfileScreen(),
+          child: MaterialApp.router(
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: goRouter,
           ),
         ),
       );
@@ -140,26 +166,52 @@ void main() {
     testWidgets('shows sign-out button in settings tab', (tester) async {
       await pumpProfile(tester);
 
+      // Debug: verify the screen rendered
+      expect(
+        find.byType(ProfileScreen),
+        findsOneWidget,
+        reason: 'ProfileScreen should be visible',
+      );
+      expect(
+        find.text('Тохиргоо'),
+        findsOneWidget,
+        reason: 'Settings tab should be visible',
+      );
+
       // Tap the third tab (Тохиргоо) directly
       await tester.tap(find.text('Тохиргоо'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Scroll until the sign-out tile is built. Header height varies with
-      // the sync status section and the leading back control, so a fixed
-      // drag offset is not reliable.
-      await tester.dragUntilVisible(
-        find.text('Sign Out'),
-        find.byType(ListView).last,
-        const Offset(0, -100),
+      // Debug: verify Settings tab content
+      expect(
+        find.text('Мэдээлэл'),
+        findsOneWidget,
+        reason: 'Session info should be visible',
       );
+
+      // Try to find the Sign Out card using scroll
+      final listViewFinder = find.byType(ListView).last;
+      await tester.drag(listViewFinder, const Offset(0, -2000));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Verify sign-out button is present
-      expect(find.text('Гарах'), findsWidgets);
-      expect(find.text('Sign Out'), findsOneWidget);
-      expect(find.byIcon(Icons.logout), findsOneWidget);
+      // Debug: check what's visible near the bottom
+      expect(
+        find.text('Гарах'),
+        findsAtLeastNWidgets(1),
+        reason: 'Sign Out title should be visible',
+      );
+      expect(
+        find.text('Sign Out'),
+        findsOneWidget,
+        reason: 'Sign Out subtitle should be visible',
+      );
+      expect(
+        find.byIcon(Icons.logout),
+        findsOneWidget,
+        reason: 'Logout icon should be visible',
+      );
     });
 
     testWidgets('shows confirmation dialog when sign-out is tapped', (
@@ -172,15 +224,9 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Scroll until the sign-out tile is built (header height varies).
-      await tester.dragUntilVisible(
-        find.text('Sign Out'),
-        find.byType(ListView).last,
-        const Offset(0, -100),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.ensureVisible(find.text('Sign Out'));
+      // Scroll down to ensure sign-out button is visible
+      final listViewFinder = find.byType(ListView).last;
+      await tester.drag(listViewFinder, const Offset(0, -2000));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -208,15 +254,9 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Scroll until the sign-out tile is built (header height varies).
-      await tester.dragUntilVisible(
-        find.text('Sign Out'),
-        find.byType(ListView).last,
-        const Offset(0, -100),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.ensureVisible(find.text('Sign Out'));
+      // Scroll down to ensure sign-out button is visible
+      final listViewFinder = find.byType(ListView).last;
+      await tester.drag(listViewFinder, const Offset(0, -2000));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -245,19 +285,11 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Scroll until the sign-out tile is built (header height varies).
-      await tester.dragUntilVisible(
-        find.text('Sign Out'),
-        find.byType(ListView).last,
-        const Offset(0, -100),
-      );
+      // Scroll down to ensure sign-out button is visible
+      final listViewFinder = find.byType(ListView).last;
+      await tester.drag(listViewFinder, const Offset(0, -2000));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      await tester.ensureVisible(find.text('Sign Out'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // Tap sign-out
       await tester.tap(find.text('Sign Out'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));

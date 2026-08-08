@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
 import '../../../core/constants/horse_coat_colors.dart';
 import '../../../core/theme/design_tokens.dart';
@@ -22,8 +23,13 @@ class ActiveReportsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Run expiry check when the screen is built.
+    ref.watch(checkAndExpireReportsProvider);
+
     final filter = ref.watch(lostHorseFilterProvider);
     final reportsAsync = ref.watch(filteredActiveLostHorsesProvider);
+    final l10n = AppLocalizations.of(context)!;
+
     final currentPos = ref.watch(currentPositionProvider).valueOrNull;
 
     final body = Column(
@@ -52,23 +58,12 @@ class ActiveReportsScreen extends ConsumerWidget {
                   ref.invalidate(activeLostHorsesStreamProvider);
                 },
                 child: ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(
-                    TamgaSpacing.lg,
-                    TamgaSpacing.sm,
-                    TamgaSpacing.lg,
-                    TamgaSpacing.lg,
-                  ),
-                  itemCount: reports.length + 1,
+                  padding: const EdgeInsets.all(TamgaSpacing.lg),
+                  itemCount: reports.length,
                   separatorBuilder: (_, _) =>
                       const SizedBox(height: TamgaSpacing.md),
                   itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _ResultSummary(
-                        count: reports.length,
-                        hasLocation: currentPos != null,
-                      );
-                    }
-                    final report = reports[index - 1];
+                    final report = reports[index];
                     final distanceKm = currentPos == null
                         ? null
                         : report.distanceTo(
@@ -106,62 +101,11 @@ class ActiveReportsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Хаяж морьд', style: TamgaTypography.headline()),
+        title: Text(l10n.mapLostHorseTitle, style: TamgaTypography.headline()),
         backgroundColor: TamgaColors.of(context).surface,
         surfaceTintColor: Colors.transparent,
       ),
       body: body,
-    );
-  }
-}
-
-// ── Result Summary ──────────────────────────────────────────────────
-
-/// Compact line showing how many reports matched and the sort order.
-class _ResultSummary extends StatelessWidget {
-  const _ResultSummary({required this.count, required this.hasLocation});
-
-  final int count;
-  final bool hasLocation;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        TamgaSpacing.xs,
-        TamgaSpacing.xs,
-        TamgaSpacing.xs,
-        TamgaSpacing.xs,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '$count идэвхтэй зар',
-              style: TamgaTypography.caption1(
-                color: colors.onSurfaceVariant,
-                weight: FontWeight.w600,
-              ),
-            ),
-          ),
-          if (hasLocation)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.near_me_outlined, size: 14, color: colors.primary),
-                const SizedBox(width: 4),
-                Text(
-                  'ойроос хол руу',
-                  style: TamgaTypography.caption1(
-                    color: colors.primary,
-                    weight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
     );
   }
 }
@@ -178,6 +122,7 @@ class _FilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = TamgaColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       decoration: BoxDecoration(
@@ -196,7 +141,6 @@ class _FilterBar extends StatelessWidget {
               context: context,
               label: filter.aimag ?? 'Аймаг',
               isActive: filter.aimag != null,
-              icon: Icons.location_on_outlined,
               onTap: () => _showAimagPicker(context),
               onClear: filter.aimag != null
                   ? () => ref
@@ -207,9 +151,8 @@ class _FilterBar extends StatelessWidget {
             const SizedBox(width: TamgaSpacing.sm),
             _buildFilterChip(
               context: context,
-              label: filter.animalType?.displayName ?? 'Төрөл',
+              label: filter.animalType?.displayName ?? l10n.healthFormTypeLabel,
               isActive: filter.animalType != null,
-              icon: Icons.pets_outlined,
               onTap: () => _showAnimalTypePicker(context),
               onClear: filter.animalType != null
                   ? () => ref
@@ -220,9 +163,8 @@ class _FilterBar extends StatelessWidget {
             const SizedBox(width: TamgaSpacing.sm),
             _buildFilterChip(
               context: context,
-              label: filter.coatColor ?? 'Зүс',
+              label: filter.coatColor ?? l10n.horseFormCoatLabel,
               isActive: filter.coatColor != null,
-              icon: Icons.palette_outlined,
               onTap: () => _showCoatColorPicker(context),
               onClear: filter.coatColor != null
                   ? () => ref
@@ -235,7 +177,6 @@ class _FilterBar extends StatelessWidget {
               context: context,
               label: filter.status?.label ?? 'Статус',
               isActive: filter.status != null,
-              icon: Icons.flag_outlined,
               onTap: () => _showStatusPicker(context),
               onClear: filter.status != null
                   ? () => ref
@@ -258,7 +199,6 @@ class _FilterBar extends StatelessWidget {
     required String label,
     required bool isActive,
     required VoidCallback onTap,
-    IconData? icon,
     VoidCallback? onClear,
   }) {
     final colors = TamgaColors.of(context);
@@ -269,7 +209,6 @@ class _FilterBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 44),
           padding: const EdgeInsets.symmetric(
             horizontal: TamgaSpacing.md,
             vertical: TamgaSpacing.xs,
@@ -288,14 +227,6 @@ class _FilterBar extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 16,
-                  color: isActive ? colors.primary : colors.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-              ],
               Text(
                 label,
                 style: TamgaTypography.caption1(
@@ -313,23 +244,12 @@ class _FilterBar extends StatelessWidget {
               ),
               if (onClear != null) ...[
                 const SizedBox(width: 2),
-                Tooltip(
-                  message: 'Сонголт арилгах',
-                  child: Semantics(
-                    label: 'Сонголт арилгах',
-                    button: true,
-                    child: InkWell(
-                      onTap: onClear,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Icon(
-                          Icons.close,
-                          size: 20,
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
+                GestureDetector(
+                  onTap: onClear,
+                  child: Icon(
+                    Icons.close,
+                    size: 14,
+                    color: colors.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -342,6 +262,7 @@ class _FilterBar extends StatelessWidget {
 
   Widget _buildClearAllButton(BuildContext context) {
     final colors = TamgaColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Material(
       color: Colors.transparent,
@@ -363,7 +284,7 @@ class _FilterBar extends StatelessWidget {
               Icon(Icons.clear_all, size: 16, color: colors.error),
               const SizedBox(width: 4),
               Text(
-                'Бүгд',
+                l10n.generalAll,
                 style: TamgaTypography.caption1(
                   color: colors.error,
                   weight: FontWeight.w500,
@@ -379,12 +300,13 @@ class _FilterBar extends StatelessWidget {
   // ── Filter picker sheets ──
 
   void _showAimagPicker(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     _showPickerSheet<String?>(
       context: context,
       title: 'Аймаг',
       currentValue: filter.aimag,
       items: [null, ...kAimags],
-      itemLabel: (item) => item ?? 'Бүгд',
+      itemLabel: (item) => item ?? l10n.generalAll,
       onSelected: (item) {
         ref.read(lostHorseFilterProvider.notifier).setAimag(item);
       },
@@ -392,12 +314,13 @@ class _FilterBar extends StatelessWidget {
   }
 
   void _showAnimalTypePicker(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     _showPickerSheet<AnimalType?>(
       context: context,
       title: 'Малын төрөл',
       currentValue: filter.animalType,
       items: [null, ...AnimalType.values],
-      itemLabel: (item) => item?.displayName ?? 'Бүгд',
+      itemLabel: (item) => item?.displayName ?? l10n.generalAll,
       onSelected: (item) {
         ref.read(lostHorseFilterProvider.notifier).setAnimalType(item);
       },
@@ -405,12 +328,13 @@ class _FilterBar extends StatelessWidget {
   }
 
   void _showCoatColorPicker(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     _showPickerSheet<String?>(
       context: context,
-      title: 'Зүс',
+      title: l10n.horseFormCoatLabel,
       currentValue: filter.coatColor,
       items: [null, ...horseCoatColors],
-      itemLabel: (item) => item ?? 'Бүгд',
+      itemLabel: (item) => item ?? l10n.generalAll,
       onSelected: (item) {
         ref.read(lostHorseFilterProvider.notifier).setCoatColor(item);
       },
@@ -418,12 +342,13 @@ class _FilterBar extends StatelessWidget {
   }
 
   void _showStatusPicker(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     _showPickerSheet<LostHorseStatus?>(
       context: context,
       title: 'Статус',
       currentValue: filter.status,
       items: [null, ...LostHorseStatus.values],
-      itemLabel: (item) => item?.label ?? 'Бүгд',
+      itemLabel: (item) => item?.label ?? l10n.generalAll,
       onSelected: (item) {
         ref.read(lostHorseFilterProvider.notifier).setStatus(item);
       },

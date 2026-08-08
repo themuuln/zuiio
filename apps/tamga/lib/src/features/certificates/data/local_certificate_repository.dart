@@ -1,13 +1,9 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 
 import '../../../core/error/app_exception.dart';
 import '../../../core/error/result.dart';
 import '../../../core/sync/sync_queue.dart';
 import '../../shared/data/isar_storage.dart';
-import '../../shared/data/isar_sync_storage.dart';
 import '../../shared/data/isar_schemas/isar_digital_certificate.dart';
 import '../domain/ownership_certificate.dart';
 import 'certificate_repository.dart';
@@ -21,28 +17,11 @@ class LocalCertificateRepository implements CertificateRepository {
   LocalCertificateRepository({
     required IsarStorage storage,
     required SyncQueue syncQueue,
-    IsarSyncStorage? syncStorage,
   }) : _storage = storage,
-       _syncQueue = syncQueue,
-       _syncStorage = syncStorage;
+       _syncQueue = syncQueue;
 
   final IsarStorage _storage;
   final SyncQueue _syncQueue;
-  final IsarSyncStorage? _syncStorage;
-
-  /// Persist the sync intent to the durable queue (no-op when not wired).
-  void _enqueueAndPersist(SyncQueueItem item) {
-    _syncQueue.enqueue(item);
-    final store = _syncStorage;
-    if (store == null) return;
-    unawaited(() async {
-      try {
-        await store.enqueue(item);
-      } catch (e) {
-        debugPrint('[certificate] Failed to persist queue item: $e');
-      }
-    }());
-  }
 
   // ── Helpers ──────────────────────────────────────────────
 
@@ -106,7 +85,7 @@ class LocalCertificateRepository implements CertificateRepository {
       });
 
       // Enqueue sync item
-      _enqueueAndPersist(
+      _syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'certificate',
           entityId: id,
@@ -209,7 +188,7 @@ class LocalCertificateRepository implements CertificateRepository {
       });
 
       // Enqueue update for current certificate
-      _enqueueAndPersist(
+      _syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'certificate',
           entityId: certificateId,
@@ -249,7 +228,7 @@ class LocalCertificateRepository implements CertificateRepository {
       });
 
       // Enqueue sync for new certificate
-      _enqueueAndPersist(
+      _syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'certificate',
           entityId: newId,
@@ -314,8 +293,14 @@ class LocalCertificateRepository implements CertificateRepository {
   // ── Private helpers ────────────────────────────────────────
 
   String _generateId() {
-    final timestamp = DateTime.now().microsecondsSinceEpoch;
-    return 'cert-${timestamp.toRadixString(36)}';
+    return 'cert-${DateTime.now().millisecondsSinceEpoch.toRadixString(36)}-${_randomSuffix()}';
+  }
+
+  String _randomSuffix() {
+    return DateTime.now().microsecondsSinceEpoch
+        .toRadixString(36)
+        .padRight(6, '0')
+        .substring(0, 6);
   }
 
   /// Prepare data for sync queue in Supabase-compatible format.

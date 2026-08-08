@@ -643,22 +643,5 @@
 
   "lineageFitToScreen": "Дэлгэцэд тааруулах",
   "lineageBadgeHousehold": "Өрхийн",
-  "lineageBadgeExternal": "Гаднын",
-
-  "marketLostReportConflictTitle": "Эрэл хайгуул бүртгэлтэй морь",
-  "marketLostReportConflictBody": "Энэ моринд идэвхтэй эрэл хайгуулын зар бүртгэлтэй байна. Худалдан авах/зарлах шийдвэрээ гаргахаасаа өмнө эрэл хайгуулын зарыг шалгана уу.",
-  "marketLostReportView": "Эрэл хайгуулын зар үзэх",
-  "marketLostReportBlockedTitle": "Энэ морийг зарлах боломжгүй",
-  "marketLostReportBlockedBody": "Энэ моринд идэвхтэй эрэл хайгуулын зар бүртгэлтэй байна. Эрэл хайгуул дуусч, зар хаагдах хүртэл зарыг нийтлэх боломжгүй.",
-  "marketProvenanceTitle": "Морины бичиг баримт",
-  "marketTamgaClan": "Тамга (овог)",
-  "marketTamgaGeneration": "Тамга (үе)",
-  "marketRegistrationNo": "Бүртгэлийн дугаар",
-  "marketMicrochipId": "Чип дугаар",
-  "marketCoatColor": "Зүс",
-  "marketBreedLineage": "Угсаа гарвал",
-  "marketRegion": "Бүс нутаг",
-  "marketSum": "Сум",
-  "marketTamgaVerified": "Тамга баталгаажсан",
-  "marketStateVerified": "Улсын бүртгэлтэй"
+  "lineageBadgeExternal": "Гаднын"
 }

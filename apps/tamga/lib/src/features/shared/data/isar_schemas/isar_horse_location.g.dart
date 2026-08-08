@@ -13,52 +13,40 @@ extension GetIsarHorseLocationCollection on Isar {
   IsarCollection<IsarHorseLocation> get isarHorseLocations => this.collection();
 }
 
-final IsarHorseLocationSchema = CollectionSchema(
+const IsarHorseLocationSchema = CollectionSchema(
   name: r'IsarHorseLocation',
-  id: int.parse('2620617625593184836'),
+  id: 2620617625593184836,
   properties: {
     r'coatColor': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'coatColor',
       type: IsarType.string,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'horseName': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'horseName',
       type: IsarType.string,
     ),
     r'isVisible': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'isVisible',
       type: IsarType.bool,
     ),
     r'lastUpdated': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'lastUpdated',
       type: IsarType.dateTime,
     ),
-    r'lat': PropertySchema(
-      id: int.parse('5'),
-      name: r'lat',
-      type: IsarType.double,
-    ),
-    r'lng': PropertySchema(
-      id: int.parse('6'),
-      name: r'lng',
-      type: IsarType.double,
-    ),
-    r'ownerId': PropertySchema(
-      id: int.parse('7'),
-      name: r'ownerId',
-      type: IsarType.string,
-    ),
+    r'lat': PropertySchema(id: 5, name: r'lat', type: IsarType.double),
+    r'lng': PropertySchema(id: 6, name: r'lng', type: IsarType.double),
+    r'ownerId': PropertySchema(id: 7, name: r'ownerId', type: IsarType.string),
     r'ownerName': PropertySchema(
-      id: int.parse('8'),
+      id: 8,
       name: r'ownerName',
       type: IsarType.string,
     ),
@@ -70,7 +58,7 @@ final IsarHorseLocationSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,

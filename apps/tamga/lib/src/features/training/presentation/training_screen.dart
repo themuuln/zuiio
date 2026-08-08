@@ -25,8 +25,7 @@ class TrainingScreen extends ConsumerWidget {
 
     return Scaffold(
       body: logsAsync.when(
-        loading: () =>
-            const TamgaLoadingView(message: 'Дасгалжуулалтыг ачаалж байна'),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => TamgaErrorWidget(
           message: 'Дасгалжуулалтын мэдээлэл авахад алдаа гарлаа: $err',
           onRetry: () => ref.invalidate(trainingLogsProvider(horseId)),
@@ -37,16 +36,16 @@ class TrainingScreen extends ConsumerWidget {
           onRefresh: () => ref.invalidate(trainingLogsProvider(horseId)),
         ),
       ),
-      bottomNavigationBar: TamgaBottomAction(
-        label: 'Дасгал нэмэх',
-        icon: Icons.add,
-        onTap: () {
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'add_training',
+        onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => TrainingFormScreen(horseId: horseId),
             ),
           );
         },
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -105,29 +104,19 @@ class _TrainingLogListState extends ConsumerState<_TrainingLogList> {
     final weeklyData = _computeWeeklyMinutes();
 
     if (widget.logs.isEmpty) {
-      return SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.xxxl,
-        ),
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TamgaCard(
-              child: _WeeklyChartSection(
-                weeklyData: weeklyData,
-                colors: colors,
+            _WeeklyChartSection(weeklyData: weeklyData, colors: colors),
+            const Expanded(
+              child: EmptyState(
+                icon: Icons.fitness_center_outlined,
+                title: 'Дасгалжуулалтын бүртгэл байхгүй',
+                description:
+                    'Шинэ дасгалжуулалт нэмэхийн тулд + товчийг дарна уу.',
+                compact: true,
               ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            const EmptyState(
-              icon: Icons.fitness_center_outlined,
-              title: 'Дасгалжуулалтын бүртгэл байхгүй',
-              description:
-                  'Доорх "Дасгал нэмэх" товчийг дарж шинэ бүртгэл үүсгэнэ үү.',
-              compact: true,
             ),
           ],
         ),
@@ -138,6 +127,7 @@ class _TrainingLogListState extends ConsumerState<_TrainingLogList> {
       onRefresh: () async => widget.onRefresh(),
       child: CustomScrollView(
         slivers: [
+          // ── Weekly chart ──
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -146,19 +136,19 @@ class _TrainingLogListState extends ConsumerState<_TrainingLogList> {
                 AppSpacing.lg,
                 AppSpacing.sm,
               ),
-              child: TamgaCard(
-                child: _WeeklyChartSection(
-                  weeklyData: weeklyData,
-                  colors: colors,
-                ),
+              child: _WeeklyChartSection(
+                weeklyData: weeklyData,
+                colors: colors,
               ),
             ),
           ),
+
+          // ── Filter chips ──
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: SizedBox(
-                height: 44,
+                height: 40,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
@@ -182,7 +172,10 @@ class _TrainingLogListState extends ConsumerState<_TrainingLogList> {
               ),
             ),
           ),
+
           const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.sm)),
+
+          // ── Training log list ──
           if (_filteredLogs.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
@@ -211,7 +204,6 @@ class _TrainingLogListState extends ConsumerState<_TrainingLogList> {
                 );
               }, childCount: _filteredLogs.length),
             ),
-          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
         ],
       ),
     );
@@ -228,6 +220,7 @@ class _WeeklyChartSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final hasData = weeklyData.values.any((v) => v > 0);
 
     return Column(
@@ -239,7 +232,9 @@ class _WeeklyChartSection extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Text(
               'Энэ долоо хоног',
-              style: TamgaTypography.headline(fontSize: 15),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -254,7 +249,7 @@ class _WeeklyChartSection extends StatelessWidget {
             padding: const EdgeInsets.only(top: AppSpacing.xs),
             child: Text(
               'Энэ долоо хоногт дасгалжуулалт бүртгэгдээгүй',
-              style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
+              style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
             ),
           ),
       ],
@@ -277,7 +272,26 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TamgaChoicePill(label: label, selected: selected, onTap: onTap);
+    final colors = TamgaColors.of(context);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? colors.primary : colors.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? colors.onPrimary : colors.onSurface,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -291,67 +305,82 @@ class _TrainingLogTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final colors = TamgaColors.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xs,
+        vertical: 4,
       ),
-      child: TamgaCard(
-        padding: EdgeInsets.zero,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: colors.primaryContainer,
-                radius: 20,
-                child: Icon(
-                  _typeIcon(log.type),
-                  color: colors.onPrimaryContainer,
-                  size: 20,
+      child: Card(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              children: [
+                // ── Type icon ──
+                CircleAvatar(
+                  backgroundColor: colors.primaryContainer,
+                  radius: 20,
+                  child: Icon(
+                    _typeIcon(log.type),
+                    color: colors.onPrimaryContainer,
+                    size: 20,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      log.type.displayName,
-                      style: TamgaTypography.headline(fontSize: 15),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${log.durationMinutes} мин'
-                      '${log.distanceKm != null ? ' · ${log.distanceKm!.toStringAsFixed(1)} км' : ''}',
-                      style: TamgaTypography.caption1(
-                        color: colors.onSurfaceVariant,
+                const SizedBox(width: AppSpacing.md),
+
+                // ── Details ──
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        log.type.displayName,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    if (log.notes.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        log.notes,
-                        style: TamgaTypography.caption2(
+                        '${log.durationMinutes} мин'
+                        '${log.distanceKm != null ? ' · ${log.distanceKm!.toStringAsFixed(1)} км' : ''}',
+                        style: TextStyle(
                           color: colors.onSurfaceVariant,
+                          fontSize: 12,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
+                      if (log.notes.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          log.notes,
+                          style: TextStyle(
+                            color: colors.onSurfaceVariant,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              Text(
-                '${log.date.month.toString().padLeft(2, '0')}/${log.date.day.toString().padLeft(2, '0')}',
-                style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Icon(Icons.chevron_right, size: 18, color: colors.outline),
-            ],
+
+                // ── Date ──
+                Text(
+                  '${log.date.month.toString().padLeft(2, '0')}/${log.date.day.toString().padLeft(2, '0')}',
+                  style: TextStyle(
+                    color: colors.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Icon(Icons.chevron_right, size: 18, color: colors.outline),
+              ],
+            ),
           ),
         ),
       ),

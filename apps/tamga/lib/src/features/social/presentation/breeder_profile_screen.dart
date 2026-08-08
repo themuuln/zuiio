@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/breeder_profile_providers.dart';
 import '../domain/breeder_profile.dart';
@@ -53,7 +52,7 @@ class BreederProfileScreen extends ConsumerWidget {
             ],
           );
         },
-        loading: () => const Center(child: LoadingIndicator(size: 28)),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => TamgaErrorWidget(
           message: 'Үржүүлэгчийн мэдээлэл ачаалахад алдаа гарлаа',
           onRetry: () => ref.invalidate(breederProfileProvider(sellerId)),
@@ -74,100 +73,102 @@ class _BreederInfoHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return TamgaCard(
+    return Card(
       margin: const EdgeInsets.all(AppSpacing.lg),
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Нэр + avatar
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 32,
-                backgroundColor: theme.colorScheme.primaryContainer,
-                child: Icon(
-                  Icons.person_outline,
-                  color: theme.colorScheme.onPrimaryContainer,
-                  size: 32,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Нэр + avatar
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 32,
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  child: Icon(
+                    Icons.person_outline,
+                    color: theme.colorScheme.onPrimaryContainer,
+                    size: 32,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      profile.displayName,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.displayName,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    if (profile.locationLabel.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 16,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Flexible(
-                            child: Text(
-                              profile.locationLabel,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
+                      if (profile.locationLabel.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 16,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Flexible(
+                              child: Text(
+                                profile.locationLabel,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
 
-          // Гишүүнээр элссэн
-          Row(
-            children: [
-              Icon(
-                Icons.calendar_today_outlined,
-                size: 16,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                'Гишүүнээр элссэн: ${profile.memberSinceLabel}',
-                style: theme.textTheme.bodyMedium?.copyWith(
+            // Гишүүнээр элссэн
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today_outlined,
+                  size: 16,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'Гишүүнээр элссэн: ${profile.memberSinceLabel}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
 
-          // Нийт морины тоо
-          Row(
-            children: [
-              Icon(
-                Icons.pets_outlined,
-                size: 16,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                'Нийт морь: ${profile.totalHorses}',
-                style: theme.textTheme.bodyMedium?.copyWith(
+            // Нийт морины тоо
+            Row(
+              children: [
+                Icon(
+                  Icons.pets_outlined,
+                  size: 16,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'Нийт морь: ${profile.totalHorses}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -184,61 +185,65 @@ class _RatingSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return TamgaCard(
+    return Card(
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Худалдагчийн үнэлгээ',
-            style: TamgaTypography.title3(weight: FontWeight.w600),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              // Дундаж үнэлгээ
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    profile.totalRatings > 0
-                        ? profile.averageRating.toStringAsFixed(1)
-                        : '—',
-                    style: theme.textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(5, (index) {
-                      final star = index + 1;
-                      final filled =
-                          profile.totalRatings > 0 &&
-                          star <= profile.averageRating.round();
-                      return Icon(
-                        filled ? Icons.star : Icons.star_border,
-                        size: 18,
-                        color: theme.colorScheme.primary,
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    profile.totalRatings > 0
-                        ? '${profile.totalRatings} үнэлгээ'
-                        : 'Үнэлгээгүй',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Худалдагчийн үнэлгээ',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                // Дундаж үнэлгээ
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.totalRatings > 0
+                          ? profile.averageRating.toStringAsFixed(1)
+                          : '—',
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(5, (index) {
+                        final star = index + 1;
+                        final filled =
+                            profile.totalRatings > 0 &&
+                            star <= profile.averageRating.round();
+                        return Icon(
+                          filled ? Icons.star : Icons.star_border,
+                          size: 18,
+                          color: theme.colorScheme.primary,
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      profile.totalRatings > 0
+                          ? '${profile.totalRatings} үнэлгээ'
+                          : 'Үнэлгээгүй',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -253,32 +258,43 @@ class _AchievementsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TamgaCard(
+    final theme = Theme.of(context);
+
+    return Card(
       margin: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.md,
       ),
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Амжилт / Тэмдэг',
-            style: TamgaTypography.title3(weight: FontWeight.w600),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: achievements.map((achievement) {
-              return TamgaBadge(
-                label: achievement,
-                variant: TamgaBadgeVariant.primary,
-                icon: Icons.emoji_events,
-              );
-            }).toList(),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Амжилт / Тэмдэг',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: achievements.map((achievement) {
+                return Chip(
+                  avatar: Icon(
+                    Icons.emoji_events,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  label: Text(achievement, style: theme.textTheme.labelMedium),
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  side: BorderSide.none,
+                );
+              }).toList(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -295,90 +311,94 @@ class _RecentListingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return TamgaCard(
+    return Card(
       margin: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.sm,
       ),
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Сүүлийн зарууд',
-                style: TamgaTypography.title3(weight: FontWeight.w600),
-              ),
-              Text(
-                '${listings.length}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Сүүлийн зарууд',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ...listings.map(
-            (listing) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Зургийн placeholder
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(
-                        AppSpacing.cornerRadiusSmall,
+                Text(
+                  '${listings.length}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            ...listings.map(
+              (listing) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Зургийн placeholder
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.cornerRadiusSmall,
+                        ),
+                      ),
+                      child: listing.thumbnailUrl != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.cornerRadiusSmall,
+                              ),
+                              child: CachedNetworkImage(
+                                imageUrl: listing.thumbnailUrl!,
+                                fit: BoxFit.cover,
+                                errorWidget: (ctx, url, err) =>
+                                    _listingPlaceholderIcon(theme),
+                              ),
+                            )
+                          : _listingPlaceholderIcon(theme),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            listing.title,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            listing.formattedPrice,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: listing.thumbnailUrl != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              AppSpacing.cornerRadiusSmall,
-                            ),
-                            child: CachedNetworkImage(
-                              imageUrl: listing.thumbnailUrl!,
-                              fit: BoxFit.cover,
-                              errorWidget: (ctx, url, err) =>
-                                  _listingPlaceholderIcon(theme),
-                            ),
-                          )
-                        : _listingPlaceholderIcon(theme),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          listing.title,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          listing.formattedPrice,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

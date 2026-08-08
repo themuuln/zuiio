@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_spacing.dart';
-import '../../../app/theme/app_colors.dart';
 import '../../../app/app_config.dart';
 import '../../../core/features/feature_flags.dart';
 import '../../../core/features/feature_flags_providers.dart';
@@ -320,69 +319,44 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
 
     return Scaffold(
-      body: Stack(
-        children: [
-          NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) => [
-              SliverToBoxAdapter(child: headerContent),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          SliverToBoxAdapter(child: headerContent),
 
-              // ── TabBar ──
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _TabBarDelegate(
-                  TabBar(
-                    controller: _tabController,
-                    onTap: (_) => HapticFeedback.selectionClick(),
-                    tabs: const [
-                      Tab(text: 'Морьд'),
-                      Tab(text: 'Удам'),
-                      Tab(text: 'Тохиргоо'),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-            body: AnimatedBuilder(
-              animation: _tabController,
-              builder: (_, _) {
-                // Respect the OS reduced-motion preference.
-                final switchDuration = MediaQuery.disableAnimationsOf(context)
-                    ? Duration.zero
-                    : const Duration(milliseconds: 200);
-                return AnimatedSwitcher(
-                  duration: switchDuration,
-                  transitionBuilder: (child, anim) =>
-                      FadeTransition(opacity: anim, child: child),
-                  child: KeyedSubtree(
-                    key: ValueKey(_tabController.index),
-                    child: switch (_tabController.index) {
-                      0 => _HorsesTab(horsesAsync: horsesAsync),
-                      1 => const _LineageTab(),
-                      _ => const _SettingsTab(),
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // ── Pinned leading close control (never scrolls away) ──
-          Positioned(
-            top: 0,
-            left: 0,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-                child: IconButton(
-                  tooltip: 'Буцах',
-                  onPressed: () => Navigator.maybePop(context),
-                  icon: const Icon(Icons.arrow_back),
-                ),
+          // ── TabBar ──
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _TabBarDelegate(
+              TabBar(
+                controller: _tabController,
+                onTap: (_) => HapticFeedback.selectionClick(),
+                tabs: const [
+                  Tab(text: 'Морьд'),
+                  Tab(text: 'Удам'),
+                  Tab(text: 'Тохиргоо'),
+                ],
               ),
             ),
           ),
         ],
+        body: AnimatedBuilder(
+          animation: _tabController,
+          builder: (_, _) {
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, anim) =>
+                  FadeTransition(opacity: anim, child: child),
+              child: KeyedSubtree(
+                key: ValueKey(_tabController.index),
+                child: switch (_tabController.index) {
+                  0 => _HorsesTab(horsesAsync: horsesAsync),
+                  1 => const _LineageTab(),
+                  _ => const _SettingsTab(),
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -395,21 +369,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Leading close control ──
-        SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                tooltip: 'Буцах',
-                onPressed: () => Navigator.maybePop(context),
-                icon: const Icon(Icons.arrow_back),
-              ),
-            ),
-          ),
-        ),
         // ── Cover photo area (same gradient as data state) ──
         Container(
           height: 180,
@@ -547,41 +506,33 @@ class _HorsesTab extends StatelessWidget {
       data: (horses) {
         if (horses.isEmpty) {
           return Center(
-            // Scroll-safe so the state never overflows in short viewports.
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.pets_outlined,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.outlineVariant,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.pets_outlined,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Морьд байхгүй байна',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Эхлэхийн тулд морь нэмнэ үү',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    'Морьд байхгүй байна',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Эхлэхийн тулд морь нэмнэ үү',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         }
 
         return ListView.builder(
-          // Bottom safe area keeps the last card + its edit button fully
-          // visible above the bottom navigation bar / home indicator.
-          padding: EdgeInsets.only(
-            top: AppSpacing.sm,
-            bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xxl,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           itemCount: horses.length,
           itemBuilder: (context, index) => Padding(
             padding: const EdgeInsets.symmetric(
@@ -597,34 +548,31 @@ class _HorsesTab extends StatelessWidget {
         itemBuilder: (ctx, i) => const SkeletonListTile(),
       ),
       error: (err, _) => Center(
-        // Scroll-safe so the state never overflows in short viewports.
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xxl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.error,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xxl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Морьдын мэдээлэл ачаалахад алдаа гарлаа',
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Failed to load horses',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'Морьдын мэдээлэл ачаалахад алдаа гарлаа',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Failed to load horses',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       ),
@@ -1396,7 +1344,7 @@ class _SyncStatusSection extends ConsumerWidget {
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: LoadingIndicator(size: 16),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.sync, size: 18),
             label: Text(
@@ -1456,13 +1404,13 @@ class _SyncStatusSection extends ConsumerWidget {
                       Icon(
                         Icons.hourglass_empty,
                         size: 14,
-                        color: AppColors.warning,
+                        color: Colors.amber.shade700,
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         '${syncState.pendingCount} синк хүлээгдэж байна',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.warning,
+                          color: Colors.amber.shade700,
                         ),
                       ),
                     ],
@@ -1501,7 +1449,7 @@ class _SyncStatusSection extends ConsumerWidget {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: LoadingIndicator(size: 16),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.sync, size: 18),
                   label: Text(

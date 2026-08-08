@@ -14,49 +14,45 @@ extension GetIsarTeamInvitationCollection on Isar {
       this.collection();
 }
 
-final IsarTeamInvitationSchema = CollectionSchema(
+const IsarTeamInvitationSchema = CollectionSchema(
   name: r'IsarTeamInvitation',
-  id: int.parse('1843860492833883654'),
+  id: 1843860492833883654,
   properties: {
     r'createdAt': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'invitedByUserId': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'invitedByUserId',
       type: IsarType.string,
     ),
     r'invitedUserId': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'invitedUserId',
       type: IsarType.string,
     ),
     r'role': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'role',
       type: IsarType.byte,
       enumMap: _IsarTeamInvitationroleEnumValueMap,
     ),
     r'status': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'status',
       type: IsarType.byte,
       enumMap: _IsarTeamInvitationstatusEnumValueMap,
     ),
-    r'teamId': PropertySchema(
-      id: int.parse('6'),
-      name: r'teamId',
-      type: IsarType.string,
-    ),
+    r'teamId': PropertySchema(id: 6, name: r'teamId', type: IsarType.string),
     r'teamName': PropertySchema(
-      id: int.parse('7'),
+      id: 7,
       name: r'teamName',
       type: IsarType.string,
     ),
@@ -68,7 +64,7 @@ final IsarTeamInvitationSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -81,7 +77,7 @@ final IsarTeamInvitationSchema = CollectionSchema(
       ],
     ),
     r'invitedUserId': IndexSchema(
-      id: int.parse('-5455332076709583523'),
+      id: -5455332076709583523,
       name: r'invitedUserId',
       unique: false,
       replace: false,

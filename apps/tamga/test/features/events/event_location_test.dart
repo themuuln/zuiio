@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/features/auth/application/auth_providers.dart';
 import 'package:tamga/src/features/auth/domain/auth_state.dart';
 import 'package:tamga/src/features/events/application/events_providers.dart';
@@ -19,6 +19,7 @@ import 'package:tamga/src/features/horses/application/horses_providers.dart';
 import 'package:tamga/src/features/horses/domain/horse_record.dart';
 import 'package:tamga/src/shared/domain/event.dart';
 import 'package:tamga/src/shared/domain/horse.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Mock classes ─────────────────────────────────────────────────────
 
@@ -145,7 +146,13 @@ Widget _buildTestApp(Widget child) {
         _testEventWithoutLocation.id,
       ).overrideWith((ref) async => []),
     ],
-    child: MaterialApp(theme: AppTheme.light(), home: child),
+    child: MaterialApp(
+      locale: const Locale('mn'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+      home: child,
+    ),
   );
 }
 

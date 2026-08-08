@@ -104,49 +104,45 @@ void main() {
     });
 
     test('upcomingDueItems detects vaccination due within 30 days', () {
-      // The implementation computes due dates relative to DateTime.now()
-      // (vaccination due = last vaccination date + 1 year) and includes items
-      // with 0 <= daysUntilDue <= 30. Build inputs relative to now so the
-      // window check stays deterministic regardless of when the test runs.
-      final now = DateTime.now();
-      // horse1: due 10 days from now (inside the 30-day window)
-      final horse1Due = now.add(const Duration(days: 10));
-      // horse2: due 200 days from now (outside the 30-day window)
-      final horse2Due = now.add(const Duration(days: 200));
-
+      // Vaccination due dates: +1 year from vaccination date.
+      // Today is July 28, 2026.
+      //
+      // horse1 vaccination on Aug 20, 2025 → due Aug 20, 2026 (23 days away)
+      // horse2 vaccination on Dec 20, 2025 → due Dec 20, 2026 (145 days away)
       final nearExpiryLogs = [
         HealthLog(
           id: '10',
           horseId: 'horse1',
           logType: LogType.vaccination,
-          date: DateTime(horse1Due.year - 1, horse1Due.month, horse1Due.day),
+          date: DateTime(2025, 8, 20),
           notes: 'Vaccination',
-          createdAt: now,
-          updatedAt: now,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         ),
         HealthLog(
           id: '11',
           horseId: 'horse2',
           logType: LogType.vaccination,
-          date: DateTime(horse2Due.year - 1, horse2Due.month, horse2Due.day),
+          date: DateTime(2025, 12, 20),
           notes: 'Vaccination',
-          createdAt: now,
-          updatedAt: now,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         ),
       ];
+      // horse1 should be in upcoming due items (23 days until due)
       final analytics = HealthAnalytics(
         healthLogs: nearExpiryLogs,
         totalHorses: 2,
       );
 
-      // horse1 should be in upcoming due items (due within 30 days)
+      // horse1 should be in upcoming due items
       final horse1Items = analytics.upcomingDueItems.where(
         (i) => i.horseId == 'horse1',
       );
       expect(horse1Items.isNotEmpty, true);
       expect(horse1Items.first.logType, LogType.vaccination);
 
-      // horse2 should not be in upcoming due items (due far in the future)
+      // horse2 should not be in upcoming due items (145 days away)
       final horse2Items = analytics.upcomingDueItems.where(
         (i) => i.horseId == 'horse2',
       );

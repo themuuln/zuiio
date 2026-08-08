@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/domain/notification_preferences.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 
 /// Мэдэгдлийн тохиргооны дэлгэц — хэрэглэгч бүр мэдэгдлүүдийг идэвхжүүлэх/унтраах боломжтой.
@@ -124,14 +123,20 @@ class _NotificationPreferencesScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Мэдэгдлийн тохиргоо'),
         actions: [
           if (_isSaving)
             const Padding(
-              padding: EdgeInsets.all(TamgaSpacing.lg),
-              child: LoadingIndicator(size: 20),
+              padding: EdgeInsets.all(16),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             ),
         ],
       ),
@@ -152,21 +157,18 @@ class _NotificationPreferencesScreenState
                 _loadPreferences();
               },
             )
-          : _buildPreferencesList(),
+          : _buildPreferencesList(theme),
     );
   }
 
-  Widget _buildPreferencesList() {
-    final colors = TamgaColors.of(context);
+  Widget _buildPreferencesList(ThemeData theme) {
     final prefs = _preferences ?? NotificationPreferences.defaults;
 
     return ListView(
-      padding: const EdgeInsets.all(TamgaSpacing.lg),
+      padding: const EdgeInsets.all(16),
       children: [
-        TamgaCard(
-          padding: EdgeInsets.zero,
+        Card(
           child: SwitchListTile(
-            contentPadding: TamgaSpacing.listCellPadding,
             value: prefs.notificationsEnabled,
             title: const Text('Бүх мэдэгдэл'),
             subtitle: const Text('Бүх мэдэгдлийг идэвхжүүлэх/унтраах'),
@@ -177,27 +179,31 @@ class _NotificationPreferencesScreenState
                   ),
           ),
         ),
-        const SizedBox(height: TamgaSpacing.md),
-        TamgaCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Мэдэгдлийн төрөл',
-                style: TamgaTypography.title3(
-                  weight: FontWeight.w700,
-                  color: colors.onSurface,
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Мэдэгдлийн төрөл',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: TamgaSpacing.sm),
-              Text(
-                'Тус бүрийн мэдэгдлийг идэвхжүүлэх эсвэл унтраана уу.',
-                style: TamgaTypography.body(color: colors.onSurfaceVariant),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'Тус бүрийн мэдэгдлийг идэвхжүүлэх эсвэл унтраана уу.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: TamgaSpacing.sm),
+        const SizedBox(height: 8),
         _PreferenceTile(
           title: 'Эрүүл мэндийн сануулга',
           subtitle: 'Вакцин, тахлах, эмчийн үзлэг',
@@ -282,26 +288,23 @@ class _PreferenceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
+    final theme = Theme.of(context);
 
-    return TamgaCard(
-      padding: EdgeInsets.zero,
+    return Card(
       child: SwitchListTile(
-        contentPadding: TamgaSpacing.listCellPadding,
         secondary: Icon(
           icon,
-          color: enabled ? colors.primary : colors.onSurfaceVariant,
+          color: enabled
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant,
         ),
         title: Text(
           title,
-          style: TamgaTypography.body(
-            color: enabled ? null : colors.onSurfaceVariant,
+          style: TextStyle(
+            color: enabled ? null : theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        subtitle: Text(
-          subtitle,
-          style: TamgaTypography.subheadline(color: colors.onSurfaceVariant),
-        ),
+        subtitle: Text(subtitle),
         value: value,
         onChanged: enabled ? onChanged : null,
       ),

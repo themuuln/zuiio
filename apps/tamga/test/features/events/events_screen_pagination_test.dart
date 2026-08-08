@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/features/shared/data/pagination/pagination_state.dart';
 import 'package:tamga/src/features/events/application/events_providers.dart';
 import 'package:tamga/src/shared/domain/event.dart';
 import 'package:tamga/src/features/events/presentation/events_screen.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
 /// Creates a PaginationNotifier that immediately starts in an error state.
 class _ErrorEventsNotifier extends PaginationNotifier<Event> {
@@ -51,7 +52,10 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: const Scaffold(body: EventsScreen()),
           ),
         ),
@@ -75,7 +79,10 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: const Scaffold(body: EventsScreen()),
           ),
         ),
@@ -85,10 +92,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify error message is displayed
-      expect(find.text('Ачаалахад алдаа гарлаа'), findsOneWidget);
+      expect(find.text('Арга хэмжээг ачаалж чадсангүй'), findsOneWidget);
 
-      // Verify retry button is displayed (TamgaErrorWidget uses bilingual label)
-      expect(find.text('Дахин оролдох / Retry'), findsOneWidget);
+      // Verify retry button is displayed
+      expect(find.text('Дахин оролдох'), findsOneWidget);
     });
   });
 }

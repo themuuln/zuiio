@@ -14,82 +14,66 @@ extension GetIsarDigitalCertificateCollection on Isar {
       this.collection();
 }
 
-final IsarDigitalCertificateSchema = CollectionSchema(
+const IsarDigitalCertificateSchema = CollectionSchema(
   name: r'IsarDigitalCertificate',
-  id: int.parse('5848469826314296659'),
+  id: 5848469826314296659,
   properties: {
     r'createdAt': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'dataAgeDays': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'dataAgeDays',
       type: IsarType.long,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'expiryDate': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'expiryDate',
       type: IsarType.dateTime,
     ),
-    r'horseId': PropertySchema(
-      id: int.parse('4'),
-      name: r'horseId',
-      type: IsarType.string,
-    ),
+    r'horseId': PropertySchema(id: 4, name: r'horseId', type: IsarType.string),
     r'horseName': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'horseName',
       type: IsarType.string,
     ),
     r'issueDate': PropertySchema(
-      id: int.parse('6'),
+      id: 6,
       name: r'issueDate',
       type: IsarType.dateTime,
     ),
-    r'ownerId': PropertySchema(
-      id: int.parse('7'),
-      name: r'ownerId',
-      type: IsarType.string,
-    ),
+    r'ownerId': PropertySchema(id: 7, name: r'ownerId', type: IsarType.string),
     r'ownerName': PropertySchema(
-      id: int.parse('8'),
+      id: 8,
       name: r'ownerName',
       type: IsarType.string,
     ),
     r'previousOwnerId': PropertySchema(
-      id: int.parse('9'),
+      id: 9,
       name: r'previousOwnerId',
       type: IsarType.string,
     ),
-    r'qrCode': PropertySchema(
-      id: int.parse('10'),
-      name: r'qrCode',
-      type: IsarType.string,
-    ),
+    r'qrCode': PropertySchema(id: 10, name: r'qrCode', type: IsarType.string),
     r'registrationDate': PropertySchema(
-      id: int.parse('11'),
+      id: 11,
       name: r'registrationDate',
       type: IsarType.dateTime,
     ),
-    r'status': PropertySchema(
-      id: int.parse('12'),
-      name: r'status',
-      type: IsarType.string,
-    ),
+    r'status': PropertySchema(id: 12, name: r'status', type: IsarType.string),
     r'trustLevel': PropertySchema(
-      id: int.parse('13'),
+      id: 13,
       name: r'trustLevel',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: int.parse('14'),
+      id: 14,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -101,7 +85,7 @@ final IsarDigitalCertificateSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -114,7 +98,7 @@ final IsarDigitalCertificateSchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: int.parse('-4681125749579367450'),
+      id: -4681125749579367450,
       name: r'horseId',
       unique: false,
       replace: false,

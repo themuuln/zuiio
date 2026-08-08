@@ -1,8 +1,0 @@
-# Edge Function authentication settings for Tamga.
-# Public report pages authenticate with a cryptographic share token instead of a JWT.
-
-[functions.public-lost-horse]
-verify_jwt = false
-
-[functions.lost-horse-alert-dispatch]
-verify_jwt = true

@@ -10,7 +10,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/features/feature_gate.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/team_providers.dart';
 import '../data/team_repository.dart';
@@ -86,7 +85,7 @@ class _TeamManagementContent extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Багийн удирдлага')),
       body: teamAsync.when(
-        loading: () => const Center(child: LoadingIndicator(size: 28)),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => TamgaErrorWidget(
           message: 'Багийн мэдээлэл ачаалахад алдаа гарлаа: $err',
           onRetry: () => ref.invalidate(currentTeamProvider),
@@ -224,7 +223,7 @@ class _TeamDetail extends ConsumerWidget {
         // ── Members List ──
         Expanded(
           child: membersAsync.when(
-            loading: () => const Center(child: LoadingIndicator(size: 28)),
+            loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, _) => TamgaErrorWidget(
               message: 'Гишүүдийн мэдээлэл ачаалахад алдаа гарлаа',
               onRetry: () => ref.invalidate(teamMembersProvider(team.id)),
@@ -378,7 +377,6 @@ class _MemberTile extends ConsumerWidget {
             // Actions (only for owner, not for owner member itself)
             if (isOwner && !isMemberOwner)
               PopupMenuButton<_MemberAction>(
-                tooltip: 'Гишүүний үйлдэл',
                 icon: Icon(
                   Icons.more_vert,
                   color: colorScheme.onSurfaceVariant,
@@ -518,7 +516,7 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
+    final theme = Theme.of(context);
 
     return Container(
       padding: AppSpacing.sheetPadding,
@@ -532,7 +530,9 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: colors.onSurfaceVariant.withValues(alpha: 0.3),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.3,
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -540,9 +540,8 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Дүр өөрчлөх — ${widget.member.userId}',
-            style: TamgaTypography.headline(
-              weight: FontWeight.w600,
-              color: colors.onSurface,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -570,7 +569,9 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? colors.primary : colors.outline,
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.outline,
                           width: isSelected ? 7 : 2,
                         ),
                       ),
@@ -590,13 +591,15 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: colors.surfaceContainerHighest,
+                                    color: theme
+                                        .colorScheme
+                                        .surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
                                     'Одоогийн',
-                                    style: TamgaTypography.caption1(
-                                      color: colors.onSurfaceVariant,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -610,9 +613,7 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
                                 : role.defaultPermissions
                                       .map((p) => p.displayName)
                                       .join(', '),
-                            style: TamgaTypography.caption1(
-                              color: colors.onSurfaceVariant,
-                            ),
+                            style: theme.textTheme.bodySmall,
                           ),
                         ],
                       ),
@@ -631,11 +632,15 @@ class _RoleChangeSheetState extends State<_RoleChangeSheet> {
             child: FilledButton(
               onPressed: _isSaving ? null : _saveRole,
               child: _isSaving
-                  ? LoadingIndicator(size: 20, color: colors.onPrimary)
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Text('Хадгалах'),
             ),
           ),
-          const SizedBox(height: TamgaSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
         ],
       ),
     );

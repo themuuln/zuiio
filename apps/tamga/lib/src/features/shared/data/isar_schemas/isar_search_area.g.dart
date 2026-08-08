@@ -13,52 +13,40 @@ extension GetIsarSearchAreaCollection on Isar {
   IsarCollection<IsarSearchArea> get isarSearchAreas => this.collection();
 }
 
-final IsarSearchAreaSchema = CollectionSchema(
+const IsarSearchAreaSchema = CollectionSchema(
   name: r'IsarSearchArea',
-  id: int.parse('8456555227036811035'),
+  id: 8456555227036811035,
   properties: {
     r'centerLat': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'centerLat',
       type: IsarType.double,
     ),
     r'centerLng': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'centerLng',
       type: IsarType.double,
     ),
-    r'color': PropertySchema(
-      id: int.parse('2'),
-      name: r'color',
-      type: IsarType.long,
-    ),
+    r'color': PropertySchema(id: 2, name: r'color', type: IsarType.long),
     r'createdAt': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'createdBy': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'createdBy',
       type: IsarType.string,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'isActive': PropertySchema(
-      id: int.parse('6'),
-      name: r'isActive',
-      type: IsarType.bool,
-    ),
-    r'name': PropertySchema(
-      id: int.parse('7'),
-      name: r'name',
-      type: IsarType.string,
-    ),
+    r'isActive': PropertySchema(id: 6, name: r'isActive', type: IsarType.bool),
+    r'name': PropertySchema(id: 7, name: r'name', type: IsarType.string),
     r'radiusKm': PropertySchema(
-      id: int.parse('8'),
+      id: 8,
       name: r'radiusKm',
       type: IsarType.double,
     ),
@@ -70,7 +58,7 @@ final IsarSearchAreaSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,

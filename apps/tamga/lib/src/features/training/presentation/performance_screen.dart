@@ -31,8 +31,7 @@ class _PerformanceScreenState extends ConsumerState<PerformanceScreen> {
 
     return Scaffold(
       body: recordsAsync.when(
-        loading: () =>
-            const TamgaLoadingView(message: 'Гүйцэтгэлийг ачаалж байна'),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => TamgaErrorWidget(
           message: 'Гүйцэтгэлийн мэдээлэл авахад алдаа гарлаа: $err',
           onRetry: () =>
@@ -47,10 +46,10 @@ class _PerformanceScreenState extends ConsumerState<PerformanceScreen> {
               ref.invalidate(performanceRecordsProvider(widget.horseId)),
         ),
       ),
-      bottomNavigationBar: TamgaBottomAction(
-        label: 'Хэмжилт нэмэх',
-        icon: Icons.add,
-        onTap: () => _showAddMeasurementDialog(context),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'add_performance',
+        onPressed: () => _showAddMeasurementDialog(context),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -104,6 +103,7 @@ class _PerformanceContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final colors = TamgaColors.of(context);
     final filtered = _filteredRecords;
 
@@ -121,7 +121,7 @@ class _PerformanceContent extends StatelessWidget {
                 icon: Icons.show_chart_outlined,
                 title: 'Гүйцэтгэлийн үзүүлэлт байхгүй',
                 description:
-                    'Гүйцэтгэлийн шинэ үзүүлэлт нэмэхийн тулд доорх товчийг дарна уу.',
+                    'Гүйцэтгэлийн шинэ үзүүлэлт нэмэхийн тулд + товчийг дарна уу.',
                 compact: true,
               ),
             ),
@@ -130,6 +130,7 @@ class _PerformanceContent extends StatelessWidget {
       );
     }
 
+    // Sort records by date for chart
     final sorted = List<PerformanceRecord>.from(records)
       ..sort((a, b) {
         final ad = a.date ?? DateTime(2020);
@@ -153,6 +154,7 @@ class _PerformanceContent extends StatelessWidget {
       onRefresh: () async => onRefresh(),
       child: CustomScrollView(
         slivers: [
+          // ── Metric filter ──
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -167,60 +169,76 @@ class _PerformanceContent extends StatelessWidget {
               ),
             ),
           ),
+
+          // ── Trend chart ──
           if (filtered.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: TamgaCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.trending_up,
-                            size: 18,
-                            color: colors.primary,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            'Тренд',
-                            style: TamgaTypography.headline(fontSize: 15),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      PerformanceTrendChart(
-                        dataPoints: chartData,
-                        xLabels: xLabels,
-                        yLabel: filtered.first.unit != null
-                            ? filtered.first.unit!
-                            : '',
-                        height: 200,
-                        lineColor: colors.primary,
-                      ),
-                    ],
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.trending_up,
+                              size: 18,
+                              color: colors.primary,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(
+                              'Тренд',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        PerformanceTrendChart(
+                          dataPoints: chartData,
+                          xLabels: xLabels,
+                          yLabel:
+                              filtered.isNotEmpty && filtered.first.unit != null
+                              ? filtered.first.unit!
+                              : '',
+                          height: 200,
+                          lineColor: colors.primary,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             )
           else
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: EmptyState(
-                icon: Icons.filter_alt_outlined,
-                title: 'Шүүлтэд тохирох үзүүлэлт байхгүй',
-                compact: true,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: Center(
+                  child: Text(
+                    'Шүүлтэд тохирох үзүүлэлт байхгүй',
+                    style: TextStyle(color: colors.onSurfaceVariant),
+                  ),
+                ),
               ),
             ),
+
           const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.sm)),
+
+          // ── Measurements list ──
           if (filtered.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 child: Text(
                   selectedMetric?.displayName ?? 'Бүх үзүүлэлт',
-                  style: TamgaTypography.headline(fontSize: 15),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -231,7 +249,6 @@ class _PerformanceContent extends StatelessWidget {
                 return _MeasurementTile(record: record);
               }, childCount: filtered.length),
             ),
-          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
         ],
       ),
     );
@@ -252,7 +269,7 @@ class _MetricFilterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 44,
+      height: 40,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -290,7 +307,26 @@ class _FilterChip2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TamgaChoicePill(label: label, selected: selected, onTap: onTap);
+    final colors = TamgaColors.of(context);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? colors.primary : colors.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? colors.onPrimary : colors.onSurface,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -303,6 +339,7 @@ class _MeasurementTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final colors = TamgaColors.of(context);
     final effectiveDate = record.date ?? DateTime.now();
     final dateStr =
@@ -311,54 +348,61 @@ class _MeasurementTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xs,
+        vertical: 4,
       ),
-      child: TamgaCard(
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: colors.secondaryContainer,
-              radius: 20,
-              child: Icon(
-                _metricIcon(record.metric),
-                color: colors.onSecondaryContainer,
-                size: 20,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: colors.secondaryContainer,
+                radius: 20,
+                child: Icon(
+                  _metricIcon(record.metric),
+                  color: colors.onSecondaryContainer,
+                  size: 20,
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    record.metric.displayName,
-                    style: TamgaTypography.headline(fontSize: 15),
-                  ),
-                  Text(
-                    '${record.value.toStringAsFixed(1)}${record.unit != null ? ' ${record.unit}' : ''}',
-                    style: TamgaTypography.caption1(
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                  if (record.notes.isNotEmpty) ...[
-                    const SizedBox(height: 2),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      record.notes,
-                      style: TamgaTypography.caption2(
-                        color: colors.onSurfaceVariant,
+                      record.metric.displayName,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
+                    Text(
+                      '${record.value.toStringAsFixed(1)}${record.unit != null ? ' ${record.unit}' : ''}',
+                      style: TextStyle(
+                        color: colors.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                    ),
+                    if (record.notes.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        record.notes,
+                        style: TextStyle(
+                          color: colors.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            Text(
-              dateStr,
-              style: TamgaTypography.caption2(color: colors.onSurfaceVariant),
-            ),
-          ],
+              Text(
+                dateStr,
+                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
+              ),
+            ],
+          ),
         ),
       ),
     );

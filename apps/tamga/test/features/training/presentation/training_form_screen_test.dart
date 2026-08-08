@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/features/training/domain/training_log.dart';
 import 'package:tamga/src/features/training/presentation/training_form_screen.dart';
 import '../../../helpers/test_helpers.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Helper ─────────────────────────────────────────────────────────
 
@@ -15,7 +15,7 @@ Widget createTrainingFormScreen({
 }) {
   return ProviderScope(
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: TrainingFormScreen(horseId: horseId, existingLog: existingLog),
     ),
   );

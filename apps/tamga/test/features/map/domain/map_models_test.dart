@@ -58,32 +58,6 @@ void main() {
       expect(restored.status, LostHorseStatus.active);
     });
 
-    test('public sharing fields serialize without the raw token', () {
-      final report = LostHorseReport(
-        id: 'r-public',
-        ownerId: 'o1',
-        lastSeenLat: 47.9,
-        lastSeenLng: 106.9,
-        lastSeenAt: DateTime(2026, 6, 1),
-        createdAt: DateTime(2026, 6, 1),
-        updatedAt: DateTime(2026, 6, 1),
-        publicShareToken: 'raw-secret-token',
-        publicTokenHash: 'hash',
-        publicAccessEnabled: true,
-        publicLocationPrecision: 'aimag',
-        publicContactMode: 'none',
-      );
-
-      final json = report.toJson();
-      final restored = LostHorseReport.fromJson(json);
-      expect(json.values, isNot(contains('raw-secret-token')));
-      expect(restored.publicTokenHash, 'hash');
-      expect(restored.publicAccessEnabled, isTrue);
-      expect(restored.publicLocationPrecision, 'aimag');
-      expect(restored.publicContactMode, 'none');
-      expect(restored.publicShareToken, isNull);
-    });
-
     test('copyWith overrides specified fields', () {
       final report = LostHorseReport(
         id: 'r1',

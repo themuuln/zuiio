@@ -8,12 +8,6 @@ enum MediaCategory {
   /// Horse photos, profile avatars, event photos → Supabase Storage.
   photo,
 
-  /// Private photos attached to a recovery report.
-  recoveryPhoto,
-
-  /// Private photos attached to a community sighting.
-  recoverySightingPhoto,
-
   /// Documents (vet certs, insurance, registration) → Supabase Storage.
   document,
 

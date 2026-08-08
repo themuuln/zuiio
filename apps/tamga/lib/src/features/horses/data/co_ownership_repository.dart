@@ -1,6 +1,3 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 
 import '../../../app/supabase_bootstrap.dart';
@@ -8,7 +5,6 @@ import '../../../core/error/app_exception.dart';
 import '../../../core/error/result.dart';
 import '../../../core/sync/sync_queue.dart';
 import '../../shared/data/isar_storage.dart';
-import '../../shared/data/isar_sync_storage.dart';
 import '../../shared/data/isar_schemas/isar_co_ownership_record.dart';
 import '../domain/co_ownership.dart';
 
@@ -29,28 +25,11 @@ class LocalCoOwnershipRepository implements CoOwnershipRepository {
   LocalCoOwnershipRepository({
     required IsarStorage storage,
     required SyncQueue syncQueue,
-    IsarSyncStorage? syncStorage,
   }) : _storage = storage,
-       _syncQueue = syncQueue,
-       _syncStorage = syncStorage;
+       _syncQueue = syncQueue;
 
   final IsarStorage _storage;
   final SyncQueue _syncQueue;
-  final IsarSyncStorage? _syncStorage;
-
-  /// Persist the sync intent to the durable queue (no-op when not wired).
-  void _enqueueAndPersist(SyncQueueItem item) {
-    _syncQueue.enqueue(item);
-    final store = _syncStorage;
-    if (store == null) return;
-    unawaited(() async {
-      try {
-        await store.enqueue(item);
-      } catch (e) {
-        debugPrint('[co_ownership] Failed to persist queue item: $e');
-      }
-    }());
-  }
 
   static List<CoOwnershipRecord> get _seed => [
     CoOwnershipRecord(
@@ -120,7 +99,7 @@ class LocalCoOwnershipRepository implements CoOwnershipRepository {
         );
       });
 
-      _enqueueAndPersist(
+      _syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'co_ownership',
           entityId: record.id,
@@ -154,7 +133,7 @@ class LocalCoOwnershipRepository implements CoOwnershipRepository {
         );
       });
 
-      _enqueueAndPersist(
+      _syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'co_ownership',
           entityId: id,

@@ -1,6 +1,3 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:uuid/uuid.dart';
 
@@ -8,7 +5,6 @@ import '../../../core/error/app_exception.dart';
 import '../../../core/error/result.dart';
 import '../../../core/sync/sync_queue.dart';
 import '../../shared/data/isar_storage.dart';
-import '../../shared/data/isar_sync_storage.dart';
 import '../../shared/data/isar_schemas/isar_payment_request.dart';
 import '../domain/payment_request.dart';
 import 'payment_repository.dart';
@@ -22,28 +18,11 @@ class LocalPaymentRepository implements PaymentRepository {
   LocalPaymentRepository({
     required IsarStorage storage,
     required SyncQueue syncQueue,
-    IsarSyncStorage? syncStorage,
   }) : _storage = storage,
-       _syncQueue = syncQueue,
-       _syncStorage = syncStorage;
+       _syncQueue = syncQueue;
 
   final IsarStorage _storage;
   final SyncQueue _syncQueue;
-  final IsarSyncStorage? _syncStorage;
-
-  /// Persist the sync intent to the durable queue (no-op when not wired).
-  void _enqueueAndPersist(SyncQueueItem item) {
-    _syncQueue.enqueue(item);
-    final store = _syncStorage;
-    if (store == null) return;
-    unawaited(() async {
-      try {
-        await store.enqueue(item);
-      } catch (e) {
-        debugPrint('[payment] Failed to persist queue item: $e');
-      }
-    }());
-  }
 
   // ── Helpers ──────────────────────────────────────────────
 
@@ -82,7 +61,7 @@ class LocalPaymentRepository implements PaymentRepository {
       });
 
       // Enqueue sync item for payment creation
-      _enqueueAndPersist(
+      _syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'payment',
           entityId: id,
@@ -206,7 +185,7 @@ class LocalPaymentRepository implements PaymentRepository {
       final updated = isarPayment.toDomain();
 
       // Enqueue sync item for status update
-      _enqueueAndPersist(
+      _syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'payment',
           entityId: requestId,

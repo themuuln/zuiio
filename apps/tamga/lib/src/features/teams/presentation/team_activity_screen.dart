@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/team_providers.dart';
 import '../domain/team_activity.dart';
@@ -34,7 +33,7 @@ class TeamActivityScreen extends ConsumerWidget {
         ],
       ),
       body: activityAsync.when(
-        loading: () => const Center(child: LoadingIndicator(size: 28)),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => TamgaErrorWidget(
           message: 'Үйлдлийн түүхийг ачаалахад алдаа гарлаа: $err',
           onRetry: () => ref.invalidate(teamActivityProvider(teamId)),
@@ -60,12 +59,39 @@ class _EmptyActivity extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return EmptyState(
-      icon: Icons.history,
-      title: 'Үйлдлийн түүх хоосон байна',
-      description: 'Багийн үйлдлүүд энд гарч ирнэ',
-      actionLabel: 'Шинэчлэх',
-      onAction: onRefresh,
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.history,
+              size: 64,
+              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Үйлдлийн түүх хоосон байна',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Багийн үйлдлүүд энд гарч ирнэ',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            OutlinedButton.icon(
+              onPressed: onRefresh,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Шинэчлэх'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -97,24 +123,25 @@ class _ActivityTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
+    final theme = Theme.of(context);
     final (icon, label) = _actionInfo(activity.action);
 
     return ListTile(
-      contentPadding: TamgaSpacing.listCellPadding,
       leading: CircleAvatar(
-        backgroundColor: colors.secondaryContainer,
-        child: Icon(icon, size: 20, color: colors.onSecondaryContainer),
+        backgroundColor: theme.colorScheme.secondaryContainer,
+        child: Icon(icon, size: 20),
       ),
       title: Text(
         label,
-        style: TamgaTypography.body(),
+        style: theme.textTheme.bodyMedium,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
         _formatDateTime(activity.createdAt),
-        style: TamgaTypography.subheadline(color: colors.onSurfaceVariant),
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

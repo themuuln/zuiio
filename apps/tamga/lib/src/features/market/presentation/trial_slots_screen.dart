@@ -298,7 +298,7 @@ class _SlotCard extends StatelessWidget {
           color: isPast
               ? theme.colorScheme.error
               : isBooked
-              ? theme.colorScheme.secondary
+              ? Colors.orange
               : theme.colorScheme.tertiary,
         ),
         title: Text(
@@ -320,7 +320,7 @@ class _SlotCard extends StatelessWidget {
                 color: isPast
                     ? theme.colorScheme.error
                     : isBooked
-                    ? theme.colorScheme.secondary
+                    ? Colors.orange
                     : theme.colorScheme.tertiary,
               ),
             ),
@@ -336,7 +336,6 @@ class _SlotCard extends StatelessWidget {
         ),
         trailing: onDelete != null
             ? IconButton(
-                tooltip: 'Устгах',
                 icon: Icon(
                   Icons.delete_outline,
                   color: theme.colorScheme.error,
@@ -446,14 +445,7 @@ class TrialBookingSection extends ConsumerWidget {
         height: 100,
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, _) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: TamgaErrorWidget(
-          message: 'Туршилтын цагууд ачаалахад алдаа гарлаа',
-          onRetry: () =>
-              ref.invalidate(trialSlotsForListingProvider(listingId)),
-        ),
-      ),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -507,10 +499,12 @@ class _AvailableSlotItem extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          FilledButton(
-            style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-            onPressed: () => _requestBooking(context, ref),
-            child: const Text('Захиалах'),
+          SizedBox(
+            height: 36,
+            child: FilledButton(
+              onPressed: () => _requestBooking(context, ref),
+              child: const Text('Захиалах', style: TextStyle(fontSize: 12)),
+            ),
           ),
         ],
       ),
@@ -581,7 +575,7 @@ class _AvailableSlotItem extends ConsumerWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Алдаа: ${result.error.message}'),
-                backgroundColor: Theme.of(context).colorScheme.error,
+                backgroundColor: Colors.red,
               ),
             );
           }

@@ -98,17 +98,38 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
-            // App bar
-            TamgaSliverHeader(
-              title: 'Зах',
-              subtitle: 'Морь, малын зарууд',
+            // App Bar
+            SliverAppBar(
+              title: const Text('Зах'),
               actions: [
                 Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.xs),
+                  padding: const EdgeInsets.only(right: 8),
                   child: SyncIndicator(size: 12),
                 ),
                 IconButton(
-                  tooltip: 'Хадгалсан зарууд',
+                  tooltip: 'Шүүлтүүр',
+                  onPressed: () => setState(() => _showFilters = !_showFilters),
+                  icon: Icon(
+                    _showFilters ? Icons.filter_list_off : Icons.filter_list,
+                  ),
+                ),
+                IconButton(
+                  tooltip: _isGrid ? 'Жагсаалт' : 'Сүлжээ',
+                  onPressed: () => setState(() => _isGrid = !_isGrid),
+                  icon: Icon(_isGrid ? Icons.view_list : Icons.grid_view),
+                ),
+                IconButton(
+                  tooltip: 'Үржүүлэгчийн чансаа',
+                  onPressed: () => context.push('/market/leaderboard'),
+                  icon: const Icon(Icons.leaderboard_outlined),
+                ),
+                IconButton(
+                  tooltip: 'Үнийн түүх',
+                  onPressed: () => context.go('/market/price-history'),
+                  icon: const Icon(Icons.analytics_outlined),
+                ),
+                IconButton(
+                  tooltip: 'Хадгалсан',
                   onPressed: () => context.go('/market/favorites'),
                   icon: const Icon(Icons.favorite_border),
                 ),
@@ -117,64 +138,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   onPressed: () => context.push('/market/create'),
                   icon: const Icon(Icons.add_business_outlined),
                 ),
-                PopupMenuButton<String>(
-                  tooltip: 'Нэмэлт үйлдэл',
-                  onSelected: _handleMenuAction,
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'filters',
-                      child: Text(
-                        _showFilters ? 'Шүүлтүүр нуух' : 'Шүүлтүүр харуулах',
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'view',
-                      child: Text(_isGrid ? 'Жагсаалт харах' : 'Сүлжээ харах'),
-                    ),
-                    PopupMenuItem(
-                      value: 'leaderboard',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.leaderboard_outlined),
-                          const SizedBox(width: AppSpacing.sm),
-                          const Text('Үржүүлэгчийн чансаа'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'price-history',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.history),
-                          const SizedBox(width: AppSpacing.sm),
-                          const Text('Үнийн түүх'),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
 
-            // Discovery lead
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.sm,
-                AppSpacing.lg,
-                AppSpacing.md,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: Text(
-                  'Танд тохирох морийг олоорой',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-
-            // Search field
+            // хайлтын талбар
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,
@@ -199,37 +166,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     );
                   },
                   decoration: InputDecoration(
-                    hintText: 'Нэр, зүс, байршлаар хайх',
+                    hintText: 'Нэр, зүс, байршил, бичиг баримт...',
                     prefixIcon: const Icon(Icons.search),
-                    suffixIcon: IconButton(
-                      tooltip: _showFilters
-                          ? 'Шүүлтүүр нуух'
-                          : 'Шүүлтүүр харуулах',
-                      onPressed: () =>
-                          setState(() => _showFilters = !_showFilters),
-                      icon: Icon(
-                        _showFilters ? Icons.tune : Icons.tune_outlined,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerLow,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(
-                        AppSpacing.cornerRadius,
-                      ),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppSpacing.cornerRadius,
-                      ),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppSpacing.cornerRadius,
+                        AppSpacing.cornerRadiusPill,
                       ),
                     ),
                     isDense: true,
@@ -256,26 +197,19 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 ),
               ),
 
-            // Result summary
+            // тоо баримт
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,
-                AppSpacing.sm,
+                0,
                 AppSpacing.lg,
                 AppSpacing.sm,
               ),
               sliver: SliverToBoxAdapter(
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Шинэ зарууд',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
                     AppStatChip(
-                      label: 'Нийт',
+                      label: 'Идэвхтэй зар',
                       value: '${catalogState.totalCount}',
                     ),
                   ],
@@ -297,8 +231,6 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     icon: Icons.storefront_outlined,
                     title: 'Эхний зарыг оруулна уу',
                     description: 'Захын зар жагсаалт хоосон байна.',
-                    actionLabel: 'Зар нэмэх',
-                    onAction: () => context.push('/market/create'),
                   ),
                 ),
               )
@@ -376,19 +308,6 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         ),
       ),
     );
-  }
-
-  void _handleMenuAction(String value) {
-    switch (value) {
-      case 'filters':
-        setState(() => _showFilters = !_showFilters);
-      case 'view':
-        setState(() => _isGrid = !_isGrid);
-      case 'leaderboard':
-        context.push('/market/leaderboard');
-      case 'price-history':
-        context.go('/market/price-history');
-    }
   }
 
   Future<void> _toggleFavorite(WidgetRef ref, String listingId) async {

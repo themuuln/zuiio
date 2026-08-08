@@ -1,6 +1,3 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 
 import '../../../core/error/app_exception.dart';
@@ -8,7 +5,6 @@ import '../../../core/error/result.dart';
 import '../../../core/sync/sync_queue.dart';
 import '../../../shared/domain/horse.dart';
 import '../../shared/data/isar_storage.dart';
-import '../../shared/data/isar_sync_storage.dart';
 import '../../shared/data/isar_schemas/isar_lineage_root.dart';
 import '../../shared/data/isar_schemas/isar_lineage_snapshot.dart';
 import '../../shared/data/isar_schemas/isar_lineage_tree_node.dart';
@@ -31,28 +27,11 @@ class LocalLineageRepository implements LineageRepository {
   LocalLineageRepository({
     required IsarStorage storage,
     required SyncQueue syncQueue,
-    IsarSyncStorage? syncStorage,
   }) : _storage = storage,
-       _syncQueue = syncQueue,
-       _syncStorage = syncStorage;
+       _syncQueue = syncQueue;
 
   final IsarStorage _storage;
   final SyncQueue _syncQueue;
-  final IsarSyncStorage? _syncStorage;
-
-  /// Persist the sync intent to the durable queue (no-op when not wired).
-  void _enqueueAndPersist(SyncQueueItem item) {
-    _syncQueue.enqueue(item);
-    final store = _syncStorage;
-    if (store == null) return;
-    unawaited(() async {
-      try {
-        await store.enqueue(item);
-      } catch (e) {
-        debugPrint('[lineage] Failed to persist queue item: $e');
-      }
-    }());
-  }
 
   // ── Seed Data ──────────────────────────────────────────────────────
 
@@ -66,7 +45,7 @@ class LocalLineageRepository implements LineageRepository {
       birthYear: 2012,
       offspringCount: 18,
       awardCount: 7,
-      notes: 'Өрхийн гол азарганы шугам. Удмын модны үндсэн язгуур.',
+      notes: 'Өрхийн гол азарганы шугам. Tree view-ийн үндсэн root.',
     ),
     LineageRoot(
       id: 'tsagaan-salkhi',
@@ -75,7 +54,7 @@ class LocalLineageRepository implements LineageRepository {
       birthYear: 2016,
       offspringCount: 9,
       awardCount: 4,
-      notes: 'Гаднах удамтай холбогдсон хоёрдогч язгуур.',
+      notes: 'Гаднах удамтай холбогдсон хоёрдогч root.',
     ),
   ];
 
@@ -436,10 +415,9 @@ class LocalLineageRepository implements LineageRepository {
       final seeded = await _storage.lineageRoots.where().findAll();
       return Result.ok(seeded.map((r) => r.toDomain()).toList());
     } catch (e) {
-      // Isar unavailable (first-launch race, store error): serve the
-      // compile-time seed data instead of failing — offline-first holds even
-      // when the local store hiccups.
-      return Result.ok(_seedRoots);
+      return Result.fail(
+        AppException.withDetail('FETCH_ROOTS_ERROR', e.toString()),
+      );
     }
   }
 
@@ -522,12 +500,6 @@ class LocalLineageRepository implements LineageRepository {
         ),
       );
     } catch (e) {
-      // Same resilience as [fetchRoots]: fall back to the compile-time seed
-      // snapshot when the store is unavailable.
-      final seed = _seedSnapshots[rootId];
-      if (seed != null) {
-        return Result.ok(seed);
-      }
       return Result.fail(
         AppException.withDetail('FETCH_SNAPSHOT_ERROR', e.toString()),
       );
@@ -565,7 +537,7 @@ class LocalLineageRepository implements LineageRepository {
         await _storage.lineageTreeNodes.put(node);
       });
 
-      _enqueueAndPersist(
+      _syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'lineage',
           entityId: '${horseId}_parent_$parentId',
@@ -605,7 +577,7 @@ class LocalLineageRepository implements LineageRepository {
         }
       });
 
-      _enqueueAndPersist(
+      _syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'lineage',
           entityId: '${horseId}_parent_$parentId',
@@ -667,7 +639,7 @@ class LocalLineageRepository implements LineageRepository {
       if (birthYear != null) updateData['birthYear'] = birthYear;
       if (notes != null) updateData['notes'] = notes;
 
-      _enqueueAndPersist(
+      _syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'lineage',
           entityId: horseId,

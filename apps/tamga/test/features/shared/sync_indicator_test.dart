@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/features/shared/application/sync_providers.dart';
 import 'package:tamga/src/features/shared/presentation/sync_indicator.dart';
 import 'package:tamga/src/features/profile/application/cloud_sync_coordinator.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -26,7 +26,7 @@ Widget wrapForTest({required Widget child, SyncState? syncState}) {
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: Scaffold(body: child),
     ),
   );
@@ -136,7 +136,7 @@ void main() {
 
       // Find the Tooltip widget
       final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
-      expect(tooltip.message, 'Синхрончлогдсон');
+      expect(tooltip.message, 'Synced');
     });
 
     testWidgets('shows correct tooltip for pending state', (
@@ -153,7 +153,7 @@ void main() {
       );
 
       final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
-      expect(tooltip.message, '5 синк хүлээгдэж байна');
+      expect(tooltip.message, '5 pending');
     });
 
     testWidgets('shows correct tooltip for error state', (
@@ -185,7 +185,7 @@ void main() {
       );
 
       final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
-      expect(tooltip.message, 'Синхрончлол идэвхгүй');
+      expect(tooltip.message, 'Sync inactive');
     });
 
     testWidgets('shows default error tooltip when no error message', (
@@ -199,7 +199,7 @@ void main() {
       );
 
       final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
-      expect(tooltip.message, 'Синхрончлолд алдаа гарлаа');
+      expect(tooltip.message, 'Sync error');
     });
   });
 
@@ -275,7 +275,7 @@ void main() {
       );
 
       final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
-      expect(tooltip.message, '3 зөрчилдөөн байна');
+      expect(tooltip.message, '3 conflict(s)');
     });
 
     testWidgets('tooltip shows singular conflict count', (
@@ -293,7 +293,7 @@ void main() {
       );
 
       final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
-      expect(tooltip.message, '1 зөрчилдөөн байна');
+      expect(tooltip.message, '1 conflict(s)');
     });
 
     testWidgets('does not show red dot when conflictCount is 0', (

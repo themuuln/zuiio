@@ -1,7 +1,5 @@
-import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:uuid/uuid.dart';
 
@@ -22,28 +20,11 @@ import 'document_repository.dart';
 class LocalDocumentRepository
     extends LocalRepository<DocumentRecord, IsarDocumentRecord>
     implements DocumentRepository {
-  LocalDocumentRepository({
-    IsarStorage? storage,
-    SyncQueue? syncQueue,
-    super.syncStorage,
-  }) : super(
-         storage: storage ?? IsarStorage.instance,
-         syncQueue: syncQueue ?? SyncQueue(),
-       );
-
-  /// Persist the sync intent to the durable queue (no-op when not wired).
-  void _enqueueAndPersist(SyncQueueItem item) {
-    syncQueue.enqueue(item);
-    final store = syncStorage;
-    if (store == null) return;
-    unawaited(() async {
-      try {
-        await store.enqueue(item);
-      } catch (e) {
-        debugPrint('[$entityType] Failed to persist queue item: $e');
-      }
-    }());
-  }
+  LocalDocumentRepository({IsarStorage? storage, SyncQueue? syncQueue})
+    : super(
+        storage: storage ?? IsarStorage.instance,
+        syncQueue: syncQueue ?? SyncQueue(),
+      );
 
   @override
   IsarCollection<IsarDocumentRecord> get collection => storage.documentRecords;
@@ -103,7 +84,7 @@ class LocalDocumentRepository
         await collection.put(isarDoc);
       });
 
-      _enqueueAndPersist(
+      syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'document',
           entityId: docId,
@@ -142,7 +123,7 @@ class LocalDocumentRepository
         await collection.delete(existing.id);
       });
 
-      _enqueueAndPersist(
+      syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'document',
           entityId: documentId,

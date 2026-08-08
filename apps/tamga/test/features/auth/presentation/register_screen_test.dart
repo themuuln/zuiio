@@ -3,16 +3,57 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:tamga/src/features/auth/application/auth_providers.dart';
 import 'package:tamga/src/features/auth/data/auth_repository.dart';
 import 'package:tamga/src/features/auth/domain/auth_state.dart';
 import 'package:tamga/src/features/auth/presentation/register_screen.dart';
 import 'package:tamga/src/core/error/result.dart';
 
-// ── Mock ────────────────────────────────────────────────────────────────
+// ── Controlled auth notifier ──
+
+/// A notifier that yields AuthState.unauthenticated (never hits kDebugMode bypass).
+class _TestAuthNotifier extends AuthStateNotifier {
+  @override
+  Stream<AuthState> build() async* {
+    yield const AuthState.unauthenticated();
+    // Then listen to authStateChanges from repository
+    final repository = ref.read(authRepositoryProvider);
+    yield* repository.authStateChanges;
+  }
+}
+
+// ── Mock ──
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+
+// ── Placeholder for GoRouter routes ──
+
+class _Placeholder extends StatelessWidget {
+  const _Placeholder(this.label);
+  final String label;
+  @override
+  Widget build(BuildContext context) => Scaffold(body: Text(label));
+}
+
+GoRouter _testRouter(Widget home) {
+  return GoRouter(
+    initialLocation: '/test',
+    routes: [
+      GoRoute(path: '/test', builder: (_, _) => home),
+      GoRoute(
+        path: '/lineage',
+        builder: (_, _) => const _Placeholder('Lineage'),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (_, _) => const _Placeholder('Register'),
+      ),
+    ],
+  );
+}
 
 void main() {
   late MockAuthRepository mockRepo;
@@ -28,12 +69,18 @@ void main() {
   });
 
   Widget buildApp({AuthRepository? repository}) {
+    final repo = repository ?? mockRepo;
     return ProviderScope(
       overrides: [
-        if (repository != null)
-          authRepositoryProvider.overrideWithValue(repository),
+        authStateProvider.overrideWith(() => _TestAuthNotifier()),
+        authRepositoryProvider.overrideWithValue(repo),
       ],
-      child: const MaterialApp(home: RegisterScreen()),
+      child: MaterialApp.router(
+        routerConfig: _testRouter(const RegisterScreen()),
+        locale: const Locale('mn'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
     );
   }
 

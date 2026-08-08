@@ -13,10 +13,6 @@ ALTER TABLE profiles
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ;
 
--- 001 already creates this constraint (with the same values); drop first so
--- re-applying the chain from scratch does not collide on the name.
-ALTER TABLE profiles
-  DROP CONSTRAINT IF EXISTS profiles_subscription_tier_check;
 ALTER TABLE profiles
   ADD CONSTRAINT profiles_subscription_tier_check
     CHECK (subscription_tier IN ('free', 'pro', 'breeder', 'stable'));
@@ -120,12 +116,12 @@ BEGIN
     admin_notes = p_admin_notes
   WHERE id = p_payment_id;
 
-  -- Update user's subscription (profiles has no owner_id; id is the PK)
+  -- Update user's subscription
   UPDATE profiles
   SET
     subscription_tier = v_payment.tier,
     subscription_expires_at = v_new_expires_at
-  WHERE id = v_payment.user_id;
+  WHERE owner_id = v_payment.user_id;
 
   -- Expire any other pending requests for same user (avoid double-pay)
   UPDATE payment_requests

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/result.dart';
 import '../../../core/providers/create_list_provider.dart';
-import '../../shared/application/sync_providers.dart';
 import '../../shared/data/isar_storage.dart';
 import '../data/document_repository.dart';
 import '../data/local_document_repository.dart';
@@ -16,10 +15,7 @@ import '../domain/document_record.dart';
 /// Supabase тохиргоо байвал cloud, үгүй бол local Isar-ыг ашиглана.
 final documentRepositoryProvider = Provider<DocumentRepository>((ref) {
   final supabase = SupabaseDocumentRepository();
-  final local = LocalDocumentRepository(
-    storage: IsarStorage.instance,
-    syncStorage: ref.watch(isarSyncStorageProvider),
-  );
+  final local = LocalDocumentRepository(storage: IsarStorage.instance);
 
   // Supabase амжилтгүй бол local руу fallback хийх
   return _DocumentRepositoryWithFallback(cloud: supabase, local: local);

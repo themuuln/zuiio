@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/features/services/application/vet_directory_providers.dart';
 import 'package:tamga/src/features/services/domain/vet_profile.dart';
 import 'package:tamga/src/features/services/presentation/vet_connect_screen.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 /// Helper to create a ProviderScope wrapping VetConnectScreen.
 Widget createVetConnectScreen({List<VetProfile>? profiles}) {
@@ -35,7 +35,10 @@ Widget createVetConnectScreen({List<VetProfile>? profiles}) {
         return profiles?.where((p) => p.id == id).firstOrNull;
       }),
     ],
-    child: MaterialApp(theme: AppTheme.light(), home: const VetConnectScreen()),
+    child: MaterialApp(
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+      home: const VetConnectScreen(),
+    ),
   );
 }
 

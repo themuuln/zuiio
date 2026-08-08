@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/error/result.dart';
 import 'package:tamga/src/core/sync/connection_status.dart';
 import 'package:tamga/src/core/sync/sync_queue.dart';
@@ -16,6 +15,7 @@ import 'package:tamga/src/features/market/domain/market_message.dart';
 import 'package:tamga/src/features/market/presentation/conversation_screen.dart';
 import 'package:tamga/src/features/shared/application/sync_providers.dart';
 import 'package:tamga/src/features/shared/data/isar_sync_storage.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Mocks ───────────────────────────────────────────────────────────────
 
@@ -75,7 +75,7 @@ Widget buildConversationTestApp({
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: ConversationScreen(
         conversationId: testConversation.id,
         conversation: testConversation,
@@ -158,10 +158,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Verify snackbar is shown
-      expect(
-        find.text('Офлайн — мессежийг синк хийхэд хадгална'),
-        findsOneWidget,
-      );
+      expect(find.text('Энэ үйлдэл интернэт холболт шаарддаг'), findsOneWidget);
 
       // Verify sendMessage was NOT called
       verifyNever(
@@ -234,10 +231,7 @@ void main() {
       ).called(1);
 
       // No offline snackbar
-      expect(
-        find.text('Офлайн — мессежийг синк хийхэд хадгална'),
-        findsNothing,
-      );
+      expect(find.text('Энэ үйлдэл интернэт холболт шаарддаг'), findsNothing);
     });
   });
 }

@@ -30,14 +30,11 @@ class PublicHorseProfileScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
-            tooltip: 'Хуваалцах',
             onPressed: () {
               final url = 'https://tamga.mn/horse/${horse.id}';
-              final text = 'Tamga дээрх энэ морийг үзээрэй: $url';
+              final text = 'Check out this horse on Tamga: $url';
               final subject = 'Tamga — ${horse.name}';
-              SharePlus.instance.share(
-                ShareParams(text: text, subject: subject),
-              );
+              Share.share(text, subject: subject);
             },
           ),
         ],

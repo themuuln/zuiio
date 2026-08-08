@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/design_tokens.dart';
-import '../../../core/widgets/widgets.dart';
 import '../application/auth_providers.dart';
 import '../domain/auth_state.dart';
 import 'auth_error_messages.dart';
@@ -61,7 +59,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         final authState = ref.read(authStateProvider).valueOrNull;
         if (authState?.isAuthenticated ?? false) {
-          context.go('/home');
+          context.go('/lineage');
         }
       }
     } catch (e) {
@@ -76,10 +74,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   /// Текст нь `message\n\ntranslation` форматтай байх ба
   /// эхний мөрийг Монгол, хоёр дахь мөрийг Англи хэлээр харуулна.
   Widget _buildBilingualErrorText(String text, ThemeData theme) {
-    final onErrorContainer = theme.colorScheme.onErrorContainer;
     final parts = text.split('\n');
     if (parts.length < 2) {
-      return Text(text, style: TamgaTypography.body(color: onErrorContainer));
+      return Text(
+        text,
+        style: TextStyle(color: theme.colorScheme.onErrorContainer),
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,16 +87,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       children: [
         Text(
           parts[0],
-          style: TamgaTypography.body(
-            weight: FontWeight.w600,
-            color: onErrorContainer,
+          style: TextStyle(
+            color: theme.colorScheme.onErrorContainer,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: TamgaSpacing.xs),
+        const SizedBox(height: 4),
         Text(
           parts.sublist(1).join('\n'),
-          style: TamgaTypography.footnote(
-            color: onErrorContainer.withValues(alpha: 0.85),
+          style: TextStyle(
+            color: theme.colorScheme.onErrorContainer.withValues(alpha: 0.85),
+            fontSize: 13,
           ),
         ),
       ],
@@ -113,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authStateProvider.notifier).signInAnonymously();
 
       if (mounted) {
-        context.go('/home');
+        context.go('/lineage');
       }
     } catch (e) {
       setState(() => _errorMessage = formatAuthErrorMessage(e));
@@ -130,7 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.listen<AsyncValue<AuthState>>(authStateProvider, (prev, next) {
       final state = next.valueOrNull;
       if (state?.isAuthenticated ?? false) {
-        context.go('/home');
+        context.go('/lineage');
       }
     });
 
@@ -138,7 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: TamgaSpacing.xxxl),
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: Form(
@@ -148,31 +149,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     // Лого
                     Text('🐎', style: TextStyle(fontSize: 64)),
-                    const SizedBox(height: TamgaSpacing.lg),
+                    const SizedBox(height: 16),
                     Text(
                       'Адуучин',
-                      style: TamgaTypography.title1(
-                        weight: FontWeight.w800,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
                         color: theme.colorScheme.primary,
                       ),
                     ),
-                    const SizedBox(height: TamgaSpacing.sm),
+                    const SizedBox(height: 8),
                     Text(
                       'Нэвтрэх',
-                      style: TamgaTypography.title2(
+                      style: theme.textTheme.titleLarge?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: TamgaSpacing.xxxl),
+                    const SizedBox(height: 32),
 
                     // Алдааны мессеж
                     if (_errorMessage != null)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: TamgaSpacing.lg),
+                        padding: const EdgeInsets.only(bottom: 16),
                         child: Card(
                           color: theme.colorScheme.errorContainer,
                           child: Padding(
-                            padding: const EdgeInsets.all(TamgaSpacing.md),
+                            padding: const EdgeInsets.all(12),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -183,7 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     color: theme.colorScheme.onErrorContainer,
                                   ),
                                 ),
-                                const SizedBox(width: TamgaSpacing.sm),
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: _buildBilingualErrorText(
                                     _errorMessage!,
@@ -223,7 +224,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: TamgaSpacing.lg),
+                          const SizedBox(height: 16),
 
                           // Нууц үг талбар
                           TextFormField(
@@ -251,7 +252,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: TamgaSpacing.xxl),
+                    const SizedBox(height: 24),
 
                     // Нэвтрэх товч
                     FilledButton(
@@ -260,32 +261,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         minimumSize: const Size.fromHeight(48),
                       ),
                       child: _isLoading
-                          ? LoadingIndicator(
-                              size: 20,
-                              color: theme.colorScheme.onPrimary,
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text('Нэвтрэх'),
                     ),
-                    const SizedBox(height: TamgaSpacing.lg),
+                    const SizedBox(height: 16),
 
                     // Бүртгүүлэх холбоос
                     TextButton(
                       onPressed: () => context.push('/register'),
                       child: const Text('Бүртгүүлэх'),
                     ),
-                    const SizedBox(height: TamgaSpacing.xxl),
+                    const SizedBox(height: 24),
 
                     // Зүсэлтийн шугам
                     Row(
                       children: [
                         const Expanded(child: Divider()),
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: TamgaSpacing.lg,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'эсвэл',
-                            style: TamgaTypography.caption1(
+                            style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -293,7 +293,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const Expanded(child: Divider()),
                       ],
                     ),
-                    const SizedBox(height: TamgaSpacing.lg),
+                    const SizedBox(height: 16),
 
                     // Утасны дугаараар нэвтрэх
                     OutlinedButton.icon(
@@ -306,7 +306,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         minimumSize: const Size.fromHeight(48),
                       ),
                     ),
-                    const SizedBox(height: TamgaSpacing.md),
+                    const SizedBox(height: 12),
 
                     // Google-аар нэвтрэх
                     OutlinedButton.icon(
@@ -321,7 +321,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         minimumSize: const Size.fromHeight(48),
                       ),
                     ),
-                    const SizedBox(height: TamgaSpacing.md),
+                    const SizedBox(height: 12),
 
                     // Apple-аар нэвтрэх
                     OutlinedButton.icon(
@@ -336,7 +336,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         minimumSize: const Size.fromHeight(48),
                       ),
                     ),
-                    const SizedBox(height: TamgaSpacing.md),
+                    const SizedBox(height: 12),
 
                     // Зочин хэрэглэгч үргэлжлүүлэх
                     OutlinedButton(

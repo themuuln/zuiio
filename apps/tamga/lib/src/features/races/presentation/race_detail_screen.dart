@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../horses/application/horses_providers.dart';
@@ -130,20 +129,10 @@ class _RaceDetailScreenState extends ConsumerState<RaceDetailScreen> {
         .where((e) => e.status != RaceEntryStatus.scratched)
         .toList();
 
-    final horses = await ref.read(horsesProvider.future);
-    if (!mounted) return;
-    final horseNames = horses.fold<Map<String, String>>(
-      {},
-      (map, h) => map..[h.id] = h.name,
-    );
-
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => RaceResultsEditorScreen(
-          race: race,
-          entries: activeEntries,
-          horseNames: horseNames,
-        ),
+        builder: (_) =>
+            RaceResultsEditorScreen(race: race, entries: activeEntries),
       ),
     );
     if (result == true && context.mounted) {
@@ -162,7 +151,7 @@ class _RaceDetailScreenState extends ConsumerState<RaceDetailScreen> {
     return raceAsync.when(
       loading: () => Scaffold(
         appBar: AppBar(title: const Text('Уралдаан')),
-        body: const Center(child: LoadingIndicator(size: 28)),
+        body: const Center(child: CircularProgressIndicator()),
       ),
       error: (error, stack) => Scaffold(
         appBar: AppBar(title: const Text('Уралдаан')),
@@ -171,58 +160,48 @@ class _RaceDetailScreenState extends ConsumerState<RaceDetailScreen> {
           onRetry: () => ref.invalidate(raceDetailProvider(widget.raceId)),
         ),
       ),
-      data: (race) {
-        final horsesAsync = ref.watch(horsesProvider);
-        final horseNames =
-            horsesAsync.valueOrNull?.fold<Map<String, String>>(
-              {},
-              (map, h) => map..[h.id] = h.name,
-            ) ??
-            <String, String>{};
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(race.name, style: TamgaTypography.title3()),
-            actions: [
-              // ── Organizer: edit race button ──
-              if (race.organizerId == userId &&
-                  race.status != RaceStatus.completed &&
-                  race.status != RaceStatus.cancelled)
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Засах',
-                  onPressed: () => _editRace(race),
-                ),
-              // ── Organizer: edit results button ──
-              if (race.organizerId == userId &&
-                  race.status == RaceStatus.completed)
-                IconButton(
-                  icon: const Icon(Icons.emoji_events_outlined),
-                  tooltip: 'Үр дүн засах',
-                  onPressed: () {
-                    final entries = entriesAsync.valueOrNull;
-                    if (entries != null) {
-                      _editResults(race, entries);
-                    }
-                  },
-                ),
-            ],
+      data: (race) => Scaffold(
+        appBar: AppBar(
+          title: Text(race.name, style: const TextStyle(fontSize: 18)),
+          actions: [
+            // ── Organizer: edit race button ──
+            if (race.organizerId == userId &&
+                race.status != RaceStatus.completed &&
+                race.status != RaceStatus.cancelled)
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Засах',
+                onPressed: () => _editRace(race),
+              ),
+            // ── Organizer: edit results button ──
+            if (race.organizerId == userId &&
+                race.status == RaceStatus.completed)
+              IconButton(
+                icon: const Icon(Icons.emoji_events_outlined),
+                tooltip: 'Үр дүн засах',
+                onPressed: () {
+                  final entries = entriesAsync.valueOrNull;
+                  if (entries != null) {
+                    _editResults(race, entries);
+                  }
+                },
+              ),
+          ],
+        ),
+        body: entriesAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => TamgaErrorWidget(
+            message: 'Бүртгэлүүдийг ачаалахад алдаа гарлаа',
+            onRetry: () => ref.invalidate(raceEntriesProvider(widget.raceId)),
           ),
-          body: entriesAsync.when(
-            loading: () => const Center(child: LoadingIndicator(size: 28)),
-            error: (err, stack) => TamgaErrorWidget(
-              message: 'Бүртгэлүүдийг ачаалахад алдаа гарлаа',
-              onRetry: () => ref.invalidate(raceEntriesProvider(widget.raceId)),
-            ),
-            data: (entries) => _RaceDetailContent(
-              race: race,
-              entries: entries,
-              userId: userId,
-              horseNames: horseNames,
-              onRegister: () => _registerHorse(race),
-            ),
+          data: (entries) => _RaceDetailContent(
+            race: race,
+            entries: entries,
+            userId: userId,
+            onRegister: () => _registerHorse(race),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -234,14 +213,12 @@ class _RaceDetailContent extends StatelessWidget {
     required this.race,
     required this.entries,
     required this.userId,
-    required this.horseNames,
     required this.onRegister,
   });
 
   final Race race;
   final List<RaceEntry> entries;
   final String userId;
-  final Map<String, String> horseNames;
   final VoidCallback onRegister;
 
   @override
@@ -258,71 +235,66 @@ class _RaceDetailContent extends StatelessWidget {
         race.hasMaxEntries && activeEntries.length >= race.maxEntries!;
     final canRegister = isUpcoming && !isFull && userId.isNotEmpty;
 
-    return SingleChildScrollView(
+    return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // ── Registration button ──
-          if (isUpcoming || isFull) ...[
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: canRegister ? onRegister : null,
-                icon: Icon(isFull ? Icons.lock_outline : Icons.add),
-                label: Text(isFull ? 'Бүртгэл дууссан' : 'Морь бүртгүүлэх'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                ),
-              ),
+      children: [
+        // ── Registration button ──
+        if (isUpcoming || isFull) ...[
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: canRegister ? onRegister : null,
+              icon: Icon(isFull ? Icons.lock_outline : Icons.add),
+              label: Text(isFull ? 'Бүртгэл дууссан' : 'Морь бүртгүүлэх'),
             ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-
-          // ── Race info card ──
-          _RaceInfoCard(race: race),
-
-          const SizedBox(height: AppSpacing.lg),
-
-          // ── Prize distribution ──
-          if (race.prizeDistribution != null &&
-              race.prizeDistribution!.isNotEmpty) ...[
-            _PrizeDistributionCard(race: race),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-
-          // ── Description ──
-          if (race.description != null && race.description!.isNotEmpty) ...[
-            TamgaCard(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Тодорхойлолт',
-                      style: TamgaTypography.title3(weight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(race.description!, style: theme.textTheme.bodyMedium),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-
-          // ── Registered horses section ──
-          _RegisteredHorsesSection(
-            entries: activeEntries,
-            isCompleted: isCompleted,
-            isUpcoming: isUpcoming,
-            horseNames: horseNames,
           ),
-
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
         ],
-      ),
+
+        // ── Race info card ──
+        _RaceInfoCard(race: race),
+
+        const SizedBox(height: AppSpacing.lg),
+
+        // ── Prize distribution ──
+        if (race.prizeDistribution != null &&
+            race.prizeDistribution!.isNotEmpty) ...[
+          _PrizeDistributionCard(race: race),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+
+        // ── Description ──
+        if (race.description != null && race.description!.isNotEmpty) ...[
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Тодорхойлолт',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(race.description!, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+
+        // ── Registered horses section ──
+        _RegisteredHorsesSection(
+          entries: activeEntries,
+          isCompleted: isCompleted,
+          isUpcoming: isUpcoming,
+        ),
+
+        const SizedBox(height: AppSpacing.xl),
+      ],
     );
   }
 }
@@ -475,7 +447,7 @@ class _RaceInfoCard extends StatelessWidget {
         ? '${race.date!.year}-${race.date!.month.toString().padLeft(2, '0')}-${race.date!.day.toString().padLeft(2, '0')}'
         : 'Тодорхойгүй';
 
-    return TamgaCard(
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -499,9 +471,9 @@ class _RaceInfoCard extends StatelessWidget {
                   children: [
                     Text(
                       race.type.displayName,
-                      style: TamgaTypography.body(
-                        weight: FontWeight.w600,
+                      style: theme.textTheme.titleSmall?.copyWith(
                         color: colorScheme.onSecondaryContainer,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
@@ -575,7 +547,7 @@ class _PrizeDistributionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return TamgaCard(
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -587,7 +559,9 @@ class _PrizeDistributionCard extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Шагналын хуваарилалт',
-                  style: TamgaTypography.title3(weight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -622,20 +596,18 @@ class _RegisteredHorsesSection extends StatelessWidget {
     required this.entries,
     required this.isCompleted,
     required this.isUpcoming,
-    required this.horseNames,
   });
 
   final List<RaceEntry> entries;
   final bool isCompleted;
   final bool isUpcoming;
-  final Map<String, String> horseNames;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return TamgaCard(
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -645,7 +617,9 @@ class _RegisteredHorsesSection extends StatelessWidget {
               children: [
                 Text(
                   'Бүртгэгдсэн морьд',
-                  style: TamgaTypography.title3(weight: FontWeight.w600),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Container(
@@ -686,11 +660,7 @@ class _RegisteredHorsesSection extends StatelessWidget {
             ] else ...[
               const SizedBox(height: AppSpacing.md),
               ...entries.map(
-                (entry) => _EntryTile(
-                  entry: entry,
-                  isCompleted: isCompleted,
-                  horseName: horseNames[entry.horseId] ?? entry.horseId,
-                ),
+                (entry) => _EntryTile(entry: entry, isCompleted: isCompleted),
               ),
             ],
           ],
@@ -703,15 +673,10 @@ class _RegisteredHorsesSection extends StatelessWidget {
 // ── Entry Tile ───────────────────────────────────────────────────
 
 class _EntryTile extends StatelessWidget {
-  const _EntryTile({
-    required this.entry,
-    required this.isCompleted,
-    required this.horseName,
-  });
+  const _EntryTile({required this.entry, required this.isCompleted});
 
   final RaceEntry entry;
   final bool isCompleted;
-  final String horseName;
 
   @override
   Widget build(BuildContext context) {
@@ -767,7 +732,7 @@ class _EntryTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Морь: $horseName',
+                  'Морь: ${entry.horseId}',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),

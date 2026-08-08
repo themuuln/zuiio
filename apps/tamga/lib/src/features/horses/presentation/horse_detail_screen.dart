@@ -124,9 +124,7 @@ class HorseDetailScreen extends ConsumerWidget {
                   horse.name,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: horse.photoUrls.isNotEmpty
-                        ? Colors.white
-                        : tamgaColors.onPrimaryContainer,
+                    color: Colors.white,
                     letterSpacing: -0.3,
                   ),
                 ),
@@ -141,63 +139,31 @@ class HorseDetailScreen extends ConsumerWidget {
                       top: BorderSide(color: tamgaColors.border, width: 0.5),
                     ),
                   ),
-                  child: Stack(
-                    children: [
-                      TabBar(
-                        isScrollable: true,
-                        tabAlignment: TabAlignment.start,
-                        labelPadding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                        ),
-                        onTap: (_) => HapticFeedback.selectionClick(),
-                        indicatorColor: tamgaColors.primary,
-                        indicatorWeight: 2.5,
-                        labelColor: tamgaColors.primary,
-                        unselectedLabelColor: tamgaColors.mutedForeground,
-                        labelStyle: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        unselectedLabelStyle: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        splashFactory: NoSplash.splashFactory,
-                        tabs: const [
-                          Tab(text: 'Мэдээлэл'),
-                          Tab(text: 'Эрүүл мэнд'),
-                          Tab(text: 'Дасгалжуулалт'),
-                          Tab(text: 'Гүйцэтгэл'),
-                          Tab(text: 'Тэжээлийн хуваарь'),
-                          Tab(text: 'Тэжээлийн бүртгэл'),
-                          Tab(text: 'Уралдаан'),
-                          Tab(text: 'Угшил'),
-                        ],
-                      ),
-                      // Right-edge fade: visible affordance that the tab
-                      // strip scrolls horizontally to reveal tabs 5-8 on
-                      // narrow screens.
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                  colors: [
-                                    tamgaColors.surfaceContainerLowest
-                                        .withValues(alpha: 0),
-                                    tamgaColors.surfaceContainerLowest,
-                                  ],
-                                ),
-                              ),
-                              child: const SizedBox(width: 28),
-                            ),
-                          ),
-                        ),
-                      ),
+                  child: TabBar(
+                    isScrollable: true,
+                    onTap: (_) => HapticFeedback.selectionClick(),
+                    indicatorColor: tamgaColors.primary,
+                    indicatorWeight: 2.5,
+                    labelColor: tamgaColors.primary,
+                    unselectedLabelColor: tamgaColors.mutedForeground,
+                    labelStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    splashFactory: NoSplash.splashFactory,
+                    tabs: [
+                      const Tab(text: 'Мэдээлэл'),
+                      const Tab(text: 'Эрүүл мэнд'),
+                      const Tab(text: 'Дасгалжуулалт'),
+                      const Tab(text: 'Гүйцэтгэл'),
+                      const Tab(text: 'Тэжээлийн хуваарь'),
+                      const Tab(text: 'Тэжээлийн бүртгэл'),
+                      const Tab(text: 'Уралдаан'),
+                      const Tab(text: 'Угшил'),
                     ],
                   ),
                 ),

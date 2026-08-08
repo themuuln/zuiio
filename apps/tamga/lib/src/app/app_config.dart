@@ -1,91 +1,23 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-
-/// Runtime application configuration loaded from the bundled environment file.
+/// Application configuration loaded from compile-time defines.
 ///
-/// `dev.sh` copies the local `.env` file into the generated asset before
-/// launching Flutter. The fallback asset keeps the app runnable in offline mode
-/// when no local credentials are configured.
+/// Set via `--dart-define-from-file=dart_defines.json` or individual
+/// `--dart-define=KEY=val` flags.
+///
+/// On macOS, use `keychain-env dart-define tamga` to generate the JSON
+/// from Keychain secrets, then pass it to Flutter:
+///   keychain-env run tamga -- flutter run --dart-define-from-file=dart_defines.json
 abstract final class AppConfig {
-  static const _generatedEnvironmentAsset = 'assets/config/generated.env';
-  static const _fallbackEnvironmentAsset = 'assets/config/default.env';
+  static String get supabaseUrl {
+    return const String.fromEnvironment('SUPABASE_URL');
+  }
 
-  static String _supabaseUrl = '';
-  static String _supabasePublishableKey = '';
-
-  static String get supabaseUrl => _supabaseUrl;
-
-  static String get supabasePublishableKey => _supabasePublishableKey;
+  static String get supabasePublishableKey {
+    return const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  }
 
   static bool get isSupabaseConfigured =>
       supabaseUrl.isNotEmpty && supabasePublishableKey.isNotEmpty;
 
-  /// Test-only seam: sets the Supabase config without the asset channel.
-  ///
-  /// `rootBundle.loadString` in widget tests never reaches the mocked
-  /// `flutter/assets` channel, so repository tests that must exercise the
-  /// remote-refresh path use this instead of mocking the channel.
-  @visibleForTesting
-  static void debugSetSupabaseConfig({
-    required String url,
-    required String key,
-  }) {
-    _supabaseUrl = url;
-    _supabasePublishableKey = key;
-  }
-
   /// Feature tour enabled эсэх. Түр зогсоосон — true болгож идэвхжүүлнэ.
   static const bool featureTourEnabled = false;
-
-  static Future<void> load() async {
-    final contents =
-        await _loadAsset(_generatedEnvironmentAsset) ??
-        await _loadAsset(_fallbackEnvironmentAsset);
-    final values = contents == null
-        ? const <String, String>{}
-        : parseDotEnv(contents);
-
-    _supabaseUrl =
-        values['SUPABASE_URL'] ?? values['EXPO_PUBLIC_SUPABASE_URL'] ?? '';
-    _supabasePublishableKey =
-        values['SUPABASE_PUBLISHABLE_KEY'] ??
-        values['EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY'] ??
-        '';
-  }
-
-  static Future<String?> _loadAsset(String assetPath) async {
-    try {
-      return await rootBundle.loadString(assetPath);
-    } catch (_) {
-      return null;
-    }
-  }
-}
-
-/// Parses the simple KEY=value format used by Tamga's local `.env` file.
-Map<String, String> parseDotEnv(String contents) {
-  final values = <String, String>{};
-
-  for (final rawLine in contents.split('\n')) {
-    final line = rawLine.trim();
-    if (line.isEmpty || line.startsWith('#')) {
-      continue;
-    }
-
-    final separatorIndex = line.indexOf('=');
-    if (separatorIndex <= 0) {
-      continue;
-    }
-
-    final key = line.substring(0, separatorIndex).trim();
-    var value = line.substring(separatorIndex + 1).trim();
-    if (value.length >= 2 &&
-        ((value.startsWith('"') && value.endsWith('"')) ||
-            (value.startsWith("'") && value.endsWith("'")))) {
-      value = value.substring(1, value.length - 1);
-    }
-    values[key] = value;
-  }
-
-  return values;
 }

@@ -9,6 +9,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/widgets.dart';
@@ -29,14 +31,15 @@ class _ApiSettingsScreenState extends ConsumerState<ApiSettingsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final keysAsync = ref.watch(userApiKeysProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('API Тохиргоо'),
+        title: Text(l10n.apiSettingsTitle),
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(PhosphorIconsRegular.caretLeft),
         ),
       ),
       body: keysAsync.when(
@@ -65,7 +68,7 @@ class _ApiSettingsScreenState extends ConsumerState<ApiSettingsScreen> {
                   ),
                   FilledButton.tonalIcon(
                     onPressed: () => _showCreateKeyDialog(context, ref),
-                    icon: const Icon(Icons.add, size: 18),
+                    icon: const Icon(PhosphorIconsRegular.plus, size: 18),
                     label: const Text('Шинэ түлхүүр'),
                   ),
                 ],
@@ -96,7 +99,11 @@ class _ApiSettingsScreenState extends ConsumerState<ApiSettingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 48, color: colorScheme.error),
+              Icon(
+                PhosphorIconsRegular.warningCircle,
+                size: 48,
+                color: colorScheme.error,
+              ),
               const SizedBox(height: AppSpacing.md),
               Text('Алдаа: $err'),
             ],
@@ -162,7 +169,7 @@ class _ApiSettingsScreenState extends ConsumerState<ApiSettingsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Цуцлах'),
+            child: Text(AppLocalizations.of(ctx)!.generalCancel),
           ),
         ],
       ),
@@ -207,7 +214,7 @@ class _TierInfoCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.workspace_premium, color: colorScheme.primary),
+              Icon(PhosphorIconsRegular.sealCheck, color: colorScheme.primary),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'API Эрхийн түвшин',
@@ -263,7 +270,7 @@ class _QuickstartHint extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.info_outline,
+            PhosphorIconsRegular.info,
             color: colorScheme.onSurfaceVariant,
             size: 20,
           ),
@@ -299,7 +306,11 @@ class _EmptyKeysState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.vpn_key, size: 48, color: colorScheme.outlineVariant),
+          Icon(
+            PhosphorIconsRegular.key,
+            size: 48,
+            color: colorScheme.outlineVariant,
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'API түлхүүр байхгүй',
@@ -322,7 +333,6 @@ class _EmptyKeysState extends StatelessWidget {
 
 class _ApiKeyCard extends StatelessWidget {
   const _ApiKeyCard({required this.apiKey, required this.onRevoke});
-
   final ApiKey apiKey;
   final VoidCallback onRevoke;
 
@@ -330,6 +340,7 @@ class _ApiKeyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     final statusColor = apiKey.isActive && !apiKey.isExpired
         ? Colors.green
@@ -376,14 +387,20 @@ class _ApiKeyCard extends StatelessWidget {
           // ── Metadata row ─────────────────────────────────────
           Row(
             children: [
-              _MetaChip(icon: Icons.layers, label: apiKey.tier.displayName),
+              _MetaChip(
+                icon: PhosphorIconsRegular.stack,
+                label: apiKey.tier.displayName,
+              ),
               const SizedBox(width: AppSpacing.sm),
               _MetaChip(
-                icon: Icons.speed,
+                icon: PhosphorIconsRegular.gauge,
                 label: '${apiKey.rateLimitPerMinute}/мин',
               ),
               const SizedBox(width: AppSpacing.sm),
-              _MetaChip(icon: Icons.access_time, label: apiKey.lastUsedText),
+              _MetaChip(
+                icon: PhosphorIconsRegular.clock,
+                label: apiKey.lastUsedText,
+              ),
             ],
           ),
 
@@ -413,8 +430,8 @@ class _ApiKeyCard extends StatelessWidget {
             children: [
               TextButton.icon(
                 onPressed: apiKey.isActive ? onRevoke : null,
-                icon: const Icon(Icons.block, size: 16),
-                label: const Text('Цуцлах'),
+                icon: const Icon(PhosphorIconsRegular.prohibit, size: 16),
+                label: Text(l10n.generalCancel),
                 style: TextButton.styleFrom(foregroundColor: colorScheme.error),
               ),
             ],
@@ -427,7 +444,6 @@ class _ApiKeyCard extends StatelessWidget {
 
 class _MetaChip extends StatelessWidget {
   const _MetaChip({required this.icon, required this.label});
-
   final IconData icon;
   final String label;
 
@@ -472,6 +488,7 @@ class _CreateKeyDialogState extends State<_CreateKeyDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -484,8 +501,8 @@ class _CreateKeyDialogState extends State<_CreateKeyDialog> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Түлхүүрийн нэр',
+              decoration: InputDecoration(
+                labelText: l10n.apiKeyNameLabel,
                 hintText: 'Жишээ: CI/CD пайплайн',
               ),
               autofocus: true,
@@ -584,9 +601,13 @@ class _KeyRevealDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      icon: Icon(Icons.vpn_key, color: colorScheme.primary, size: 48),
+      icon: Icon(
+        PhosphorIconsRegular.key,
+        color: colorScheme.primary,
+        size: 48,
+      ),
       title: const Text('Түлхүүр үүсгэгдлээ!'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -633,12 +654,12 @@ class _KeyRevealDialog extends StatelessWidget {
               const SnackBar(content: Text('Түлхүүр хууллагдлаа')),
             );
           },
-          icon: const Icon(Icons.copy, size: 16),
+          icon: const Icon(PhosphorIconsRegular.copySimple, size: 16),
           label: const Text('Хуулах'),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Дуусгах'),
+          child: Text(l10n.generalDone),
         ),
       ],
     );
@@ -663,7 +684,11 @@ class _CurlExamples extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.terminal, size: 20, color: colorScheme.primary),
+              Icon(
+                PhosphorIconsRegular.terminal,
+                size: 20,
+                color: colorScheme.primary,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Ашиглах жишээ',

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/features/services/application/provider_dashboard_providers.dart';
 import 'package:tamga/src/features/services/domain/service_booking.dart';
 import 'package:tamga/src/features/services/domain/service_booking_status.dart';
 import 'package:tamga/src/features/services/domain/service_provider.dart';
 import 'package:tamga/src/features/services/domain/service_provider_type.dart';
 import 'package:tamga/src/features/services/presentation/provider_dashboard_screen.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 /// Helper to create a ProviderScope wrapping ProviderDashboardScreen.
 Widget createProviderDashboardScreen({
@@ -29,7 +29,7 @@ Widget createProviderDashboardScreen({
       }),
     ],
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: const ProviderDashboardScreen(),
     ),
   );

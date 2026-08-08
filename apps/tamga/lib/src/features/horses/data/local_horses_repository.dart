@@ -9,15 +9,13 @@ import '../../shared/data/isar_schemas/isar_horse.dart';
 import '../../shared/data/local_sync_preferences.dart';
 import '../../shared/data/pagination/paginated_result.dart';
 import '../domain/horse_record.dart';
+import '../../../shared/domain/horse_breed_lineage.dart';
+import '../../../shared/domain/horse_coat_color.dart';
 import 'horses_repository.dart';
 
 class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
     implements HorsesRepository {
-  LocalHorsesRepository({
-    required super.storage,
-    required super.syncQueue,
-    super.syncStorage,
-  });
+  LocalHorsesRepository({required super.storage, required super.syncQueue});
 
   @override
   IsarCollection<IsarHorse> get collection => storage.horses;
@@ -36,6 +34,125 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
 
   @override
   Map<String, dynamic> toDataJson(HorseRecord entity) => entity.toJson();
+
+  static final _seed = [
+    HorseRecord(
+      id: 'khan-khuleg',
+      name: 'Хан Хүлэг',
+      relationLabel: 'Root азарга',
+      coat: 'Хээр',
+      birthYear: 2012,
+      awardCount: 7,
+      offspringCount: 18,
+      isOwnedByHousehold: true,
+      notes: 'Lineage-ийн үндсэн root. Өрхийн хамгийн идэвхтэй азарганы шугам.',
+      gender: HorseGender.stallion,
+      lineageRootId: 'khan-khuleg',
+      coatColor: MongolianCoatColor.kheer,
+      breedLineage: MongolianBreedLineage.galshar,
+      region: 'Хэнтий',
+      sum: 'Галшар',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ),
+    HorseRecord(
+      id: 'tsagaan-salkhi',
+      name: 'Цагаан Салхи',
+      relationLabel: 'Root азарга',
+      coat: 'Цагаан',
+      birthYear: 2016,
+      awardCount: 4,
+      offspringCount: 9,
+      isOwnedByHousehold: false,
+      notes: 'Гаднах талын root шугамыг төлөөлнө.',
+      gender: HorseGender.stallion,
+      lineageRootId: 'tsagaan-salkhi',
+      coatColor: MongolianCoatColor.tsenker,
+      breedLineage: MongolianBreedLineage.mongol,
+      region: 'Улаанбаатар',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ),
+    HorseRecord(
+      id: 'altan-shuurga',
+      name: 'Алтан Шуурга',
+      relationLabel: 'Хүү',
+      coat: 'Хээр',
+      birthYear: 2018,
+      awardCount: 3,
+      offspringCount: 5,
+      isOwnedByHousehold: true,
+      notes: 'Уралдааны feed дээр тогтмол орж ирдэг үр төл.',
+      gender: HorseGender.gelding,
+      lineageRootId: 'khan-khuleg',
+      sireId: 'khan-khuleg',
+      damId: 'tsagaan-salkhi',
+      coatColor: MongolianCoatColor.sharga,
+      breedLineage: MongolianBreedLineage.galshar,
+      region: 'Хэнтий',
+      sum: 'Галшар',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ),
+    HorseRecord(
+      id: 'uulen-bor',
+      name: 'Үүлэн Бор',
+      relationLabel: 'Охин',
+      coat: 'Бор',
+      birthYear: 2019,
+      awardCount: 2,
+      offspringCount: 2,
+      isOwnedByHousehold: true,
+      notes: 'Өрхийн гүүний шугамын гол холбоос.',
+      gender: HorseGender.mare,
+      lineageRootId: 'khan-khuleg',
+      sireId: 'khan-khuleg',
+      coatColor: MongolianCoatColor.bor,
+      breedLineage: MongolianBreedLineage.galshar,
+      region: 'Хэнтий',
+      sum: 'Галшар',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ),
+    HorseRecord(
+      id: 'shandas-gal',
+      name: 'Шандас Гал',
+      relationLabel: 'Хүү',
+      coat: 'Хүрэн',
+      birthYear: 2020,
+      awardCount: 1,
+      offspringCount: 1,
+      isOwnedByHousehold: false,
+      notes: 'Гаднах бүртгэлтэй ч lineage болон events дээр давтагдана.',
+      gender: HorseGender.gelding,
+      lineageRootId: 'khan-khuleg',
+      sireId: 'khan-khuleg',
+      coatColor: MongolianCoatColor.khuren,
+      breedLineage: MongolianBreedLineage.galshar,
+      region: 'Хэнтий',
+      sum: 'Галшар',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ),
+    HorseRecord(
+      id: 'munguun-khiimor',
+      name: 'Мөнгөн Хийморь',
+      relationLabel: 'Охин',
+      coat: 'Саарал',
+      birthYear: 2021,
+      awardCount: 1,
+      offspringCount: 0,
+      isOwnedByHousehold: true,
+      notes: 'Цагаан Салхины шугамаас өрхөд үлдсэн адуу.',
+      gender: HorseGender.mare,
+      lineageRootId: 'tsagaan-salkhi',
+      coatColor: MongolianCoatColor.saaral,
+      breedLineage: MongolianBreedLineage.mongol,
+      region: 'Улаанбаатар',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ),
+  ];
 
   @override
   Future<Result<List<HorseRecord>>> fetchHorses() async {
@@ -58,6 +175,13 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
     required int limit,
   }) async {
     return Result.tryFuture(() async {
+      // Ensure seeded if empty
+      final count = await collection.where().count();
+      if (count == 0) {
+        await collection.isar.writeTxn(() async {
+          await collection.putAll(_seed.map(IsarHorse.fromDomain).toList());
+        });
+      }
       final stored = await collection
           .where()
           .offset(page * limit)
@@ -126,15 +250,15 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
         await collection.putAll(next.map(IsarHorse.fromDomain).toList());
       });
 
-      final item = SyncQueueItem(
-        entityType: 'horse',
-        entityId: horse.id,
-        action: index >= 0 ? SyncAction.update : SyncAction.create,
-        data: horse.toJson(),
-        timestamp: DateTime.now(),
+      syncQueue.enqueue(
+        SyncQueueItem(
+          entityType: 'horse',
+          entityId: horse.id,
+          action: index >= 0 ? SyncAction.update : SyncAction.create,
+          data: horse.toJson(),
+          timestamp: DateTime.now(),
+        ),
       );
-      syncQueue.enqueue(item);
-      await persistEnqueue(item);
 
       if (!await LocalSyncPreferences.isAutoSyncEnabledFromStorage()) {
         return Result.ok(horse);
@@ -164,15 +288,15 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
         }
       });
 
-      final item = SyncQueueItem(
-        entityType: 'horse',
-        entityId: id,
-        action: SyncAction.delete,
-        data: {},
-        timestamp: DateTime.now(),
+      syncQueue.enqueue(
+        SyncQueueItem(
+          entityType: 'horse',
+          entityId: id,
+          action: SyncAction.delete,
+          data: {},
+          timestamp: DateTime.now(),
+        ),
       );
-      syncQueue.enqueue(item);
-      await persistEnqueue(item);
 
       return const Result.ok(null);
     } catch (e) {
@@ -184,6 +308,13 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
 
   Future<List<HorseRecord>> _readLocal() async {
     final stored = await collection.where().findAll();
+    if (stored.isEmpty) {
+      // Seed on first read
+      await collection.isar.writeTxn(() async {
+        await collection.putAll(_seed.map(IsarHorse.fromDomain).toList());
+      });
+      return _seed;
+    }
     return stored.map(toDomain).toList();
   }
 }

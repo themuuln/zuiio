@@ -14,7 +14,7 @@ desc: How to set up and develop the Tamga Flutter app
 - **CocoaPods** (iOS/macOS dependencies)
 - **Node.js** (for VitePress docs and web scaffold)
 - **pnpm** (preferred package manager for web workspace)
-- **`.env`** (local Supabase configuration; never commit it)
+- **keychain-env** (macOS only — loads secrets from Keychain into dart_defines.json)
 
 ## Project Overview
 
@@ -48,38 +48,50 @@ flutter pub get
 
 ### 3. Configure Supabase
 
-Tamga loads Supabase configuration at runtime from `.env`; no
-`--dart-define` flags are required.
+Environment variables are passed to Flutter at compile time via `--dart-define-from-file`.
 
-Create `.env` in the project root:
+#### Option A: Using keychain-env (macOS, recommended)
 
-```dotenv
-EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-key
-```
-
-`SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are also accepted. The
-`EXPO_PUBLIC_*` names are retained for compatibility with the Expo app.
-
-Run the app through the helper:
+The project ships a helper script that reads secrets from the macOS Keychain:
 
 ```bash
 ./dev.sh
 ```
 
-The helper temporarily bundles `.env` as a Flutter asset and removes the
-generated asset when Flutter exits. Without `.env`, the app still launches in
-offline mode with Supabase disabled.
+This generates a `dart_defines.json` file from Keychain entries and launches Flutter.
 
-> **Security note**: Use only the publishable/anon key in `.env`. Never add a
-> Supabase secret/service-role key to a Flutter app or commit `.env`.
+To store your Supabase credentials in the Keychain:
+
+```bash
+keychain-env dart-define tamga -- SUPABASE_URL=https://your-project.supabase.co SUPABASE_PUBLISHABLE_KEY=your-anon-key
+```
+
+#### Option B: Manual dart_defines.json
+
+Create a `dart_defines.json` in the project root:
+
+```json
+{
+  "SUPABASE_URL": "https://your-project.supabase.co",
+  "SUPABASE_PUBLISHABLE_KEY": "your-anon-key"
+}
+```
+
+#### Option C: Individual --dart-define flags
+
+```bash
+flutter run --dart-define=SUPABASE_URL=https://your-project.supabase.co --dart-define=SUPABASE_PUBLISHABLE_KEY=your-anon-key
+```
+
+> **Security note**: `dart_defines.json` is gitignored. Never commit secrets to the repository.
 
 #### Required Environment Variables
 
-| Variable | Description | Required for Supabase |
-| --- | --- | --- |
-| `SUPABASE_URL` or `EXPO_PUBLIC_SUPABASE_URL` | Supabase project URL | Yes |
-| `SUPABASE_PUBLISHABLE_KEY` or `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable/anon key | Yes |
+| Variable                   | Description                   | Required |
+| -------------------------- | ----------------------------- | -------- |
+| `SUPABASE_URL`             | Supabase project URL          | Yes      |
+| `SUPABASE_PUBLISHABLE_KEY` | Supabase anon/publishable key | Yes      |
+
 ### 4. (Optional) Firebase Configuration
 
 Firebase is used for push notifications and crash reporting. If you don't configure it, the app initializes gracefully without Firebase features.
@@ -109,14 +121,17 @@ Isar schemas are already generated in the repository. Run this command whenever 
 ### 6. Run the App
 
 ```bash
-# Using the helper script (loads `.env`):
+# Using the helper script (loads secrets from Keychain):
 ./dev.sh
 
+# Or with manual env vars:
+flutter run --dart-define-from-file=dart_defines.json
+
 # Run on a specific device:
-./dev.sh -d <device-id>
+flutter run -d <device-id>
 
 # Release build:
-./dev.sh --release
+flutter run --release
 ```
 
 ---

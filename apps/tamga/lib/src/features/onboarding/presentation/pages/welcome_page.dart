@@ -138,7 +138,7 @@ class WelcomePage extends StatelessWidget {
                       // Primary button
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
+                        height: 52,
                         child: FilledButton(
                           onPressed: onContinue,
                           child: const Text(

@@ -487,15 +487,12 @@ class SupabaseMarketRepository with SupabaseRepositoryMixin {
     final phone = await fetchPhoneVerification(sellerId);
     final eMongolia = await fetchEMongoliaVerification(sellerId);
 
-    if (phone.isFailure) return Result.fail(phone.error);
-    if (eMongolia.isFailure) return Result.fail(eMongolia.error);
-
     return Result.ok(
       SellerVerificationStatusSummary(
-        phoneVerified: phone.value?.isVerified ?? false,
-        eMongoliaVerified: eMongolia.value?.isVerified ?? false,
-        phone: phone.value?.phone,
-        eMongoliaVerification: eMongolia.value,
+        phoneVerified: phone.getOrThrow()?.isVerified ?? false,
+        eMongoliaVerified: eMongolia.getOrThrow()?.isVerified ?? false,
+        phone: phone.getOrThrow()?.phone,
+        eMongoliaVerification: eMongolia.getOrThrow(),
       ),
     );
   }

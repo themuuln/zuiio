@@ -6,6 +6,8 @@ import '../../../core/widgets/widgets.dart';
 import '../application/map_providers.dart';
 import '../domain/pasture_zone.dart';
 
+import 'package:tamga/l10n/generated/app_localizations.dart';
+
 /// Бэлчээрийн удирдлагын дэлгэц — бүсийг үүсгэх, засварлах, морь хамааруулах.
 class PastureManagementScreen extends ConsumerStatefulWidget {
   const PastureManagementScreen({super.key});
@@ -29,10 +31,9 @@ class _PastureManagementScreenState
         backgroundColor: colors.surface,
         surfaceTintColor: Colors.transparent,
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateZoneDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text('Бэлчээр нэмэх'),
+        child: const Icon(Icons.add),
       ),
       body: zonesAsync.when(
         data: (zones) {
@@ -110,6 +111,7 @@ class _PastureManagementScreenState
   }
 
   void _confirmDelete(BuildContext context, PastureZone zone) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -118,7 +120,7 @@ class _PastureManagementScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Цуцлах'),
+            child: Text(l10n.generalCancel),
           ),
           TextButton(
             onPressed: () async {
@@ -127,7 +129,7 @@ class _PastureManagementScreenState
               ref.invalidate(pastureZonesProvider);
               if (ctx.mounted) Navigator.of(ctx).pop();
             },
-            child: const Text('Устгах'),
+            child: Text(l10n.generalDelete),
           ),
         ],
       ),
@@ -143,49 +145,34 @@ class _AlertSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return TamgaCard(
-      margin: TamgaSpacing.horizontalInset,
-      color: scheme.errorContainer,
+    final colors = TamgaColors.of(context);
+    return Container(
       padding: TamgaSpacing.cardPadding,
+      color: colors.error,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber, color: scheme.onErrorContainer),
+              Icon(Icons.warning_amber, color: colors.onError),
               const SizedBox(width: TamgaSpacing.sm),
               Text(
-                'Анхааруулгууд (${alerts.length})',
-                style: TamgaTypography.subheadline(
-                  color: scheme.onErrorContainer,
-                  weight: FontWeight.w700,
+                'Анхааруулгууд',
+                style: TextStyle(
+                  color: colors.onError,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: TamgaSpacing.sm),
+          const SizedBox(height: TamgaSpacing.xs),
           ...alerts.map(
             (alert) => Padding(
               padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.circle,
-                    size: 6,
-                    color: scheme.onErrorContainer.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(width: TamgaSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      '${alert.zoneName}: '
-                      '${alert.alertType == ZoneAlertType.overdue ? "Хугацаа дууссан" : "${alert.remainingDays} өдөр үлдсэн"}',
-                      style: TamgaTypography.footnote(
-                        color: scheme.onErrorContainer,
-                      ),
-                    ),
-                  ),
-                ],
+              child: Text(
+                '${alert.zoneName}: '
+                '${alert.alertType == ZoneAlertType.overdue ? "Хугацаа дууссан" : "${alert.remainingDays} өдөр үлдсэн"}',
+                style: TextStyle(color: colors.onError),
               ),
             ),
           ),
@@ -210,135 +197,52 @@ class _ZoneTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = TamgaColors.of(context);
-    final accent = zone.isOverdue ? colors.error : colors.primary;
-
-    // Usage ratio: how much of the occupancy window has passed.
-    final totalDays = zone.maxOccupancyDuration.inDays;
-    final usedRatio = totalDays > 0
-        ? ((totalDays - zone.remainingDays) / totalDays).clamp(0.0, 1.0)
-        : 0.0;
-
-    return TamgaCard(
-      margin: TamgaSpacing.horizontalInset,
-      showTopAccent: zone.isOverdue,
-      accentColor: colors.error,
-      padding: TamgaSpacing.listCellPadding,
-      child: Row(
-        children: [
-          // Icon
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(
-                TamgaSpacing.cornerRadiusSmall,
-              ),
-            ),
-            child: Icon(Icons.park_outlined, color: accent, size: 22),
+    final l10n = AppLocalizations.of(context)!;
+    return Card(
+      margin: const EdgeInsets.symmetric(
+        horizontal: TamgaSpacing.md,
+        vertical: TamgaSpacing.xs,
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: zone.isOverdue
+              ? colors.error
+              : colors.primaryContainer,
+          child: Icon(
+            Icons.park,
+            color: zone.isOverdue ? colors.onError : colors.onPrimaryContainer,
           ),
-          const SizedBox(width: TamgaSpacing.md),
-
-          // Info + occupancy progress
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        zone.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TamgaTypography.body(weight: FontWeight.w600),
-                      ),
-                    ),
-                    const SizedBox(width: TamgaSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: TamgaSpacing.sm,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: zone.isOverdue
-                            ? colors.error.withValues(alpha: 0.12)
-                            : colors.primaryContainer,
-                        borderRadius: BorderRadius.circular(
-                          TamgaSpacing.cornerRadiusSmall,
-                        ),
-                      ),
-                      child: Text(
-                        zone.isOverdue
-                            ? 'Хугацаа дууссан!'
-                            : '${zone.remainingDays} өдөр үлдсэн',
-                        style: TamgaTypography.caption1(
-                          color: zone.isOverdue
-                              ? colors.destructive
-                              : colors.onPrimaryContainer,
-                          weight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: TamgaSpacing.sm),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
-                  child: LinearProgressIndicator(
-                    value: usedRatio,
-                    minHeight: 4,
-                    backgroundColor: colors.surfaceContainer,
-                    color: accent,
-                  ),
-                ),
-                const SizedBox(height: TamgaSpacing.xs),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.pets_outlined,
-                      size: 14,
-                      color: colors.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${zone.assignedHorseIds.length} морь',
-                      style: TamgaTypography.caption1(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(width: TamgaSpacing.md),
-                    Icon(
-                      Icons.radar_outlined,
-                      size: 14,
-                      color: colors.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${zone.radiusKm.toStringAsFixed(0)} км',
-                      style: TamgaTypography.caption1(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
+        ),
+        title: Text(zone.name),
+        subtitle: Text(
+          zone.isOverdue
+              ? 'Хугацаа дууссан!'
+              : '${zone.remainingDays} өдөр үлдсэн',
+          style: TextStyle(
+            color: zone.isOverdue
+                ? colors.destructive
+                : colors.onSurfaceVariant,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${zone.assignedHorseIds.length} морь',
+              style: TamgaTypography.footnote(),
+            ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'edit') onEdit();
+                if (value == 'delete') onDelete();
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'edit', child: Text('Засварлах')),
+                PopupMenuItem(value: 'delete', child: Text(l10n.generalDelete)),
               ],
             ),
-          ),
-
-          // Actions
-          PopupMenuButton<String>(
-            tooltip: 'Нэмэлт үйлдэл',
-            onSelected: (value) {
-              if (value == 'edit') onEdit();
-              if (value == 'delete') onDelete();
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'edit', child: Text('Засварлах')),
-              const PopupMenuItem(value: 'delete', child: Text('Устгах')),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -383,6 +287,7 @@ class _ZoneFormSheetState extends State<_ZoneFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -404,13 +309,8 @@ class _ZoneFormSheetState extends State<_ZoneFormSheet> {
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: 'Нэр',
+                labelText: l10n.mapPastureNameLabel,
                 hintText: 'Жишээ: Баруун бэлчээр',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(
-                    TamgaSpacing.cornerRadiusSmall,
-                  ),
-                ),
               ),
               validator: (v) =>
                   v == null || v.isEmpty ? 'Нэр оруулна уу' : null,
@@ -418,14 +318,7 @@ class _ZoneFormSheetState extends State<_ZoneFormSheet> {
             const SizedBox(height: TamgaSpacing.md),
             TextFormField(
               controller: _radiusController,
-              decoration: InputDecoration(
-                labelText: 'Радиус (км)',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(
-                    TamgaSpacing.cornerRadiusSmall,
-                  ),
-                ),
-              ),
+              decoration: const InputDecoration(labelText: 'Радиус (км)'),
               keyboardType: TextInputType.number,
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Радиус оруулна уу';
@@ -437,14 +330,7 @@ class _ZoneFormSheetState extends State<_ZoneFormSheet> {
             const SizedBox(height: TamgaSpacing.md),
             TextFormField(
               controller: _occupancyController,
-              decoration: InputDecoration(
-                labelText: 'Хугацаа (өдөр)',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(
-                    TamgaSpacing.cornerRadiusSmall,
-                  ),
-                ),
-              ),
+              decoration: const InputDecoration(labelText: 'Хугацаа (өдөр)'),
               keyboardType: TextInputType.number,
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Хугацаа оруулна уу';
@@ -456,7 +342,7 @@ class _ZoneFormSheetState extends State<_ZoneFormSheet> {
             const SizedBox(height: TamgaSpacing.lg),
             FilledButton(
               onPressed: _submit,
-              child: Text(widget.zone == null ? 'Үүсгэх' : 'Хадгалах'),
+              child: Text(widget.zone == null ? 'Үүсгэх' : l10n.generalSave),
             ),
             const SizedBox(height: TamgaSpacing.md),
           ],

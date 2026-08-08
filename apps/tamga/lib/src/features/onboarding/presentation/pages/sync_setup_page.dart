@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../widgets/onboarding_bottom_actions.dart';
 
 /// Screen 6: Синк тохиргоо — Cloud sync setup.
 ///
@@ -133,12 +132,66 @@ class SyncSetupPage extends StatelessWidget {
         ),
 
         // ── Bottom actions — back + continue ──
-        OnboardingBottomActions(
-          onBack: onBack,
-          primaryLabel: 'Эхлэх',
-          onPrimary: onStart,
-          secondaryLabel: 'Дараа тохируулъя',
-          onSecondary: onLater,
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.lg,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: onBack,
+                        icon: Icon(Icons.chevron_left, color: tc.primary),
+                        style: IconButton.styleFrom(
+                          backgroundColor: tc.surfaceContainerLow,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: onStart,
+                          child: const Text(
+                            'Эхлэх',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: TextButton(
+                    onPressed: onLater,
+                    child: Text(
+                      'Дараа тохируулъя',
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: tc.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );

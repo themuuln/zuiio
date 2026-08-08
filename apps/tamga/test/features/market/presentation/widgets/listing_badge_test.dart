@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tamga/src/features/market/domain/market_listing.dart';
 import 'package:tamga/src/features/market/presentation/widgets/listing_badge.dart';
-import 'package:tamga/l10n/generated/app_localizations.dart';
 
 void main() {
   MarketListing createTestListing({
@@ -12,7 +11,6 @@ void main() {
     DateTime? vipExpiresAt,
     SellerBadgeType sellerBadge = SellerBadgeType.none,
     DateTime? sellerBadgeExpiresAt,
-    bool lostReportConflict = false,
   }) {
     return MarketListing(
       id: 'test-1',
@@ -37,7 +35,6 @@ void main() {
       vipExpiresAt: vipExpiresAt,
       sellerBadge: sellerBadge,
       sellerBadgeExpiresAt: sellerBadgeExpiresAt,
-      lostReportConflict: lostReportConflict,
     );
   }
 
@@ -146,47 +143,8 @@ void main() {
         ),
       );
 
-      expect(find.text('Баталгаатай'), findsOneWidget);
+      expect(find.text('Verified'), findsOneWidget);
       expect(find.byIcon(Icons.verified_outlined), findsOneWidget);
-    });
-
-    testWidgets('shows lost-report conflict badge and takes priority', (
-      tester,
-    ) async {
-      final listing = createTestListing(
-        lostReportConflict: true,
-        vipLevel: VipLevel.standard,
-        vipExpiresAt: DateTime.now().add(const Duration(days: 5)),
-      );
-
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('mn'),
-          home: Scaffold(body: ListingBadge(listing: listing)),
-        ),
-      );
-
-      // Safety signal wins over VIP badge.
-      expect(find.text('Эрэл хайгуул бүртгэлтэй морь'), findsOneWidget);
-      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.workspace_premium), findsNothing);
-    });
-
-    testWidgets('shows conflict badge in compact mode', (tester) async {
-      final listing = createTestListing(lostReportConflict: true);
-
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('mn'),
-          home: Scaffold(body: ListingBadge(listing: listing, compact: true)),
-        ),
-      );
-
-      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
     });
   });
 
@@ -236,27 +194,6 @@ void main() {
   });
 
   group('ListingBadgeOverlay', () {
-    testWidgets('shows lost-report conflict chip in overlay', (tester) async {
-      final listing = createTestListing(
-        lostReportConflict: true,
-        vipLevel: VipLevel.standard,
-        vipExpiresAt: DateTime.now().add(const Duration(days: 5)),
-      );
-
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('mn'),
-          home: Scaffold(
-            body: Stack(children: [ListingBadgeOverlay(listing: listing)]),
-          ),
-        ),
-      );
-
-      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
-    });
-
     testWidgets('shows nothing when no badges', (tester) async {
       final listing = createTestListing();
 
@@ -352,7 +289,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Баталгаатай'), findsOneWidget);
+      expect(find.text('Verified'), findsOneWidget);
     });
 
     testWidgets('shows all badges when all active', (tester) async {

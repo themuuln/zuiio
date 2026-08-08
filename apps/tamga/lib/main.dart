@@ -19,7 +19,6 @@ import 'src/core/error/error_boundary.dart';
 import 'src/core/features/feature_flags.dart';
 import 'src/core/services/local_notification_service.dart';
 import 'src/core/services/notification_service.dart';
-import 'src/core/services/notification_types.dart';
 import 'src/core/storage/isar_database.dart';
 import 'src/features/updater/presentation/update_overlay.dart';
 
@@ -34,18 +33,6 @@ export 'src/app/app.dart';
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Firebase ачаалсан байх ёстой (background isolate-д).
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-}
-
-/// Firebase-ийг алдаагүй эхлүүлэх — GoogleService-Info.plist байхгүй бол
-/// алдаа гаргахгүйгээр үргэлжлүүлнэ (cold-start parallel batch-д зориулав).
-Future<void> _initializeFirebaseSafely() async {
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (e) {
-    debugPrint('[main] Firebase init skipped: $e');
-  }
 }
 
 void main() {
@@ -67,14 +54,6 @@ void main() {
             isInteractiveWidget: (type) => type == shadcn.Button,
             // Collect logs for get_logs.
             logCollector: logCollector,
-            // Extract labels from custom shadcn buttons for text matching.
-            extractText: (element) {
-              final widget = element.widget;
-              if (widget is shadcn.Button && widget.child is Text) {
-                return (widget.child as Text).data;
-              }
-              return null;
-            },
           ),
         );
 
@@ -91,15 +70,18 @@ void main() {
       PaintingBinding.instance.imageCache.maximumSize = 500;
       PaintingBinding.instance.imageCache.maximumSizeBytes = 100 * 1024 * 1024;
 
-      // ── Parallel cold-start init ──
-      // Firebase, prefs and Isar are independent — running them concurrently
-      // cuts the blocking startup chain roughly in half on cold starts.
-      final prefsFuture = SharedPreferences.getInstance();
-      final firebaseInit = _initializeFirebaseSafely();
-      final isarInit = IsarDatabase.initialize();
-      final supabaseInit = initializeSupabaseIfConfigured();
-      await Future.wait([prefsFuture, firebaseInit, isarInit, supabaseInit]);
-      final prefs = await prefsFuture;
+      // Firebase эхлүүлэх — GoogleService-Info.plist байхгүй бол алдаа гаргахгүй.
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      } catch (e) {
+        // Firebase init нь амжилтгүй бол алгасах — crash гаргахгүй.
+      }
+
+      // Firebase-ийн background message handler register.
+      // Push notification feature flag унтраалттай бол алгасна.
+      final prefs = await SharedPreferences.getInstance();
       final pushEnabled =
           prefs.getBool(FeatureFlag.pushNotifications.storageKey) ??
           FeatureFlag.pushNotifications.defaultValue;
@@ -114,15 +96,31 @@ void main() {
         }
       }
 
+      await IsarDatabase.initialize();
+      await initializeSupabaseIfConfigured();
+
+      // Local notification service — Apple Dev account шаарддаггүй тул үргэлж эхлүүлнэ.
+      await LocalNotificationService.instance.initialize(
+        onNotificationTap: (payload) {
+          // Handle navigation on notification tap
+        },
+      );
+
+      // Push notification (FCM) services — зөвхөн feature flag идэвхтэй үед.
+      if (pushEnabled) {
+        final notificationService = NotificationService();
+        await notificationService.initialize();
+      }
+
       // ── Read onboarding state BEFORE runApp ──
       // This avoids any GoRouter redirects or navigation during the first frame.
       final raw = prefs.getString('onboarding.data');
-      final onboardingData = raw != null && raw.isNotEmpty
-          ? jsonDecode(raw) as Map?
-          : null;
-      final isOnboardingCompleted =
-          onboardingData?['isCompleted'] as bool? ?? false;
-      final initialRoute = isOnboardingCompleted ? '/home' : '/onboarding';
+      final isOnboardingCompleted = raw != null && raw.isNotEmpty
+          ? (jsonDecode(raw) as Map?)?.containsKey('isCompleted') == true
+                ? (jsonDecode(raw) as Map)['isCompleted'] as bool? ?? false
+                : false
+          : false;
+      final initialRoute = isOnboardingCompleted ? '/lineage' : '/onboarding';
 
       // ── Global error boundary ──
       crashReporter = FirebaseCrashReporter();
@@ -146,20 +144,6 @@ void main() {
         ),
       );
 
-      // ── Post-first-frame init ──
-      // Notification services were awaited before runApp, delaying the first
-      // frame. They are independent of the widget tree, so initialize them
-      // after the app is visible.
-      await LocalNotificationService.instance.initialize(
-        onNotificationTap: (payload) {
-          debugPrint('[main] Notification tapped: ${payload.type.key}');
-        },
-      );
-      if (pushEnabled) {
-        final notificationService = NotificationService();
-        await notificationService.initialize();
-      }
-
       // Connection monitor must start after runApp — platform callbacks
       // can request frames before the engine is ready otherwise.
       await ConnectionMonitor.instance.start();
@@ -167,7 +151,7 @@ void main() {
     (Object error, StackTrace stack) {
       // Баригдаагүй async алдаануудыг crash reporting руу илгээнэ.
       crashReporter?.recordError(error, stack);
-      debugPrint('[main] Unhandled async error: $error');
+      // Unhandled error logged via crashReporter above
     },
   );
 }

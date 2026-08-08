@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:uuid/uuid.dart';
 import 'package:isar/isar.dart';
 
 import '../../../core/error/app_exception.dart';
@@ -10,9 +9,6 @@ import '../../shared/data/isar_storage.dart';
 import '../../shared/data/isar_schemas/isar_geofence_alert.dart';
 import '../../shared/data/isar_schemas/isar_horse_location.dart';
 import '../../shared/data/isar_schemas/isar_lost_horse_report.dart';
-import '../../../core/sync/sync_queue.dart';
-import '../../shared/data/isar_schemas/isar_lost_horse_media_draft.dart';
-import '../../shared/data/isar_schemas/isar_sync_queue_item.dart';
 import '../../shared/data/isar_schemas/isar_search_area.dart';
 import '../domain/geofence_alert.dart';
 import '../domain/horse_location.dart';
@@ -41,20 +37,9 @@ class LocalMapRepository implements MapRepository {
     try {
       final isar = _storage.lostHorseReports.isar;
       final isarReport = IsarLostHorseReport.fromDomain(report);
+
       await isar.writeTxn(() async {
         await _storage.lostHorseReports.put(isarReport);
-        final queueItem = IsarSyncQueueItem.fromDomain(
-          SyncQueueItem(
-            entityType: 'lost_horse_report',
-            entityId: report.id,
-            action: SyncAction.create,
-            data: report.toJson(),
-            timestamp: report.createdAt,
-            accountId: report.ownerId,
-            queueId: 'lost_horse_report:${report.id}',
-          ),
-        );
-        await _storage.syncQueueItems.put(queueItem);
       });
 
       return Result.ok(report);
@@ -64,60 +49,6 @@ class LocalMapRepository implements MapRepository {
           'REPORT_FAILED',
           'Хаяж морийн мэдээлэл хадгалсангүй: $e',
         ),
-      );
-    }
-  }
-
-  String _extensionOf(String path) {
-    final extension = path.split('.').last.toLowerCase();
-    return extension.isEmpty || extension == path ? 'jpg' : extension;
-  }
-
-  /// Atomically stores a report, its local media descriptors, and one queue row.
-  Future<Result<LostHorseReport>> reportLostHorseWithMedia(
-    LostHorseReport report,
-    List<String> localMediaPaths,
-  ) async {
-    try {
-      final isar = _storage.lostHorseReports.isar;
-      final mediaDrafts = [
-        for (var index = 0; index < localMediaPaths.length; index++)
-          (IsarLostHorseMediaDraft()
-            ..mediaId = const Uuid().v4()
-            ..reportId = report.id
-            ..accountId = report.ownerId
-            ..localPath = localMediaPaths[index]
-            ..mediaType = 'photo'
-            ..storagePath =
-                '${report.ownerId}/${report.id}/$index.${_extensionOf(localMediaPaths[index])}'
-            ..sortOrder = index
-            ..createdAt = report.createdAt),
-      ];
-      final queueData = Map<String, dynamic>.from(report.toJson())
-        ..['media_ids'] = mediaDrafts.map((draft) => draft.mediaId).toList();
-      await isar.writeTxn(() async {
-        await _storage.lostHorseReports.put(
-          IsarLostHorseReport.fromDomain(report),
-        );
-        await _storage.lostHorseMediaDrafts.putAll(mediaDrafts);
-        await _storage.syncQueueItems.put(
-          IsarSyncQueueItem.fromDomain(
-            SyncQueueItem(
-              entityType: 'lost_horse_report',
-              entityId: report.id,
-              action: SyncAction.create,
-              data: queueData,
-              timestamp: report.createdAt,
-              accountId: report.ownerId,
-              queueId: 'lost_horse_report:${report.id}',
-            ),
-          ),
-        );
-      });
-      return Result.ok(report);
-    } catch (e) {
-      return Result.fail(
-        AppException.withDetail('REPORT_FAILED', 'Мэдээлэл хадгалсангүй: $e'),
       );
     }
   }

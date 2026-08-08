@@ -251,15 +251,14 @@ class _CalculatorResultView extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Semantic risk colors from the theme (not hardcoded Material colors):
-    // Эрсдэлгүй → primary · Бага → tertiary · Дунд → error (softened) ·
-    // Өндөр → error. Keeps the 4-level semantic mapping.
-    final Color riskColor = switch (result.riskLevel) {
-      'Бага эрсдэлтэй' => colorScheme.tertiary,
-      'Дунд зэргийн эрсдэлтэй' => colorScheme.error.withValues(alpha: 0.8),
-      'Өндөр эрсдэлтэй' => colorScheme.error,
-      _ => colorScheme.primary,
-    };
+    Color riskColor = Colors.green;
+    if (result.riskLevel == 'Бага эрсдэлтэй') {
+      riskColor = Colors.yellow.shade800;
+    } else if (result.riskLevel == 'Дунд зэргийн эрсдэлтэй') {
+      riskColor = Colors.orange;
+    } else if (result.riskLevel == 'Өндөр эрсдэлтэй') {
+      riskColor = Colors.red;
+    }
 
     final coiPercentage = (result.coi * 100).toStringAsFixed(3);
 
@@ -328,7 +327,7 @@ class _CalculatorResultView extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.xl),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle, color: colorScheme.primary),
+                  const Icon(Icons.check_circle, color: Colors.green),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(

@@ -1,24 +1,6 @@
 {
   "version": 1,
   "skills": {
-    "dart-add-unit-test": {
-      "source": "flutter/skills",
-      "sourceType": "github",
-      "skillPath": "skills/dart-add-unit-test/SKILL.md",
-      "computedHash": "326a2b6cb57bcb4f40203e063a1060e9549a8cea0ece1a5c9a0d39a2f2b85bc8"
-    },
-    "flutter-add-integration-test": {
-      "source": "flutter/skills",
-      "sourceType": "github",
-      "skillPath": "skills/flutter-add-integration-test/SKILL.md",
-      "computedHash": "9ead37fef54371fed6ad07a9ba3de7a908135a0867b05baf74c28b7095343999"
-    },
-    "flutter-add-widget-test": {
-      "source": "flutter/skills",
-      "sourceType": "github",
-      "skillPath": "skills/flutter-add-widget-test/SKILL.md",
-      "computedHash": "c4f263c59cfe331ef42dba2aa81e25142aa4f7284518907c6b847e04502676b0"
-    },
     "supabase": {
       "source": "supabase/agent-skills",
       "sourceType": "github",

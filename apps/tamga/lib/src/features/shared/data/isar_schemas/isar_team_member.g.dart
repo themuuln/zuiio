@@ -13,41 +13,33 @@ extension GetIsarTeamMemberCollection on Isar {
   IsarCollection<IsarTeamMember> get isarTeamMembers => this.collection();
 }
 
-final IsarTeamMemberSchema = CollectionSchema(
+const IsarTeamMemberSchema = CollectionSchema(
   name: r'IsarTeamMember',
-  id: int.parse('4060877772387470504'),
+  id: 4060877772387470504,
   properties: {
     r'domainId': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'joinedAt': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'joinedAt',
       type: IsarType.dateTime,
     ),
     r'permissions': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'permissions',
       type: IsarType.stringList,
     ),
     r'role': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'role',
       type: IsarType.byte,
       enumMap: _IsarTeamMemberroleEnumValueMap,
     ),
-    r'teamId': PropertySchema(
-      id: int.parse('4'),
-      name: r'teamId',
-      type: IsarType.string,
-    ),
-    r'userId': PropertySchema(
-      id: int.parse('5'),
-      name: r'userId',
-      type: IsarType.string,
-    ),
+    r'teamId': PropertySchema(id: 4, name: r'teamId', type: IsarType.string),
+    r'userId': PropertySchema(id: 5, name: r'userId', type: IsarType.string),
   },
   estimateSize: _isarTeamMemberEstimateSize,
   serialize: _isarTeamMemberSerialize,
@@ -56,7 +48,7 @@ final IsarTeamMemberSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -69,7 +61,7 @@ final IsarTeamMemberSchema = CollectionSchema(
       ],
     ),
     r'teamId': IndexSchema(
-      id: int.parse('8894498918133773550'),
+      id: 8894498918133773550,
       name: r'teamId',
       unique: false,
       replace: false,
@@ -82,7 +74,7 @@ final IsarTeamMemberSchema = CollectionSchema(
       ],
     ),
     r'userId': IndexSchema(
-      id: int.parse('-2005826577402374815'),
+      id: -2005826577402374815,
       name: r'userId',
       unique: false,
       replace: false,

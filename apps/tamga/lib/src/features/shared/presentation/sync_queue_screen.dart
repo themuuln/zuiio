@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
@@ -30,13 +31,13 @@ class SyncQueueScreen extends ConsumerWidget {
     final syncState = ref.watch(syncStateProvider);
     final pendingItemsAsync = ref.watch(pendingSyncItemsProvider);
     final deadLetterItemsAsync = ref.watch(persistentDeadLetterItemsProvider);
-
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Синк дараалал'),
+        title: Text(l10n.syncQueueTitle),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.xs),
+            padding: const EdgeInsets.only(right: 4),
             child: SyncIndicator(size: 12),
           ),
           // ── Sync Now button ──
@@ -45,12 +46,16 @@ class SyncQueueScreen extends ConsumerWidget {
             child: syncState.isSyncing
                 ? const Padding(
                     padding: EdgeInsets.all(AppSpacing.md),
-                    child: LoadingIndicator(size: 20),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   )
                 : TextButton.icon(
                     onPressed: () => _triggerSync(ref),
                     icon: const Icon(Icons.sync, size: 18),
-                    label: const Text('Синхрончлох'),
+                    label: Text(l10n.syncButton),
                   ),
           ),
         ],
@@ -63,11 +68,8 @@ class SyncQueueScreen extends ConsumerWidget {
             // ── Sync Status Card ──
             _SyncStatusCard(syncState: syncState),
 
-            const SizedBox(height: AppSpacing.lg),
-
-            // ── Pending Items Section ──
             Text(
-              'Хүлээгдэж буй синк',
+              l10n.syncQueueStatusPending,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -78,8 +80,8 @@ class SyncQueueScreen extends ConsumerWidget {
                 if (items.isEmpty) {
                   return _EmptySection(
                     icon: Icons.check_circle_outline,
-                    message: 'Хүлээгдэж буй синк байхгүй',
-                    subtitle: 'Бүх өгөгдөл синк хийгдсэн',
+                    message: l10n.syncQueueEmpty,
+                    subtitle: l10n.syncSynced,
                   );
                 }
                 return _PendingItemsList(items: items);
@@ -98,7 +100,7 @@ class SyncQueueScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Амжилтгүй синк',
+                  l10n.syncQueueStatusFailed,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -106,7 +108,7 @@ class SyncQueueScreen extends ConsumerWidget {
                 TextButton.icon(
                   onPressed: () => _clearDeadLetter(ref),
                   icon: const Icon(Icons.delete_outline, size: 18),
-                  label: const Text('Бүгдийг устгах'),
+                  label: Text(l10n.generalDelete),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
                   ),
@@ -164,11 +166,11 @@ class SyncQueueScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Цуцлах'),
+            child: Text(AppLocalizations.of(ctx)!.generalCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Устгах'),
+            child: Text(AppLocalizations.of(ctx)!.generalDelete),
           ),
         ],
       ),
@@ -205,6 +207,7 @@ class _SyncStatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isSyncing = syncState.isSyncing;
     final hasError = syncState.hasError;
     final pendingCount = syncState.pendingCount;
@@ -217,19 +220,19 @@ class _SyncStatusCard extends StatelessWidget {
     if (isSyncing) {
       statusColor = TamgaColors.of(context).primary;
       statusIcon = Icons.sync;
-      statusText = 'Синк хийж байна...';
+      statusText = l10n.syncInProgressButton;
     } else if (hasError) {
       statusColor = theme.colorScheme.error;
       statusIcon = Icons.error_outline;
-      statusText = 'Синк амжилтгүй';
+      statusText = l10n.syncQueueStatusFailed;
     } else if (pendingCount > 0) {
       statusColor = AppColors.warning;
       statusIcon = Icons.sync_problem;
-      statusText = 'Хүлээгдэж буй синк: $pendingCount';
+      statusText = '${l10n.syncQueueStatusPending}: $pendingCount';
     } else {
       statusColor = AppColors.success;
       statusIcon = Icons.cloud_done;
-      statusText = 'Синк хийгдсэн';
+      statusText = l10n.syncSynced;
     }
 
     return Card(
@@ -247,7 +250,10 @@ class _SyncStatusCard extends StatelessWidget {
               child: isSyncing
                   ? Padding(
                       padding: const EdgeInsets.all(AppSpacing.sm),
-                      child: LoadingIndicator(size: 22, color: statusColor),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: statusColor,
+                      ),
                     )
                   : Icon(statusIcon, color: statusColor, size: 22),
             ),
@@ -264,7 +270,7 @@ class _SyncStatusCard extends StatelessWidget {
                   ),
                   if (syncState.lastSyncTime != null)
                     Text(
-                      'Сүүлд синк хийсэн: ${_formatLastSyncTime(syncState.lastSyncTime!)}',
+                      _formatLastSyncTime(l10n, syncState.lastSyncTime!),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -278,14 +284,14 @@ class _SyncStatusCard extends StatelessWidget {
     );
   }
 
-  String _formatLastSyncTime(DateTime lastSyncTime) {
+  String _formatLastSyncTime(AppLocalizations l10n, DateTime lastSyncTime) {
     final now = DateTime.now();
     final diff = now.difference(lastSyncTime);
 
-    if (diff.inMinutes < 1) return 'саяхан';
-    if (diff.inHours < 1) return '${diff.inMinutes} минутын өмнө';
-    if (diff.inDays < 1) return '${diff.inHours} цагийн өмнө';
-    return '${diff.inDays} хоногийн өмнө';
+    if (diff.inMinutes < 1) return l10n.syncLastSynced;
+    if (diff.inHours < 1) return l10n.syncLastSyncedMinutes(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.syncLastSyncedHours(diff.inHours);
+    return l10n.syncLastSyncedDays(diff.inDays);
   }
 }
 
@@ -484,6 +490,7 @@ class _DeadLetterItemCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       color: theme.colorScheme.errorContainer.withValues(alpha: 0.5),
@@ -538,10 +545,11 @@ class _DeadLetterItemCard extends ConsumerWidget {
                       padding: const EdgeInsets.only(top: AppSpacing.xs),
                       child: Text(
                         'Оролдсон: ${item.retryCount} удаа',
-                        style: TamgaTypography.caption2(
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onErrorContainer.withValues(
                             alpha: 0.7,
                           ),
+                          fontSize: 11,
                         ),
                       ),
                     ),
@@ -555,7 +563,7 @@ class _DeadLetterItemCard extends ConsumerWidget {
                 Icons.refresh,
                 color: theme.colorScheme.onErrorContainer,
               ),
-              tooltip: 'Дахин оролдох',
+              tooltip: l10n.generalRetry,
             ),
           ],
         ),
@@ -645,9 +653,10 @@ class _ActionChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TamgaTypography.caption2(
+        style: theme.textTheme.labelSmall?.copyWith(
           color: chipColor,
-          weight: FontWeight.w600,
+          fontWeight: FontWeight.w600,
+          fontSize: 10,
         ),
       ),
     );
@@ -670,7 +679,31 @@ class _EmptySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InlineEmptyState(icon: icon, title: message, description: subtitle);
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+      child: Column(
+        children: [
+          Icon(icon, size: 40, color: theme.colorScheme.outlineVariant),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            message,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
@@ -684,7 +717,7 @@ class _LoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.all(AppSpacing.xxl),
-      child: Center(child: LoadingIndicator(size: 24)),
+      child: Center(child: CircularProgressIndicator()),
     );
   }
 }
@@ -699,23 +732,26 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         children: [
-          Icon(Icons.error_outline, size: 40, color: colors.error),
+          Icon(Icons.error_outline, size: 40, color: theme.colorScheme.error),
           const SizedBox(height: AppSpacing.sm),
           Text(
             message,
-            style: TamgaTypography.body(color: colors.onSurfaceVariant),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.md),
           FilledButton.tonalIcon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('Дахин оролдох'),
+            label: Text(l10n.generalRetry),
           ),
         ],
       ),

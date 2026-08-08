@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/features/races/domain/race.dart';
 import 'package:tamga/src/features/races/presentation/race_form_screen.dart';
 import '../../../helpers/test_helpers.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Helper to create a ProviderScope wrapper ────────────────────────
 
 Widget createRaceFormScreen({Race? initialRace}) {
   return ProviderScope(
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: RaceFormScreen(initialRace: initialRace),
     ),
   );
@@ -40,6 +40,13 @@ void main() {
       expect(find.text('Оролцогчдын дээд тоо'), findsOneWidget);
       expect(find.text('Оролцооны төлбөр (₮)'), findsOneWidget);
       expect(find.text('Тодорхойлолт'), findsOneWidget);
+
+      // Scroll to prize distribution field (may be off-screen)
+      await tester.dragUntilVisible(
+        find.text('Шагналын хуваарилалт'),
+        find.byType(ListView),
+        const Offset(0, -300),
+      );
       expect(find.text('Шагналын хуваарилалт'), findsOneWidget);
 
       // Verify save button
@@ -86,20 +93,19 @@ void main() {
         '10000',
       );
 
-      // Enter description
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Тодорхойлолт'),
-        'Уралдааны тодорхойлолт',
-      );
+      // Verify text was entered before scrolling
+      expect(find.text('Төв аймгийн наадам'), findsOneWidget);
 
-      // Enter prize distribution
+      // Scroll to prize distribution field and enter text
+      await tester.dragUntilVisible(
+        find.widgetWithText(TextFormField, 'Шагналын хуваарилалт'),
+        find.byType(ListView),
+        const Offset(0, -300),
+      );
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Шагналын хуваарилалт'),
         '1-р байр: 500,000₮',
       );
-
-      // Verify text was entered
-      expect(find.text('Төв аймгийн наадам'), findsOneWidget);
     });
 
     // ════════════════════════════════════════════════════════════

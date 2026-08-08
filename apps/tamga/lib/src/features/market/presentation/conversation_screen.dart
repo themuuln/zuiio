@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/sync/connection_status.dart';
 import '../../../core/sync/sync_queue.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../shared/application/sync_providers.dart';
 import '../application/market_providers.dart';
@@ -74,13 +73,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     // ── Offline guard ───────────────────────────────────────────────
     final monitor = ref.read(connectionMonitorProvider);
     if (monitor.current == ConnectionStatus.offline) {
-      // Offline-first: save the message for later sync and let the user know
-      // it will be delivered once the connection is back.
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Офлайн — мессежийг синк хийхэд хадгална'),
-          ),
+          const SnackBar(content: Text('Энэ үйлдэл интернэт холболт шаарддаг')),
         );
       }
 
@@ -168,7 +163,6 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         title: Text(effectiveTitle),
         actions: [
           PopupMenuButton<String>(
-            tooltip: 'Нэмэлт үйлдэл',
             onSelected: (value) {
               switch (value) {
                 case 'listing':
@@ -367,22 +361,22 @@ class _ListingCardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
+    final theme = Theme.of(context);
 
     return GestureDetector(
       onTap: () => context.push('/market/${listing.id}'),
       child: Container(
-        padding: TamgaSpacing.listCellPadding,
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: colors.surfaceContainerLow,
-          border: Border(bottom: BorderSide(color: colors.outlineVariant)),
+          color: theme.colorScheme.surfaceContainerHighest,
+          border: Border(
+            bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+          ),
         ),
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(
-                TamgaSpacing.cornerRadiusSmall,
-              ),
+              borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusSmall),
               child: SizedBox(
                 width: 48,
                 height: 48,
@@ -392,36 +386,38 @@ class _ListingCardHeader extends StatelessWidget {
                         fit: BoxFit.cover,
                         errorWidget: (_, _, _) => Icon(
                           Icons.image_outlined,
-                          color: colors.onSurfaceVariant,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       )
                     : Icon(
                         Icons.image_outlined,
-                        color: colors.onSurfaceVariant,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
               ),
             ),
-            const SizedBox(width: TamgaSpacing.md),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     listing.title,
-                    style: TamgaTypography.body(weight: FontWeight.w600),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     '${_formatPrice(listing)} • ${listing.locationLabel}',
-                    style: TamgaTypography.footnote(
-                      color: colors.onSurfaceVariant,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: colors.outline),
+            Icon(Icons.chevron_right, color: theme.colorScheme.outline),
           ],
         ),
       ),
@@ -452,8 +448,7 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
@@ -470,9 +465,8 @@ class _MessageBubble extends StatelessWidget {
               ),
               child: Text(
                 'Худалдагч',
-                style: TamgaTypography.caption1(
-                  color: colors.onSurfaceVariant,
-                  weight: FontWeight.w600,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -493,24 +487,24 @@ class _MessageBubble extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isMe
-                        ? colors.primary
-                        : scheme.surfaceContainerHighest,
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(
                         isMe
-                            ? TamgaSpacing.cornerRadius
-                            : TamgaSpacing.cornerRadiusSmall,
+                            ? AppSpacing.cornerRadius
+                            : AppSpacing.cornerRadiusSmall,
                       ),
                       topRight: Radius.circular(
                         isMe
-                            ? TamgaSpacing.cornerRadiusSmall
-                            : TamgaSpacing.cornerRadius,
+                            ? AppSpacing.cornerRadiusSmall
+                            : AppSpacing.cornerRadius,
                       ),
                       bottomLeft: const Radius.circular(
-                        TamgaSpacing.cornerRadius,
+                        AppSpacing.cornerRadius,
                       ),
                       bottomRight: const Radius.circular(
-                        TamgaSpacing.cornerRadius,
+                        AppSpacing.cornerRadius,
                       ),
                     ),
                   ),
@@ -519,8 +513,10 @@ class _MessageBubble extends StatelessWidget {
                     children: [
                       Text(
                         message.text,
-                        style: TamgaTypography.body(
-                          color: isMe ? colors.onPrimary : colors.onSurface,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isMe
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -529,18 +525,23 @@ class _MessageBubble extends StatelessWidget {
                         children: [
                           Text(
                             _formatTime(message.timestamp),
-                            style: TamgaTypography.caption1(
+                            style: theme.textTheme.labelSmall?.copyWith(
                               color: isMe
-                                  ? colors.onPrimary.withValues(alpha: 0.7)
-                                  : colors.onSurfaceVariant,
-                            ).copyWith(fontSize: 10),
+                                  ? theme.colorScheme.onPrimary.withValues(
+                                      alpha: 0.7,
+                                    )
+                                  : theme.colorScheme.onSurfaceVariant,
+                              fontSize: 10,
+                            ),
                           ),
                           if (isMe) ...[
                             const SizedBox(width: AppSpacing.xs),
                             Icon(
                               message.read ? Icons.done_all : Icons.done,
                               size: 12,
-                              color: colors.onPrimary.withValues(alpha: 0.7),
+                              color: theme.colorScheme.onPrimary.withValues(
+                                alpha: 0.7,
+                              ),
                             ),
                           ],
                         ],

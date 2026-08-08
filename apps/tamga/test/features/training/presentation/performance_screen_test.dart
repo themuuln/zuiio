@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/widgets/widgets.dart';
 import 'package:tamga/src/features/training/application/training_providers.dart';
 import 'package:tamga/src/features/training/domain/performance_record.dart';
 import 'package:tamga/src/features/training/presentation/performance_screen.dart';
 import 'package:tamga/src/features/training/presentation/widgets/performance_chart.dart';
 import '../../../helpers/test_helpers.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -27,7 +27,7 @@ Widget createPerformanceScreen({
         }),
       ],
       child: MaterialApp(
-        theme: AppTheme.light(),
+        theme: TamgaDesignSystem.buildThemeData(Brightness.light),
         home: PerformanceScreen(horseId: horseId),
       ),
     );
@@ -40,7 +40,7 @@ Widget createPerformanceScreen({
       }),
     ],
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: PerformanceScreen(horseId: horseId),
     ),
   );
@@ -64,14 +64,14 @@ void main() {
             ).overrideWith((ref) => completer.future),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const PerformanceScreen(horseId: 'horse-1'),
           ),
         ),
       );
 
       await tester.pump();
-      expect(find.byType(TamgaLoadingView), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
       completer.complete([]);
     });
@@ -196,15 +196,15 @@ void main() {
     });
 
     // ════════════════════════════════════════════════════════════════
-    // ── Bottom action ────────────────────────────────────────────────
+    // FAB
     // ════════════════════════════════════════════════════════════════
-    testWidgets('shows bottom action to add new measurement', (tester) async {
+    testWidgets('shows FAB to add new measurement', (tester) async {
       await tester.pumpWidget(
         createPerformanceScreen(horseId: 'horse-1', records: []),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(TamgaBottomAction), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
     // ════════════════════════════════════════════════════════════════

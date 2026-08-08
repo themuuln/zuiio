@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../domain/onboarding_data.dart';
-import '../widgets/onboarding_bottom_actions.dart';
 
 /// Screen 4: Алдар цол сонгох — Rank selection.
 ///
@@ -151,12 +150,67 @@ class _RankSelectionPageState extends State<RankSelectionPage> {
         ),
 
         // ── Bottom actions — back + continue ──
-        OnboardingBottomActions(
-          onBack: widget.onBack,
-          primaryLabel: 'Үргэлжлүүлэх',
-          onPrimary: () => widget.onContinue(_selectedRank ?? 'no_rank'),
-          secondaryLabel: 'Алгасах',
-          onSecondary: () => widget.onContinue('no_rank'),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.lg,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: widget.onBack,
+                        icon: Icon(Icons.chevron_left, color: tc.primary),
+                        style: IconButton.styleFrom(
+                          backgroundColor: tc.surfaceContainerLow,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () =>
+                              widget.onContinue(_selectedRank ?? 'no_rank'),
+                          child: const Text(
+                            'Үргэлжлүүлэх',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: TextButton(
+                    onPressed: () => widget.onContinue('no_rank'),
+                    child: Text(
+                      'Алгасах',
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: tc.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );

@@ -61,9 +61,6 @@ class ListingCard extends StatelessWidget {
                             width: 72,
                             height: 72,
                             fit: BoxFit.cover,
-                            // Decode a 2x-sized bitmap instead of the full
-                            // original (often 1000px+) — big memory win in lists.
-                            memCacheWidth: 144,
                             placeholder: (_, _) => _ImagePlaceholder(
                               theme: theme,
                               width: 72,
@@ -91,11 +88,7 @@ class ListingCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             listing.title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleLarge,
                           ),
                         ),
                         IconButton(
@@ -114,29 +107,15 @@ class ListingCard extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      _formatPrice(listing),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: tc.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      '${_formatPrice(listing)} • ${listing.locationLabel}',
+                      style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      listing.locationLabel.isEmpty
-                          ? listing.saleType.label
-                          : '${listing.saleType.label} • ${listing.locationLabel}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       horse == null
                           ? listing.description
                           : '${horse.name} • ${horse.coat} • ${horse.birthYear}',
-                      style: theme.textTheme.bodyMedium,
+                      style: theme.textTheme.bodyLarge,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -145,7 +124,10 @@ class ListingCard extends StatelessWidget {
                       spacing: AppSpacing.xs,
                       runSpacing: AppSpacing.xs,
                       children: [
-                        _Badge(label: 'Итгэл ${listing.trustScore}%'),
+                        _Badge(label: listing.saleType.label),
+                        _Badge(label: 'Trust ${listing.trustScore}%'),
+                        if (listing.isSellerVerified)
+                          const _Badge(label: 'Verified'),
                         if (listing.viewsCount > 0)
                           _Badge(label: 'Үзсэн ${listing.viewsCount}'),
                       ],
@@ -207,7 +189,6 @@ class ListingGridCard extends StatelessWidget {
                         imageUrl: imageUrl,
                         fit: BoxFit.cover,
                         width: double.infinity,
-                        memCacheWidth: 800,
                         height: double.infinity,
                       ),
                     )
@@ -235,71 +216,33 @@ class ListingGridCard extends StatelessWidget {
                       ),
                     ),
                   // Дээд талын тэмдэглэгээнүүд
+                  if (listing.mediaUrls.isNotEmpty)
+                    Positioned(
+                      top: AppSpacing.sm,
+                      right: AppSpacing.sm,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(138, 0, 0, 0),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.cornerRadiusSmall,
+                          ),
+                        ),
+                        child: Text(
+                          '${listing.mediaUrls.length}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: const Color.fromARGB(255, 255, 255, 255),
+                          ),
+                        ),
+                      ),
+                    ),
                   Positioned(
                     top: AppSpacing.sm,
                     left: AppSpacing.sm,
-                    right: AppSpacing.sm,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _Badge(label: listing.saleType.label),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (listing.mediaUrls.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.xs,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.45,
-                                  ),
-                                  borderRadius: BorderRadius.circular(
-                                    AppSpacing.cornerRadiusSmall,
-                                  ),
-                                ),
-                                child: Text(
-                                  '${listing.mediaUrls.length}',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.surface,
-                                  ),
-                                ),
-                              ),
-                            if (listing.mediaUrls.isNotEmpty)
-                              const SizedBox(width: AppSpacing.xs),
-                            Material(
-                              color: theme.colorScheme.surface.withValues(
-                                alpha: 0.92,
-                              ),
-                              shape: const CircleBorder(),
-                              child: IconButton(
-                                tooltip: item.isFavorite
-                                    ? 'Хадгалснаас хасах / Remove saved'
-                                    : 'Хадгалах / Save',
-                                onPressed: onFavorite,
-                                icon: Icon(
-                                  item.isFavorite
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                ),
-                                color: item.isFavorite
-                                    ? theme.colorScheme.error
-                                    : theme.colorScheme.onSurfaceVariant,
-                                iconSize: 18,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints.tightFor(
-                                  width: 44,
-                                  height: 44,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                    child: _Badge(label: listing.saleType.label),
                   ),
                 ],
               ),

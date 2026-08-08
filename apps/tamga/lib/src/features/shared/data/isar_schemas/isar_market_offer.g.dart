@@ -13,60 +13,44 @@ extension GetIsarMarketOfferCollection on Isar {
   IsarCollection<IsarMarketOffer> get isarMarketOffers => this.collection();
 }
 
-final IsarMarketOfferSchema = CollectionSchema(
+const IsarMarketOfferSchema = CollectionSchema(
   name: r'IsarMarketOffer',
-  id: int.parse('657758144542806313'),
+  id: 657758144542806313,
   properties: {
-    r'amount': PropertySchema(
-      id: int.parse('0'),
-      name: r'amount',
-      type: IsarType.long,
-    ),
-    r'buyerId': PropertySchema(
-      id: int.parse('1'),
-      name: r'buyerId',
-      type: IsarType.string,
-    ),
+    r'amount': PropertySchema(id: 0, name: r'amount', type: IsarType.long),
+    r'buyerId': PropertySchema(id: 1, name: r'buyerId', type: IsarType.string),
     r'counterAmount': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'counterAmount',
       type: IsarType.long,
     ),
     r'createdAt': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'listingId': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'listingId',
       type: IsarType.string,
     ),
-    r'message': PropertySchema(
-      id: int.parse('6'),
-      name: r'message',
-      type: IsarType.string,
-    ),
+    r'message': PropertySchema(id: 6, name: r'message', type: IsarType.string),
     r'respondedAt': PropertySchema(
-      id: int.parse('7'),
+      id: 7,
       name: r'respondedAt',
       type: IsarType.dateTime,
     ),
     r'sellerId': PropertySchema(
-      id: int.parse('8'),
+      id: 8,
       name: r'sellerId',
       type: IsarType.string,
     ),
-    r'status': PropertySchema(
-      id: int.parse('9'),
-      name: r'status',
-      type: IsarType.string,
-    ),
+    r'status': PropertySchema(id: 9, name: r'status', type: IsarType.string),
   },
   estimateSize: _isarMarketOfferEstimateSize,
   serialize: _isarMarketOfferSerialize,
@@ -75,7 +59,7 @@ final IsarMarketOfferSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -88,7 +72,7 @@ final IsarMarketOfferSchema = CollectionSchema(
       ],
     ),
     r'listingId': IndexSchema(
-      id: int.parse('-7684668030872652461'),
+      id: -7684668030872652461,
       name: r'listingId',
       unique: false,
       replace: false,
@@ -101,7 +85,7 @@ final IsarMarketOfferSchema = CollectionSchema(
       ],
     ),
     r'buyerId': IndexSchema(
-      id: int.parse('720979758479371927'),
+      id: 720979758479371927,
       name: r'buyerId',
       unique: false,
       replace: false,
@@ -114,7 +98,7 @@ final IsarMarketOfferSchema = CollectionSchema(
       ],
     ),
     r'sellerId': IndexSchema(
-      id: int.parse('-270845138789699514'),
+      id: -270845138789699514,
       name: r'sellerId',
       unique: false,
       replace: false,

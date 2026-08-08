@@ -17,66 +17,55 @@ const IsarSyncQueueItemSchema = CollectionSchema(
   name: r'IsarSyncQueueItem',
   id: 1568309971225112296,
   properties: {
-    r'accountId': PropertySchema(
-      id: 0,
-      name: r'accountId',
-      type: IsarType.string,
-    ),
     r'action': PropertySchema(
-      id: 1,
+      id: 0,
       name: r'action',
       type: IsarType.byte,
       enumMap: _IsarSyncQueueItemactionEnumValueMap,
     ),
     r'dataJson': PropertySchema(
-      id: 2,
+      id: 1,
       name: r'dataJson',
       type: IsarType.string,
     ),
     r'entityId': PropertySchema(
-      id: 3,
+      id: 2,
       name: r'entityId',
       type: IsarType.string,
     ),
     r'entityType': PropertySchema(
-      id: 4,
+      id: 3,
       name: r'entityType',
       type: IsarType.string,
     ),
     r'isDeadLetter': PropertySchema(
-      id: 5,
+      id: 4,
       name: r'isDeadLetter',
       type: IsarType.bool,
     ),
     r'lastAttemptAt': PropertySchema(
-      id: 6,
+      id: 5,
       name: r'lastAttemptAt',
       type: IsarType.dateTime,
     ),
     r'movedAt': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'movedAt',
       type: IsarType.dateTime,
     ),
-    r'nextAttemptAt': PropertySchema(
-      id: 8,
-      name: r'nextAttemptAt',
-      type: IsarType.dateTime,
-    ),
-    r'queueId': PropertySchema(id: 9, name: r'queueId', type: IsarType.string),
     r'retryCount': PropertySchema(
-      id: 10,
+      id: 7,
       name: r'retryCount',
       type: IsarType.long,
     ),
     r'status': PropertySchema(
-      id: 11,
+      id: 8,
       name: r'status',
       type: IsarType.byte,
       enumMap: _IsarSyncQueueItemstatusEnumValueMap,
     ),
     r'timestamp': PropertySchema(
-      id: 12,
+      id: 9,
       name: r'timestamp',
       type: IsarType.dateTime,
     ),
@@ -86,34 +75,7 @@ const IsarSyncQueueItemSchema = CollectionSchema(
   deserialize: _isarSyncQueueItemDeserialize,
   deserializeProp: _isarSyncQueueItemDeserializeProp,
   idName: r'id',
-  indexes: {
-    r'queueId': IndexSchema(
-      id: -3743451411909378321,
-      name: r'queueId',
-      unique: true,
-      replace: true,
-      properties: [
-        IndexPropertySchema(
-          name: r'queueId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-      ],
-    ),
-    r'accountId': IndexSchema(
-      id: -1591555361937770434,
-      name: r'accountId',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'accountId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-      ],
-    ),
-  },
+  indexes: {},
   links: {},
   embeddedSchemas: {},
   getId: _isarSyncQueueItemGetId,
@@ -128,16 +90,9 @@ int _isarSyncQueueItemEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  {
-    final value = object.accountId;
-    if (value != null) {
-      bytesCount += 3 + value.length * 3;
-    }
-  }
   bytesCount += 3 + object.dataJson.length * 3;
   bytesCount += 3 + object.entityId.length * 3;
   bytesCount += 3 + object.entityType.length * 3;
-  bytesCount += 3 + object.queueId.length * 3;
   return bytesCount;
 }
 
@@ -147,19 +102,16 @@ void _isarSyncQueueItemSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.accountId);
-  writer.writeByte(offsets[1], object.action.index);
-  writer.writeString(offsets[2], object.dataJson);
-  writer.writeString(offsets[3], object.entityId);
-  writer.writeString(offsets[4], object.entityType);
-  writer.writeBool(offsets[5], object.isDeadLetter);
-  writer.writeDateTime(offsets[6], object.lastAttemptAt);
-  writer.writeDateTime(offsets[7], object.movedAt);
-  writer.writeDateTime(offsets[8], object.nextAttemptAt);
-  writer.writeString(offsets[9], object.queueId);
-  writer.writeLong(offsets[10], object.retryCount);
-  writer.writeByte(offsets[11], object.status.index);
-  writer.writeDateTime(offsets[12], object.timestamp);
+  writer.writeByte(offsets[0], object.action.index);
+  writer.writeString(offsets[1], object.dataJson);
+  writer.writeString(offsets[2], object.entityId);
+  writer.writeString(offsets[3], object.entityType);
+  writer.writeBool(offsets[4], object.isDeadLetter);
+  writer.writeDateTime(offsets[5], object.lastAttemptAt);
+  writer.writeDateTime(offsets[6], object.movedAt);
+  writer.writeLong(offsets[7], object.retryCount);
+  writer.writeByte(offsets[8], object.status.index);
+  writer.writeDateTime(offsets[9], object.timestamp);
 }
 
 IsarSyncQueueItem _isarSyncQueueItemDeserialize(
@@ -169,26 +121,21 @@ IsarSyncQueueItem _isarSyncQueueItemDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = IsarSyncQueueItem();
-  object.accountId = reader.readStringOrNull(offsets[0]);
   object.action =
-      _IsarSyncQueueItemactionValueEnumMap[reader.readByteOrNull(offsets[1])] ??
+      _IsarSyncQueueItemactionValueEnumMap[reader.readByteOrNull(offsets[0])] ??
       SyncAction.create;
-  object.dataJson = reader.readString(offsets[2]);
-  object.entityId = reader.readString(offsets[3]);
-  object.entityType = reader.readString(offsets[4]);
+  object.dataJson = reader.readString(offsets[1]);
+  object.entityId = reader.readString(offsets[2]);
+  object.entityType = reader.readString(offsets[3]);
   object.id = id;
-  object.isDeadLetter = reader.readBool(offsets[5]);
-  object.lastAttemptAt = reader.readDateTimeOrNull(offsets[6]);
-  object.movedAt = reader.readDateTimeOrNull(offsets[7]);
-  object.nextAttemptAt = reader.readDateTimeOrNull(offsets[8]);
-  object.queueId = reader.readString(offsets[9]);
-  object.retryCount = reader.readLong(offsets[10]);
+  object.isDeadLetter = reader.readBool(offsets[4]);
+  object.lastAttemptAt = reader.readDateTimeOrNull(offsets[5]);
+  object.movedAt = reader.readDateTimeOrNull(offsets[6]);
+  object.retryCount = reader.readLong(offsets[7]);
   object.status =
-      _IsarSyncQueueItemstatusValueEnumMap[reader.readByteOrNull(
-        offsets[11],
-      )] ??
+      _IsarSyncQueueItemstatusValueEnumMap[reader.readByteOrNull(offsets[8])] ??
       SyncItemStatus.pending;
-  object.timestamp = reader.readDateTime(offsets[12]);
+  object.timestamp = reader.readDateTime(offsets[9]);
   return object;
 }
 
@@ -200,38 +147,32 @@ P _isarSyncQueueItemDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readStringOrNull(offset)) as P;
-    case 1:
       return (_IsarSyncQueueItemactionValueEnumMap[reader.readByteOrNull(
                 offset,
               )] ??
               SyncAction.create)
           as P;
+    case 1:
+      return (reader.readString(offset)) as P;
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
-    case 5:
       return (reader.readBool(offset)) as P;
+    case 5:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 6:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 7:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 8:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 9:
-      return (reader.readString(offset)) as P;
-    case 10:
       return (reader.readLong(offset)) as P;
-    case 11:
+    case 8:
       return (_IsarSyncQueueItemstatusValueEnumMap[reader.readByteOrNull(
                 offset,
               )] ??
               SyncItemStatus.pending)
           as P;
-    case 12:
+    case 9:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -275,63 +216,6 @@ void _isarSyncQueueItemAttach(
   IsarSyncQueueItem object,
 ) {
   object.id = id;
-}
-
-extension IsarSyncQueueItemByIndex on IsarCollection<IsarSyncQueueItem> {
-  Future<IsarSyncQueueItem?> getByQueueId(String queueId) {
-    return getByIndex(r'queueId', [queueId]);
-  }
-
-  IsarSyncQueueItem? getByQueueIdSync(String queueId) {
-    return getByIndexSync(r'queueId', [queueId]);
-  }
-
-  Future<bool> deleteByQueueId(String queueId) {
-    return deleteByIndex(r'queueId', [queueId]);
-  }
-
-  bool deleteByQueueIdSync(String queueId) {
-    return deleteByIndexSync(r'queueId', [queueId]);
-  }
-
-  Future<List<IsarSyncQueueItem?>> getAllByQueueId(List<String> queueIdValues) {
-    final values = queueIdValues.map((e) => [e]).toList();
-    return getAllByIndex(r'queueId', values);
-  }
-
-  List<IsarSyncQueueItem?> getAllByQueueIdSync(List<String> queueIdValues) {
-    final values = queueIdValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'queueId', values);
-  }
-
-  Future<int> deleteAllByQueueId(List<String> queueIdValues) {
-    final values = queueIdValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'queueId', values);
-  }
-
-  int deleteAllByQueueIdSync(List<String> queueIdValues) {
-    final values = queueIdValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'queueId', values);
-  }
-
-  Future<Id> putByQueueId(IsarSyncQueueItem object) {
-    return putByIndex(r'queueId', object);
-  }
-
-  Id putByQueueIdSync(IsarSyncQueueItem object, {bool saveLinks = true}) {
-    return putByIndexSync(r'queueId', object, saveLinks: saveLinks);
-  }
-
-  Future<List<Id>> putAllByQueueId(List<IsarSyncQueueItem> objects) {
-    return putAllByIndex(r'queueId', objects);
-  }
-
-  List<Id> putAllByQueueIdSync(
-    List<IsarSyncQueueItem> objects, {
-    bool saveLinks = true,
-  }) {
-    return putAllByIndexSync(r'queueId', objects, saveLinks: saveLinks);
-  }
 }
 
 extension IsarSyncQueueItemQueryWhereSort
@@ -411,296 +295,10 @@ extension IsarSyncQueueItemQueryWhere
       );
     });
   }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterWhereClause>
-  queueIdEqualTo(String queueId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'queueId', value: [queueId]),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterWhereClause>
-  queueIdNotEqualTo(String queueId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'queueId',
-                lower: [],
-                upper: [queueId],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'queueId',
-                lower: [queueId],
-                includeLower: false,
-                upper: [],
-              ),
-            );
-      } else {
-        return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'queueId',
-                lower: [queueId],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'queueId',
-                lower: [],
-                upper: [queueId],
-                includeUpper: false,
-              ),
-            );
-      }
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterWhereClause>
-  accountIdIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'accountId', value: [null]),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterWhereClause>
-  accountIdIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'accountId',
-          lower: [null],
-          includeLower: false,
-          upper: [],
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterWhereClause>
-  accountIdEqualTo(String? accountId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'accountId', value: [accountId]),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterWhereClause>
-  accountIdNotEqualTo(String? accountId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'accountId',
-                lower: [],
-                upper: [accountId],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'accountId',
-                lower: [accountId],
-                includeLower: false,
-                upper: [],
-              ),
-            );
-      } else {
-        return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'accountId',
-                lower: [accountId],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'accountId',
-                lower: [],
-                upper: [accountId],
-                includeUpper: false,
-              ),
-            );
-      }
-    });
-  }
 }
 
 extension IsarSyncQueueItemQueryFilter
     on QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QFilterCondition> {
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'accountId'),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'accountId'),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdEqualTo(String? value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'accountId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'accountId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'accountId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'accountId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdStartsWith(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'accountId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdEndsWith(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'accountId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'accountId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'accountId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'accountId', value: ''),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  accountIdIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'accountId', value: ''),
-      );
-    });
-  }
-
   QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
   actionEqualTo(SyncAction value) {
     return QueryBuilder.apply(this, (query) {
@@ -1390,220 +988,6 @@ extension IsarSyncQueueItemQueryFilter
   }
 
   QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  nextAttemptAtIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'nextAttemptAt'),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  nextAttemptAtIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'nextAttemptAt'),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  nextAttemptAtEqualTo(DateTime? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'nextAttemptAt', value: value),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  nextAttemptAtGreaterThan(DateTime? value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'nextAttemptAt',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  nextAttemptAtLessThan(DateTime? value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'nextAttemptAt',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  nextAttemptAtBetween(
-    DateTime? lower,
-    DateTime? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'nextAttemptAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  queueIdEqualTo(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'queueId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  queueIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'queueId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  queueIdLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'queueId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  queueIdBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'queueId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  queueIdStartsWith(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'queueId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  queueIdEndsWith(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'queueId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  queueIdContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'queueId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  queueIdMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'queueId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  queueIdIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'queueId', value: ''),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
-  queueIdIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'queueId', value: ''),
-      );
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterFilterCondition>
   retryCountEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1778,20 +1162,6 @@ extension IsarSyncQueueItemQueryLinks
 extension IsarSyncQueueItemQuerySortBy
     on QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QSortBy> {
   QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  sortByAccountId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'accountId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  sortByAccountIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'accountId', Sort.desc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
   sortByAction() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'action', Sort.asc);
@@ -1890,34 +1260,6 @@ extension IsarSyncQueueItemQuerySortBy
   }
 
   QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  sortByNextAttemptAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextAttemptAt', Sort.asc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  sortByNextAttemptAtDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextAttemptAt', Sort.desc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  sortByQueueId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'queueId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  sortByQueueIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'queueId', Sort.desc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
   sortByRetryCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'retryCount', Sort.asc);
@@ -1962,20 +1304,6 @@ extension IsarSyncQueueItemQuerySortBy
 
 extension IsarSyncQueueItemQuerySortThenBy
     on QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QSortThenBy> {
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  thenByAccountId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'accountId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  thenByAccountIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'accountId', Sort.desc);
-    });
-  }
-
   QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
   thenByAction() {
     return QueryBuilder.apply(this, (query) {
@@ -2088,34 +1416,6 @@ extension IsarSyncQueueItemQuerySortThenBy
   }
 
   QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  thenByNextAttemptAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextAttemptAt', Sort.asc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  thenByNextAttemptAtDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextAttemptAt', Sort.desc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  thenByQueueId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'queueId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
-  thenByQueueIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'queueId', Sort.desc);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QAfterSortBy>
   thenByRetryCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'retryCount', Sort.asc);
@@ -2160,13 +1460,6 @@ extension IsarSyncQueueItemQuerySortThenBy
 
 extension IsarSyncQueueItemQueryWhereDistinct
     on QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QDistinct> {
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QDistinct>
-  distinctByAccountId({bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'accountId', caseSensitive: caseSensitive);
-    });
-  }
-
   QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QDistinct>
   distinctByAction() {
     return QueryBuilder.apply(this, (query) {
@@ -2217,20 +1510,6 @@ extension IsarSyncQueueItemQueryWhereDistinct
   }
 
   QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QDistinct>
-  distinctByNextAttemptAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'nextAttemptAt');
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QDistinct>
-  distinctByQueueId({bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'queueId', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, IsarSyncQueueItem, QDistinct>
   distinctByRetryCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'retryCount');
@@ -2257,13 +1536,6 @@ extension IsarSyncQueueItemQueryProperty
   QueryBuilder<IsarSyncQueueItem, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, String?, QQueryOperations>
-  accountIdProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'accountId');
     });
   }
 
@@ -2311,19 +1583,6 @@ extension IsarSyncQueueItemQueryProperty
   movedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'movedAt');
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, DateTime?, QQueryOperations>
-  nextAttemptAtProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'nextAttemptAt');
-    });
-  }
-
-  QueryBuilder<IsarSyncQueueItem, String, QQueryOperations> queueIdProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'queueId');
     });
   }
 

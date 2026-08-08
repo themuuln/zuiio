@@ -13,60 +13,40 @@ extension GetIsarTrialSlotCollection on Isar {
   IsarCollection<IsarTrialSlot> get isarTrialSlots => this.collection();
 }
 
-final IsarTrialSlotSchema = CollectionSchema(
+const IsarTrialSlotSchema = CollectionSchema(
   name: r'IsarTrialSlot',
-  id: int.parse('-8566309412913947098'),
+  id: -8566309412913947098,
   properties: {
-    r'buyerId': PropertySchema(
-      id: int.parse('0'),
-      name: r'buyerId',
-      type: IsarType.string,
-    ),
+    r'buyerId': PropertySchema(id: 0, name: r'buyerId', type: IsarType.string),
     r'createdAt': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'date': PropertySchema(
-      id: int.parse('2'),
-      name: r'date',
-      type: IsarType.string,
-    ),
+    r'date': PropertySchema(id: 2, name: r'date', type: IsarType.string),
     r'domainId': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'endTime': PropertySchema(
-      id: int.parse('4'),
-      name: r'endTime',
-      type: IsarType.string,
-    ),
+    r'endTime': PropertySchema(id: 4, name: r'endTime', type: IsarType.string),
     r'listingId': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'listingId',
       type: IsarType.string,
     ),
-    r'notes': PropertySchema(
-      id: int.parse('6'),
-      name: r'notes',
-      type: IsarType.string,
-    ),
+    r'notes': PropertySchema(id: 6, name: r'notes', type: IsarType.string),
     r'sellerId': PropertySchema(
-      id: int.parse('7'),
+      id: 7,
       name: r'sellerId',
       type: IsarType.string,
     ),
     r'startTime': PropertySchema(
-      id: int.parse('8'),
+      id: 8,
       name: r'startTime',
       type: IsarType.string,
     ),
-    r'status': PropertySchema(
-      id: int.parse('9'),
-      name: r'status',
-      type: IsarType.string,
-    ),
+    r'status': PropertySchema(id: 9, name: r'status', type: IsarType.string),
   },
   estimateSize: _isarTrialSlotEstimateSize,
   serialize: _isarTrialSlotSerialize,
@@ -75,7 +55,7 @@ final IsarTrialSlotSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -88,7 +68,7 @@ final IsarTrialSlotSchema = CollectionSchema(
       ],
     ),
     r'listingId': IndexSchema(
-      id: int.parse('-7684668030872652461'),
+      id: -7684668030872652461,
       name: r'listingId',
       unique: false,
       replace: false,
@@ -101,7 +81,7 @@ final IsarTrialSlotSchema = CollectionSchema(
       ],
     ),
     r'sellerId': IndexSchema(
-      id: int.parse('-270845138789699514'),
+      id: -270845138789699514,
       name: r'sellerId',
       unique: false,
       replace: false,

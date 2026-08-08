@@ -103,11 +103,11 @@ class FavoriteListingsScreen extends ConsumerWidget {
                                 _StatusChip(label: listing.saleType.label),
                                 const SizedBox(width: AppSpacing.xs),
                                 _StatusChip(
-                                  label: 'Итгэл ${listing.trustScore}%',
+                                  label: 'Trust ${listing.trustScore}%',
                                 ),
                                 if (listing.isSellerVerified) ...[
                                   const SizedBox(width: AppSpacing.xs),
-                                  const _StatusChip(label: 'Баталгаатай'),
+                                  const _StatusChip(label: 'Verified'),
                                 ],
                               ],
                             ),

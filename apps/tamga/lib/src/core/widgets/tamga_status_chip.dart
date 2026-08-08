@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import '../theme/design_tokens.dart';
 import 'tamga_badge.dart';
 
@@ -33,15 +34,18 @@ class TamgaStatusChip extends StatelessWidget {
 
   final TamgaStatus status;
   final TamgaBadgeSize size;
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final (label, color) = switch (status) {
       TamgaStatus.healthy => ('Эрүүл', const Color(0xFF6B8F6B)),
       TamgaStatus.inTreatment => ('Эмчлэлтэй', const Color(0xFFD4884A)),
       TamgaStatus.pregnant => ('Үүлдэртэй', const Color(0xFF8B6BB0)),
-      TamgaStatus.sold => ('Зарсан', const Color(0xFF8E8E8E)),
-      TamgaStatus.deceased => ('Нас барсан', const Color(0xFFD4442A)),
+      TamgaStatus.sold => (l10n.statusChipSold, const Color(0xFF8E8E8E)),
+      TamgaStatus.deceased => (
+        l10n.statusChipDeceased,
+        const Color(0xFFD4442A),
+      ),
       TamgaStatus.pending => ('Хүлээгдэж буй', const Color(0xFFD4884A)),
       TamgaStatus.active => ('Идэвхтэй', const Color(0xFF6B8F6B)),
       TamgaStatus.inactive => ('Идэвхгүй', const Color(0xFF8E8E8E)),

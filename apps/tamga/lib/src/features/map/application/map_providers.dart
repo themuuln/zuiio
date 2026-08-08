@@ -2,17 +2,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../../../app/app_config.dart';
 import '../../../app/supabase_bootstrap.dart';
 import '../data/herd_tracking_service.dart';
 import '../data/location_service.dart';
-import '../data/local_map_repository.dart';
 import '../data/map_repository.dart';
 import '../data/offline_tile_manager.dart';
 import '../data/supabase_map_repository.dart';
-import '../data/supabase_lost_horse_repository.dart';
-import '../data/offline_first_lost_horse_repository.dart';
-import '../data/lost_horse_repository.dart';
 import '../data/tile_cache_manager.dart';
 import '../domain/herd_tracking_status.dart';
 import '../domain/map_enums.dart';
@@ -20,23 +15,7 @@ import '../domain/pasture_zone.dart';
 
 /// Repository provider — swap SupabaseMapRepository for LocalMapRepository when offline.
 final mapRepositoryProvider = Provider<MapRepository>((ref) {
-  // Only construct the Supabase remote when configured — its constructor
-  // touches `Supabase.instance` and throws in an offline (no .env) launch,
-  // killing the whole map screen.
-  return AppConfig.isSupabaseConfigured
-      ? SupabaseMapRepository()
-      : LocalMapRepository();
-});
-
-/// Local-first repository for the horse/livestock recovery workflow.
-final lostHorseRepositoryProvider = Provider<LostHorseRepository>((ref) {
-  // Only construct the Supabase remote when configured — its constructor
-  // touches `Supabase.instance` and throws in an offline (no .env) launch.
-  return OfflineFirstLostHorseRepository(
-    remote: AppConfig.isSupabaseConfigured
-        ? SupabaseLostHorseRepository()
-        : null,
-  );
+  return SupabaseMapRepository();
 });
 
 /// Current GPS position of the device.

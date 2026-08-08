@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:tamga/src/features/market/application/market_providers.dart';
 import 'package:tamga/src/features/market/data/market_repository.dart';
 import 'package:tamga/src/features/market/presentation/market_screen.dart';
@@ -11,6 +11,7 @@ import 'package:tamga/src/features/horses/application/horses_providers.dart';
 import 'package:tamga/src/features/horses/domain/horse_record.dart';
 import 'package:tamga/src/features/events/application/events_providers.dart';
 import 'package:tamga/src/shared/domain/event.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 /// A mock [MarketRepository] that throws on any method call.
 class _MockMarketRepository extends Mock implements MarketRepository {}
@@ -40,7 +41,10 @@ void main() {
             favoriteListingIdsProvider.overrideWith((ref) => <String>[]),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const MarketScreen(),
           ),
         ),

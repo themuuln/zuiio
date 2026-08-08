@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/widgets/tamga_error_widget.dart';
 import '../../application/offer_providers.dart';
 import '../../domain/market_offer.dart';
 
@@ -126,6 +125,7 @@ class _SendOfferSheetState extends ConsumerState<SendOfferSheet> {
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'Таны санал (MNT)',
+                prefixText: '₮ ',
                 border: const OutlineInputBorder(),
                 suffixText: 'MNT',
               ),
@@ -150,12 +150,12 @@ class _SendOfferSheetState extends ConsumerState<SendOfferSheet> {
               child: FilledButton(
                 onPressed: _isSubmitting ? null : _submitOffer,
                 child: _isSubmitting
-                    ? SizedBox(
+                    ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: theme.colorScheme.onPrimary,
+                          color: Colors.white,
                         ),
                       )
                     : const Text('Санал илгээх'),
@@ -206,10 +206,7 @@ class _SendOfferSheetState extends ConsumerState<SendOfferSheet> {
   void _showError(String message) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 }
@@ -277,13 +274,7 @@ class OfferHistoryCard extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, _) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: TamgaErrorWidget(
-          message: 'Үнийн саналууд ачаалахад алдаа гарлаа',
-          onRetry: () => ref.invalidate(offersForListingProvider(listingId)),
-        ),
-      ),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -307,7 +298,7 @@ class _OfferHistoryItem extends StatelessWidget {
       MarketOfferStatus.pending => theme.colorScheme.primary,
       MarketOfferStatus.accepted => theme.colorScheme.tertiary,
       MarketOfferStatus.declined => theme.colorScheme.error,
-      MarketOfferStatus.countered => theme.colorScheme.secondary,
+      MarketOfferStatus.countered => Colors.orange,
     };
 
     return Container(
@@ -357,9 +348,7 @@ class _OfferHistoryItem extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Хариу санал: ${_formatPrice(offer.counterAmount!)}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.secondary,
-              ),
+              style: theme.textTheme.bodySmall?.copyWith(color: Colors.orange),
             ),
           ],
           if (offer.message != null && offer.message!.isNotEmpty) ...[
@@ -496,6 +485,7 @@ class _OfferResponseDialogState extends State<OfferResponseDialog> {
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'Таны хариу үнэ (MNT)',
+                prefixText: '₮ ',
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -539,9 +529,9 @@ class _OfferResponseDialogState extends State<OfferResponseDialog> {
     final amount = int.tryParse(text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Зөв үнэ оруулна уу'),
-          backgroundColor: Theme.of(context).colorScheme.error,
+        const SnackBar(
+          content: Text('Зөв үнэ оруулна уу'),
+          backgroundColor: Colors.red,
         ),
       );
       return;

@@ -98,68 +98,53 @@ class _TamgaNavTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? colors.primary : colors.onSurfaceVariant;
-    final transitionDuration = MediaQuery.disableAnimationsOf(context)
-        ? Duration.zero
-        : const Duration(milliseconds: 200);
 
     return TamgaTappable(
       onTap: onTap,
       pressedOpacity: 0.5,
       child: Semantics(
-        container: true,
-        button: true,
-        enabled: true,
         label: item.label,
         selected: isSelected,
-        onTap: onTap,
         child: SizedBox.expand(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // ── Icon with animated color transition ──
               AnimatedSwitcher(
-                duration: transitionDuration,
-                child: _buildIcon(color),
+                duration: const Duration(milliseconds: 200),
+                child: item.iconWidget != null
+                    ? IconTheme(
+                        key: ValueKey(isSelected),
+                        data: IconThemeData(size: 24, color: color),
+                        child: item.iconWidget!,
+                      )
+                    : Icon(
+                        isSelected ? (item.activeIcon ?? item.icon) : item.icon,
+                        key: ValueKey(isSelected),
+                        size: 24,
+                        color: color,
+                      ),
               ),
               const SizedBox(height: 2),
               // ── Label ──
-              Flexible(
-                child: AnimatedDefaultTextStyle(
-                  duration: transitionDuration,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: color,
-                    letterSpacing: 0.07,
-                  ),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(item.label, maxLines: 1),
-                  ),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: color,
+                  letterSpacing: 0.07,
+                ),
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildIcon(Color color) {
-    final selectedIconWidget = item.activeIconWidget ?? item.iconWidget;
-    final iconWidget = isSelected ? selectedIconWidget : item.iconWidget;
-    if (iconWidget != null) {
-      return IconTheme(
-        key: ValueKey(isSelected),
-        data: IconThemeData(size: 24, color: color),
-        child: iconWidget,
-      );
-    }
-    return Icon(
-      isSelected ? (item.activeIcon ?? item.icon) : item.icon,
-      key: ValueKey(isSelected),
-      size: 24,
-      color: color,
     );
   }
 }

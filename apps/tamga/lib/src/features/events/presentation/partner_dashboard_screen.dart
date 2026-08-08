@@ -12,6 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
+
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/sync/connection_status.dart';
 import '../../../core/widgets/widgets.dart';
@@ -52,13 +55,14 @@ class _PartnerDashboardScreenState
     final horses = horsesAsync.valueOrNull ?? [];
     final authState = authAsync.valueOrNull;
     final userId = authState?.userId ?? '';
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Түншийн самбар'),
+        title: Text(l10n.partnerDashboardTitle),
         leading: IconButton(
           onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(PhosphorIconsRegular.caretLeft),
         ),
       ),
       body: eventsAsync.when(
@@ -69,7 +73,7 @@ class _PartnerDashboardScreenState
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.event_outlined,
+                    PhosphorIconsRegular.calendarBlank,
                     size: 64,
                     color: colorScheme.outlineVariant,
                   ),
@@ -90,8 +94,8 @@ class _PartnerDashboardScreenState
                   const SizedBox(height: AppSpacing.lg),
                   FilledButton.icon(
                     onPressed: () => _createEvent(context, horses, userId),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Арга хэмжээ нэмэх'),
+                    icon: const Icon(PhosphorIconsRegular.plus),
+                    label: Text(l10n.eventsAddButton),
                   ),
                 ],
               ),
@@ -129,7 +133,11 @@ class _PartnerDashboardScreenState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 64, color: colorScheme.error),
+              Icon(
+                PhosphorIconsRegular.warningCircle,
+                size: 64,
+                color: colorScheme.error,
+              ),
               const SizedBox(height: AppSpacing.md),
               Text(
                 'Арга хэмжээг ачаалахад алдаа гарлаа',
@@ -147,8 +155,8 @@ class _PartnerDashboardScreenState
               const SizedBox(height: AppSpacing.lg),
               FilledButton.tonalIcon(
                 onPressed: () => ref.invalidate(partnerEventsProvider),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Дахин оролдох'),
+                icon: const Icon(PhosphorIconsRegular.arrowsClockwise),
+                label: Text(l10n.generalRetry),
               ),
             ],
           ),
@@ -157,8 +165,8 @@ class _PartnerDashboardScreenState
       floatingActionButton: events.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: () => _createEvent(context, horses, userId),
-              icon: const Icon(Icons.add),
-              label: const Text('Арга хэмжээ нэмэх'),
+              icon: const Icon(PhosphorIconsRegular.plus),
+              label: Text(l10n.eventsAddButton),
             )
           : null,
     );
@@ -346,11 +354,11 @@ class _PartnerDashboardScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Цуцлах'),
+            child: Text(AppLocalizations.of(ctx)!.generalCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, resultController.text.trim()),
-            child: const Text('Дуусгах'),
+            child: Text(AppLocalizations.of(ctx)!.generalDone),
           ),
         ],
       ),
@@ -401,13 +409,13 @@ class _PartnerEventCard extends ConsumerWidget {
   IconData get _typeIcon {
     switch (event.eventType) {
       case EventType.race:
-        return Icons.speed;
+        return PhosphorIconsRegular.gauge;
       case EventType.auction:
-        return Icons.gavel;
+        return PhosphorIconsRegular.scales;
       case EventType.expo:
-        return Icons.storefront;
+        return PhosphorIconsFill.storefront;
       case EventType.training:
-        return Icons.school;
+        return PhosphorIconsRegular.graduationCap;
     }
   }
 
@@ -431,6 +439,7 @@ class _PartnerEventCard extends ConsumerWidget {
     final typeColor = _typeColor(theme);
     final regCountAsync = ref.watch(registrationCountProvider(event.id));
     final regCount = regCountAsync.valueOrNull ?? 0;
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -486,7 +495,9 @@ class _PartnerEventCard extends ConsumerWidget {
                         ),
                       ),
                       child: Icon(
-                        event.isFeatured ? Icons.star : Icons.star_border,
+                        event.isFeatured
+                            ? PhosphorIconsFill.star
+                            : PhosphorIconsRegular.star,
                         size: 20,
                         color: event.isFeatured
                             ? colorScheme.primary
@@ -504,7 +515,7 @@ class _PartnerEventCard extends ConsumerWidget {
                   // Date
                   if (event.date != null) ...[
                     Icon(
-                      Icons.calendar_today_outlined,
+                      PhosphorIconsRegular.calendarBlank,
                       size: 14,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -519,13 +530,13 @@ class _PartnerEventCard extends ConsumerWidget {
                   ],
                   // Registration count
                   Icon(
-                    Icons.pets_outlined,
+                    PhosphorIconsRegular.horse,
                     size: 14,
                     color: colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
-                    'Бүртгэл: $regCount',
+                    '${l10n.eventDetailRegistration}: $regCount',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -546,7 +557,7 @@ class _PartnerEventCard extends ConsumerWidget {
                       ),
                     ),
                     child: Text(
-                      event.isUpcoming ? 'Удахгүй' : 'Дууссан',
+                      event.isUpcoming ? l10n.eventsTabUpcoming : 'Дууссан',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: event.isUpcoming
                             ? colorScheme.onPrimaryContainer
@@ -566,8 +577,8 @@ class _PartnerEventCard extends ConsumerWidget {
                   // Edit button
                   TextButton.icon(
                     onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined, size: 16),
-                    label: const Text('Засах'),
+                    icon: const Icon(PhosphorIconsRegular.pencil, size: 16),
+                    label: Text(l10n.generalEdit),
                     style: TextButton.styleFrom(
                       foregroundColor: colorScheme.primary,
                       padding: const EdgeInsets.symmetric(
@@ -580,8 +591,11 @@ class _PartnerEventCard extends ConsumerWidget {
                   if (event.isUpcoming)
                     TextButton.icon(
                       onPressed: onComplete,
-                      icon: const Icon(Icons.check_circle_outline, size: 16),
-                      label: const Text('Дуусгах'),
+                      icon: const Icon(
+                        PhosphorIconsRegular.checkCircle,
+                        size: 16,
+                      ),
+                      label: Text(l10n.generalDone),
                       style: TextButton.styleFrom(
                         foregroundColor: colorScheme.tertiary,
                         padding: const EdgeInsets.symmetric(
@@ -662,7 +676,7 @@ class _HorseSelectionSheet extends StatelessWidget {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    trailing: const Icon(Icons.add_circle_outline),
+                    trailing: const Icon(PhosphorIconsRegular.plusCircle),
                     onTap: () => Navigator.pop(context, horse),
                   );
                 },

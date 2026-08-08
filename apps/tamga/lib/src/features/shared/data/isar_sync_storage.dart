@@ -3,7 +3,6 @@ import 'package:isar/isar.dart';
 import '../../../core/sync/sync_queue.dart';
 import 'isar_storage.dart';
 import 'isar_schemas/isar_sync_queue_item.dart';
-import 'isar_schemas/isar_lost_horse_media_draft.dart';
 
 /// SyncQueue-ийг Isar-д persistent хадгалах давхарга.
 ///
@@ -14,105 +13,34 @@ class IsarSyncStorage {
   final IsarStorage _storage;
 
   /// Isar-аас queue-ийг сэргээх (зөвхөн идэвхтэй item-үүд).
-  Future<SyncQueue> loadQueue({String? accountId}) async {
+  Future<SyncQueue> loadQueue() async {
     final items = await _storage.syncQueueItems
         .filter()
         .isDeadLetterEqualTo(false)
         .findAll();
     final queue = SyncQueue();
     for (final item in items) {
-      if (accountId == null || item.accountId == accountId) {
-        queue.enqueue(item.toDomain());
-      }
+      queue.enqueue(item.toDomain());
     }
     return queue;
   }
 
-  /// Upsert pending rows without deleting rows enqueued by another isolate.
-  Future<void> saveQueue(SyncQueue queue, {String? accountId}) async {
-    final rows = queue
-        .toList()
-        .where((item) => accountId == null || item.accountId == accountId)
-        .map(IsarSyncQueueItem.fromDomain)
-        .toList();
-    if (rows.isEmpty) return;
-    await _storage.syncQueueItems.isar.writeTxn(() async {
-      await _storage.syncQueueItems.putAll(rows);
-    });
-  }
-
-  /// Complete one stable queue row after the remote operation is acknowledged.
-  Future<void> removeQueueItem(String queueId) async {
-    await _storage.syncQueueItems.isar.writeTxn(() async {
-      final row = await _storage.syncQueueItems
-          .filter()
-          .queueIdEqualTo(queueId)
-          .findFirst();
-      if (row != null) await _storage.syncQueueItems.delete(row.id);
-    });
-  }
-
-  /// Add one row while preserving coalescing for the same entity.
-  ///
-  /// Uses a targeted entityId query instead of loading the whole queue — the
-  /// old implementation fetched every active row into Dart on every write.
-  Future<void> enqueue(SyncQueueItem item) async {
-    final isar = _storage.syncQueueItems.isar;
-    await isar.writeTxn(() async {
-      final related = await _storage.syncQueueItems
-          .filter()
-          .entityIdEqualTo(item.entityId)
-          .isDeadLetterEqualTo(false)
-          .findAll();
-      if (item.action == SyncAction.delete &&
-          related.any((row) => row.action == SyncAction.create)) {
-        // create + delete cancels out — drop all related rows.
-        await _storage.syncQueueItems.deleteAll(
-          related.map((row) => row.id).toList(),
-        );
-        return;
-      }
-      if (item.action == SyncAction.update) {
-        // Updates coalesce — replace earlier non-delete rows for the entity.
-        await _storage.syncQueueItems.deleteAll(
-          related
-              .where((row) => row.action != SyncAction.delete)
-              .map((row) => row.id)
-              .toList(),
-        );
-      }
-      await _storage.syncQueueItems.put(IsarSyncQueueItem.fromDomain(item));
-    });
-  }
-
-  /// Loads staged recovery attachments for an idempotent remote upload.
-  Future<List<IsarLostHorseMediaDraft>> loadRecoveryMediaDrafts(
-    String reportId,
-  ) {
-    return _storage.lostHorseMediaDrafts
+  /// Бүх queue-ийг Isar-д хадгалах (бүхэлд нь орлуулах).
+  Future<void> saveQueue(SyncQueue queue) async {
+    // Зөвхөн идэвхтэй (dead letter биш) item-үүдийг устгаад дахин хадгална
+    await _storage.syncQueueItems
         .filter()
-        .reportIdEqualTo(reportId)
-        .sortBySortOrder()
-        .findAll();
+        .isDeadLetterEqualTo(false)
+        .deleteAll();
+    final isarItems = queue.toList().map(IsarSyncQueueItem.fromDomain).toList();
+    await _storage.syncQueueItems.putAll(isarItems);
   }
 
-  /// Marks staged recovery attachments acknowledged by the remote service.
-  Future<void> markRecoveryMediaUploaded(
-    String reportId, {
-    List<String>? mediaIds,
-  }) async {
-    final drafts = await loadRecoveryMediaDrafts(reportId);
-    final selected = mediaIds == null
-        ? drafts
-        : drafts.where((draft) => mediaIds.contains(draft.mediaId)).toList();
-    if (selected.isEmpty) return;
-    for (final draft in selected) {
-      draft.uploaded = true;
-      draft.remoteUrl = draft.storagePath;
-    }
-    await _storage.lostHorseMediaDrafts.isar.writeTxn(() async {
-      await _storage.lostHorseMediaDrafts.putAll(selected);
-    });
+  /// Нэг item нэмээд хадгалах.
+  Future<void> enqueue(SyncQueueItem item) async {
+    final queue = await loadQueue();
+    queue.enqueue(item);
+    await saveQueue(queue);
   }
 
   /// Queue-ийг хоослох.

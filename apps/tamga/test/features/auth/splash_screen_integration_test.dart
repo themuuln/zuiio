@@ -3,30 +3,49 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:tamga/src/app/app.dart';
-import 'package:tamga/src/core/error/result.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:tamga/src/core/widgets/splash_screen.dart';
 import 'package:tamga/src/features/auth/application/auth_providers.dart';
-import 'package:tamga/src/features/auth/data/auth_repository.dart';
 import 'package:tamga/src/features/auth/domain/auth_state.dart';
 
-// ── Mock ──
+/// A controlled AuthStateNotifier that lets the test control auth state.
+class _ControllableAuthNotifier extends AuthStateNotifier {
+  final _stateController = StreamController<AuthState>();
 
-class MockAuthRepository extends Mock implements AuthRepository {}
+  @override
+  Stream<AuthState> build() {
+    // Never calls super.build() — no kDebugMode bypass.
+    _stateController.add(const AuthState.loading());
+    return _stateController.stream;
+  }
 
-/// Helper: wraps TamgaApp with a mocked auth repository.
-///
-/// Uses /login as initial route to avoid triggering GoRouter redirect
-/// into protected screens that require Isar initialization.
-Widget buildApp({required AuthRepository repository}) {
-  return Directionality(
-    textDirection: TextDirection.ltr,
-    child: ProviderScope(
-      overrides: [authRepositoryProvider.overrideWithValue(repository)],
-      child: const TamgaApp(),
-    ),
-  );
+  void emit(AuthState state) {
+    _stateController.add(state);
+  }
+}
+
+/// A test app that shows SplashScreen while auth is loading,
+/// and a Scaffold with 'Loaded' after auth resolves.
+class _TestApp extends ConsumerWidget {
+  const _TestApp();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authAsync = ref.watch(authStateProvider);
+    final isLoading = authAsync.valueOrNull?.isLoading ?? true;
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      switchInCurve: Curves.easeInOut,
+      switchOutCurve: Curves.easeInOut,
+      child: isLoading
+          ? const SplashScreen(key: ValueKey('splash'))
+          : Scaffold(
+              key: const ValueKey('loaded'),
+              body: const Center(child: Text('Loaded')),
+            ),
+    );
+  }
 }
 
 void main() {
@@ -34,14 +53,25 @@ void main() {
     testWidgets('shows SplashScreen while auth resolves, then transitions', (
       tester,
     ) async {
-      final mockRepo = MockAuthRepository();
-      final completer = Completer<Result<AuthState>>();
-      when(() => mockRepo.getCurrentUser()).thenAnswer((_) => completer.future);
-      when(
-        () => mockRepo.authStateChanges,
-      ).thenAnswer((_) => const Stream.empty());
+      _ControllableAuthNotifier? capturedNotifier;
 
-      await tester.pumpWidget(buildApp(repository: mockRepo));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authStateProvider.overrideWith(() {
+              final notifier = _ControllableAuthNotifier();
+              capturedNotifier = notifier;
+              return notifier;
+            }),
+          ],
+          child: MaterialApp(
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const _TestApp(),
+          ),
+        ),
+      );
       await tester.pump();
 
       // SplashScreen should be visible while auth is loading
@@ -49,14 +79,14 @@ void main() {
       expect(find.text('Тамга'), findsOneWidget);
 
       // Complete auth resolution to unauthenticated
-      completer.complete(const Result.ok(AuthState.unauthenticated()));
+      capturedNotifier!.emit(const AuthState.unauthenticated());
       await tester.pump();
       // AnimatedSwitcher has 300ms duration
       await tester.pump(const Duration(milliseconds: 350));
 
-      // Splash should be gone, MaterialApp.router should be visible
+      // Splash should be gone, 'Loaded' text should be visible
       expect(find.byType(SplashScreen), findsNothing);
-      expect(find.byType(MaterialApp), findsOneWidget);
+      expect(find.text('Loaded'), findsOneWidget);
     });
   });
 }

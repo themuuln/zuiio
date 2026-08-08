@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../theme/design_tokens.dart';
@@ -45,9 +46,8 @@ class SplashScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
             Text(
-              'Тамга',
+              AppLocalizations.of(context)!.splashTitle,
               style: TextStyle(
                 fontSize: 36,
                 fontWeight: FontWeight.w700,
@@ -55,9 +55,8 @@ class SplashScreen extends StatelessWidget {
                 letterSpacing: 1.2,
               ),
             ),
-            const SizedBox(height: 8),
             Text(
-              'Моринын удмын сан',
+              AppLocalizations.of(context)!.splashSubtitle,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,

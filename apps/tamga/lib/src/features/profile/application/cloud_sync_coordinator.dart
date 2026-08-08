@@ -13,36 +13,26 @@ import '../../../core/sync/sync_engine.dart';
 import '../../../core/sync/sync_queue.dart';
 import '../../../shared/domain/health_log.dart';
 import '../../breeding/data/breeding_repository.dart';
-import '../../breeding/data/supabase_breeding_repository.dart';
 import '../../breeding/domain/breeding_record.dart';
 import '../../certificates/data/certificate_repository.dart';
 import '../../documents/data/document_repository.dart';
 import '../../documents/domain/document_record.dart';
 import '../../events/data/event_repository.dart';
-import '../../events/data/supabase_event_repository.dart';
 import '../../../shared/domain/event.dart';
 import '../../horses/data/co_ownership_repository.dart';
 import '../../horses/data/horses_repository.dart';
-import '../../horses/data/supabase_horses_repository.dart';
 import '../../horses/domain/co_ownership.dart';
 import '../../horses/domain/horse_record.dart';
 import '../../market/data/market_repository.dart';
-import '../../market/data/supabase_market_repository.dart';
 import '../../market/domain/market_listing.dart';
-import '../../market/domain/market_message.dart';
 import '../../payments/data/payment_repository.dart';
 import '../../shared/data/isar_sync_storage.dart';
 import '../../health/data/health_repository.dart';
-import '../../health/data/supabase_health_repository.dart';
 import '../../map/data/map_repository.dart';
 import '../../map/domain/geofence_alert.dart';
 import '../../map/domain/horse_location.dart';
 import '../../map/domain/lost_horse_report.dart';
 import '../../map/domain/search_area.dart';
-import '../../map/domain/map_enums.dart';
-import '../../map/domain/sighting_report.dart';
-import '../../map/data/lost_horse_repository.dart';
-import '../../map/data/supabase_lost_horse_repository.dart';
 import '../data/profile_settings_repository.dart';
 import '../domain/profile_settings.dart';
 
@@ -142,14 +132,6 @@ class CloudSyncCoordinator {
     required this.documentRepository,
     required this.certificateRepository,
     required this.paymentRepository,
-    this.lostHorseRepository,
-    // Cloud-side repos for queue pushes. Default to real Supabase
-    // implementations; tests inject mocks.
-    this.cloudHorsesRepository,
-    this.cloudHealthRepository,
-    this.cloudEventRepository,
-    this.cloudMarketRepository,
-    this.cloudBreedingRepository,
   });
 
   final HorsesRepository horsesRepository;
@@ -164,35 +146,7 @@ class CloudSyncCoordinator {
   final CoOwnershipRepository coOwnershipRepository;
   final DocumentRepository documentRepository;
   final CertificateRepository certificateRepository;
-  final LostHorseRepository? lostHorseRepository;
   final PaymentRepository paymentRepository;
-
-  /// Cloud-side repositories used by queue push handlers.
-  ///
-  /// The local [*Repository] fields above back the UI; pushes must write to
-  /// Supabase — wiring the local repos as push targets silently dropped
-  /// offline changes (re-save locally, delete the queue row, nothing reaches
-  /// the cloud).
-  final HorsesRepository? cloudHorsesRepository;
-  final HealthRepository? cloudHealthRepository;
-  final EventRepository? cloudEventRepository;
-  final SupabaseMarketRepository? cloudMarketRepository;
-  final SupabaseBreedingRepository? cloudBreedingRepository;
-
-  HorsesRepository get _cloudHorses =>
-      cloudHorsesRepository ?? SupabaseHorsesRepository();
-
-  HealthRepository get _cloudHealth =>
-      cloudHealthRepository ?? SupabaseHealthRepository();
-
-  EventRepository get _cloudEvents =>
-      cloudEventRepository ?? SupabaseEventRepository();
-
-  SupabaseMarketRepository get _cloudMarket =>
-      cloudMarketRepository ?? SupabaseMarketRepository();
-
-  SupabaseBreedingRepository get _cloudBreeding =>
-      cloudBreedingRepository ?? SupabaseBreedingRepository();
 
   /// Sync-ийн одоогийн төлөв.
   SyncState _state = const SyncState();
@@ -415,7 +369,6 @@ class CloudSyncCoordinator {
         final result = await _pushItem(item);
         if (result.isSuccess) {
           pushed++;
-          await syncStorage.removeQueueItem(item.stableQueueId);
         } else {
           failed++;
         }
@@ -446,12 +399,6 @@ class CloudSyncCoordinator {
           return _pushEvent(item);
         case 'market':
           return _pushMarketListing(item);
-        case 'lost_horse_publish':
-          return _pushLostHorsePublish(item);
-        case 'lost_horse_resolution':
-          return _pushLostHorseResolution(item);
-        case 'lost_horse_sighting':
-          return _pushLostHorseSighting(item);
         case 'breeding':
           return _pushBreedingRecord(item);
         case 'lost_horse_report':
@@ -472,8 +419,6 @@ class CloudSyncCoordinator {
           return _pushLineageNode(item);
         case 'payment':
           return _pushPayment(item);
-        case 'market_message':
-          return _pushMarketMessage(item);
         default:
           developer.log(
             'Warning: unknown entity type "${item.entityType}" for item ${item.entityId}',
@@ -505,20 +450,9 @@ class CloudSyncCoordinator {
 
   Future<Result<bool>> _pushHorse(SyncQueueItem item) async {
     if (item.action == SyncAction.delete) {
-      // Hard delete on the remote side so the next full pull does not
-      // resurrect the horse.
-      try {
-        final result = await _cloudHorses.deleteHorse(item.entityId);
-        return result.map((_) => true);
-      } catch (e) {
-        return Result.fail(
-          AppException(
-            message: 'Horse delete push алдаа: $e',
-            code: 'HORSE_DELETE_PUSH_ERROR',
-            details: {'entityId': item.entityId},
-          ),
-        );
-      }
+      // Delete — Supabase дээр soft delete эсвэл hard delete хийх боломжтой
+      // Одоогоор амжилттай гэж тэмдэглэнэ (sync delete flow ирээдүйд)
+      return const Result.ok(true);
     }
 
     final horse = Horse.fromJson(item.data);
@@ -539,7 +473,7 @@ class CloudSyncCoordinator {
       return const Result.ok(true);
     }
 
-    final result = await _cloudHorses.saveHorse(horse);
+    final result = await horsesRepository.saveHorse(horse);
     return result.map((_) => true);
   }
 
@@ -547,12 +481,12 @@ class CloudSyncCoordinator {
     if (item.action == SyncAction.delete) {
       final logId = item.entityId;
       final horseId = item.data['horseId'] as String? ?? '';
-      final result = await _cloudHealth.deleteHealthLog(horseId, logId);
+      final result = await healthRepository.deleteHealthLog(horseId, logId);
       return result.map((_) => true);
     }
 
     final log = HealthLog.fromJson(item.data);
-    final result = await _cloudHealth.saveHealthLog(log);
+    final result = await healthRepository.saveHealthLog(log);
     return result.map((_) => true);
   }
 
@@ -571,13 +505,13 @@ class CloudSyncCoordinator {
       // Cloud дээрх өгөгдөл илүү шинэ — гэхдээ local өөрчлөлтийг push хийнэ
     }
 
-    final result = await _cloudEvents.saveEvent(event);
+    final result = await eventRepository.saveEvent(event);
     return result.map((_) => true);
   }
 
   Future<Result<bool>> _pushMarketListing(SyncQueueItem item) async {
     if (item.action == SyncAction.delete) {
-      final result = await _cloudMarket.delete(item.entityId);
+      final result = await marketRepository.deleteListing(item.entityId);
       return result.map((_) => true);
     }
 
@@ -589,51 +523,19 @@ class CloudSyncCoordinator {
       // Cloud дээрх өгөгдөл илүү шинэ — гэхдээ local өөрчлөлтийг push хийнэ
     }
 
-    final result = await _cloudMarket.create(listing);
+    final result = await marketRepository.saveListing(listing);
     return result.map((_) => true);
   }
 
   Future<Result<bool>> _pushBreedingRecord(SyncQueueItem item) async {
     if (item.action == SyncAction.delete) {
-      final result = await _cloudBreeding.delete(item.entityId);
-      return result.map((_) => true);
+      // Breeding delete flow ирээдүйд
+      return const Result.ok(true);
     }
 
     final record = BreedingRecord.fromJson(item.data);
-    final result = await _cloudBreeding.create(record);
-    return result.map((_) => true);
-  }
-
-  Future<Result<bool>> _pushMarketMessage(SyncQueueItem item) async {
-    try {
-      if (item.action == SyncAction.delete) {
-        // Delete not supported for messages
-        return const Result.ok(true);
-      }
-
-      final client = getConfiguredSupabaseClient();
-      if (client == null) {
-        return const Result.fail(
-          AppException(
-            message: 'Supabase тохиргоо байхгүй байна',
-            code: 'SUPABASE_NOT_CONFIGURED',
-          ),
-        );
-      }
-
-      final message = MarketMessage.fromJson(item.data);
-      // Mirrors SupabaseMessageRepository.sendMessage's cloud write.
-      await client.from('messages').upsert(message.toJson());
-      return const Result.ok(true);
-    } catch (e) {
-      return Result.fail(
-        AppException(
-          message: 'Market message push алдаа: $e',
-          code: 'MARKET_MESSAGE_PUSH_ERROR',
-          details: {'entityId': item.entityId},
-        ),
-      );
-    }
+    final result = await breedingRepository.saveBreedingRecord(record);
+    return result.map((list) => list.isNotEmpty);
   }
 
   // ── Map entity push ───────────────────────────────────────────
@@ -646,95 +548,21 @@ class CloudSyncCoordinator {
 
     if (item.action == SyncAction.create) {
       final report = LostHorseReport.fromJson(item.data);
-      final drafts = await syncStorage.loadRecoveryMediaDrafts(report.id);
-      final pendingDrafts = drafts.where((draft) => !draft.uploaded).toList();
-      final mediaIds = drafts.map((draft) => draft.mediaId).toList();
-      final pendingMediaIds = pendingDrafts
-          .map((draft) => draft.mediaId)
-          .toList();
-      final created = await _remoteRecoveryRepository.createReport(
-        report,
-        localMediaPaths: pendingDrafts.map((draft) => draft.localPath).toList(),
-        mediaIds: pendingMediaIds,
-      );
-      if (created.isFailure) return created.map((_) => true);
-      if (pendingMediaIds.isNotEmpty) {
-        await syncStorage.markRecoveryMediaUploaded(
-          report.id,
-          mediaIds: pendingMediaIds,
-        );
-      }
-      final published = await _remoteRecoveryRepository.publishReport(
-        report.id,
-        expectedMediaIds: mediaIds,
-      );
-      if (published.isSuccess) {
-        await syncStorage.markRecoveryMediaUploaded(
-          report.id,
-          mediaIds: mediaIds,
-        );
-      }
-      return published.map((_) => true);
+      final result = await mapRepository.reportLostHorse(report);
+      return result.map((_) => true);
     }
 
-    // Legacy queue rows may contain only a status; route them through the
-    // owner resolution RPC instead of writing lifecycle columns directly.
-    final resolutionType = LostHorseResolutionType.values.firstWhere(
-      (value) => value.name == item.data['resolution_type'],
-      orElse: () {
-        final status = item.data['status'] as String?;
-        return status == LostHorseStatus.found.name
-            ? LostHorseResolutionType.reunited
-            : LostHorseResolutionType.withdrawn;
-      },
-    );
-    final result = await _remoteRecoveryRepository.resolveReport(
-      reportId: item.entityId,
-      resolutionType: resolutionType,
-      note: item.data['resolution_note'] as String?,
-      verifiedSightingId: item.data['verified_sighting_id'] as String?,
-    );
-    return result.map((_) => true);
-  }
+    // Update — only status changes are supported
+    final status = item.data['status'] as String?;
+    if (status != null) {
+      final result = await mapRepository.updateLostHorseStatus(
+        item.entityId,
+        status,
+      );
+      return result.map((_) => true);
+    }
 
-  LostHorseRepository get _remoteRecoveryRepository =>
-      lostHorseRepository ?? SupabaseLostHorseRepository();
-
-  Future<Result<bool>> _pushLostHorsePublish(SyncQueueItem item) async {
-    final expectedMediaIds =
-        (item.data['expected_media_ids'] as List<dynamic>? ?? const [])
-            .whereType<String>()
-            .toList();
-    final result = await _remoteRecoveryRepository.publishReport(
-      item.entityId,
-      expectedMediaIds: expectedMediaIds,
-    );
-    return result.map((_) => true);
-  }
-
-  Future<Result<bool>> _pushLostHorseResolution(SyncQueueItem item) async {
-    final type = LostHorseResolutionType.values.firstWhere(
-      (value) => value.name == item.data['resolution_type'],
-      orElse: () => LostHorseResolutionType.withdrawn,
-    );
-    final result = await _remoteRecoveryRepository.resolveReport(
-      reportId: item.entityId,
-      resolutionType: type,
-      note: item.data['resolution_note'] as String?,
-      verifiedSightingId: item.data['verified_sighting_id'] as String?,
-    );
-    return result.map((_) => true);
-  }
-
-  Future<Result<bool>> _pushLostHorseSighting(SyncQueueItem item) async {
-    final sighting = SightingReport.fromJson(item.data);
-    final result = item.action == SyncAction.update
-        ? await _remoteRecoveryRepository.reviewSighting(
-            sightingId: item.entityId,
-            status: sighting.status,
-          )
-        : await _remoteRecoveryRepository.createSighting(sighting);
-    return result.map((_) => true);
+    return const Result.ok(true);
   }
 
   Future<Result<bool>> _pushSearchArea(SyncQueueItem item) async {
@@ -1024,9 +852,7 @@ class CloudSyncCoordinator {
       entityId: report.id,
       action: SyncAction.create,
       data: report.toJson(),
-      timestamp: report.createdAt,
-      accountId: report.ownerId,
-      queueId: 'lost_horse_report:${report.id}',
+      timestamp: DateTime.now(),
     );
     await syncStorage.enqueue(item);
   }

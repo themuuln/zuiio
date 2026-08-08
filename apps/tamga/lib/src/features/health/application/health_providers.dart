@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/sync/sync_queue.dart';
-import '../../shared/application/sync_providers.dart';
 import '../../shared/data/isar_storage.dart';
 import '../../shared/data/pagination/pagination_state.dart';
 import '../data/health_repository.dart';
@@ -12,7 +11,6 @@ final healthRepositoryProvider = FutureProvider<HealthRepository>((ref) async {
   return LocalHealthRepository(
     storage: IsarStorage.instance,
     syncQueue: SyncQueue(),
-    syncStorage: ref.watch(isarSyncStorageProvider),
   );
 });
 
@@ -40,10 +38,3 @@ final paginatedHealthLogsProvider =
       Future.microtask(() => notifier.loadInitial());
       return notifier;
     });
-
-/// All health records for the current owner, used by the care overview.
-final healthLogsProvider = FutureProvider<List<HealthLog>>((ref) async {
-  final repository = await ref.watch(healthRepositoryProvider.future);
-  final result = await repository.fetchAll();
-  return result.getOrThrow();
-});

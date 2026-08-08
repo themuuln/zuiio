@@ -13,37 +13,33 @@ extension GetIsarTeamCollection on Isar {
   IsarCollection<IsarTeam> get isarTeams => this.collection();
 }
 
-final IsarTeamSchema = CollectionSchema(
+const IsarTeamSchema = CollectionSchema(
   name: r'IsarTeam',
-  id: int.parse('1076676258024781077'),
+  id: 1076676258024781077,
   properties: {
     r'createdAt': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'horseCount': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'horseCount',
       type: IsarType.long,
     ),
     r'memberCount': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'memberCount',
       type: IsarType.long,
     ),
-    r'name': PropertySchema(
-      id: int.parse('4'),
-      name: r'name',
-      type: IsarType.string,
-    ),
+    r'name': PropertySchema(id: 4, name: r'name', type: IsarType.string),
     r'ownerUserId': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'ownerUserId',
       type: IsarType.string,
     ),
@@ -55,7 +51,7 @@ final IsarTeamSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,

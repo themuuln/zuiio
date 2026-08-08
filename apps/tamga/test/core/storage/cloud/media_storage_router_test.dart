@@ -6,45 +6,47 @@ void main() {
     // ── Path generators ─────────────────────────────────────────────
 
     group('lostHorsePhotoPath', () {
-      test('returns an owner-scoped path matching the expected pattern', () {
+      test('returns path matching expected pattern', () {
         final path = MediaStorageRouter.lostHorsePhotoPath(
           reportId: 'report-123',
-          userId: 'user-456',
         );
 
-        // Private bucket path: {userId}/{reportId}/{uuid}.jpg
-        expect(path, startsWith('user-456/report-123/'));
+        // Pattern: lost-horse-photos/{reportId}/{uuid}.jpg
+        expect(path, startsWith('lost-horse-photos/report-123/'));
         expect(path, endsWith('.jpg'));
 
+        // Should contain a UUID-like segment (8-4-4-? format)
         final segments = path.split('/');
         expect(segments.length, 3);
-        expect(segments[0], 'user-456');
+        expect(segments[0], 'lost-horse-photos');
         expect(segments[1], 'report-123');
 
+        // The third segment should be {uuid}.jpg
         final filename = segments[2];
         expect(filename, endsWith('.jpg'));
-        expect(filename.length, greaterThan(30));
+        expect(
+          filename.length,
+          greaterThan(30),
+          reason: 'Filename should contain uuid-like string + extension',
+        );
       });
 
       test('supports custom extension', () {
         final path = MediaStorageRouter.lostHorsePhotoPath(
           reportId: 'report-456',
-          userId: 'user-789',
           extension: 'png',
         );
 
-        expect(path, startsWith('user-789/report-456/'));
+        expect(path, startsWith('lost-horse-photos/report-456/'));
         expect(path, endsWith('.png'));
       });
 
       test('produces unique paths on successive calls', () {
         final path1 = MediaStorageRouter.lostHorsePhotoPath(
           reportId: 'report-1',
-          userId: 'user-1',
         );
         final path2 = MediaStorageRouter.lostHorsePhotoPath(
           reportId: 'report-1',
-          userId: 'user-1',
         );
 
         expect(

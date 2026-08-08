@@ -178,9 +178,10 @@ class _TeamInviteScreenState extends ConsumerState<TeamInviteScreen> {
                 child: FilledButton.icon(
                   onPressed: _isSending ? null : _sendInvite,
                   icon: _isSending
-                      ? LoadingIndicator(
-                          size: 18,
-                          color: theme.colorScheme.onPrimary,
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.send_outlined),
                   label: Text(_isSending ? 'Илгээж байна...' : 'Урих'),

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/error/result.dart';
 import 'package:tamga/src/features/events/application/events_providers.dart';
 import 'package:tamga/src/features/events/data/event_repository.dart';
 import 'package:tamga/src/features/events/presentation/widgets/event_card.dart';
 import 'package:tamga/src/shared/domain/event.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Mock EventRepository ───────────────────────────────────────────
 
@@ -137,7 +138,10 @@ ProviderScope _buildTestWidget({required List<Event> featuredEvents}) {
       }),
     ],
     child: MaterialApp(
-      theme: AppTheme.light(),
+      locale: const Locale('mn'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: Scaffold(
         body: SingleChildScrollView(child: const FeaturedEventsTestWidget()),
       ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/leaderboard_providers.dart';
 import '../domain/leaderboard_entry.dart';
@@ -22,9 +21,7 @@ class LeaderboardScreen extends ConsumerWidget {
     final selectedTimePeriod = ref.watch(leaderboardTimePeriodProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Үржүүлэгчийн чансаа', style: TamgaTypography.title3()),
-      ),
+      appBar: AppBar(title: const Text('Үржүүлэгчийн чансаа')),
       body: Column(
         children: [
           // ── Шүүлтүүрүүд ──
@@ -45,10 +42,11 @@ class LeaderboardScreen extends ConsumerWidget {
             child: leaderboardAsync.when(
               data: (entries) {
                 if (entries.isEmpty) {
-                  return const EmptyState(
-                    icon: Icons.leaderboard_outlined,
-                    title: 'Үржүүлэгч олдсонгүй',
-                    description: 'Шүүлтүүрт тохирох үржүүлэгч олдсонгүй.',
+                  return const Center(
+                    child: Text(
+                      'Шүүлтүүрт тохирох үржүүлэгч олдсонгүй.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   );
                 }
                 return ListView.builder(
@@ -62,7 +60,7 @@ class LeaderboardScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: LoadingIndicator(size: 28)),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, _) => TamgaErrorWidget(
                 message: 'Чансаа ачаалахад алдаа гарлаа',
                 onRetry: () => ref.invalidate(leaderboardProvider),
@@ -121,7 +119,7 @@ class _FilterSection extends StatelessWidget {
                 child: regionsAsync.when(
                   data: (regions) {
                     return Container(
-                      height: 44,
+                      height: 40,
                       decoration: BoxDecoration(
                         border: Border.all(color: theme.colorScheme.outline),
                         borderRadius: BorderRadius.circular(
@@ -151,8 +149,10 @@ class _FilterSection extends StatelessWidget {
                     );
                   },
                   loading: () => const SizedBox(
-                    height: 44,
-                    child: Center(child: LoadingIndicator(size: 18)),
+                    height: 40,
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
                   error: (_, _) => const SizedBox(
                     height: 40,
@@ -171,34 +171,30 @@ class _FilterSection extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
 
           // ── Хугацааны шүүлтүүр ──
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          Row(
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.schedule_outlined,
-                    size: 18,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    'Хугацаа:',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+              Icon(
+                Icons.schedule_outlined,
+                size: 18,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                'Хугацаа:',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
               ...LeaderboardTimePeriod.values.map((period) {
                 final isSelected = period == selectedTimePeriod;
-                return TamgaChoicePill(
-                  label: period.label,
-                  selected: isSelected,
-                  onTap: () => onTimePeriodChanged(period),
+                return Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.xs),
+                  child: FilterChip(
+                    label: Text(period.label),
+                    selected: isSelected,
+                    onSelected: (_) => onTimePeriodChanged(period),
+                  ),
                 );
               }),
             ],
@@ -220,12 +216,9 @@ class _LeaderboardRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Semantics(
-      container: true,
-      label:
-          '${entry.rank}-р байр, ${entry.breederName}, ${entry.totalScore} оноо',
-      child: TamgaCard(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +235,9 @@ class _LeaderboardRow extends StatelessWidget {
                   // Нэр
                   Text(
                     entry.breederName,
-                    style: TamgaTypography.body(weight: FontWeight.w600),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -312,23 +307,20 @@ class _LeaderboardRow extends StatelessWidget {
       textColor = theme.colorScheme.onSurfaceVariant;
     }
 
-    return Semantics(
-      label: '${entry.rank}-р байр',
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusSmall),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          '${entry.rank}',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            color: textColor,
-          ),
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusSmall),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '${entry.rank}',
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+          color: textColor,
         ),
       ),
     );
@@ -397,23 +389,20 @@ class _MetricChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: '$tooltip: $label',
-      child: Tooltip(
-        message: tooltip,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(width: 2),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+    return Tooltip(
+      message: tooltip,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 2),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

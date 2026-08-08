@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/error/result.dart';
 import 'package:tamga/src/features/events/application/events_providers.dart';
 import 'package:tamga/src/features/events/application/partner_dashboard_provider.dart';
 import 'package:tamga/src/features/events/data/event_repository.dart';
 import 'package:tamga/src/features/events/presentation/partner_dashboard_screen.dart';
 import 'package:tamga/src/shared/domain/event.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Mock EventRepository ───────────────────────────────────────────
 
@@ -67,7 +69,10 @@ Widget buildTestApp(List<Override> overrides) {
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
-      theme: AppTheme.light(),
+      locale: const Locale('mn'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: const PartnerDashboardScreen(),
     ),
   );
@@ -167,11 +172,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Should have star_border icon (not featured)
-      expect(find.byIcon(Icons.star_border), findsOneWidget);
+      expect(find.byIcon(PhosphorIconsRegular.star), findsOneWidget);
 
-      // Tap to toggle
-      await tester.tap(find.byIcon(Icons.star_border));
+      await tester.tap(find.byIcon(PhosphorIconsRegular.star));
       await tester.pumpAndSettle();
 
       // saveEvent should have been called

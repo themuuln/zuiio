@@ -13,56 +13,36 @@ extension GetIsarRaceEntryCollection on Isar {
   IsarCollection<IsarRaceEntry> get isarRaceEntrys => this.collection();
 }
 
-final IsarRaceEntrySchema = CollectionSchema(
+const IsarRaceEntrySchema = CollectionSchema(
   name: r'IsarRaceEntry',
-  id: int.parse('5640362438934546934'),
+  id: 5640362438934546934,
   properties: {
     r'domainId': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'entryStatus': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'entryStatus',
       type: IsarType.byte,
       enumMap: _IsarRaceEntryentryStatusEnumValueMap,
     ),
-    r'horseId': PropertySchema(
-      id: int.parse('2'),
-      name: r'horseId',
-      type: IsarType.string,
-    ),
+    r'horseId': PropertySchema(id: 2, name: r'horseId', type: IsarType.string),
     r'jockeyName': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'jockeyName',
       type: IsarType.string,
     ),
-    r'ownerId': PropertySchema(
-      id: int.parse('4'),
-      name: r'ownerId',
-      type: IsarType.string,
-    ),
+    r'ownerId': PropertySchema(id: 4, name: r'ownerId', type: IsarType.string),
     r'placement': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'placement',
       type: IsarType.long,
     ),
-    r'prize': PropertySchema(
-      id: int.parse('6'),
-      name: r'prize',
-      type: IsarType.long,
-    ),
-    r'raceId': PropertySchema(
-      id: int.parse('7'),
-      name: r'raceId',
-      type: IsarType.string,
-    ),
-    r'result': PropertySchema(
-      id: int.parse('8'),
-      name: r'result',
-      type: IsarType.string,
-    ),
+    r'prize': PropertySchema(id: 6, name: r'prize', type: IsarType.long),
+    r'raceId': PropertySchema(id: 7, name: r'raceId', type: IsarType.string),
+    r'result': PropertySchema(id: 8, name: r'result', type: IsarType.string),
   },
   estimateSize: _isarRaceEntryEstimateSize,
   serialize: _isarRaceEntrySerialize,
@@ -71,7 +51,7 @@ final IsarRaceEntrySchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -84,7 +64,7 @@ final IsarRaceEntrySchema = CollectionSchema(
       ],
     ),
     r'horseId': IndexSchema(
-      id: int.parse('-4681125749579367450'),
+      id: -4681125749579367450,
       name: r'horseId',
       unique: false,
       replace: false,

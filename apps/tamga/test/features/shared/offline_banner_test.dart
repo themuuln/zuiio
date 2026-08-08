@@ -1,15 +1,14 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
-import 'package:tamga/src/app/theme/app_theme.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:tamga/src/core/sync/connection_status.dart';
 import 'package:tamga/src/features/shared/application/sync_providers.dart';
 import 'package:tamga/src/features/shared/presentation/offline_banner.dart';
 import 'package:tamga/src/features/profile/application/cloud_sync_coordinator.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Mocks ───────────────────────────────────────────────────────────────
 
@@ -40,11 +39,12 @@ Widget wrapForTest({
       }),
     );
   }
-
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(body: child),
     ),
   );
@@ -59,7 +59,6 @@ void main() {
   setUp(() {
     mockMonitor = MockConnectionMonitor();
     statusController = StreamController<ConnectionStatus>.broadcast();
-
     when(() => mockMonitor.status).thenAnswer((_) => statusController.stream);
   });
 
@@ -80,10 +79,7 @@ void main() {
       await tester.pump();
 
       // The banner should show the offline message
-      expect(
-        find.text('Offline — Локал өгөгдөл харуулж байна'),
-        findsOneWidget,
-      );
+      expect(find.text('Offline — Showing local data'), findsOneWidget);
 
       // The cloud_off icon should be visible
       expect(find.byIcon(Icons.cloud_off), findsOneWidget);
@@ -100,8 +96,7 @@ void main() {
       );
       await tester.pump();
 
-      // Banner should not be visible when online
-      expect(find.text('Offline — Локал өгөгдөл харуулж байна'), findsNothing);
+      expect(find.text('Offline — Showing local data'), findsNothing);
     });
   });
 
@@ -124,8 +119,7 @@ void main() {
       );
       await tester.pump();
 
-      // Should show last sync time
-      expect(find.textContaining('Сүүлд синк хийсэн'), findsOneWidget);
+      expect(find.textContaining('Last synced:'), findsOneWidget);
     });
 
     testWidgets('banner works without last sync time (null)', (
@@ -141,14 +135,9 @@ void main() {
       );
       await tester.pump();
 
-      // Banner still shows the offline message even without sync time
-      expect(
-        find.text('Offline — Локал өгөгдөл харуулж байна'),
-        findsOneWidget,
-      );
-
+      expect(find.text('Offline — Showing local data'), findsOneWidget);
       // No sync time text
-      expect(find.textContaining('Сүүлд синк хийсэн'), findsNothing);
+      expect(find.textContaining('Last synced:'), findsNothing);
     });
 
     testWidgets('shows correct relative time format for minutes', (
@@ -168,8 +157,7 @@ void main() {
         ),
       );
       await tester.pump();
-
-      expect(find.text('Сүүлд синк хийсэн: 3 минутын өмнө'), findsOneWidget);
+      expect(find.text('Last synced: 3 minutes ago'), findsOneWidget);
     });
 
     testWidgets('shows correct relative time format for hours', (
@@ -189,8 +177,7 @@ void main() {
         ),
       );
       await tester.pump();
-
-      expect(find.text('Сүүлд синк хийсэн: 2 цагийн өмнө'), findsOneWidget);
+      expect(find.text('Last synced: 2 hours ago'), findsOneWidget);
     });
 
     testWidgets('shows correct relative time format for "just now"', (
@@ -210,8 +197,7 @@ void main() {
         ),
       );
       await tester.pump();
-
-      expect(find.text('Сүүлд синк хийсэн: саяхан'), findsOneWidget);
+      expect(find.text('Last synced: just now'), findsOneWidget);
     });
   });
 }

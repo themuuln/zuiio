@@ -85,14 +85,15 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
                 // Аймгаар шүүх
                 Text(
                   'Аймгаар шүүх / Filter by Aimag',
-                  style: TamgaTypography.subheadline(
-                    weight: FontWeight.w600,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                     color: tc.onSurface,
                   ),
                 ),
                 const SizedBox(height: TamgaSpacing.sm),
                 SizedBox(
-                  height: 44,
+                  height: 36,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: _aimags.length,
@@ -103,10 +104,10 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
                       final isSelected =
                           (aimag == 'Бүгд / All' && _selectedAimag == null) ||
                           _selectedAimag == aimag;
-                      return TamgaChoicePill(
-                        label: aimag,
+                      return FilterChip(
+                        label: Text(aimag),
                         selected: isSelected,
-                        onTap: () {
+                        onSelected: (selected) {
                           setState(() {
                             _selectedAimag = aimag == 'Бүгд / All'
                                 ? null
@@ -121,14 +122,15 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
                 // Мэргэжлээр шүүх
                 Text(
                   'Мэргэжлээр шүүх / Filter by Specialization',
-                  style: TamgaTypography.subheadline(
-                    weight: FontWeight.w600,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                     color: tc.onSurface,
                   ),
                 ),
                 const SizedBox(height: TamgaSpacing.sm),
                 SizedBox(
-                  height: 44,
+                  height: 36,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: _specializations.length,
@@ -140,10 +142,10 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
                           (spec == 'Бүгд / All' &&
                               _selectedSpecialization == null) ||
                           _selectedSpecialization == spec;
-                      return TamgaChoicePill(
-                        label: _specializationLabel(spec),
+                      return FilterChip(
+                        label: Text(_specializationLabel(spec)),
                         selected: isSelected,
-                        onTap: () {
+                        onSelected: (selected) {
                           setState(() {
                             _selectedSpecialization = spec == 'Бүгд / All'
                                 ? null
@@ -267,8 +269,9 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
                   const SizedBox(height: TamgaSpacing.lg),
                   Text(
                     'Мал эмч / Veterinarian',
-                    style: TamgaTypography.title3(
-                      weight: FontWeight.w700,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
                       color: tc.onSurface,
                     ),
                     textAlign: TextAlign.center,
@@ -277,58 +280,64 @@ class _VetConnectScreenState extends ConsumerState<VetConnectScreen> {
 
                   // Мэргэжил
                   if (profile.specialization.isNotEmpty) ...[
-                    TamgaInfoRow(
+                    _ProfileInfoRow(
                       icon: Icons.medical_services_outlined,
                       label: 'Мэргэжил / Specialization',
                       value: profile.specialization
                           .map(_specializationLabel)
                           .join(', '),
                     ),
+                    const Divider(),
                   ],
 
                   // Лиценз
                   if (profile.licenseNumber != null) ...[
-                    TamgaInfoRow(
+                    _ProfileInfoRow(
                       icon: Icons.badge_outlined,
                       label: 'Лиценз / License',
                       value: profile.licenseNumber!,
                     ),
+                    const Divider(),
                   ],
 
                   // Боловсрол
                   if (profile.education != null) ...[
-                    TamgaInfoRow(
+                    _ProfileInfoRow(
                       icon: Icons.school_outlined,
                       label: 'Боловсрол / Education',
                       value: profile.education!,
                     ),
+                    const Divider(),
                   ],
 
                   // Ажлын туршлага
                   if (profile.experienceYears != null) ...[
-                    TamgaInfoRow(
+                    _ProfileInfoRow(
                       icon: Icons.work_outline,
                       label: 'Туршлага / Experience',
                       value: '${profile.experienceYears} жил / years',
                     ),
+                    const Divider(),
                   ],
 
                   // Зөвлөгөөний хураамж
                   if (profile.consultationFee != null) ...[
-                    TamgaInfoRow(
+                    _ProfileInfoRow(
                       icon: Icons.attach_money,
                       label: 'Зөвлөгөөний хураамж / Fee',
                       value: '${profile.consultationFee}₮',
                     ),
+                    const Divider(),
                   ],
 
                   // Аялалын нэмэгдэл
                   if (profile.travelSurcharge != null) ...[
-                    TamgaInfoRow(
+                    _ProfileInfoRow(
                       icon: Icons.directions_car_outlined,
                       label: 'Аялалын нэмэгдэл / Travel Surcharge',
                       value: '${profile.travelSurcharge}₮',
                     ),
+                    const Divider(),
                   ],
 
                   const SizedBox(height: TamgaSpacing.xxl),
@@ -379,86 +388,98 @@ class _VetProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tc = TamgaColors.of(context);
-    return TamgaCard(
-      onTap: onViewProfile,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Card(
+      child: InkWell(
+        onTap: onViewProfile,
+        borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadius),
+        child: Padding(
+          padding: const EdgeInsets.all(TamgaSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                backgroundColor: tc.primaryContainer,
-                child: Icon(Icons.person, color: tc.onPrimaryContainer),
-              ),
-              const SizedBox(width: TamgaSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Мал эмч / Veterinarian',
-                      style: TamgaTypography.body(
-                        weight: FontWeight.w600,
-                        color: tc.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (profile.specialization.isNotEmpty)
-                      Text(
-                        profile.specialization
-                            .map(_specializationLabel)
-                            .join(', '),
-                        style: TamgaTypography.caption1(
-                          color: tc.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
-                ),
-              ),
-              if (profile.consultationFee != null)
-                Text(
-                  '${profile.consultationFee}₮',
-                  style: TamgaTypography.body(
-                    weight: FontWeight.w700,
-                    color: tc.primary,
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: tc.primaryContainer,
+                    child: Icon(Icons.person, color: tc.onPrimaryContainer),
                   ),
+                  const SizedBox(width: TamgaSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Мал эмч / Veterinarian',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: tc.onSurface,
+                          ),
+                        ),
+                        if (profile.specialization.isNotEmpty)
+                          Text(
+                            profile.specialization
+                                .map(_specializationLabel)
+                                .join(', '),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: tc.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (profile.consultationFee != null)
+                    Text(
+                      '${profile.consultationFee}₮',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: tc.primary,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: TamgaSpacing.md),
+              Row(
+                children: [
+                  if (profile.experienceYears != null) ...[
+                    Icon(
+                      Icons.work_outline,
+                      size: 16,
+                      color: tc.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${profile.experienceYears} жил',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: tc.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(width: TamgaSpacing.lg),
+                  ],
+                  if (profile.licenseNumber != null) ...[
+                    Icon(Icons.verified_outlined, size: 16, color: tc.tertiary),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Лицензтэй / Licensed',
+                      style: TextStyle(fontSize: 12, color: tc.tertiary),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: TamgaSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: onBook,
+                  child: const Text('Цаг захиалах / Book'),
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: TamgaSpacing.md),
-          Row(
-            children: [
-              if (profile.experienceYears != null) ...[
-                Icon(Icons.work_outline, size: 16, color: tc.onSurfaceVariant),
-                const SizedBox(width: 4),
-                Text(
-                  '${profile.experienceYears} жил',
-                  style: TamgaTypography.caption2(color: tc.onSurfaceVariant),
-                ),
-                const SizedBox(width: TamgaSpacing.lg),
-              ],
-              if (profile.licenseNumber != null) ...[
-                Icon(Icons.verified_outlined, size: 16, color: tc.tertiary),
-                const SizedBox(width: 4),
-                Text(
-                  'Лицензтэй / Licensed',
-                  style: TamgaTypography.caption2(color: tc.tertiary),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: TamgaSpacing.md),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: onBook,
-              child: const Text('Цаг захиалах / Book'),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -478,5 +499,47 @@ String _specializationLabel(String spec) {
       return 'Дотоод / Internal Medicine';
     default:
       return spec;
+  }
+}
+
+/// Профайлын мэдээллийн мөр.
+class _ProfileInfoRow extends StatelessWidget {
+  const _ProfileInfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final tc = TamgaColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: TamgaSpacing.sm),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: tc.onSurfaceVariant),
+          const SizedBox(width: TamgaSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: tc.onSurfaceVariant),
+                ),
+                Text(
+                  value,
+                  style: TextStyle(fontSize: 14, color: tc.onSurface),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

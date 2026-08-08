@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:isar/isar.dart';
 
 import '../../../core/data/local_repository.dart';
@@ -33,17 +31,7 @@ import 'market_repository.dart';
 class LocalMarketRepositoryV2
     extends LocalRepository<MarketListing, IsarMarketListing>
     implements MarketRepository {
-  LocalMarketRepositoryV2({
-    required super.storage,
-    required super.syncQueue,
-    super.syncStorage,
-  });
-
-  /// Enqueue + persist to the durable queue (no-op when not wired).
-  void _enqueueAndPersist(SyncQueueItem item) {
-    syncQueue.enqueue(item);
-    unawaited(persistEnqueue(item));
-  }
+  LocalMarketRepositoryV2({required super.storage, required super.syncQueue});
 
   @override
   IsarCollection<IsarMarketListing> get collection => storage.marketListings;
@@ -127,7 +115,7 @@ class LocalMarketRepositoryV2
         await storage.marketListings.put(isarListing);
       });
 
-      _enqueueAndPersist(
+      syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'market',
           entityId: listing.id,
@@ -152,7 +140,7 @@ class LocalMarketRepositoryV2
         await storage.marketListings.isar.writeTxn(() async {
           await storage.marketListings.delete(toDelete.id);
         });
-        _enqueueAndPersist(
+        syncQueue.enqueue(
           SyncQueueItem(
             entityType: 'market',
             entityId: id,
@@ -217,7 +205,7 @@ class LocalMarketRepositoryV2
         await storage.marketListings.put(updated);
       });
 
-      _enqueueAndPersist(
+      syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'market',
           entityId: listingId,
@@ -282,7 +270,7 @@ class LocalMarketRepositoryV2
         await storage.marketListings.put(updated);
       });
 
-      _enqueueAndPersist(
+      syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'market',
           entityId: listingId,
@@ -331,7 +319,7 @@ class LocalMarketRepositoryV2
         await storage.marketListings.put(existing);
       });
 
-      _enqueueAndPersist(
+      syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'market',
           entityId: listingId,
@@ -565,7 +553,7 @@ class LocalMarketRepositoryV2
     try {
       final now = DateTime.now();
       final report = ListingReport(
-        id: 'report-${now.microsecondsSinceEpoch}',
+        id: 'report-${now.millisecondsSinceEpoch}',
         listingId: listingId,
         reporterId: reporterId,
         reason: reason,
@@ -981,7 +969,7 @@ class LocalMarketRepositoryV2
         await storage.marketListings.put(existing);
       });
 
-      _enqueueAndPersist(
+      syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'market',
           entityId: listingId,
@@ -1022,7 +1010,7 @@ class LocalMarketRepositoryV2
         await storage.marketListings.put(existing);
       });
 
-      _enqueueAndPersist(
+      syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'market',
           entityId: listingId,
@@ -1063,7 +1051,7 @@ class LocalMarketRepositoryV2
         await storage.marketListings.put(existing);
       });
 
-      _enqueueAndPersist(
+      syncQueue.enqueue(
         SyncQueueItem(
           entityType: 'market',
           entityId: listingId,
@@ -1153,7 +1141,7 @@ class LocalMarketRepositoryV2
       });
 
       for (final listing in listings) {
-        _enqueueAndPersist(
+        syncQueue.enqueue(
           SyncQueueItem(
             entityType: 'market',
             entityId: listing.domainId,
@@ -1184,7 +1172,7 @@ class LocalMarketRepositoryV2
       });
 
       for (final listing in listings) {
-        _enqueueAndPersist(
+        syncQueue.enqueue(
           SyncQueueItem(
             entityType: 'market',
             entityId: listing.domainId,

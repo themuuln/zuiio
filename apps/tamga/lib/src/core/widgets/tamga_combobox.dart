@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:tamga/l10n/generated/app_localizations.dart';
+
 import '../theme/design_tokens.dart';
 
 // ── Composition ─────────────────────────────────────────────────────────
@@ -83,7 +85,7 @@ class TamgaCombobox<T> extends StatefulWidget {
     this.onValuesChanged,
     this.itemBuilder,
     this.itemToString,
-    this.placeholder = 'Сонгоно уу...',
+    this.placeholder,
     this.enabled = true,
     this.showClear = false,
     this.autoHighlight = false,
@@ -92,7 +94,7 @@ class TamgaCombobox<T> extends StatefulWidget {
     this.maxContentHeight = 300,
     this.filterFn,
     this.onAddNew,
-    this.addNewLabel = 'Шинэ нэмэх «{query}»',
+    this.addNewLabel,
     this.searchable = false,
   });
 
@@ -124,7 +126,7 @@ class TamgaCombobox<T> extends StatefulWidget {
   final String Function(T item)? itemToString;
 
   /// Placeholder text for the input.
-  final String placeholder;
+  final String? placeholder;
 
   /// Whether the combobox is interactive.
   final bool enabled;
@@ -153,7 +155,7 @@ class TamgaCombobox<T> extends StatefulWidget {
   final ValueChanged<String>? onAddNew;
 
   /// Label template for the "Add new" row. Use `{query}` as placeholder.
-  final String addNewLabel;
+  final String? addNewLabel;
 
   /// Whether the dropdown is searchable via a filter input.
   /// When true, a search field appears at the top of the dropdown
@@ -422,7 +424,9 @@ class _TamgaComboboxState<T> extends State<TamgaCombobox<T>> {
       controller: _controller,
       autofocus: true,
       decoration: InputDecoration(
-        hintText: widget.placeholder,
+        hintText:
+            widget.placeholder ??
+            AppLocalizations.of(context)!.comboboxSearchHint,
         hintStyle: TamgaTypography.body(
           color: TamgaColors.of(context).onSurfaceVariant,
         ),
@@ -454,7 +458,7 @@ class _TamgaComboboxState<T> extends State<TamgaCombobox<T>> {
         padding: const EdgeInsets.all(TamgaSpacing.lg),
         child: Center(
           child: Text(
-            'Олдсонгүй',
+            AppLocalizations.of(context)!.comboboxEmptyText,
             style: TamgaTypography.body(color: colors.onSurfaceVariant),
           ),
         ),
@@ -471,7 +475,9 @@ class _TamgaComboboxState<T> extends State<TamgaCombobox<T>> {
       itemBuilder: (ctx, i) {
         // "Add new" row at the end
         if (canAdd && i == filtered.length) {
-          final label = widget.addNewLabel.replaceAll('{query}', _query);
+          final label =
+              (widget.addNewLabel ?? AppLocalizations.of(ctx)!.comboboxAddNew)
+                  .replaceAll('{query}', _query);
           return _ComboboxAddNewRow(
             label: label,
             isFocused: i == _focusedIndex,
@@ -560,7 +566,9 @@ class _TamgaComboboxState<T> extends State<TamgaCombobox<T>> {
       decoration:
           (widget.decoration ??
                   InputDecoration(
-                    hintText: widget.placeholder,
+                    hintText:
+                        widget.placeholder ??
+                        AppLocalizations.of(context)!.comboboxSearchHint,
                     hintStyle: TamgaTypography.body(
                       color: colors.onSurfaceVariant,
                     ),
@@ -610,7 +618,8 @@ class _TamgaComboboxState<T> extends State<TamgaCombobox<T>> {
           (widget.decoration ??
                   InputDecoration(
                     hintText: _selectedValues.isEmpty
-                        ? widget.placeholder
+                        ? (widget.placeholder ??
+                              AppLocalizations.of(context)!.comboboxSearchHint)
                         : null,
                     hintStyle: TamgaTypography.body(
                       color: colors.onSurfaceVariant,
@@ -660,7 +669,10 @@ class _TamgaComboboxState<T> extends State<TamgaCombobox<T>> {
               enabled: widget.enabled,
               style: TamgaTypography.body(color: colors.onSurface),
               decoration: InputDecoration(
-                hintText: _selectedValues.isEmpty ? widget.placeholder : '',
+                hintText: _selectedValues.isEmpty
+                    ? (widget.placeholder ??
+                          AppLocalizations.of(context)!.comboboxSearchHint)
+                    : '',
                 hintStyle: TamgaTypography.body(color: colors.onSurfaceVariant),
                 isDense: true,
                 border: InputBorder.none,
@@ -949,17 +961,19 @@ class _ComboboxAddNewRowState extends State<_ComboboxAddNewRow> {
 
 /// Empty state shown when no items match the filter.
 class TamgaComboboxEmpty extends StatelessWidget {
-  const TamgaComboboxEmpty({super.key, this.text = 'Олдсонгүй'});
+  const TamgaComboboxEmpty({super.key, this.text});
 
-  final String text;
+  final String? text;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveText =
+        text ?? AppLocalizations.of(context)!.comboboxEmptyText;
     return Padding(
       padding: const EdgeInsets.all(TamgaSpacing.lg),
       child: Center(
         child: Text(
-          text,
+          effectiveText,
           style: TamgaTypography.body(
             color: TamgaColors.of(context).onSurfaceVariant,
           ),

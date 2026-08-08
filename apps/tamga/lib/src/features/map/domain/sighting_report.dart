@@ -16,9 +16,6 @@ class SightingReport {
     this.isAnonymous = false,
     this.status = SightingStatus.pending,
     required this.createdAt,
-    this.clientId,
-    this.reviewedAt,
-    this.reviewedBy,
   });
 
   final String id;
@@ -33,11 +30,6 @@ class SightingReport {
   final SightingStatus status;
   final DateTime createdAt;
 
-  /// Stable local id used to make offline retries idempotent.
-  final String? clientId;
-  final DateTime? reviewedAt;
-  final String? reviewedBy;
-
   SightingReport copyWith({
     String? id,
     String? reportId,
@@ -50,9 +42,6 @@ class SightingReport {
     bool? isAnonymous,
     SightingStatus? status,
     DateTime? createdAt,
-    String? clientId,
-    DateTime? reviewedAt,
-    String? reviewedBy,
   }) {
     return SightingReport(
       id: id ?? this.id,
@@ -63,9 +52,6 @@ class SightingReport {
       locationName: locationName ?? this.locationName,
       description: description ?? this.description,
       photoUrl: photoUrl ?? this.photoUrl,
-      clientId: clientId ?? this.clientId,
-      reviewedAt: reviewedAt ?? this.reviewedAt,
-      reviewedBy: reviewedBy ?? this.reviewedBy,
       isAnonymous: isAnonymous ?? this.isAnonymous,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
@@ -81,9 +67,6 @@ class SightingReport {
     'location_name': locationName,
     'description': description,
     'photo_url': photoUrl,
-    'client_id': clientId,
-    'reviewed_at': reviewedAt?.toIso8601String(),
-    'reviewed_by': reviewedBy,
     'is_anonymous': isAnonymous,
     'status': status.name,
     'created_at': createdAt.toIso8601String(),
@@ -104,11 +87,6 @@ class SightingReport {
         (e) => e.name == json['status'],
         orElse: () => SightingStatus.pending,
       ),
-      clientId: json['client_id'] as String?,
-      reviewedAt: json['reviewed_at'] != null
-          ? DateTime.parse(json['reviewed_at'] as String)
-          : null,
-      reviewedBy: json['reviewed_by'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }

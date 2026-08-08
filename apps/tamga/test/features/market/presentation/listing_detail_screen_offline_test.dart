@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/sync/connection_status.dart';
 import 'package:tamga/src/features/shared/application/sync_providers.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Mocks ───────────────────────────────────────────────────────────────
 
@@ -77,7 +77,7 @@ void main() {
             connectionMonitorProvider.overrideWith((ref) => mockMonitor),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: _OfflineGuardTestHarness(
               onOnlineAction: () => onlineActionCalled++,
             ),
@@ -112,7 +112,7 @@ void main() {
             connectionMonitorProvider.overrideWith((ref) => mockMonitor),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: _OfflineGuardTestHarness(
               onOnlineAction: () => onlineActionCalled++,
             ),

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/features/races/domain/race.dart';
 import 'package:tamga/src/features/races/domain/race_entry.dart';
 import 'package:tamga/src/features/races/presentation/race_results_editor_screen.dart';
 import '../../../helpers/test_helpers.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Helper to create a ProviderScope wrapper ────────────────────────
 
@@ -16,7 +16,7 @@ Widget createRaceResultsEditorScreen({
 }) {
   return ProviderScope(
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: RaceResultsEditorScreen(race: race, entries: entries),
     ),
   );

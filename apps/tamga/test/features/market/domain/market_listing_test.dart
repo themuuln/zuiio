@@ -258,42 +258,6 @@ void main() {
       expect(listing.boostExpiresAt, isNull);
       expect(listing.vipExpiresAt, isNull);
       expect(listing.sellerBadgeExpiresAt, isNull);
-      expect(listing.lostReportConflict, isFalse);
-    });
-
-    test('lostReportConflict round-trips through all four serializers', () {
-      final now = DateTime.now();
-      final listing = MarketListing(
-        id: 'test-conflict',
-        horseId: 'horse-1',
-        sellerId: 'seller-1',
-        title: 'Conflicted Listing',
-        priceAmount: 500000,
-        saleType: MarketSaleType.sale,
-        status: MarketListingStatus.active,
-        createdAt: now,
-        updatedAt: now,
-        lostReportConflict: true,
-      );
-
-      // JSON (local cache) round-trip
-      final restored = MarketListing.fromJson(listing.toJson());
-      expect(restored.lostReportConflict, isTrue);
-
-      // Supabase row round-trip
-      final row = listing.toSupabaseJson();
-      expect(row['lost_report_conflict'], isTrue);
-      final restoredFromRow = MarketListing.fromSupabaseJson(row);
-      expect(restoredFromRow.lostReportConflict, isTrue);
-      expect(restoredFromRow.id, 'test-conflict');
-
-      // Missing column defaults to false
-      final rowWithoutFlag = Map<String, dynamic>.from(row)
-        ..remove('lost_report_conflict');
-      final restoredWithoutFlag = MarketListing.fromSupabaseJson(
-        rowWithoutFlag,
-      );
-      expect(restoredWithoutFlag.lostReportConflict, isFalse);
     });
   });
 

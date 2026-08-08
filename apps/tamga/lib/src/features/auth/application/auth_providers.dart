@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 
@@ -26,12 +24,6 @@ final authStateProvider = StreamNotifierProvider<AuthStateNotifier, AuthState>(
   AuthStateNotifier.new,
 );
 
-/// Optional auth state preloaded before the app starts.
-///
-/// The provider defaults to `null` and is overridden by startup tests or
-/// bootstrapping code when an initial state is already available.
-final initialAuthStateProvider = Provider<AuthState?>((ref) => null);
-
 /// Сессийн хугацаа дууссан үйл явдлын түгээгч.
 ///
 /// Энэ provider нь хэрэглэгч өөрөө системээс гараагүй,
@@ -46,12 +38,18 @@ final sessionExpiredProvider = StreamProvider<void>((ref) {
 /// Хэрэглэгч дахин нэвтрэхдээ өмнөх хуудас руу шилжихэд ашиглана.
 final preservedRouteAfterReAuthProvider = StateProvider<String?>((ref) => null);
 
+/// Урьдчилан ачаалагдсан нэвтрэх төлөв.
+///
+/// Хэрэглэгчийн сессийг урьдчилан шалгахад ашиглана.
+/// Default утга нь null (үргэлж SplashScreen харуулна).
+final initialAuthStateProvider = Provider<AuthState?>((ref) => null);
+
 /// Хэрэглэгчийн нэвтрэх төлөвийг удирдах Notifier.
 class AuthStateNotifier extends StreamNotifier<AuthState> {
   @override
   Stream<AuthState> build() async* {
-    // Dev mode: skip Supabase, auto-authenticate outside Flutter tests.
-    if (kDebugMode && !Platform.environment.containsKey('FLUTTER_TEST')) {
+    // Dev mode: skip Supabase, auto-authenticate.
+    if (kDebugMode) {
       yield const AuthState.authenticated(
         userId: 'dev-user-000',
         email: 'dev@tamga.local',

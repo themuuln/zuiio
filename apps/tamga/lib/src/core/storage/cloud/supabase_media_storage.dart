@@ -12,8 +12,7 @@ import 'media_upload_result.dart';
 ///
 /// Bucket mapping:
 /// - [MediaCategory.photo] → `horse-photos` (public read)
-/// - [MediaCategory.recoveryPhoto] → `lost-horse-reports` (private, owner read)
-/// - [MediaCategory.document] → `documents` (private, owner read/write)
+/// - [MediaCategory.document] → `documents` (private, owner-only)
 class SupabaseMediaStorage implements MediaStorageService {
   SupabaseMediaStorage({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
@@ -21,10 +20,9 @@ class SupabaseMediaStorage implements MediaStorageService {
   final SupabaseClient _client;
 
   // ── Bucket mapping ────────────────────────────────────────────
+
   static const _bucketMap = {
     MediaCategory.photo: 'horse-photos',
-    MediaCategory.recoveryPhoto: 'lost-horse-reports',
-    MediaCategory.recoverySightingPhoto: 'lost-horse-sightings',
     MediaCategory.document: 'documents',
   };
 
@@ -64,14 +62,11 @@ class SupabaseMediaStorage implements MediaStorageService {
             bytes,
             fileOptions: FileOptions(contentType: mimeType, upsert: true),
           );
-      final url = switch (category) {
-        MediaCategory.recoveryPhoto ||
-        MediaCategory.recoverySightingPhoto => path,
-        _ => _client.storage.from(bucket).getPublicUrl(path),
-      };
+
+      final publicUrl = _client.storage.from(bucket).getPublicUrl(path);
 
       return MediaUploadResult(
-        url: url,
+        url: publicUrl,
         path: path,
         fileSize: bytes.length,
         mimeType: mimeType,

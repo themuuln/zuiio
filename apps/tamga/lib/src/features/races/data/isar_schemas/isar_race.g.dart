@@ -13,63 +13,51 @@ extension GetIsarRaceCollection on Isar {
   IsarCollection<IsarRace> get isarRaces => this.collection();
 }
 
-final IsarRaceSchema = CollectionSchema(
+const IsarRaceSchema = CollectionSchema(
   name: r'IsarRace',
-  id: int.parse('672194119055800382'),
+  id: 672194119055800382,
   properties: {
-    r'date': PropertySchema(
-      id: int.parse('0'),
-      name: r'date',
-      type: IsarType.dateTime,
-    ),
+    r'date': PropertySchema(id: 0, name: r'date', type: IsarType.dateTime),
     r'description': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'description',
       type: IsarType.string,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'entryFee': PropertySchema(
-      id: int.parse('3'),
-      name: r'entryFee',
-      type: IsarType.long,
-    ),
+    r'entryFee': PropertySchema(id: 3, name: r'entryFee', type: IsarType.long),
     r'location': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'location',
       type: IsarType.string,
     ),
     r'maxEntries': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'maxEntries',
       type: IsarType.long,
     ),
-    r'name': PropertySchema(
-      id: int.parse('6'),
-      name: r'name',
-      type: IsarType.string,
-    ),
+    r'name': PropertySchema(id: 6, name: r'name', type: IsarType.string),
     r'organizerId': PropertySchema(
-      id: int.parse('7'),
+      id: 7,
       name: r'organizerId',
       type: IsarType.string,
     ),
     r'prizeDistribution': PropertySchema(
-      id: int.parse('8'),
+      id: 8,
       name: r'prizeDistribution',
       type: IsarType.string,
     ),
     r'raceStatus': PropertySchema(
-      id: int.parse('9'),
+      id: 9,
       name: r'raceStatus',
       type: IsarType.byte,
       enumMap: _IsarRaceraceStatusEnumValueMap,
     ),
     r'raceType': PropertySchema(
-      id: int.parse('10'),
+      id: 10,
       name: r'raceType',
       type: IsarType.byte,
       enumMap: _IsarRaceraceTypeEnumValueMap,
@@ -82,7 +70,7 @@ final IsarRaceSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,

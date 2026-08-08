@@ -30,16 +30,8 @@ class IsarSyncQueueItem {
   @Name('isDeadLetter')
   bool isDeadLetter = false;
 
-  /// Stable persisted identity; completion is addressed by this field.
-  @Index(unique: true, replace: true)
-  late String queueId;
-  @Index()
-  String? accountId;
-  DateTime? nextAttemptAt;
-
   factory IsarSyncQueueItem.fromDomain(SyncQueueItem item) {
     return IsarSyncQueueItem()
-      ..queueId = item.stableQueueId
       ..entityType = item.entityType
       ..entityId = item.entityId
       ..action = item.action
@@ -49,9 +41,7 @@ class IsarSyncQueueItem {
       ..status = item.status
       ..lastAttemptAt = item.lastAttemptAt
       ..movedAt = item.movedAt
-      ..isDeadLetter = item.isDeadLetter
-      ..accountId = item.accountId
-      ..nextAttemptAt = item.nextAttemptAt;
+      ..isDeadLetter = item.isDeadLetter;
   }
 
   SyncQueueItem toDomain() {
@@ -65,9 +55,6 @@ class IsarSyncQueueItem {
       status: status,
       lastAttemptAt: lastAttemptAt,
       movedAt: movedAt,
-      queueId: queueId,
-      accountId: accountId,
-      nextAttemptAt: nextAttemptAt,
     );
   }
 }

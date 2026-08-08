@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import '../../profile/application/cloud_sync_coordinator.dart';
 import '../application/sync_providers.dart';
 
@@ -27,60 +27,51 @@ class SyncIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Select only the fields this widget renders — avoids rebuilding on
-    // lastSyncTime/pushedCount/pulledCount changes after every sync.
-    final syncState = ref.watch(
-      syncStateProvider.select(
-        (s) => (s.status, s.conflictCount, s.pendingCount, s.errorMessage),
-      ),
-    );
+    final syncState = ref.watch(syncStateProvider);
+    final l10n = _SafeLocalizations(context);
 
     final Color dotColor;
     final String tooltip;
-    final hasConflicts = syncState.$2 > 0;
+    final bool hasConflicts = syncState.conflictCount > 0;
 
     if (hasConflicts) {
       dotColor = Colors.red;
-      tooltip = '${syncState.$2} зөрчилдөөн байна';
-    } else if (syncState.$1 == SyncStatus.error) {
+      tooltip = l10n.syncConflictCount(syncState.conflictCount);
+    } else if (syncState.status == SyncStatus.error) {
       dotColor = Colors.red;
-      tooltip = syncState.$4 ?? 'Синхрончлолд алдаа гарлаа';
-    } else if (syncState.$3 > 0) {
+      tooltip = l10n.syncError(syncState.errorMessage);
+    } else if (syncState.pendingCount > 0) {
       dotColor = Colors.amber;
-      tooltip = '${syncState.$3} синк хүлээгдэж байна';
-    } else if (syncState.$1 == SyncStatus.syncing) {
+      tooltip = l10n.syncPendingCount(syncState.pendingCount);
+    } else if (syncState.status == SyncStatus.syncing) {
       dotColor = Colors.amber;
-      tooltip = 'Синхрончлол явагдаж байна...';
-    } else if (syncState.$1 == SyncStatus.synced) {
+      tooltip = l10n.syncInProgress();
+    } else if (syncState.status == SyncStatus.synced) {
       dotColor = Colors.green;
-      tooltip = 'Синхрончлогдсон';
+      tooltip = l10n.syncSynced();
     } else {
       dotColor = Colors.grey;
-      tooltip = 'Синхрончлол идэвхгүй';
+      tooltip = l10n.syncInactive();
     }
 
     return GestureDetector(
       onTap:
           onTap ?? (hasConflicts ? () => _navigateToConflicts(context) : null),
-      child: Semantics(
-        label: tooltip,
-        button: hasConflicts || onTap != null,
-        child: Tooltip(
-          message: tooltip,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: dotColor.withValues(alpha: 0.4),
-                  blurRadius: 3,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
+      child: Tooltip(
+        message: tooltip,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: dotColor,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: dotColor.withValues(alpha: 0.4),
+                blurRadius: 3,
+                spreadRadius: 1,
+              ),
+            ],
           ),
         ),
       ),
@@ -89,5 +80,49 @@ class SyncIndicator extends ConsumerWidget {
 
   void _navigateToConflicts(BuildContext context) {
     context.push('/profile/sync-conflicts');
+  }
+}
+
+/// Null-safe wrapper for AppLocalizations that falls back to English strings
+/// when [AppLocalizations.of(context)] is null (e.g. in tests).
+class _SafeLocalizations {
+  _SafeLocalizations(this._context);
+
+  final BuildContext _context;
+
+  String syncConflictCount(int count) {
+    final loc = AppLocalizations.of(_context);
+    if (loc != null) return loc.syncConflictCount(count);
+    return '$count conflict(s)';
+  }
+
+  String syncError(String? message) {
+    final loc = AppLocalizations.of(_context);
+    if (loc != null) return loc.syncError;
+    return message ?? 'Sync error';
+  }
+
+  String syncPendingCount(int count) {
+    final loc = AppLocalizations.of(_context);
+    if (loc != null) return loc.syncPendingCount(count);
+    return '$count pending';
+  }
+
+  String syncInProgress() {
+    final loc = AppLocalizations.of(_context);
+    if (loc != null) return loc.syncInProgress;
+    return 'Syncing...';
+  }
+
+  String syncSynced() {
+    final loc = AppLocalizations.of(_context);
+    if (loc != null) return loc.syncSynced;
+    return 'Synced';
+  }
+
+  String syncInactive() {
+    final loc = AppLocalizations.of(_context);
+    if (loc != null) return loc.syncInactive;
+    return 'Sync inactive';
   }
 }

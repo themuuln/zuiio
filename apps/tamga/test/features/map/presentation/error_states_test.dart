@@ -7,6 +7,7 @@ import 'package:tamga/src/core/error/error_helpers.dart';
 import 'package:tamga/src/core/theme/design_tokens.dart';
 import 'package:tamga/src/core/widgets/empty_state.dart';
 import 'package:tamga/src/core/widgets/tamga_error_widget.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
 void main() {
   // ── Empty State Widget Tests ──────────────────────────────────────
@@ -101,28 +102,28 @@ void main() {
   // ── TamgaErrorWidget Tests ────────────────────────────────────────
 
   group('TamgaErrorWidget renders correctly', () {
+    Widget wrap(Widget child) {
+      return MaterialApp(
+        locale: const Locale('mn'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: ThemeData(extensions: const [TamgaColors.light]),
+        home: Scaffold(body: child),
+      );
+    }
+
     testWidgets('TamgaErrorWidget shows default message when message is null', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(extensions: const [TamgaColors.light]),
-          home: const Scaffold(body: TamgaErrorWidget()),
-        ),
-      );
+      await tester.pumpWidget(wrap(const TamgaErrorWidget()));
 
-      expect(find.textContaining('Алдаа гарлаа'), findsOneWidget);
-      expect(find.textContaining('Something went wrong'), findsOneWidget);
+      expect(find.text('Алдаа гарлаа'), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
     });
 
     testWidgets('TamgaErrorWidget shows custom message', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(extensions: const [TamgaColors.light]),
-          home: const Scaffold(
-            body: TamgaErrorWidget(message: 'Сүлжээний алдаа гарлаа'),
-          ),
-        ),
+        wrap(const TamgaErrorWidget(message: 'Сүлжээний алдаа гарлаа')),
       );
 
       expect(find.text('Сүлжээний алдаа гарлаа'), findsOneWidget);
@@ -132,34 +133,18 @@ void main() {
     testWidgets('TamgaErrorWidget retry button fires callback', (tester) async {
       var retryCalled = false;
       await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(extensions: const [TamgaColors.light]),
-          home: Scaffold(
-            body: TamgaErrorWidget(
-              message: 'Алдаа',
-              onRetry: () => retryCalled = true,
-            ),
-          ),
-        ),
+        wrap(TamgaErrorWidget(onRetry: () => retryCalled = true)),
       );
-
-      expect(find.text('Дахин оролдох / Retry'), findsOneWidget);
-
-      await tester.tap(find.text('Дахин оролдох / Retry'));
+      expect(find.text('Дахин оролдох'), findsOneWidget);
+      await tester.tap(find.text('Дахин оролдох'));
       expect(retryCalled, isTrue);
     });
 
     testWidgets('TamgaErrorWidget no retry button when onRetry is null', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(extensions: const [TamgaColors.light]),
-          home: const Scaffold(body: TamgaErrorWidget(message: 'Алдаа')),
-        ),
-      );
-
-      expect(find.text('Дахин оролдох / Retry'), findsNothing);
+      await tester.pumpWidget(wrap(const TamgaErrorWidget()));
+      expect(find.text('Дахин оролдох'), findsNothing);
     });
   });
 

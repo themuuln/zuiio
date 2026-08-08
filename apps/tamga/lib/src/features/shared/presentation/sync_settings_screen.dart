@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
-import '../../../app/theme/app_colors.dart';
 import '../../../core/sync/connection_status.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../profile/application/cloud_sync_coordinator.dart';
 import '../../profile/application/profile_providers.dart';
@@ -31,19 +30,19 @@ class SyncSettingsScreen extends ConsumerWidget {
     final settingsAsync = ref.watch(profileSettingsProvider);
     final connectionMonitor = ref.watch(connectionMonitorProvider);
     final isOffline = connectionMonitor.current == ConnectionStatus.offline;
-
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Синк тохиргоо'),
+        title: Text(l10n.syncSettingsTitle),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: TamgaSpacing.md),
+            padding: const EdgeInsets.only(right: 12),
             child: SyncIndicator(size: 12),
           ),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(TamgaSpacing.lg),
+        padding: const EdgeInsets.all(16),
         children: [
           // ── Sync Status Card ──
           _SyncStatusCard(
@@ -52,55 +51,55 @@ class SyncSettingsScreen extends ConsumerWidget {
             isOffline: isOffline,
           ),
 
-          const SizedBox(height: TamgaSpacing.xxl),
+          const SizedBox(height: 24),
 
           // ── Auto-sync Toggle ──
           settingsAsync.when(
-            data: (settings) => TamgaCard(
-              padding: EdgeInsets.zero,
+            data: (settings) => Card(
               child: SwitchListTile(
-                contentPadding: TamgaSpacing.listCellPadding,
-                title: const Text('Авто синк'),
+                title: Text(l10n.syncSettingsAutoSync),
                 subtitle: Text(
                   settings.autoSyncEnabled
-                      ? 'Сүлжээнд холбогдсон үед автоматаар синк хийх'
+                      ? l10n.syncSettingsAutoSyncDesc
                       : 'Автомат синк унтарсан',
                 ),
                 value: settings.autoSyncEnabled,
                 onChanged: (newVal) => _toggleAutoSync(ref, settings, newVal),
               ),
             ),
-            loading: () => const TamgaCard(
-              padding: EdgeInsets.zero,
+            loading: () => Card(
               child: ListTile(
-                contentPadding: TamgaSpacing.listCellPadding,
-                leading: LoadingIndicator(size: 24),
-                title: Text('Ачаалж байна...'),
+                leading: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                title: Text(l10n.profileLoading),
               ),
             ),
-            error: (err, _) => TamgaCard(
-              padding: EdgeInsets.zero,
+            error: (err, _) => Card(
               child: ListTile(
-                contentPadding: TamgaSpacing.listCellPadding,
                 leading: const Icon(Icons.error_outline),
                 title: Text('Алдаа: $err'),
               ),
             ),
           ),
 
-          const SizedBox(height: TamgaSpacing.lg),
+          const SizedBox(height: 16),
 
           // ── Sync Now Button ──
-          TamgaCard(
-            padding: EdgeInsets.zero,
+          Card(
             child: ListTile(
-              contentPadding: TamgaSpacing.listCellPadding,
               leading: syncState.isSyncing
-                  ? const LoadingIndicator(size: 24)
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.sync),
-              title: const Text('Синк хийх'),
+              title: Text(l10n.syncButton),
               subtitle: syncState.isSyncing
-                  ? const Text('Синхрончлол явагдаж байна...')
+                  ? Text(l10n.syncInProgress)
                   : Text(
                       isOffline
                           ? 'Офлайн — синк хийх боломжгүй'
@@ -114,23 +113,18 @@ class SyncSettingsScreen extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: TamgaSpacing.lg),
+          const SizedBox(height: 16),
 
           // ── Clear Sync Queue ──
-          TamgaCard(
-            padding: EdgeInsets.zero,
+          Card(
             child: ListTile(
-              contentPadding: TamgaSpacing.listCellPadding,
               leading: Icon(
                 Icons.delete_sweep_outlined,
                 color: theme.colorScheme.error,
               ),
               title: Text(
-                'Синк дарааллыг цэвэрлэх',
-                style: TamgaTypography.body(
-                  weight: FontWeight.w600,
-                  color: theme.colorScheme.error,
-                ),
+                l10n.syncSettingsClearData,
+                style: TextStyle(color: theme.colorScheme.error),
               ),
               subtitle: const Text(
                 'Хүлээгдэж буй синк дараалал болон dead letter-уудыг устгана',
@@ -192,7 +186,7 @@ class SyncSettingsScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Цуцлах'),
+            child: Text(AppLocalizations.of(ctx)!.generalCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -248,42 +242,42 @@ class _SyncStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final Color statusColor;
     final IconData statusIcon;
     final String statusText;
     final String? statusSubtitle;
 
     if (isOffline) {
-      statusColor = colors.error;
+      statusColor = theme.colorScheme.error;
       statusIcon = Icons.cloud_off;
       statusText = 'Офлайн';
-      statusSubtitle = 'Сүлжээнд холбогдсон үед синк хийгдэнэ';
+      statusSubtitle = l10n.offlineSaveQueued;
     } else if (syncState.isSyncing) {
-      statusColor = AppColors.warning;
+      statusColor = Colors.amber;
       statusIcon = Icons.sync;
-      statusText = 'Синк хийж байна...';
+      statusText = l10n.syncInProgressButton;
       statusSubtitle = null;
     } else if (syncState.hasError) {
-      statusColor = colors.error;
+      statusColor = theme.colorScheme.error;
       statusIcon = Icons.error_outline;
-      statusText = 'Синк амжилтгүй';
+      statusText = l10n.syncQueueStatusFailed;
       statusSubtitle = syncState.errorMessage;
     } else if (syncState.pendingCount > 0) {
-      statusColor = AppColors.warning;
+      statusColor = Colors.amber;
       statusIcon = Icons.sync_problem;
-      statusText = 'Хүлээгдэж буй синк';
+      statusText = l10n.syncQueueStatusPending;
       statusSubtitle = '${syncState.pendingCount} item синк хүлээгдэж байна';
     } else {
-      statusColor = AppColors.success;
+      statusColor = Colors.green;
       statusIcon = Icons.cloud_done;
-      statusText = 'Синхрончлогдсон';
+      statusText = l10n.syncSynced;
       statusSubtitle = null;
     }
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(TamgaSpacing.lg),
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             Container(
@@ -291,16 +285,16 @@ class _SyncStatusCard extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: statusColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadius),
+                borderRadius: BorderRadius.circular(13),
               ),
               child: syncState.isSyncing
                   ? const Padding(
-                      padding: EdgeInsets.all(TamgaSpacing.sm),
-                      child: LoadingIndicator(size: 22),
+                      padding: EdgeInsets.all(8),
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Icon(statusIcon, color: statusColor, size: 22),
             ),
-            const SizedBox(width: TamgaSpacing.md),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,10 +319,7 @@ class _SyncStatusCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(
-                        'Сүүлд синк хийсэн: ${_formatLastSyncTime(syncState.lastSyncTime!)}',
-                        style: TamgaTypography.caption2(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                        _formatLastSyncTime(l10n, syncState.lastSyncTime!),
                       ),
                     ),
                 ],
@@ -340,13 +331,13 @@ class _SyncStatusCard extends StatelessWidget {
     );
   }
 
-  String _formatLastSyncTime(DateTime lastSyncTime) {
+  String _formatLastSyncTime(AppLocalizations l10n, DateTime lastSyncTime) {
     final now = DateTime.now();
     final diff = now.difference(lastSyncTime);
 
-    if (diff.inMinutes < 1) return 'саяхан';
-    if (diff.inHours < 1) return '${diff.inMinutes} минутын өмнө';
-    if (diff.inDays < 1) return '${diff.inHours} цагийн өмнө';
-    return '${diff.inDays} хоногийн өмнө';
+    if (diff.inMinutes < 1) return l10n.syncLastSynced;
+    if (diff.inHours < 1) return l10n.syncLastSyncedMinutes(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.syncLastSyncedHours(diff.inHours);
+    return l10n.syncLastSyncedDays(diff.inDays);
   }
 }

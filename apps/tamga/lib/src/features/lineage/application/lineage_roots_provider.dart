@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/sync/connection_status.dart';
 import '../../../core/sync/sync_queue.dart';
-import '../../shared/application/sync_providers.dart';
 import '../../shared/data/isar_storage.dart';
 import '../data/lineage_repository.dart';
 import '../data/local_lineage_repository.dart';
@@ -45,17 +44,7 @@ final localLineageRepositoryProvider = Provider<LocalLineageRepository>((ref) {
   return LocalLineageRepository(
     storage: IsarStorage.instance,
     syncQueue: SyncQueue(),
-    syncStorage: ref.watch(isarSyncStorageProvider),
   );
-});
-
-/// Stream of connectivity changes from the app-wide [ConnectionMonitor].
-///
-/// Watched by [lineageRepositoryProvider] so the local/remote switch reacts
-/// to connectivity changes instead of being pinned to the value captured at
-/// first evaluation.
-final connectionStatusProvider = StreamProvider<ConnectionStatus>((ref) {
-  return ConnectionMonitor.instance.status;
 });
 
 /// Provides a [LineageRepository] that switches between local (Isar) and
@@ -66,14 +55,9 @@ final connectionStatusProvider = StreamProvider<ConnectionStatus>((ref) {
 /// - When offline: reads from the local Isar-backed [LocalLineageRepository].
 /// - Mutations always write to local Isar first via [LocalLineageRepository],
 ///   then enqueue sync items that the sync engine processes when online.
-///
-/// Watches [connectionStatusProvider] so switching to local data happens as
-/// soon as connectivity drops — not only on the next app restart.
 final lineageRepositoryProvider = Provider<LineageRepository>((ref) {
-  final status =
-      ref.watch(connectionStatusProvider).valueOrNull ??
-      ConnectionMonitor.instance.current;
-  final isOnline = status == ConnectionStatus.online;
+  final isOnline =
+      ConnectionMonitor.instance.current == ConnectionStatus.online;
 
   if (isOnline) {
     return SupabaseLineageRepository();
@@ -101,17 +85,6 @@ final selectedPedigreeNodeIdProvider = StateProvider<String?>((ref) {
 final lineageRootsProvider = FutureProvider<List<LineageRoot>>((ref) async {
   final repository = ref.watch(lineageRepositoryProvider);
   final result = await repository.fetchRoots();
-
-  // Remote fetch failed while "online" (unconfigured client, transient
-  // network error, Supabase down): fall back to local Isar/seed data so the
-  // tree still renders — the offline-first promise.
-  if (repository is SupabaseLineageRepository && result.isFailure) {
-    final localResult = await ref
-        .read(localLineageRepositoryProvider)
-        .fetchRoots();
-    return localResult.getOrThrow();
-  }
-
   final roots = result.getOrThrow();
 
   // Cache to local Isar when fetching from Supabase (online)
@@ -144,15 +117,6 @@ final lineageSnapshotProvider = FutureProvider<LineageSnapshot>((ref) async {
   final repository = ref.watch(lineageRepositoryProvider);
   final selectedId = ref.watch(selectedLineageRootIdProvider);
   final result = await repository.fetchSnapshot(selectedId);
-
-  // Same remote-failure fallback as [lineageRootsProvider].
-  if (repository is SupabaseLineageRepository && result.isFailure) {
-    final localResult = await ref
-        .read(localLineageRepositoryProvider)
-        .fetchSnapshot(selectedId);
-    return localResult.getOrThrow();
-  }
-
   final snapshot = result.getOrThrow();
 
   // Cache to local Isar when fetching from Supabase (online)

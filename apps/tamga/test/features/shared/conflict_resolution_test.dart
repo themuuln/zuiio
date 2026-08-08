@@ -2,27 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
-import 'package:tamga/src/app/theme/app_theme.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:tamga/src/core/sync/sync_conflict.dart';
 import 'package:tamga/src/core/sync/sync_queue.dart';
+import 'package:tamga/src/core/sync/connection_status.dart';
 import 'package:tamga/src/features/profile/application/cloud_sync_coordinator.dart';
 import 'package:tamga/src/features/shared/application/sync_providers.dart';
-import 'package:tamga/src/features/shared/data/isar_sync_storage.dart';
 import 'package:tamga/src/features/shared/presentation/conflict_resolution_screen.dart';
-import 'package:tamga/src/core/sync/connection_status.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 import 'package:tamga/src/features/horses/data/horses_repository.dart';
 import 'package:tamga/src/features/health/data/health_repository.dart';
 import 'package:tamga/src/features/events/data/event_repository.dart';
 import 'package:tamga/src/features/market/data/market_repository.dart';
 import 'package:tamga/src/features/breeding/data/breeding_repository.dart';
 import 'package:tamga/src/features/profile/data/profile_settings_repository.dart';
+import 'package:tamga/src/features/shared/data/isar_sync_storage.dart';
 import 'package:tamga/src/features/map/data/map_repository.dart';
 import 'package:tamga/src/features/horses/data/co_ownership_repository.dart';
 import 'package:tamga/src/features/documents/data/document_repository.dart';
 import 'package:tamga/src/features/certificates/data/certificate_repository.dart';
 import 'package:tamga/src/features/payments/data/payment_repository.dart';
-
 // ── Mocks ───────────────────────────────────────────────────────────────
 
 class MockHorsesRepository extends Mock implements HorsesRepository {}
@@ -305,11 +304,12 @@ void main() {
           return notifier;
         }),
       ];
-
       return ProviderScope(
         overrides: overrides,
         child: MaterialApp(
-          theme: AppTheme.light(),
+          theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: const ConflictResolutionScreen(),
         ),
       );
@@ -417,7 +417,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap "Keep Remote" button
-      await tester.tap(find.text('Keep Remote'));
+      await tester.tap(find.text('Keep Server'));
       await tester.pumpAndSettle();
 
       // After resolution, conflict count should be 0

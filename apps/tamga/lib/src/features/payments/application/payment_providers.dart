@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/sync/sync_queue.dart';
 import '../../../app/supabase_bootstrap.dart';
-import '../../shared/application/sync_providers.dart';
 import '../../shared/data/isar_storage.dart';
 import '../data/admin_verification.dart';
 import '../data/local_payment_repository.dart';
@@ -20,7 +19,6 @@ final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
   return LocalPaymentRepository(
     storage: IsarStorage.instance,
     syncQueue: SyncQueue(),
-    syncStorage: ref.watch(isarSyncStorageProvider),
   );
 });
 

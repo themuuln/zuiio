@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/error/result.dart';
 import 'package:tamga/src/core/services/local_notification_service.dart';
 import 'package:tamga/src/core/services/notification_types.dart';
@@ -19,6 +19,7 @@ import 'package:tamga/src/features/horses/domain/horse_record.dart';
 import 'package:tamga/src/shared/domain/event.dart';
 import 'package:tamga/src/shared/domain/event_registration.dart';
 import 'package:tamga/src/shared/domain/horse.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Mock classes ─────────────────────────────────────────────────────
 
@@ -194,7 +195,10 @@ ProviderScope _buildEventDetailScreen({
         ),
     ],
     child: MaterialApp(
-      theme: AppTheme.light(),
+      locale: const Locale('mn'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: EventDetailScreen(event: event),
     ),
   );
@@ -474,8 +478,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Content may be off-screen; scroll the detail view to reveal notes.
-      await tester.drag(find.byType(Scrollable).first, const Offset(0, -400));
+      // Content may be off-screen; drag the ListView down to reveal notes.
+      await tester.drag(find.byType(ListView).first, const Offset(0, -400));
       await tester.pumpAndSettle();
 
       expect(find.text('Тэмдэглэл'), findsWidgets);
@@ -640,10 +644,12 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Keep the action visible before tapping it in the scrollable detail view.
+        // Ensure the button is visible in the scrollable viewport
         await tester.ensureVisible(find.text('Сануулах'));
-        await tester.tap(find.text('Сануулах'));
         await tester.pumpAndSettle();
+
+        // Tap the "Сануулах" button
+        await tester.tap(find.text('Сануулах'));
 
         // Verify scheduleNotification was called with correct parameters
         verify(

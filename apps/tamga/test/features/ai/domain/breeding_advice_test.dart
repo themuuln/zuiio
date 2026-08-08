@@ -44,9 +44,9 @@ void main() {
       expect(sampleAdvice.riskScore, 45);
       expect(sampleAdvice.healthNotes, 'Health check notes for this pair.');
       expect(sampleAdvice.coatColorPredictions, [
-        CoatColorPrediction(color: 'Bay', probability: 50),
-        CoatColorPrediction(color: 'Black', probability: 50),
-        CoatColorPrediction(color: 'Chestnut', probability: 50),
+        const CoatColorPrediction(color: 'Bay', probability: 50),
+        const CoatColorPrediction(color: 'Black', probability: 50),
+        const CoatColorPrediction(color: 'Chestnut', probability: 50),
       ]);
       expect(sampleAdvice.breedSuggestions, [
         'Consider line-breeding',
@@ -60,8 +60,8 @@ void main() {
         'riskScore': 25,
         'healthNotes': 'Low risk, good genetic diversity.',
         'coatColorPredictions': [
-          {'color': 'Bay', 'probability': 40},
-          {'color': 'Chestnut', 'probability': 60},
+          {'color': 'Bay', 'probability': 60},
+          {'color': 'Chestnut', 'probability': 40},
         ],
         'breedSuggestions': ['Good match'],
       };
@@ -71,8 +71,8 @@ void main() {
       expect(advice.riskScore, 25);
       expect(advice.healthNotes, 'Low risk, good genetic diversity.');
       expect(advice.coatColorPredictions, [
-        CoatColorPrediction(color: 'Bay', probability: 40),
-        CoatColorPrediction(color: 'Chestnut', probability: 60),
+        const CoatColorPrediction(color: 'Bay', probability: 60),
+        const CoatColorPrediction(color: 'Chestnut', probability: 40),
       ]);
       expect(advice.breedSuggestions, ['Good match']);
     });
@@ -92,6 +92,9 @@ void main() {
       final advice = BreedingAdvice.fromJson(json);
       expect(advice.inbreedingRisk, InbreedingRisk.high);
       expect(advice.riskScore, 85);
+      expect(advice.coatColorPredictions, [
+        const CoatColorPrediction(color: 'Gray', probability: 70),
+      ]);
       expect(advice.quota, isNotNull);
       expect(advice.quota!.tier, 'free');
       expect(advice.quota!.limit, 5);

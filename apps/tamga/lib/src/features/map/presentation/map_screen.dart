@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../../../core/theme/design_tokens.dart';
@@ -36,6 +37,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final currentPos = ref.watch(currentPositionProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     // ── Error listeners: surface errors to user ──
     ref.listen<
@@ -135,38 +137,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             myLocationTrackingMode: MyLocationTrackingMode.tracking,
           ),
 
-          // ── Summary pill ────────────────────────────────────────
-          // At-a-glance state: active lost reports + active geofences.
-          // Red count signals urgency; offline style gets a hint chip.
-          Positioned(
-            left: TamgaSpacing.md,
-            top: MediaQuery.of(context).padding.top + TamgaSpacing.md,
-            child: _MapSummaryPill(
-              lostCount: lostHorsesAsync.valueOrNull?.length ?? 0,
-              geofenceCount: geofencesAsync.valueOrNull?.length ?? 0,
-              usingOfflineStyle:
-                  styleAsync.valueOrNull != null &&
-                  styleAsync.valueOrNull !=
-                      'https://tiles.openfreemap.org/styles/liberty',
-            ),
-          ),
-
           // ── Error overlay ─────────────────────────────────────
           // Shows inline error feedback instead of silently swallowing
           // data failures (VAL-ERR-011).
           if (hasMapDataError)
             Positioned(
               left: TamgaSpacing.md,
-              top: MediaQuery.of(context).padding.top + TamgaSpacing.xxl + 48,
+              top: MediaQuery.of(context).padding.top + TamgaSpacing.md,
               right: TamgaSpacing.md,
               child: Card(
                 color: Theme.of(context).colorScheme.errorContainer,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    TamgaSpacing.cornerRadius,
-                  ),
-                ),
                 child: Padding(
                   padding: const EdgeInsets.all(TamgaSpacing.sm),
                   child: Row(
@@ -244,7 +224,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               foregroundColor: TamgaColors.of(context).onError,
               icon: const Icon(Icons.search_off, size: 20),
               label: Text(
-                'Хаяж морь',
+                l10n.mapLostHorseTitle,
                 style: TamgaTypography.subheadline(
                   color: TamgaColors.of(context).onError,
                   weight: FontWeight.w600,
@@ -411,111 +391,5 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// Convert km radius to circle radius in pixels (approximate).
   double _kmToCircleRadius(double km) {
     return km * 2.0;
-  }
-}
-
-/// Floating at-a-glance summary of what is on the map.
-///
-/// Shows the active lost-report count (red when > 0) and active geofence
-/// count, plus a hint when an offline style is in use. Kept compact so it
-/// never blocks the map itself.
-class _MapSummaryPill extends StatelessWidget {
-  const _MapSummaryPill({
-    required this.lostCount,
-    required this.geofenceCount,
-    required this.usingOfflineStyle,
-  });
-
-  final int lostCount;
-  final int geofenceCount;
-  final bool usingOfflineStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = TamgaColors.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: TamgaSpacing.md,
-        vertical: TamgaSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: colors.surface.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadiusPill),
-        border: Border.all(color: colors.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.12),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (lostCount > 0) ...[
-            _PillDot(color: colors.error),
-            const SizedBox(width: TamgaSpacing.xs),
-            Text(
-              '$lostCount идэвхтэй зар',
-              style: TamgaTypography.footnote(
-                color: colors.error,
-                weight: FontWeight.w700,
-              ),
-            ),
-          ] else ...[
-            _PillDot(color: colors.primary),
-            const SizedBox(width: TamgaSpacing.xs),
-            Text(
-              'Идэвхтэй зар байхгүй',
-              style: TamgaTypography.footnote(
-                color: colors.onSurfaceVariant,
-                weight: FontWeight.w600,
-              ),
-            ),
-          ],
-          if (geofenceCount > 0) ...[
-            const SizedBox(width: TamgaSpacing.md),
-            Icon(Icons.radar_outlined, size: 14, color: colors.tertiary),
-            const SizedBox(width: TamgaSpacing.xs),
-            Text(
-              '$geofenceCount',
-              style: TamgaTypography.footnote(
-                color: colors.onSurfaceVariant,
-                weight: FontWeight.w600,
-              ),
-            ),
-          ],
-          if (usingOfflineStyle) ...[
-            const SizedBox(width: TamgaSpacing.md),
-            Icon(Icons.cloud_off_outlined, size: 14, color: colors.tertiary),
-            const SizedBox(width: TamgaSpacing.xs),
-            Text(
-              'Офлайн',
-              style: TamgaTypography.footnote(
-                color: colors.onSurfaceVariant,
-                weight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _PillDot extends StatelessWidget {
-  const _PillDot({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
   }
 }

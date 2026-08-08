@@ -20,21 +20,46 @@ class PendingInvitationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final invitationsAsync = ref.watch(pendingInvitationsProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Урилгууд')),
       body: invitationsAsync.when(
-        loading: () => const Center(child: LoadingIndicator(size: 28)),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => TamgaErrorWidget(
           message: 'Урилгуудыг ачаалахад алдаа гарлаа: $err',
           onRetry: () => ref.invalidate(pendingInvitationsProvider),
         ),
         data: (invitations) {
           if (invitations.isEmpty) {
-            return EmptyState(
-              icon: Icons.mail_outline,
-              title: 'Шинэ урилга байхгүй',
-              description: 'Танд идэвхтэй урилга байхгүй байна',
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.mail_outline,
+                      size: 64,
+                      color: colorScheme.outlineVariant,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      'Шинэ урилга байхгүй',
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Танд идэвхтэй урилга байхгүй байна',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 

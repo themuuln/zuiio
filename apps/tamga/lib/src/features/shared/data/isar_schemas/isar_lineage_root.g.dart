@@ -13,42 +13,30 @@ extension GetIsarLineageRootCollection on Isar {
   IsarCollection<IsarLineageRoot> get isarLineageRoots => this.collection();
 }
 
-final IsarLineageRootSchema = CollectionSchema(
+const IsarLineageRootSchema = CollectionSchema(
   name: r'IsarLineageRoot',
-  id: int.parse('2817765634246830082'),
+  id: 2817765634246830082,
   properties: {
     r'awardCount': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'awardCount',
       type: IsarType.long,
     ),
     r'birthYear': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'birthYear',
       type: IsarType.long,
     ),
-    r'coat': PropertySchema(
-      id: int.parse('2'),
-      name: r'coat',
-      type: IsarType.string,
-    ),
+    r'coat': PropertySchema(id: 2, name: r'coat', type: IsarType.string),
     r'domainId': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'domainId',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(
-      id: int.parse('4'),
-      name: r'name',
-      type: IsarType.string,
-    ),
-    r'notes': PropertySchema(
-      id: int.parse('5'),
-      name: r'notes',
-      type: IsarType.string,
-    ),
+    r'name': PropertySchema(id: 4, name: r'name', type: IsarType.string),
+    r'notes': PropertySchema(id: 5, name: r'notes', type: IsarType.string),
     r'offspringCount': PropertySchema(
-      id: int.parse('6'),
+      id: 6,
       name: r'offspringCount',
       type: IsarType.long,
     ),
@@ -60,7 +48,7 @@ final IsarLineageRootSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import 'package:tamga/src/app/theme/app_colors.dart';
 import 'package:tamga/src/features/shared/data/pagination/pagination_state.dart';
 import 'package:tamga/src/features/auth/application/auth_providers.dart';
@@ -15,6 +15,7 @@ import 'package:tamga/src/shared/domain/horse.dart';
 import 'package:tamga/src/features/events/presentation/events_screen.dart';
 import 'package:tamga/src/features/events/presentation/add_event_screen.dart';
 import 'package:tamga/src/features/events/presentation/widgets/event_card.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ═══════════════════════════════════════════════════════════════════
 // Test helpers
@@ -203,6 +204,10 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: AddEventScreen(horseId: 'h1', horseName: 'Test'),
           ),
         ),
@@ -224,6 +229,10 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: AddEventScreen(horseId: 'h1', horseName: 'Test'),
           ),
         ),
@@ -258,7 +267,10 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const EventsScreen(),
           ),
         ),
@@ -294,6 +306,10 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: AddEventScreen(horseId: 'h1', horseName: 'Test'),
           ),
         ),
@@ -321,6 +337,10 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: AddEventScreen(horseId: 'h1', horseName: 'Test'),
           ),
         ),
@@ -357,7 +377,10 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const EventsScreen(),
           ),
         ),
@@ -391,6 +414,10 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: AddEventScreen(
               horseId: 'h1',
               horseName: 'Test Horse',
@@ -459,7 +486,10 @@ void main() {
               ),
             ],
             child: MaterialApp(
-              theme: AppTheme.light(),
+              locale: const Locale('mn'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              theme: TamgaDesignSystem.buildThemeData(Brightness.light),
               home: const EventsScreen(),
             ),
           ),
@@ -506,7 +536,10 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const EventsScreen(),
           ),
         ),
@@ -534,7 +567,10 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            locale: const Locale('mn'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const EventsScreen(),
           ),
         ),
@@ -576,7 +612,10 @@ void main() {
               ).overrideWith((ref) async => []),
             ],
             child: MaterialApp(
-              theme: AppTheme.light(),
+              locale: const Locale('mn'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              theme: TamgaDesignSystem.buildThemeData(Brightness.light),
               initialRoute: '/',
               routes: {
                 '/': (ctx) => Scaffold(
@@ -623,7 +662,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.light(),
+          theme: TamgaDesignSystem.buildThemeData(Brightness.light),
           home: Scaffold(
             body: SingleChildScrollView(
               child: EventCard(event: event, onTap: () => wasTapped = true),
@@ -663,7 +702,10 @@ class _FakeAuthStateNotifier extends AuthStateNotifier {
 /// Wraps an EventCard in MaterialApp + Scaffold for widget testing.
 Widget _buildEventCard(Event event) {
   return MaterialApp(
-    theme: AppTheme.light(),
+    locale: const Locale('mn'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    theme: TamgaDesignSystem.buildThemeData(Brightness.light),
     home: Scaffold(
       body: SingleChildScrollView(
         child: EventCard(event: event, onTap: () {}),

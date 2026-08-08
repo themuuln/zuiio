@@ -16,9 +16,6 @@ class TamgaCard extends StatelessWidget {
     this.border,
     this.onTap,
     this.borderRadius,
-    this.showTopAccent = false,
-    this.accentColor,
-    this.accentHeight = 3,
   });
 
   final Widget child;
@@ -29,37 +26,17 @@ class TamgaCard extends StatelessWidget {
   final VoidCallback? onTap;
   final double? borderRadius;
 
-  /// If true, renders a thin brand-colored border at the top of the card.
-  /// Gives cards a distinctive visual anchor — use sparingly on hero/first cards.
-  final bool showTopAccent;
-
-  /// Color of the top accent border. Defaults to [TamgaColors.primary].
-  final Color? accentColor;
-
-  /// Height of the top accent border. Defaults to 3dp.
-  final double accentHeight;
-
   @override
   Widget build(BuildContext context) {
     final colors = TamgaColors.of(context);
     final radius = borderRadius ?? TamgaSpacing.cornerRadius;
-
-    final effectiveBorder = showTopAccent
-        ? (border ??
-              Border(
-                top: BorderSide(
-                  color: accentColor ?? colors.primary,
-                  width: accentHeight,
-                ),
-              ))
-        : border;
 
     Widget card = Container(
       margin: margin,
       decoration: BoxDecoration(
         color: color ?? colors.surface,
         borderRadius: BorderRadius.circular(radius),
-        border: effectiveBorder,
+        border: border,
       ),
       clipBehavior: Clip.antiAlias,
       child: Padding(

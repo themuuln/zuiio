@@ -14,56 +14,44 @@ extension GetIsarServiceProviderCollection on Isar {
       this.collection();
 }
 
-final IsarServiceProviderSchema = CollectionSchema(
+const IsarServiceProviderSchema = CollectionSchema(
   name: r'IsarServiceProvider',
-  id: int.parse('203366758289002905'),
+  id: 203366758289002905,
   properties: {
     r'businessName': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'businessName',
       type: IsarType.string,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'isVerified': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'isVerified',
       type: IsarType.bool,
     ),
     r'locationAimag': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'locationAimag',
       type: IsarType.string,
     ),
     r'locationSum': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'locationSum',
       type: IsarType.string,
     ),
-    r'phone': PropertySchema(
-      id: int.parse('5'),
-      name: r'phone',
-      type: IsarType.string,
-    ),
+    r'phone': PropertySchema(id: 5, name: r'phone', type: IsarType.string),
     r'providerType': PropertySchema(
-      id: int.parse('6'),
+      id: 6,
       name: r'providerType',
       type: IsarType.byte,
       enumMap: _IsarServiceProviderproviderTypeEnumValueMap,
     ),
-    r'rating': PropertySchema(
-      id: int.parse('7'),
-      name: r'rating',
-      type: IsarType.double,
-    ),
-    r'userId': PropertySchema(
-      id: int.parse('8'),
-      name: r'userId',
-      type: IsarType.string,
-    ),
+    r'rating': PropertySchema(id: 7, name: r'rating', type: IsarType.double),
+    r'userId': PropertySchema(id: 8, name: r'userId', type: IsarType.string),
   },
   estimateSize: _isarServiceProviderEstimateSize,
   serialize: _isarServiceProviderSerialize,
@@ -72,7 +60,7 @@ final IsarServiceProviderSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -85,7 +73,7 @@ final IsarServiceProviderSchema = CollectionSchema(
       ],
     ),
     r'userId': IndexSchema(
-      id: int.parse('-2005826577402374815'),
+      id: -2005826577402374815,
       name: r'userId',
       unique: false,
       replace: false,

@@ -45,5 +45,5 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Add missing geofence_alerts DELETE policy
 CREATE POLICY "Geofence alerts delete by owner" ON geofence_alerts
   FOR DELETE USING (
-    geofence_id IN (SELECT id FROM search_areas WHERE created_by = auth.uid())
+    geofence_id IN (SELECT id FROM search_areas WHERE owner_id = auth.uid())
   );

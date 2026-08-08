@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/error/app_exception.dart';
 import 'package:tamga/src/core/error/result.dart';
 import 'package:tamga/src/core/widgets/widgets.dart';
@@ -16,6 +15,7 @@ import 'package:tamga/src/features/ai/presentation/breeding_advice_screen.dart';
 import 'package:tamga/src/features/horses/application/horses_providers.dart';
 import 'package:tamga/src/features/payments/domain/payment_request.dart';
 import 'package:tamga/src/shared/domain/horse.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Mocks ───────────────────────────────────────────────────────────────
 
@@ -94,19 +94,6 @@ BreedingAdvice createMockAdvice({
   );
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────
-
-/// Bounded settle: waits for animations with an explicit timeout so a stuck
-/// animation (e.g. an indeterminate spinner left on screen by a delayed
-/// async step) fails fast instead of hanging the test.
-Future<void> settle(WidgetTester tester) {
-  return tester.pumpAndSettle(
-    const Duration(milliseconds: 100),
-    EnginePhase.sendSemanticsUpdate,
-    const Duration(seconds: 5),
-  );
-}
-
 // ── Helper: select dropdown item ───────────────────────────────────────
 
 Future<void> selectDropdownItem(
@@ -117,9 +104,9 @@ Future<void> selectDropdownItem(
   await tester.tap(
     find.byType(DropdownButtonFormField<String>).at(dropdownIndex),
   );
-  await settle(tester);
+  await tester.pumpAndSettle();
   await tester.tap(find.text(itemText).last);
-  await settle(tester);
+  await tester.pumpAndSettle();
 }
 
 // ── Widget Builder ──────────────────────────────────────────────────────
@@ -143,7 +130,7 @@ Widget createBreedingAdviceScreen({
         breedingQuotaProvider.overrideWith((ref) async => quotaOverride),
     ],
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: const BreedingAdviceScreen(),
     ),
   );
@@ -173,7 +160,7 @@ void main() {
             aiRepositoryProvider.overrideWith((ref) => mockRepository),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const BreedingAdviceScreen(),
           ),
         ),
@@ -332,14 +319,7 @@ void main() {
 
       // Tap analyze
       await tester.tap(find.text('Анализ хийх'));
-
-      // Deterministic wait: the quota and advice futures both complete on
-      // microtasks, so drain them with explicit pumps, then settle with a
-      // bounded timeout (the loading overlay shows an indeterminate spinner,
-      // so an unbounded settle could hang if the chain ever stalls).
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 50));
-      await settle(tester);
+      await tester.pumpAndSettle();
 
       // Verify results are displayed
       verify(

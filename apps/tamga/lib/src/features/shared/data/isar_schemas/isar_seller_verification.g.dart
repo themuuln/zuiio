@@ -14,32 +14,28 @@ extension GetIsarSellerPhoneVerificationCollection on Isar {
   get isarSellerPhoneVerifications => this.collection();
 }
 
-final IsarSellerPhoneVerificationSchema = CollectionSchema(
+const IsarSellerPhoneVerificationSchema = CollectionSchema(
   name: r'IsarSellerPhoneVerification',
-  id: int.parse('9183017056121775790'),
+  id: 9183017056121775790,
   properties: {
     r'domainId': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'isVerified': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'isVerified',
       type: IsarType.bool,
     ),
-    r'phone': PropertySchema(
-      id: int.parse('2'),
-      name: r'phone',
-      type: IsarType.string,
-    ),
+    r'phone': PropertySchema(id: 2, name: r'phone', type: IsarType.string),
     r'sellerId': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'sellerId',
       type: IsarType.string,
     ),
     r'verifiedAt': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'verifiedAt',
       type: IsarType.dateTime,
     ),
@@ -51,7 +47,7 @@ final IsarSellerPhoneVerificationSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -1519,52 +1515,52 @@ extension GetIsarEMongoliaVerificationCollection on Isar {
       this.collection();
 }
 
-final IsarEMongoliaVerificationSchema = CollectionSchema(
+const IsarEMongoliaVerificationSchema = CollectionSchema(
   name: r'IsarEMongoliaVerification',
-  id: int.parse('-3804368658895489013'),
+  id: -3804368658895489013,
   properties: {
     r'documentUrls': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'documentUrls',
       type: IsarType.stringList,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'eMongoliaId': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'eMongoliaId',
       type: IsarType.string,
     ),
     r'errorMessage': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'errorMessage',
       type: IsarType.string,
     ),
     r'fullName': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'fullName',
       type: IsarType.string,
     ),
     r'isVerified': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'isVerified',
       type: IsarType.bool,
     ),
     r'sellerId': PropertySchema(
-      id: int.parse('6'),
+      id: 6,
       name: r'sellerId',
       type: IsarType.string,
     ),
     r'submittedAt': PropertySchema(
-      id: int.parse('7'),
+      id: 7,
       name: r'submittedAt',
       type: IsarType.dateTime,
     ),
     r'verifiedAt': PropertySchema(
-      id: int.parse('8'),
+      id: 8,
       name: r'verifiedAt',
       type: IsarType.dateTime,
     ),
@@ -1576,7 +1572,7 @@ final IsarEMongoliaVerificationSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,

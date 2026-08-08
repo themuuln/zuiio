@@ -13,47 +13,39 @@ extension GetIsarMarketMessageCollection on Isar {
   IsarCollection<IsarMarketMessage> get isarMarketMessages => this.collection();
 }
 
-final IsarMarketMessageSchema = CollectionSchema(
+const IsarMarketMessageSchema = CollectionSchema(
   name: r'IsarMarketMessage',
-  id: int.parse('-6525004917822622503'),
+  id: -6525004917822622503,
   properties: {
     r'conversationId': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'conversationId',
       type: IsarType.string,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'listingId': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'listingId',
       type: IsarType.string,
     ),
-    r'read': PropertySchema(
-      id: int.parse('3'),
-      name: r'read',
-      type: IsarType.bool,
-    ),
+    r'read': PropertySchema(id: 3, name: r'read', type: IsarType.bool),
     r'reportId': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'reportId',
       type: IsarType.string,
     ),
     r'senderId': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'senderId',
       type: IsarType.string,
     ),
-    r'text': PropertySchema(
-      id: int.parse('6'),
-      name: r'text',
-      type: IsarType.string,
-    ),
+    r'text': PropertySchema(id: 6, name: r'text', type: IsarType.string),
     r'timestamp': PropertySchema(
-      id: int.parse('7'),
+      id: 7,
       name: r'timestamp',
       type: IsarType.dateTime,
     ),
@@ -65,7 +57,7 @@ final IsarMarketMessageSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -78,7 +70,7 @@ final IsarMarketMessageSchema = CollectionSchema(
       ],
     ),
     r'conversationId': IndexSchema(
-      id: int.parse('2945908346256754300'),
+      id: 2945908346256754300,
       name: r'conversationId',
       unique: false,
       replace: false,
@@ -91,7 +83,7 @@ final IsarMarketMessageSchema = CollectionSchema(
       ],
     ),
     r'senderId': IndexSchema(
-      id: int.parse('-1619654757968658561'),
+      id: -1619654757968658561,
       name: r'senderId',
       unique: false,
       replace: false,
@@ -104,7 +96,7 @@ final IsarMarketMessageSchema = CollectionSchema(
       ],
     ),
     r'timestamp': IndexSchema(
-      id: int.parse('1852253767416892198'),
+      id: 1852253767416892198,
       name: r'timestamp',
       unique: false,
       replace: false,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 import '../theme/design_tokens.dart';
 
 /// iOS-style search bar with rounded rectangle, magnifying glass icon, and clear button.
@@ -14,26 +15,26 @@ class TamgaSearchBar extends StatelessWidget {
   const TamgaSearchBar({
     super.key,
     this.controller,
-    this.hintText = 'Хайх...',
+    this.hintText,
     this.onChanged,
     this.onSubmitted,
     this.autofocus = false,
     this.enabled = true,
   });
-
   final TextEditingController? controller;
-  final String hintText;
+  final String? hintText;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final bool autofocus;
   final bool enabled;
-
   @override
   Widget build(BuildContext context) {
     final colors = TamgaColors.of(context);
+    final effectiveHint =
+        hintText ?? AppLocalizations.of(context)!.searchBarHint;
 
     return Semantics(
-      label: hintText,
+      label: effectiveHint,
       textField: true,
       child: Container(
         height: 40,
@@ -49,7 +50,7 @@ class TamgaSearchBar extends StatelessWidget {
           enabled: enabled,
           style: TamgaTypography.body(color: colors.onSurface),
           decoration: InputDecoration(
-            hintText: hintText,
+            hintText: effectiveHint,
             hintStyle: TamgaTypography.body(color: colors.onSurfaceVariant),
             prefixIcon: Icon(
               Icons.search,

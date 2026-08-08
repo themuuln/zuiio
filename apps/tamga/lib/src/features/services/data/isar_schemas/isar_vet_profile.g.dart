@@ -13,52 +13,52 @@ extension GetIsarVetProfileCollection on Isar {
   IsarCollection<IsarVetProfile> get isarVetProfiles => this.collection();
 }
 
-final IsarVetProfileSchema = CollectionSchema(
+const IsarVetProfileSchema = CollectionSchema(
   name: r'IsarVetProfile',
-  id: int.parse('5566058682065015217'),
+  id: 5566058682065015217,
   properties: {
     r'availableDays': PropertySchema(
-      id: int.parse('0'),
+      id: 0,
       name: r'availableDays',
       type: IsarType.stringList,
     ),
     r'consultationFee': PropertySchema(
-      id: int.parse('1'),
+      id: 1,
       name: r'consultationFee',
       type: IsarType.long,
     ),
     r'domainId': PropertySchema(
-      id: int.parse('2'),
+      id: 2,
       name: r'domainId',
       type: IsarType.string,
     ),
     r'education': PropertySchema(
-      id: int.parse('3'),
+      id: 3,
       name: r'education',
       type: IsarType.string,
     ),
     r'experienceYears': PropertySchema(
-      id: int.parse('4'),
+      id: 4,
       name: r'experienceYears',
       type: IsarType.long,
     ),
     r'licenseNumber': PropertySchema(
-      id: int.parse('5'),
+      id: 5,
       name: r'licenseNumber',
       type: IsarType.string,
     ),
     r'providerId': PropertySchema(
-      id: int.parse('6'),
+      id: 6,
       name: r'providerId',
       type: IsarType.string,
     ),
     r'specialization': PropertySchema(
-      id: int.parse('7'),
+      id: 7,
       name: r'specialization',
       type: IsarType.stringList,
     ),
     r'travelSurcharge': PropertySchema(
-      id: int.parse('8'),
+      id: 8,
       name: r'travelSurcharge',
       type: IsarType.long,
     ),
@@ -70,7 +70,7 @@ final IsarVetProfileSchema = CollectionSchema(
   idName: r'id',
   indexes: {
     r'domainId': IndexSchema(
-      id: int.parse('-9138809277110658179'),
+      id: -9138809277110658179,
       name: r'domainId',
       unique: true,
       replace: true,
@@ -83,7 +83,7 @@ final IsarVetProfileSchema = CollectionSchema(
       ],
     ),
     r'providerId': IndexSchema(
-      id: int.parse('-1675978104265523206'),
+      id: -1675978104265523206,
       name: r'providerId',
       unique: false,
       replace: false,

@@ -61,12 +61,23 @@ Use `Result` type from `lib/src/core/error/result.dart` with `AppException`. No 
 - No commented-out code (git remembers)
 - **Bilingual UI text** (Mongolian + English) — domain requirement, not optional
 
+## Commands
 
+```bash
+flutter run                                                        # Dev server
+flutter build apk                                                  # Build APK
+flutter test                                                       # All tests
+flutter test test/features/horses/                                 # Feature-specific
+dart analyze --fatal-infos                                          # Lint (strict)
+dart format --set-exit-if-changed .                                # Format check
+dart run build_runner build --delete-conflicting-outputs           # Isar schema gen (required after model changes)
+make check                                                         # Full gate: format-check + analyze + test
+make setup-hooks                                                   # Install pre-commit hooks
+```
 
-## Commands, Testing & Tooling
+Pre-commit hooks run on every commit via `.githooks`: `dart format --check` → `dart analyze --fatal-infos` → `flutter test` on changed files.
 
-- **Every new feature MUST ship automated tests** — see the 4-layer test contract in `docs/agent-reference.md` (this is a gate, not a suggestion).
-- Commands, local Supabase setup, Marionette (AI UI testing), and Maestro (black-box regression) references live in `docs/agent-reference.md` — load when relevant.
+Flutter version pinned via `subosito/flutter-action` using `flutter-version-file: pubspec.yaml`.
 
 ## Permission Boundaries
 
@@ -103,14 +114,146 @@ Deeper docs in `docs/` — load only when relevant:
 - `docs/features/` — per-feature deep dives (business rules, user flows)
 - `docs/design.md` — brand and visual direction
 - `docs/product.md` — product vision and roadmap
-- `test/README.md` — test guide: conventions, mocks, Isar setup, integration tests, Maestro flows
-
-**Testing skills** (load before writing tests):
-- `skill://tamga-riverpod-testing` — Tamga Riverpod test conventions (ProviderContainer / ProviderScope / mocktail)
-- `skill://dart-add-unit-test`, `skill://flutter-add-widget-test`, `skill://flutter-add-integration-test` — official Flutter testing skills (project-level in `.agents/skills/`)
 
 **Package APIs change across versions. Always use current docs, never training data.**
 
+## AI-Assisted UI Testing — Marionette
+
+The app has [Marionette](https://pub.dev/packages/marionette_flutter) wired in for AI-driven UI testing. `MarionetteBinding` is initialized in debug mode (skipped under `flutter test`) with:
+- `isInteractiveWidget` recognizing shadcn `Button` as interactive
+- `PrintLogCollector` capturing app logs via a `debugPrint` tee
+
+### OMP Setup — MCP Server
+
+The marionette MCP server is registered in `apps/tamga/.omp/mcp.json` (project-level config):
+```json
+"marionette": {
+  "type": "stdio",
+  "command": "/Users/themuuln/.pub-cache/bin/marionette_mcp",
+  "args": [],
+  "env": {}
+}
+```
+
+This gives the AI agent tools to inspect and interact with the running Flutter app — tap, scroll, type, screenshot, get-logs.
+
+> `~/.pub-cache/bin` MUST be on `$PATH` for the `marionette` and `marionette_mcp` binaries.
+> This is already set in `~/.zshrc` (line 308), but may need adding in other shells.
+
+### CLI Usage (for scripts and manual testing)
+
+```bash
+marionette register <name> <ws_uri>          # Register an app instance
+marionette get-interactive-elements -i <name>  # List UI elements
+marionette tap -i <name> --text "Текст"        # Tap by visible text
+marionette tap -i <name> --type Button         # Tap by widget type
+marionette enter-text -i <name> --text "ввод" --focused-element  # Type into focused field
+marionette scroll-to -i <name> --text "Текст"  # Scroll until text visible
+marionette take-screenshots -i <name> --output /tmp/shot.png
+marionette get-logs -i <name>                  # Retrieve app logs
+marionette press-back-button -i <name>         # Navigate back
+marionette hot-reload -i <name>                # Hot reload
+```
+
+### Automated Smoke Test
+
+Run the smoke test against a running debug build:
+
+```bash
+make marionette-smoke uri=ws://127.0.0.1:XXXXX/XX/ws
+```
+
+Or use the script directly:
+```bash
+scripts/marionette-smoke.sh -u ws://127.0.0.1:XXXXX/XX/ws
+```
+
+The smoke test:
+1. Registers the app instance
+2. Calls `get-interactive-elements` — fails if < 3 elements
+3. Taps the onboarding "Үргэлжлүүлэх" FilledButton — fails if no tap target
+4. Verifies navigation to the role selection screen (checks for "Таны үргэлжлүүлэх" title)
+5. Captures a log snapshot
+6. Unregisters the instance
+
+### Workflow — Zero-touch (Agent manages everything)
+
+**Best for agent-driven testing.** Just tell the agent what to test:
+
+> "Run the app and test the onboarding flow"
+
+The agent internally:
+1. Starts `flutter run` via `hub start` with `ready.log: "ws://"`
+2. Waits for the VM service URI to appear in the output
+3. Extracts the `ws://.../ws` URI
+4. Registers with marionette: `marionette register tamga <uri>`
+5. Lists elements, taps, scrolls, screenshots — whatever you asked
+6. Stops `flutter run` when done
+
+No terminal windows, no commands, no URI copying. One sentence.
+
+### Workflow — One-command (User runs, agent discovers)
+
+If you prefer running the app yourself, `make marionette-run` wraps
+`flutter run` and auto-registers for agent discovery:
+
+```bash
+make marionette-run    # Foreground, interactive (hot reload works)
+```
+
+Then tell the agent:
+> "Test the app — list elements, tap Удам угшил, check the lineage screen"
+
+### Workflow — Manual (just flutter run)
+
+```bash
+flutter run    # Copy the URI from output
+```
+
+Tell the agent:
+> "Connect to marionette at ws://127.0.0.1:56207/TjyRME2F608=/ws, list elements..."
+
+### Creating Regression Tests
+
+For permanent smoke tests, add Maestro `.yaml` flows under `test/maestro/` (if the Flutter app is being tested on device) or extend `scripts/marionette-smoke.sh` with app-specific navigation flows.
+
+## Maestro — Black-Box UI Regression Testing
+
+[Maestro](https://maestro.dev) provides system-level, cross-platform UI testing that works against the compiled app (no code changes needed). It interacts via the **OS accessibility/semantics layer**, so it tests what the user actually sees and touches.
+
+### Key Features
+
+- **Zero app deps** — no pubspec changes, tests the compiled APK/IPA
+- **Cross-platform** — same YAML flows run on iOS, Android, Web
+- **Semantics-based** — finds elements by visible text, accessibility IDs, position
+- **Auto-waits** — built-in retries and animation waits reduce flakiness
+- **Maestro Cloud** — run tests in parallel on real device farms
+- **Studio** — visually author and debug flows
+
+### Test Flows
+
+Flows live in `test/maestro/`:
+
+| Flow | File | What it tests |
+|------|------|------|
+| Smoke | `smoke.yaml` | App launches, title/cards/social proof visible |
+| Onboarding | `onboarding.yaml` | Full flow: landing → role selection → option visibility |
+
+### Usage
+
+```bash
+# Run smoke test on the default available device
+make maestro-smoke
+
+# Run on a specific simulator device
+make maestro-smoke device="iPhone-17"
+
+# Run the onboarding flow test
+make maestro-onboarding device="iPhone-17"
+
+# Full gate: format + analyze + test + Maestro smoke + onboarding
+make maestro-check device="iPhone-17"
+```
 
 ### Flutter Semantics Note
 
@@ -147,9 +290,7 @@ Then target them in flows:
 
 | Tool | Role | When |
 |------|------|------|
-| **Unit/Widget tests** (`flutter test`) | Logic + component regression | Every feature, every PR — `make check` |
-| **Integration tests** (`integration_test/`) | Real app tree on device | Critical flows, `make integration-test` |
-| **Marionette** | AI-agent exploration & debug | During dev, ad-hoc smoke tests, discovering semantics for flows |
-| **Maestro** | Deterministic black-box UI gate | CI/CD, every PR, release verification |
+| **Marionette** | AI-agent exploration & debug | During dev, ad-hoc smoke tests |
+| **Maestro** | Deterministic regression gate | CI/CD, every PR, release verification |
 
-Use Marionette to explore and debug. Use Maestro to guarantee nothing regresses. Use `flutter test` for everything below the UI layer.
+Use Marionette to explore and debug. Use Maestro to guarantee nothing regresses.

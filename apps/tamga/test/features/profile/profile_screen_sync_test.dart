@@ -13,8 +13,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 import 'package:tamga/src/core/error/app_exception.dart';
 import 'package:tamga/src/core/error/result.dart';
 import 'package:tamga/src/features/auth/application/auth_providers.dart';
@@ -28,6 +30,13 @@ import 'package:tamga/src/features/profile/presentation/profile_screen.dart';
 import 'package:tamga/src/features/shared/application/sync_providers.dart';
 import 'package:tamga/src/features/shared/presentation/sync_indicator.dart';
 import 'package:tamga/src/shared/domain/event.dart';
+
+class _Placeholder extends StatelessWidget {
+  const _Placeholder(this.label);
+  final String label;
+  @override
+  Widget build(BuildContext context) => Scaffold(body: Text(label));
+}
 
 // ── Helper: set a large viewport to prevent RenderFlex overflow ────
 // The sync status section adds extra vertical space to the header,
@@ -154,7 +163,26 @@ Future<SyncStateNotifier> pumpProfileScreen({
         horsesProvider.overrideWith((ref) => <HorseRecord>[]),
         eventsProvider.overrideWith((ref) => <Event>[]),
       ],
-      child: MaterialApp(theme: AppTheme.light(), home: const ProfileScreen()),
+      child: MaterialApp.router(
+        theme: TamgaDesignSystem.buildThemeData(Brightness.light),
+        locale: const Locale('mn'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: GoRouter(
+          initialLocation: '/test',
+          routes: [
+            GoRoute(path: '/test', builder: (_, _) => const ProfileScreen()),
+            GoRoute(
+              path: '/login',
+              builder: (_, _) => const _Placeholder('Login'),
+            ),
+            GoRoute(
+              path: '/lineage',
+              builder: (_, _) => const _Placeholder('Lineage'),
+            ),
+          ],
+        ),
+      ),
     ),
   );
 

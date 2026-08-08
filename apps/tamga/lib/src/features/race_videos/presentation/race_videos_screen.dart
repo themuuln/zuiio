@@ -2,9 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/theme/app_spacing.dart';
 import '../../../core/constants/race_categories.dart';
-import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../application/race_videos_providers.dart';
 import '../domain/race_video.dart';
@@ -23,50 +21,40 @@ class _RaceVideosScreenState extends ConsumerState<RaceVideosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // ── Command header ──
-          TamgaSliverHeader(
-            title: 'Уралдааны бичлэгүүд',
-            subtitle: 'Тэмцээний бичлэгийн зах зээл',
-            pinned: true,
-            actions: [
-              IconButton(
-                onPressed: _showUploadSheet,
-                icon: const Icon(Icons.upload_outlined),
-                tooltip: 'Бичлэг нэмэх',
-              ),
-            ],
+      appBar: AppBar(
+        title: const Text('Уралдааны бичлэгүүд'),
+        actions: [
+          IconButton(
+            onPressed: _showUploadSheet,
+            icon: const Icon(Icons.upload_outlined),
+            tooltip: 'Бичлэг нэмэх',
           ),
-
+        ],
+      ),
+      body: Column(
+        children: [
           // ── Ангиллын шүүлтүүр ──────────────────────────────────
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 56,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.sm,
-                ),
-                itemCount: kRaceCategories.length,
-                separatorBuilder: (_, index) =>
-                    const SizedBox(width: AppSpacing.sm),
-                itemBuilder: (context, i) {
-                  final cat = kRaceCategories[i];
-                  final selected = cat == _selectedCategory;
-                  return TamgaChoicePill(
-                    label: cat,
-                    selected: selected,
-                    onTap: () => setState(() => _selectedCategory = cat),
-                  );
-                },
-              ),
+          SizedBox(
+            height: 44,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              itemCount: kRaceCategories.length,
+              separatorBuilder: (_, index) => const SizedBox(width: 8),
+              itemBuilder: (context, i) {
+                final cat = kRaceCategories[i];
+                final selected = cat == _selectedCategory;
+                return FilterChip(
+                  label: Text(cat),
+                  selected: selected,
+                  onSelected: (_) => setState(() => _selectedCategory = cat),
+                );
+              },
             ),
           ),
 
           // ── Видео жагсаалт ─────────────────────────────────────
-          _VideoFeedSliver(category: _selectedCategory),
+          Expanded(child: _VideoFeedList(category: _selectedCategory)),
         ],
       ),
     );
@@ -82,10 +70,10 @@ class _RaceVideosScreenState extends ConsumerState<RaceVideosScreen> {
   }
 }
 
-// ── Feed sliver ──────────────────────────────────────────────────────────────
+// ── Feed list ───────────────────────────────────────────────────────────────
 
-class _VideoFeedSliver extends ConsumerWidget {
-  const _VideoFeedSliver({required this.category});
+class _VideoFeedList extends ConsumerWidget {
+  const _VideoFeedList({required this.category});
 
   final String category;
 
@@ -94,48 +82,27 @@ class _VideoFeedSliver extends ConsumerWidget {
     final videosAsync = ref.watch(raceVideosProvider(category));
 
     return videosAsync.when(
-      loading: () => SliverPadding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
-        ),
-        sliver: SliverList.separated(
-          itemCount: 4,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-          itemBuilder: (_, i) => const SkeletonCardTile(),
-        ),
+      loading: () => SkeletonLoader(
+        items: 4,
+        itemBuilder: (ctx, i) => const SkeletonCardTile(),
       ),
-      error: (err, _) => SliverFillRemaining(
-        hasScrollBody: false,
-        child: TamgaErrorWidget(
-          message: 'Уралдааны бичлэг ачаалахад алдаа гарлаа',
-          onRetry: () => ref.invalidate(raceVideosProvider(category)),
-        ),
+      error: (err, _) => TamgaErrorWidget(
+        message: 'Уралдааны бичлэг ачаалахад алдаа гарлаа',
+        onRetry: () => ref.invalidate(raceVideosProvider(category)),
       ),
       data: (videos) {
         if (videos.isEmpty) {
-          return const SliverFillRemaining(
-            hasScrollBody: false,
-            child: EmptyState(
-              icon: Icons.videocam_off_outlined,
-              title: 'Бичлэг байхгүй',
-              description:
-                  'Энэ ангилалд бичлэг олдсонгүй. Дээрх товчоор бичлэг нэмэх боломжтой.',
-            ),
+          return const EmptyState(
+            icon: Icons.videocam_off_outlined,
+            title: 'Бичлэг байхгүй',
+            description:
+                'Энэ ангилалд бичлэг олдсонгүй. Дээрх товчоор бичлэг нэмэх боломжтой.',
           );
         }
-        return SliverPadding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.sm,
-            AppSpacing.lg,
-            AppSpacing.xxl * 2,
-          ),
-          sliver: SliverList.separated(
-            itemCount: videos.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-            itemBuilder: (context, i) => _VideoCard(video: videos[i]),
-          ),
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: videos.length,
+          itemBuilder: (context, i) => _VideoCard(video: videos[i]),
         );
       },
     );
@@ -152,9 +119,9 @@ class _VideoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return TamgaCard(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: EdgeInsets.zero,
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.hardEdge,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -179,31 +146,41 @@ class _VideoCard extends StatelessWidget {
                 ),
                 // Preview play button
                 Center(
-                  child: Semantics(
-                    label: 'Бичлэг үзэх',
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        shape: BoxShape.circle,
-                      ),
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: const Icon(
-                        Icons.play_arrow,
-                        color: Colors.white,
-                        size: 32,
-                      ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: const Icon(
+                      Icons.play_arrow,
+                      color: Colors.white,
+                      size: 32,
                     ),
                   ),
                 ),
                 // Free badge
                 if (video.price3day == 0)
-                  const Positioned(
-                    top: AppSpacing.sm,
-                    left: AppSpacing.sm,
-                    child: TamgaBadge(
-                      label: 'Үнэгүй',
-                      variant: TamgaBadgeVariant.success,
-                      icon: Icons.check_circle_outline,
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Үнэгүй',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
               ],
@@ -212,41 +189,55 @@ class _VideoCard extends StatelessWidget {
 
           // ── Metadata ──
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   video.title,
-                  style: TamgaTypography.body(weight: FontWeight.w600),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Wrap(
-                  spacing: AppSpacing.md,
-                  runSpacing: AppSpacing.xs,
+                const SizedBox(height: 4),
+                Row(
                   children: [
-                    if (video.category != null)
-                      _MetaLabel(
-                        icon: Icons.sports,
-                        text: video.category!,
-                        theme: theme,
+                    if (video.category != null) ...[
+                      Icon(
+                        Icons.sports,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                    if (video.locationAimag != null)
-                      _MetaLabel(
-                        icon: Icons.location_on_outlined,
-                        text: video.locationAimag!,
-                        theme: theme,
+                      const SizedBox(width: 4),
+                      Text(video.category!, style: theme.textTheme.bodySmall),
+                      const SizedBox(width: 12),
+                    ],
+                    if (video.locationAimag != null) ...[
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                    _MetaLabel(
-                      icon: Icons.visibility_outlined,
-                      text: '${video.viewCount}',
-                      theme: theme,
+                      const SizedBox(width: 4),
+                      Text(
+                        video.locationAimag!,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Icon(
+                      Icons.visibility_outlined,
+                      size: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${video.viewCount}',
+                      style: theme.textTheme.bodySmall,
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -254,18 +245,20 @@ class _VideoCard extends StatelessWidget {
                       video.price3day == 0
                           ? 'Үнэгүй'
                           : '₮${video.price3day} / 3 хоног',
-                      style: TamgaTypography.footnote(
-                        weight: FontWeight.w600,
+                      style: theme.textTheme.labelMedium?.copyWith(
                         color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     FilledButton.tonal(
                       onPressed: () => _onBuyTap(context, video),
                       style: FilledButton.styleFrom(
-                        minimumSize: const Size(76, 44),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
+                          horizontal: 12,
+                          vertical: 6,
                         ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: const Text('Үзэх'),
                     ),
@@ -287,40 +280,6 @@ class _VideoCard extends StatelessWidget {
   }
 }
 
-// ── Metadata label ───────────────────────────────────────────────────────────
-
-class _MetaLabel extends StatelessWidget {
-  const _MetaLabel({
-    required this.icon,
-    required this.text,
-    required this.theme,
-  });
-
-  final IconData icon;
-  final String text;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: text,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: theme.textTheme.bodySmall,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Access pass purchase sheet ──────────────────────────────────────────────
 
 class _AccessPassSheet extends StatelessWidget {
@@ -332,28 +291,25 @@ class _AccessPassSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.xxl,
-        AppSpacing.lg,
-        AppSpacing.xxxl,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             video.title,
-            style: TamgaTypography.title3(weight: FontWeight.w600),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: 4),
           Text(
             'Хандалтын төрлийг сонгоно уу',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: 16),
           _PassTile(
             label: '3 хоног',
             price: video.price3day,
@@ -361,7 +317,7 @@ class _AccessPassSheet extends StatelessWidget {
             icon: Icons.timelapse,
             onTap: () => Navigator.pop(context),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: 8),
           _PassTile(
             label: '1 жил',
             price: video.price1year,
@@ -370,7 +326,7 @@ class _AccessPassSheet extends StatelessWidget {
             highlighted: true,
             onTap: () => Navigator.pop(context),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: 8),
           _PassTile(
             label: 'Бүрмөсөн',
             price: video.priceLifetime,
@@ -404,9 +360,8 @@ class _PassTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return TamgaCard(
+    return Card(
       color: highlighted ? theme.colorScheme.primaryContainer : null,
-      padding: EdgeInsets.zero,
       child: ListTile(
         leading: Icon(
           icon,
@@ -414,20 +369,13 @@ class _PassTile extends StatelessWidget {
         ),
         title: Text(
           label,
-          style: TamgaTypography.body(
-            weight: FontWeight.w600,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
             color: highlighted ? theme.colorScheme.primary : null,
           ),
         ),
         subtitle: Text(description),
-        trailing: FilledButton(
-          onPressed: onTap,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(76, 44),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          ),
-          child: Text('₮$price'),
-        ),
+        trailing: FilledButton(onPressed: onTap, child: Text('₮$price')),
       ),
     );
   }
@@ -459,10 +407,10 @@ class _VideoUploadSheetState extends State<_VideoUploadSheet> {
     final theme = Theme.of(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
-        MediaQuery.viewInsetsOf(context).bottom + AppSpacing.lg,
+        16,
+        16,
+        16,
+        MediaQuery.viewInsetsOf(context).bottom + 16,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -470,49 +418,47 @@ class _VideoUploadSheetState extends State<_VideoUploadSheet> {
         children: [
           Text(
             'Бичлэг нэмэх',
-            style: TamgaTypography.title3(weight: FontWeight.w600),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: 16),
 
           // Video picker placeholder
-          Semantics(
-            button: true,
-            label: 'Видео сонгох',
-            child: GestureDetector(
-              onTap: () {
-                // TODO: image_picker / video picker
-              },
-              child: Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
-                  border: Border.all(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.5),
-                    style: BorderStyle.solid,
-                  ),
+          GestureDetector(
+            onTap: () {
+              // TODO: image_picker / video picker
+            },
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                  style: BorderStyle.solid,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.video_call_outlined,
-                      size: 36,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.video_call_outlined,
+                    size: 36,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Видео сонгох',
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'Видео сонгох',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: 12),
 
           TextFormField(
             controller: _titleController,
@@ -521,7 +467,7 @@ class _VideoUploadSheetState extends State<_VideoUploadSheet> {
               hintText: 'Жишээ: Улсын наадам 2026 — Шодон даага',
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -533,7 +479,7 @@ class _VideoUploadSheetState extends State<_VideoUploadSheet> {
                   ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<String>(
                   initialValue: _selectedCategory,
@@ -547,7 +493,7 @@ class _VideoUploadSheetState extends State<_VideoUploadSheet> {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
@@ -555,9 +501,6 @@ class _VideoUploadSheetState extends State<_VideoUploadSheet> {
                 // TODO: upload logic
                 Navigator.pop(context);
               },
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-              ),
               child: const Text('Нийтлэх'),
             ),
           ),

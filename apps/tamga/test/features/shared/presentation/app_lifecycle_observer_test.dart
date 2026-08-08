@@ -6,10 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:tamga/src/app/app_lifecycle_observer.dart';
-import 'package:tamga/src/app/theme/app_theme.dart';
+
 import 'package:tamga/src/core/sync/sync_queue.dart';
 import 'package:tamga/src/features/shared/application/sync_providers.dart';
 import 'package:tamga/src/features/profile/application/cloud_sync_coordinator.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Mocks ───────────────────────────────────────────────────────────────
 
@@ -33,7 +34,7 @@ Widget buildTestApp({required CloudSyncCoordinator coordinator}) {
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: Scaffold(body: AppLifecycleObserver(child: const SizedBox())),
     ),
   );

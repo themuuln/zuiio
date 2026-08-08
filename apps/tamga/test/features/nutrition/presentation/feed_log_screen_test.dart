@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:tamga/src/app/theme/app_theme.dart';
 import 'package:tamga/src/core/widgets/widgets.dart';
 import 'package:tamga/src/features/nutrition/application/nutrition_providers.dart';
 import 'package:tamga/src/features/nutrition/domain/feed_schedule.dart';
@@ -12,6 +11,7 @@ import 'package:tamga/src/features/nutrition/domain/feed_log.dart';
 import 'package:tamga/src/features/nutrition/presentation/feed_log_screen.dart';
 import 'package:tamga/src/features/nutrition/presentation/feed_schedule_screen.dart';
 import '../../../helpers/test_helpers.dart';
+import 'package:tamga/src/core/theme/tamga_design_system.dart';
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ Widget createFeedLogScreen({
         }),
       ],
       child: MaterialApp(
-        theme: AppTheme.light(),
+        theme: TamgaDesignSystem.buildThemeData(Brightness.light),
         home: FeedLogScreen(horseId: horseId),
       ),
     );
@@ -62,7 +62,7 @@ Widget createFeedLogScreen({
       }),
     ],
     child: MaterialApp(
-      theme: AppTheme.light(),
+      theme: TamgaDesignSystem.buildThemeData(Brightness.light),
       home: FeedLogScreen(horseId: horseId),
     ),
   );
@@ -84,7 +84,7 @@ void main() {
             ).overrideWith((ref) => scheduleCompleter.future),
           ],
           child: MaterialApp(
-            theme: AppTheme.light(),
+            theme: TamgaDesignSystem.buildThemeData(Brightness.light),
             home: const FeedLogScreen(horseId: 'horse-1'),
           ),
         ),

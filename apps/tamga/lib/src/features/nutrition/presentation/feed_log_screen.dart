@@ -250,9 +250,10 @@ class _DateSelector extends StatelessWidget {
                   if (isToday)
                     Text(
                       'Өнөөдөр',
-                      style: TamgaTypography.caption2(
+                      style: TextStyle(
+                        fontSize: 11,
                         color: colors.tertiary,
-                        weight: FontWeight.w500,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                 ],
@@ -385,6 +386,7 @@ class _FeedLogChecklistState extends ConsumerState<_FeedLogChecklist> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final colors = TamgaColors.of(context);
 
     return RefreshIndicator(
@@ -404,111 +406,117 @@ class _FeedLogChecklistState extends ConsumerState<_FeedLogChecklist> {
 
           return Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: TamgaCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Schedule info ──
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: colors.primaryContainer,
-                        radius: 18,
-                        child: Icon(
-                          _feedTypeIcon(schedule.feedType),
-                          color: colors.onPrimaryContainer,
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              schedule.feedType.displayName,
-                              style: TamgaTypography.body(
-                                weight: FontWeight.w600,
-                                color: colors.onSurface,
-                              ),
-                            ),
-                            Text(
-                              '${schedule.quantityKg.toStringAsFixed(1)} кг · ${schedule.frequency}',
-                              style: TamgaTypography.caption1(
-                                color: colors.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // ── Status badge ──
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _statusColor(
-                            status,
-                            colors,
-                          ).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.cornerRadiusSmall,
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Schedule info ──
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: colors.primaryContainer,
+                          radius: 18,
+                          child: Icon(
+                            _feedTypeIcon(schedule.feedType),
+                            color: colors.onPrimaryContainer,
+                            size: 18,
                           ),
                         ),
-                        child: Text(
-                          _statusLabel(status),
-                          style: TamgaTypography.caption2(
-                            weight: FontWeight.w600,
-                            color: _statusColor(status, colors),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                schedule.feedType.displayName,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                '${schedule.quantityKg.toStringAsFixed(1)} кг · ${schedule.frequency}',
+                                style: TextStyle(
+                                  color: colors.onSurfaceVariant,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-
-                  // ── Action buttons ──
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ActionButton(
-                          icon: Icons.check_circle_outline,
-                          label: 'Тэжээсэн',
-                          isActive: status == FeedStatus.fed,
-                          activeColor: colors.tertiary,
-                          onPressed: _isProcessing
-                              ? null
-                              : () => _toggleFed(schedule),
+                        // ── Status badge ──
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _statusColor(
+                              status,
+                              colors,
+                            ).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.cornerRadiusSmall,
+                            ),
+                          ),
+                          child: Text(
+                            _statusLabel(status),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _statusColor(status, colors),
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: _ActionButton(
-                          icon: Icons.cancel_outlined,
-                          label: 'Алгассан',
-                          isActive: status == FeedStatus.skipped,
-                          activeColor: colors.error,
-                          onPressed: _isProcessing
-                              ? null
-                              : () => _toggleSkipped(schedule),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // ── Notes field (when fed/skipped) ──
-                  if (existingLog != null && existingLog.notes.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      existingLog.notes,
-                      style: TamgaTypography.caption1(
-                        color: colors.onSurfaceVariant,
-                      ).copyWith(fontStyle: FontStyle.italic),
+                      ],
                     ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Action buttons ──
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _ActionButton(
+                            icon: Icons.check_circle_outline,
+                            label: 'Тэжээсэн',
+                            isActive: status == FeedStatus.fed,
+                            activeColor: colors.tertiary,
+                            onPressed: _isProcessing
+                                ? null
+                                : () => _toggleFed(schedule),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: _ActionButton(
+                            icon: Icons.cancel_outlined,
+                            label: 'Алгассан',
+                            isActive: status == FeedStatus.skipped,
+                            activeColor: colors.error,
+                            onPressed: _isProcessing
+                                ? null
+                                : () => _toggleSkipped(schedule),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // ── Notes field (when fed/skipped) ──
+                    if (existingLog != null &&
+                        existingLog.notes.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        existingLog.notes,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.onSurfaceVariant,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           );
@@ -566,7 +574,7 @@ class _ActionButton extends StatelessWidget {
     final colors = TamgaColors.of(context);
 
     return SizedBox(
-      height: 44,
+      height: 40,
       child: OutlinedButton.icon(
         onPressed: onPressed,
         icon: Icon(
@@ -576,8 +584,9 @@ class _ActionButton extends StatelessWidget {
         ),
         label: Text(
           label,
-          style: TamgaTypography.caption1(
-            weight: isActive ? FontWeight.w600 : FontWeight.w400,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
             color: isActive ? colors.onPrimary : colors.onSurfaceVariant,
           ),
         ),

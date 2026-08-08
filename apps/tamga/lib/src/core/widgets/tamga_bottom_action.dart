@@ -68,49 +68,40 @@ class TamgaBottomAction extends StatelessWidget {
           TamgaSpacing.lg,
           TamgaSpacing.sm,
         ),
-        child: Semantics(
-          container: true,
-          button: true,
-          enabled: !isDisabled,
-          label: label,
+        child: GestureDetector(
           onTap: isDisabled ? null : onTap,
-          child: GestureDetector(
-            onTap: isDisabled ? null : onTap,
-            child: AnimatedContainer(
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : TamgaMotion.durationNormal,
-              curve: TamgaMotion.easingStandard,
-              width: double.infinity,
-              height: 50,
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadius),
-              ),
-              child: Center(
-                child: isLoading
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: fgColor,
-                        ),
-                      )
-                    : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (icon != null) ...[
-                            Icon(icon, color: fgColor, size: 20),
-                            const SizedBox(width: TamgaSpacing.sm),
-                          ],
-                          Text(
-                            label,
-                            style: TamgaTypography.headline(color: fgColor),
-                          ),
-                        ],
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            width: double.infinity,
+            height: 50,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(TamgaSpacing.cornerRadius),
+            ),
+            child: Center(
+              child: isLoading
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: fgColor,
                       ),
-              ),
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (icon != null) ...[
+                          Icon(icon, color: fgColor, size: 20),
+                          const SizedBox(width: TamgaSpacing.sm),
+                        ],
+                        Text(
+                          label,
+                          style: TamgaTypography.headline(color: fgColor),
+                        ),
+                      ],
+                    ),
             ),
           ),
         ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
@@ -8,6 +10,7 @@ import '../../../core/services/notification_types.dart';
 import '../../../core/sync/connection_status.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/smooth_sheet_helpers.dart';
 import '../../../shared/domain/event.dart';
 import '../../../shared/domain/event_registration.dart';
 import '../../auth/application/auth_providers.dart';
@@ -107,15 +110,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       return;
     }
 
-    if (!mounted) return;
-
-    final selectedHorse = await showModalBottomSheet<Horse>(
-      context: context,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => _HorseSelectionSheet(horses: availableHorses),
+    final selectedHorse = await context.showSmoothSheet<Horse>(
+      builder: (_) => _HorseSelectionSheet(horses: availableHorses),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
     );
 
     if (selectedHorse == null) return;
@@ -189,7 +186,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       context,
       title: 'Бүртгэл цуцлах',
       message: 'Энэ морины бүртгэлийг цуцлахдаа итгэлтэй байна уу?',
-      confirmLabel: 'Цуцлах',
+      confirmLabel: AppLocalizations.of(context)!.generalCancel,
       isDestructive: true,
     );
 
@@ -227,6 +224,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     final userId = authState?.userId;
     final horsesAsync = ref.watch(horsesProvider);
 
+    final l10n = AppLocalizations.of(context)!;
+
     // Морины ID → нэр хөрвүүлэгч
     final horseNames =
         horsesAsync.valueOrNull?.fold<Map<String, String>>(
@@ -240,118 +239,121 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
         title: Text(widget.event.title, style: TamgaTypography.title3()),
         actions: [
           IconButton(
-            tooltip: 'Засах',
-            icon: const Icon(Icons.edit_outlined),
+            tooltip: l10n.generalEdit,
+            icon: const Icon(PhosphorIconsRegular.pencil),
             onPressed: _editEvent,
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ── Event type badge ──
-              _EventTypeBadge(event: widget.event),
+      body: ListView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        children: [
+          // ── Event type badge ──
+          _EventTypeBadge(event: widget.event),
 
-              const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
 
-              // ── Date & Location ──
-              _EventInfoSection(event: widget.event),
+          // ── Date & Location ──
+          _EventInfoSection(event: widget.event),
 
-              const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
 
-              // ── Result (if completed) ──
-              if (widget.event.result != null &&
-                  widget.event.result!.isNotEmpty) ...[
-                _ResultSection(event: widget.event),
-                const SizedBox(height: AppSpacing.lg),
-              ],
+          // ── Result (if completed) ──
+          if (widget.event.result != null &&
+              widget.event.result!.isNotEmpty) ...[
+            _ResultSection(event: widget.event),
+            const SizedBox(height: AppSpacing.lg),
+          ],
 
-              // ── Organizer info ──
-              if (widget.event.organizerName != null ||
-                  widget.event.organizerPhone != null ||
-                  widget.event.organizerEmail != null) ...[
-                _OrganizerSection(event: widget.event),
-                const SizedBox(height: AppSpacing.lg),
-              ],
+          // ── Organizer info ──
+          if (widget.event.organizerName != null ||
+              widget.event.organizerPhone != null ||
+              widget.event.organizerEmail != null) ...[
+            _OrganizerSection(event: widget.event),
+            const SizedBox(height: AppSpacing.lg),
+          ],
 
-              // ── Reminder button (Сануулах) ──
-              if (widget.event.date != null &&
-                  widget.event.date!.isAfter(DateTime.now())) ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _scheduleReminder,
-                    icon: const Icon(Icons.notifications_outlined),
-                    label: const Text('Сануулах'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-
-              // ── Notes ──
-              if (widget.event.notes != null &&
-                  widget.event.notes!.isNotEmpty) ...[
-                _NotesSection(event: widget.event),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-
-              // ── Map preview ──
-              if (widget.event.latitude != null &&
-                  widget.event.longitude != null) ...[
-                EventMapPreview(
-                  latitude: widget.event.latitude,
-                  longitude: widget.event.longitude,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                NavigateToLocationButton(
-                  latitude: widget.event.latitude,
-                  longitude: widget.event.longitude,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-
-              // ── Registered horses section ──
-              registrationsAsync.when(
-                data: (registrations) {
-                  final activeRegs = registrations
-                      .where((r) => r.status != RegistrationStatus.cancelled)
-                      .toList();
-
-                  return _RegisteredHorsesSection(
-                    registrations: activeRegs,
-                    horseNames: horseNames,
-                    currentUserId: userId,
-                    onCancel: _cancelRegistration,
-                  );
-                },
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
-                  child: LoadingIndicator(size: 24),
-                ),
-                error: (err, _) => TamgaErrorWidget(
-                  message: 'Бүртгэлүүдийг ачаалахад алдаа гарлаа',
-                  onRetry: () => ref.invalidate(
-                    eventRegistrationsProvider(widget.event.id),
-                  ),
+          // ── Reminder button (Сануулах) ──
+          if (widget.event.date != null &&
+              widget.event.date!.isAfter(DateTime.now())) ...[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _scheduleReminder,
+                icon: const Icon(PhosphorIconsRegular.bell),
+                label: const Text('Сануулах'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
                 ),
               ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
 
-              const SizedBox(height: AppSpacing.xl),
-            ],
+          // ── Notes ──
+          if (widget.event.notes != null && widget.event.notes!.isNotEmpty) ...[
+            _NotesSection(event: widget.event),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+
+          // ── Map preview ──
+          if (widget.event.latitude != null &&
+              widget.event.longitude != null) ...[
+            EventMapPreview(
+              latitude: widget.event.latitude,
+              longitude: widget.event.longitude,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            NavigateToLocationButton(
+              latitude: widget.event.latitude,
+              longitude: widget.event.longitude,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+
+          // ── Registered horses section ──
+          registrationsAsync.when(
+            data: (registrations) {
+              final activeRegs = registrations
+                  .where((r) => r.status != RegistrationStatus.cancelled)
+                  .toList();
+
+              return _RegisteredHorsesSection(
+                registrations: activeRegs,
+                horseNames: horseNames,
+                currentUserId: userId,
+                onCancel: _cancelRegistration,
+              );
+            },
+            loading: () => const Padding(
+              padding: EdgeInsets.all(AppSpacing.lg),
+              child: LoadingIndicator(size: 24),
+            ),
+            error: (err, _) => TamgaErrorWidget(
+              message: 'Бүртгэлүүдийг ачаалахад алдаа гарлаа',
+              onRetry: () =>
+                  ref.invalidate(eventRegistrationsProvider(widget.event.id)),
+            ),
           ),
-        ),
+
+          const SizedBox(height: AppSpacing.xl),
+        ],
       ),
       bottomNavigationBar: widget.event.registrationEnabled
-          ? TamgaBottomAction(
-              label: 'Морь бүртгүүлэх',
-              icon: Icons.add,
-              onTap: _showRegisterHorseSheet,
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                ),
+                child: FilledButton.icon(
+                  onPressed: _showRegisterHorseSheet,
+                  icon: const Icon(PhosphorIconsRegular.plus),
+                  label: const Text('Морь бүртгүүлэх'),
+                ),
+              ),
             )
           : null,
     );
@@ -368,13 +370,13 @@ class _EventTypeBadge extends StatelessWidget {
   IconData get _icon {
     switch (event.eventType) {
       case EventType.race:
-        return Icons.speed;
+        return PhosphorIconsRegular.gauge;
       case EventType.auction:
-        return Icons.gavel;
+        return PhosphorIconsRegular.scales;
       case EventType.expo:
-        return Icons.storefront;
+        return PhosphorIconsFill.storefront;
       case EventType.training:
-        return Icons.school;
+        return PhosphorIconsRegular.graduationCap;
     }
   }
 
@@ -396,6 +398,7 @@ class _EventTypeBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = _color(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Row(
       children: [
@@ -417,7 +420,7 @@ class _EventTypeBadge extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              event.isUpcoming ? 'Удахгүй' : 'Дууссан',
+              event.isUpcoming ? l10n.eventsTabUpcoming : 'Дууссан',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -440,15 +443,16 @@ class _EventInfoSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
-    return TamgaCard(
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Мэдээлэл',
+              l10n.profileInfoCard,
               style: TamgaTypography.title3(weight: FontWeight.w600),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -459,7 +463,7 @@ class _EventInfoSection extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.calendar_today_outlined,
+                      PhosphorIconsRegular.calendarBlank,
                       size: 18,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -478,7 +482,7 @@ class _EventInfoSection extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.place_outlined,
+                      PhosphorIconsRegular.mapPin,
                       size: 18,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -499,7 +503,7 @@ class _EventInfoSection extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.location_city_outlined,
+                      PhosphorIconsRegular.building,
                       size: 18,
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -518,7 +522,7 @@ class _EventInfoSection extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    Icons.pets_outlined,
+                    PhosphorIconsRegular.horse,
                     size: 18,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -550,7 +554,7 @@ class _ResultSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return TamgaCard(
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -573,7 +577,7 @@ class _ResultSection extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.emoji_events_outlined,
+                    PhosphorIconsRegular.trophy,
                     size: 20,
                     color: colorScheme.onTertiaryContainer,
                   ),
@@ -688,14 +692,14 @@ class _OrganizerSection extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               if (_hasPhone)
                 ListTile(
-                  leading: const Icon(Icons.phone_outlined),
+                  leading: const Icon(PhosphorIconsRegular.phone),
                   title: const Text('Засах/Захиалах'),
                   subtitle: Text(event.organizerPhone!),
                   onTap: () => Navigator.of(ctx).pop('phone'),
                 ),
               if (_hasEmail)
                 ListTile(
-                  leading: const Icon(Icons.email_outlined),
+                  leading: const Icon(PhosphorIconsRegular.envelope),
                   title: const Text('Имэйл'),
                   subtitle: Text(event.organizerEmail!),
                   onTap: () => Navigator.of(ctx).pop('email'),
@@ -734,7 +738,7 @@ class _OrganizerSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return TamgaCard(
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -747,21 +751,21 @@ class _OrganizerSection extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             if (event.organizerName != null && event.organizerName!.isNotEmpty)
               _InfoRow(
-                icon: Icons.person_outlined,
+                icon: PhosphorIconsRegular.user,
                 text: event.organizerName!,
                 colorScheme: colorScheme,
                 theme: theme,
               ),
             if (_hasPhone)
               _InfoRow(
-                icon: Icons.phone_outlined,
+                icon: PhosphorIconsRegular.phone,
                 text: event.organizerPhone!,
                 colorScheme: colorScheme,
                 theme: theme,
               ),
             if (_hasEmail)
               _InfoRow(
-                icon: Icons.email_outlined,
+                icon: PhosphorIconsRegular.envelope,
                 text: event.organizerEmail!,
                 colorScheme: colorScheme,
                 theme: theme,
@@ -773,7 +777,7 @@ class _OrganizerSection extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () => _contactOrganizer(context),
-                  icon: const Icon(Icons.contact_phone_outlined),
+                  icon: const Icon(PhosphorIconsRegular.phoneCall),
                   label: const Text('Зарлагчтай холбогдох'),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(44),
@@ -825,15 +829,16 @@ class _NotesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
-    return TamgaCard(
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Тэмдэглэл',
+              l10n.eventDetailNotes,
               style: TamgaTypography.title3(weight: FontWeight.w600),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -870,7 +875,7 @@ class _RegisteredHorsesSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return TamgaCard(
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -952,6 +957,7 @@ class _RegisteredHorseTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -961,7 +967,7 @@ class _RegisteredHorseTile extends StatelessWidget {
             backgroundColor: colorScheme.secondaryContainer,
             radius: 16,
             child: Icon(
-              Icons.pets,
+              PhosphorIconsRegular.horse,
               size: 16,
               color: colorScheme.onSecondaryContainer,
             ),
@@ -989,8 +995,8 @@ class _RegisteredHorseTile extends StatelessWidget {
           if (isOwnedByCurrentUser)
             TextButton.icon(
               onPressed: onCancel,
-              icon: const Icon(Icons.cancel_outlined, size: 16),
-              label: const Text('Цуцлах'),
+              icon: const Icon(PhosphorIconsRegular.xCircle, size: 16),
+              label: Text(l10n.generalCancel),
               style: TextButton.styleFrom(
                 foregroundColor: colorScheme.error,
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
@@ -1070,7 +1076,7 @@ class _HorseSelectionSheet extends StatelessWidget {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      trailing: const Icon(Icons.add_circle_outline),
+                      trailing: const Icon(PhosphorIconsRegular.plusCircle),
                       onTap: () => Navigator.of(context).pop(horse),
                     );
                   },

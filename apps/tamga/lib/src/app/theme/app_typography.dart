@@ -23,7 +23,6 @@ abstract final class AppTypography {
   static const _caption2Size = 11.0;
 
   /// Large Title — 34pt Semibold. Use sparingly for top-level screens.
-  /// Tight letter-spacing gives headings a premium editorial feel.
   static TextStyle largeTitle({
     FontWeight weight = FontWeight.w600,
     Color? color,
@@ -31,11 +30,10 @@ abstract final class AppTypography {
     fontSize: _largeTitleSize,
     fontWeight: weight,
     color: color ?? AppColors.foreground,
-    letterSpacing: -0.5,
+    letterSpacing: 0.37,
   );
 
   /// Title 1 — 28pt Semibold. Primary screen titles.
-  /// Tight letter-spacing for consistency with [largeTitle] editorial feel.
   static TextStyle title1({
     FontWeight weight = FontWeight.w600,
     Color? color,
@@ -43,7 +41,7 @@ abstract final class AppTypography {
     fontSize: _title1Size,
     fontWeight: weight,
     color: color ?? AppColors.foreground,
-    letterSpacing: -0.4,
+    letterSpacing: 0.36,
   );
 
   /// Title 2 — 22pt Semibold. Section headers.
@@ -54,7 +52,7 @@ abstract final class AppTypography {
     fontSize: _title2Size,
     fontWeight: weight,
     color: color ?? AppColors.foreground,
-    letterSpacing: -0.3,
+    letterSpacing: 0.35,
   );
 
   /// Title 3 — 20pt Semibold. Subsection headers.

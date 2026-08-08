@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tamga/l10n/generated/app_localizations.dart';
 
 import '../../../core/sync/connection_status.dart';
 import '../../../core/theme/design_tokens.dart';
@@ -73,8 +74,10 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
   Widget build(BuildContext context) {
     if (!_isOffline) return const SizedBox.shrink();
 
+    final theme = Theme.of(context);
     final colors = TamgaColors.of(context);
     final syncState = ref.watch(syncStateProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Material(
       elevation: 4,
@@ -101,17 +104,18 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Offline — Локал өгөгдөл харуулж байна',
-                    style: TamgaTypography.caption1(
-                      weight: FontWeight.w600,
+                    l10n.syncOfflineBanner,
+                    style: theme.textTheme.bodySmall?.copyWith(
                       color: colors.primary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   if (syncState.lastSyncTime != null)
                     Text(
                       _formatLastSyncTime(syncState.lastSyncTime!),
-                      style: TamgaTypography.caption2(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.primary.withValues(alpha: 0.8),
+                        fontSize: 11,
                       ),
                     ),
                 ],
@@ -127,18 +131,13 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
   ///
   /// Жишээ нь: "Сүүлд синк хийсэн: 5 минутын өмнө"
   String _formatLastSyncTime(DateTime lastSyncTime) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = now.difference(lastSyncTime);
 
-    if (diff.inMinutes < 1) {
-      return 'Сүүлд синк хийсэн: саяхан';
-    }
-    if (diff.inHours < 1) {
-      return 'Сүүлд синк хийсэн: ${diff.inMinutes} минутын өмнө';
-    }
-    if (diff.inDays < 1) {
-      return 'Сүүлд синк хийсэн: ${diff.inHours} цагийн өмнө';
-    }
-    return 'Сүүлд синк хийсэн: ${diff.inDays} хоногийн өмнө';
+    if (diff.inMinutes < 1) return l10n.syncLastSynced;
+    if (diff.inHours < 1) return l10n.syncLastSyncedMinutes(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.syncLastSyncedHours(diff.inHours);
+    return l10n.syncLastSyncedDays(diff.inDays);
   }
 }
