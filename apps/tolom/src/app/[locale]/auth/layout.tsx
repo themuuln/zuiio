@@ -22,7 +22,7 @@ export default async function AuthLayout({
   return (
     <div className="h-dvh flex flex-col md:grid md:grid-cols-12 bg-background select-none overscroll-none">
       {/* Left showcase — brand panel, desktop only */}
-      <aside className="relative hidden md:flex md:col-span-7 lg:col-span-8 flex-col justify-between overflow-hidden bg-zinc-950 p-10 lg:p-14">
+      <aside className="relative hidden md:flex md:col-span-7 lg:col-span-6 flex-col justify-between overflow-hidden bg-zinc-950 p-10 lg:p-14">
         {/* Ambient brand glow (violet identity + teal accent) */}
         <div className="pointer-events-none absolute -top-32 -left-32 size-[28rem] rounded-full bg-[radial-gradient(circle,var(--brand-violet-glow),transparent_65%)]" />
         <div className="pointer-events-none absolute -right-40 -bottom-40 size-[30rem] rounded-full bg-[radial-gradient(circle,var(--brand-teal-glow),transparent_65%)]" />
@@ -58,11 +58,11 @@ export default async function AuthLayout({
       </aside>
 
       {/* Right side — form */}
-      <main className="relative flex-1 flex col-span-12 md:col-span-5 lg:col-span-4 flex-col items-center justify-start md:justify-center p-6 sm:p-10 overflow-y-auto min-h-dvh">
+      <main className="relative flex-1 flex col-span-12 md:col-span-5 lg:col-span-6 flex-col items-center justify-start md:justify-center overflow-y-auto h-dvh">
         {/* Soft brand wash behind the card */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_40%,var(--brand-gradient-subtle),transparent_70%)]" />
 
-        <div className="w-full max-w-sm relative">
+        <div className="relative flex w-full flex-1 flex-col">
           {/* Brand header for mobile only (hidden on desktop) */}
           <div className="mb-8 text-center md:hidden">
             <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--brand-violet)] to-[var(--brand-teal)] shadow-brand">
@@ -79,7 +79,7 @@ export default async function AuthLayout({
           </div>
 
           {/* Form wrapper */}
-          <div className="rounded-xl border border-border bg-card p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]">
+          <div className="flex w-full flex-1 flex-col bg-card p-5 sm:p-6">
             {children}
           </div>
         </div>

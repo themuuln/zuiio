@@ -148,7 +148,7 @@ export function OrganizationSetupForm({
 
       {/* Step 1: Business Type Selection */}
       {step === "type" && (
-        <Card>
+        <Card size="sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Building2 className="size-4 text-muted-foreground" />
@@ -157,7 +157,7 @@ export function OrganizationSetupForm({
             <CardDescription>{copy.businessTypeSubtitle}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {BUSINESS_TYPES.map((type) => {
                 const preset = INDUSTRY_PRESETS[type];
                 const Icon = BUSINESS_TYPE_ICONS[type];
@@ -169,7 +169,7 @@ export function OrganizationSetupForm({
                     type="button"
                     onClick={() => setSelectedType(type)}
                     className={cn(
-                      "flex items-start gap-3 rounded-lg border p-4 text-left transition-all",
+                      "flex items-start gap-3 rounded-lg border p-3 text-left transition-all",
                       "hover:border-primary/50 hover:bg-accent/50",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       isSelected
@@ -179,7 +179,7 @@ export function OrganizationSetupForm({
                   >
                     <div
                       className={cn(
-                        "flex size-10 shrink-0 items-center justify-center rounded-lg",
+                        "flex size-9 shrink-0 items-center justify-center rounded-lg",
                         isSelected
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground",
@@ -196,7 +196,7 @@ export function OrganizationSetupForm({
                       >
                         {t(preset.labelKey)}
                       </Typography.Text>
-                      <Typography.Muted className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                      <Typography.Muted className="mt-0.5 line-clamp-4 text-xs leading-relaxed text-muted-foreground">
                         {t(preset.descriptionKey)}
                       </Typography.Muted>
                     </div>
@@ -205,7 +205,7 @@ export function OrganizationSetupForm({
               })}
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-4 flex justify-end">
               <Button
                 onClick={() => setStep("details")}
                 disabled={!selectedType}
