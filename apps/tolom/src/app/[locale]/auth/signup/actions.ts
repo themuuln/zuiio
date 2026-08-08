@@ -1,5 +1,6 @@
 "use server";
 
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
 // biome-ignore lint/style/noRestrictedImports: TablesInsert is only defined in database.types
 import type { TablesInsert } from "@/lib/database.types";
@@ -63,7 +64,8 @@ export async function signup(
     };
   }
 
-  const { identifier, password, fullName } = parsed.data;
+  const { identifier, password } = parsed.data;
+  const fullName = parsed.data.fullName || undefined;
   const type = detectIdentifierType(identifier);
   const serviceRole = await createServiceRoleClient();
 
@@ -149,7 +151,7 @@ export async function signup(
     if (type === "email") {
       sendWelcomeEmail(
         authEmail,
-        fullName,
+        fullName ?? "",
         `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/auth/login`,
       ).catch((err) => reportServerError("welcome_email", err));
     }
@@ -175,6 +177,8 @@ export async function signup(
       redirect("/auth/setup-organization");
     }
   } catch (error) {
+    // redirect() throws NEXT_REDIRECT — normal control flow, not an error
+    if (isRedirectError(error)) throw error;
     reportServerError("Unexpected error", error);
     if (isSupabaseNetworkError(error)) {
       reportServerError("Supabase signUp network failure", error);

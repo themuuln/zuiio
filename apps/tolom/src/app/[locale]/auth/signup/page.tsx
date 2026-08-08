@@ -78,15 +78,12 @@ export default function SignupPage() {
           )}
 
           <Field>
-            <FieldLabel htmlFor="fullName">
-              {t("fullNameLabel")} <span className="text-destructive">*</span>
-            </FieldLabel>
+            <FieldLabel htmlFor="fullName">{t("fullNameLabel")}</FieldLabel>
             <Input
               id="fullName"
               name="fullName"
               type="text"
               autoComplete="name"
-              required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder={t("fullNamePlaceholder")}

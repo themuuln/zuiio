@@ -14,7 +14,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const signupSchema = z
   .object({
-    fullName: z.string().min(1, "Full name is required"),
+    fullName: z.string().optional(),
     identifier: z.string().min(1, "Email, phone, or username is required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(1, "Please confirm your password"),

@@ -49,6 +49,26 @@ describe("signupSchema", () => {
     ).toBe(true);
   });
 
+  it("accepts signup without full name (optional field)", () => {
+    expect(
+      signupSchema.safeParse({
+        identifier: "test@test.com",
+        password: "password123",
+        confirmPassword: "password123",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects signup without identifier (required field)", () => {
+    expect(
+      signupSchema.safeParse({
+        fullName: "Test User",
+        password: "password123",
+        confirmPassword: "password123",
+      }).success,
+    ).toBe(false);
+  });
+
   it("rejects non-matching passwords", () => {
     expect(
       signupSchema.safeParse({
