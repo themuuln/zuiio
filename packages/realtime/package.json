@@ -10,14 +10,14 @@
 	"main": "./src/index.ts",
 	"peerDependencies": {
 		"@tanstack/react-query": "^5.101.2",
-		"react": "^19.2.0"
+		"react": "^19.2.8"
 	},
 	"devDependencies": {
 		"@tanstack/react-query": "^5.101.2",
 		"@types/react": "^19",
 		"@typescript/native": "npm:typescript@^7.0.2",
 		"@zuiio/config": "workspace:*",
-		"react": "^19.2.7",
+		"react": "^19.2.8",
 		"typescript": "^7.0.2"
 	}
 }
