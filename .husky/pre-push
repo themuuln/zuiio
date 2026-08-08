@@ -19,6 +19,9 @@ if [ "$PUSHING_TO_MAIN" = "true" ]; then
   CHANGED_APPS=$(git diff --name-only HEAD~1..HEAD 2>/dev/null | cut -d/ -f2 | sort -u | tr '\n' ' ')
   FILTERS=""
   for APP in $CHANGED_APPS; do
+    # Skip submodules — they are separate git repos with their own workspaces
+    # (turbo filters on them loop inside the submodule, e.g. apps/zoa).
+    [ -e "apps/$APP/.git" ] && continue
     if [ -f "apps/$APP/package.json" ]; then
       FILTERS="$FILTERS --filter=./apps/$APP..."
     fi
