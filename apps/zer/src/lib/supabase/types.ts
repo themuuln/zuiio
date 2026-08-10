@@ -1080,6 +1080,99 @@ export type Database = {
           },
         ];
       };
+      coupon_category_scope: {
+        Row: {
+          category_id: string;
+          coupon_id: string;
+          created_at: string | null;
+          id: string;
+          organization_id: string;
+        };
+        Insert: {
+          category_id: string;
+          coupon_id: string;
+          created_at?: string | null;
+          id?: string;
+          organization_id: string;
+        };
+        Update: {
+          category_id?: string;
+          coupon_id?: string;
+          created_at?: string | null;
+          id?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coupon_category_scope_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "coupon_category_scope_coupon_id_fkey";
+            columns: ["coupon_id"];
+            isOneToOne: false;
+            referencedRelation: "coupons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "coupon_category_scope_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      coupon_product_scope: {
+        Row: {
+          coupon_id: string;
+          created_at: string | null;
+          id: string;
+          organization_id: string;
+          product_id: string;
+        };
+        Insert: {
+          coupon_id: string;
+          created_at?: string | null;
+          id?: string;
+          organization_id: string;
+          product_id: string;
+        };
+        Update: {
+          coupon_id?: string;
+          created_at?: string | null;
+          id?: string;
+          organization_id?: string;
+          product_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coupon_product_scope_coupon_id_fkey";
+            columns: ["coupon_id"];
+            isOneToOne: false;
+            referencedRelation: "coupons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "coupon_product_scope_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "coupon_product_scope_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
       coupon_usage: {
         Row: {
           contact_id: string | null;

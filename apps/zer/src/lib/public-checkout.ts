@@ -43,6 +43,25 @@ export function computeCouponDiscount(input: CouponDiscountInput): number {
   return round2(Math.min(Math.max(cappedByMax, 0), subtotal));
 }
 
+/**
+ * Scoped-coupon discount (applies_to = selected_products / selected_categories).
+ * The discount is computed against the ELIGIBLE SUBTOTAL — the server-priced
+ * sum of the cart lines the coupon is scoped to — and capped by it, so a
+ * scoped coupon never discounts a non-matching line. Mirrors the SQL in
+ * submit_shop_order (migration 20260810200000): min_purchase_amount,
+ * percent/fixed base and max_discount_amount all compare against the
+ * eligible subtotal. Returns null when no eligible line exists — the
+ * checkout rejects such coupons ('Купон энэ захиалгад тохирохгүй байна').
+ * For 'all'-scope coupons pass the full subtotal (same as computeCouponDiscount).
+ */
+export function computeCouponDiscountWithEligible(
+  input: CouponDiscountInput,
+  eligibleSubtotal: number,
+): number | null {
+  if (eligibleSubtotal <= 0) return null;
+  return computeCouponDiscount({ ...input, subtotal: eligibleSubtotal });
+}
+
 export type PromotionRewardType =
   | "percentage_discount"
   | "fixed_discount"

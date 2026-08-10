@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import {
   computeCouponDiscount,
+  computeCouponDiscountWithEligible,
   computeDeliveryFee,
   computeGiftCardAmount,
   computeOrderTotals,
@@ -75,6 +76,79 @@ describe("computeCouponDiscount", () => {
         maxDiscountAmount: null,
       }),
     ).toBe(0);
+  });
+});
+
+describe("computeCouponDiscountWithEligible", () => {
+  it("applies a percentage against the eligible subtotal only", () => {
+    // Full cart 10000, but only 6000 is eligible → 10% of 6000 = 600.
+    expect(
+      computeCouponDiscountWithEligible(
+        {
+          discountType: "percentage",
+          discountValue: 10,
+          subtotal: 10000,
+          maxDiscountAmount: null,
+        },
+        6000,
+      ),
+    ).toBe(600);
+  });
+
+  it("caps the percentage at max_discount_amount against the eligible subtotal", () => {
+    // 50% of 2000 eligible = 1000, capped by max 500 → 500.
+    expect(
+      computeCouponDiscountWithEligible(
+        {
+          discountType: "percentage",
+          discountValue: 50,
+          subtotal: 10000,
+          maxDiscountAmount: 500,
+        },
+        2000,
+      ),
+    ).toBe(500);
+  });
+
+  it("caps a fixed discount at the eligible subtotal", () => {
+    // Fixed 20000 can never exceed the 4000 eligible subtotal.
+    expect(
+      computeCouponDiscountWithEligible(
+        {
+          discountType: "fixed_amount",
+          discountValue: 20000,
+          subtotal: 10000,
+          maxDiscountAmount: null,
+        },
+        4000,
+      ),
+    ).toBe(4000);
+  });
+
+  it("returns null when no eligible line exists (zero eligible subtotal)", () => {
+    expect(
+      computeCouponDiscountWithEligible(
+        {
+          discountType: "percentage",
+          discountValue: 10,
+          subtotal: 10000,
+          maxDiscountAmount: null,
+        },
+        0,
+      ),
+    ).toBeNull();
+  });
+
+  it("equals the plain helper when the whole cart is eligible", () => {
+    const input = {
+      discountType: "percentage" as const,
+      discountValue: 10,
+      subtotal: 10000,
+      maxDiscountAmount: null as number | null,
+    };
+    expect(computeCouponDiscountWithEligible(input, 10000)).toBe(
+      computeCouponDiscount(input),
+    );
   });
 });
 

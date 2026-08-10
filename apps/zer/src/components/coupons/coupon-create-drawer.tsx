@@ -1,11 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { capture } from "@zuiio/capture";
+import { useEffect, useState } from "react";
 import { Controller, type Resolver, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { createCoupon } from "@/app/(dashboard)/coupons/actions";
+import { CouponScopePicker } from "@/components/coupons/coupon-scope-picker";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -25,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatRouteDate } from "@/lib/format";
 import { couponKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
+import { createClient } from "@/lib/supabase/client";
 
 const couponSchema = z.object({
   code: z
@@ -65,6 +68,71 @@ export function CouponCreateDrawer({
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
 
+  // Scope selection (applies_to = selected_products / selected_categories).
+  const [productIds, setProductIds] = useState<string[]>([]);
+  const [categoryIds, setCategoryIds] = useState<string[]>([]);
+  const [localProducts, setLocalProducts] = useState<Array<{
+    id: string;
+    name: string;
+  }> | null>(null);
+  const [localCategories, setLocalCategories] = useState<Array<{
+    id: string;
+    name: string;
+  }> | null>(null);
+
+  // Fetch products + categories on demand when the drawer opens (org-scoped,
+  // same on-demand pattern as the promotions drawer).
+  useEffect(() => {
+    if (!open) return;
+    if (localProducts !== null && localCategories !== null) return;
+
+    async function fetchData() {
+      const supabase = createClient();
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", userData.user.id)
+        .single();
+      if (!profile?.organization_id) return;
+      const orgId = profile.organization_id;
+
+      if (localProducts === null) {
+        const productsRes = await supabase
+          .from("products")
+          .select("id, name")
+          .eq("organization_id", orgId)
+          .is("deleted_at", null)
+          .order("name");
+        if (productsRes.error) {
+          capture(productsRes.error, {
+            context: "CouponCreateDrawer: fetch products",
+          });
+        } else {
+          setLocalProducts(productsRes.data);
+        }
+      }
+
+      if (localCategories === null) {
+        const categoriesRes = await supabase
+          .from("categories")
+          .select("id, name")
+          .eq("organization_id", orgId)
+          .order("name");
+        if (categoriesRes.error) {
+          capture(categoriesRes.error, {
+            context: "CouponCreateDrawer: fetch categories",
+          });
+        } else {
+          setLocalCategories(categoriesRes.data);
+        }
+      }
+    }
+
+    void fetchData();
+  }, [open, localProducts, localCategories]);
+
   const {
     register,
     handleSubmit,
@@ -91,6 +159,7 @@ export function CouponCreateDrawer({
   });
 
   const discountType = watch("discount_type");
+  const appliesTo = watch("applies_to");
 
   const couponMutation = useOptimisticCreate({
     mutationFn: async (formData: FormData) => {
@@ -138,6 +207,8 @@ export function CouponCreateDrawer({
     formData.append("applies_to", data.applies_to);
     formData.append("is_active", String(data.is_active));
     formData.append("description", data.description ?? "");
+    formData.append("product_ids", JSON.stringify(productIds));
+    formData.append("category_ids", JSON.stringify(categoryIds));
     if (data.usage_limit !== undefined && data.usage_limit > 0) {
       formData.append("usage_limit", String(data.usage_limit));
     }
@@ -156,7 +227,11 @@ export function CouponCreateDrawer({
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (!next) reset();
+        if (!next) {
+          reset();
+          setProductIds([]);
+          setCategoryIds([]);
+        }
       }}
       title="Шинэ купон"
       description="Хямдралын купоны тохиргоо"
@@ -299,6 +374,36 @@ export function CouponCreateDrawer({
               )}
             />
           </Field>
+
+          {appliesTo === "selected_products" && (
+            <Field>
+              <FieldLabel>Тухайн бараанууд</FieldLabel>
+              <CouponScopePicker
+                items={localProducts ?? []}
+                value={productIds}
+                onValueChange={setProductIds}
+                placeholder="Бараа сонгох"
+                searchPlaceholder="Бараа хайх..."
+                emptyText="Бараа олдсонгүй"
+                noItemsText="Бараа байхгүй"
+              />
+            </Field>
+          )}
+
+          {appliesTo === "selected_categories" && (
+            <Field>
+              <FieldLabel>Тухайн ангилалууд</FieldLabel>
+              <CouponScopePicker
+                items={localCategories ?? []}
+                value={categoryIds}
+                onValueChange={setCategoryIds}
+                placeholder="Ангилал сонгох"
+                searchPlaceholder="Ангилал хайх..."
+                emptyText="Ангилал олдсонгүй"
+                noItemsText="Ангилал байхгүй"
+              />
+            </Field>
+          )}
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Field>

@@ -1,10 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { capture } from "@zuiio/capture";
+import { useEffect, useState } from "react";
 import { Controller, type Resolver, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { updateCoupon } from "@/app/(dashboard)/coupons/actions";
+import { CouponScopePicker } from "@/components/coupons/coupon-scope-picker";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -23,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatRouteDate } from "@/lib/format";
 import { couponKeys } from "@/lib/query/keys";
 import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
+import { createClient } from "@/lib/supabase/client";
 
 const couponEditSchema = z.object({
   code: z
@@ -61,6 +65,8 @@ export interface CouponEditData {
   applies_to: "all" | "selected_products" | "selected_categories";
   is_active: boolean;
   description: string | null;
+  product_ids: string[];
+  category_ids: string[];
 }
 
 export function CouponEditDrawer({
@@ -72,6 +78,76 @@ export function CouponEditDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  // Scope selection — synced whenever the drawer opens for a coupon.
+  const [productIds, setProductIds] = useState<string[]>(coupon.product_ids);
+  const [categoryIds, setCategoryIds] = useState<string[]>(coupon.category_ids);
+  const [localProducts, setLocalProducts] = useState<Array<{
+    id: string;
+    name: string;
+  }> | null>(null);
+  const [localCategories, setLocalCategories] = useState<Array<{
+    id: string;
+    name: string;
+  }> | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setProductIds(coupon.product_ids);
+      setCategoryIds(coupon.category_ids);
+    }
+  }, [open, coupon.product_ids, coupon.category_ids]);
+
+  // Fetch products + categories on demand when the drawer opens (org-scoped).
+  useEffect(() => {
+    if (!open) return;
+    if (localProducts !== null && localCategories !== null) return;
+
+    async function fetchData() {
+      const supabase = createClient();
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", userData.user.id)
+        .single();
+      if (!profile?.organization_id) return;
+      const orgId = profile.organization_id;
+
+      if (localProducts === null) {
+        const productsRes = await supabase
+          .from("products")
+          .select("id, name")
+          .eq("organization_id", orgId)
+          .is("deleted_at", null)
+          .order("name");
+        if (productsRes.error) {
+          capture(productsRes.error, {
+            context: "CouponEditDrawer: fetch products",
+          });
+        } else {
+          setLocalProducts(productsRes.data);
+        }
+      }
+
+      if (localCategories === null) {
+        const categoriesRes = await supabase
+          .from("categories")
+          .select("id, name")
+          .eq("organization_id", orgId)
+          .order("name");
+        if (categoriesRes.error) {
+          capture(categoriesRes.error, {
+            context: "CouponEditDrawer: fetch categories",
+          });
+        } else {
+          setLocalCategories(categoriesRes.data);
+        }
+      }
+    }
+
+    void fetchData();
+  }, [open, localProducts, localCategories]);
   const {
     register,
     handleSubmit,
@@ -97,6 +173,7 @@ export function CouponEditDrawer({
   });
 
   const discountType = watch("discount_type");
+  const appliesTo = watch("applies_to");
 
   const updateMutation = useOptimisticUpdate({
     mutationFn: async (formData: FormData) => {
@@ -154,6 +231,8 @@ export function CouponEditDrawer({
     formData.append("applies_to", data.applies_to);
     formData.append("is_active", String(data.is_active));
     formData.append("description", data.description ?? "");
+    formData.append("product_ids", JSON.stringify(productIds));
+    formData.append("category_ids", JSON.stringify(categoryIds));
     if (data.usage_limit !== undefined && data.usage_limit > 0) {
       formData.append("usage_limit", String(data.usage_limit));
     }
@@ -309,6 +388,36 @@ export function CouponEditDrawer({
               )}
             />
           </Field>
+
+          {appliesTo === "selected_products" && (
+            <Field>
+              <FieldLabel>Тухайн бараанууд</FieldLabel>
+              <CouponScopePicker
+                items={localProducts ?? []}
+                value={productIds}
+                onValueChange={setProductIds}
+                placeholder="Бараа сонгох"
+                searchPlaceholder="Бараа хайх..."
+                emptyText="Бараа олдсонгүй"
+                noItemsText="Бараа байхгүй"
+              />
+            </Field>
+          )}
+
+          {appliesTo === "selected_categories" && (
+            <Field>
+              <FieldLabel>Тухайн ангилалууд</FieldLabel>
+              <CouponScopePicker
+                items={localCategories ?? []}
+                value={categoryIds}
+                onValueChange={setCategoryIds}
+                placeholder="Ангилал сонгох"
+                searchPlaceholder="Ангилал хайх..."
+                emptyText="Ангилал олдсонгүй"
+                noItemsText="Ангилал байхгүй"
+              />
+            </Field>
+          )}
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Field>
