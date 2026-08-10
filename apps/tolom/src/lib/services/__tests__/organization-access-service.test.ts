@@ -148,11 +148,12 @@ describe("activateOrganizationAccess", () => {
     });
   });
 
-  it("skips PIN creation when org already has a bay view pin", async () => {
+  it("verifies the bay view pin when org already has one", async () => {
     const orgWithPin = [{ ...orgRows[0], has_bay_view_pin: true }];
     db.rpc = vi
       .fn()
       .mockResolvedValueOnce({ data: orgWithPin, error: null })
+      .mockResolvedValueOnce({ data: true, error: null })
       .mockResolvedValueOnce({ data: null, error: null });
 
     await activateOrganizationAccess(db as never, {
@@ -164,9 +165,32 @@ describe("activateOrganizationAccess", () => {
       "set_organization_bay_view_pin",
       expect.anything(),
     );
+    expect(db.rpc).toHaveBeenCalledWith("verify_organization_bay_view_pin", {
+      target_org_id: ORG_ID,
+      plain_pin: "1234",
+    });
     expect(db.rpc).toHaveBeenCalledWith("set_primary_organization", {
       target_org_id: ORG_ID,
     });
+  });
+
+  it("throws ValidationError when org pin verification fails", async () => {
+    const orgWithPin = [{ ...orgRows[0], has_bay_view_pin: true }];
+    db.rpc = vi
+      .fn()
+      .mockResolvedValueOnce({ data: orgWithPin, error: null })
+      .mockResolvedValueOnce({ data: false, error: null });
+
+    await expect(
+      activateOrganizationAccess(db as never, {
+        organizationId: ORG_ID,
+        pin: "9999",
+      }),
+    ).rejects.toThrow(ValidationError);
+    expect(db.rpc).not.toHaveBeenCalledWith(
+      "set_primary_organization",
+      expect.anything(),
+    );
   });
 
   it("throws UnauthorizedError when org is not in user's list", async () => {
