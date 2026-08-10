@@ -1,8 +1,8 @@
 # Root-level ignore for `vercel deploy` run from the monorepo root.
-# This repo's root deploys build apps/tolom only (project Root Directory =
-# apps/tolom), so sibling apps' sources are excluded from uploads.
-# Workspace members' package.json files are kept so `pnpm install` at the
-# root can resolve every project in pnpm-lock.yaml.
+# Per-app Vercel projects (zer, agent-gateway, website, …) have their own
+# rootDirectory inside apps/* — their sources MUST be uploaded, so sibling
+# app dirs are NOT excluded here. Only generated/heavy dirs are ignored
+# (they are also gitignored; kept here for tgz-archive deploys).
 
 # --- Heavy / generated (also gitignored, kept here for the tgz archive path) ---
 **/node_modules
@@ -16,35 +16,4 @@
 **/*.log
 **/.env
 **/.env.*
-
-# --- Sibling apps: keep only their package.json for workspace resolution ---
-# Root deploys serve apps/tolom and apps/agent-gateway — their sources are
-# uploaded. Vercel's ignore does not support re-inclusion under a
-# directory-wide exclusion, so sibling apps are excluded by name.
-!apps/
 apps/archive/
-apps/docs/
-apps/khosuud/
-apps/onoo/
-apps/onoo-app/
-apps/sakhuu/
-apps/side/
-apps/sms-pay/
-apps/tamga/
-apps/tamga-web/
-apps/tolom-mobile/
-apps/tumurch/
-apps/tumurch-rn/
-apps/website/
-apps/zatly/
-apps/zer/
-apps/zer-app/
-apps/zerbu/
-apps/zill/
-apps/zim/
-apps/zoa/
-apps/zraf/
-apps/zraf-web/
-apps/zuiio-id/
-apps/zunch/
-!apps/*/package.json

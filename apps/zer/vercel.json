@@ -4,6 +4,6 @@
     "sin1"
   ],
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "buildCommand": "pwd && echo ROOT-LS: && ls -la && echo PARENT-LS: && ls -la .. && echo PARENT2-LS: && ls -la ../.. && echo PKG-FIND: && find . -maxdepth 2 -name package.json -o -maxdepth 3 -name pnpm-workspace.yaml | head -30 && echo WS-YAML: && find .. -maxdepth 2 -name pnpm-workspace.yaml | head -5",
+  "buildCommand": "cd ../.. && pnpm exec turbo run build --filter=zer",
   "outputDirectory": ".next"
 }
