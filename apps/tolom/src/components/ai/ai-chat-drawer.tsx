@@ -92,6 +92,9 @@ function ChatInput({
       el.style.height = "auto";
       el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
     }
+    // Height is derived from the current value through the DOM.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: resize must run on input change; the value is read via the ref.
+    void input;
   }, [input]);
 
   return (
@@ -196,6 +199,9 @@ export function AiChatDrawer({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+    // Scroll position derives from the message list rendered in the DOM.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: must run on every message change.
+    void messages;
   }, [messages]);
 
   const handleSend = useCallback(

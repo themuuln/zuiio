@@ -102,7 +102,7 @@ export function GlobalPartsSearch({
         });
       }
     },
-    [orgId, onImported, t],
+    [orgId, onImported, t, importingIds],
   );
 
   const showSearchPrompt =

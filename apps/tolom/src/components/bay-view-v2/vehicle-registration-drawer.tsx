@@ -172,7 +172,7 @@ export function VehicleRegistrationDrawer({
       custPhone: "",
       complaint: "",
     });
-  }, [open]);
+  }, [open, form.reset]);
 
   // Populate form from lookup result
   useEffect(() => {

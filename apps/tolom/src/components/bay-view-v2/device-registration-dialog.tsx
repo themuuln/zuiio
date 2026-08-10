@@ -136,7 +136,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
       setCountdown(300);
       loadMechanics();
     }
-  }, [open, loadMechanics]);
+  }, [open, loadMechanics, form.reset]);
 
   const selectedMechanic = mechanics.find((m) => m.id === selectedMechanicId);
 

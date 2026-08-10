@@ -24,14 +24,6 @@ interface DetailDrawerContextValue {
 const DetailDrawerContext =
   React.createContext<DetailDrawerContextValue | null>(null);
 
-function _useDetailDrawerContext() {
-  const ctx = React.useContext(DetailDrawerContext);
-  if (!ctx) {
-    throw new Error("DetailDrawer.Header must be used within a <DetailDrawer>");
-  }
-  return ctx;
-}
-
 interface DetailDrawerRootProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

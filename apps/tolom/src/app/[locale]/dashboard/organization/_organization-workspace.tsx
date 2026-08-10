@@ -75,7 +75,7 @@ function OrganizationMark({ organization }: { organization?: Organization }) {
 
   // Reset image-failed state when the logo URL changes
   useEffect(() => {
-    setImageFailed(false);
+    if (logoUrl) setImageFailed(false);
   }, [logoUrl]);
 
   if (organization?.logo_url && !imageFailed) {

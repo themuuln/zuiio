@@ -152,7 +152,7 @@ export function EbarimtSettings({ orgId }: EbarimtSettingsProps) {
         });
       }
     });
-  }, [orgId, startTransition]);
+  }, [orgId]);
 
   // ── Loading State ───────────────────────────────────────────
 
