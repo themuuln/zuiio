@@ -93,6 +93,33 @@ describe("validateCheckoutInput", () => {
       validateCheckoutInput(makeInput({ customerPhone: null })),
     ).toBeNull();
   });
+
+  it("rejects delivery without an address", () => {
+    expect(
+      validateCheckoutInput(
+        makeInput({ deliveryType: "delivery", address: "" }),
+      ),
+    ).toContain("хаяг");
+  });
+
+  it("accepts delivery with an address", () => {
+    expect(
+      validateCheckoutInput(
+        makeInput({
+          deliveryType: "delivery",
+          address: "УБ, Сүхбаатар дүүрэг, 8-р хороо",
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("allows pickup without an address", () => {
+    expect(
+      validateCheckoutInput(
+        makeInput({ deliveryType: "pickup", pickupBranchSlug: "ub-1" }),
+      ),
+    ).toBeNull();
+  });
 });
 
 describe("buildProcessShopSaleParams", () => {
@@ -201,6 +228,11 @@ describe("submitShopOrder", () => {
       saleId: "sale-123",
       reference: "sale-123",
       serverOrder: true,
+      totalAmount: 3700,
+      deliveryFee: null,
+      discountAmount: null,
+      giftCardAmount: null,
+      paymentInstructions: null,
     });
     const call = rpc.mock.calls[0];
     expect(call[0]).toBe("submit_shop_order");
@@ -231,6 +263,96 @@ describe("submitShopOrder", () => {
     );
     const args = rpc.mock.calls[0][1] as Record<string, unknown>;
     expect(args.p_idempotency_key).toBe(key);
+  });
+
+  it("passes delivery/pickup + coupon + gift card + email params through", async () => {
+    const rpc = jest.fn(
+      async (_fn: string, _args?: Record<string, unknown>) => ({
+        data: [{ order_id: "sale-123", total_amount: 3700, status: "pending" }],
+        error: null,
+      }),
+    );
+    await submitShopOrder(
+      makeRpcClient(rpc),
+      makeInput({
+        deliveryType: "delivery",
+        address: "УБ, Сүхбаатар дүүрэг",
+        addressNote: "1-р орц",
+        email: "buyer@example.com",
+        couponCode: "SAVE10",
+        giftCardCode: "GC-123",
+      }),
+    );
+    const args = rpc.mock.calls[0][1] as Record<string, unknown>;
+    expect(args.p_delivery_type).toBe("delivery");
+    expect(args.p_address).toBe("УБ, Сүхбаатар дүүрэг");
+    expect(args.p_address_note).toBe("1-р орц");
+    expect(args.p_contact_email).toBe("buyer@example.com");
+    expect(args.p_coupon_code).toBe("SAVE10");
+    expect(args.p_gift_card_code).toBe("GC-123");
+    expect(args.p_pickup_branch_slug).toBeNull();
+  });
+
+  it("passes pickup branch slug and null delivery fields for pickup", async () => {
+    const rpc = jest.fn(
+      async (_fn: string, _args?: Record<string, unknown>) => ({
+        data: [{ order_id: "sale-123", status: "pending" }],
+        error: null,
+      }),
+    );
+    await submitShopOrder(
+      makeRpcClient(rpc),
+      makeInput({ deliveryType: "pickup", pickupBranchSlug: "ub-1" }),
+    );
+    const args = rpc.mock.calls[0][1] as Record<string, unknown>;
+    expect(args.p_delivery_type).toBe("pickup");
+    expect(args.p_pickup_branch_slug).toBe("ub-1");
+    expect(args.p_address).toBeNull();
+    expect(args.p_coupon_code).toBeNull();
+    expect(args.p_gift_card_code).toBeNull();
+  });
+
+  it("surfaces delivery fee, discount, gift card and payment instructions from the result row", async () => {
+    const rpc = jest.fn(
+      async (_fn: string, _args?: Record<string, unknown>) => ({
+        data: [
+          {
+            order_id: "sale-123",
+            total_amount: 3300,
+            delivery_fee: 200,
+            discount_amount: 400,
+            gift_card_amount: 300,
+            payment_instructions: {
+              bank_name: "Хаан банк",
+              bank_account: "5000123456",
+              account_name: "Дэлгүүр ХХК",
+              qpay_qr_url: null,
+            },
+          },
+        ],
+        error: null,
+      }),
+    );
+    const result = await submitShopOrder(
+      makeRpcClient(rpc),
+      makeInput({
+        deliveryType: "delivery",
+        address: "УБ, Сүхбаатар дүүрэг",
+        paymentMethod: "bank_transfer",
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.deliveryFee).toBe(200);
+    expect(result.discountAmount).toBe(400);
+    expect(result.giftCardAmount).toBe(300);
+    expect(result.totalAmount).toBe(3300);
+    expect(result.paymentInstructions).toEqual({
+      bank_name: "Хаан банк",
+      bank_account: "5000123456",
+      account_name: "Дэлгүүр ХХК",
+      qpay_qr_url: null,
+    });
   });
 
   it("returns VALIDATION_FAILED without calling the RPC", async () => {

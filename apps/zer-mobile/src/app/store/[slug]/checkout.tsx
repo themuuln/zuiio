@@ -14,11 +14,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { fetchPublicCatalog } from "@/lib/catalog";
+import {
+  fetchPublicBranches,
+  fetchPublicCatalog,
+  type PublicBranch,
+} from "@/lib/catalog";
 import {
   type CheckoutPaymentMethod,
   cartItemsToOrderItems,
   type ShopOrderInput,
+  type ShopOrderResult,
   submitShopOrder,
   validateCheckoutInput,
 } from "@/lib/checkout";
@@ -53,6 +58,13 @@ export default function CheckoutScreen() {
   });
   const currency = orgQuery.data?.organization?.currency ?? "MNT";
   const storeName = orgQuery.data?.organization?.name ?? storeSlug;
+  const org = orgQuery.data?.organization ?? null;
+  const deliveryEnabled = !!org?.delivery_enabled;
+  const pickupEnabled = !!org?.pickup_enabled;
+  const showDeliverySection = deliveryEnabled || pickupEnabled;
+  const bankPaymentAvailable =
+    !!org?.payment_bank_account || !!org?.payment_account_name;
+  const qpayAvailable = !!org?.qpay_qr_url;
 
   const sessionUser =
     authState.status === "authenticated" ? authState.session.user : null;
@@ -62,6 +74,13 @@ export default function CheckoutScreen() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [couponCode, setCouponCode] = useState("");
+  const [giftCardCode, setGiftCardCode] = useState("");
+  const [deliveryType, setDeliveryType] = useState<
+    "delivery" | "pickup" | null
+  >(null);
+  const [address, setAddress] = useState("");
+  const [addressNote, setAddressNote] = useState("");
+  const [pickupBranchSlug, setPickupBranchSlug] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] =
     useState<CheckoutPaymentMethod>("cash");
   const [backendState, setBackendState] = useState<BackendState>("idle");
@@ -82,14 +101,60 @@ export default function CheckoutScreen() {
     setEmail(sessionUser.email ?? "");
   }, [sessionUser, metadata.displayName, metadata.phone]);
 
-  const goToSuccess = (reference: string, local: boolean, saleId?: string) => {
+  // Default the delivery choice once the org config loads.
+  useEffect(() => {
+    if (deliveryType !== null) return;
+    if (deliveryEnabled) setDeliveryType("delivery");
+    else if (pickupEnabled) setDeliveryType("pickup");
+  }, [deliveryEnabled, pickupEnabled, deliveryType]);
+
+  // Keep the payment method in the set the store actually offers.
+  const availablePaymentMethods: CheckoutPaymentMethod[] = ["cash", "card"];
+  if (bankPaymentAvailable) availablePaymentMethods.push("bank_transfer");
+  if (qpayAvailable) availablePaymentMethods.push("qpay");
+  const effectivePaymentMethod: CheckoutPaymentMethod =
+    availablePaymentMethods.includes(paymentMethod) ? paymentMethod : "cash";
+
+  const branchesQuery = useQuery({
+    queryKey: ["public-branches", storeSlug],
+    queryFn: () => fetchPublicBranches(supabase, storeSlug),
+    enabled:
+      showDeliverySection && deliveryType === "pickup" && storeSlug.length > 0,
+  });
+  const branches: PublicBranch[] = branchesQuery.data ?? [];
+  const selectedBranch = branches.find((b) => b.slug === pickupBranchSlug);
+
+  const goToSuccess = (
+    reference: string,
+    local: boolean,
+    result?: Extract<ShopOrderResult, { ok: true }>,
+  ) => {
     router.replace({
       pathname: "/store/[slug]/order-success",
       params: {
         slug: storeSlug,
         reference,
         local: local ? "1" : "0",
-        saleId: saleId ?? "",
+        saleId: result?.saleId ?? "",
+        currency,
+        totalAmount:
+          result?.totalAmount != null ? String(result.totalAmount) : "",
+        deliveryFee:
+          result?.deliveryFee != null && result.deliveryFee > 0
+            ? String(result.deliveryFee)
+            : "",
+        discountAmount:
+          result?.discountAmount != null && result.discountAmount > 0
+            ? String(result.discountAmount)
+            : "",
+        giftCardAmount:
+          result?.giftCardAmount != null && result.giftCardAmount > 0
+            ? String(result.giftCardAmount)
+            : "",
+        bankName: result?.paymentInstructions?.bank_name ?? "",
+        bankAccount: result?.paymentInstructions?.bank_account ?? "",
+        accountName: result?.paymentInstructions?.account_name ?? "",
+        qpayQrUrl: result?.paymentInstructions?.qpay_qr_url ?? "",
       },
     } as never);
   };
@@ -105,12 +170,28 @@ export default function CheckoutScreen() {
       items: cartItemsToOrderItems(items),
       customerName: name.trim(),
       customerPhone: phone.trim() || null,
+      email: email.trim() || null,
       storeAccountId: sessionUser?.id ?? null,
-      paymentMethod,
+      paymentMethod: effectivePaymentMethod,
       currencyCode: currency,
       couponCode: couponCode.trim() || null,
+      giftCardCode: giftCardCode.trim() || null,
+      deliveryType,
+      address: address.trim() || null,
+      addressNote: addressNote.trim() || null,
+      pickupBranchSlug: pickupBranchSlug ?? null,
       idempotencyKey: idempotencyKeyRef.current,
     };
+
+    if (
+      deliveryType === "pickup" &&
+      pickupEnabled &&
+      branches.length > 0 &&
+      !pickupBranchSlug
+    ) {
+      setError("Авах салбараа сонгоно уу.");
+      return;
+    }
 
     const validationError = validateCheckoutInput(input);
     if (validationError) {
@@ -124,7 +205,7 @@ export default function CheckoutScreen() {
 
     if (result.ok) {
       clearCart();
-      goToSuccess(result.reference, false, result.saleId);
+      goToSuccess(result.reference, false, result);
       return;
     }
 
@@ -236,25 +317,143 @@ export default function CheckoutScreen() {
               autoCapitalize="characters"
               editable={!submitting}
             />
+            <Input
+              placeholder="Бэлгийн картын код (заавал биш)"
+              value={giftCardCode}
+              onChangeText={setGiftCardCode}
+              autoCapitalize="characters"
+              editable={!submitting}
+            />
           </CardContent>
         </Card>
+
+        {/* Delivery / pickup */}
+        {showDeliverySection && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Хүргэлт</CardTitle>
+            </CardHeader>
+            <CardContent className="gap-3">
+              <View className="flex-row gap-2">
+                {deliveryEnabled && (
+                  <PaymentOption
+                    label="Хүргэлт"
+                    active={deliveryType === "delivery"}
+                    onPress={() => setDeliveryType("delivery")}
+                  />
+                )}
+                {pickupEnabled && (
+                  <PaymentOption
+                    label="Дэлгүүрээс авах"
+                    active={deliveryType === "pickup"}
+                    onPress={() => setDeliveryType("pickup")}
+                  />
+                )}
+              </View>
+
+              {deliveryType === "delivery" && (
+                <View className="gap-3">
+                  <Input
+                    placeholder="Хаяг *"
+                    value={address}
+                    onChangeText={setAddress}
+                    editable={!submitting}
+                  />
+                  <Input
+                    placeholder="Гэрийн дугаар / бусад тэмдэглэл"
+                    value={addressNote}
+                    onChangeText={setAddressNote}
+                    editable={!submitting}
+                  />
+                  {deliveryEnabled && org?.delivery_fee_amount != null && (
+                    <Text className="text-xs text-muted-foreground">
+                      Хүргэлтийн төлбөр:{" "}
+                      {formatPrice(Number(org.delivery_fee_amount), currency)}
+                      {org.free_delivery_threshold != null &&
+                        ` · ${formatPrice(Number(org.free_delivery_threshold), currency)}-аас дээш үнэгүй`}
+                    </Text>
+                  )}
+                </View>
+              )}
+
+              {deliveryType === "pickup" && (
+                <View className="gap-1.5">
+                  {branches.length === 0 ? (
+                    <Text className="text-xs text-muted-foreground">
+                      Авах салбарууд ачаалагдаж байна…
+                    </Text>
+                  ) : (
+                    branches.map((b) => (
+                      <Pressable
+                        key={b.id}
+                        onPress={() => setPickupBranchSlug(b.slug)}
+                        className={
+                          pickupBranchSlug === b.slug
+                            ? "rounded-lg border border-primary bg-primary/10 p-3"
+                            : "rounded-lg border border-border bg-background p-3 active:opacity-70"
+                        }
+                      >
+                        <Text className="text-sm font-medium text-foreground">
+                          {b.name}
+                        </Text>
+                        {b.address ? (
+                          <Text className="text-xs text-muted-foreground">
+                            {b.address}
+                          </Text>
+                        ) : null}
+                        {b.phone ? (
+                          <Text className="text-xs text-muted-foreground">
+                            {b.phone}
+                          </Text>
+                        ) : null}
+                      </Pressable>
+                    ))
+                  )}
+                  {selectedBranch && (
+                    <Text className="text-xs text-emerald-600">
+                      Сонгосон: {selectedBranch.name}
+                    </Text>
+                  )}
+                </View>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Payment method */}
         <Card>
           <CardHeader>
             <CardTitle>Төлбөрийн хэлбэр</CardTitle>
           </CardHeader>
-          <CardContent className="flex-row gap-2">
-            <PaymentOption
-              label="Бэлэн"
-              active={paymentMethod === "cash"}
-              onPress={() => setPaymentMethod("cash")}
-            />
-            <PaymentOption
-              label="Карт"
-              active={paymentMethod === "card"}
-              onPress={() => setPaymentMethod("card")}
-            />
+          <CardContent className="flex-row flex-wrap gap-2">
+            {availablePaymentMethods.includes("cash") && (
+              <PaymentOption
+                label="Бэлэн"
+                active={effectivePaymentMethod === "cash"}
+                onPress={() => setPaymentMethod("cash")}
+              />
+            )}
+            {availablePaymentMethods.includes("card") && (
+              <PaymentOption
+                label="Карт"
+                active={effectivePaymentMethod === "card"}
+                onPress={() => setPaymentMethod("card")}
+              />
+            )}
+            {availablePaymentMethods.includes("bank_transfer") && (
+              <PaymentOption
+                label="Данс"
+                active={effectivePaymentMethod === "bank_transfer"}
+                onPress={() => setPaymentMethod("bank_transfer")}
+              />
+            )}
+            {availablePaymentMethods.includes("qpay") && (
+              <PaymentOption
+                label="QPay"
+                active={effectivePaymentMethod === "qpay"}
+                onPress={() => setPaymentMethod("qpay")}
+              />
+            )}
           </CardContent>
         </Card>
 
