@@ -221,8 +221,17 @@ function CartView({
     } catch (err) {
       capture(err, { context: "storefront: submit order" });
       // Keep cart intact; retry uses the same idempotency key.
+      // PostgREST surfaces server-raised, user-facing Mongolian messages
+      // (coupon / gift-card / stock errors) in the RPC error's `message` field
+      // — surface those verbatim instead of the generic fallback. Always
+      // rendered as text content, never dangerouslySetInnerHTML, and never a
+      // stack trace.
+      const message =
+        err && typeof err === "object" && "message" in err ? err.message : null;
       setError(
-        "Захиалга илгээхэд алдаа гарлаа. Холболтоо шалгаад дахин оролдоно уу.",
+        typeof message === "string" && message.trim() !== ""
+          ? message
+          : "Захиалга илгээхэд алдаа гарлаа. Холболтоо шалгаад дахин оролдоно уу.",
       );
     } finally {
       setSubmitting(false);

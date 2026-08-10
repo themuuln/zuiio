@@ -315,7 +315,7 @@ describe("CartClient", () => {
     expect(JSON.parse(raw ?? "{}")).toEqual({ items: [] });
   });
 
-  it("keeps the cart and shows a Mongolian error when the RPC fails", async () => {
+  it("keeps the cart and surfaces the RPC error message when the RPC fails", async () => {
     seedCart(TWO_ITEM_CART);
     mockRpc.mockResolvedValue({
       data: null,
@@ -327,11 +327,7 @@ describe("CartClient", () => {
     submitCheckout();
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          "Захиалга илгээхэд алдаа гарлаа. Холболтоо шалгаад дахин оролдоно уу.",
-        ),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Нөөц хүрэлцэхгүй байна")).toBeInTheDocument();
     });
     expect(mockCapture).toHaveBeenCalled();
     // Cart is intact — items still render and can be resubmitted
@@ -344,7 +340,7 @@ describe("CartClient", () => {
   it("reuses the same idempotency key when retrying after an error", async () => {
     seedCart(TWO_ITEM_CART);
     mockRpc
-      .mockResolvedValueOnce({ data: null, error: { message: "timeout" } })
+      .mockResolvedValueOnce({ data: null, error: {} })
       .mockResolvedValueOnce({
         data: [
           { order_id: "ord-retry", status: "pending", total_amount: 22500 },
@@ -614,5 +610,42 @@ describe("CartClient", () => {
       "src",
       "https://cdn.test/qpay.png",
     );
+  });
+
+  it("surfaces a server-side RPC message in the error banner", async () => {
+    seedCart(TWO_ITEM_CART);
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { message: "Купон олдсонгүй" },
+    });
+    render(<CartClient slug={ORG.slug} organization={ORG} />);
+
+    await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
+    submitCheckout();
+
+    await waitFor(() => {
+      const alert = screen.getByRole("alert");
+      expect(alert).toHaveTextContent("Купон олдсонгүй");
+      expect(alert).not.toHaveTextContent(
+        "Захиалга илгээхэд алдаа гарлаа. Холболтоо шалгаад дахин оролдоно уу.",
+      );
+    });
+    expect(mockCapture).toHaveBeenCalled();
+  });
+
+  it("falls back to the generic message when the RPC error has no message", async () => {
+    seedCart(TWO_ITEM_CART);
+    mockRpc.mockResolvedValue({ data: null, error: {} });
+    render(<CartClient slug={ORG.slug} organization={ORG} />);
+
+    await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
+    submitCheckout();
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Захиалга илгээхэд алдаа гарлаа. Холболтоо шалгаад дахин оролдоно уу.",
+      );
+    });
+    expect(mockCapture).toHaveBeenCalled();
   });
 });
