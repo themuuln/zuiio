@@ -318,7 +318,8 @@ declare const messages: {
     "customerSetPassword": {
       "metaTitle": "Set Password | TOLOM",
       "metaDescription": "Set your password to access the TOLOM customer portal."
-    }
+    },
+    "ssoComingSoon": "coming soon"
   },
   "nav": {
     "overview": "Overview",

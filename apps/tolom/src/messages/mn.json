@@ -315,7 +315,8 @@
     "customerSetPassword": {
       "metaTitle": "Нууц үг тохируулах | TOLOM",
       "metaDescription": "TOLOM хэрэглэгчийн портал руу нэвтрэх нууц үгээ тохируулах."
-    }
+    },
+    "ssoComingSoon": "тун удахгүй"
   },
   "nav": {
     "overview": "Ерөнхий",

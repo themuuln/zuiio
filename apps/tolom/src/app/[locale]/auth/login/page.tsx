@@ -71,7 +71,6 @@ function LoginForm() {
   }, [state?.formError, isPending]);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [ssoLoading, setSsoLoading] = useState(false);
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get("redirectTo") ?? "";
 
@@ -239,26 +238,17 @@ function LoginForm() {
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            <Link
-              href={
-                redirectTo
-                  ? `/auth/sso?next=${encodeURIComponent(redirectTo)}`
-                  : "/auth/sso"
-              }
+            <Button
+              type="button"
+              variant="outline"
+              disabled
+              className="w-full flex items-center justify-center gap-1.5 cursor-not-allowed opacity-70"
             >
-              <Button
-                type="button"
-                variant="outline"
-                disabled={ssoLoading}
-                onClick={() => setSsoLoading(true)}
-                className="w-full flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                {ssoLoading ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : null}
-                {authT("ssoLogin")}
-              </Button>
-            </Link>
+              {authT("ssoLogin")}
+              <span className="text-xs font-normal text-muted-foreground">
+                ({authT("ssoComingSoon")})
+              </span>
+            </Button>
 
             <Typography.Muted className="mt-4 text-center text-sm text-muted-foreground">
               {t("noAccount")}{" "}

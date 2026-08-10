@@ -44,7 +44,6 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [ssoLoading, setSsoLoading] = useState(false);
 
   return (
     <div className="flex flex-col gap-6">
@@ -202,26 +201,17 @@ export default function SignupPage() {
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            <Link
-              href={
-                redirectTo
-                  ? `/auth/sso?next=${encodeURIComponent(redirectTo)}`
-                  : "/auth/sso"
-              }
+            <Button
+              type="button"
+              variant="outline"
+              disabled
+              className="w-full flex items-center justify-center gap-1.5 cursor-not-allowed opacity-70"
             >
-              <Button
-                type="button"
-                variant="outline"
-                disabled={ssoLoading}
-                onClick={() => setSsoLoading(true)}
-                className="w-full flex items-center justify-center gap-1.5"
-              >
-                {ssoLoading ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : null}
-                {authT("ssoSignup")}
-              </Button>
-            </Link>
+              {authT("ssoSignup")}
+              <span className="text-xs font-normal text-muted-foreground">
+                ({authT("ssoComingSoon")})
+              </span>
+            </Button>
             <Typography.Muted className="mt-4 text-center text-sm text-muted-foreground">
               {t("haveAccount")}{" "}
               <Link
