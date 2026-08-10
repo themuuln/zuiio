@@ -873,6 +873,7 @@ declare const messages: {
     "assignMechanic": "Assign Mechanic",
     "addHelper": "Add Helper",
     "changeMechanic": "Change Mechanic",
+    "changeCustomer": "Change customer",
     "searchMechanics": "Search mechanics...",
     "allBranches": "All",
     "allStatuses": "All",
@@ -3048,6 +3049,7 @@ declare const messages: {
     "acceptedDescription": "You've joined {organization}. Redirecting to dashboard...",
     "goToDashboard": "Go to Dashboard",
     "pendingForYou": "Pending invitations for you",
+    "pendingDescription": "Track invitations that are waiting for a response.",
     "metaTitle": "Invitation | TOLOM",
     "metaDescription": "Accept your invitation to join an organization on TOLOM."
   },

@@ -870,6 +870,7 @@
     "assignMechanic": "Механикч томилох",
     "addHelper": "Туслах нэмэх",
     "changeMechanic": "Механикч солих",
+    "changeCustomer": "Харилцагч солих",
     "searchMechanics": "Механикч хайх...",
     "allBranches": "Бүгд",
     "allStatuses": "Бүгд",
@@ -3045,6 +3046,7 @@
     "acceptedDescription": "Та {organization} байгууллагад нэгдлээ. Хянах самбар руу шилжиж байна...",
     "goToDashboard": "Хянах самбар руу",
     "pendingForYou": "Танд ирсэн урилгууд",
+    "pendingDescription": "Хариу хүлээж буй урилгуудыг хяна.",
     "metaTitle": "Урилга | TOLOM",
     "metaDescription": "Байгууллагын урилгыг хүлээн авч TOLOM-д нэгдэх."
   },
