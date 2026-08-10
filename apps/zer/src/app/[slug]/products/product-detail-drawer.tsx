@@ -23,24 +23,21 @@ export function ProductDetailDrawer({
 
   return (
     <>
-      {/* Whole card opens the drawer. It is a div (not a button) so the
-          AddToCartButton inside the card stays valid, non-nested HTML. */}
-      {/* biome-ignore lint/a11y/useSemanticElements: cannot be a <button> — AddToCartButton nests inside the card */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setOpen(true)}
-        onKeyDown={(e) => {
-          // Ignore key events that bubble up from inner interactive controls.
-          if (e.target !== e.currentTarget) return;
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setOpen(true);
-          }
-        }}
-        className="cursor-pointer"
-      >
-        {children}
+      {/* Whole card opens the drawer via an overlay trigger button. The
+          card's own AddToCartButton is raised above the overlay (z-20, see
+          ProductCard) so the two interactive elements are siblings — never
+          nested — which keeps the markup axe-compliant. */}
+      <div className="relative cursor-pointer">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`${product.name} дэлгэрэнгүй үзэх`}
+          className="absolute inset-0 z-10 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+        {/* No z-index here: a stacking context would trap the card's
+            z-20 add button below the overlay. The button competes with
+            the overlay in the same stacking context and wins. */}
+        <div className="relative">{children}</div>
       </div>
 
       <BottomSheet

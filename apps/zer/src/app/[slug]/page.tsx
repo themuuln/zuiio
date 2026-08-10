@@ -320,7 +320,7 @@ async function OrgProfileDataFetcher({
                     href={orgData.public_profile.website_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline"
+                    className="text-sm text-foreground underline-offset-4 hover:text-primary hover:underline"
                   >
                     {orgData.public_profile.website_url}
                   </a>

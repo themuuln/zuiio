@@ -6,6 +6,38 @@ import type { Database } from "../database.types";
 import { maybeRewriteStorefrontHost } from "./domain-rewrite";
 import { getSupabaseEnv } from "./env";
 
+/**
+ * Storefront subpaths that are public on the default domain under an org
+ * slug: /{slug}, /{slug}/products(+/[id]), /{slug}/cart, /{slug}/blog,
+ * /{slug}/account (buyer sign-in / register / orders). Dashboard routes
+ * (/shop/cart, /products, /settings, /dashboard, …) stay protected
+ * because their first segment is not an org slug.
+ */
+const STOREFRONT_SUBPATHS = ["products", "cart", "blog", "account"];
+
+/**
+ * True when `pathname` looks like a storefront path (single segment or a
+ * known storefront subpath) whose first segment resolves to an org slug.
+ * Runs only for anonymous visitors on non-public paths, so dashboard
+ * routes never reach the DB lookup.
+ */
+async function isPublicStorefrontPath(
+  supabase: ReturnType<typeof createServerClient<Database>>,
+  pathname: string,
+): Promise<boolean> {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return false;
+  if (segments.length > 1 && !STOREFRONT_SUBPATHS.includes(segments[1])) {
+    return false;
+  }
+  const { data } = await supabase
+    .from("organizations")
+    .select("slug")
+    .eq("slug", segments[0])
+    .maybeSingle();
+  return data !== null;
+}
+
 export async function updateSession(request: NextRequest) {
   // Custom-domain / subdomain storefront rewrite (before auth checks):
   // public storefront pages must render under the requested host.
@@ -50,19 +82,21 @@ export async function updateSession(request: NextRequest) {
   // Allow public share links (/r/[token]) without auth.
   const isShareRoute = request.nextUrl.pathname.startsWith("/r/");
 
-  // Allow public org product pages (/{slug}/products) without auth.
-  const isPublicProductsRoute = /^\/[^/]+\/products(\/|$)/.test(
-    request.nextUrl.pathname,
-  );
-
   // Allow cron API routes without auth (they use CRON_SECRET Bearer token instead).
   const isCronRoute = request.nextUrl.pathname.startsWith("/api/cron/");
+
+  // Allow public storefront pages on the default domain (/{slug} and its
+  // storefront subpaths) — resolved against organizations.slug so
+  // dashboard routes never match. Only consulted for anonymous visitors.
+  const isStorefrontRoute = !userId
+    ? await isPublicStorefrontPath(supabase, request.nextUrl.pathname)
+    : false;
 
   if (
     !userId &&
     !isPublicRoute &&
     !isShareRoute &&
-    !isPublicProductsRoute &&
+    !isStorefrontRoute &&
     !isCronRoute
   ) {
     const url = request.nextUrl.clone();

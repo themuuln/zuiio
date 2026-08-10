@@ -24,6 +24,24 @@ const mockCapture = vi.fn();
 const mockNextResponseNext = vi.fn();
 const mockNextResponseRedirect = vi.fn();
 const mockNextResponseRewrite = vi.fn();
+const mockOrgSlugMaybeSingle = vi.fn();
+
+/** Mock server client: getClaims + organizations.slug resolution. */
+function mockServerClient() {
+  return {
+    auth: { getClaims: mockGetClaims },
+    from: vi.fn((table: string) => {
+      if (table !== "organizations") {
+        throw new Error(`unexpected table: ${table}`);
+      }
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({ maybeSingle: mockOrgSlugMaybeSingle })),
+        })),
+      };
+    }),
+  };
+}
 
 vi.mock("@supabase/ssr", () => ({
   createServerClient: mockCreateServerClient,
@@ -154,9 +172,8 @@ describe("updateSession", () => {
       url: "https://example.supabase.co",
       anonKey: "test-anon-key",
     });
-    mockCreateServerClient.mockReturnValue({
-      auth: { getClaims: mockGetClaims },
-    });
+    mockCreateServerClient.mockReturnValue(mockServerClient());
+    mockOrgSlugMaybeSingle.mockResolvedValue({ data: null });
     mockNextResponseNext.mockImplementation(() => createMockResponse());
     mockNextResponseRedirect.mockImplementation(() => createMockResponse());
   });
@@ -222,6 +239,7 @@ describe("updateSession", () => {
     it.each(["/my-org/products", "/my-org/products/123"])(
       "allows unauthenticated access to /{slug}/products%#",
       async (path) => {
+        mockOrgSlugMaybeSingle.mockResolvedValue({ data: { slug: "my-org" } });
         const req = createMockRequest(path);
         const { updateSession } = await import("../proxy");
         await updateSession(req);
@@ -236,6 +254,84 @@ describe("updateSession", () => {
       await updateSession(req);
 
       expect(mockNextResponseRedirect).not.toHaveBeenCalled();
+    });
+
+    // ── Public storefront (default domain) ───────────────────────
+
+    it.each([
+      "/my-org",
+      "/my-org/cart",
+      "/my-org/blog",
+      "/my-org/blog/new-season",
+      "/my-org/account",
+      "/my-org/account/orders",
+    ])("allows unauthenticated access to storefront path %s", async (path) => {
+      mockOrgSlugMaybeSingle.mockResolvedValue({ data: { slug: "my-org" } });
+      const req = createMockRequest(path);
+      const { updateSession } = await import("../proxy");
+      await updateSession(req);
+
+      expect(mockNextResponseRedirect).not.toHaveBeenCalled();
+    });
+
+    it("still redirects when the first segment is not an org slug", async () => {
+      // No org with slug "shop"/"products" — dashboard routes stay protected.
+      mockOrgSlugMaybeSingle.mockResolvedValue({ data: null });
+      const req = createMockRequest("/shop/cart");
+      const { updateSession } = await import("../proxy");
+      await updateSession(req);
+
+      expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
+      expect(mockNextResponseRedirect.mock.calls[0][0].pathname).toBe("/login");
+    });
+
+    it.each(["/products", "/settings", "/dashboard", "/shop/cart"])(
+      "denies unauthenticated access to dashboard route %s",
+      async (path) => {
+        mockOrgSlugMaybeSingle.mockResolvedValue({ data: null });
+        const req = createMockRequest(path);
+        const { updateSession } = await import("../proxy");
+        await updateSession(req);
+
+        expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
+        expect(
+          mockNextResponseRedirect.mock.calls[0][0].searchParams.get("next"),
+        ).toBe(path);
+      },
+    );
+
+    it("denies storefront-looking paths when the org does not exist", async () => {
+      mockOrgSlugMaybeSingle.mockResolvedValue({ data: null });
+      const req = createMockRequest("/unknown-org/cart");
+      const { updateSession } = await import("../proxy");
+      await updateSession(req);
+
+      expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
+    });
+
+    it("denies org paths under non-storefront subpaths", async () => {
+      mockOrgSlugMaybeSingle.mockResolvedValue({ data: { slug: "my-org" } });
+      const req = createMockRequest("/my-org/settings");
+      const { updateSession } = await import("../proxy");
+      await updateSession(req);
+
+      expect(mockNextResponseRedirect).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not resolve org slugs for authenticated visitors", async () => {
+      mockGetClaims.mockResolvedValue({
+        data: { claims: { sub: "user-abc-123" } },
+      });
+      const req = createMockRequest("/my-org/cart");
+      const { updateSession } = await import("../proxy");
+      const result = await updateSession(req);
+
+      expect(mockOrgSlugMaybeSingle).not.toHaveBeenCalled();
+      expect(mockNextResponseRedirect).not.toHaveBeenCalled();
+      expect(result.headers.set).toHaveBeenCalledWith(
+        "x-authed-user-id",
+        "user-abc-123",
+      );
     });
 
     it("increments __redirect_count on redirect", async () => {
@@ -399,9 +495,8 @@ describe("updateSession — custom domains", () => {
       url: "https://example.supabase.co",
       anonKey: "test-anon-key",
     });
-    mockCreateServerClient.mockReturnValue({
-      auth: { getClaims: mockGetClaims },
-    });
+    mockCreateServerClient.mockReturnValue(mockServerClient());
+    mockOrgSlugMaybeSingle.mockResolvedValue({ data: null });
     mockNextResponseNext.mockImplementation(() => createMockResponse());
     mockNextResponseRewrite.mockImplementation(() => createMockResponse());
     vi.stubGlobal(

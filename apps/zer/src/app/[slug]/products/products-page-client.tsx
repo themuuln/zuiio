@@ -331,7 +331,7 @@ function SidebarFilters({
               onClick={() => setCategoryFilter("")}
               className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
                 !categoryFilter
-                  ? "bg-primary/10 font-medium text-primary"
+                  ? "bg-primary/10 font-medium text-primary-foreground"
                   : "text-muted-foreground hover:bg-muted"
               }`}
             >
@@ -347,7 +347,7 @@ function SidebarFilters({
                 }
                 className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
                   categoryFilter === cat.id
-                    ? "bg-primary/10 font-medium text-primary"
+                    ? "bg-primary/10 font-medium text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted"
                 }`}
               >
@@ -435,6 +435,7 @@ function ProductCard({
           </div>
           <AddToCartButton
             size="sm"
+            className="relative z-20"
             item={{
               productId: product.id,
               name: product.name,
