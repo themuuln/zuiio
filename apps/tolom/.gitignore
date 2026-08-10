@@ -70,6 +70,7 @@ opencode/
 .commandcode/
 .pi/
 .factory/
+.firecrawl/
 
 # scratch / artifacts / generated
 /artifacts/

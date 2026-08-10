@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5";
   };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       agent_audit_log: {
@@ -3307,6 +3332,35 @@ export type Database = {
           },
         ];
       };
+      org_pin_attempts: {
+        Row: {
+          failed_at: string;
+          id: number;
+          organization_id: string;
+          user_id: string;
+        };
+        Insert: {
+          failed_at?: string;
+          id?: never;
+          organization_id: string;
+          user_id: string;
+        };
+        Update: {
+          failed_at?: string;
+          id?: never;
+          organization_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "org_pin_attempts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       organization_settings: {
         Row: {
           created_at: string;
@@ -4615,67 +4669,6 @@ export type Database = {
           },
         ];
       };
-      service_part_suggestions: {
-        Row: {
-          created_at: string;
-          created_by: string | null;
-          id: string;
-          notes: string | null;
-          organization_id: string;
-          part_id: string;
-          quantity: number;
-          service_id: string;
-          updated_at: string;
-          updated_by: string | null;
-        };
-        Insert: {
-          created_at?: string;
-          created_by?: string | null;
-          id?: string;
-          notes?: string | null;
-          organization_id: string;
-          part_id: string;
-          quantity?: number;
-          service_id: string;
-          updated_at?: string;
-          updated_by?: string | null;
-        };
-        Update: {
-          created_at?: string;
-          created_by?: string | null;
-          id?: string;
-          notes?: string | null;
-          organization_id?: string;
-          part_id?: string;
-          quantity?: number;
-          service_id?: string;
-          updated_at?: string;
-          updated_by?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "service_part_suggestions_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "service_part_suggestions_service_id_fkey";
-            columns: ["service_id"];
-            isOneToOne: false;
-            referencedRelation: "service_catalog";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "service_part_suggestions_part_id_fkey";
-            columns: ["part_id"];
-            isOneToOne: false;
-            referencedRelation: "parts_catalog";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       service_catalog: {
         Row: {
           branch_id: string | null;
@@ -4854,6 +4847,67 @@ export type Database = {
             columns: ["work_order_id"];
             isOneToOne: false;
             referencedRelation: "work_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      service_part_suggestions: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          notes: string | null;
+          organization_id: string;
+          part_id: string;
+          quantity: number;
+          service_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          notes?: string | null;
+          organization_id: string;
+          part_id: string;
+          quantity?: number;
+          service_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          notes?: string | null;
+          organization_id?: string;
+          part_id?: string;
+          quantity?: number;
+          service_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_part_suggestions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_part_suggestions_part_id_fkey";
+            columns: ["part_id"];
+            isOneToOne: false;
+            referencedRelation: "parts_catalog";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_part_suggestions_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "service_catalog";
             referencedColumns: ["id"];
           },
         ];
@@ -7106,6 +7160,40 @@ export type Database = {
         };
         Relationships: [];
       };
+      invoice_items_v: {
+        Row: {
+          created_at: string | null;
+          description: string | null;
+          discount_amount: number | null;
+          id: string | null;
+          invoice_id: string | null;
+          is_tax_exempt: boolean | null;
+          issued_at: string | null;
+          item_type: string | null;
+          organization_id: string | null;
+          quantity: number | null;
+          sort_order: number | null;
+          tax_rate: number | null;
+          total_price: number | null;
+          unit_price: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoices_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       mv_active_bay_work_orders: {
         Row: {
           bay_number: number | null;
@@ -7506,6 +7594,7 @@ export type Database = {
         Args: { p_date: string; p_org_id: string; p_tokens: number };
         Returns: undefined;
       };
+      invoke_check_itp_reminders: { Args: never; Returns: undefined };
       invoke_check_service_reminders: { Args: never; Returns: undefined };
       invoke_expire_subscriptions: { Args: never; Returns: undefined };
       invoke_telegram_notify_daily: { Args: never; Returns: undefined };
@@ -7631,8 +7720,7 @@ export type Database = {
         | "transfer_out"
         | "return"
         | "waste"
-        | "disassembly"
-        | "count_adjustment";
+        | "disassembly";
       invoice_status:
         | "draft"
         | "sent"
@@ -7793,6 +7881,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       handoff_status: [
@@ -7811,7 +7902,6 @@ export const Constants = {
         "return",
         "waste",
         "disassembly",
-        "count_adjustment",
       ],
       invoice_status: [
         "draft",
