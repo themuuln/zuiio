@@ -95,6 +95,9 @@ Thumbs.db
 # AI skills lock files
 skills-lock.json
 
+# Stray npm lockfiles (pnpm-only monorepo)
+package-lock.json
+
 # Archived apps — no longer in active workspace
 archive/apps/
 /apps/zer/.turbo/turbo-build.log

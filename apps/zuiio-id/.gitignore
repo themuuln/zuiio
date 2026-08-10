@@ -1,4 +1,5 @@
 .vercel
+supabase/.temp/
 
 # impeccable-live-ignore-start
 .impeccable/hook.cache.json
