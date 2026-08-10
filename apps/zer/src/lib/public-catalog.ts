@@ -81,8 +81,8 @@ export async function getPublicCatalog(
 } | null> {
   const { data, error } = await supabase.rpc("get_public_products", {
     p_slug: slug,
-    p_category_id: options?.categoryId ?? null,
-    p_search: options?.search ?? null,
+    p_category_id: options?.categoryId,
+    p_search: options?.search,
     p_page: options?.page ?? 1,
     p_page_size: options?.pageSize ?? 24,
   });

@@ -143,7 +143,9 @@ describe("submit_shop_order (public buyer checkout)", () => {
 
     const { data: sale } = (await admin
       .from("sales")
-      .select("status, total_amount, paid_amount, store_account_id, branch_id")
+      .select(
+        "status, total_amount, paid_amount, store_account_id, branch_id, is_online",
+      )
       .eq("id", row!.order_id)
       .single()) as unknown as {
       data: {
@@ -152,12 +154,14 @@ describe("submit_shop_order (public buyer checkout)", () => {
         paid_amount: number;
         store_account_id: string | null;
         branch_id: string;
+        is_online: boolean;
       } | null;
     };
     expect(sale?.status).toBe("pending");
     expect(sale?.total_amount).toBe(10000);
     expect(sale?.paid_amount).toBe(0);
     expect(sale?.store_account_id).toBeNull(); // guest order
+    expect(sale?.is_online).toBe(true); // storefront order flag
 
     const { data: product } = (await admin
       .from("products")

@@ -16,6 +16,7 @@ import {
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { saleKeys } from "@/lib/query/keys";
+import { filterOnlineSales, onlineBuyerLabel } from "@/lib/shop-online-sales";
 import { createClient } from "@/lib/supabase/client";
 
 // ── Types ────────────────────────────────────────────────────────
@@ -63,6 +64,8 @@ type SaleRow = {
   created_at: string | null;
   contacts: { name: string } | null;
   profiles: { full_name: string | null } | null;
+  store_accounts: { display_name: string | null; email: string } | null;
+  is_online: boolean;
   item_count: number;
 };
 
@@ -113,6 +116,7 @@ function ShopHistoryDrawer({
 }) {
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<SaleDetailData | null>(null);
+  const [onlineOnly, setOnlineOnly] = useState(false);
 
   // Fetch sales list
   const { data: sales, isLoading } = useQuery({
@@ -124,7 +128,7 @@ function ShopHistoryDrawer({
       const { data: saleData, error: saleError } = await supabase
         .from("sales")
         .select(
-          "id, total_amount, paid_amount, payment_method, status, sale_date, created_at, contact_id, contacts(name), salesperson_id, profiles!sales_salesperson_id_fkey(full_name)",
+          "id, total_amount, paid_amount, payment_method, status, sale_date, created_at, contact_id, contacts(name), salesperson_id, profiles!sales_salesperson_id_fkey(full_name), store_accounts(display_name, email), is_online",
         )
         .eq("organization_id", orgId)
         .order("created_at", { ascending: false })
@@ -243,11 +247,23 @@ function ShopHistoryDrawer({
           </Empty>
         ) : (
           <div className="flex flex-col gap-2 pb-4">
-            {sales.map((sale) => {
+            <button
+              type="button"
+              onClick={() => setOnlineOnly((v) => !v)}
+              className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                onlineOnly
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-input bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              }`}
+            >
+              Онлайн захиалга
+            </button>
+            {filterOnlineSales(sales, onlineOnly).map((sale) => {
               const paymentLabel =
                 paymentMethodLabels[sale.payment_method ?? ""] ??
                 sale.payment_method ??
                 "-";
+              const buyerLabel = onlineBuyerLabel(sale);
 
               return (
                 <button
@@ -263,7 +279,7 @@ function ShopHistoryDrawer({
                     </span>
                     <span className="text-xs text-muted-foreground truncate">
                       #{sale.id.slice(0, 8).toUpperCase()}
-                      {sale.contacts?.name && <> · {sale.contacts.name}</>}
+                      {buyerLabel && <> · {buyerLabel}</>}
                       {sale.profiles?.full_name && (
                         <>
                           {" · "}
@@ -290,11 +306,18 @@ function ShopHistoryDrawer({
                         {paymentLabel}
                       </span>
                     </div>
-                    <span
-                      className={`mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium leading-none ${getStatusBadgeClass(sale.status)}`}
-                    >
-                      {getStatusLabel(sale.status)}
-                    </span>
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                      {sale.is_online && (
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium leading-none text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          Онлайн
+                        </span>
+                      )}
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium leading-none ${getStatusBadgeClass(sale.status)}`}
+                      >
+                        {getStatusLabel(sale.status)}
+                      </span>
+                    </div>
                   </div>
                 </button>
               );
