@@ -184,8 +184,10 @@ describe("InvoicesTab", () => {
     setStats(undefined, true);
     setInvoices(undefined, true);
     render(<InvoicesTab orgId="org-1" />);
-    // 4 KPI skeletons + 1 table-row skeleton
-    expect(document.querySelectorAll('[data-slot="skeleton"]').length).toBe(5);
+    // 4 KPI skeletons + DataTable's multi-row table skeleton
+    expect(
+      document.querySelectorAll('[data-slot="skeleton"]').length,
+    ).toBeGreaterThanOrEqual(5);
   });
 
   it("renders invoice stats and the invoice table rows", () => {

@@ -87,6 +87,8 @@ export interface DataTableProps<TData, TValue> {
   columnLabels?: Record<string, string>;
   /** Initial column visibility state (e.g. `{ id: false }` to hide ID by default) */
   defaultColumnVisibility?: VisibilityState;
+  /** Initial sort state (e.g. `[{ id: "shortage", desc: true }]`) */
+  defaultSorting?: SortingState;
   /** Enable row selection (default: false) */
   enableRowSelection?: boolean;
   /** Enable global search filter */
@@ -147,9 +149,12 @@ export function DataTable<TData, TValue>({
   noPagination = false,
   columnLabels,
   defaultColumnVisibility,
+  defaultSorting,
   onTableReady,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>(
+    defaultSorting ?? [],
+  );
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
