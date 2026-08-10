@@ -45,7 +45,7 @@ export function ProductDetailDrawer({
         onOpenChange={setOpen}
         title={product.name}
         description={organization.name}
-        maxHeight="90dvh"
+        maxHeight="calc(90dvh + 3rem)"
         footer={
           <div className="flex gap-2">
             <Link
