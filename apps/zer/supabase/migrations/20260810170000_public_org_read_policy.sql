@@ -24,6 +24,10 @@
 REVOKE SELECT ON public.organizations FROM anon;
 GRANT SELECT (id, name, slug, currency, company_type) ON public.organizations TO anon;
 
+-- RLS must be ON for the policy to take effect (prod had it on; fresh
+-- environments get it here).
+ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
+
 -- authenticated keeps full table access (dashboard reads the config columns).
 GRANT SELECT ON public.organizations TO authenticated;
 
