@@ -37,11 +37,12 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Init private submodules (optional)
-        if: ${{ secrets.SUBMODULE_PAT != '' }}
+        if: env.HAVE_SUBMODULE_PAT == 'true'
         run: |
           git config --global url."https://x-access-token:${SUBMODULE_PAT}@github.com/".insteadOf "https://github.com/"
           git submodule update --init --recursive
         env:
+          HAVE_SUBMODULE_PAT: ${{ secrets.SUBMODULE_PAT != '' }}
           SUBMODULE_PAT: ${{ secrets.SUBMODULE_PAT }}
 
       - name: Install tokei
