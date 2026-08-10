@@ -33,6 +33,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { compressImage } from "@/lib/compress-image";
 import { useOrgSettings } from "@/lib/org-settings-context";
@@ -77,6 +78,15 @@ type PublicProfile = {
   domain_verified: boolean;
   policies: string | null;
   social_links: Record<string, string> | null;
+  delivery_fee_amount?: string | null;
+  free_delivery_threshold?: string | null;
+  delivery_enabled?: boolean;
+  pickup_enabled?: boolean;
+  show_stock?: boolean;
+  payment_bank_name?: string | null;
+  payment_bank_account?: string | null;
+  payment_account_name?: string | null;
+  qpay_qr_url?: string | null;
 };
 
 function ImageUploadField({
@@ -261,6 +271,17 @@ export function PublicProfileSettings({
     return links;
   });
 
+  // Delivery, pickup & stock toggles (persisted as "true"/"false" strings)
+  const [deliveryEnabled, setDeliveryEnabled] = useState(
+    initialProfile?.delivery_enabled ?? false,
+  );
+  const [pickupEnabled, setPickupEnabled] = useState(
+    initialProfile?.pickup_enabled ?? false,
+  );
+  const [showStock, setShowStock] = useState(
+    initialProfile?.show_stock ?? false,
+  );
+
   useEffect(() => {
     if (state?.success && formRef.current) {
       formRef.current.reset();
@@ -268,6 +289,21 @@ export function PublicProfileSettings({
   }, [state?.success]);
 
   const handleFormSubmit = async (formData: FormData) => {
+    // Validate delivery fee fields (non-negative numbers)
+    for (const name of ["delivery_fee_amount", "free_delivery_threshold"]) {
+      const raw = String(formData.get(name) ?? "");
+      if (raw.trim() === "") continue;
+      const value = Number(raw);
+      if (Number.isNaN(value) || value < 0) {
+        toast.error(
+          name === "delivery_fee_amount"
+            ? "Хүргэлтийн төлбөр 0-ээс багагүй тоо байх ёстой."
+            : "Үнэгүй хүргэлтийн босго 0-ээс багагүй тоо байх ёстой.",
+        );
+        return;
+      }
+    }
+
     // Append controlled values to form data
     if (logoUrl) formData.set("logo_url", logoUrl);
     else formData.set("logo_url", "");
@@ -679,6 +715,183 @@ export function PublicProfileSettings({
               rows={4}
               defaultValue={initialProfile?.policies ?? ""}
             />
+          </div>
+
+          <Separator />
+
+          {/* Delivery & Pickup */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Хүргэлт ба хүлээн авалт</h3>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <label
+                  htmlFor="delivery_enabled"
+                  className="text-sm font-medium leading-none"
+                >
+                  Хүргэлтийн захиалга авах
+                </label>
+              </div>
+              <Switch
+                checked={deliveryEnabled}
+                onCheckedChange={setDeliveryEnabled}
+              />
+              <input
+                type="hidden"
+                name="delivery_enabled"
+                value={deliveryEnabled ? "true" : "false"}
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="delivery_fee_amount"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Хүргэлтийн төлбөр (₮)
+                </label>
+                <Input
+                  id="delivery_fee_amount"
+                  name="delivery_fee_amount"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder="0"
+                  defaultValue={initialProfile?.delivery_fee_amount ?? "0"}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="free_delivery_threshold"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Үнэгүй хүргэлтийн босго (₮)
+                </label>
+                <Input
+                  id="free_delivery_threshold"
+                  name="free_delivery_threshold"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder="0"
+                  defaultValue={initialProfile?.free_delivery_threshold ?? "0"}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Энэ дүнгээс дээш захиалга үнэгүй хүргэгдэнэ. 0 = үнэгүй
+                  хүргэлтгүй
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <label
+                  htmlFor="pickup_enabled"
+                  className="text-sm font-medium leading-none"
+                >
+                  Дэлгүүрээс авах захиалга авах
+                </label>
+              </div>
+              <Switch
+                checked={pickupEnabled}
+                onCheckedChange={setPickupEnabled}
+              />
+              <input
+                type="hidden"
+                name="pickup_enabled"
+                value={pickupEnabled ? "true" : "false"}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <label
+                  htmlFor="show_stock"
+                  className="text-sm font-medium leading-none"
+                >
+                  Худалдан авагчид нөөцийн тоо харуулах
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Худалдан авагчид барааны нөөц, 'Дууссан' төлөвийг харах
+                  боломжтой болно
+                </p>
+              </div>
+              <Switch checked={showStock} onCheckedChange={setShowStock} />
+              <input
+                type="hidden"
+                name="show_stock"
+                value={showStock ? "true" : "false"}
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Payment information */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Төлбөрийн мэдээлэл</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="payment_bank_name"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Банкны нэр
+                </label>
+                <Input
+                  id="payment_bank_name"
+                  name="payment_bank_name"
+                  placeholder="Хаан банк"
+                  defaultValue={initialProfile?.payment_bank_name ?? ""}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="payment_bank_account"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Дансны дугаар
+                </label>
+                <Input
+                  id="payment_bank_account"
+                  name="payment_bank_account"
+                  placeholder="4000000000"
+                  defaultValue={initialProfile?.payment_bank_account ?? ""}
+                />
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="payment_account_name"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Данс эзэмшигч
+                </label>
+                <Input
+                  id="payment_account_name"
+                  name="payment_account_name"
+                  placeholder="Байгууллагын нэр"
+                  defaultValue={initialProfile?.payment_account_name ?? ""}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="qpay_qr_url"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  QPay QR зурагны URL
+                </label>
+                <Input
+                  id="qpay_qr_url"
+                  name="qpay_qr_url"
+                  placeholder="https://..."
+                  defaultValue={initialProfile?.qpay_qr_url ?? ""}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Худалдан авагчид QPay-ээр төлөхөд энэ зургийг харуулна. Эдгээр
+              мэдээлэл QPay болон банкны шилжүүлгийн төлбөрийн аргуудын үед
+              төлбөрийн хэсэгт харагдана.
+            </p>
           </div>
 
           <div className="flex items-center gap-3 pt-2">
