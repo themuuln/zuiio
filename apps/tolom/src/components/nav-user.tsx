@@ -31,7 +31,15 @@ export function NavUser() {
   const initials = getInitials(profile?.fullName ?? null);
 
   const handleSignOut = async () => {
-    await fetch("/auth/signout", { method: "POST" });
+    try {
+      await fetch("/auth/signout", { method: "POST" });
+    } catch {
+      // The signout route 307-redirects to the canonical origin before the
+      // client can consume the response. When the app is served on a
+      // non-canonical host (e.g. 127.0.0.1 in local dev), following that
+      // cross-origin redirect rejects in fetch. The session cookie is already
+      // cleared server-side by then — never let that block navigation.
+    }
     window.location.href = "/auth/login";
   };
 
