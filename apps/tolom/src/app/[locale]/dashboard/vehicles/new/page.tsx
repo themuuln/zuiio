@@ -173,14 +173,17 @@ function NewVehicleForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCustomer, searchCustomers]);
 
-  // Clear errors on any input change
+  // Clear errors on any input change. Deps are the form fields (the form
+  // object), NOT [error, fieldErrors]: depending on the errors themselves
+  // wiped a just-set validation/mutation error on the next effect flush, so
+  // error messages flashed for one render and vanished.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: clearing on form change is the intent; error/fieldErrors must not be deps (that re-introduces the flash-and-vanish bug)
   useEffect(() => {
     if (error || Object.keys(fieldErrors).length > 0) {
       setError(null);
       setFieldErrors({});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error, fieldErrors]);
+  }, [form]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -214,12 +217,18 @@ function NewVehicleForm() {
 
     setError(null);
 
-    await createVehicle.mutateAsync({
-      ...form,
-      customerId: selectedCustomer.id,
-      year: form.year ? Number(form.year) : undefined,
-      odometer: form.odometer ? Number(form.odometer) : undefined,
-    });
+    try {
+      await createVehicle.mutateAsync({
+        ...form,
+        customerId: selectedCustomer.id,
+        year: form.year ? Number(form.year) : undefined,
+        odometer: form.odometer ? Number(form.odometer) : undefined,
+      });
+    } catch (error) {
+      // The mutation's onError already surfaced the message via setError;
+      // catch the rejection so the async submit handler doesn't throw.
+      reportServerError("Unexpected error", error);
+    }
   };
 
   if (orgQuery.isPending) {

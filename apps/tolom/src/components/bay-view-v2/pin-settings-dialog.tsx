@@ -102,7 +102,7 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
   // Merge form.register ref with our currentRef for auto-focus
   const currentRegister = form.register("currentPin");
   const mergedCurrentRef = (el: HTMLInputElement | null) => {
-    currentRegister.ref({ current: el });
+    currentRegister.ref(el);
     currentRef.current = el;
     if (el) el.focus();
   };

@@ -289,6 +289,18 @@ export default function ServicesPageClient() {
                   size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
+                    setModelPricesService(service);
+                  }}
+                  aria-label={st("modelSpecificPrices")}
+                  title={st("modelSpecificPrices")}
+                >
+                  <CarFront className="size-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setEditingService(service);
                   }}
                 >

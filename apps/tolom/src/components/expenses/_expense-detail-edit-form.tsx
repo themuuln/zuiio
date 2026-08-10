@@ -50,7 +50,9 @@ export function ExpenseDetailEditForm({
       id="expense-detail-form"
       onSubmit={(e) => {
         e.preventDefault();
-        handleSave();
+        // Run the zod schema validation (e.g. required amount) before save;
+        // on invalid input handleSave is not called and FieldErrors render.
+        void form.handleSubmit(handleSave)();
       }}
     >
       <FieldGroup>

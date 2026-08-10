@@ -59,25 +59,29 @@ export async function getDashboardData(
     throw new Error(error.message);
   }
 
-  const result = data as Record<string, unknown>;
+  // RPC can resolve with null/empty data (e.g. no rows for the period) —
+  // fall back to defaults instead of throwing.
+  const result = (data ?? {}) as Record<string, unknown>;
 
-  const summary = result.summary as Record<string, number>;
+  const summary = (result.summary ?? {}) as Record<string, number>;
   const summaryComparison = result.summaryComparison as Record<
     string,
     number
   > | null;
-  const statusDist =
-    result.workOrderStatusDistribution as WorkOrderStatusDistribution[];
-  const revenueTrend = result.revenueTrend as DashboardData["revenueTrend"];
-  const topServices = result.topServices as DashboardData["topServices"];
-  const techPerf =
-    result.technicianPerformance as DashboardData["technicianPerformance"];
-  const recentOrders =
-    result.recentWorkOrders as DashboardData["recentWorkOrders"];
-  const categoryBreakdown =
-    result.serviceCategoryBreakdown as DashboardData["serviceCategoryBreakdown"];
-  const acquisitionTrend =
-    result.customerAcquisitionTrend as DashboardData["customerAcquisitionTrend"];
+  const statusDist = (result.workOrderStatusDistribution ??
+    []) as WorkOrderStatusDistribution[];
+  const revenueTrend = (result.revenueTrend ??
+    []) as DashboardData["revenueTrend"];
+  const topServices = (result.topServices ??
+    []) as DashboardData["topServices"];
+  const techPerf = (result.technicianPerformance ??
+    []) as DashboardData["technicianPerformance"];
+  const recentOrders = (result.recentWorkOrders ??
+    []) as DashboardData["recentWorkOrders"];
+  const categoryBreakdown = (result.serviceCategoryBreakdown ??
+    []) as DashboardData["serviceCategoryBreakdown"];
+  const acquisitionTrend = (result.customerAcquisitionTrend ??
+    []) as DashboardData["customerAcquisitionTrend"];
 
   // Build comparison shape for insights
   const comparison: DashboardSummary | null = summaryComparison

@@ -51,7 +51,7 @@ export function StatusNotesModal({
   const notesRegister = form.register("notes");
   const notesRef = useCallback(
     (el: HTMLInputElement | null) => {
-      notesRegister.ref({ current: el });
+      notesRegister.ref(el);
       if (el) el.focus();
     },
     [notesRegister],

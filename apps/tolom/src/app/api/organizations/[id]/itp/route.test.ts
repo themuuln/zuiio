@@ -8,6 +8,7 @@ const getItpStatsMock = vi.fn();
 const getExpiringItpRecordsMock = vi.fn();
 const recordItpInspectionMock = vi.fn();
 const getVehiclesNeedingReminderMock = vi.fn();
+const getItpHistoryMock = vi.fn();
 
 vi.mock("@/lib/api-handler", () => ({
   createRouteHandler: vi.fn((handler: unknown) => handler),
@@ -19,6 +20,7 @@ vi.mock("@/lib/services/itp-service", () => ({
   getExpiringItpRecords: getExpiringItpRecordsMock,
   recordItpInspection: recordItpInspectionMock,
   getVehiclesNeedingReminder: getVehiclesNeedingReminderMock,
+  getItpHistory: getItpHistoryMock,
 }));
 
 const { GET, POST } = await import("./route");
@@ -149,6 +151,37 @@ describe("organizations/[id]/itp route", () => {
       expect(body.data).toEqual([
         { vehicle_id: "v-3", plate_number: "7777УНА" },
       ]);
+    });
+
+    it("filters by vehicle_id", async () => {
+      getItpRecordsMock.mockResolvedValue({ data: [], total: 0 });
+
+      const supabase = { from: vi.fn() };
+      const request = new NextRequest(`${baseUrl}?vehicle_id=v-9`);
+      await (GET as any)({ request, orgId, supabase });
+
+      expect(getItpRecordsMock).toHaveBeenCalledWith(
+        supabase,
+        orgId,
+        expect.objectContaining({ vehicleId: "v-9" }),
+      );
+    });
+
+    it("returns a vehicle's history when include_history=true with vehicle_id", async () => {
+      getItpHistoryMock.mockResolvedValue([
+        { id: "hist-1", vehicle_id: "v-9" },
+      ]);
+
+      const supabase = { from: vi.fn() };
+      const request = new NextRequest(
+        `${baseUrl}?include_history=true&vehicle_id=v-9`,
+      );
+      const response = await (GET as any)({ request, orgId, supabase });
+      const body = await response.json();
+
+      expect(getItpHistoryMock).toHaveBeenCalledWith(supabase, "v-9", orgId);
+      expect(body.data).toEqual([{ id: "hist-1", vehicle_id: "v-9" }]);
+      expect(getItpRecordsMock).not.toHaveBeenCalled();
     });
 
     it("returns vehicles needing reminder when needs_reminder=true", async () => {

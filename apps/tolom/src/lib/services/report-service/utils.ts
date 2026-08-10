@@ -25,7 +25,11 @@ export function formatCurrencyHelper(amount: number): string {
  * Compute an ISO week key (YYYY-Www) from a date string.
  */
 export function getWeekKey(dateStr: string): string {
-  const d = new Date(`${dateStr}T00:00:00`);
+  // Parse as UTC so the getUTC* date math below operates on the same date
+  // as the input — parsing without Z makes the internal UTC representation
+  // shift to the previous day in positive-offset timezones, which rolled
+  // ISO week boundaries back by one week (e.g. 2025-06-16 → 2025-W24).
+  const d = new Date(`${dateStr}T00:00:00Z`);
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));

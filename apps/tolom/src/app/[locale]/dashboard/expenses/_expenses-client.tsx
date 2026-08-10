@@ -428,18 +428,18 @@ export default function ExpensesPage() {
             !!expense.due_date &&
             new Date(expense.due_date) < now;
           const dateStr = (() => {
-            try {
-              return new Date(expense.expense_date).toLocaleDateString(
-                "en-US",
-                {
-                  month: "short",
-                  day: "numeric",
-                },
+            const parsed = new Date(expense.expense_date);
+            if (Number.isNaN(parsed.getTime())) {
+              reportServerError(
+                "Unexpected error",
+                new Error(`Invalid expense date: ${expense.expense_date}`),
               );
-            } catch (error) {
-              reportServerError("Unexpected error", error);
               return expense.expense_date;
             }
+            return parsed.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            });
           })();
           return (
             <div className="flex flex-col gap-3 text-sm">

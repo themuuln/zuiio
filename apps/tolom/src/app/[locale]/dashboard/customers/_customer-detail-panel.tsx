@@ -168,6 +168,7 @@ export function CustomerDetailPanel({
   const {
     data: customer,
     isLoading: loading,
+    isSuccess,
     error: queryError,
   } = useQuery({
     queryKey: customerKeys.detail(orgId, customerId),
@@ -257,7 +258,12 @@ export function CustomerDetailPanel({
     });
   }, [deleteMutation, onClose]);
 
-  const isLoadingData = loading || (!customer && !error);
+  // Distinguish "still loading" from "loaded, but there is no customer":
+  // a settled query with data:null is a successful empty result (customer
+  // not found), not a loading state. The old `!customer && !error` clause
+  // kept the panel spinning forever on data:null and made the
+  // "Customer not found" branch dead code.
+  const isLoadingData = loading || (!customer && !error && !isSuccess);
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card">

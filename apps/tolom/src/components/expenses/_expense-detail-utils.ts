@@ -43,7 +43,8 @@ export function syncForm(expense: {
   return {
     description: expense.description,
     amount: String(expense.amount),
-    taxAmount: expense.tax_amount ? String(expense.tax_amount) : "",
+    // != null (not truthiness): a 0 tax amount must render as "0", not ""
+    taxAmount: expense.tax_amount != null ? String(expense.tax_amount) : "",
     expenseDate: expense.expense_date ?? "",
     dueDate: expense.due_date ?? "",
     categoryId: expense.category_id ?? "",

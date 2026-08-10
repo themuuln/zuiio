@@ -36,7 +36,8 @@ export function MongolianLicensePlate({
   const formatted = formatPlateNumber(plate);
 
   // Check if plate matches Mongolian standard: e.g. 4 digits + 3 Cyrillic letters (e.g., 1234УАБ)
-  const mongolianRegex = /^(\d{4})([А-Яа-яӨөҮү]{3})$/;
+  // formatPlateNumber() outputs "1234 УБА" (with a space), so allow an optional separator.
+  const mongolianRegex = /^(\d{4})\s?([А-Яа-яӨөҮү]{3})$/;
   const match = formatted.match(mongolianRegex);
 
   let digits = "";

@@ -138,6 +138,15 @@ describe("getItpRecords", () => {
     expect(db.from("vehicles").eq).toHaveBeenCalledWith("branch_id", BRANCH_ID);
   });
 
+  it("filters by vehicle id", async () => {
+    const row = makeVehicleRow();
+    db.__qb.resolveOnce({ data: [row], error: null, count: 1 });
+
+    await getItpRecords(db, ORG_ID, { vehicleId: VEHICLE_ID });
+
+    expect(db.from("vehicles").eq).toHaveBeenCalledWith("id", VEHICLE_ID);
+  });
+
   it("filters by search via matching customer ids", async () => {
     // customers match
     db.__qb.resolveOnce({ data: [{ id: "cust-1" }], error: null });

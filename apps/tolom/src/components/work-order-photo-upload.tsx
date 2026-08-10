@@ -99,13 +99,9 @@ export default function WorkOrderPhotoUpload({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      "image/jpeg": [".jpg", ".jpeg"],
-      "image/png": [".png"],
-      "image/webp": [".webp"],
-      "image/heic": [".heic"],
-      "application/pdf": [".pdf"],
-    },
+    // No `accept` filter: react-dropzone would reject unsupported files before
+    // onDrop runs, making the invalidFileType toast in uploadFile unreachable.
+    // Let every file through and let uploadFile validate type/size itself.
     maxFiles: 1,
     disabled: uploading || createAttachment.isPending,
     noClick: true,

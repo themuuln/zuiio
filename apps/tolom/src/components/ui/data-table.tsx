@@ -302,12 +302,14 @@ export function DataTable<TData, TValue>({
                 role="button"
                 tabIndex={0}
                 onClick={(e) => {
-                  if (
-                    (e.target as HTMLElement).closest(
-                      'button, a, input, select, textarea, [role="button"], [role="menuitem"], [data-slot$="trigger"]',
-                    )
-                  )
-                    return;
+                  // The card wrapper itself is a [role="button"] container, so
+                  // a plain closest() match would always swallow the click.
+                  // Only bail out when the click landed on a NESTED interactive
+                  // element (a real control inside the card), not on the row.
+                  const interactive = (e.target as HTMLElement).closest(
+                    'button, a, input, select, textarea, [role="button"], [role="menuitem"], [data-slot$="trigger"]',
+                  );
+                  if (interactive && interactive !== e.currentTarget) return;
                   onRowClick?.(row.original);
                 }}
                 onKeyDown={(e) => {

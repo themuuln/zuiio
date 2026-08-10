@@ -19,7 +19,10 @@ import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePartsCatalog } from "@/lib/queries/use-inventory";
+import {
+  useInventoryBalances,
+  usePartsCatalog,
+} from "@/lib/queries/use-inventory";
 import {
   useAddCountItem,
   useCreateStockCountSession,
@@ -58,6 +61,7 @@ export function StartCountDrawer({
 
   // Data
   const { data: parts = [], isPending: partsPending } = usePartsCatalog(orgId);
+  const { data: balances = [] } = useInventoryBalances(orgId);
 
   // Mutations
   const createSession = useCreateStockCountSession(orgId);
@@ -89,10 +93,22 @@ export function StartCountDrawer({
     );
   }, [parts, partSearch, items]);
 
+  const balanceMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const b of balances) {
+      if (b.part_id) map.set(b.part_id, b.quantity_on_hand ?? 0);
+    }
+    return map;
+  }, [balances]);
+
   const selectedPart = useMemo(
     () => parts.find((p) => p.id === selectedPartId),
     [parts, selectedPartId],
   );
+
+  const selectedSystemQty = selectedPart
+    ? (balanceMap.get(selectedPart.id) ?? 0)
+    : 0;
 
   const itemsWithVariance = useMemo(
     () => items.filter((i) => i.physicalQuantity !== i.systemQuantity),
@@ -116,7 +132,7 @@ export function StartCountDrawer({
     const existing = items.find((i) => i.partId === selectedPartId);
     if (existing) return;
 
-    const systemQty = 0; // Will be updated if we can find a balance
+    const systemQty = balanceMap.get(selectedPartId) ?? 0;
     setItems((prev) => [
       ...prev,
       {
@@ -276,7 +292,7 @@ export function StartCountDrawer({
                     {t("systemQuantity")}
                   </span>
                   <span className="text-sm font-semibold tabular-nums">
-                    {0}
+                    {selectedSystemQty}
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">

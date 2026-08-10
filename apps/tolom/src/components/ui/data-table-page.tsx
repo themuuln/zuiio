@@ -5,8 +5,7 @@ import type {
   Table as TanStackTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import type { ReactNode } from "react";
-import { useRef } from "react";
+import { type ReactNode, useState } from "react";
 import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -146,7 +145,7 @@ export function DataTablePage<TData, TValue>({
   className,
 }: DataTablePageProps<TData, TValue>) {
   const isFirstLoad = loading && data.length === 0;
-  const tableRef = useRef<TanStackTable<TData> | null>(null);
+  const [table, setTable] = useState<TanStackTable<TData> | null>(null);
   const paginationEnabled = pageSize === undefined || pageSize > 0;
 
   const resolvedEmptyState: ReactNode =
@@ -203,15 +202,18 @@ export function DataTablePage<TData, TValue>({
             insideCard
             noPagination={paginationEnabled}
             onTableReady={(t) => {
-              tableRef.current = t;
+              // Keep the table instance in state so the external pagination
+              // mounts on the FIRST load: a ref alone would never re-render
+              // this page when DataTable's effect populates it.
+              setTable(t);
             }}
           />
         </CardContent>
       </Card>
 
-      {tableRef.current && paginationEnabled && (
+      {table && paginationEnabled && (
         <DataTablePagination
-          table={tableRef.current}
+          table={table}
           showColumnVisibility={showColumnVisibility}
           columnLabels={columnLabels}
         />

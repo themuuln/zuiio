@@ -2,6 +2,7 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
   getExpiringItpRecords,
+  getItpHistory,
   getItpRecords,
   getItpStats,
   getVehiclesNeedingReminder,
@@ -19,6 +20,8 @@ import {
  * Supports ?stats=true to get counts only
  * Supports ?expiring=true to get only vehicles expiring within 30 days
  * Supports ?needs_reminder=true to get vehicles needing reminder
+ * Supports ?vehicle_id= to filter records to a single vehicle
+ * Supports ?include_history=true&vehicle_id= to get a vehicle's audit trail
  */
 export const GET = createRouteHandler(
   async ({ request, orgId, supabase }) => {
@@ -36,6 +39,8 @@ export const GET = createRouteHandler(
     const statsOnly = url.searchParams.get("stats") === "true";
     const expiringOnly = url.searchParams.get("expiring") === "true";
     const needsReminder = url.searchParams.get("needs_reminder") === "true";
+    const vehicleId = url.searchParams.get("vehicle_id") ?? undefined;
+    const includeHistory = url.searchParams.get("include_history") === "true";
 
     // Stats only (for dashboard widget)
     if (statsOnly) {
@@ -55,6 +60,12 @@ export const GET = createRouteHandler(
       return ok(records);
     }
 
+    // Per-vehicle audit trail (used by the ITP details panel)
+    if (includeHistory && vehicleId) {
+      const history = await getItpHistory(supabase, vehicleId, orgId);
+      return ok(history);
+    }
+
     // Full record list
     const result = await getItpRecords(supabase, orgId, {
       status: status ?? undefined,
@@ -62,6 +73,7 @@ export const GET = createRouteHandler(
       search,
       limit,
       offset,
+      vehicleId,
     });
 
     return ok(result);

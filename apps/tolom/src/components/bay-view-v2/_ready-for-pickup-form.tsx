@@ -158,6 +158,7 @@ export function ReadyForPickupForm({
       setError(
         err instanceof Error ? err.message : t("failedToSavePostServiceData"),
       );
+    } finally {
       setSaving(false);
     }
   });

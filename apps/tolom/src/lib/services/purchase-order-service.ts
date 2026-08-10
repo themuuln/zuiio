@@ -242,9 +242,12 @@ export async function receivePurchaseOrder(
     .eq("organization_id", orgId)
     .single();
 
-  // Determine new status
+  // Determine new status from the POST-update state: every item that had an
+  // outstanding quantity was fully received by the loop above.
   const allReceived = items.every(
-    (i) => i.quantity_received >= i.quantity_ordered,
+    (i) =>
+      i.quantity_received >= i.quantity_ordered ||
+      itemsToReceive.some((t) => t.id === i.id),
   );
   const newStatus: PurchaseOrderStatus = allReceived ? "received" : "partial";
 

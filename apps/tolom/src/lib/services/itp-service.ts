@@ -189,6 +189,7 @@ export async function getItpRecords(
     status?: ItpRecordResult["itp_status"];
     branchId?: string | null;
     search?: string;
+    vehicleId?: string;
     limit?: number;
     offset?: number;
   },
@@ -215,6 +216,11 @@ export async function getItpRecords(
   // Branch filter
   if (options?.branchId) {
     query = query.eq("branch_id", options.branchId);
+  }
+
+  // Single-vehicle filter
+  if (options?.vehicleId) {
+    query = query.eq("id", options.vehicleId);
   }
 
   // Search by plate number or customer name

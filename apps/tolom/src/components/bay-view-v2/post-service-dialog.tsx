@@ -178,7 +178,10 @@ export function PostServiceDialog({
   }
 
   async function handleSubmit() {
-    if (!odometerNum && odometer.trim()) {
+    if (
+      odometer.trim() !== "" &&
+      (odometerNum === null || Number.isNaN(odometerNum))
+    ) {
       setError("Please enter a valid odometer reading");
       return;
     }
@@ -215,6 +218,7 @@ export function PostServiceDialog({
       setError(
         err instanceof Error ? err.message : t("failedToSavePostServiceData"),
       );
+    } finally {
       setSaving(false);
     }
   }

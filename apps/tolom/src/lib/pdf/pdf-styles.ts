@@ -11,6 +11,8 @@ export type Locale = "en" | "mn";
 const translations: Record<Locale, Record<string, string>> = {
   en: {
     invoice: "INVOICE",
+    estimate: "ESTIMATE",
+    validUntil: "Valid Until",
     workOrder: "WORK ORDER",
     billTo: "Bill To",
     vehicle: "Vehicle",
@@ -58,6 +60,8 @@ const translations: Record<Locale, Record<string, string>> = {
   },
   mn: {
     invoice: "НЭХЭЛГЭЭ",
+    estimate: "ТООЦОО",
+    validUntil: "Хүчинтэй хугацаа",
     workOrder: "АЖЛЫН ЗАХИАЛГА",
     billTo: "Захиалагч",
     vehicle: "Тэрэг",

@@ -416,7 +416,7 @@ export function MovementsTab({
                   ))}
                 </div>
               )}
-              {movementForm.part_id && !partsSearch && (
+              {movementForm.part_id && parts.length === 0 && (
                 <div className="flex items-center justify-between">
                   <Typography.Muted className="text-sm text-muted-foreground">
                     {t("selectedPart")}: {movementForm.part_name}

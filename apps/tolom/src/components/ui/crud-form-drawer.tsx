@@ -45,7 +45,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { type ReactNode, useCallback, useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import type { Resolver, UseFormReturn } from "react-hook-form";
 import type { ZodType } from "zod";
 import { Button } from "@/components/ui/button";
@@ -118,19 +118,20 @@ export function CrudFormDrawer<T extends Record<string, unknown>>({
     }
   }, [open, defaultValues, form]);
 
-  const handleSubmit = useCallback(
-    form.handleSubmit(async (data) => {
-      try {
-        await onSubmit(data);
-        onOpenChange(false);
-      } catch (err) {
-        reportServerError("CrudFormDrawer submit failed", err);
-        // Error handling is done by the caller's mutateAsync + toast pattern
-        // or by the useOrgMutation hook's built-in error toasts.
-      }
-    }),
-    [],
-  );
+  // No useCallback here: the drawer stays mounted across open/close, so a
+  // stable closure would capture the mount-time onSubmit/onOpenChange and run
+  // the create-mode handler on later edit-mode submits. RHF's handleSubmit is
+  // stable, so a fresh wrapper per render is cheap and always fresh.
+  const handleSubmit = form.handleSubmit(async (data) => {
+    try {
+      await onSubmit(data);
+      onOpenChange(false);
+    } catch (err) {
+      reportServerError("CrudFormDrawer submit failed", err);
+      // Error handling is done by the caller's mutateAsync + toast pattern
+      // or by the useOrgMutation hook's built-in error toasts.
+    }
+  });
 
   return (
     <DetailDrawer open={open} onOpenChange={onOpenChange} size={_size}>

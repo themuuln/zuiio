@@ -68,7 +68,7 @@ export function PurchaseOrdersTab({
   const { data: suppliers = [] } = useSuppliers(orgId);
 
   const [showAddPO, setShowAddPO] = useState(false);
-  const [_expandedPO, setExpandedPO] = useState<string | null>(null);
+  const [expandedPO, setExpandedPO] = useState<string | null>(null);
 
   const filteredPOs = useMemo(() => {
     if (!search) return purchaseOrders;
@@ -197,6 +197,7 @@ export function PurchaseOrdersTab({
               key={po.id}
               po={po}
               orgId={orgId}
+              expanded={expandedPO === po.id}
               onReceive={handleReceivePO}
               onToggle={handleTogglePO}
               t={t}
@@ -311,6 +312,7 @@ export function PurchaseOrdersTab({
 function POListItem({
   po,
   orgId,
+  expanded,
   onReceive,
   onToggle,
   t,
@@ -318,6 +320,7 @@ function POListItem({
 }: {
   po: PurchaseOrderWithSupplier;
   orgId: string;
+  expanded: boolean;
   onReceive: (id: string) => void;
   onToggle: (id: string) => void;
   t: (key: string) => string;
@@ -353,11 +356,11 @@ function POListItem({
         </span>
       </Button>
 
-      {itemsLoading ? (
+      {expanded && itemsLoading ? (
         <div className="border-t border-border px-6 py-4">
           <Skeleton className="h-10 w-full" />
         </div>
-      ) : items.length > 0 ? (
+      ) : expanded && items.length > 0 ? (
         <div className="border-t border-border px-6 py-4">
           <div className="flex flex-col gap-2">
             <Table>

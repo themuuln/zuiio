@@ -53,7 +53,9 @@ export interface ItpHistoryItem {
 const fetchItpRecords = createOrgQuery<ItpRecordItem[]>("/itp");
 const fetchItpStats = createOrgQuery<ItpStatsData>("/itp");
 const fetchExpiringItpRecords = createOrgQuery<ItpRecordItem[]>("/itp");
-const fetchItpRecord = createOrgQuery<ItpRecordItem>(`/itp`);
+const fetchItpRecord = createOrgQuery<ItpRecordItem[]>(`/itp`, {
+  unwrap: "paginated",
+});
 const fetchItpHistoryItems = createOrgQuery<ItpHistoryItem[]>(`/itp`);
 
 // ── Hooks ───────────────────────────────────────────────────────
@@ -145,9 +147,12 @@ export function useItpRecord(
 ): UseQueryResult<ItpRecordItem, Error> {
   return useQuery({
     queryKey: itpKeys.detail(orgId ?? "", vehicleId),
-    queryFn: () => {
+    queryFn: async () => {
       if (!orgId) throw new Error("orgId required");
-      return fetchItpRecord(orgId);
+      const records = await fetchItpRecord(orgId, {
+        params: { vehicle_id: vehicleId },
+      });
+      return records[0];
     },
     enabled: !!orgId && !!vehicleId,
     staleTime: 30_000,
@@ -166,7 +171,7 @@ export function useItpHistory(
     queryFn: () => {
       if (!orgId) throw new Error("orgId required");
       return fetchItpHistoryItems(orgId, {
-        params: { include_history: true },
+        params: { vehicle_id: vehicleId, include_history: true },
       });
     },
     enabled: !!orgId && !!vehicleId,

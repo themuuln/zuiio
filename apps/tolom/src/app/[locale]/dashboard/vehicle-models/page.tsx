@@ -237,7 +237,11 @@ export default function VehicleModelsPage() {
     minQueryLength: 1,
   });
 
-  const tree = buildTree(filteredModels);
+  // Memoize so the auto-expand effect's deps ([search, tree]) are stable —
+  // rebuilding the tree on every render made the effect re-fire endlessly
+  // while a search was active, hanging the page. useFuzzySearch is memoized,
+  // so filteredModels (and thus the tree) only changes when models/search do.
+  const tree = useMemo(() => buildTree(filteredModels), [filteredModels]);
 
   const totalCount = models.length;
   const filteredCount = filteredModels.length;

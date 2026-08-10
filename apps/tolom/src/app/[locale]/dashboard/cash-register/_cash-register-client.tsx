@@ -14,6 +14,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ import {
   useOpenSession,
 } from "@/lib/queries/use-cash-register";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { useSelectedBranchId } from "@/lib/stores";
 import { formatCurrency } from "@/lib/utils";
 
@@ -170,7 +172,8 @@ function SessionHeader({
               {t("cashRegister.sessionOpen")}
             </Typography.Text>
             <Typography.Muted className="text-xs">
-              Opened {new Date(session.opened_at).toLocaleTimeString()}
+              {t("cashRegister.openedAt")}{" "}
+              {new Date(session.opened_at).toLocaleTimeString()}
             </Typography.Muted>
           </div>
         </div>
@@ -394,15 +397,24 @@ function OpenSessionDialog({
         <form
           id={formId}
           onSubmit={form.handleSubmit(async (data) => {
-            await openSession.mutateAsync(
-              { opening_balance: data.balance, branch_id: branchId },
-              {
-                onSuccess: () => {
-                  onOpenChange(false);
-                  form.reset();
+            try {
+              await openSession.mutateAsync(
+                { opening_balance: data.balance, branch_id: branchId },
+                {
+                  onSuccess: () => {
+                    onOpenChange(false);
+                    form.reset();
+                  },
                 },
-              },
-            );
+              );
+            } catch (err) {
+              reportServerError("Unexpected error", err);
+              toast.error(
+                err instanceof Error
+                  ? err.message
+                  : t("common.unexpectedError"),
+              );
+            }
           })}
           className="flex flex-col gap-4"
         >
@@ -548,19 +560,28 @@ function CloseSessionDialog({
         <form
           id={formId}
           onSubmit={form.handleSubmit(async (data) => {
-            await closeSession.mutateAsync(
-              {
-                sessionId: session.id,
-                closing_balance: data.balance,
-                note: data.note || null,
-              },
-              {
-                onSuccess: () => {
-                  onOpenChange(false);
-                  form.reset();
+            try {
+              await closeSession.mutateAsync(
+                {
+                  sessionId: session.id,
+                  closing_balance: data.balance,
+                  note: data.note || null,
                 },
-              },
-            );
+                {
+                  onSuccess: () => {
+                    onOpenChange(false);
+                    form.reset();
+                  },
+                },
+              );
+            } catch (err) {
+              reportServerError("Unexpected error", err);
+              toast.error(
+                err instanceof Error
+                  ? err.message
+                  : t("common.unexpectedError"),
+              );
+            }
           })}
           className="flex flex-col gap-4"
         >
@@ -712,19 +733,28 @@ function CashOutDialog({
         <form
           id={formId}
           onSubmit={form.handleSubmit(async (data) => {
-            await cashOut.mutateAsync(
-              {
-                sessionId,
-                amount: data.amount,
-                description: data.description.trim(),
-              },
-              {
-                onSuccess: () => {
-                  onOpenChange(false);
-                  form.reset();
+            try {
+              await cashOut.mutateAsync(
+                {
+                  sessionId,
+                  amount: data.amount,
+                  description: data.description.trim(),
                 },
-              },
-            );
+                {
+                  onSuccess: () => {
+                    onOpenChange(false);
+                    form.reset();
+                  },
+                },
+              );
+            } catch (err) {
+              reportServerError("Unexpected error", err);
+              toast.error(
+                err instanceof Error
+                  ? err.message
+                  : t("common.unexpectedError"),
+              );
+            }
           })}
           className="flex flex-col gap-4"
         >

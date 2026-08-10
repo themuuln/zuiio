@@ -113,11 +113,18 @@ export function ExpenseDetailDrawer({
     if (!expenseId) return;
 
     const data = form.getValues();
+    const amount = parseFloat(data.amount);
+    if (Number.isNaN(amount)) {
+      // Guard against non-numeric amounts slipping past the schema
+      // (e.g. a cleared/partially-edited currency input) — never submit NaN.
+      form.setError("amount", { message: t("invalidAmount") });
+      return;
+    }
     try {
       await updateExpense.mutateAsync({
         id: expenseId,
         description: data.description.trim(),
-        amount: parseFloat(data.amount),
+        amount,
         taxAmount: data.taxAmount ? parseFloat(data.taxAmount) : undefined,
         expenseDate: data.expenseDate || undefined,
         dueDate: data.dueDate || null,

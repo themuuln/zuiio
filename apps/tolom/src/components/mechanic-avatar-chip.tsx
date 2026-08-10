@@ -85,8 +85,31 @@ export function MechanicAvatarChip({
     </div>
   );
 
+  const removeButton = onRemove ? (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onRemove();
+      }}
+      className={cn(
+        "-ml-1 flex size-4 items-center justify-center rounded-full opacity-0 group-hover/chip:opacity-100 transition-opacity",
+        "text-muted-foreground/40 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20",
+      )}
+    >
+      <X className="size-2.5" />
+    </button>
+  ) : null;
+
   if (!showTooltip) {
-    return renderChip();
+    // The remove affordance must render even without the tooltip wrapper.
+    if (!removeButton) return renderChip();
+    return (
+      <div className="flex items-center gap-0 group/chip">
+        {renderChip()}
+        {removeButton}
+      </div>
+    );
   }
 
   const chip = (
@@ -105,19 +128,7 @@ export function MechanicAvatarChip({
     return (
       <div className="flex items-center gap-0 group/chip">
         {chip}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-          className={cn(
-            "-ml-1 flex size-4 items-center justify-center rounded-full opacity-0 group-hover/chip:opacity-100 transition-opacity",
-            "text-muted-foreground/40 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20",
-          )}
-        >
-          <X className="size-2.5" />
-        </button>
+        {removeButton}
       </div>
     );
   }
