@@ -143,4 +143,88 @@ ON CONFLICT (organization_id, slug) DO UPDATE SET
   content = EXCLUDED.content, is_published = EXCLUDED.is_published,
   published_at = EXCLUDED.published_at;
 
+-- =============================================
+-- Delivery-enabled storefront org + promo fixtures
+--
+-- Second storefront org (`storefront-e2e-delivery`): delivery AND pickup
+-- enabled with a flat ₮5,000 delivery fee below a ₮20,000 free-delivery
+-- threshold, plus three deterministic products — one below the threshold
+-- (₮1,000, fee applies), one above it (₮15,000 × 2 = ₮30,000, free), and
+-- a dedicated one for the buyer-account order-detail test (₮2,000, fee
+-- applies — kept separate so parallel spec runs never restore the same
+-- product's stock concurrently).
+-- Backs e2e/storefront-delivery-checkout.spec.ts and the delivery-order
+-- detail test in e2e/buyer-account.spec.ts.
+--
+-- Promo fixtures live on the base org (delivery/pickup disabled, so the
+-- promo checkout flow stays simple): one 10% coupon (unlimited uses so
+-- repeated E2E runs never exhaust it) and one ₮4,000 gift card. Re-running
+-- the seed resets the gift card balance (specs also reset it in beforeAll
+-- via the service role, so repeat runs without re-seeding stay green).
+-- Backs e2e/storefront-promo-checkout.spec.ts.
+-- =============================================
+
+INSERT INTO organizations (id, slug, name, currency, company_type, onboarding_completed)
+VALUES ('10000000-0000-4000-8000-000000000002', 'storefront-e2e-delivery', 'Delivery E2E Shop', 'MNT', 'retail', true)
+ON CONFLICT (id) DO UPDATE SET
+  name = EXCLUDED.name, currency = EXCLUDED.currency,
+  company_type = EXCLUDED.company_type, onboarding_completed = EXCLUDED.onboarding_completed;
+
+INSERT INTO organization_public_profiles (
+  organization_id, catalog_enabled, display_name, description,
+  contact_email, contact_phone, address,
+  delivery_enabled, pickup_enabled, delivery_fee_amount, free_delivery_threshold, show_stock
+) VALUES (
+  '10000000-0000-4000-8000-000000000002', true, 'Delivery E2E Shop',
+  'Хүргэлттэй E2E тестийн дэлгүүр. Хүргэлт 5000₮, 20000₮-аас дээш үнэгүй.',
+  'delivery@example.mn', '99112233', 'Улаанбаатар, Баянгол дүүрэг',
+  true, true, 5000, 20000, false
+)
+ON CONFLICT (organization_id) DO UPDATE SET
+  catalog_enabled = EXCLUDED.catalog_enabled, display_name = EXCLUDED.display_name,
+  description = EXCLUDED.description, contact_email = EXCLUDED.contact_email,
+  contact_phone = EXCLUDED.contact_phone, address = EXCLUDED.address,
+  delivery_enabled = EXCLUDED.delivery_enabled, pickup_enabled = EXCLUDED.pickup_enabled,
+  delivery_fee_amount = EXCLUDED.delivery_fee_amount,
+  free_delivery_threshold = EXCLUDED.free_delivery_threshold,
+  show_stock = EXCLUDED.show_stock;
+
+INSERT INTO branches (id, organization_id, name, slug, is_default)
+VALUES ('80000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000002', 'Төв салбар', 'main', true)
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, is_default = EXCLUDED.is_default;
+
+INSERT INTO categories (id, organization_id, name, slug)
+VALUES ('20000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', 'Хүнс', 'food')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, slug = EXCLUDED.slug;
+
+INSERT INTO products (id, organization_id, name, description, unit, sale_price, current_stock, min_stock, category_id, is_public, has_variants, published_at)
+VALUES
+  ('90000000-0000-4000-8000-000000000031', '10000000-0000-4000-8000-000000000002', 'Хүргэлт Бага Захиалга', NULL, 'ширхэг', 1000, 20, 5, '20000000-0000-4000-8000-000000000003', true, false, now()),
+  ('90000000-0000-4000-8000-000000000032', '10000000-0000-4000-8000-000000000002', 'Хүргэлт Их Захиалга', NULL, 'ширхэг', 15000, 20, 5, '20000000-0000-4000-8000-000000000003', true, false, now()),
+  ('90000000-0000-4000-8000-000000000033', '10000000-0000-4000-8000-000000000002', 'Хүргэлт Дансны Захиалга', NULL, 'ширхэг', 2000, 20, 5, '20000000-0000-4000-8000-000000000003', true, false, now())
+ON CONFLICT (id) DO UPDATE SET
+  name = EXCLUDED.name, description = EXCLUDED.description,
+  sale_price = EXCLUDED.sale_price, current_stock = EXCLUDED.current_stock,
+  min_stock = EXCLUDED.min_stock, category_id = EXCLUDED.category_id,
+  is_public = EXCLUDED.is_public, has_variants = EXCLUDED.has_variants,
+  published_at = EXCLUDED.published_at;
+
+-- Coupon: 10% off, no usage_limit (unlimited) so repeated E2E runs never
+-- exhaust it. applies_to='all' — no scope rows exist in the fixture.
+INSERT INTO coupons (id, organization_id, code, discount_type, discount_value, min_purchase_amount, usage_limit, per_customer_limit, applies_to, is_active, description)
+VALUES ('a0000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'E2E10', 'percentage', 10, 0, NULL, 1, 'all', true, 'E2E: 10% хямдрал')
+ON CONFLICT (id) DO UPDATE SET
+  code = EXCLUDED.code, discount_type = EXCLUDED.discount_type,
+  discount_value = EXCLUDED.discount_value, min_purchase_amount = EXCLUDED.min_purchase_amount,
+  usage_limit = EXCLUDED.usage_limit, per_customer_limit = EXCLUDED.per_customer_limit,
+  applies_to = EXCLUDED.applies_to, is_active = EXCLUDED.is_active;
+
+-- Gift card: ₮4,000 balance. current_balance resets on every seed re-apply.
+INSERT INTO gift_cards (id, organization_id, code, initial_balance, current_balance, currency_code, is_active, recipient_name)
+VALUES ('b0000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'E2EGIFT4000', 4000, 4000, 'MNT', true, 'E2E Хэрэглэгч')
+ON CONFLICT (id) DO UPDATE SET
+  code = EXCLUDED.code, initial_balance = EXCLUDED.initial_balance,
+  current_balance = EXCLUDED.current_balance, currency_code = EXCLUDED.currency_code,
+  is_active = EXCLUDED.is_active;
+
 COMMIT;

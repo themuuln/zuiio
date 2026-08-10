@@ -35,14 +35,17 @@ async function seededOrgHasCatalog(page: Page): Promise<boolean> {
 
 test.describe("Guest checkout (seeded org, anonymous)", () => {
   test("anonymous visitor can browse and place an order", async ({ page }) => {
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    // Navigate straight to the org home. Visiting "/" first would register
+    // the PWA service worker and race the very next navigation with
+    // ERR_ABORTED (Chromium aborts navigations intercepted by a just-
+    // registering SW) — flaky under load.
+    await page.goto(`/${SEEDED_SLUG}`, { waitUntil: "domcontentloaded" });
     test.skip(
       !(await seededOrgHasCatalog(page)),
       `seed missing — run apps/zer/supabase/seed.sql on the local stack`,
     );
 
     // Anonymous org home renders (not redirected to /login)
-    await page.goto(`/${SEEDED_SLUG}`, { waitUntil: "domcontentloaded" });
     await expect(
       page.getByRole("heading", { name: "Storefront E2E Shop" }),
     ).toBeVisible({ timeout: 15_000 });
