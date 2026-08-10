@@ -18,6 +18,7 @@ import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { BuyPanel } from "./buy-panel";
+import { ProductGallery } from "./product-gallery";
 
 // Types mirror the get_public_product RPC return shape (see supabase
 // migrations). Stock fields are intentionally absent — privacy by design.
@@ -51,6 +52,11 @@ export type PublicProductDetail = {
   created_at: string | null;
   variants: PublicVariant[];
   attributes: PublicAttribute[];
+  // Extra gallery images (image_url is always the primary/first entry).
+  images: Array<{ url: string | null; sort_order: number | null }> | null;
+  // Only populated when the org opts in to public stock (show_stock=true),
+  // otherwise NULL — privacy default preserved.
+  current_stock: number | null;
 };
 
 export type PublicProductDetailData = {
@@ -159,6 +165,19 @@ async function ProductDetailDataFetcher({
     const attributes = product.attributes ?? [];
     const hasAttributes = attributes.length > 0;
 
+    // Gallery images: image_url is the primary entry; extra images come from
+    // the product_images table (via `images`). Only render the gallery when
+    // there is more than one image; otherwise keep the single-image layout.
+    const galleryImages = (product.images ?? [])
+      .map((img) => img.url)
+      .filter((url): url is string => url != null);
+    const hasGallery = galleryImages.length > 1;
+
+    // Stock is only exposed when the org opts in (show_stock=true). When it
+    // is unknown (null) we keep today's behavior — never block on stock.
+    const currentStock = product.current_stock;
+    const soldOut = currentStock !== null && currentStock === 0;
+
     return (
       <StorefrontCartProvider>
         <div className="min-h-dvh bg-background">
@@ -199,8 +218,12 @@ async function ProductDetailDataFetcher({
           </div>
 
           <div className="mx-auto max-w-4xl space-y-0 p-4 sm:p-6 lg:p-8">
-            {/* Product image */}
-            {product.image_url ? (
+            {/* Product image(s) */}
+            {hasGallery ? (
+              <div className="mb-8">
+                <ProductGallery images={galleryImages} alt={product.name} />
+              </div>
+            ) : product.image_url ? (
               <div className="mb-8">
                 <OptimizedImage
                   src={product.image_url}
@@ -238,6 +261,23 @@ async function ProductDetailDataFetcher({
               </div>
             </div>
 
+            {/* Stock status — only shown when the org exposes stock */}
+            {currentStock !== null && (
+              <div className="mb-8">
+                {soldOut ? (
+                  <Badge variant="destructive" className="gap-1">
+                    <Package className="size-3" />
+                    Дууссан
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="gap-1">
+                    <Package className="size-3" />
+                    Нөөцөд байна — {currentStock}
+                  </Badge>
+                )}
+              </div>
+            )}
+
             {/* Price + variants + add to cart */}
             <div className="mb-8">
               <BuyPanel
@@ -247,6 +287,7 @@ async function ProductDetailDataFetcher({
                 unit={product.unit}
                 currency={organization.currency}
                 variants={variants}
+                soldOut={soldOut}
               />
             </div>
 

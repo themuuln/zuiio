@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
+import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { PublicVariant } from "./page";
@@ -18,6 +19,7 @@ export function BuyPanel({
   unit,
   currency,
   variants,
+  soldOut = false,
 }: {
   productId: string;
   productName: string;
@@ -25,6 +27,7 @@ export function BuyPanel({
   unit: string | null;
   currency: string;
   variants: PublicVariant[];
+  soldOut?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -108,8 +111,15 @@ export function BuyPanel({
         </div>
       )}
 
-      {/* Add to cart */}
-      <AddToCartButton item={item} size="lg" className="w-full" />
+      {/* Add to cart — variant selectors stay functional; the add action is
+          replaced by a disabled "Дууссан" state when the product is sold out. */}
+      {soldOut ? (
+        <Button disabled size="lg" className="w-full">
+          Дууссан
+        </Button>
+      ) : (
+        <AddToCartButton item={item} size="lg" className="w-full" />
+      )}
     </div>
   );
 }

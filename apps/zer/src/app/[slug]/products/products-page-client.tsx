@@ -393,30 +393,41 @@ export function ProductCard({
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/30">
-      {/* Image area */}
-      {product.image_url ? (
-        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-          {/* biome-ignore lint/performance/noImgElement: Supabase storage URLs */}
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-            loading="lazy"
-          />
-          {product.attribute_count > 0 && (
-            <div className="absolute top-2 right-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm">
-                <BookmarkSimple className="size-3" />
-                Зөвлөмж
-              </span>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex aspect-[4/3] items-center justify-center bg-muted/50">
-          <Package className="size-10 text-muted-foreground/20" />
-        </div>
-      )}
+      {/* Image area — sold-out overlay is a sibling so it also renders over
+          the placeholder when the product has no image */}
+      <div className="relative">
+        {product.image_url ? (
+          <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+            {/* biome-ignore lint/performance/noImgElement: Supabase storage URLs */}
+            <img
+              src={product.image_url}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+              loading="lazy"
+            />
+            {product.attribute_count > 0 && (
+              <div className="absolute top-2 right-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm">
+                  <BookmarkSimple className="size-3" />
+                  Зөвлөмж
+                </span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex aspect-[4/3] items-center justify-center bg-muted/50">
+            <Package className="size-10 text-muted-foreground/20" />
+          </div>
+        )}
+        {/* Sold-out overlay — only when the org exposes stock and it is 0 */}
+        {product.current_stock === 0 && (
+          <div className="absolute top-2 left-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/90 px-2 py-0.5 text-[10px] font-medium text-destructive-foreground backdrop-blur-sm">
+              Дууссан
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Content */}
       <div className="space-y-2 p-4">

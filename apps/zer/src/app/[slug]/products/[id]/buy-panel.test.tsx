@@ -232,4 +232,59 @@ describe("BuyPanel", () => {
     fireEvent.click(addButton);
     expect(itemArgs().maxStock).toBe(Number.POSITIVE_INFINITY);
   });
+
+  it("shows a disabled Дууссан state and blocks adding when sold out", () => {
+    render(
+      <BuyPanel
+        productId="p1"
+        productName="Цамц"
+        basePrice={10000}
+        unit="ширхэг"
+        currency="MNT"
+        variants={[]}
+        soldOut
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /Сагсанд нэмэх/ })).toBeNull();
+    const soldOutButton = screen.getByRole("button", { name: /Дууссан/ });
+    expect(soldOutButton).toBeDisabled();
+  });
+
+  it("keeps variant selectors functional when sold out", () => {
+    render(
+      <BuyPanel
+        productId="p1"
+        productName="Цамц"
+        basePrice={12000}
+        unit="ширхэг"
+        currency="MNT"
+        variants={VARIANTS}
+        soldOut
+      />,
+    );
+    const first = screen.getByRole("button", { name: /S \/ Хар/ });
+    const second = screen.getByRole("button", { name: /M \/ Цагаан/ });
+    expect(first).toBeEnabled();
+    expect(second).toBeEnabled();
+    fireEvent.click(second);
+    expect(mockReplace).toHaveBeenCalledWith("/slug/products/p1?variant=v2", {
+      scroll: false,
+    });
+    expect(screen.queryByRole("button", { name: /Сагсанд нэмэх/ })).toBeNull();
+  });
+
+  it("keeps add-to-cart enabled when stock is unknown (soldOut defaults false)", () => {
+    render(
+      <BuyPanel
+        productId="p1"
+        productName="Цамц"
+        basePrice={10000}
+        unit="ширхэг"
+        currency="MNT"
+        variants={[]}
+      />,
+    );
+    const addButton = screen.getByRole("button", { name: /Сагсанд нэмэх/ });
+    expect(addButton).toBeEnabled();
+  });
 });
