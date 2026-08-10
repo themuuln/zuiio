@@ -57,6 +57,15 @@ describe("AiChatDrawer", () => {
     expect(screen.getByText("ai.chatWelcome")).toBeInTheDocument();
   });
 
+  it("pins the chat input in the drawer footer, outside the scrollable area", () => {
+    renderDrawer();
+    const textarea = screen.getByPlaceholderText("ai.chatPlaceholder");
+    // The input bar must live in the footer slot so it stays pinned to the
+    // bottom of the drawer instead of scrolling with the message thread.
+    expect(textarea.closest('[data-slot="drawer-footer"]')).not.toBeNull();
+    expect(textarea.closest('[data-slot="scroll-area"]')).toBeNull();
+  });
+
   it("sends the message and renders the assistant reply", async () => {
     mockFetch.mockResolvedValue({
       ok: true,

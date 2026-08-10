@@ -891,7 +891,13 @@ declare const messages: {
       "somethingWentWrong": "Something went wrong"
     },
     "confirmRemoveFromBay": "Remove from Bay?",
-    "confirmRemoveFromBayDesc": "The work order returns to \"New\" status and the bay, mechanic, services, parts, and notes are all removed. This action cannot be undone."
+    "confirmRemoveFromBayDesc": "The work order returns to \"New\" status and the bay, mechanic, services, parts, and notes are all removed. This action cannot be undone.",
+    "bay": "Bay",
+    "created": "Created",
+    "subtotal": "Subtotal",
+    "fuel": "Fuel",
+    "km": "km",
+    "readyForPickup": "Ready for Pickup"
   },
   "portal": {
     "dashboard": "Dashboard",
@@ -1659,6 +1665,7 @@ declare const messages: {
     "lastServiceDate": "Last Service Date",
     "nextDueDate": "Next Due Date",
     "reminderEnabled": "Reminders Enabled",
+    "status": "Status",
     "statusPending": "Pending",
     "statusSent": "Sent",
     "statusFailed": "Failed",

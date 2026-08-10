@@ -56,7 +56,12 @@ import { DeleteConfirmDialog } from "./_delete-confirm-dialog";
 import { EditScheduleDialog } from "./_edit-schedule-dialog";
 import { ReminderLogsTab } from "./_reminder-logs-tab";
 import { ScheduleRow } from "./_schedule-row";
-import { formatVehicleLabel, getScheduleDueStatus } from "./_utils";
+import { SortableHeader, type SortDir } from "./_sortable-header";
+import {
+  formatVehicleLabel,
+  getScheduleDueStatus,
+  getScheduleSortValue,
+} from "./_utils";
 
 type DueStatus = "overdue" | "due-soon" | "scheduled" | "no-date";
 
@@ -166,6 +171,33 @@ export default function ServiceRemindersPageClient() {
     search ||
     (statusFilter !== "" && statusFilter !== "all") ||
     (reminderFilter !== "" && reminderFilter !== "all");
+
+  // Sorting
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  const toggleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const sortedSchedules = useMemo(() => {
+    if (!sortKey) return filteredSchedules;
+    const arr = [...filteredSchedules];
+    const dir = sortDir === "asc" ? 1 : -1;
+    arr.sort((a, b) => {
+      const av = getScheduleSortValue(a, sortKey);
+      const bv = getScheduleSortValue(b, sortKey);
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+    return arr;
+  }, [filteredSchedules, sortKey, sortDir]);
 
   const handleDelete = async () => {
     if (!orgId || !deleteItem) return;
@@ -319,7 +351,7 @@ export default function ServiceRemindersPageClient() {
         <TabsContent value="schedule" className="mt-4 flex flex-col gap-4">
           {/* Toolbar */}
           {schedules.length > 0 && (
-            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-muted/50 px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
@@ -457,33 +489,77 @@ export default function ServiceRemindersPageClient() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>{t("serviceReminders.vehicle")}</TableHead>
                           <TableHead>
-                            {t("serviceReminders.serviceName")}
+                            <SortableHeader
+                              label={t("serviceReminders.vehicle")}
+                              sortKey="vehicle"
+                              currentSortKey={sortKey}
+                              sortDir={sortDir}
+                              onSort={toggleSort}
+                            />
                           </TableHead>
                           <TableHead>
-                            {t("serviceReminders.customer")}
+                            <SortableHeader
+                              label={t("serviceReminders.serviceName")}
+                              sortKey="service"
+                              currentSortKey={sortKey}
+                              sortDir={sortDir}
+                              onSort={toggleSort}
+                            />
                           </TableHead>
                           <TableHead>
-                            {t("serviceReminders.interval")}
+                            <SortableHeader
+                              label={t("serviceReminders.customer")}
+                              sortKey="customer"
+                              currentSortKey={sortKey}
+                              sortDir={sortDir}
+                              onSort={toggleSort}
+                            />
                           </TableHead>
                           <TableHead>
-                            {t("serviceReminders.lastServiceDate")}
+                            <SortableHeader
+                              label={t("serviceReminders.interval")}
+                              sortKey="interval"
+                              currentSortKey={sortKey}
+                              sortDir={sortDir}
+                              onSort={toggleSort}
+                            />
                           </TableHead>
                           <TableHead>
-                            {t("serviceReminders.nextDueDate")}
+                            <SortableHeader
+                              label={t("serviceReminders.lastServiceDate")}
+                              sortKey="last-service"
+                              currentSortKey={sortKey}
+                              sortDir={sortDir}
+                              onSort={toggleSort}
+                            />
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader
+                              label={t("serviceReminders.nextDueDate")}
+                              sortKey="next-due"
+                              currentSortKey={sortKey}
+                              sortDir={sortDir}
+                              onSort={toggleSort}
+                            />
                           </TableHead>
                           <TableHead>
                             {t("serviceReminders.reminderEnabled")}
                           </TableHead>
                           <TableHead>
-                            {t("serviceReminders.contactStatus")}
+                            <SortableHeader
+                              label={t("serviceReminders.contactStatus")}
+                              sortKey="contact"
+                              currentSortKey={sortKey}
+                              sortDir={sortDir}
+                              onSort={toggleSort}
+                            />
                           </TableHead>
                           <TableHead className="w-20" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredSchedules.map((item) => (
+                        {sortedSchedules.map((item) => (
                           <ScheduleRow
                             key={item.id}
                             item={item}

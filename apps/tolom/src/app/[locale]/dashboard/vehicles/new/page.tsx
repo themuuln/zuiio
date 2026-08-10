@@ -2,13 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
-import { ArrowLeft, CarFront, Loader2, User } from "lucide-react";
+import { CarFront, Loader2, User } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { PlateInput } from "@/components/ui/plate-input";
@@ -242,24 +243,11 @@ function NewVehicleForm() {
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <Button
-          render={<Link href="/dashboard/vehicles" />}
-          variant="ghost"
-          size="icon-xs"
-          aria-label="Back"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("addVehicle")}
-          </Typography.H1>
-          <Typography.Muted className="text-sm text-muted-foreground">
-            {t("registerVehicleDesc")}
-          </Typography.Muted>
-        </div>
-      </div>
+      <CreatePageHeader
+        backHref="/dashboard/vehicles"
+        title={t("addVehicle")}
+        subtitle={t("registerVehicleDesc")}
+      />
 
       {error && (
         <Card className="border-destructive/50 bg-destructive/5">

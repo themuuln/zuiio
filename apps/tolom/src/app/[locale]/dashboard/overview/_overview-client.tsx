@@ -4,6 +4,7 @@ import dynamicImport from "next/dynamic";
 
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
+import { ListPageShell } from "@/components/list-page-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -187,136 +188,122 @@ export default function OverviewPage() {
 
   // ── Main Content (always rendered) ──
   return (
-    <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
-      {/* Simple header */}
-      <div>
-        {showOrgSkeleton ? (
-          <>
-            <Skeleton className="h-9 w-56" />
-            <Skeleton className="mt-1.5 h-5 w-72" />
-          </>
-        ) : (
-          <>
-            <Typography.H2 className="m-0">
-              {t("dashboard.welcome")}
-            </Typography.H2>
-            <Typography.Muted className="mt-1">
-              {t("dashboard.subtitle")}
-            </Typography.Muted>
-          </>
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={t("dashboard.welcome")}
+        description={t("dashboard.subtitle")}
+      >
+        {/* ── Error banner (org error) ── */}
+        {hasOrgError && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="flex flex-col items-center gap-4 py-6">
+              <Typography.Muted className="text-destructive">
+                {t("common.noData")}
+              </Typography.Muted>
+              <Button onClick={() => window.location.reload()}>
+                {t("common.retry")}
+              </Button>
+            </CardContent>
+          </Card>
         )}
-      </div>
 
-      {/* ── Error banner (org error) ── */}
-      {hasOrgError && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="flex flex-col items-center gap-4 py-6">
-            <Typography.Muted className="text-destructive">
-              {t("common.noData")}
-            </Typography.Muted>
-            <Button onClick={() => window.location.reload()}>
-              {t("common.retry")}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+        {/* ── Error banner (dashboard error, no data yet) ── */}
+        {showDashError && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="flex flex-col items-center gap-4 py-6">
+              <Typography.Muted className="text-destructive">
+                {errorMessage ?? t("common.noData")}
+              </Typography.Muted>
+              <Button onClick={() => refetchDashboard()}>
+                {t("common.retry")}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* ── Error banner (dashboard error, no data yet) ── */}
-      {showDashError && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="flex flex-col items-center gap-4 py-6">
-            <Typography.Muted className="text-destructive">
-              {errorMessage ?? t("common.noData")}
-            </Typography.Muted>
-            <Button onClick={() => refetchDashboard()}>
-              {t("common.retry")}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+        {/* 4 KPI cards — skeleton when no org or dashboard loading */}
+        {!hasOrgError && (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+            {showOrgSkeleton || showDashError ? (
+              [1, 2, 3, 4].map((key) => (
+                <Card key={key}>
+                  <div className="p-6 pb-2">
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                  <div className="p-6 pt-2">
+                    <Skeleton className="h-9 w-28" />
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <>
+                <KpiCard
+                  label={t("dashboard.totalRevenue")}
+                  value={formatCurrency(summary?.totalRevenue ?? 0)}
+                  icon={DollarSign}
+                  loading={isDataLoading}
+                  accentKey="totalRevenue"
+                />
+                <KpiCard
+                  label={t("dashboard.activeWorkOrders")}
+                  value={String(summary?.activeWorkOrders ?? 0)}
+                  icon={Clock}
+                  loading={isDataLoading}
+                  accentKey="activeWorkOrders"
+                />
+                <KpiCard
+                  label={t("dashboard.totalCustomers")}
+                  value={String(summary?.totalCustomers ?? 0)}
+                  icon={Users}
+                  loading={isDataLoading}
+                  accentKey="totalCustomers"
+                />
+                <KpiCard
+                  label={t("dashboard.avgRepairOrder")}
+                  value={formatCurrency(summary?.avgRepairOrderValue ?? 0)}
+                  icon={TrendingUp}
+                  loading={isDataLoading}
+                  accentKey="avgRepairOrder"
+                />
+              </>
+            )}
+          </div>
+        )}
 
-      {/* 4 KPI cards — skeleton when no org or dashboard loading */}
-      {!hasOrgError && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-          {showOrgSkeleton || showDashError ? (
-            [1, 2, 3, 4].map((key) => (
-              <Card key={key}>
+        {/* Charts */}
+        {showOrgSkeleton || showDashError ? (
+          <div className="grid gap-6 lg:grid-cols-2">
+            {[1, 2].map((n) => (
+              <Card key={n}>
                 <div className="p-6 pb-2">
-                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-5 w-44" />
                 </div>
                 <div className="p-6 pt-2">
-                  <Skeleton className="h-9 w-28" />
+                  <Skeleton className="h-72 w-full rounded-lg" />
                 </div>
               </Card>
-            ))
-          ) : (
-            <>
-              <KpiCard
-                label={t("dashboard.totalRevenue")}
-                value={formatCurrency(summary?.totalRevenue ?? 0)}
-                icon={DollarSign}
-                loading={isDataLoading}
-                accentKey="totalRevenue"
-              />
-              <KpiCard
-                label={t("dashboard.activeWorkOrders")}
-                value={String(summary?.activeWorkOrders ?? 0)}
-                icon={Clock}
-                loading={isDataLoading}
-                accentKey="activeWorkOrders"
-              />
-              <KpiCard
-                label={t("dashboard.totalCustomers")}
-                value={String(summary?.totalCustomers ?? 0)}
-                icon={Users}
-                loading={isDataLoading}
-                accentKey="totalCustomers"
-              />
-              <KpiCard
-                label={t("dashboard.avgRepairOrder")}
-                value={formatCurrency(summary?.avgRepairOrderValue ?? 0)}
-                icon={TrendingUp}
-                loading={isDataLoading}
-                accentKey="avgRepairOrder"
-              />
-            </>
-          )}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : data ? (
+          <ChartsSection data={data} />
+        ) : null}
 
-      {/* Charts */}
-      {showOrgSkeleton || showDashError ? (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {[1, 2].map((n) => (
-            <Card key={n}>
-              <div className="p-6 pb-2">
-                <Skeleton className="h-5 w-44" />
-              </div>
-              <div className="p-6 pt-2">
-                <Skeleton className="h-72 w-full rounded-lg" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      ) : data ? (
-        <ChartsSection data={data} />
-      ) : null}
-
-      {/* Recent Work Orders */}
-      {!showOrgSkeleton && !showDashError && (
-        <div>
-          <SectionHeader
-            title={t("dashboard.recentWorkOrders")}
-            description={t("dashboard.recentWorkOrdersDesc")}
-          />
-          <RecentWorkOrdersTable
-            workOrders={workOrders}
-            router={router}
-            t={t}
-            workOrdersForExport={dashboardExportColumns}
-          />
-        </div>
-      )}
+        {/* Recent Work Orders */}
+        {!showOrgSkeleton && !showDashError && (
+          <div>
+            <SectionHeader
+              title={t("dashboard.recentWorkOrders")}
+              description={t("dashboard.recentWorkOrdersDesc")}
+            />
+            <RecentWorkOrdersTable
+              workOrders={workOrders}
+              router={router}
+              t={t}
+              workOrdersForExport={dashboardExportColumns}
+            />
+          </div>
+        )}
+      </ListPageShell>
     </div>
   );
 }

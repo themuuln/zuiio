@@ -1,12 +1,12 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, Package } from "lucide-react";
+import { AlertTriangle, Package } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "@/lib/i18n/navigation";
 import type { PartsCatalogItem } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 
@@ -66,50 +66,39 @@ export function PartHeader({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Back link */}
-      <Link
-        href="/dashboard/inventory"
-        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground w-fit"
-      >
-        <ArrowLeft className="size-3.5" />
-        {t("backToInventory")}
-      </Link>
-
-      {/* Title row */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          {part.image_url ? (
-            <div className="relative size-10 shrink-0 overflow-hidden rounded-xl">
-              <Image
-                src={part.image_url}
-                alt={part.name}
-                width={40}
-                height={40}
-                className="size-full object-cover"
-                unoptimized
-              />
-            </div>
-          ) : (
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-              <Package className="size-5 text-primary" />
-            </div>
-          )}
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight truncate">
-              {part.name}
-            </h1>
-            {part.name_mn && (
-              <p className="text-sm text-muted-foreground">{part.name_mn}</p>
-            )}
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        {part.image_url ? (
+          <div className="relative size-10 shrink-0 overflow-hidden rounded-xl">
+            <Image
+              src={part.image_url}
+              alt={part.name}
+              width={40}
+              height={40}
+              className="size-full object-cover"
+              unoptimized
+            />
           </div>
-          <Badge
-            variant={statusBadge.variant}
-            className={statusBadge.className}
-          >
-            {status === "low" && <AlertTriangle className="size-3 mr-1" />}
-            {statusBadge.label}
-          </Badge>
-        </div>
+        ) : (
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <Package className="size-5 text-primary" />
+          </div>
+        )}
+        <CreatePageHeader
+          backHref="/dashboard/inventory"
+          title={part.name}
+          subtitle={part.name_mn ?? undefined}
+          className="flex-1 min-w-0"
+          actions={
+            <Badge
+              variant={statusBadge.variant}
+              className={statusBadge.className}
+            >
+              {status === "low" && <AlertTriangle className="size-3 mr-1" />}
+              {statusBadge.label}
+            </Badge>
+          }
+        />
       </div>
 
       {/* Quick stats */}

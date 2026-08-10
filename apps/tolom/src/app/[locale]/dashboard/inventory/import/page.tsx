@@ -2,7 +2,6 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   CheckCircle2,
   Download,
   FileText,
@@ -15,6 +14,7 @@ import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import {
   Table,
   TableBody,
@@ -23,7 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Link } from "@/lib/i18n/navigation";
 import { inventoryKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
@@ -179,21 +178,11 @@ export default function ImportPartsPage() {
   return (
     <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          render={<Link href="/dashboard/inventory" />}
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
-        <div>
-          <h1 className="text-xl font-semibold">{t("importParts")}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t("importPartsDescription")}
-          </p>
-        </div>
-      </div>
+      <CreatePageHeader
+        backHref="/dashboard/inventory"
+        title={t("importParts")}
+        subtitle={t("importPartsDescription")}
+      />
 
       {/* Template Download */}
       <Card>

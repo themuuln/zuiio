@@ -5,15 +5,11 @@ import { Building2, Loader2, Plus, ShieldAlert, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { ListPageShell } from "@/components/list-page-shell";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
@@ -139,210 +135,193 @@ export default function SellersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={
+          <span className="flex items-center gap-2">
             <Users className="size-6" />
             Seller Management
-          </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">
-            {isSuperAdmin
-              ? "Manage sellers and their organization assignments"
-              : "View your assigned organizations"}
-          </Typography.Muted>
-        </div>
-        {isSuperAdmin && (
-          <Button size="sm" onClick={() => setShowAssignDialog(true)}>
-            <Plus className="size-4 mr-1" />
-            Assign Org
-          </Button>
-        )}
-      </div>
+          </span>
+        }
+        description={
+          isSuperAdmin
+            ? "Manage sellers and their organization assignments"
+            : "View your assigned organizations"
+        }
+        headerAction={
+          isSuperAdmin ? (
+            <Button size="sm" onClick={() => setShowAssignDialog(true)}>
+              <Plus className="size-4 mr-1" />
+              Assign Org
+            </Button>
+          ) : undefined
+        }
+      >
+        {/* Stats */}
+        <StatCards columns={3}>
+          <StatCard
+            label="Assigned Organizations"
+            value={organizations.length}
+            loading={loading}
+          />
+          <StatCard
+            label="Active Subscriptions"
+            value={
+              organizations.filter((o) => o.subscription?.status === "active")
+                .length
+            }
+            loading={loading}
+          />
+          <StatCard
+            label="Trial Organizations"
+            value={organizations.filter((o) => o.subscription?.trial).length}
+            loading={loading}
+          />
+        </StatCards>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+        {/* Organizations List */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Assigned Organizations</CardDescription>
-            <CardTitle className="text-2xl">
-              {loading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                organizations.length
-              )}
-            </CardTitle>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Organizations</CardTitle>
           </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Active Subscriptions</CardDescription>
-            <CardTitle className="text-2xl">
+          <CardContent className="p-0">
+            <div className="divide-y">
               {loading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                organizations.filter((o) => o.subscription?.status === "active")
-                  .length
-              )}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Trial Organizations</CardDescription>
-            <CardTitle className="text-2xl">
-              {loading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                organizations.filter((o) => o.subscription?.trial).length
-              )}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Organizations List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Organizations</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            {loading ? (
-              [1, 2, 3].map((i) => (
-                <div
-                  key={`org-skeleton-${i}`}
-                  className="flex items-center justify-between px-6 py-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <Building2 className="size-4 text-muted-foreground" />
-                    <div className="flex flex-col gap-2">
-                      <Skeleton className="h-4 w-40" />
-                      <Skeleton className="h-3 w-24" />
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : organizations.length === 0 ? (
-              <div className="px-6 py-12 text-center text-sm text-muted-foreground">
-                No organizations assigned yet.
-              </div>
-            ) : (
-              organizations.map((org) => {
-                const assignment = assignments.find(
-                  (a) => a.organization_id === org.id,
-                );
-                return (
+                [1, 2, 3].map((i) => (
                   <div
-                    key={org.id}
+                    key={`org-skeleton-${i}`}
                     className="flex items-center justify-between px-6 py-4"
                   >
                     <div className="flex items-center gap-3">
                       <Building2 className="size-4 text-muted-foreground" />
-                      <div>
-                        <Typography.Text className="text-sm font-medium">
-                          {org.name}
-                        </Typography.Text>
-                        <Typography.Muted className="text-xs text-muted-foreground">
-                          {org.slug}
-                        </Typography.Muted>
+                      <div className="flex flex-col gap-2">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-3 w-24" />
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {org.subscription && (
-                        <Badge variant="secondary" className="text-xs">
-                          {org.subscription.plan_type}
-                        </Badge>
-                      )}
-                      {isSuperAdmin && assignment && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => removeMutation.mutate(assignment.id)}
-                        >
-                          <X className="size-3" />
-                        </Button>
-                      )}
-                    </div>
                   </div>
-                );
-              })
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                ))
+              ) : organizations.length === 0 ? (
+                <div className="px-6 py-12 text-center text-sm text-muted-foreground">
+                  No organizations assigned yet.
+                </div>
+              ) : (
+                organizations.map((org) => {
+                  const assignment = assignments.find(
+                    (a) => a.organization_id === org.id,
+                  );
+                  return (
+                    <div
+                      key={org.id}
+                      className="flex items-center justify-between px-6 py-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Building2 className="size-4 text-muted-foreground" />
+                        <div>
+                          <Typography.Text className="text-sm font-medium">
+                            {org.name}
+                          </Typography.Text>
+                          <Typography.Muted className="text-xs text-muted-foreground">
+                            {org.slug}
+                          </Typography.Muted>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {org.subscription && (
+                          <Badge variant="secondary" className="text-xs">
+                            {org.subscription.plan_type}
+                          </Badge>
+                        )}
+                        {isSuperAdmin && assignment && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => removeMutation.mutate(assignment.id)}
+                          >
+                            <X className="size-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Assign Dialog */}
-      <DetailDrawer
-        open={showAssignDialog}
-        onOpenChange={setShowAssignDialog}
-        size="lg"
-      >
-        <DetailDrawer.Header>
-          <DetailDrawer.Title>Assign Organization</DetailDrawer.Title>
-          <DetailDrawer.Description>
-            Select an organization to assign to this seller.
-          </DetailDrawer.Description>
-        </DetailDrawer.Header>
-        <DetailDrawer.Body>
-          <Field data-invalid={!!form.formState.errors.organization_id}>
-            <FieldLabel>
-              Organization <span className="text-destructive">*</span>
-            </FieldLabel>
-            <FieldContent>
-              <Select
-                value={form.watch("organization_id")}
-                onValueChange={(v) =>
-                  form.setValue("organization_id", v ?? "", {
-                    shouldValidate: true,
-                  })
+        {/* Assign Dialog */}
+        <DetailDrawer
+          open={showAssignDialog}
+          onOpenChange={setShowAssignDialog}
+          size="lg"
+        >
+          <DetailDrawer.Header>
+            <DetailDrawer.Title>Assign Organization</DetailDrawer.Title>
+            <DetailDrawer.Description>
+              Select an organization to assign to this seller.
+            </DetailDrawer.Description>
+          </DetailDrawer.Header>
+          <DetailDrawer.Body>
+            <Field data-invalid={!!form.formState.errors.organization_id}>
+              <FieldLabel>
+                Organization <span className="text-destructive">*</span>
+              </FieldLabel>
+              <FieldContent>
+                <Select
+                  value={form.watch("organization_id")}
+                  onValueChange={(v) =>
+                    form.setValue("organization_id", v ?? "", {
+                      shouldValidate: true,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select organization" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {organizations.map((org) => (
+                      <SelectItem key={org.id} value={org.id}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.organization_id && (
+                  <FieldError>
+                    {form.formState.errors.organization_id.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
+          </DetailDrawer.Body>
+          <DetailDrawer.Footer>
+            <DetailDrawer.FooterActions>
+              <Button
+                variant="outline"
+                onClick={() => setShowAssignDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={form.handleSubmit((data) =>
+                  assignMutation.mutate(data.organization_id),
+                )}
+                size="lg"
+                disabled={
+                  !form.watch("organization_id") || assignMutation.isPending
                 }
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select organization" />
-                </SelectTrigger>
-                <SelectContent>
-                  {organizations.map((org) => (
-                    <SelectItem key={org.id} value={org.id}>
-                      {org.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.organization_id && (
-                <FieldError>
-                  {form.formState.errors.organization_id.message}
-                </FieldError>
-              )}
-            </FieldContent>
-          </Field>
-        </DetailDrawer.Body>
-        <DetailDrawer.Footer>
-          <DetailDrawer.FooterActions>
-            <Button
-              variant="outline"
-              onClick={() => setShowAssignDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={form.handleSubmit((data) =>
-                assignMutation.mutate(data.organization_id),
-              )}
-              size="lg"
-              disabled={
-                !form.watch("organization_id") || assignMutation.isPending
-              }
-            >
-              {assignMutation.isPending && (
-                <Loader2 className="size-4 mr-1 animate-spin" />
-              )}
-              Assign
-            </Button>
-          </DetailDrawer.FooterActions>
-        </DetailDrawer.Footer>
-      </DetailDrawer>
+                {assignMutation.isPending && (
+                  <Loader2 className="size-4 mr-1 animate-spin" />
+                )}
+                Assign
+              </Button>
+            </DetailDrawer.FooterActions>
+          </DetailDrawer.Footer>
+        </DetailDrawer>
+      </ListPageShell>
     </div>
   );
 }

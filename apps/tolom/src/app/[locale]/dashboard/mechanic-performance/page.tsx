@@ -15,6 +15,7 @@ import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { z } from "zod";
 import { BarChart } from "@/components/charts";
+import { ListPageShell } from "@/components/list-page-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -297,31 +298,22 @@ export default function MechanicPerformancePage() {
 
   return (
     <>
-      <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
-        {/* Header */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between min-w-0 flex-wrap">
-          <div>
-            <Typography.H1 className="text-2xl font-semibold tracking-tight">
-              {t("title")}
-            </Typography.H1>
-            {showSkeleton ? (
-              <Skeleton className="h-4 w-72 mt-1" />
-            ) : (
-              <Typography.Muted className="text-muted-foreground">
-                {watchedDateRange?.from
-                  ? t("subtitle", {
-                      from: format(watchedDateRange.from, "MMM d, yyyy"),
-                      to: format(
-                        watchedDateRange.to ?? watchedDateRange.from,
-                        "MMM d, yyyy",
-                      ),
-                      branch: branchName,
-                    })
-                  : t("subtitleNoDates", { branch: branchName })}
-              </Typography.Muted>
-            )}
-          </div>
-          <div className="flex items-center gap-2 min-w-0">
+      <div className="px-4 pt-4 pb-6 md:px-6">
+        <ListPageShell
+          title={t("title")}
+          description={
+            watchedDateRange?.from
+              ? t("subtitle", {
+                  from: format(watchedDateRange.from, "MMM d, yyyy"),
+                  to: format(
+                    watchedDateRange.to ?? watchedDateRange.from,
+                    "MMM d, yyyy",
+                  ),
+                  branch: branchName,
+                })
+              : t("subtitleNoDates", { branch: branchName })
+          }
+          headerAction={
             <DateRangePicker
               align="end"
               className="w-full min-w-0 sm:w-[16rem]"
@@ -333,215 +325,215 @@ export default function MechanicPerformancePage() {
                 )
               }
             />
+          }
+        >
+          {/* KPI Cards */}
+          <div className="grid gap-3 grid-cols-5">
+            <KpiCard
+              label={t("activeMechanics")}
+              value={loading ? "—" : String(totals.mechanics)}
+              icon={Users}
+              accent="teal"
+              loading={showSkeleton}
+            />
+            <KpiCard
+              label={t("jobsCompleted")}
+              value={loading ? "—" : String(totals.jobs)}
+              icon={Wrench}
+              accent="green"
+              loading={showSkeleton}
+            />
+            <KpiCard
+              label={t("totalHours")}
+              value={loading ? "—" : String(Math.round(totals.hours * 10) / 10)}
+              icon={Clock}
+              accent="amber"
+              loading={showSkeleton}
+            />
+            <KpiCard
+              label={t("totalRevenue")}
+              value={loading ? "—" : formatMNT(totals.revenue)}
+              icon={DollarSign}
+              accent="blue"
+              loading={showSkeleton}
+            />
+            <KpiCard
+              label={t("avgSatisfaction")}
+              value={
+                loading
+                  ? "—"
+                  : totals.avgSatisfaction > 0
+                    ? `${totals.avgSatisfaction.toFixed(1)} / 5`
+                    : t("noReviews")
+              }
+              icon={Star}
+              accent="amber"
+              loading={showSkeleton}
+            />
           </div>
-        </div>
 
-        {/* KPI Cards */}
-        <div className="grid gap-3 grid-cols-5">
-          <KpiCard
-            label={t("activeMechanics")}
-            value={loading ? "—" : String(totals.mechanics)}
-            icon={Users}
-            accent="teal"
-            loading={showSkeleton}
-          />
-          <KpiCard
-            label={t("jobsCompleted")}
-            value={loading ? "—" : String(totals.jobs)}
-            icon={Wrench}
-            accent="green"
-            loading={showSkeleton}
-          />
-          <KpiCard
-            label={t("totalHours")}
-            value={loading ? "—" : String(Math.round(totals.hours * 10) / 10)}
-            icon={Clock}
-            accent="amber"
-            loading={showSkeleton}
-          />
-          <KpiCard
-            label={t("totalRevenue")}
-            value={loading ? "—" : formatMNT(totals.revenue)}
-            icon={DollarSign}
-            accent="blue"
-            loading={showSkeleton}
-          />
-          <KpiCard
-            label={t("avgSatisfaction")}
-            value={
-              loading
-                ? "—"
-                : totals.avgSatisfaction > 0
-                  ? `${totals.avgSatisfaction.toFixed(1)} / 5`
-                  : t("noReviews")
-            }
-            icon={Star}
-            accent="amber"
-            loading={showSkeleton}
-          />
-        </div>
-
-        {/* Chart + Leaderboard */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Bar Chart */}
-          <Card className="lg:col-span-1">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <BarChart3 className="size-4" />
-                {t("revenueByMechanic")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {showSkeleton ? (
-                <Skeleton className="h-[220px] w-full" />
-              ) : chartData.length === 0 ? (
-                <Typography.Muted className="text-sm text-center py-12">
-                  {t("noData")}
-                </Typography.Muted>
-              ) : (
-                <>
-                  <Typography.Muted className="text-xs text-center text-muted-foreground pb-2">
-                    {t("showingTop", {
-                      count: chartData.length,
-                      total: mechanics.length,
-                    })}
+          {/* Chart + Leaderboard */}
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Bar Chart */}
+            <Card className="lg:col-span-1">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <BarChart3 className="size-4" />
+                  {t("revenueByMechanic")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {showSkeleton ? (
+                  <Skeleton className="h-[220px] w-full" />
+                ) : chartData.length === 0 ? (
+                  <Typography.Muted className="text-sm text-center py-12">
+                    {t("noData")}
                   </Typography.Muted>
-                  <BarChart
-                    data={chartData}
-                    config={{
-                      value: {
-                        label: t("chartRevenue"),
-                        color: "var(--chart-1)",
-                      },
-                    }}
-                    xKey="name"
-                    series={[{ key: "value", color: "var(--chart-1)" }]}
-                    height={220}
-                  />
-                </>
-              )}
-            </CardContent>
-          </Card>
+                ) : (
+                  <>
+                    <Typography.Muted className="text-xs text-center text-muted-foreground pb-2">
+                      {t("showingTop", {
+                        count: chartData.length,
+                        total: mechanics.length,
+                      })}
+                    </Typography.Muted>
+                    <BarChart
+                      data={chartData}
+                      config={{
+                        value: {
+                          label: t("chartRevenue"),
+                          color: "var(--chart-1)",
+                        },
+                      }}
+                      xKey="name"
+                      series={[{ key: "value", color: "var(--chart-1)" }]}
+                      height={220}
+                    />
+                  </>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Leaderboard Table */}
-          <Card className="lg:col-span-2 overflow-hidden">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Crown className="size-4" />
-                {t("leaderboard")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {leaderboardLoading ? (
-                <div className="flex flex-col p-4 gap-y-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton key={i} className="h-12 w-full rounded-lg" />
-                  ))}
-                </div>
-              ) : leaderboard.length === 0 ? (
-                <Typography.Muted className="text-sm text-center py-12">
-                  {t("noMechanicData")}
-                </Typography.Muted>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border/60">
-                        <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 w-10">
-                          #
-                        </th>
-                        <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                          {t("colMechanic")}
-                        </th>
-                        <th className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                          {t("colJobs")}
-                        </th>
-                        <th className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                          {t("colRevenue")}
-                        </th>
-                        <th className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                          {t("colHours")}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {leaderboard.map((item, i) => {
-                        const isTop = i === 0;
-                        const initials = item.mechanic_name
-                          .split(" ")
-                          .map((w) => w[0])
-                          .join("")
-                          .slice(0, 2)
-                          .toUpperCase();
-                        return (
-                          <tr
-                            key={item.mechanic_id}
-                            className={cn(
-                              "border-b border-border/40 transition-colors",
-                              "hover:bg-muted/40",
-                              isTop &&
-                                "bg-amber-50/40 dark:bg-amber-950/15 ring-1 ring-amber-500/20",
-                            )}
-                          >
-                            <td className="px-4 py-3">
-                              {isTop ? (
-                                <Crown className="size-4 text-amber-500" />
-                              ) : (
-                                <span className="text-xs text-muted-foreground/60 font-medium">
-                                  {i + 1}
-                                </span>
+            {/* Leaderboard Table */}
+            <Card className="lg:col-span-2 overflow-hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Crown className="size-4" />
+                  {t("leaderboard")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {leaderboardLoading ? (
+                  <div className="flex flex-col p-4 gap-y-2">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                    ))}
+                  </div>
+                ) : leaderboard.length === 0 ? (
+                  <Typography.Muted className="text-sm text-center py-12">
+                    {t("noMechanicData")}
+                  </Typography.Muted>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border/60">
+                          <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 w-10">
+                            #
+                          </th>
+                          <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                            {t("colMechanic")}
+                          </th>
+                          <th className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                            {t("colJobs")}
+                          </th>
+                          <th className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                            {t("colRevenue")}
+                          </th>
+                          <th className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                            {t("colHours")}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leaderboard.map((item, i) => {
+                          const isTop = i === 0;
+                          const initials = item.mechanic_name
+                            .split(" ")
+                            .map((w) => w[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase();
+                          return (
+                            <tr
+                              key={item.mechanic_id}
+                              className={cn(
+                                "border-b border-border/40 transition-colors",
+                                "hover:bg-muted/40",
+                                isTop &&
+                                  "bg-amber-50/40 dark:bg-amber-950/15 ring-1 ring-amber-500/20",
                               )}
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-2.5">
-                                <span
-                                  className={cn(
-                                    "flex size-7 items-center justify-center rounded-full text-[10px] font-bold shrink-0",
-                                    "bg-primary/10 text-primary",
-                                  )}
-                                >
-                                  {initials}
-                                </span>
-                                <span
-                                  className={cn(
-                                    "font-medium",
-                                    isTop && "text-foreground",
-                                  )}
-                                >
-                                  {item.mechanic_name}
-                                </span>
-                                {isTop && (
-                                  <span className="text-[10px] font-semibold text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded-full leading-none">
-                                    #1
+                            >
+                              <td className="px-4 py-3">
+                                {isTop ? (
+                                  <Crown className="size-4 text-amber-500" />
+                                ) : (
+                                  <span className="text-xs text-muted-foreground/60 font-medium">
+                                    {i + 1}
                                   </span>
                                 )}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-right tabular-nums font-medium">
-                              {item.total_orders}
-                            </td>
-                            <td className="px-4 py-3 text-right tabular-nums font-semibold">
-                              {formatMNT(item.revenue)}
-                            </td>
-                            <td className="px-4 py-3 text-right tabular-nums text-muted-foreground/70">
-                              {item.avg_hours_per_order > 0 ? (
-                                Math.round(item.avg_hours_per_order * 10) / 10
-                              ) : (
-                                <span className="text-muted-foreground/30">
-                                  —
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2.5">
+                                  <span
+                                    className={cn(
+                                      "flex size-7 items-center justify-center rounded-full text-[10px] font-bold shrink-0",
+                                      "bg-primary/10 text-primary",
+                                    )}
+                                  >
+                                    {initials}
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      "font-medium",
+                                      isTop && "text-foreground",
+                                    )}
+                                  >
+                                    {item.mechanic_name}
+                                  </span>
+                                  {isTop && (
+                                    <span className="text-[10px] font-semibold text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded-full leading-none">
+                                      #1
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-right tabular-nums font-medium">
+                                {item.total_orders}
+                              </td>
+                              <td className="px-4 py-3 text-right tabular-nums font-semibold">
+                                {formatMNT(item.revenue)}
+                              </td>
+                              <td className="px-4 py-3 text-right tabular-nums text-muted-foreground/70">
+                                {item.avg_hours_per_order > 0 ? (
+                                  Math.round(item.avg_hours_per_order * 10) / 10
+                                ) : (
+                                  <span className="text-muted-foreground/30">
+                                    —
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </ListPageShell>
       </div>
 
       {/* Mechanic Detail Sheet */}

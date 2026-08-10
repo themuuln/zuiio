@@ -14,6 +14,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,7 +38,6 @@ import {
 import { reportServerError } from "@/lib/sentry-report-server";
 import { formatCurrency } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
-import { KpiCard } from "./_kpi-card";
 
 // ── Shared helpers (module scope to avoid per-render rebuild) ──
 
@@ -197,36 +197,40 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
+      <StatCards>
+        <StatCard
           label={t("totalInvoices")}
           value={isPending ? "\u2014" : String(stats?.total ?? 0)}
           icon={DollarSign}
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("sent")}
           value={isPending ? "\u2014" : String(stats?.sent ?? 0)}
           icon={ArrowUpRight}
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("paid")}
           value={isPending ? "\u2014" : String(stats?.paid ?? 0)}
           icon={TrendingUp}
-          subtitle={
+          sub={
             stats?.totalRevenue ? formatCurrency(stats.totalRevenue) : undefined
           }
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("outstanding")}
           value={isPending ? "\u2014" : formatCurrency(stats?.outstanding ?? 0)}
           icon={Clock}
-          subtitle={`${stats?.overdue ?? 0} ${t("overdueCount")}`}
+          sub={`${stats?.overdue ?? 0} ${t("overdueCount")}`}
           loading={isPending}
+          iconPosition="end"
         />
-      </div>
+      </StatCards>
       <ListToolbar
         search={{
           placeholder: t("searchInvoices"),

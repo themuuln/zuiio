@@ -262,6 +262,7 @@ export async function deleteServiceSchedule(
 export async function syncWorkOrderToSchedules(
   db: SupabaseClient,
   workOrderId: string,
+  userId?: string,
 ): Promise<number> {
   const supabase = db;
 
@@ -322,26 +323,52 @@ export async function syncWorkOrderToSchedules(
         last_service_date: completedDate,
         next_due_date: nextDueDate,
         updated_at: new Date().toISOString(),
+        updated_by: userId,
       };
       if (intervalMonths) updates.interval_months = intervalMonths;
       if (intervalKm) updates.interval_km = intervalKm;
 
-      await supabase
+      const { error: updateError } = await supabase
         .from("vehicle_service_schedules")
         .update(updates)
         .eq("id", existing.id);
+
+      if (updateError) {
+        reportServerError(
+          `Failed to update schedule ${existing.id} from WO ${workOrderId}`,
+          updateError,
+        );
+        continue;
+      }
     } else {
-      await supabase.from("vehicle_service_schedules").insert({
-        organization_id: wo.organization_id,
-        vehicle_id: wo.vehicle_id,
-        service_catalog_id: svc.service_catalog_id,
-        service_name: svc.service_name,
-        interval_months: intervalMonths,
-        interval_km: intervalKm,
-        last_service_date: completedDate,
-        next_due_date: nextDueDate,
-        reminder_enabled: true,
-      });
+      // A schedule requires at least one interval (check_interval). Services
+      // without catalog intervals cannot be scheduled — skip the insert
+      // instead of failing the constraint.
+      if (!intervalMonths && !intervalKm) continue;
+
+      const { error: insertError } = await supabase
+        .from("vehicle_service_schedules")
+        .insert({
+          organization_id: wo.organization_id,
+          vehicle_id: wo.vehicle_id,
+          service_catalog_id: svc.service_catalog_id,
+          service_name: svc.service_name,
+          interval_months: intervalMonths,
+          interval_km: intervalKm,
+          last_service_date: completedDate,
+          next_due_date: nextDueDate,
+          reminder_enabled: true,
+          created_by: userId,
+          updated_by: userId,
+        });
+
+      if (insertError) {
+        reportServerError(
+          `Failed to create schedule from WO ${workOrderId}`,
+          insertError,
+        );
+        continue;
+      }
     }
 
     updatedCount++;
@@ -365,6 +392,7 @@ export async function syncWorkOrderToSchedules(
 export async function backfillSchedulesFromHistory(
   db: SupabaseClient,
   orgId: string,
+  userId?: string,
 ): Promise<number> {
   const supabase = db;
 
@@ -378,7 +406,7 @@ export async function backfillSchedulesFromHistory(
   if (error || !completedWOs) return 0;
 
   const results = await Promise.all(
-    completedWOs.map((wo) => syncWorkOrderToSchedules(db, wo.id)),
+    completedWOs.map((wo) => syncWorkOrderToSchedules(db, wo.id, userId)),
   );
   const totalSynced = results.reduce((sum, c) => sum + c, 0);
 

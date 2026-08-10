@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { cn } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -53,8 +54,6 @@ function ChatBubble({ message }: { message: ChatMessage }) {
   );
 }
 
-import { cn } from "@/lib/utils";
-
 // ── Chat Input ───────────────────────────────────────────────
 
 function ChatInput({
@@ -98,7 +97,7 @@ function ChatInput({
   }, [input]);
 
   return (
-    <div className="flex items-end gap-2 border-t bg-background p-4">
+    <div className="flex w-full items-end gap-2 bg-background p-4">
       <textarea
         ref={textareaRef}
         value={input}
@@ -127,11 +126,16 @@ function ChatInput({
 
 // ── Welcome Message ──────────────────────────────────────────
 
-function WelcomeMessage() {
+function WelcomeMessage({ className }: { className?: string }) {
   const t = useTranslations();
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center gap-4 py-12 text-center",
+        className,
+      )}
+    >
       <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
         <Sparkles className="size-8 text-primary" />
       </div>
@@ -273,9 +277,9 @@ export function AiChatDrawer({
 
         <DetailDrawer.Body className="flex flex-col p-0">
           {messages.length === 0 && !isLoading ? (
-            <WelcomeMessage />
+            <WelcomeMessage className="flex-1" />
           ) : (
-            <ScrollArea className="flex-1">
+            <ScrollArea className="min-h-0 flex-1">
               <div
                 ref={scrollRef}
                 className="flex flex-col gap-4 p-4 overflow-y-auto max-h-[calc(100vh-12rem)]"
@@ -292,9 +296,11 @@ export function AiChatDrawer({
               </div>
             </ScrollArea>
           )}
-
-          <ChatInput onSend={handleSend} disabled={isLoading} />
         </DetailDrawer.Body>
+
+        <DetailDrawer.Footer className="p-0">
+          <ChatInput onSend={handleSend} disabled={isLoading} />
+        </DetailDrawer.Footer>
       </DetailDrawer>
 
       {showFloatingButton && !open && (

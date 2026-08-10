@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,7 +41,6 @@ import {
 import { reportServerError } from "@/lib/sentry-report-server";
 import { formatMNT } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
-import { KpiCard } from "./_kpi-card";
 
 const refundStatusConfig: Record<
   string,
@@ -132,26 +132,29 @@ export function RefundsTab({ orgId }: RefundsTabProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
+      <StatCards>
+        <StatCard
           label={t("refund.totalRefunds")}
           value={isPending ? "—" : String(stats?.refundCount ?? 0)}
           icon={RotateCcw}
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("refund.totalRefunded")}
           value={isPending ? "—" : formatMNT(stats?.totalRefunded ?? 0)}
           icon={RotateCcw}
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("refund.pendingAmount")}
           value={isPending ? "—" : formatMNT(stats?.pendingAmount ?? 0)}
           icon={Clock}
           loading={isPending}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("refund.avgRefund")}
           value={
             isPending
@@ -162,8 +165,9 @@ export function RefundsTab({ orgId }: RefundsTabProps) {
           }
           icon={ArrowUpRight}
           loading={isPending}
+          iconPosition="end"
         />
-      </div>
+      </StatCards>
 
       {/* Toolbar */}
       <ListToolbar

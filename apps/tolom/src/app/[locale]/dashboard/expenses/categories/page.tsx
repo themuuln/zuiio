@@ -4,6 +4,7 @@ import { Circle, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
+import { ListPageShell } from "@/components/list-page-shell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +33,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Typography } from "@/components/ui/typography";
 import {
   useCreateExpenseCategory,
   useDeleteExpenseCategory,
@@ -169,246 +169,244 @@ export default function CategoriesPage() {
     (orgLoading || (isPending && !categories)) && !hasLoadedOnce;
 
   return (
-    <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6 tablet:gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("expenses.categories")}
-          </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">
-            {t("expenses.categoriesDescription")}
-          </Typography.Muted>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-border bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground">
-              {categoryCount} {t("expenses.categories").toLowerCase()}
-            </span>
-          </div>
-        </div>
-        <Button onClick={openAddDialog} size="default">
-          <Plus className="size-4" />
-          {t("expenses.addCategory")}
-        </Button>
-      </div>
-
-      {isError && (
-        <Card className="border-destructive/50">
-          <CardContent className="flex items-start gap-4 py-4">
-            <p className="text-sm text-destructive">
-              {error?.message ?? t("common.somethingWentWrong")}
-            </p>
-            <Button onClick={() => refetch()} variant="outline" size="sm">
-              {t("common.retry")}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {showSkeleton ? (
-        <SkeletonGrid />
-      ) : (
-        <>
-          {/* Empty state */}
-          {!categories || categories.length === 0 ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Circle />
-                </EmptyMedia>
-                <EmptyTitle>{t("expenses.noCategories")}</EmptyTitle>
-              </EmptyHeader>
-              <EmptyContent>
-                <Button onClick={openAddDialog} variant="outline">
-                  <Plus className="size-4" />
-                  {t("expenses.addCategory")}
-                </Button>
-              </EmptyContent>
-            </Empty>
-          ) : (
-            /* Category grid */
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {categories.map((cat) => (
-                <Card
-                  key={cat.id}
-                  className="border-border/70  transition-colors hover:border-foreground/15"
-                >
-                  <div
-                    className="h-1.5 shrink-0"
-                    style={{ backgroundColor: cat.color }}
-                  />
-                  <CardHeader>
-                    <div className="flex flex-col gap-y-2">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="size-2.5 rounded-full"
-                          style={{ backgroundColor: cat.color }}
-                        />
-                        <CardTitle className="capitalize">{cat.name}</CardTitle>
-                      </div>
-                      {cat.description && (
-                        <CardDescription className="line-clamp-2">
-                          {cat.description}
-                        </CardDescription>
-                      )}
-                    </div>
-                    <CardAction>
-                      <div className="flex rounded-lg border border-border bg-muted/20 p-0.5">
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          className="rounded-md"
-                          onClick={() => openEditDialog(cat)}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          className="rounded-md"
-                          onClick={() => {
-                            setSelectedCategory(cat);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="size-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </CardAction>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* ── Add/Edit Drawer ── */}
-      <CrudFormDrawer
-        open={dialogOpen}
-        onOpenChange={handleDialogChange}
-        mode={isEditing ? "edit" : "create"}
-        title={{
-          create: t("expenses.addCategoryTitle"),
-          edit: t("expenses.editCategoryTitle"),
-        }}
-        formId="category-form"
-        schema={categorySchema}
-        defaultValues={getDefaultValues()}
-        onSubmit={handleSubmit}
-        isPending={isPendingMutation}
-        size="md"
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={t("expenses.categories")}
+        description={t("expenses.categoriesDescription")}
+        headerAction={
+          <Button onClick={openAddDialog} size="default">
+            <Plus className="size-4" />
+            {t("expenses.addCategory")}
+          </Button>
+        }
       >
-        {(form) => (
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                {t("expenses.categoryName")}{" "}
-                <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="name"
-                {...form.register("name")}
-                placeholder={t("expenses.categoryNamePlaceholder")}
-                className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              />
-              {form.formState.errors.name && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.name.message}
-                </p>
-              )}
-            </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-border bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground">
+            {categoryCount} {t("expenses.categories").toLowerCase()}
+          </span>
+        </div>
 
-            <div className="flex flex-col gap-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                {t("expenses.description")}
-              </label>
-              <input
-                id="description"
-                {...form.register("description")}
-                placeholder={t("expenses.descriptionPlaceholder")}
-                className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              />
-            </div>
+        {isError && (
+          <Card className="border-destructive/50">
+            <CardContent className="flex items-start gap-4 py-4">
+              <p className="text-sm text-destructive">
+                {error?.message ?? t("common.somethingWentWrong")}
+              </p>
+              <Button onClick={() => refetch()} variant="outline" size="sm">
+                {t("common.retry")}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">
-                {t("expenses.color")}
-              </label>
-              <div className="flex flex-wrap gap-2.5">
-                {CATEGORY_COLORS.map((color) => (
-                  <Button
-                    key={color.value}
-                    type="button"
-                    onClick={() => form.setValue("color", color.value)}
-                    variant="outline"
-                    size="icon-sm"
-                    className={cn(
-                      "rounded-full border-2",
-                      form.watch("color") === color.value &&
-                        "scale-105 border-foreground",
-                    )}
-                    style={{
-                      backgroundColor: color.value,
-                    }}
-                    aria-label={color.name}
-                    title={color.name}
-                  />
+        {showSkeleton ? (
+          <SkeletonGrid />
+        ) : (
+          <>
+            {/* Empty state */}
+            {!categories || categories.length === 0 ? (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Circle />
+                  </EmptyMedia>
+                  <EmptyTitle>{t("expenses.noCategories")}</EmptyTitle>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button onClick={openAddDialog} variant="outline">
+                    <Plus className="size-4" />
+                    {t("expenses.addCategory")}
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            ) : (
+              /* Category grid */
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {categories.map((cat) => (
+                  <Card
+                    key={cat.id}
+                    className="border-border/70  transition-colors hover:border-foreground/15"
+                  >
+                    <div
+                      className="h-1.5 shrink-0"
+                      style={{ backgroundColor: cat.color }}
+                    />
+                    <CardHeader>
+                      <div className="flex flex-col gap-y-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="size-2.5 rounded-full"
+                            style={{ backgroundColor: cat.color }}
+                          />
+                          <CardTitle className="capitalize">
+                            {cat.name}
+                          </CardTitle>
+                        </div>
+                        {cat.description && (
+                          <CardDescription className="line-clamp-2">
+                            {cat.description}
+                          </CardDescription>
+                        )}
+                      </div>
+                      <CardAction>
+                        <div className="flex rounded-lg border border-border bg-muted/20 p-0.5">
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            className="rounded-md"
+                            onClick={() => openEditDialog(cat)}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            className="rounded-md"
+                            onClick={() => {
+                              setSelectedCategory(cat);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </CardAction>
+                    </CardHeader>
+                  </Card>
                 ))}
               </div>
-              <div className="rounded-lg bg-muted/25 px-3 py-2 text-xs text-muted-foreground">
-                {t("expenses.color")}:{" "}
-                <span className="font-mono uppercase text-foreground">
-                  {form.watch("color")}
-                </span>
+            )}
+          </>
+        )}
+
+        {/* ── Add/Edit Drawer ── */}
+        <CrudFormDrawer
+          open={dialogOpen}
+          onOpenChange={handleDialogChange}
+          mode={isEditing ? "edit" : "create"}
+          title={{
+            create: t("expenses.addCategoryTitle"),
+            edit: t("expenses.editCategoryTitle"),
+          }}
+          formId="category-form"
+          schema={categorySchema}
+          defaultValues={getDefaultValues()}
+          onSubmit={handleSubmit}
+          isPending={isPendingMutation}
+          size="md"
+        >
+          {(form) => (
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="name" className="text-sm font-medium">
+                  {t("expenses.categoryName")}{" "}
+                  <span className="text-destructive">*</span>
+                </label>
+                <input
+                  id="name"
+                  {...form.register("name")}
+                  placeholder={t("expenses.categoryNamePlaceholder")}
+                  className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                />
+                {form.formState.errors.name && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="description" className="text-sm font-medium">
+                  {t("expenses.description")}
+                </label>
+                <input
+                  id="description"
+                  {...form.register("description")}
+                  placeholder={t("expenses.descriptionPlaceholder")}
+                  className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">
+                  {t("expenses.color")}
+                </label>
+                <div className="flex flex-wrap gap-2.5">
+                  {CATEGORY_COLORS.map((color) => (
+                    <Button
+                      key={color.value}
+                      type="button"
+                      onClick={() => form.setValue("color", color.value)}
+                      variant="outline"
+                      size="icon-sm"
+                      className={cn(
+                        "rounded-full border-2",
+                        form.watch("color") === color.value &&
+                          "scale-105 border-foreground",
+                      )}
+                      style={{
+                        backgroundColor: color.value,
+                      }}
+                      aria-label={color.name}
+                      title={color.name}
+                    />
+                  ))}
+                </div>
+                <div className="rounded-lg bg-muted/25 px-3 py-2 text-xs text-muted-foreground">
+                  {t("expenses.color")}:{" "}
+                  <span className="font-mono uppercase text-foreground">
+                    {form.watch("color")}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </CrudFormDrawer>
+          )}
+        </CrudFormDrawer>
 
-      {/* ── Delete Confirmation ── */}
-      <AlertDialog
-        open={deleteDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteDialogOpen(false);
-            setSelectedCategory(null);
-          }
-        }}
-      >
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("expenses.deleteCategoryTitle")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("expenses.deleteCategoryDesc", {
-                name: selectedCategory?.name ?? "",
-              })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={deleteCategory.isPending}
-              onClick={() => {
-                if (selectedCategory)
-                  deleteCategory.mutate(selectedCategory.id, {
-                    onSuccess: () => {
-                      setDeleteDialogOpen(false);
-                      setSelectedCategory(null);
-                    },
-                  });
-              }}
-            >
-              {deleteCategory.isPending
-                ? t("common.loading")
-                : t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* ── Delete Confirmation ── */}
+        <AlertDialog
+          open={deleteDialogOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDeleteDialogOpen(false);
+              setSelectedCategory(null);
+            }
+          }}
+        >
+          <AlertDialogContent size="sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("expenses.deleteCategoryTitle")}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("expenses.deleteCategoryDesc", {
+                  name: selectedCategory?.name ?? "",
+                })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={deleteCategory.isPending}
+                onClick={() => {
+                  if (selectedCategory)
+                    deleteCategory.mutate(selectedCategory.id, {
+                      onSuccess: () => {
+                        setDeleteDialogOpen(false);
+                        setSelectedCategory(null);
+                      },
+                    });
+                }}
+              >
+                {deleteCategory.isPending
+                  ? t("common.loading")
+                  : t("common.delete")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </ListPageShell>
     </div>
   );
 }

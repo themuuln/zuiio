@@ -13,15 +13,11 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { ListPageShell } from "@/components/list-page-shell";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
@@ -177,214 +173,197 @@ export default function MarketingPage() {
   const totalClicked = campaigns.reduce((sum, c) => sum + c.clicked_count, 0);
 
   return (
-    <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={
+          <span className="flex items-center gap-2">
             <Megaphone className="size-6" />
             Marketing Campaigns
-          </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">
-            Manage email, SMS, and push notification campaigns
-          </Typography.Muted>
-        </div>
-        <Button size="sm" onClick={() => setShowCreateDialog(true)}>
-          <Plus className="size-4 mr-1" />
-          New Campaign
-        </Button>
-      </div>
+          </span>
+        }
+        description="Manage email, SMS, and push notification campaigns"
+        headerAction={
+          <Button size="sm" onClick={() => setShowCreateDialog(true)}>
+            <Plus className="size-4 mr-1" />
+            New Campaign
+          </Button>
+        }
+      >
+        {/* Stats */}
+        <StatCards>
+          <StatCard
+            label="Total Campaigns"
+            value={campaigns.length}
+            loading={loading}
+          />
+          <StatCard
+            label="Sent"
+            value={totalSent.toLocaleString()}
+            loading={loading}
+          />
+          <StatCard
+            label="Opened"
+            value={totalOpened.toLocaleString()}
+            loading={loading}
+          />
+          <StatCard
+            label="Clicked"
+            value={totalClicked.toLocaleString()}
+            loading={loading}
+          />
+        </StatCards>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+        {/* Campaigns List */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Total Campaigns</CardDescription>
-            <CardTitle className="text-2xl">
-              {loading ? <Skeleton className="h-8 w-16" /> : campaigns.length}
-            </CardTitle>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Campaigns</CardTitle>
           </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Sent</CardDescription>
-            <CardTitle className="text-2xl">
+          <CardContent className="p-0">
+            <div className="divide-y">
               {loading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                totalSent.toLocaleString()
-              )}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Opened</CardDescription>
-            <CardTitle className="text-2xl">
-              {loading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                totalOpened.toLocaleString()
-              )}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Clicked</CardDescription>
-            <CardTitle className="text-2xl">
-              {loading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                totalClicked.toLocaleString()
-              )}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Campaigns List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Campaigns</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            {loading ? (
-              [1, 2, 3].map((i) => (
-                <div
-                  key={`sk-campaign-${i}`}
-                  className="flex items-center justify-between px-6 py-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="size-4 rounded-full" />
-                    <div className="flex flex-col gap-1">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-3 w-24" />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-5 w-16 rounded-full" />
-                    <Skeleton className="size-7" />
-                  </div>
-                </div>
-              ))
-            ) : campaigns.length === 0 ? (
-              <div className="px-6 py-12 text-center text-sm text-muted-foreground">
-                No campaigns yet. Create your first campaign to get started.
-              </div>
-            ) : (
-              campaigns.map((campaign) => {
-                const TypeIcon = TYPE_ICONS[campaign.type] ?? Mail;
-                return (
+                [1, 2, 3].map((i) => (
                   <div
-                    key={campaign.id}
+                    key={`sk-campaign-${i}`}
                     className="flex items-center justify-between px-6 py-4"
                   >
                     <div className="flex items-center gap-3">
-                      <TypeIcon className="size-4 text-muted-foreground" />
-                      <div>
-                        <Typography.Text className="text-sm font-medium">
-                          {campaign.name}
-                        </Typography.Text>
-                        <Typography.Muted className="text-xs text-muted-foreground">
-                          {campaign.organization_name ?? "All organizations"} ·{" "}
-                          {campaign.type.toUpperCase()}
-                        </Typography.Muted>
+                      <Skeleton className="size-4 rounded-full" />
+                      <div className="flex flex-col gap-1">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-24" />
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="text-right text-xs text-muted-foreground">
-                        <span>{campaign.sent_count} sent</span>
-                        <span className="mx-1">·</span>
-                        <span>{campaign.opened_count} opened</span>
-                      </div>
-                      <Badge
-                        className={STATUS_COLORS[campaign.status] ?? "bg-muted"}
-                        variant="secondary"
-                      >
-                        {campaign.status}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs text-destructive"
-                        onClick={() => handleDelete(campaign.id)}
-                      >
-                        <Trash2 className="size-3" />
-                      </Button>
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                      <Skeleton className="size-7" />
                     </div>
                   </div>
-                );
-              })
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Create Dialog */}
-      <DetailDrawer
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        size="lg"
-      >
-        <DetailDrawer.Header>
-          <DetailDrawer.Title>Create Campaign</DetailDrawer.Title>
-          <DetailDrawer.Description>
-            Create a new marketing campaign.
-          </DetailDrawer.Description>
-        </DetailDrawer.Header>
-        <DetailDrawer.Body>
-          <FieldGroup>
-            <Field data-invalid={!!form.formState.errors.name}>
-              <FieldLabel>
-                Campaign Name <span className="text-destructive">*</span>
-              </FieldLabel>
-              <FieldContent>
-                <Input placeholder="Campaign name" {...form.register("name")} />
-                {form.formState.errors.name && (
-                  <FieldError>{form.formState.errors.name.message}</FieldError>
-                )}
-              </FieldContent>
-            </Field>
-            <Field>
-              <FieldLabel>Type</FieldLabel>
-              <FieldContent>
-                <Select
-                  value={form.watch("type")}
-                  onValueChange={(v) => form.setValue("type", v ?? "email")}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="sms">SMS</SelectItem>
-                    <SelectItem value="push">Push Notification</SelectItem>
-                    <SelectItem value="all">All Channels</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FieldContent>
-            </Field>
-          </FieldGroup>
-        </DetailDrawer.Body>
-        <DetailDrawer.Footer>
-          <DetailDrawer.FooterActions>
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleCreate} size="lg">
-              {createMutation.isPending && (
-                <Loader2 className="size-4 mr-1 animate-spin" />
+                ))
+              ) : campaigns.length === 0 ? (
+                <div className="px-6 py-12 text-center text-sm text-muted-foreground">
+                  No campaigns yet. Create your first campaign to get started.
+                </div>
+              ) : (
+                campaigns.map((campaign) => {
+                  const TypeIcon = TYPE_ICONS[campaign.type] ?? Mail;
+                  return (
+                    <div
+                      key={campaign.id}
+                      className="flex items-center justify-between px-6 py-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <TypeIcon className="size-4 text-muted-foreground" />
+                        <div>
+                          <Typography.Text className="text-sm font-medium">
+                            {campaign.name}
+                          </Typography.Text>
+                          <Typography.Muted className="text-xs text-muted-foreground">
+                            {campaign.organization_name ?? "All organizations"}{" "}
+                            · {campaign.type.toUpperCase()}
+                          </Typography.Muted>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right text-xs text-muted-foreground">
+                          <span>{campaign.sent_count} sent</span>
+                          <span className="mx-1">·</span>
+                          <span>{campaign.opened_count} opened</span>
+                        </div>
+                        <Badge
+                          className={
+                            STATUS_COLORS[campaign.status] ?? "bg-muted"
+                          }
+                          variant="secondary"
+                        >
+                          {campaign.status}
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs text-destructive"
+                          onClick={() => handleDelete(campaign.id)}
+                        >
+                          <Trash2 className="size-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
               )}
-              Create
-            </Button>
-          </DetailDrawer.FooterActions>
-        </DetailDrawer.Footer>
-      </DetailDrawer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Create Dialog */}
+        <DetailDrawer
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+          size="lg"
+        >
+          <DetailDrawer.Header>
+            <DetailDrawer.Title>Create Campaign</DetailDrawer.Title>
+            <DetailDrawer.Description>
+              Create a new marketing campaign.
+            </DetailDrawer.Description>
+          </DetailDrawer.Header>
+          <DetailDrawer.Body>
+            <FieldGroup>
+              <Field data-invalid={!!form.formState.errors.name}>
+                <FieldLabel>
+                  Campaign Name <span className="text-destructive">*</span>
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    placeholder="Campaign name"
+                    {...form.register("name")}
+                  />
+                  {form.formState.errors.name && (
+                    <FieldError>
+                      {form.formState.errors.name.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>Type</FieldLabel>
+                <FieldContent>
+                  <Select
+                    value={form.watch("type")}
+                    onValueChange={(v) => form.setValue("type", v ?? "email")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="sms">SMS</SelectItem>
+                      <SelectItem value="push">Push Notification</SelectItem>
+                      <SelectItem value="all">All Channels</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FieldContent>
+              </Field>
+            </FieldGroup>
+          </DetailDrawer.Body>
+          <DetailDrawer.Footer>
+            <DetailDrawer.FooterActions>
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleCreate} size="lg">
+                {createMutation.isPending && (
+                  <Loader2 className="size-4 mr-1 animate-spin" />
+                )}
+                Create
+              </Button>
+            </DetailDrawer.FooterActions>
+          </DetailDrawer.Footer>
+        </DetailDrawer>
+      </ListPageShell>
     </div>
   );
 }

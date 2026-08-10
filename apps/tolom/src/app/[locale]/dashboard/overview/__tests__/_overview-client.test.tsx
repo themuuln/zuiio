@@ -274,7 +274,9 @@ describe("OverviewPage", () => {
     mockOrgPending = true;
     render(<OverviewPage />);
 
-    expect(screen.queryByText("Welcome")).not.toBeInTheDocument();
+    // Inline skeleton pattern: page title/description are real text on frame 1
+    expect(screen.getByText("Welcome")).toBeInTheDocument();
+    expect(screen.getByText("Your shop at a glance")).toBeInTheDocument();
     expect(screen.queryByTestId("kpi-card")).not.toBeInTheDocument();
     expect(screen.queryByTestId("charts-section")).not.toBeInTheDocument();
     expect(screen.queryByTestId("recent-wo-table")).not.toBeInTheDocument();

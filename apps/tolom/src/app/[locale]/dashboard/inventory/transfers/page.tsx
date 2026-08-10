@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
+import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import { useBranches } from "@/lib/queries/use-branches";
@@ -158,139 +158,135 @@ export default function TransfersPage() {
   ];
 
   return (
-    <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("transferTitle")}
-        </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">
-          {t("transferSubtitle")}
-        </Typography.Muted>
-      </div>
-
-      <ListToolbar
-        search={{
-          placeholder: t("searchTransfers"),
-          value: search,
-          onChange: setSearch,
-        }}
-        filters={<FilterChips items={statusChips} />}
-        stats={
-          <span>
-            {filtered.length} {t("transfers")}
-          </span>
-        }
-        actions={
-          <div className="flex items-center gap-2">
-            <ExportButton
-              data={filtered}
-              columns={exportColumns}
-              filename={`stock-transfers-${now.toISOString().split("T")[0]}.xlsx`}
-              sheetName="Stock Transfers"
-            />
-            <Button size="default" onClick={() => setCreateOpen(true)}>
-              <Package className="size-5" /> {t("newTransfer")}
-            </Button>
-          </div>
-        }
-      />
-
-      <Card>
-        <CardContent className="p-0">
-          {isPending ? (
-            <div className="divide-y divide-border">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 p-4">
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-5 w-20" />
-                  <Skeleton className="h-5 w-24" />
-                </div>
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <ArrowRightLeft />
-                </EmptyMedia>
-                <EmptyTitle>{t("noTransfers")}</EmptyTitle>
-              </EmptyHeader>
-              <EmptyContent>
-                <Button onClick={() => setCreateOpen(true)}>
-                  {t("createFirstTransfer")}
-                </Button>
-              </EmptyContent>
-            </Empty>
-          ) : (
-            <div className="divide-y divide-border">
-              {filtered.map((tr) => {
-                const statusCfg = STATUS_CONFIG[tr.status];
-                const StatusIcon = statusCfg?.icon ?? Clock;
-                return (
-                  <button
-                    key={tr.id}
-                    type="button"
-                    onClick={() => setDetailId(tr.id)}
-                    className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50 cursor-pointer min-h-[64px] w-full text-left"
-                  >
-                    {/* Branches */}
-                    <span className="text-sm font-medium w-28 shrink-0 truncate">
-                      {tr.from_branch_name ?? t("transferAnyBranch")}
-                    </span>
-                    <ArrowRightLeft className="size-4 text-muted-foreground shrink-0" />
-                    <span className="text-sm font-medium w-28 shrink-0 truncate">
-                      {tr.to_branch_name}
-                    </span>
-
-                    {/* Status */}
-                    <Badge
-                      variant="outline"
-                      className={`shrink-0 text-xs ${statusCfg?.color ?? ""}`}
-                    >
-                      <StatusIcon className="mr-1 size-3" />
-                      {t(statusCfg?.labelKey ?? tr.status)}
-                    </Badge>
-
-                    {/* Items count */}
-                    <span className="text-sm text-muted-foreground shrink-0 hidden sm:block">
-                      {tr.item_count ?? 0} {t("transferItemsShort")}
-                    </span>
-
-                    {/* Date */}
-                    <span className="text-xs text-muted-foreground shrink-0 ml-auto hidden sm:block">
-                      {new Date(tr.created_at).toLocaleDateString("mn-MN")}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Create Transfer Dialog */}
-      {orgId && (
-        <CreateTransferDrawer
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-          orgId={orgId}
-          branches={branches}
-          currentBranchId={branchFilter}
-        />
-      )}
-
-      {/* Transfer Detail Sheet */}
-      {orgId && detailId && (
-        <TransferDetailDrawer
-          open={!!detailId}
-          onOpenChange={(open) => {
-            if (!open) setDetailId(null);
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={t("transferTitle")}
+        description={t("transferSubtitle")}
+      >
+        <ListToolbar
+          search={{
+            placeholder: t("searchTransfers"),
+            value: search,
+            onChange: setSearch,
           }}
-          orgId={orgId}
-          transferId={detailId}
+          filters={<FilterChips items={statusChips} />}
+          stats={
+            <span>
+              {filtered.length} {t("transfers")}
+            </span>
+          }
+          actions={
+            <div className="flex items-center gap-2">
+              <ExportButton
+                data={filtered}
+                columns={exportColumns}
+                filename={`stock-transfers-${now.toISOString().split("T")[0]}.xlsx`}
+                sheetName="Stock Transfers"
+              />
+              <Button size="default" onClick={() => setCreateOpen(true)}>
+                <Package className="size-5" /> {t("newTransfer")}
+              </Button>
+            </div>
+          }
         />
-      )}
+
+        <Card>
+          <CardContent className="p-0">
+            {isPending ? (
+              <div className="divide-y divide-border">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <div key={n} className="flex items-center gap-4 p-4">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-5 w-20" />
+                    <Skeleton className="h-5 w-24" />
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <ArrowRightLeft />
+                  </EmptyMedia>
+                  <EmptyTitle>{t("noTransfers")}</EmptyTitle>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button onClick={() => setCreateOpen(true)}>
+                    {t("createFirstTransfer")}
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            ) : (
+              <div className="divide-y divide-border">
+                {filtered.map((tr) => {
+                  const statusCfg = STATUS_CONFIG[tr.status];
+                  const StatusIcon = statusCfg?.icon ?? Clock;
+                  return (
+                    <button
+                      key={tr.id}
+                      type="button"
+                      onClick={() => setDetailId(tr.id)}
+                      className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50 cursor-pointer min-h-[64px] w-full text-left"
+                    >
+                      {/* Branches */}
+                      <span className="text-sm font-medium w-28 shrink-0 truncate">
+                        {tr.from_branch_name ?? t("transferAnyBranch")}
+                      </span>
+                      <ArrowRightLeft className="size-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm font-medium w-28 shrink-0 truncate">
+                        {tr.to_branch_name}
+                      </span>
+
+                      {/* Status */}
+                      <Badge
+                        variant="outline"
+                        className={`shrink-0 text-xs ${statusCfg?.color ?? ""}`}
+                      >
+                        <StatusIcon className="mr-1 size-3" />
+                        {t(statusCfg?.labelKey ?? tr.status)}
+                      </Badge>
+
+                      {/* Items count */}
+                      <span className="text-sm text-muted-foreground shrink-0 hidden sm:block">
+                        {tr.item_count ?? 0} {t("transferItemsShort")}
+                      </span>
+
+                      {/* Date */}
+                      <span className="text-xs text-muted-foreground shrink-0 ml-auto hidden sm:block">
+                        {new Date(tr.created_at).toLocaleDateString("mn-MN")}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Create Transfer Dialog */}
+        {orgId && (
+          <CreateTransferDrawer
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            orgId={orgId}
+            branches={branches}
+            currentBranchId={branchFilter}
+          />
+        )}
+
+        {/* Transfer Detail Sheet */}
+        {orgId && detailId && (
+          <TransferDetailDrawer
+            open={!!detailId}
+            onOpenChange={(open) => {
+              if (!open) setDetailId(null);
+            }}
+            orgId={orgId}
+            transferId={detailId}
+          />
+        )}
+      </ListPageShell>
     </div>
   );
 }

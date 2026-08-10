@@ -21,6 +21,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreatePageHeader } from "@/components/ui/create-page-header";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Dialog,
@@ -169,32 +170,14 @@ export default function WorkOrderDetailPage() {
       {wo ? (
         <>
           {/* ── Header ── */}
-          <div className="flex items-center gap-4 tablet:gap-6">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => back()}
-              aria-label={t("back")}
-              className="tablet:size-12"
-            >
-              <ArrowLeft className="size-5" />
-            </Button>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <Typography.H1 className="text-2xl font-semibold tracking-tight">
-                  {t("woPrefix")}
-                  {wo.id.slice(0, 8)}
-                </Typography.H1>
-                <StatusBadge status={wo.status as unknown as WorkOrderStatus} />
-              </div>
-              <Typography.Muted className="text-sm text-muted-foreground">
-                {new Date(wo.created_at).toLocaleDateString()}
-                {wo.customer &&
-                  ` \u00B7 ${wo.customer.first_name} ${wo.customer.last_name ?? ""}`}
-                {wo.vehicle && ` \u00B7 ${wo.vehicle.plate_number}`}
-              </Typography.Muted>
-            </div>
-          </div>
+          <CreatePageHeader
+            backHref="/dashboard/work-orders"
+            title={`${t("woPrefix")}${wo.id.slice(0, 8)}`}
+            subtitle={`${new Date(wo.created_at).toLocaleDateString()}${wo.customer ? ` \u00B7 ${wo.customer.first_name} ${wo.customer.last_name ?? ""}` : ""}${wo.vehicle ? ` \u00B7 ${wo.vehicle.plate_number}` : ""}`}
+            actions={
+              <StatusBadge status={wo.status as unknown as WorkOrderStatus} />
+            }
+          />
 
           {/* ── Status Change ── */}
           <Card>

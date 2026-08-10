@@ -13,6 +13,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { AreaChart } from "@/components/charts/area-chart";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ChartConfig } from "@/components/ui/chart";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
@@ -23,7 +24,6 @@ const EMPTY_REVENUE_TREND: RevenueTrendPoint[] = [];
 
 import { formatCurrency } from "@/lib/utils";
 import { EmptyFinanceState } from "./_empty-finance-state";
-import { KpiCard } from "./_kpi-card";
 import { NoRevenueBanner } from "./_no-revenue-banner";
 import { RevenueSplitBar } from "./_revenue-split-bar";
 
@@ -95,36 +95,40 @@ export function OverviewTab({
     return (
       <>
         <NoRevenueBanner activeWorkOrders={safeSummary.activeWorkOrders} />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-          <KpiCard
+        <StatCards columns={2}>
+          <StatCard
             label={t("dashboard.activeWorkOrders")}
             value={String(safeSummary.activeWorkOrders)}
             icon={Clock}
-            subtitle={financeT("currentlyInProgress")}
+            sub={financeT("currentlyInProgress")}
             loading={loading}
+            iconPosition="end"
           />
-          <KpiCard
+          <StatCard
             label={t("dashboard.totalCustomers")}
             value={String(safeSummary.totalCustomers)}
             icon={Users}
             loading={loading}
+            iconPosition="end"
           />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-          <KpiCard
+        </StatCards>
+        <StatCards columns={2}>
+          <StatCard
             label={t("dashboard.totalVehicles")}
             value={String(safeSummary.totalVehicles)}
             icon={TrendingUp}
             loading={loading}
+            iconPosition="end"
           />
-          <KpiCard
+          <StatCard
             label={t("dashboard.serviceRevenue")}
             value={formatCurrency(0)}
             icon={Wrench}
-            subtitle={financeT("completeWosToPopulate")}
+            sub={financeT("completeWosToPopulate")}
             loading={loading}
+            iconPosition="end"
           />
-        </div>
+        </StatCards>
       </>
     );
   }
@@ -142,42 +146,46 @@ export function OverviewTab({
         </Card>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
+      <StatCards>
+        <StatCard
           label={t("dashboard.totalRevenue")}
           value={formatCurrency(safeSummary.totalRevenue)}
           icon={DollarSign}
-          subtitle={financeT("completedTodaySummary", {
+          sub={financeT("completedTodaySummary", {
             count: safeSummary.completedToday,
           })}
           loading={loading}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("dashboard.activeWorkOrders")}
           value={String(safeSummary.activeWorkOrders)}
           icon={Clock}
-          subtitle={financeT("currentlyInProgress")}
+          sub={financeT("currentlyInProgress")}
           loading={loading}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("dashboard.avgRepairOrder")}
           value={formatCurrency(safeSummary.avgRepairOrderValue)}
           icon={TrendingUp}
           loading={loading}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("dashboard.totalCustomers")}
           value={String(safeSummary.totalCustomers)}
           icon={Users}
           loading={loading}
+          iconPosition="end"
         />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
+      </StatCards>
+      <StatCards>
+        <StatCard
           label={t("finance.grossProfit")}
           value={formatCurrency(safeSummary.grossProfit)}
           icon={TrendingUp}
-          subtitle={
+          sub={
             safeSummary.marginPercent > 0
               ? financeT("marginSummary", {
                   percent: safeSummary.marginPercent.toFixed(1),
@@ -185,35 +193,40 @@ export function OverviewTab({
               : undefined
           }
           loading={loading}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("dashboard.serviceRevenue")}
           value={formatCurrency(safeSummary.serviceRevenue)}
           icon={Wrench}
-          subtitle={financeT("laborAndServices")}
+          sub={financeT("laborAndServices")}
           loading={loading}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("dashboard.partsRevenue")}
           value={formatCurrency(safeSummary.partsRevenue)}
           icon={ClipboardList}
-          subtitle={financeT("partsAndMaterials")}
+          sub={financeT("partsAndMaterials")}
           loading={loading}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("dashboard.totalVehicles")}
           value={String(safeSummary.totalVehicles)}
           icon={TrendingUp}
           loading={loading}
+          iconPosition="end"
         />
-        <KpiCard
+        <StatCard
           label={t("dashboard.serviceMix")}
           value={`${safeSummary.totalRevenue > 0 ? Math.round((safeSummary.serviceRevenue / safeSummary.totalRevenue) * 100) : "—"}%`}
           icon={Percent}
-          subtitle={financeT("serviceVsParts")}
+          sub={financeT("serviceVsParts")}
           loading={loading}
+          iconPosition="end"
         />
-      </div>
+      </StatCards>
 
       {/* Revenue Trend Chart */}
       <Card>

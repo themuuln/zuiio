@@ -436,7 +436,7 @@ describe("syncWorkOrderToSchedules", () => {
     // insert resolves
     db.__qb.resolveWith({ data: null, error: null });
 
-    const result = await syncWorkOrderToSchedules(db, WORK_ORDER_ID);
+    const result = await syncWorkOrderToSchedules(db, WORK_ORDER_ID, "user-1");
 
     expect(result).toBe(1);
 
@@ -451,6 +451,8 @@ describe("syncWorkOrderToSchedules", () => {
     expect(insertCall.interval_km).toBe(5000);
     expect(insertCall.reminder_enabled).toBe(true);
     expect(insertCall.last_service_date).toBe(woRow.completed_at);
+    expect(insertCall.created_by).toBe("user-1");
+    expect(insertCall.updated_by).toBe("user-1");
     // next_due_date should be computed (completed_at + 6 months = 2026-07-10)
     expect(insertCall.next_due_date).toBe("2026-07-10");
 
@@ -474,7 +476,7 @@ describe("syncWorkOrderToSchedules", () => {
     });
     db.__qb.resolveWith({ data: null, error: null });
 
-    const result = await syncWorkOrderToSchedules(db, WORK_ORDER_ID);
+    const result = await syncWorkOrderToSchedules(db, WORK_ORDER_ID, "user-1");
 
     expect(result).toBe(1);
     // Should have called update, not insert
@@ -483,9 +485,30 @@ describe("syncWorkOrderToSchedules", () => {
     ).mock.calls[0][0];
     expect(updateCall.last_service_date).toBe(woRow.completed_at);
     expect(updateCall).toHaveProperty("next_due_date");
+    expect(updateCall.updated_by).toBe("user-1");
 
     // Insert should NOT have been called for this service (update path)
     expect(db.from("vehicle_service_schedules").insert).not.toHaveBeenCalled();
+  });
+
+  it("skips services without catalog intervals instead of inserting", async () => {
+    db.__qb.resolveOnce({ data: woRow, error: null });
+    db.__qb.resolveOnce({
+      data: [
+        {
+          service_catalog_id: "cat-no-interval",
+          service_name: "Diagnostics",
+          service_catalog: [{ interval_months: null, interval_km: null }],
+        },
+      ],
+      error: null,
+    });
+
+    const result = await syncWorkOrderToSchedules(db, WORK_ORDER_ID, "user-1");
+
+    expect(result).toBe(0);
+    expect(db.from("vehicle_service_schedules").insert).not.toHaveBeenCalled();
+    expect(db.from("vehicle_service_schedules").update).not.toHaveBeenCalled();
   });
 
   it("returns 0 when work order has no vehicle", async () => {
