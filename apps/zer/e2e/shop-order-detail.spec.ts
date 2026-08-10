@@ -31,7 +31,9 @@ test.describe("Shop order detail and receipt", () => {
     });
 
     // Should have back link regardless of whether sale exists
-    const backLink = page.getByText("Түүх рүү буцах");
+    // .first(): the not-found state can transiently double-render during dev
+    // hydration, briefly yielding two identical back-link <p> elements.
+    const backLink = page.getByText("Түүх рүү буцах").first();
     await expect(backLink).toBeVisible({ timeout: 10000 });
   });
 
@@ -41,7 +43,8 @@ test.describe("Shop order detail and receipt", () => {
     });
 
     // Should have back link regardless of whether sale exists
-    const backLink = page.getByText("Түүх рүү буцах");
+    // .first(): same transient double-render guard as the history back-link test.
+    const backLink = page.getByText("Түүх рүү буцах").first();
     await expect(backLink).toBeVisible({ timeout: 10000 });
   });
 
