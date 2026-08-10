@@ -2,6 +2,7 @@
 import "fake-indexeddb/auto";
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
+import { createElement } from "react";
 import { afterEach, vi } from "vitest";
 
 // Global mock for @/lib/audit — services call logAuditAfter which uses next/after
@@ -9,6 +10,34 @@ import { afterEach, vi } from "vitest";
 vi.mock("@/lib/audit", () => ({
   createAuditLog: vi.fn(),
   logAuditAfter: vi.fn(),
+}));
+
+// Mock @/lib/i18n/navigation — next-intl's createNavigation imports the bare
+// "next/navigation" specifier, which pnpm's strict node_modules cannot resolve
+// under vitest. Tests that care about routing mock this module per-file; this
+// fallback keeps components that render Link/useRouter importable everywhere.
+vi.mock("@/lib/i18n/navigation", () => ({
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children?: React.ReactNode;
+  }) => createElement("a", { href: String(href), ...props }, children),
+  redirect: (url: string) => {
+    throw new Error(`redirect:${url}`);
+  },
+  usePathname: () => "/",
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  getPathname: (href: string) => href,
 }));
 
 // Mock @/lib/offline/idb-store so the factory's IndexedDB operations are

@@ -4,6 +4,8 @@ import { Calculator, CheckCircle2, ClipboardList, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ListPageShell } from "@/components/list-page-shell";
+import { StatCard, StatCards } from "@/components/stat-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -231,31 +233,11 @@ export default function PayrollPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-8 px-4 pt-4 pb-6 md:px-6">
-      <div className="rounded-xl border border-border/60 bg-card p-5">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex flex-col gap-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="rounded-full px-2.5 py-0.5">
-                <Calculator className="mr-1 size-3.5" />
-                {t("payroll.periodLabel", { period: periodLabel })}
-              </Badge>
-              {branchFilter && (
-                <Badge variant="outline" className="rounded-full px-2.5 py-0.5">
-                  {t("payroll.branchScoped")}
-                </Badge>
-              )}
-            </div>
-            <div>
-              <Typography.H1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                {t("payroll.title")}
-              </Typography.H1>
-              <Typography.Muted className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                {t("payroll.subtitle")}
-              </Typography.Muted>
-            </div>
-          </div>
-
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ListPageShell
+        title={t("payroll.title")}
+        description={t("payroll.subtitle")}
+        headerAction={
           <div className="flex flex-wrap items-center gap-3">
             <Select
               value={String(year)}
@@ -299,301 +281,282 @@ export default function PayrollPage() {
                 : t("payroll.calculate")}
             </Button>
           </div>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary" className="rounded-full px-2.5 py-0.5">
+            <Calculator className="mr-1 size-3.5" />
+            {t("payroll.periodLabel", { period: periodLabel })}
+          </Badge>
+          {branchFilter && (
+            <Badge variant="outline" className="rounded-full px-2.5 py-0.5">
+              {t("payroll.branchScoped")}
+            </Badge>
+          )}
         </div>
-      </div>
 
-      {pageError && (
-        <Alert variant="destructive">
-          <AlertTitle>{commonT("somethingWentWrong")}</AlertTitle>
-          <AlertDescription>{pageError}</AlertDescription>
-        </Alert>
-      )}
+        {pageError && (
+          <Alert variant="destructive">
+            <AlertTitle>{commonT("somethingWentWrong")}</AlertTitle>
+            <AlertDescription>{pageError}</AlertDescription>
+          </Alert>
+        )}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-border/60 bg-muted/15 ">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">
-              {t("payroll.activeMechanics")}
+        <StatCards>
+          <StatCard
+            label={t("payroll.activeMechanics")}
+            sub={t("payroll.activeMechanicsDesc")}
+            value={mechanics.length}
+          />
+          <StatCard
+            label={t("payroll.ratesConfigured")}
+            sub={t("payroll.ratesConfiguredDesc")}
+            value={configuredRatesCount}
+          />
+          <StatCard
+            label={t("payroll.payrollRecords")}
+            sub={t("payroll.recordsDescription")}
+            value={records.length}
+          />
+          <StatCard
+            label={t("payroll.grossPayroll")}
+            sub={t("payroll.grossPayrollDesc")}
+            value={formatMNT(totalGrossPay)}
+          />
+        </StatCards>
+
+        <Card className="border-border/60 ">
+          <CardHeader className="gap-2 pb-4">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="size-4" />
+              {t("payroll.payRates")}
             </CardTitle>
             <CardDescription>
-              {t("payroll.activeMechanicsDesc")}
+              {t("payroll.payRatesDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Typography.Text className="text-3xl font-semibold tabular-nums">
-              {mechanics.length}
-            </Typography.Text>
+            {mechanicsQuery.isPending || ratesQuery.isPending ? (
+              <div className="flex flex-col gap-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : mechanicRateRows.length === 0 ? (
+              <Empty className="border border-dashed border-border/70 bg-muted/20">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Users />
+                  </EmptyMedia>
+                  <EmptyTitle>{t("payroll.noMechanics")}</EmptyTitle>
+                  <EmptyDescription>
+                    {t("payroll.noMechanicsDesc")}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("payroll.mechanic")}</TableHead>
+                    <TableHead>{t("payroll.currentRate")}</TableHead>
+                    <TableHead>{t("payroll.hourlyRate")}</TableHead>
+                    <TableHead>{t("payroll.effectiveFrom")}</TableHead>
+                    <TableHead className="w-[120px]" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mechanicRateRows.map((row) => {
+                    const draftValue = editingRates[row.mechanicId] ?? "";
+                    const isDirty =
+                      draftValue !== "" &&
+                      Number(draftValue) !== row.hourlyRate;
+                    const isSaving = savingRateId === row.mechanicId;
+
+                    return (
+                      <TableRow key={row.mechanicId}>
+                        <TableCell className="font-medium">
+                          {row.mechanicName}
+                        </TableCell>
+                        <TableCell>
+                          {row.hourlyRate !== null ? (
+                            <Typography.Text className="font-medium">
+                              {formatMNT(row.hourlyRate)}
+                            </Typography.Text>
+                          ) : (
+                            <Badge variant="outline">
+                              {t("payroll.noRate")}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <CurrencyInput
+                            value={Number(draftValue) || 0}
+                            onChange={(val) =>
+                              setEditingRates((prev) => ({
+                                ...prev,
+                                [row.mechanicId]: String(val),
+                              }))
+                            }
+                            min={0}
+                            className="h-9 w-32 rounded-xl"
+                            placeholder={row.hourlyRate?.toString() ?? "0"}
+                          />
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {row.effectiveFrom ?? "\u2014"}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full rounded-xl"
+                            onClick={() => handleSaveRate(row.mechanicId)}
+                            disabled={!isDirty || upsertRate.isPending}
+                          >
+                            {isSaving ? commonT("saving") : t("payroll.save")}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
-        <Card className="border-border/60 bg-muted/15 ">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">
-              {t("payroll.ratesConfigured")}
-            </CardTitle>
-            <CardDescription>
-              {t("payroll.ratesConfiguredDesc")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Typography.Text className="text-3xl font-semibold tabular-nums">
-              {configuredRatesCount}
-            </Typography.Text>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60 bg-muted/15 ">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">
+
+        <Card className="border-border/60 ">
+          <CardHeader className="gap-2 pb-4">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ClipboardList className="size-4" />
               {t("payroll.payrollRecords")}
             </CardTitle>
             <CardDescription>{t("payroll.recordsDescription")}</CardDescription>
+            {recordsQuery.isPending ? (
+              <Skeleton className="h-4 w-72" />
+            ) : records[0]?.ndsh_enabled ? (
+              <Typography.Muted className="text-xs text-muted-foreground">
+                {t("payroll.ndshRatesInfo", {
+                  employerRate: records[0].ndsh_employer_rate,
+                  employeeRate: records[0].ndsh_employee_rate,
+                })}
+              </Typography.Muted>
+            ) : null}
           </CardHeader>
           <CardContent>
-            <Typography.Text className="text-3xl font-semibold tabular-nums">
-              {records.length}
-            </Typography.Text>
+            {recordsQuery.isPending ? (
+              <div className="flex flex-col gap-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : records.length === 0 ? (
+              <Empty className="border border-dashed border-border/70 bg-muted/20">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <ClipboardList />
+                  </EmptyMedia>
+                  <EmptyTitle>{t("payroll.noPayrollRecords")}</EmptyTitle>
+                  <EmptyDescription>
+                    {t("payroll.noPayrollRecordsDesc")}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("payroll.mechanic")}</TableHead>
+                    <TableHead>{t("payroll.totalHours")}</TableHead>
+                    <TableHead>{t("payroll.hourlyRate")}</TableHead>
+                    <TableHead>{t("payroll.grossPay")}</TableHead>
+                    <TableHead>{t("payroll.ndshEmployer")}</TableHead>
+                    <TableHead>{t("payroll.ndshEmployee")}</TableHead>
+                    <TableHead>{t("payroll.status")}</TableHead>
+                    <TableHead className="w-[150px]" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {records.map((record) => {
+                    const isUpdating = updatingRecordId === record.id;
+
+                    return (
+                      <TableRow key={record.id}>
+                        <TableCell className="font-medium">
+                          {record.mechanic_name ?? commonT("unknown")}
+                        </TableCell>
+                        <TableCell>{record.total_hours}</TableCell>
+                        <TableCell>{formatMNT(record.hourly_rate)}</TableCell>
+                        <TableCell className="font-semibold">
+                          {formatMNT(record.gross_pay)}
+                        </TableCell>
+                        <TableCell>
+                          {record.ndsh_enabled
+                            ? formatMNT(record.ndsh_employer_amount)
+                            : "\u2014"}
+                        </TableCell>
+                        <TableCell>
+                          {record.ndsh_enabled
+                            ? formatMNT(record.ndsh_employee_amount)
+                            : "\u2014"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={
+                              STATUS_STYLES[record.status] ??
+                              "bg-gray-100 text-gray-700"
+                            }
+                            variant="secondary"
+                          >
+                            {t(`payroll.${record.status}`)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            {record.status === "draft" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="rounded-xl"
+                                onClick={() => handleApprove(record.id)}
+                                disabled={updateRecord.isPending}
+                              >
+                                {isUpdating
+                                  ? commonT("updating")
+                                  : t("payroll.approve")}
+                              </Button>
+                            )}
+                            {record.status === "approved" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="rounded-xl"
+                                onClick={() => handlePay(record.id)}
+                                disabled={updateRecord.isPending}
+                              >
+                                {isUpdating
+                                  ? commonT("updating")
+                                  : t("payroll.markAsPaid")}
+                              </Button>
+                            )}
+                            {record.status === "paid" && (
+                              <Badge variant="outline" className="rounded-full">
+                                <CheckCircle2 className="mr-1 size-3.5" />
+                                {t("payroll.paid")}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
-        <Card className="border-border/60 bg-muted/15 ">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">
-              {t("payroll.grossPayroll")}
-            </CardTitle>
-            <CardDescription>{t("payroll.grossPayrollDesc")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Typography.Text className="text-3xl font-semibold tabular-nums">
-              {formatMNT(totalGrossPay)}
-            </Typography.Text>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-border/60 ">
-        <CardHeader className="gap-2 pb-4">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="size-4" />
-            {t("payroll.payRates")}
-          </CardTitle>
-          <CardDescription>{t("payroll.payRatesDescription")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {mechanicsQuery.isPending || ratesQuery.isPending ? (
-            <div className="flex flex-col gap-2">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-12 w-full rounded-xl" />
-              ))}
-            </div>
-          ) : mechanicRateRows.length === 0 ? (
-            <Empty className="border border-dashed border-border/70 bg-muted/20">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Users />
-                </EmptyMedia>
-                <EmptyTitle>{t("payroll.noMechanics")}</EmptyTitle>
-                <EmptyDescription>
-                  {t("payroll.noMechanicsDesc")}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("payroll.mechanic")}</TableHead>
-                  <TableHead>{t("payroll.currentRate")}</TableHead>
-                  <TableHead>{t("payroll.hourlyRate")}</TableHead>
-                  <TableHead>{t("payroll.effectiveFrom")}</TableHead>
-                  <TableHead className="w-[120px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mechanicRateRows.map((row) => {
-                  const draftValue = editingRates[row.mechanicId] ?? "";
-                  const isDirty =
-                    draftValue !== "" && Number(draftValue) !== row.hourlyRate;
-                  const isSaving = savingRateId === row.mechanicId;
-
-                  return (
-                    <TableRow key={row.mechanicId}>
-                      <TableCell className="font-medium">
-                        {row.mechanicName}
-                      </TableCell>
-                      <TableCell>
-                        {row.hourlyRate !== null ? (
-                          <Typography.Text className="font-medium">
-                            {formatMNT(row.hourlyRate)}
-                          </Typography.Text>
-                        ) : (
-                          <Badge variant="outline">{t("payroll.noRate")}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <CurrencyInput
-                          value={Number(draftValue) || 0}
-                          onChange={(val) =>
-                            setEditingRates((prev) => ({
-                              ...prev,
-                              [row.mechanicId]: String(val),
-                            }))
-                          }
-                          min={0}
-                          className="h-9 w-32 rounded-xl"
-                          placeholder={row.hourlyRate?.toString() ?? "0"}
-                        />
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {row.effectiveFrom ?? "\u2014"}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full rounded-xl"
-                          onClick={() => handleSaveRate(row.mechanicId)}
-                          disabled={!isDirty || upsertRate.isPending}
-                        >
-                          {isSaving ? commonT("saving") : t("payroll.save")}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/60 ">
-        <CardHeader className="gap-2 pb-4">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ClipboardList className="size-4" />
-            {t("payroll.payrollRecords")}
-          </CardTitle>
-          <CardDescription>{t("payroll.recordsDescription")}</CardDescription>
-          {recordsQuery.isPending ? (
-            <Skeleton className="h-4 w-72" />
-          ) : records[0]?.ndsh_enabled ? (
-            <Typography.Muted className="text-xs text-muted-foreground">
-              {t("payroll.ndshRatesInfo", {
-                employerRate: records[0].ndsh_employer_rate,
-                employeeRate: records[0].ndsh_employee_rate,
-              })}
-            </Typography.Muted>
-          ) : null}
-        </CardHeader>
-        <CardContent>
-          {recordsQuery.isPending ? (
-            <div className="flex flex-col gap-2">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-12 w-full rounded-xl" />
-              ))}
-            </div>
-          ) : records.length === 0 ? (
-            <Empty className="border border-dashed border-border/70 bg-muted/20">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <ClipboardList />
-                </EmptyMedia>
-                <EmptyTitle>{t("payroll.noPayrollRecords")}</EmptyTitle>
-                <EmptyDescription>
-                  {t("payroll.noPayrollRecordsDesc")}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("payroll.mechanic")}</TableHead>
-                  <TableHead>{t("payroll.totalHours")}</TableHead>
-                  <TableHead>{t("payroll.hourlyRate")}</TableHead>
-                  <TableHead>{t("payroll.grossPay")}</TableHead>
-                  <TableHead>{t("payroll.ndshEmployer")}</TableHead>
-                  <TableHead>{t("payroll.ndshEmployee")}</TableHead>
-                  <TableHead>{t("payroll.status")}</TableHead>
-                  <TableHead className="w-[150px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {records.map((record) => {
-                  const isUpdating = updatingRecordId === record.id;
-
-                  return (
-                    <TableRow key={record.id}>
-                      <TableCell className="font-medium">
-                        {record.mechanic_name ?? commonT("unknown")}
-                      </TableCell>
-                      <TableCell>{record.total_hours}</TableCell>
-                      <TableCell>{formatMNT(record.hourly_rate)}</TableCell>
-                      <TableCell className="font-semibold">
-                        {formatMNT(record.gross_pay)}
-                      </TableCell>
-                      <TableCell>
-                        {record.ndsh_enabled
-                          ? formatMNT(record.ndsh_employer_amount)
-                          : "\u2014"}
-                      </TableCell>
-                      <TableCell>
-                        {record.ndsh_enabled
-                          ? formatMNT(record.ndsh_employee_amount)
-                          : "\u2014"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={
-                            STATUS_STYLES[record.status] ??
-                            "bg-gray-100 text-gray-700"
-                          }
-                          variant="secondary"
-                        >
-                          {t(`payroll.${record.status}`)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          {record.status === "draft" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="rounded-xl"
-                              onClick={() => handleApprove(record.id)}
-                              disabled={updateRecord.isPending}
-                            >
-                              {isUpdating
-                                ? commonT("updating")
-                                : t("payroll.approve")}
-                            </Button>
-                          )}
-                          {record.status === "approved" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="rounded-xl"
-                              onClick={() => handlePay(record.id)}
-                              disabled={updateRecord.isPending}
-                            >
-                              {isUpdating
-                                ? commonT("updating")
-                                : t("payroll.markAsPaid")}
-                            </Button>
-                          )}
-                          {record.status === "paid" && (
-                            <Badge variant="outline" className="rounded-full">
-                              <CheckCircle2 className="mr-1 size-3.5" />
-                              {t("payroll.paid")}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      </ListPageShell>
     </div>
   );
 }
