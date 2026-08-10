@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -45,10 +46,23 @@ export async function generateMetadata({
     return { title: "Нийтлэл" };
   }
 
+  // Canonical host: use the request host when a custom domain served the
+  // page (rewrites preserve it); fall back to the configured site URL.
+  const host = (await headers()).get("host") ?? "";
+  const configuredHost = (
+    process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn"
+  ).replace(/^https?:\/\//, "");
+  const canonicalBase =
+    host && host !== configuredHost
+      ? `https://${host}`
+      : process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn";
+  const postUrl = `${canonicalBase}/${slug}/blog/${postSlug}`;
+
   return {
     title: post.title,
     description: post.excerpt ?? post.title,
     robots: { index: true, follow: true },
+    alternates: { canonical: postUrl },
     openGraph: {
       title: post.title,
       description: post.excerpt ?? post.title,
@@ -56,7 +70,7 @@ export async function generateMetadata({
         ? { images: [{ url: post.cover_image_url, width: 1200, height: 630 }] }
         : {}),
       type: "article",
-      url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn"}/${slug}/blog/${postSlug}`,
+      url: postUrl,
     },
   };
 }
@@ -69,16 +83,36 @@ async function PostDataFetcher({
   const { slug, postSlug } = await params;
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc("get_public_blog_post", {
-    p_slug: slug,
-    p_post_slug: postSlug,
-  });
+  const [{ data, error }, { data: org }] = await Promise.all([
+    supabase.rpc("get_public_blog_post", {
+      p_slug: slug,
+      p_post_slug: postSlug,
+    }),
+    supabase.from("organizations").select("name").eq("slug", slug).single(),
+  ]);
 
   if (error || !data) {
     notFound();
   }
 
   const post = data as PublicBlogPostDetail;
+  const publisherName = org?.name ?? null;
+
+  const paragraphs = post.content
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    ...(post.cover_image_url ? { image: [post.cover_image_url] } : {}),
+    ...(post.published_at ? { datePublished: post.published_at } : {}),
+    ...(publisherName
+      ? { publisher: { "@type": "Organization", name: publisherName } }
+      : {}),
+  };
 
   return (
     <div className="min-h-dvh bg-background">
@@ -118,10 +152,19 @@ async function PostDataFetcher({
             <p className="mb-8 text-lg text-muted-foreground">{post.excerpt}</p>
           )}
 
-          <div className="prose prose-sm max-w-none whitespace-pre-wrap text-muted-foreground sm:prose-base">
-            {post.content}
+          <div className="prose prose-sm max-w-none text-muted-foreground sm:prose-base">
+            {paragraphs.map((paragraph) => (
+              <p key={paragraph} className="mb-4 whitespace-pre-line last:mb-0">
+                {paragraph}
+              </p>
+            ))}
           </div>
         </article>
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </div>
     </div>
   );

@@ -97,6 +97,16 @@ pnpm test:e2e               # Playwright E2E
 
 **Pre-merge:** `pnpm validate && pnpm test`
 
+## Storefront (public pages)
+
+Public storefront lives in `src/app/[slug]/` (profile, products, blog, cart, buyer account). It renders ONLY what the public RPCs expose — stock, sku, and barcode are intentionally private. Never render stock on public pages (the old detail page showed a phantom stock=0 card because it expected fields the RPC never returns).
+
+- **RPC contract**: `get_public_products/categories`, `get_public_product`, `submit_shop_order`, `get_public_blog_*` return `Json`; real shapes are defined in `supabase/migrations` (fixed in `20260810150000`). `product_variants` has NO `name`/`price`/`image_url` columns — variants expose `{id, sku, sale_price, current_stock, option_labels}` (option labels joined from `product_variant_options`); attributes are `{name, value}` joined from `product_attribute_definitions`. Never write a shape from memory — check the migration/`pg_get_functiondef`.
+- **E2E fixture**: `supabase/seed.sql` — idempotent (fixed UUIDs + `ON CONFLICT`), org slug `storefront-e2e-test`, 31 products + variant product + blog + branch. Apply: `psql "postgresql://postgres:postgres@127.0.0.1:54328/postgres" -f supabase/seed.sql`.
+- **E2E**: `pnpm test:e2e` — `playwright.config.ts` `webServer` auto-starts the dev server against the LOCAL Supabase stack (`127.0.0.1:54326`); seeded tests in `e2e/public-storefront.spec.ts` (pagination, variants, guest checkout) skip with a clear message when the seed is missing.
+- **Integration**: `SUPABASE_URL=http://127.0.0.1:54326 SUPABASE_ANON_KEY=<local anon> SUPABASE_DB_PORT=54328 pnpm exec vitest run --config vitest.integration.config.ts src/__integration__/<spec>.ts` — `shop-orders.spec.ts` includes a variant-order regression test (variant pricing + variant-only stock decrement).
+- **Caveat**: the local stack is started `--exclude ... inbucket` (no email), so buyer-signup integration tests fail with "Error sending confirmation email"; start the stack with inbucket to run them.
+
 ## Auto-Verification
 
 The OMP stop hook runs `pnpm --filter=zer typecheck` + `pnpm --filter=zer test` automatically before every agent yield. Fix any failures before claiming work is done.

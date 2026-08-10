@@ -38,6 +38,27 @@ export default defineConfig({
     screenshot: "only-on-failure",
     video: "on-first-retry",
   },
+  // Auto-start the dev server for E2E (reuse an already-running one).
+  // Supabase defaults point at the LOCAL stack; explicit process.env values
+  // always win so remote/CI setups are unaffected.
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command: "pnpm dev",
+        url: "http://localhost:3000",
+        reuseExistingServer: true,
+        timeout: 120_000,
+        env: {
+          NEXT_PUBLIC_SUPABASE_URL:
+            process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54326",
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+            process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+            "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH",
+          SUPABASE_SERVICE_ROLE_KEY:
+            process.env.SUPABASE_SERVICE_ROLE_KEY ??
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU",
+        },
+      },
   projects: [
     // Setup project: login once, save storage state
     {

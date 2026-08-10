@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CheckCircle,
   Envelope,
   FacebookLogo,
   Globe,
@@ -21,7 +22,11 @@ import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { updatePublicProfile } from "@/app/(dashboard)/settings/organization/actions";
+import {
+  updatePublicProfile,
+  verifyCustomDomain,
+} from "@/app/(dashboard)/settings/organization/actions";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -216,6 +221,10 @@ export function PublicProfileSettings({
   useOrgSettings();
   const [state, formAction, isPending] = useActionState(
     updatePublicProfile,
+    undefined,
+  );
+  const [verifyState, verifyFormAction, isVerifying] = useActionState(
+    verifyCustomDomain,
     undefined,
   );
   const formRef = useRef<HTMLFormElement>(null);
@@ -546,24 +555,58 @@ export function PublicProfileSettings({
               />
               <p className="text-xs text-muted-foreground">
                 Нийтийн дэлгүүр энэ домэйноор нээгдэнэ. Домэйнээ энэ апп руу
-                чиглүүлж (CNAME эсвэл A бичлэг), доорх "Баталгаажуулсан"
-                тэмдэглэгээг асаана уу.
+                чиглүүлж (CNAME эсвэл A бичлэг), доорх TXT бичлэгийг DNS
+                тохиргоондоо нэмээд "Баталгаажуулах" товчийг дарна уу.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="domain_verified"
-                name="domain_verified"
-                defaultChecked={initialProfile?.domain_verified === true}
-                className="size-4 rounded border-border"
-              />
-              <label
-                htmlFor="domain_verified"
-                className="text-sm text-muted-foreground"
-              >
-                Домэйний холболт баталгаажсан
-              </label>
+            <div className="space-y-2">
+              {initialProfile?.domain_verified ? (
+                <Badge variant="outline" className="text-emerald-600">
+                  <CheckCircle className="size-3" weight="fill" />
+                  Домэйн баталгаажсан
+                </Badge>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Домэйн эзэмшиж буйгаа баталгаажуулахын тулд DNS TXT бичлэг
+                  нэмнэ үү:
+                </p>
+              )}
+              {verifyState?.token && (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    TXT бичлэгийн утга
+                  </p>
+                  <code className="block w-fit break-all rounded-md bg-muted px-3 py-2 text-xs">
+                    zer-verify={verifyState.token}
+                  </code>
+                </div>
+              )}
+              <form action={verifyFormAction}>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  size="sm"
+                  disabled={isVerifying}
+                >
+                  {isVerifying ? (
+                    <>
+                      <Spinner className="size-3 animate-spin" />
+                      Шалгаж байна...
+                    </>
+                  ) : (
+                    "Баталгаажуулах"
+                  )}
+                </Button>
+              </form>
+              {verifyState?.verified && (
+                <p className="flex items-center gap-1 text-xs text-emerald-600">
+                  <CheckCircle className="size-3.5" weight="fill" />
+                  Домэйн амжилттай баталгаажуулсан.
+                </p>
+              )}
+              {verifyState?.error && (
+                <p className="text-xs text-destructive">{verifyState.error}</p>
+              )}
             </div>
           </div>
 

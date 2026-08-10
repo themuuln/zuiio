@@ -21,10 +21,10 @@ export async function GET(request: Request) {
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("organization_public_profiles" as never)
+    .from("organization_public_profiles")
     .select("organization_id, custom_domain")
-    .eq("custom_domain" as never, host)
-    .eq("domain_verified" as never, true)
+    .eq("custom_domain", host)
+    .eq("domain_verified", true)
     .maybeSingle();
 
   if (error) {
@@ -37,11 +37,10 @@ export async function GET(request: Request) {
   }
 
   // Resolve slug from the org id
-  const row = data as unknown as { organization_id: string };
   const { data: org } = await supabase
     .from("organizations")
     .select("slug")
-    .eq("id", row.organization_id)
+    .eq("id", data.organization_id)
     .maybeSingle();
 
   if (!org?.slug) {

@@ -52,7 +52,7 @@ export function useStoreSession() {
     }
 
     const { data: row } = await supabase
-      .from("store_accounts" as never)
+      .from("store_accounts")
       .select("id, email, display_name, phone")
       .eq("id", user.id)
       .maybeSingle();
@@ -65,20 +65,20 @@ export function useStoreSession() {
     if (row) {
       setState({
         status: "account",
-        account: row as unknown as StoreAccount,
+        account: row,
       });
       return;
     }
 
     // Signed in but store_accounts row missing — create it from the session.
     const { error: upsertError } = await supabase
-      .from("store_accounts" as never)
+      .from("store_accounts")
       .upsert({
         id: user.id,
         email: user.email ?? "",
         display_name: displayName,
         phone,
-      } as never);
+      });
     if (upsertError) {
       capture(upsertError, { context: "store account: upsert after login" });
     }

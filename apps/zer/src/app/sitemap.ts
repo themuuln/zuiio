@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getPublicCatalog } from "@/lib/public-catalog";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -27,32 +28,66 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .not("slug", "is", null)
     : { data: [] };
 
-  const orgEntries: MetadataRoute.Sitemap = (organizations ?? []).flatMap(
-    (org) => {
-      if (!org.slug) return [];
-      const orgBase = domainByOrg[org.id] ?? baseUrl;
-      return [
-        {
-          url: `${orgBase}/${org.slug}`,
-          lastModified: new Date(),
-          changeFrequency: "weekly" as const,
-          priority: 0.7,
-        },
-        {
-          url: `${orgBase}/${org.slug}/products`,
-          lastModified: new Date(),
-          changeFrequency: "daily" as const,
-          priority: 0.6,
-        },
-        {
-          url: `${orgBase}/${org.slug}/blog`,
+  const orgEntries: MetadataRoute.Sitemap = [];
+
+  for (const org of organizations ?? []) {
+    if (!org.slug) continue;
+    const orgBase = domainByOrg[org.id] ?? baseUrl;
+
+    orgEntries.push(
+      {
+        url: `${orgBase}/${org.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      },
+      {
+        url: `${orgBase}/${org.slug}/products`,
+        lastModified: new Date(),
+        changeFrequency: "daily" as const,
+        priority: 0.6,
+      },
+      {
+        url: `${orgBase}/${org.slug}/blog`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.5,
+      },
+    );
+
+    // Product deep links: paginate the public catalog, cap at 300/org.
+    for (let page = 1; page <= 3; page++) {
+      const catalog = await getPublicCatalog(supabase, org.slug, {
+        page,
+        pageSize: 100,
+      });
+      const products = catalog?.products ?? [];
+      for (const product of products) {
+        orgEntries.push({
+          url: `${orgBase}/${org.slug}/products/${product.id}`,
           lastModified: new Date(),
           changeFrequency: "weekly" as const,
           priority: 0.5,
-        },
-      ];
-    },
-  );
+        });
+      }
+      if (products.length < 100) break;
+    }
+
+    // Blog post deep links.
+    const { data: blogPosts } = await supabase.rpc("get_public_blog_posts", {
+      p_slug: org.slug,
+    });
+    const posts = (blogPosts ?? []) as Array<{ slug: string }>;
+    for (const post of posts) {
+      if (!post.slug) continue;
+      orgEntries.push({
+        url: `${orgBase}/${org.slug}/blog/${post.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.4,
+      });
+    }
+  }
 
   return [
     {

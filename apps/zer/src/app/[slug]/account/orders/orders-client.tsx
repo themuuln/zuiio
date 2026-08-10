@@ -45,7 +45,7 @@ export function OrdersClient({ slug }: { slug: string }) {
     let cancelled = false;
     (async () => {
       const supabase = createClient();
-      const result = (await supabase.rpc("get_my_orders" as never)) as {
+      const result = (await supabase.rpc("get_my_orders")) as {
         data: MyOrder[] | null;
         error: { message: string } | null;
       };

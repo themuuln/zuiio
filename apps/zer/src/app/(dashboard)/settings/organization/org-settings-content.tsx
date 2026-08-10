@@ -73,7 +73,7 @@ export function OrgSettingsContent() {
       const profileResult = await withDbCapture(
         "page:organization",
         supabase
-          .from("organization_public_profiles" as never)
+          .from("organization_public_profiles")
           .select("*")
           .eq("organization_id", organizationId)
           .maybeSingle(),

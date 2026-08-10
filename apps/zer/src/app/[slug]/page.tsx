@@ -171,9 +171,8 @@ async function OrgProfileDataFetcher({
       notFound();
     }
 
-    // Fetch public profile (table not yet in generated types)
     const profileResult = (await supabase
-      .from("organization_public_profiles" as never)
+      .from("organization_public_profiles")
       .select("*")
       .eq("organization_id", org.id)
       .maybeSingle()) as { data: OrgProfileData["public_profile"] };

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { StorefrontCartProvider } from "@/components/storefront/cart-context";
 import { getPublicCatalog, getPublicCategories } from "@/lib/public-catalog";
 import { createClient } from "@/lib/supabase/server";
 import { ProductsPageClient } from "./products-page-client";
 
-// Types for client components — private fields optional for public catalog
+// Types for client components — match the public catalog RPC shape exactly.
 export type PublicProduct = {
   id: string;
   name: string;
@@ -16,11 +17,6 @@ export type PublicProduct = {
   image_url: string | null;
   description: string | null;
   attribute_count: number;
-  // These may be present for internal use but absent from public catalog
-  sku?: string | null;
-  barcode?: string | null;
-  current_stock?: number | null;
-  min_stock?: number | null;
 };
 
 export type OrgMeta = {
@@ -36,14 +32,20 @@ export type PublicCategory = {
   product_count: number;
 };
 
+const PAGE_SIZE = 24;
+
 export default function PublicProductsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string; q?: string; category?: string }>;
 }) {
   return (
     <Suspense fallback={<ProductsSkeleton />}>
-      <ProductsDataFetcher params={params} />
+      <StorefrontCartProvider>
+        <ProductsDataFetcher params={params} searchParams={searchParams} />
+      </StorefrontCartProvider>
     </Suspense>
   );
 }
@@ -70,15 +72,27 @@ export async function generateMetadata({
 
 async function ProductsDataFetcher({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string; q?: string; category?: string }>;
 }) {
   const { slug } = await params;
+  const sp = await searchParams;
   const supabase = await createClient();
+
+  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const search = sp.q?.trim() || undefined;
+  const categoryId = sp.category || undefined;
 
   try {
     const [catalog, categories] = await Promise.all([
-      getPublicCatalog(supabase, slug),
+      getPublicCatalog(supabase, slug, {
+        page,
+        pageSize: PAGE_SIZE,
+        search,
+        categoryId,
+      }),
       getPublicCategories(supabase, slug),
     ]);
 
@@ -96,6 +110,11 @@ async function ProductsDataFetcher({
         }}
         products={catalog.products}
         categories={categories}
+        total={catalog.total}
+        page={page}
+        pageSize={catalog.pageSize}
+        search={search ?? ""}
+        categoryId={categoryId ?? ""}
       />
     );
   } catch {

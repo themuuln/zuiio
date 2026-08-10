@@ -406,4 +406,49 @@ describe("submit_shop_order (public buyer checkout)", () => {
     const ids = (buyerBOrders ?? []).map((o: { id: string }) => o.id);
     expect(ids).not.toContain(row!.order_id);
   });
+
+  it("variant order: prices from product_variants, decrements variant stock", async () => {
+    // Regression guard: submit_shop_order decrements variant stock via
+    // `UPDATE product_variants`, which fires the sync_product_has_variants
+    // trigger. That trigger must run with a public search_path — without it
+    // the RPC's empty search_path made `UPDATE products` raise 42P01 and the
+    // whole order failed (fix: migration 20260810150000).
+    const { org, orgId, productId } = await setupStore(admin);
+
+    const variantId = crypto.randomUUID();
+    await runSql(
+      `INSERT INTO public.product_variants (id, product_id, sku, sale_price, current_stock, min_stock) VALUES ('${variantId}', '${productId}', 'V-${Date.now()}', 7500, 10, 2);`,
+    );
+    // Reset has_variants explicitly — the trigger already flipped it.
+    await admin
+      .from("products")
+      .update({ has_variants: true })
+      .eq("id", productId);
+
+    const anon = createAnonClient();
+    const { data, error } = await anon.rpc("submit_shop_order", {
+      p_org_slug: org.slug,
+      p_items: [{ product_id: productId, quantity: 2, variant_id: variantId }],
+      p_payment_method: "cash",
+      p_contact_name: "Вариант Захиалагч",
+      p_contact_phone: "99881122",
+      p_idempotency_key: `variant-${Date.now()}`,
+    } as never);
+
+    expect(error).toBeNull();
+    const row = Array.isArray(data) ? (data[0] as OrderRow) : null;
+    expect(row?.order_id).toBeTruthy();
+    // 2 × variant sale_price 7500, priced server-side from product_variants
+    expect(row?.total_amount).toBe(15000);
+    trackCleanup("sales", row!.order_id);
+    await trackOrderContact(admin, orgId, "99881122");
+
+    const { data: variant } = (await admin
+      .from("product_variants")
+      .select("current_stock")
+      .eq("id", variantId)
+      .single()) as unknown as { data: { current_stock: number } | null };
+    // 10 - 2 = 8 — the variant stock decrement path (and its trigger) worked
+    expect(variant?.current_stock).toBe(8);
+  });
 });

@@ -1,13 +1,13 @@
 import { Article } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { OptimizedImage } from "@/components/ui/optimized-image";
-import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import { BlogClient } from "./blog-client";
 
-type PublicBlogPost = {
+export type PublicBlogPost = {
   id: string;
   title: string;
   slug: string;
@@ -41,10 +41,22 @@ export async function generateMetadata({
     .eq("slug", slug)
     .single();
 
+  // Canonical host: use the request host when a custom domain served the
+  // page (rewrites preserve it); fall back to the configured site URL.
+  const host = (await headers()).get("host") ?? "";
+  const configuredHost = (
+    process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn"
+  ).replace(/^https?:\/\//, "");
+  const canonicalBase =
+    host && host !== configuredHost
+      ? `https://${host}`
+      : process.env.NEXT_PUBLIC_SITE_URL || "https://zuiio.mn";
+
   return {
     title: org ? `${org.name} — Блог` : "Блог",
     description: org ? `${org.name}-ийн блог, нийтлэлүүд` : "Блог",
     robots: { index: true, follow: true },
+    alternates: { canonical: `${canonicalBase}/${slug}/blog` },
   };
 }
 
@@ -84,52 +96,7 @@ async function BlogDataFetcher({
           <p className="text-sm text-muted-foreground">Мэдээ, нийтлэлүүд</p>
         </div>
 
-        {posts.length === 0 ? (
-          <div className="rounded-xl border border-border/80 bg-card p-10 text-center text-sm text-muted-foreground">
-            Одоогоор нийтлэл байхгүй.
-          </div>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2">
-            {posts.map((post) => (
-              <Link
-                key={post.id}
-                href={`/${slug}/blog/${post.slug}`}
-                className="group overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm transition-colors hover:border-primary/30"
-              >
-                {post.cover_image_url ? (
-                  <div className="relative aspect-[16/9] overflow-hidden bg-muted">
-                    <OptimizedImage
-                      src={post.cover_image_url}
-                      alt={post.title}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]"
-                      width={640}
-                      height={360}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex aspect-[16/9] items-center justify-center bg-muted/50">
-                    <Article className="size-10 text-muted-foreground/20" />
-                  </div>
-                )}
-                <div className="space-y-2 p-5">
-                  {post.published_at && (
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(post.published_at)}
-                    </p>
-                  )}
-                  <h2 className="text-lg font-semibold leading-snug group-hover:text-primary">
-                    {post.title}
-                  </h2>
-                  {post.excerpt && (
-                    <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {post.excerpt}
-                    </p>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+        <BlogClient slug={slug} posts={posts} />
       </div>
     </div>
   );

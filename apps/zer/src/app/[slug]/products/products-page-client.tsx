@@ -6,10 +6,14 @@ import {
   FunnelSimple,
   MagnifyingGlass,
   Package,
+  ShoppingCart,
   X,
 } from "@phosphor-icons/react";
-import { useMemo, useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
+import { useStorefrontCart } from "@/components/storefront/cart-context";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCompanyTypeLabel } from "@/lib/constants";
@@ -17,55 +21,79 @@ import { formatCurrency } from "@/lib/format";
 import type { OrgMeta, PublicCategory, PublicProduct } from "./page";
 import { ProductDetailDrawer } from "./product-detail-drawer";
 
-const STOCK_FILTERS = [
-  { value: "all", label: "Бүгд" },
-  { value: "in_stock", label: "Нөөцөд" },
-  { value: "low_stock", label: "Дуусах дөхсөн" },
-  { value: "out_of_stock", label: "Дууссан" },
-] as const;
-
 export function ProductsPageClient({
   organization,
   products,
   categories,
+  total,
+  page,
+  pageSize,
+  search,
+  categoryId,
 }: {
   organization: OrgMeta;
   products: PublicProduct[];
   categories: PublicCategory[];
+  total: number;
+  page: number;
+  pageSize: number;
+  search: string;
+  categoryId: string;
 }) {
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [stockFilter, setStockFilter] = useState<string>("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const urlSearchParams = useSearchParams();
+  const { count } = useStorefrontCart();
+
+  // Local input state drives the debounced URL update for `q`.
+  const [searchInput, setSearchInput] = useState(search);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const filtered = useMemo(() => {
-    return products.filter((p) => {
-      const query = search.toLowerCase();
-      if (
-        query &&
-        !p.name.toLowerCase().includes(query) &&
-        !(p.sku ?? "").toLowerCase().includes(query) &&
-        !(p.description ?? "").toLowerCase().includes(query)
-      ) {
-        return false;
+  const updateParams = useCallback(
+    (updates: Record<string, string | undefined>) => {
+      const params = new URLSearchParams(urlSearchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value) {
+          params.set(key, value);
+        } else {
+          params.delete(key);
+        }
       }
-      if (categoryFilter && p.category_id !== categoryFilter) return false;
-      const stock = Number(p.current_stock ?? 0);
-      const minStock = Number(p.min_stock ?? 0);
-      if (stockFilter === "in_stock" && stock <= 0) return false;
-      if (stockFilter === "low_stock" && (stock <= 0 || stock > minStock))
-        return false;
-      if (stockFilter === "out_of_stock" && stock > 0) return false;
-      return true;
-    });
-  }, [products, search, categoryFilter, stockFilter]);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, urlSearchParams],
+  );
 
-  const hasFilters = !!(search || categoryFilter || stockFilter !== "all");
+  // Debounced search — filters reset to page 1.
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (searchInput !== search) {
+        updateParams({
+          q: searchInput.trim() || undefined,
+          page: undefined,
+        });
+      }
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchInput, search, updateParams]);
+
+  const setCategory = (id: string) => {
+    updateParams({ category: id || undefined, page: undefined });
+  };
+
+  const hasFilters = !!(search || categoryId);
 
   const clearFilters = () => {
-    setSearch("");
-    setCategoryFilter("");
-    setStockFilter("all");
+    setSearchInput("");
+    updateParams({ q: undefined, category: undefined, page: undefined });
+  };
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const goToPage = (target: number) => {
+    const clamped = Math.min(Math.max(target, 1), totalPages);
+    if (clamped === page) return;
+    updateParams({ page: clamped === 1 ? undefined : String(clamped) });
   };
 
   return (
@@ -95,10 +123,22 @@ export function ProductsPageClient({
                   <span className="size-1.5 rounded-full bg-primary" />
                 )}
               </button>
+              {/* Cart link */}
+              <Link
+                href={`/${organization.slug}/cart`}
+                aria-label={`Сагс (${count})`}
+                className="relative flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <ShoppingCart className="size-4" />
+                <span className="hidden sm:inline">Сагс</span>
+                {count > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground tabular-nums">
+                    {count}
+                  </span>
+                )}
+              </Link>
               <div className="text-right">
-                <p className="text-2xl font-bold tabular-nums">
-                  {filtered.length}
-                </p>
+                <p className="text-2xl font-bold tabular-nums">{total}</p>
                 <p className="text-xs text-muted-foreground">бүтээгдэхүүн</p>
               </div>
             </div>
@@ -127,14 +167,12 @@ export function ProductsPageClient({
               </button>
             </div>
             <SidebarFilters
-              search={search}
-              setSearch={setSearch}
-              categoryFilter={categoryFilter}
-              setCategoryFilter={setCategoryFilter}
-              stockFilter={stockFilter}
-              setStockFilter={setStockFilter}
+              search={searchInput}
+              setSearch={setSearchInput}
+              categoryFilter={categoryId}
+              setCategoryFilter={setCategory}
               categories={categories}
-              products={products}
+              total={total}
               hasFilters={hasFilters}
               clearFilters={clearFilters}
             />
@@ -147,14 +185,12 @@ export function ProductsPageClient({
         {/* Sidebar — sticky below header */}
         <aside className="hidden py-6 pr-6 lg:block lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto lg:border-r lg:border-border/60">
           <SidebarFilters
-            search={search}
-            setSearch={setSearch}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            stockFilter={stockFilter}
-            setStockFilter={setStockFilter}
+            search={searchInput}
+            setSearch={setSearchInput}
+            categoryFilter={categoryId}
+            setCategoryFilter={setCategory}
             categories={categories}
-            products={products}
+            total={total}
             hasFilters={hasFilters}
             clearFilters={clearFilters}
           />
@@ -164,11 +200,11 @@ export function ProductsPageClient({
         <main className="py-6">
           {hasFilters && (
             <p className="mb-4 text-sm text-muted-foreground">
-              {filtered.length} бүтээгдэхүүн олдлоо
+              {total} бүтээгдэхүүн олдлоо
             </p>
           )}
 
-          {filtered.length === 0 ? (
+          {products.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-20 text-center">
               <Package className="size-12 text-muted-foreground/30" />
               <p className="text-sm text-muted-foreground">
@@ -185,20 +221,56 @@ export function ProductsPageClient({
               )}
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((product) => (
-                <ProductDetailDrawer
-                  key={product.id}
-                  product={product}
-                  organization={organization}
-                >
-                  <ProductCard
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {products.map((product) => (
+                  <ProductDetailDrawer
+                    key={product.id}
                     product={product}
-                    currency={organization.currency}
-                  />
-                </ProductDetailDrawer>
-              ))}
-            </div>
+                    organization={organization}
+                  >
+                    <ProductCard
+                      product={product}
+                      currency={organization.currency}
+                    />
+                  </ProductDetailDrawer>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <div className="flex flex-col items-center gap-2 py-8">
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  Нийт {total} бүтээгдэхүүн
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={page <= 1}
+                    onClick={() => goToPage(page - 1)}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "sm",
+                    })}
+                  >
+                    ← Өмнөх
+                  </button>
+                  <span className="text-sm text-muted-foreground tabular-nums">
+                    {page} / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={page >= totalPages}
+                    onClick={() => goToPage(page + 1)}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "sm",
+                    })}
+                  >
+                    Дараах →
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </main>
       </div>
@@ -217,10 +289,8 @@ function SidebarFilters({
   setSearch,
   categoryFilter,
   setCategoryFilter,
-  stockFilter,
-  setStockFilter,
   categories,
-  products,
+  total,
   hasFilters,
   clearFilters,
 }: {
@@ -228,10 +298,8 @@ function SidebarFilters({
   setSearch: (v: string) => void;
   categoryFilter: string;
   setCategoryFilter: (v: string) => void;
-  stockFilter: string;
-  setStockFilter: (v: string) => void;
   categories: PublicCategory[];
-  products: PublicProduct[];
+  total: number;
   hasFilters: boolean;
   clearFilters: () => void;
 }) {
@@ -268,7 +336,7 @@ function SidebarFilters({
               }`}
             >
               <span>Бүгд</span>
-              <span className="text-xs tabular-nums">{products.length}</span>
+              <span className="text-xs tabular-nums">{total}</span>
             </button>
             {categories.map((cat) => (
               <button
@@ -293,27 +361,6 @@ function SidebarFilters({
         </div>
       )}
 
-      {/* Stock filter */}
-      <div>
-        <p className="mb-1.5 text-xs font-medium text-muted-foreground">Нөөц</p>
-        <div className="space-y-0.5">
-          {STOCK_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              onClick={() => setStockFilter(f.value)}
-              className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
-                stockFilter === f.value
-                  ? "bg-primary/10 font-medium text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Clear */}
       {hasFilters && (
         <button
@@ -335,11 +382,6 @@ function ProductCard({
   product: PublicProduct;
   currency: string;
 }) {
-  const stock = Number(product.current_stock ?? 0);
-  const minStock = Number(product.min_stock ?? 0);
-  const isLow = stock > 0 && stock <= minStock;
-  const isOut = stock <= 0;
-
   return (
     <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/30">
       {/* Image area */}
@@ -391,24 +433,16 @@ function ProductCard({
               <p className="text-[10px] text-muted-foreground">{currency}</p>
             )}
           </div>
-          <div className="text-right">
-            {isOut ? (
-              <Badge variant="destructive" className="text-[10px]">
-                Дууссан
-              </Badge>
-            ) : isLow ? (
-              <Badge
-                variant="outline"
-                className="border-amber-300 text-amber-600 text-[10px]"
-              >
-                {stock} үлдсэн
-              </Badge>
-            ) : (
-              <span className="text-xs text-emerald-600 font-medium">
-                {stock} {product.unit ?? "ширхэг"}
-              </span>
-            )}
-          </div>
+          <AddToCartButton
+            size="sm"
+            item={{
+              productId: product.id,
+              name: product.name,
+              unitPrice: Number(product.sale_price ?? 0),
+              unit: product.unit ?? "ширхэг",
+              maxStock: Number.POSITIVE_INFINITY,
+            }}
+          />
         </div>
 
         {/* View details hint */}
