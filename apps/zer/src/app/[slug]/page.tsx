@@ -14,12 +14,16 @@ import {
 import { capture } from "@zuiio/capture";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { StorefrontCartProvider } from "@/components/storefront/cart-context";
 import { Badge } from "@/components/ui/badge";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { getPublicCatalog } from "@/lib/public-catalog";
 import { createClient } from "@/lib/supabase/server";
+import type { OrgMeta, PublicProduct } from "./products/page";
+import { ProductDetailDrawer } from "./products/product-detail-drawer";
+import { ProductCard } from "./products/products-page-client";
 
 type OrgProfileData = {
   name: string;
@@ -182,6 +186,28 @@ async function OrgProfileDataFetcher({
     if (!publicProfile?.catalog_enabled) {
       notFound();
     }
+
+    // Fetch ALL public products — the storefront shows the full catalog
+    // inline instead of a CTA button to the products page.
+    const products: PublicProduct[] = [];
+    let catalogTotal = 0;
+    for (let page = 1; ; page += 1) {
+      const catalog = await getPublicCatalog(supabase, slug, {
+        page,
+        pageSize: 100,
+      });
+      if (!catalog?.organization) break;
+      catalogTotal = catalog.total;
+      products.push(...catalog.products);
+      if (products.length >= catalogTotal) break;
+    }
+
+    const orgMeta: OrgMeta = {
+      name: org.name,
+      slug: org.slug,
+      currency: org.currency ?? "",
+      companyType: org.company_type,
+    };
 
     const orgData: OrgProfileData = {
       name: org.name,
@@ -391,21 +417,36 @@ async function OrgProfileDataFetcher({
             </div>
           )}
 
-          {/* CTA */}
-          <div className="flex justify-center gap-3 pt-4">
-            <Link
-              href={`/${slug}/products`}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Бүтээгдэхүүний каталог үзэх →
-            </Link>
-            <Link
-              href={`/${slug}/blog`}
-              className="inline-flex items-center gap-2 rounded-lg border px-6 py-3 text-sm font-medium transition-colors hover:border-primary/30 hover:text-primary"
-            >
-              Блог үзэх
-            </Link>
-          </div>
+          {/* Products — full catalog inline */}
+          {products.length > 0 && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold tracking-tight">
+                  Бүтээгдэхүүнүүд
+                </h2>
+                <span className="text-sm text-muted-foreground tabular-nums">
+                  Нийт {catalogTotal}
+                </span>
+              </div>
+              <StorefrontCartProvider>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {products.map((product) => (
+                    <div key={product.id} className="group">
+                      <ProductDetailDrawer
+                        product={product}
+                        organization={orgMeta}
+                      >
+                        <ProductCard
+                          product={product}
+                          currency={orgMeta.currency}
+                        />
+                      </ProductDetailDrawer>
+                    </div>
+                  ))}
+                </div>
+              </StorefrontCartProvider>
+            </div>
+          )}
         </div>
       </div>
     );

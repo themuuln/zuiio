@@ -18,6 +18,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { OrgMeta, PublicCategory, PublicProduct } from "./page";
 import { ProductDetailDrawer } from "./product-detail-drawer";
 
@@ -115,7 +116,10 @@ export function ProductsPageClient({
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground lg:hidden"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "default" }),
+                  "lg:hidden",
+                )}
               >
                 <FunnelSimple className="size-4" />
                 Шүүлтүүр
@@ -127,7 +131,10 @@ export function ProductsPageClient({
               <Link
                 href={`/${organization.slug}/cart`}
                 aria-label={`Сагс (${count})`}
-                className="relative flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "default" }),
+                  "relative",
+                )}
               >
                 <ShoppingCart className="size-4" />
                 <span className="hidden sm:inline">Сагс</span>
@@ -181,19 +188,21 @@ export function ProductsPageClient({
       )}
 
       {/* Main layout: sticky sidebar + grid */}
-      <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-0 px-4 sm:px-6 lg:grid-cols-[15rem_1fr] lg:gap-8 lg:px-8">
+      <div className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 gap-0 px-4 sm:px-6 lg:grid-cols-[15rem_1fr] lg:gap-8 lg:px-8">
         {/* Sidebar — sticky below header */}
-        <aside className="hidden py-6 pr-6 lg:block lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto lg:border-r lg:border-border/60">
-          <SidebarFilters
-            search={searchInput}
-            setSearch={setSearchInput}
-            categoryFilter={categoryId}
-            setCategoryFilter={setCategory}
-            categories={categories}
-            total={total}
-            hasFilters={hasFilters}
-            clearFilters={clearFilters}
-          />
+        <aside className="hidden py-6 pr-6 lg:block lg:border-r lg:border-border/60">
+          <div className="lg:sticky lg:top-20 lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto">
+            <SidebarFilters
+              search={searchInput}
+              setSearch={setSearchInput}
+              categoryFilter={categoryId}
+              setCategoryFilter={setCategory}
+              categories={categories}
+              total={total}
+              hasFilters={hasFilters}
+              clearFilters={clearFilters}
+            />
+          </div>
         </aside>
 
         {/* Product grid */}
@@ -375,7 +384,7 @@ function SidebarFilters({
   );
 }
 
-function ProductCard({
+export function ProductCard({
   product,
   currency,
 }: {
