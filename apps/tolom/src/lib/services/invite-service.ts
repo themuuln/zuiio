@@ -171,11 +171,12 @@ export async function getInviteByToken(
   const { data, error } = await supabase
     .from("org_invites")
     .select(
-      `*,
-      organizations!inner(name),
-      inviter:invited_by(full_name)`,
+      `id, organization_id, email, role_id, token, status, invited_by, message, expires_at, created_at, updated_at,
+      organizations!inner(name)`,
     )
     .eq("token", token)
+    .eq("status", "pending")
+    .gt("expires_at", new Date().toISOString())
     .single();
 
   if (error || !data) {
@@ -186,15 +187,22 @@ export async function getInviteByToken(
     ? data.organizations[0]?.name
     : (data.organizations as unknown as { name: string } | null)?.name;
 
-  const inviterName = Array.isArray(data.inviter)
-    ? data.inviter[0]?.full_name
-    : (data.inviter as unknown as { full_name: string | null } | null)
-        ?.full_name;
+  // inviter name comes from profiles — org_invites.invited_by FKs to
+  // auth.users, so a PostgREST embed (invited_by(full_name)) cannot resolve.
+  let inviterName: string | null = null;
+  if (data.invited_by) {
+    const { data: inviter } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", data.invited_by)
+      .maybeSingle();
+    inviterName = inviter?.full_name ?? null;
+  }
 
   return {
     ...data,
     organization_name: orgName ?? "Unknown",
-    inviter_name: inviterName ?? null,
+    inviter_name: inviterName,
   };
 }
 

@@ -12,6 +12,11 @@ vi.mock("@/lib/services/invite-service", () => ({
   getInviteByToken: getInviteByTokenMock,
 }));
 
+const serviceRoleMock = { auth: { admin: { getUserById: vi.fn() } } };
+vi.mock("@/lib/supabase/service-role", () => ({
+  createServiceRoleClient: vi.fn(async () => serviceRoleMock),
+}));
+
 const { GET } = await import("./route");
 
 describe("GET /api/invites/[token]", () => {
@@ -41,7 +46,10 @@ describe("GET /api/invites/[token]", () => {
     const response = await GET({ request: req, supabase: {} });
     const body = await response.json();
 
-    expect(getInviteByTokenMock).toHaveBeenCalledWith({}, "abc123def456");
+    expect(getInviteByTokenMock).toHaveBeenCalledWith(
+      serviceRoleMock,
+      "abc123def456",
+    );
     expect(body.data).toEqual(invite);
   });
 

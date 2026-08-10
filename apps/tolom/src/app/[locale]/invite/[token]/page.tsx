@@ -1,6 +1,11 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query";
 import { CheckCircle, Loader2, LogIn, Wrench, XCircle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -37,6 +42,15 @@ type PageState =
   | { type: "error"; message: string };
 
 export default function InviteRedeemPage() {
+  const [queryClient] = useState(() => new QueryClient());
+  return (
+    <QueryClientProvider client={queryClient}>
+      <InviteRedeemContent />
+    </QueryClientProvider>
+  );
+}
+
+function InviteRedeemContent() {
   const t = useTranslations("invite");
   const appT = useTranslations("app");
   const params = useParams();
