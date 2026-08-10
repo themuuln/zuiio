@@ -2854,9 +2854,12 @@ export type Database = {
           contact_phone: string | null;
           created_at: string | null;
           custom_domain: string | null;
+          delivery_enabled: boolean;
+          delivery_fee_amount: number;
           description: string | null;
           display_name: string | null;
           domain_verified: boolean;
+          free_delivery_threshold: number;
           ga_measurement_id: string | null;
           id: string;
           logo_url: string | null;
@@ -2865,7 +2868,13 @@ export type Database = {
           meta_title: string | null;
           og_image_url: string | null;
           organization_id: string;
+          payment_account_name: string | null;
+          payment_bank_account: string | null;
+          payment_bank_name: string | null;
+          pickup_enabled: boolean;
           policies: string | null;
+          qpay_qr_url: string | null;
+          show_stock: boolean;
           social_links: Json | null;
           updated_at: string | null;
           website_url: string | null;
@@ -2879,9 +2888,12 @@ export type Database = {
           contact_phone?: string | null;
           created_at?: string | null;
           custom_domain?: string | null;
+          delivery_enabled?: boolean;
+          delivery_fee_amount?: number;
           description?: string | null;
           display_name?: string | null;
           domain_verified?: boolean;
+          free_delivery_threshold?: number;
           ga_measurement_id?: string | null;
           id?: string;
           logo_url?: string | null;
@@ -2890,7 +2902,13 @@ export type Database = {
           meta_title?: string | null;
           og_image_url?: string | null;
           organization_id: string;
+          payment_account_name?: string | null;
+          payment_bank_account?: string | null;
+          payment_bank_name?: string | null;
+          pickup_enabled?: boolean;
           policies?: string | null;
+          qpay_qr_url?: string | null;
+          show_stock?: boolean;
           social_links?: Json | null;
           updated_at?: string | null;
           website_url?: string | null;
@@ -2904,9 +2922,12 @@ export type Database = {
           contact_phone?: string | null;
           created_at?: string | null;
           custom_domain?: string | null;
+          delivery_enabled?: boolean;
+          delivery_fee_amount?: number;
           description?: string | null;
           display_name?: string | null;
           domain_verified?: boolean;
+          free_delivery_threshold?: number;
           ga_measurement_id?: string | null;
           id?: string;
           logo_url?: string | null;
@@ -2915,7 +2936,13 @@ export type Database = {
           meta_title?: string | null;
           og_image_url?: string | null;
           organization_id?: string;
+          payment_account_name?: string | null;
+          payment_bank_account?: string | null;
+          payment_bank_name?: string | null;
+          pickup_enabled?: boolean;
           policies?: string | null;
+          qpay_qr_url?: string | null;
+          show_stock?: boolean;
           social_links?: Json | null;
           updated_at?: string | null;
           website_url?: string | null;
@@ -3633,6 +3660,48 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      product_images: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          organization_id: string;
+          product_id: string;
+          sort_order: number;
+          url: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          organization_id: string;
+          product_id: string;
+          sort_order?: number;
+          url: string;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          organization_id?: string;
+          product_id?: string;
+          sort_order?: number;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_images_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_images_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
             referencedColumns: ["id"];
           },
         ];
@@ -5310,7 +5379,9 @@ export type Database = {
         Row: {
           bank_account_id: string | null;
           branch_id: string;
+          contact_email: string | null;
           contact_id: string | null;
+          coupon_id: string | null;
           created_at: string | null;
           created_by: string | null;
           currency_code: string | null;
@@ -5318,7 +5389,14 @@ export type Database = {
           currency_symbol: string | null;
           dedupe_key: string | null;
           deleted_at: string | null;
+          delivery_address: string | null;
+          delivery_fee: number;
+          delivery_note: string | null;
+          delivery_type: string | null;
+          discount_amount: number;
           exchange_rate: number | null;
+          gift_card_amount: number;
+          gift_card_id: string | null;
           id: string;
           is_online: boolean;
           notes: string | null;
@@ -5327,6 +5405,8 @@ export type Database = {
           paid_amount: number | null;
           payment_method: string | null;
           payment_splits: Json | null;
+          promotion_discount: number;
+          promotion_id: string | null;
           sale_date: string;
           salesperson_id: string | null;
           status: string | null;
@@ -5336,7 +5416,9 @@ export type Database = {
         Insert: {
           bank_account_id?: string | null;
           branch_id: string;
+          contact_email?: string | null;
           contact_id?: string | null;
+          coupon_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
           currency_code?: string | null;
@@ -5344,7 +5426,14 @@ export type Database = {
           currency_symbol?: string | null;
           dedupe_key?: string | null;
           deleted_at?: string | null;
+          delivery_address?: string | null;
+          delivery_fee?: number;
+          delivery_note?: string | null;
+          delivery_type?: string | null;
+          discount_amount?: number;
           exchange_rate?: number | null;
+          gift_card_amount?: number;
+          gift_card_id?: string | null;
           id?: string;
           is_online?: boolean;
           notes?: string | null;
@@ -5353,6 +5442,8 @@ export type Database = {
           paid_amount?: number | null;
           payment_method?: string | null;
           payment_splits?: Json | null;
+          promotion_discount?: number;
+          promotion_id?: string | null;
           sale_date?: string;
           salesperson_id?: string | null;
           status?: string | null;
@@ -5362,7 +5453,9 @@ export type Database = {
         Update: {
           bank_account_id?: string | null;
           branch_id?: string;
+          contact_email?: string | null;
           contact_id?: string | null;
+          coupon_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
           currency_code?: string | null;
@@ -5370,7 +5463,14 @@ export type Database = {
           currency_symbol?: string | null;
           dedupe_key?: string | null;
           deleted_at?: string | null;
+          delivery_address?: string | null;
+          delivery_fee?: number;
+          delivery_note?: string | null;
+          delivery_type?: string | null;
+          discount_amount?: number;
           exchange_rate?: number | null;
+          gift_card_amount?: number;
+          gift_card_id?: string | null;
           id?: string;
           is_online?: boolean;
           notes?: string | null;
@@ -5379,6 +5479,8 @@ export type Database = {
           paid_amount?: number | null;
           payment_method?: string | null;
           payment_splits?: Json | null;
+          promotion_discount?: number;
+          promotion_id?: string | null;
           sale_date?: string;
           salesperson_id?: string | null;
           status?: string | null;
@@ -6392,7 +6494,15 @@ export type Database = {
       get_my_orders: {
         Args: never;
         Returns: {
+          contact_email: string;
           created_at: string;
+          delivery_address: string;
+          delivery_fee: number;
+          delivery_status: string;
+          delivery_type: string;
+          discount_amount: number;
+          external_tracking_id: string;
+          gift_card_amount: number;
           id: string;
           invoice_number: string;
           items: Json;
@@ -6420,8 +6530,13 @@ export type Database = {
         Returns: Json;
       };
       get_public_blog_posts: { Args: { p_slug: string }; Returns: Json };
+      get_public_branches: { Args: { p_slug: string }; Returns: Json };
       get_public_categories: { Args: { p_slug: string }; Returns: Json };
       get_public_invoice: { Args: { p_token: string }; Returns: Json };
+      get_public_order: {
+        Args: { p_order_id: string; p_slug: string };
+        Returns: Json;
+      };
       get_public_product: {
         Args: { p_product_id: string; p_slug: string };
         Returns: Json;
@@ -6591,7 +6706,7 @@ export type Database = {
         Returns: string;
       };
       schedule_daily_report_cron: {
-        Args: { p_app_url: string };
+        Args: { app_url: string };
         Returns: string;
       };
       search_products: {
@@ -6666,17 +6781,28 @@ export type Database = {
       };
       submit_shop_order: {
         Args: {
+          p_address?: string;
+          p_address_note?: string;
           p_branch_slug?: string;
+          p_contact_email?: string;
           p_contact_name?: string;
           p_contact_phone?: string;
+          p_coupon_code?: string;
           p_currency_code?: string;
+          p_delivery_type?: string;
+          p_gift_card_code?: string;
           p_idempotency_key?: string;
           p_items: Json;
           p_org_slug: string;
           p_payment_method?: string;
+          p_pickup_branch_slug?: string;
         };
         Returns: {
+          delivery_fee: number;
+          discount_amount: number;
+          gift_card_amount: number;
           order_id: string;
+          payment_instructions: Json;
           status: string;
           total_amount: number;
         }[];
