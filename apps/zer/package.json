@@ -24,6 +24,7 @@
     "test:e2e:all": "playwright test",
     "prepare": "husky",
     "mcp:init": "npx tsx scripts/mcp-init.ts",
+    "setup:org": "tsx scripts/setup-org.ts",
     "design:check": "bash scripts/design-quality-check.sh",
     "design:score": "echo 'OPTIK skills available via AI agent — use /score command in Claude Code or Cursor'",
     "docs:dev": "vitepress dev docs",
