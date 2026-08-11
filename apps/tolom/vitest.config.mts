@@ -37,6 +37,9 @@ export default defineConfig({
           // Integration tests sign in against the local Supabase stack while
           // the full suite runs in parallel — 5s is too tight under load.
           testTimeout: 20_000,
+          // RLS suites create orgs/users/branches in beforeAll — seeding can
+          // exceed the default 10s hook window on a shared machine.
+          hookTimeout: 60_000,
         },
       },
       {
@@ -67,19 +70,19 @@ export default defineConfig({
         "src/**/*.spec.*",
         "src/lib/database.types.ts",
         "src/**/*.d.ts",
-        "src/hooks/**",
-        "src/lib/hooks/**",
+        // Only genuinely untested code is excluded — dirs with passing tests
+        // (hooks, email, cache) are measured so the gate is honest.
         "src/lib/offline/**",
-        "src/lib/email/**",
-        "src/lib/cache/**",
         "src/lib/utils/email.ts",
         "src/lib/utils/pdf.ts",
       ],
       thresholds: {
-        statements: 37,
-        branches: 30,
-        functions: 30,
-        lines: 38,
+        // Measured 2026-08-11 with exclusions narrowed: 75/67/67/76.
+        // Buffer of ~5-6pts for normal drift on new code.
+        statements: 70,
+        branches: 60,
+        functions: 60,
+        lines: 70,
       },
     },
   },

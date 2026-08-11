@@ -74,6 +74,10 @@ catalog:
   serwist: ^9.5.12
   '@serwist/turbopack': ^9.5.12
   esbuild: ^0.25.4
+  fast-check: ^4.9.0
+  '@stryker-mutator/core': ^9.6.1
+  '@stryker-mutator/vitest-runner': ^9.6.1
+  tsx: ^4.23.12
 
 allowBuilds:
   '@google/genai': true
