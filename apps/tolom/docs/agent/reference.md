@@ -36,7 +36,7 @@ colima start --cpu 4 --memory 8
 supabase start --exclude studio,imgproxy,inbucket,vector,logflare,edge-runtime,meta
 
 # Run full suite with local Supabase credentials
-export SUPABASE_URL=http://127.0.0.1:54321
+export SUPABASE_URL=http://127.0.0.1:54361
 export SUPABASE_ANON_KEY=$(supabase status | sed -n '/Publishable/{n;s/.*│ //;s/ │//;p}')
 export SUPABASE_SERVICE_ROLE_KEY=$(supabase status | sed -n '/Secret/{n;s/.*│ //;s/ │//;p}')
 npx vitest run

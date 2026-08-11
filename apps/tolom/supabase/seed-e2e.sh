@@ -14,7 +14,7 @@ set -euo pipefail
 
 EMAIL="${E2E_EMAIL:-themuuln4@gmail.com}"
 PASSWORD="${E2E_PASSWORD:-Tolom!11}"
-SUPABASE_URL="${SUPABASE_URL:-http://localhost:54321}"
+SUPABASE_URL="${SUPABASE_URL:-http://localhost:54361}"
 SUPABASE_HOST=$(python3 -c 'from urllib.parse import urlparse; import sys; print(urlparse(sys.argv[1]).hostname or "")' "$SUPABASE_URL")
 case "$SUPABASE_HOST" in
   localhost|127.0.0.1|::1) ;;

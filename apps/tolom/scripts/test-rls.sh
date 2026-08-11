@@ -2,7 +2,7 @@
 # RLS Integration Test — Verifies Customer Portal RLS Policies
 set -euo pipefail
 
-DB_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+DB_URL="postgresql://postgres:postgres@127.0.0.1:54362/postgres"
 PSQL="psql $DB_URL -At"
 
 echo "=== RLS Integration Tests for Customer Portal ==="

@@ -1,9 +1,25 @@
 
+# Ports moved off the CLI defaults (54321-54330): an SSH tunnel used by
+# another session occupies that range. Tolom's stack now lives at 54361+.
 [api]
+port = 54361
 max_rows = 1000
+
+[db]
+port = 54362
+
+[studio]
+port = 54363
+
+[local_smtp]
+port = 54364
+
+[analytics]
+port = 54365
 
 [db.pooler]
 enabled = true
+port = 54366
 pool_mode = "transaction"
 default_pool_size = 15
 max_client_conn = 100
