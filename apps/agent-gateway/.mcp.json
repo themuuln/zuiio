@@ -1,37 +1,50 @@
 {
-	"$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
-	"mcpServers": {
-		"next-devtools": {
-			"command": "npx",
-			"args": ["next-devtools-mcp"]
-		},
-		"vercel": {
-			"url": "https://mcp.vercel.com",
-			"type": "http",
-			"enabled": false
-		},
-		"github": {
-			"command": "npx",
-			"args": ["-y", "@modelcontextprotocol/server-github"],
-			"env": {
-				"GITHUB_TOKEN": "${GITHUB_TOKEN}"
-			}
-		},
-		"sentry": {
-			"command": "npx",
-			"args": ["@sentry/mcp-server@latest"],
-			"env": {
-				"SENTRY_ACCESS_TOKEN": "${SENTRY_ACCESS_TOKEN}"
-			},
-			"enabled": false
-		},
-		"supabase": {
-			"type": "http",
-			"url": "https://mcp.supabase.com/mcp?project_ref=krrkhozadforrydffegg&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
-		},
-		"react-grab-mcp": {
-			"command": "npx",
-			"args": ["-y", "@react-grab/mcp", "--stdio"]
-		}
-	}
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": [
+        "next-devtools-mcp"
+      ],
+      "enabled": false
+    },
+    "vercel": {
+      "url": "https://mcp.vercel.com",
+      "type": "http",
+      "enabled": false
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "enabled": false
+    },
+    "sentry": {
+      "command": "npx",
+      "args": [
+        "@sentry/mcp-server@latest"
+      ],
+      "env": {
+        "SENTRY_ACCESS_TOKEN": "${SENTRY_ACCESS_TOKEN}"
+      },
+      "enabled": false
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=krrkhozadforrydffegg&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
+    },
+    "react-grab-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@react-grab/mcp",
+        "--stdio"
+      ]
+    }
+  }
 }
