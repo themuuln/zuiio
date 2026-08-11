@@ -10,13 +10,14 @@ import {
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   StorefrontCartProvider,
   useStorefrontCart,
 } from "@/components/storefront/cart-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -58,6 +59,20 @@ export type CartOrg = {
   pickupEnabled: boolean;
   deliveryFeeAmount: number | null;
   freeDeliveryThreshold: number | null;
+  estimatedDeliveryHours: number | null;
+};
+
+/**
+ * Saved-address row shape (`store_account_addresses`, backend migration) used
+ * by the checkout address book — typed through the untyped client until
+ * types regenerate.
+ */
+export type SavedAddress = {
+  id: string;
+  label: string | null;
+  address: string | null;
+  address_note: string | null;
+  phone: string | null;
 };
 
 export type StorefrontBranch = {
@@ -136,6 +151,15 @@ function CartView({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<SubmittedOrder | null>(null);
+  // Address book state: null = not loaded / guest. The picker and the
+  // "Хаягаа хадгалах" checkbox only appear for signed-in buyers.
+  const [accountId, setAccountId] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[] | null>(
+    null,
+  );
+  const [savedAddressId, setSavedAddressId] = useState("");
+  const [saveAddress, setSaveAddress] = useState(false);
   // Created once per checkout session and reused across retries so the RPC
   // returns the same order instead of creating a duplicate.
   const idempotencyKeyRef = useRef<string | null>(null);
@@ -143,6 +167,46 @@ function CartView({
   // submitted delivery type for the confirmation breakdown.
   const submittedSubtotalRef = useRef(0);
   const submittedDeliveryTypeRef = useRef<DeliveryType>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const supabase = createClient() as SupabaseClient;
+        const { data: sessionData } = await supabase.auth.getSession();
+        const user = sessionData.session?.user;
+        if (!user) {
+          if (!cancelled) setSavedAddresses([]);
+          return;
+        }
+        if (!cancelled) setSignedIn(true);
+        if (!cancelled) setAccountId(user.id);
+        const { data, error: addressesError } = await supabase
+          .from("store_account_addresses")
+          .select("id, label, address, address_note, phone, is_default")
+          .eq("store_account_id", user.id)
+          .order("is_default", { ascending: false })
+          .order("created_at", { ascending: false });
+        if (addressesError) throw addressesError;
+        if (!cancelled) setSavedAddresses(data ?? []);
+      } catch (err) {
+        capture(err, { context: "storefront: load saved addresses" });
+        if (!cancelled) setSavedAddresses([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleAddressPick = (addressId: string) => {
+    const picked = savedAddresses?.find((a) => a.id === addressId);
+    if (!picked) return;
+    setSavedAddressId(addressId);
+    if (picked.address) setAddress(picked.address);
+    if (picked.address_note) setAddressNote(picked.address_note);
+    if (picked.phone) setPhone(picked.phone);
+  };
 
   const showDeliveryChoice =
     organization.deliveryEnabled || organization.pickupEnabled;
@@ -216,6 +280,23 @@ function CartView({
 
       submittedSubtotalRef.current = Number(total);
       submittedDeliveryTypeRef.current = deliveryType;
+      // Persist the entered address to the address book when the buyer opted
+      // in. Failure here must never fail the order — log and continue.
+      if (signedIn && saveAddress && accountId && address.trim()) {
+        try {
+          const addressSupabase = createClient() as SupabaseClient;
+          await addressSupabase.from("store_account_addresses").insert({
+            store_account_id: accountId,
+            label: "Хаяг",
+            address: address.trim(),
+            address_note: addressNote.trim() || null,
+            phone: phone.trim() || null,
+            is_default: false,
+          });
+        } catch (saveErr) {
+          capture(saveErr, { context: "storefront: save address" });
+        }
+      }
       clear();
       setOrder(row);
     } catch (err) {
@@ -579,6 +660,36 @@ function CartView({
                   )}
                   {deliveryType === "delivery" && (
                     <>
+                      {organization.estimatedDeliveryHours != null && (
+                        <p className="text-xs text-muted-foreground">
+                          Хүргэлт: ~{organization.estimatedDeliveryHours} цагийн
+                          дотор
+                        </p>
+                      )}
+                      {savedAddresses !== null && savedAddresses.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                          <Label htmlFor="checkout-saved-address">
+                            Хадгалсан хаяг
+                          </Label>
+                          <Select
+                            value={savedAddressId}
+                            onValueChange={(v) => handleAddressPick(v ?? "")}
+                          >
+                            <SelectTrigger id="checkout-saved-address">
+                              <SelectValue placeholder="Хадгалсан хаяг сонгох" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {savedAddresses.map((addr) => (
+                                <SelectItem key={addr.id} value={addr.id}>
+                                  {[addr.label, addr.address]
+                                    .filter(Boolean)
+                                    .join(" — ")}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="checkout-address">Хаяг</Label>
                         <Textarea
@@ -600,6 +711,21 @@ function CartView({
                           placeholder="Орц, давхар, тоот"
                         />
                       </div>
+                      {signedIn && (
+                        <label
+                          htmlFor="checkout-save-address"
+                          className="flex w-fit cursor-pointer items-center gap-2 text-sm text-muted-foreground"
+                        >
+                          <Checkbox
+                            id="checkout-save-address"
+                            checked={saveAddress}
+                            onCheckedChange={(checked) =>
+                              setSaveAddress(checked === true)
+                            }
+                          />
+                          Хаягаа хадгалах
+                        </label>
+                      )}
                     </>
                   )}
                   <div className="flex flex-col gap-2">

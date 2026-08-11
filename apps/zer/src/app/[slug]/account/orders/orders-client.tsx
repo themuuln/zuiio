@@ -1,9 +1,11 @@
 "use client";
 
 import { Receipt } from "@phosphor-icons/react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -35,31 +37,61 @@ export function OrdersClient({ slug }: { slug: string }) {
   const { state } = useStoreSession();
   const [orders, setOrders] = useState<MyOrder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const loadOrders = useCallback(async () => {
+    const supabase = createClient();
+    const result = (await supabase.rpc("get_my_orders")) as {
+      data: MyOrder[] | null;
+      error: { message: string } | null;
+    };
+    if (result.error) {
+      capture(result.error, { context: "orders: get_my_orders" });
+      setError(result.error.message);
+      return;
+    }
+    setOrders(result.data ?? []);
+  }, []);
 
   useEffect(() => {
     if (state.status !== "account") return;
     let cancelled = false;
-    (async () => {
-      const supabase = createClient();
-      const result = (await supabase.rpc("get_my_orders")) as {
-        data: MyOrder[] | null;
-        error: { message: string } | null;
-      };
-      if (cancelled) return;
-      if (result.error) {
-        capture(result.error, { context: "orders: get_my_orders" });
-        setError(result.error.message);
-        return;
-      }
-      setOrders(result.data ?? []);
-    })().catch((err) => {
+    loadOrders().catch((err) => {
       capture(err, { context: "orders: get_my_orders" });
       if (!cancelled) setError(t("storeAccount.error.generic"));
     });
     return () => {
       cancelled = true;
     };
-  }, [state.status, t]);
+  }, [state.status, t, loadOrders]);
+
+  const handleCancel = async (order: MyOrder) => {
+    if (!window.confirm("Захиалга цуцлах уу?")) return;
+    setCancellingId(order.id);
+    try {
+      const supabase = createClient() as SupabaseClient;
+      const { error: rpcError } = await supabase.rpc("cancel_my_order", {
+        p_slug: slug,
+        p_order_id: order.id,
+      });
+      if (rpcError) throw rpcError;
+      toast.success("Захиалга цуцалсан");
+      await loadOrders();
+    } catch (err) {
+      capture(err, { context: "orders: cancel order" });
+      let message: unknown = null;
+      if (err && typeof err === "object" && "message" in err) {
+        message = err.message;
+      }
+      toast.error(
+        typeof message === "string" && message.trim() !== ""
+          ? message
+          : "Захиалга цуцлахад алдаа гарлаа. Дахин оролдоно уу.",
+      );
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   if (state.status === "loading") {
     return (
@@ -156,6 +188,21 @@ export function OrdersClient({ slug }: { slug: string }) {
               <span className="text-sm font-bold tabular-nums">
                 {formatCurrency(Number(order.total_amount ?? 0))}
               </span>
+              {order.status === "pending" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  disabled={cancellingId === order.id}
+                  onClick={() => handleCancel(order)}
+                >
+                  {cancellingId === order.id ? (
+                    <Spinner className="size-3.5" />
+                  ) : null}
+                  Захиалга цуцлах
+                </Button>
+              )}
               <Button asChild size="sm" variant="outline">
                 <Link href={`/${slug}/account/orders/${order.id}`}>
                   {t("storeAccount.orders.detail")}

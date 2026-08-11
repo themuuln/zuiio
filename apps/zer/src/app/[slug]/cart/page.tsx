@@ -53,7 +53,7 @@ async function CartDataFetcher({
     const { data: org } = await untyped
       .from("organizations")
       .select(
-        "name, slug, currency, public_profile:organization_public_profiles(delivery_enabled, pickup_enabled, delivery_fee_amount, free_delivery_threshold)",
+        "name, slug, currency, public_profile:organization_public_profiles(delivery_enabled, pickup_enabled, delivery_fee_amount, free_delivery_threshold, estimated_delivery_hours)",
       )
       .eq("slug", slug)
       .maybeSingle();
@@ -98,6 +98,10 @@ async function CartDataFetcher({
           freeDeliveryThreshold:
             profile?.free_delivery_threshold != null
               ? Number(profile.free_delivery_threshold)
+              : null,
+          estimatedDeliveryHours:
+            profile?.estimated_delivery_hours != null
+              ? Number(profile.estimated_delivery_hours)
               : null,
         }}
         branches={branches}

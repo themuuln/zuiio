@@ -1,6 +1,13 @@
 "use client";
 
-import { Envelope, Phone, Receipt, SignOut, User } from "@phosphor-icons/react";
+import {
+  Envelope,
+  MapPin,
+  Phone,
+  Receipt,
+  SignOut,
+  User,
+} from "@phosphor-icons/react";
 import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
@@ -187,6 +194,12 @@ export function AccountClient({ slug }: { slug: string }) {
             <Link href={`/${slug}/account/orders`}>
               <Receipt className="size-4" />
               {t("storeAccount.ordersLink")}
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href={`/${slug}/account/addresses`}>
+              <MapPin className="size-4" />
+              Хаягийн дэвтэр
             </Link>
           </Button>
           <Button

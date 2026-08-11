@@ -4,9 +4,46 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const STORAGE_KEY = "zer-storefront-cart";
 const mockRpc = vi.hoisted(() => vi.fn());
 const mockCapture = vi.hoisted(() => vi.fn());
+const mockGetSession = vi.hoisted(() => vi.fn());
+const mockInsert = vi.hoisted(() => vi.fn());
+
+const mockFrom = vi.hoisted(() => vi.fn());
+
+/**
+ * Stub for `createClient().from("store_account_addresses")` — the checkout
+ * address-book reads go through the untyped client, so the table mock needs
+ * the chainable select/eq/order builder plus insert.
+ */
+function mockAddressTable(rows: unknown[]) {
+  mockFrom.mockReturnValue({
+    select: () => ({
+      eq: () => ({
+        order: () => ({
+          order: () => Promise.resolve({ data: rows, error: null }),
+        }),
+      }),
+    }),
+    insert: (payload: unknown) => mockInsert(payload),
+  });
+}
+
+function mockSignedInSession(userId = "user-1") {
+  mockGetSession.mockResolvedValue({
+    data: { session: { user: { id: userId } } },
+    error: null,
+  });
+}
+
+function mockGuestSession() {
+  mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+}
 
 vi.mock("@/lib/supabase/client", () => ({
-  createClient: () => ({ rpc: mockRpc }),
+  createClient: () => ({
+    rpc: mockRpc,
+    auth: { getSession: mockGetSession },
+    from: mockFrom,
+  }),
 }));
 
 vi.mock("@zuiio/capture", () => ({
@@ -52,6 +89,7 @@ const ORG: CartOrg = {
   pickupEnabled: false,
   deliveryFeeAmount: null,
   freeDeliveryThreshold: null,
+  estimatedDeliveryHours: null,
 };
 
 const PICKUP_ONLY: CartOrg = {
@@ -64,6 +102,11 @@ const DELIVERY_ONLY: CartOrg = {
   deliveryEnabled: true,
   deliveryFeeAmount: 5000,
   freeDeliveryThreshold: 100000,
+};
+
+const DELIVERY_WITH_ETA: CartOrg = {
+  ...DELIVERY_ONLY,
+  estimatedDeliveryHours: 4,
 };
 
 const BRANCHES: StorefrontBranch[] = [
@@ -143,6 +186,11 @@ describe("CartClient", () => {
     window.localStorage.clear();
     mockRpc.mockReset();
     mockCapture.mockReset();
+    mockGetSession.mockReset();
+    mockInsert.mockReset();
+    // Default: guest session with an empty address table.
+    mockGuestSession();
+    mockAddressTable([]);
   });
 
   it("shows the empty-cart state with a link back to the catalog", () => {
@@ -647,5 +695,139 @@ describe("CartClient", () => {
       );
     });
     expect(mockCapture).toHaveBeenCalled();
+  });
+
+  it("shows the saved-address picker for a signed-in buyer and prefills the delivery fields", async () => {
+    seedCart(TWO_ITEM_CART);
+    mockSignedInSession();
+    mockAddressTable([
+      {
+        id: "addr-1",
+        label: "Гэр",
+        address: "СБД, 1-р хороо, 41-р байр, 12 тоот",
+        address_note: "Орц 2",
+        phone: "99112233",
+      },
+    ]);
+    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+
+    // The picker appears next to the address fields for delivery.
+    const picker = await screen.findByLabelText("Хадгалсан хаяг");
+    expect(picker).toBeInTheDocument();
+
+    fireEvent.click(picker);
+    const option = await screen.findByText(
+      "Гэр — СБД, 1-р хороо, 41-р байр, 12 тоот",
+    );
+    fireEvent.click(option);
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Хаяг") as HTMLTextAreaElement).value).toBe(
+        "СБД, 1-р хороо, 41-р байр, 12 тоот",
+      );
+    });
+    expect(
+      (screen.getByLabelText("Нэмэлт мэдээлэл") as HTMLInputElement).value,
+    ).toBe("Орц 2");
+    expect((screen.getByLabelText("Утас") as HTMLInputElement).value).toBe(
+      "99112233",
+    );
+  });
+
+  it("keeps the address picker and save checkbox hidden for guests", async () => {
+    seedCart(TWO_ITEM_CART);
+    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Хаяг")).toBeInTheDocument();
+    });
+    expect(screen.queryByLabelText("Хадгалсан хаяг")).toBeNull();
+    expect(screen.queryByLabelText("Хаягаа хадгалах")).toBeNull();
+  });
+
+  it("saves the entered address to the address book when the checkbox is checked", async () => {
+    seedCart(TWO_ITEM_CART);
+    mockSignedInSession();
+    // Signed in but no saved addresses yet → no picker, checkbox only.
+    mockAddressTable([]);
+    mockRpc.mockResolvedValue({
+      data: [{ order_id: "ord-addr", status: "pending", total_amount: 27500 }],
+      error: null,
+    });
+    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("checkbox", { name: "Хаягаа хадгалах" }),
+      ).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Хаягаа хадгалах" }));
+
+    await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
+    fireEvent.change(screen.getByLabelText("Хаяг"), {
+      target: { value: "СБД, 1-р хороо, 41-р байр" },
+    });
+    fireEvent.change(screen.getByLabelText("Нэмэлт мэдээлэл"), {
+      target: { value: "Орц 2" },
+    });
+    submitCheckout();
+
+    await waitFor(() => {
+      expect(mockInsert).toHaveBeenCalledTimes(1);
+    });
+    expect(mockInsert).toHaveBeenCalledWith({
+      store_account_id: "user-1",
+      label: "Хаяг",
+      address: "СБД, 1-р хороо, 41-р байр",
+      address_note: "Орц 2",
+      phone: "99887766",
+      is_default: false,
+    });
+  });
+
+  it("does not insert an address when the save checkbox is unchecked", async () => {
+    seedCart(TWO_ITEM_CART);
+    mockSignedInSession();
+    mockAddressTable([]);
+    mockRpc.mockResolvedValue({
+      data: [
+        { order_id: "ord-no-save", status: "pending", total_amount: 27500 },
+      ],
+      error: null,
+    });
+    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("checkbox", { name: "Хаягаа хадгалах" }),
+      ).toBeInTheDocument();
+    });
+    await fillCheckoutForm("Тест Хэрэглэгч", "99887766");
+    fireEvent.change(screen.getByLabelText("Хаяг"), {
+      target: { value: "СБД, 1-р хороо" },
+    });
+    submitCheckout();
+
+    await waitFor(() => {
+      expect(screen.getByText("Захиалга амжилттай үүслээ")).toBeInTheDocument();
+    });
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("renders the delivery ETA hint when the org has estimated_delivery_hours", async () => {
+    seedCart(TWO_ITEM_CART);
+    render(<CartClient slug={ORG.slug} organization={DELIVERY_WITH_ETA} />);
+
+    expect(
+      await screen.findByText("Хүргэлт: ~4 цагийн дотор"),
+    ).toBeInTheDocument();
+  });
+
+  it("hides the ETA hint when estimated_delivery_hours is absent", async () => {
+    seedCart(TWO_ITEM_CART);
+    render(<CartClient slug={ORG.slug} organization={DELIVERY_ONLY} />);
+
+    expect(await screen.findByLabelText("Хаяг")).toBeInTheDocument();
+    expect(screen.queryByText(/Хүргэлт: ~\d+ цагийн дотор/)).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const hoisted = vi.hoisted(() => {
@@ -17,6 +17,8 @@ vi.mock("../use-store-session", () => ({
 
 const mockRpc = vi.hoisted(() => vi.fn());
 const mockCapture = vi.hoisted(() => vi.fn());
+const mockToastSuccess = vi.hoisted(() => vi.fn());
+const mockToastError = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({ rpc: mockRpc }),
@@ -24,6 +26,10 @@ vi.mock("@/lib/supabase/client", () => ({
 
 vi.mock("@zuiio/capture", () => ({
   capture: mockCapture,
+}));
+
+vi.mock("sonner", () => ({
+  toast: { success: mockToastSuccess, error: mockToastError },
 }));
 
 import { I18nProvider } from "@/lib/i18n";
@@ -80,6 +86,105 @@ describe("OrdersClient", () => {
     hoisted.setState({ status: "signedOut" });
     mockRpc.mockReset();
     mockCapture.mockClear();
+    mockToastSuccess.mockClear();
+    mockToastError.mockClear();
+  });
+
+  it("shows the cancel button for pending orders and cancels via cancel_my_order", async () => {
+    hoisted.setState(ACCOUNT_STATE);
+    const pendingOrder: MyOrder = { ...ORDER, status: "pending" };
+    mockRpc
+      .mockResolvedValueOnce({ data: [pendingOrder], error: null })
+      .mockResolvedValueOnce({
+        data: [{ order_id: pendingOrder.id, status: "cancelled" }],
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: [{ ...pendingOrder, status: "cancelled" }],
+        error: null,
+      });
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderOrders();
+
+    expect(await screen.findByText("INV-2026-001")).toBeInTheDocument();
+    const cancelButton = screen.getByRole("button", {
+      name: "Захиалга цуцлах",
+    });
+    fireEvent.click(cancelButton);
+
+    await waitFor(() => {
+      expect(mockRpc).toHaveBeenCalledWith("cancel_my_order", {
+        p_slug: "storefront-e2e-test",
+        p_order_id: pendingOrder.id,
+      });
+    });
+    expect(mockToastSuccess).toHaveBeenCalledWith("Захиалга цуцалсан");
+    // The list refetches and now shows the cancelled status + no cancel button.
+    expect(await screen.findByText("Цуцалсан")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Захиалга цуцлах" }),
+    ).toBeNull();
+    confirmSpy.mockRestore();
+  });
+
+  it("does not cancel when the confirm dialog is declined", async () => {
+    hoisted.setState(ACCOUNT_STATE);
+    const pendingOrder: MyOrder = { ...ORDER, status: "pending" };
+    mockRpc.mockResolvedValue({ data: [pendingOrder], error: null });
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    renderOrders();
+
+    expect(await screen.findByText("INV-2026-001")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Захиалга цуцлах" }));
+
+    expect(mockRpc).not.toHaveBeenCalledWith(
+      "cancel_my_order",
+      expect.anything(),
+    );
+    expect(mockToastSuccess).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  it("surfaces the RPC error message when cancellation fails", async () => {
+    hoisted.setState(ACCOUNT_STATE);
+    const pendingOrder: MyOrder = { ...ORDER, status: "pending" };
+    mockRpc
+      .mockResolvedValueOnce({ data: [pendingOrder], error: null })
+      .mockResolvedValueOnce({
+        data: null,
+        error: { message: "Зөвхөн хүлээгдэж буй захиалгыг цуцлах боломжтой." },
+      });
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderOrders();
+
+    expect(await screen.findByText("INV-2026-001")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Захиалга цуцлах" }));
+
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith(
+        "Зөвхөн хүлээгдэж буй захиалгыг цуцлах боломжтой.",
+      );
+    });
+    expect(mockCapture).toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  it("hides the cancel button for completed orders", async () => {
+    hoisted.setState(ACCOUNT_STATE);
+    mockRpc.mockResolvedValue({ data: [ORDER], error: null });
+    renderOrders();
+
+    expect(await screen.findByText("INV-2026-001")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Захиалга цуцлах" }),
+    ).toBeNull();
+  });
+
+  it("hides the cancel button for guests", () => {
+    renderOrders();
+    expect(
+      screen.queryByRole("button", { name: "Захиалга цуцлах" }),
+    ).toBeNull();
   });
 
   it("shows the sign-in prompt with a link to the account page when signed out", () => {

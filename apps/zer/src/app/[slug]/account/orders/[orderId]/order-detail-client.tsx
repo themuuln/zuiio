@@ -11,13 +11,23 @@ import {
   Truck,
   User,
 } from "@phosphor-icons/react";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { capture } from "@zuiio/capture";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  StorefrontCartProvider,
+  useStorefrontCart,
+} from "@/components/storefront/cart-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useStoreSession } from "../../use-store-session";
 import {
@@ -48,6 +58,17 @@ export type OrderDetailDelivery = {
   assigned_to_name?: string | null;
 };
 
+/**
+ * One entry of `sales.status_history` (backend contract): the event status,
+ * when it happened and (optionally) who set it. Populated for submit / cancel
+ * / staff flips.
+ */
+export type StatusHistoryEntry = {
+  status: string;
+  at: string;
+  by?: string | null;
+};
+
 export type OrderDetail = {
   id: string;
   invoice_number: string | null;
@@ -67,17 +88,20 @@ export type OrderDetail = {
   contact_phone: string | null;
   contact_email: string | null;
   delivery: OrderDetailDelivery | null;
+  status_history?: StatusHistoryEntry[] | null;
   items: OrderDetailItem[];
 };
 
 type TimelineStep = {
   label: string;
   done: boolean;
+  at?: string | null;
 };
 
 /**
- * Deterministic status timeline. No history table exists — steps are derived
- * from the current order/delivery status only, so no timestamps are invented.
+ * Deterministic status timeline fallback — used only when the backend has not
+ * yet recorded a `status_history` for the order. Steps are derived from the
+ * current order/delivery status, so no timestamps are shown.
  */
 function buildTimelineSteps(order: OrderDetail): TimelineStep[] {
   const completed = order.status === "completed";
@@ -103,15 +127,124 @@ function buildTimelineSteps(order: OrderDetail): TimelineStep[] {
   return steps;
 }
 
+/**
+ * Timeline from `sales.status_history` when present: every recorded event is
+ * a completed step with its own timestamp (the history is a log of what
+ * happened, including cancellations). Falls back to the deterministic steps
+ * when the history is empty.
+ */
+function buildHistorySteps(order: OrderDetail): TimelineStep[] {
+  const history = Array.isArray(order.status_history)
+    ? order.status_history
+    : [];
+  if (history.length === 0) return buildTimelineSteps(order);
+  return history.map((entry) => ({
+    label: STATUS_LABELS[entry.status] ?? entry.status,
+    done: true,
+    at: entry.at ?? null,
+  }));
+}
+
+/**
+ * Re-adds the order's line items to the storefront cart (localStorage-backed
+ * via StorefrontCartProvider) and navigates to the cart page. In-stock
+ * awareness is intentionally skipped — the server rejects the order at
+ * submit time if an item is unavailable.
+ */
+function ReorderButton({
+  slug,
+  items,
+}: {
+  slug: string;
+  items: OrderDetailItem[];
+}) {
+  const { addItem } = useStorefrontCart();
+  const router = useRouter();
+
+  // Items whose product was deleted have a null product_id and cannot be
+  // re-added — drop them and narrow the type for the loop below.
+  const reorderable: Array<OrderDetailItem & { product_id: string }> = [];
+  for (const item of items) {
+    if (item.product_id) {
+      reorderable.push({ ...item, product_id: item.product_id });
+    }
+  }
+  if (reorderable.length === 0) return null;
+
+  const handleReorder = () => {
+    for (const item of reorderable) {
+      addItem({
+        productId: item.product_id,
+        name: item.name ?? "Бүтээгдэхүүн",
+        unitPrice: Number(item.unit_price ?? 0),
+        unit: "ширхэг",
+        maxStock: Number.POSITIVE_INFINITY,
+        quantity: item.quantity,
+        variantLabels:
+          Array.isArray(item.variant_labels) && item.variant_labels.length > 0
+            ? item.variant_labels.join(", ")
+            : undefined,
+      });
+    }
+    router.push(`/${slug}/cart`);
+  };
+
+  return (
+    <Button type="button" variant="outline" onClick={handleReorder}>
+      Дахин захиалах
+    </Button>
+  );
+}
+
 export function OrderDetailClient({
   slug,
-  order,
+  order: initialOrder,
 }: {
   slug: string;
   order: OrderDetail;
 }) {
   const { t } = useI18n();
   const { state } = useStoreSession();
+  // Local copy so cancellation can refetch and re-render the detail.
+  const [order, setOrder] = useState<OrderDetail>(initialOrder);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!window.confirm("Захиалга цуцлах уу?")) return;
+    setCancelling(true);
+    try {
+      const supabase = createClient() as SupabaseClient;
+      const { error: rpcError } = await supabase.rpc("cancel_my_order", {
+        p_slug: slug,
+        p_order_id: order.id,
+      });
+      if (rpcError) throw rpcError;
+      toast.success("Захиалга цуцалсан");
+      // Refetch the fresh detail so the status badge + timeline update.
+      const result = (await supabase.rpc("get_public_order", {
+        p_slug: slug,
+        p_order_id: order.id,
+      })) as {
+        data: { order: OrderDetail } | null;
+        error: { message: string } | null;
+      };
+      if (result.error) throw result.error;
+      if (result.data?.order) setOrder(result.data.order);
+    } catch (err) {
+      capture(err, { context: "storefront: cancel order" });
+      let message: unknown = null;
+      if (err && typeof err === "object" && "message" in err) {
+        message = err.message;
+      }
+      toast.error(
+        typeof message === "string" && message.trim() !== ""
+          ? message
+          : "Захиалга цуцлахад алдаа гарлаа. Дахин оролдоно уу.",
+      );
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   if (state.status === "loading") {
     return (
@@ -140,7 +273,7 @@ export function OrderDetailClient({
     );
   }
 
-  const steps = buildTimelineSteps(order);
+  const steps = buildHistorySteps(order);
   // The current step is the furthest reached one — last step that is done.
   const currentIndex = steps.reduce(
     (current, step, index) => (step.done ? index : current),
@@ -175,7 +308,7 @@ export function OrderDetailClient({
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {order.status && (
             <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">
               {STATUS_LABELS[order.status] ?? order.status}
@@ -186,6 +319,22 @@ export function OrderDetailClient({
               {DELIVERY_STATUS_LABELS[deliveryStatus] ?? deliveryStatus}
             </span>
           )}
+          {order.status === "pending" && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              disabled={cancelling}
+              onClick={handleCancel}
+            >
+              {cancelling && <Spinner className="size-3.5" />}
+              Захиалга цуцлах
+            </Button>
+          )}
+          <StorefrontCartProvider>
+            <ReorderButton slug={slug} items={order.items} />
+          </StorefrontCartProvider>
         </div>
       </div>
 
@@ -234,6 +383,11 @@ export function OrderDetailClient({
                     )}
                   >
                     <p>{step.label}</p>
+                    {step.at && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {formatDate(step.at)}
+                      </p>
+                    )}
                   </div>
                 </li>
               );

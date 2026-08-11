@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const hoisted = vi.hoisted(() => {
@@ -14,6 +14,57 @@ const hoisted = vi.hoisted(() => {
 vi.mock("../../use-store-session", () => ({
   useStoreSession: () => ({ state: hoisted.getState() }),
 }));
+
+const mockRpc = vi.hoisted(() => vi.fn());
+const mockCapture = vi.hoisted(() => vi.fn());
+const mockPush = vi.hoisted(() => vi.fn());
+const mockToastSuccess = vi.hoisted(() => vi.fn());
+const mockToastError = vi.hoisted(() => vi.fn());
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({ rpc: mockRpc }),
+}));
+
+vi.mock("@zuiio/capture", () => ({
+  capture: mockCapture,
+}));
+
+vi.mock("sonner", () => ({
+  toast: { success: mockToastSuccess, error: mockToastError },
+}));
+
+// jsdom in this setup has no localStorage — install the repo-standard mock
+// so the reorder cart (StorefrontCartProvider) can persist and be asserted.
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => {
+      store[key] = String(value);
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+    key: (index: number) => Object.keys(store)[index] ?? null,
+    get length() {
+      return Object.keys(store).length;
+    },
+  };
+})();
+
+beforeAll(() => {
+  Object.defineProperty(window, "localStorage", {
+    value: localStorageMock,
+    configurable: true,
+  });
+});
 
 import { I18nProvider } from "@/lib/i18n";
 import type { StoreSessionState } from "../../use-store-session";
@@ -82,6 +133,12 @@ function renderDetail(order: OrderDetail = ORDER) {
 describe("OrderDetailClient", () => {
   beforeEach(() => {
     hoisted.setState(ACCOUNT_STATE);
+    window.localStorage.clear();
+    mockRpc.mockReset();
+    mockCapture.mockClear();
+    mockPush.mockClear();
+    mockToastSuccess.mockClear();
+    mockToastError.mockClear();
   });
 
   it("links back to the order history", () => {
@@ -210,5 +267,141 @@ describe("OrderDetailClient", () => {
     hoisted.setState({ status: "loading" });
     renderDetail();
     expect(screen.getByLabelText("Loading")).toBeInTheDocument();
+  });
+
+  it("shows the cancel button for pending orders and cancels via cancel_my_order", async () => {
+    const pendingOrder: OrderDetail = {
+      ...ORDER,
+      status: "pending",
+      delivery: null,
+    };
+    mockRpc
+      .mockResolvedValueOnce({
+        data: [{ order_id: pendingOrder.id, status: "cancelled" }],
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: { order: { ...pendingOrder, status: "cancelled" } },
+        error: null,
+      });
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderDetail(pendingOrder);
+
+    fireEvent.click(screen.getByRole("button", { name: "Захиалга цуцлах" }));
+
+    await waitFor(() => {
+      expect(mockRpc).toHaveBeenCalledWith("cancel_my_order", {
+        p_slug: "storefront-e2e-test",
+        p_order_id: pendingOrder.id,
+      });
+    });
+    expect(mockToastSuccess).toHaveBeenCalledWith("Захиалга цуцалсан");
+    // Refetched detail shows the cancelled status badge and hides the button.
+    expect(await screen.findByText("Цуцалсан")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Захиалга цуцлах" }),
+    ).toBeNull();
+    confirmSpy.mockRestore();
+  });
+
+  it("hides the cancel button for completed orders", () => {
+    renderDetail();
+    expect(
+      screen.queryByRole("button", { name: "Захиалга цуцлах" }),
+    ).toBeNull();
+  });
+
+  it("surfaces the RPC error message when cancellation fails", async () => {
+    const pendingOrder: OrderDetail = {
+      ...ORDER,
+      status: "pending",
+      delivery: null,
+    };
+    mockRpc.mockResolvedValueOnce({
+      data: null,
+      error: { message: "Зөвхөн хүлээгдэж буй захиалгыг цуцлах боломжтой." },
+    });
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderDetail(pendingOrder);
+
+    fireEvent.click(screen.getByRole("button", { name: "Захиалга цуцлах" }));
+
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith(
+        "Зөвхөн хүлээгдэж буй захиалгыг цуцлах боломжтой.",
+      );
+    });
+    expect(mockCapture).toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  it("renders timeline steps from status_history with formatted dates", () => {
+    renderDetail({
+      ...ORDER,
+      status: "cancelled",
+      created_at: "2026-07-01T12:00:00Z",
+      delivery_type: null,
+      delivery: null,
+      status_history: [
+        { status: "pending", at: "2026-08-01T12:00:00Z" },
+        { status: "cancelled", at: "2026-08-02T09:30:00Z" },
+      ],
+    });
+
+    // History entries render as steps with their own dates; cancelled shows too.
+    expect(screen.getByText("Хүлээгдэж буй")).toBeInTheDocument();
+    expect(screen.getByText("2026-08-01")).toBeInTheDocument();
+    expect(screen.getByText("2026-08-02")).toBeInTheDocument();
+    // Status badge + timeline step for the cancelled entry.
+    expect(screen.getAllByText("Цуцалсан").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("reorder re-adds the order items to the cart and navigates to the cart page", async () => {
+    renderDetail({
+      ...ORDER,
+      items: [
+        {
+          product_id: "p1",
+          name: "Бүтээгдэхүүн 1",
+          quantity: 2,
+          unit_price: 5000,
+          total_price: 10000,
+        },
+        {
+          product_id: "p2",
+          name: "Цамц",
+          quantity: 3,
+          unit_price: 7000,
+          total_price: 21000,
+          variant_labels: ["Улаан", "L"],
+        },
+      ],
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Дахин захиалах" }));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/storefront-e2e-test/cart");
+    });
+    const raw = window.localStorage.getItem("zer-storefront-cart");
+    expect(raw).not.toBeNull();
+    const { items } = JSON.parse(raw ?? "{}") as { items: unknown[] };
+    expect(items).toEqual([
+      expect.objectContaining({
+        productId: "p1",
+        name: "Бүтээгдэхүүн 1",
+        unitPrice: 5000,
+        quantity: 2,
+        unit: "ширхэг",
+      }),
+      expect.objectContaining({
+        productId: "p2",
+        name: "Цамц",
+        unitPrice: 7000,
+        quantity: 3,
+        unit: "ширхэг",
+        variantLabels: "Улаан, L",
+      }),
+    ]);
   });
 });

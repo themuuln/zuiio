@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Receipt, UserCircle } from "@phosphor-icons/react";
+import { ArrowLeft, MapPin, Receipt, UserCircle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
@@ -20,6 +20,8 @@ export function AccountHeader({
   const { t } = useI18n();
   const pathname = usePathname();
   const isOrders = pathname?.endsWith("/orders");
+  const isAddresses = pathname?.endsWith("/addresses");
+  const isAccountHome = !isOrders && !isAddresses;
 
   return (
     <header className="sticky top-0 z-10 border-b border-border/60 bg-card/50 backdrop-blur-sm">
@@ -36,7 +38,7 @@ export function AccountHeader({
             href={`/${slug}/account`}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors",
-              !isOrders
+              isAccountHome
                 ? "bg-muted font-medium text-foreground"
                 : "text-muted-foreground hover:text-foreground",
             )}
@@ -55,6 +57,18 @@ export function AccountHeader({
           >
             <Receipt className="size-4" />
             {t("storeAccount.ordersLink")}
+          </Link>
+          <Link
+            href={`/${slug}/account/addresses`}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors",
+              isAddresses
+                ? "bg-muted font-medium text-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <MapPin className="size-4" />
+            Хаягийн дэвтэр
           </Link>
         </nav>
       </div>
