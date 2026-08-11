@@ -1,8 +1,10 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { Clock } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import type { Vehicle } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
@@ -21,6 +23,8 @@ function _getWaitTime(createdAt: string): { text: string; urgent: boolean } {
 interface CondensedQueueItemProps {
   workOrder: BayViewWorkOrder & { vehicle: Vehicle | null };
   onClick: () => void;
+  /** orgId used to warm the drawer detail cache on hover/focus. */
+  orgId?: string | null;
 }
 
 /**
@@ -30,11 +34,30 @@ interface CondensedQueueItemProps {
 export function CondensedQueueItem({
   workOrder,
   onClick,
+  orgId,
 }: CondensedQueueItemProps) {
   const v = workOrder.vehicle;
   const [waitInfo, setWaitInfo] = useState(() =>
     _getWaitTime(workOrder.created_at),
   );
+
+  const queryClient = useQueryClient();
+  const prefetchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Warm the drawer detail cache when the user hovers or tabs to the item —
+  // same 200ms debounce pattern as the list view rows.
+  const handleHover = useCallback(() => {
+    if (workOrder.id && orgId) {
+      clearTimeout(prefetchTimerRef.current);
+      prefetchTimerRef.current = setTimeout(() => {
+        prefetchDrawerData(queryClient, orgId, workOrder.id);
+      }, 200);
+    }
+  }, [orgId, queryClient, workOrder.id]);
+
+  useEffect(() => {
+    return () => clearTimeout(prefetchTimerRef.current);
+  }, []);
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -75,6 +98,8 @@ export function CondensedQueueItem({
         {...listeners}
         {...attributes}
         onClick={onClick}
+        onMouseEnter={handleHover}
+        onFocus={handleHover}
         style={style}
         className={cn(
           "flex flex-col gap-1 rounded-xl border border-border/60 bg-card px-4 py-3 text-left ring-1 ring-foreground/10 transition-colors w-full shrink-0",
@@ -101,6 +126,8 @@ export function CondensedQueueItem({
       {...listeners}
       {...attributes}
       onClick={onClick}
+      onMouseEnter={handleHover}
+      onFocus={handleHover}
       style={style}
       className={cn(
         "flex flex-col gap-1 rounded-xl border border-border/60 bg-card px-4 py-3 text-left ring-1 ring-foreground/10 transition-colors w-full shrink-0",

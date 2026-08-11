@@ -897,7 +897,14 @@ declare const messages: {
     "subtotal": "Subtotal",
     "fuel": "Fuel",
     "km": "km",
-    "readyForPickup": "Ready for Pickup"
+    "readyForPickup": "Ready for Pickup",
+    "readyForPickupSubtitle": "Confirm vehicle info and payment method",
+    "change": "Change",
+    "assigned": "Assigned",
+    "assignMechanicFailed": "Failed to assign mechanic",
+    "addHelperFailed": "Failed to add helper",
+    "removeHelperFailed": "Failed to remove helper",
+    "noNotesYet": "No notes yet"
   },
   "portal": {
     "dashboard": "Dashboard",

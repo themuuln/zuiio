@@ -1,8 +1,13 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import { render } from "@/test/test-utils";
 import { CondensedQueueItem } from "../_condensed-queue-item";
+
+vi.mock("@/lib/queries/use-drawer-queries", () => ({
+  prefetchDrawerData: vi.fn(),
+}));
 
 vi.mock("@dnd-kit/core", () => ({
   useDraggable: () => ({
@@ -36,6 +41,7 @@ function makeWorkOrder(
 
 describe("CondensedQueueItem", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-08-09T10:00:00Z"));
   });
@@ -79,5 +85,35 @@ describe("CondensedQueueItem", () => {
     );
     fireEvent.click(screen.getByText("1234 УБА"));
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("prefetches the drawer detail on hover after the debounce", () => {
+    render(
+      <CondensedQueueItem
+        workOrder={makeWorkOrder()}
+        onClick={vi.fn()}
+        orgId="org-1"
+      />,
+    );
+
+    fireEvent.mouseEnter(screen.getByText("1234 УБА"));
+    expect(prefetchDrawerData).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(200);
+    expect(prefetchDrawerData).toHaveBeenCalledWith(
+      expect.anything(),
+      "org-1",
+      "wo-queue-1",
+    );
+  });
+
+  it("skips prefetch without an orgId", () => {
+    render(
+      <CondensedQueueItem workOrder={makeWorkOrder()} onClick={vi.fn()} />,
+    );
+
+    fireEvent.mouseEnter(screen.getByText("1234 УБА"));
+    vi.advanceTimersByTime(200);
+    expect(prefetchDrawerData).not.toHaveBeenCalled();
   });
 });

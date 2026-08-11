@@ -894,7 +894,14 @@
     "subtotal": "Дүн",
     "fuel": "Түлш",
     "km": "км",
-    "readyForPickup": "Хүлээлгэхэд бэлэн"
+    "readyForPickup": "Хүлээлгэхэд бэлэн",
+    "readyForPickupSubtitle": "Машины мэдээлэл, төлбөрийн аргаа баталгаажуулна уу",
+    "change": "Солих",
+    "assigned": "Томилогдсон",
+    "assignMechanicFailed": "Механикч онооход алдаа гарлаа",
+    "addHelperFailed": "Туслах нэмэхэд алдаа гарлаа",
+    "removeHelperFailed": "Туслах хасахад алдаа гарлаа",
+    "noNotesYet": "Тэмдэглэл байхгүй"
   },
   "portal": {
     "dashboard": "Хяналтын самбар",

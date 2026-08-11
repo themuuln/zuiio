@@ -145,6 +145,7 @@ export const KanbanView = React.memo(function KanbanView({
               key={wo.id}
               workOrder={wo}
               onClick={() => onQueueItemClick(wo)}
+              orgId={orgId}
             />
           ))}
           {queue.length === 0 && (

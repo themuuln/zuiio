@@ -273,12 +273,15 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
   const handleOpenDetail = useCallback(
     (woId: string, initialAction?: "add-service" | "add-part") => {
       // Seed the drawer detail cache with partial work order data
-      // from the bay card so the drawer shows real content immediately.
+      // (from the bay card, or the waiting queue) so the drawer shows
+      // real content immediately.
       const bay = data?.bays.find((b) => b.workOrder?.id === woId);
-      if (bay?.workOrder && orgId) {
+      const queueWo = data?.waitingQueue.find((w) => w.id === woId) ?? null;
+      const seedWo = bay?.workOrder ?? queueWo;
+      if (seedWo && orgId) {
         const key = drawerDetailKeys.all(orgId, woId);
         queryClient.setQueryData(key, {
-          workOrder: bay.workOrder as unknown as WorkOrderDetail,
+          workOrder: seedWo as unknown as WorkOrderDetail,
         });
         // Mark as stale so the drawer refetches full detail in background
         queryClient.invalidateQueries({ queryKey: key, refetchType: "active" });
@@ -538,6 +541,9 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
     // Mutation refs (needed by JSX)
     assignMechanicMutation,
     assignCustomerMutation,
+    addHelperMutation,
+    removeHelperMutation,
+    removeMechanicMutation,
     updateStatusMutation,
     batchCompleteMutation,
     updateBayCountMutation,

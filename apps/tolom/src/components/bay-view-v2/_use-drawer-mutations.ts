@@ -18,7 +18,7 @@ import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import { drawerDetailKeys } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
-import type { WorkOrderDetail } from "@/lib/types";
+import type { Customer, WorkOrderDetail } from "@/lib/types";
 import type { PaymentMethodFees } from "./_payment-fees";
 import { useCatalogMutations } from "./_use-catalog-mutations";
 import { useInvoiceMutations } from "./_use-invoice-mutations";
@@ -253,6 +253,7 @@ export function useDrawerMutations({
   async function assignCustomer(
     customerId: string | null,
     customerName?: string | null,
+    customer?: Customer | null,
   ) {
     const orgIdCurrent = orgIdRef.current;
     if (!orgIdCurrent || !workOrderId) return;
@@ -264,11 +265,11 @@ export function useDrawerMutations({
         ...prev,
         customer_id: customerId,
         customer: customerId
-          ? (prev.customer ?? {
+          ? ({
+              ...(prev.customer ?? {}),
+              ...(customer ?? {}),
               id: customerId,
-              full_name: customerName ?? null,
-              company_name: null,
-            })
+            } as WorkOrderDetail["customer"])
           : null,
       } as WorkOrderDetail;
     });

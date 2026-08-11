@@ -43,7 +43,7 @@ export function BayCardOccupied({ bay }: BayCardOccupiedProps) {
   const isCritical = elapsed != null && elapsed > 180;
   return (
     <>
-      <header className="flex min-h-12 select-none items-center justify-between gap-3 border-b border-border/60 px-5 py-3">
+      <header className="flex min-h-12 select-none items-center justify-between gap-3 border-b border-border/60 px-4 py-2.5 sm:px-5">
         <div className="flex min-w-0 items-center gap-2">
           <BayNumberLabel
             bayNumber={bay.bayNumber}
@@ -72,7 +72,7 @@ export function BayCardOccupied({ bay }: BayCardOccupiedProps) {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-center gap-5 px-5 py-5">
+      <div className="flex min-h-0 flex-1 flex-col justify-center gap-4 px-4 py-4 sm:px-5">
         <BayCardVehicleInfo
           vehicle={wo.vehicle}
           startedAt={wo.started_at ?? wo.created_at}
@@ -83,7 +83,7 @@ export function BayCardOccupied({ bay }: BayCardOccupiedProps) {
           className="gap-2"
         />
 
-        <div className="flex min-w-0 items-center gap-3 border-t border-border/50 pt-4">
+        <div className="flex min-w-0 items-center gap-3 border-t border-border/50 pt-3.5">
           <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             {t("listHeaderMechanic")}
           </span>
@@ -103,7 +103,7 @@ export function BayCardOccupied({ bay }: BayCardOccupiedProps) {
         </div>
       </div>
 
-      <footer className="flex flex-col gap-2 border-t border-border/60 px-5 py-3">
+      <footer className="flex flex-col gap-2 border-t border-border/60 px-4 py-3 sm:px-5">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             {t("listHeaderCustomer")}

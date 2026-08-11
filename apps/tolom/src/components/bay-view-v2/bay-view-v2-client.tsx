@@ -4,13 +4,16 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
+  MeasuringStrategy,
+  pointerWithin,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { useQueryClient } from "@tanstack/react-query";
 import { GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,7 +21,10 @@ import {
   normalizeOrgTransferBankAccounts,
   resolveOrgTransferBanks,
 } from "@/lib/payments/org-bank-accounts";
-import { prefetchDrawerCatalogs } from "@/lib/queries/use-drawer-queries";
+import {
+  prefetchDrawerCatalogs,
+  prefetchDrawerDataMany,
+} from "@/lib/queries/use-drawer-queries";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
@@ -74,6 +80,32 @@ export function BayViewV2Client() {
     dialogs,
     pending,
   );
+
+  // ── Idle prefetch: warm detail caches for visible work orders ──
+  // Runs right after bay data loads (and on incremental realtime updates),
+  // so drawer opens are instant — especially on touch devices where the
+  // hover-based prefetch never fires. Each id is scheduled once per session;
+  // the drawer still refetches fresh data when it opens (staleTime 30s).
+  const prefetchedWoIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const orgId = orgInfo?.orgId;
+    if (!orgId || !bayViewData.data) return;
+    const ids: string[] = [];
+    for (const bay of bayViewData.data.bays) {
+      if (bay.workOrder?.id) ids.push(bay.workOrder.id);
+    }
+    for (const wo of bayViewData.data.waitingQueue) {
+      if (wo.id) ids.push(wo.id);
+    }
+    const newIds = ids.filter((id) => !prefetchedWoIdsRef.current.has(id));
+    if (newIds.length === 0) return;
+    for (const id of newIds) prefetchedWoIdsRef.current.add(id);
+    // Cap the batch — the detail RPC carries prior-visit history, so keep
+    // the warm-up light; occupied bays first, then the waiting queue.
+    void prefetchDrawerDataMany(queryClient, orgId, newIds.slice(0, 10), {
+      concurrency: 3,
+    });
+  }, [queryClient, orgInfo?.orgId, bayViewData.data]);
 
   // ── Mutations & handlers ──
   const mutations = useBayViewMutations({
@@ -131,6 +163,11 @@ export function BayViewV2Client() {
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={pointerWithin}
+      measuring={{
+        droppable: { strategy: MeasuringStrategy.Always },
+      }}
+      modifiers={[restrictToWindowEdges]}
       onDragStart={mutations.onDragStart}
       onDragEnd={mutations.onDragEnd}
       onDragCancel={mutations.onDragCancel}
@@ -315,6 +352,7 @@ export function BayViewV2Client() {
                   onToggle={() => setShowQueueRail((s) => !s)}
                   onItemClick={mutations.handleQueueItemClick}
                   onAssignToBay={(_woId) => {}}
+                  orgId={orgInfo?.orgId}
                   t={t}
                 />
               )}
@@ -342,21 +380,24 @@ export function BayViewV2Client() {
             t={t}
             assignMechanicMutation={mutations.assignMechanicMutation}
             assignCustomerMutation={mutations.assignCustomerMutation}
+            addHelperMutation={mutations.addHelperMutation}
+            removeHelperMutation={mutations.removeHelperMutation}
+            removeMechanicMutation={mutations.removeMechanicMutation}
           />
         )}
 
         {/* ── Drag overlay ── */}
         <DragOverlay
           dropAnimation={{
-            duration: 200,
-            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+            duration: 250,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
           }}
         >
           {safeData &&
             bayViewData.activeDrag &&
             (bayViewData.activeDrag.type === "vehicle" &&
             bayViewData.activeDrag.previewBay ? (
-              <div className="scale-[1.03] shadow-2xl ring-1 ring-primary/20 rounded-xl overflow-hidden">
+              <div className="scale-[1.02] shadow-2xl ring-1 ring-primary/20 rounded-xl overflow-hidden will-change-transform">
                 <BayCardDragPreview bay={bayViewData.activeDrag.previewBay} />
               </div>
             ) : (

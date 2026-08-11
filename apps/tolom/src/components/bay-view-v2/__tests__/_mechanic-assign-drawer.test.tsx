@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { render } from "@/test/test-utils";
 import { MechanicAssignDrawer } from "../_mechanic-assign-drawer";
@@ -17,6 +17,7 @@ let pickerProps: {
   leadId: string | null;
   onToggle: (id: string) => void;
   onSetLead: (id: string) => void;
+  onOpenChange: (open: boolean) => void;
 } | null = null;
 
 vi.mock("@/components/mechanic-picker-drawer", () => ({
@@ -27,6 +28,7 @@ vi.mock("@/components/mechanic-picker-drawer", () => ({
     mechanics: { id: string }[];
     onToggle: (id: string) => void;
     onSetLead: (id: string) => void;
+    onOpenChange: (open: boolean) => void;
   }) => {
     pickerProps = props;
     return props.open ? (
@@ -38,6 +40,9 @@ vi.mock("@/components/mechanic-picker-drawer", () => ({
         ))}
         <button type="button" onClick={() => props.onSetLead("m-2")}>
           set-lead
+        </button>
+        <button type="button" onClick={() => props.onOpenChange(false)}>
+          close-picker
         </button>
       </div>
     ) : null;
@@ -65,52 +70,175 @@ describe("MechanicAssignDrawer", () => {
     expect(pickerProps?.selectedIds).toEqual([]);
   });
 
-  it("assigns the first mechanic as lead", () => {
-    const onAssignLead = vi.fn().mockResolvedValue(undefined);
-    render(
-      <MechanicAssignDrawer
-        trigger={<span>trigger</span>}
-        mechanics={mechanics}
-        leadMechanicId={null}
-        helpers={[]}
-        onAssignLead={onAssignLead}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "assignMechanic" }));
-    fireEvent.click(screen.getByRole("button", { name: "toggle-m-1" }));
-    expect(onAssignLead).toHaveBeenCalledWith("m-1");
+  it("assigns the first mechanic as lead (after the debounced flush)", async () => {
+    vi.useFakeTimers();
+    try {
+      const onAssignLead = vi.fn().mockResolvedValue(undefined);
+      render(
+        <MechanicAssignDrawer
+          trigger={<span>trigger</span>}
+          mechanics={mechanics}
+          leadMechanicId={null}
+          helpers={[]}
+          onAssignLead={onAssignLead}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "assignMechanic" }));
+      fireEvent.click(screen.getByRole("button", { name: "toggle-m-1" }));
+      // The picker flips instantly; the server sync is debounced.
+      expect(pickerProps?.selectedIds).toEqual(["m-1"]);
+      await act(async () => {
+        await vi.runAllTimersAsync();
+      });
+      expect(onAssignLead).toHaveBeenCalledWith("m-1");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
-  it("adds a helper when a lead is already assigned", () => {
-    const onAssignHelper = vi.fn().mockResolvedValue(undefined);
-    render(
-      <MechanicAssignDrawer
-        trigger={<span>trigger</span>}
-        mechanics={mechanics}
-        leadMechanicId="m-1"
-        helpers={[]}
-        onAssignHelper={onAssignHelper}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "changeMechanic" }));
-    fireEvent.click(screen.getByRole("button", { name: "toggle-m-2" }));
-    expect(onAssignHelper).toHaveBeenCalledWith("m-2");
+  it("adds a helper when a lead is already assigned", async () => {
+    vi.useFakeTimers();
+    try {
+      const onAssignHelper = vi.fn().mockResolvedValue(undefined);
+      render(
+        <MechanicAssignDrawer
+          trigger={<span>trigger</span>}
+          mechanics={mechanics}
+          leadMechanicId="m-1"
+          helpers={[]}
+          onAssignHelper={onAssignHelper}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "changeMechanic" }));
+      fireEvent.click(screen.getByRole("button", { name: "toggle-m-2" }));
+      expect(pickerProps?.selectedIds).toEqual(["m-1", "m-2"]);
+      await act(async () => {
+        await vi.runAllTimersAsync();
+      });
+      expect(onAssignHelper).toHaveBeenCalledWith("m-2");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
-  it("unassigns the lead mechanic", () => {
-    const onUnassign = vi.fn().mockResolvedValue(undefined);
-    render(
-      <MechanicAssignDrawer
-        trigger={<span>trigger</span>}
-        mechanics={mechanics}
-        leadMechanicId="m-1"
-        helpers={[]}
-        onUnassign={onUnassign}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "changeMechanic" }));
-    fireEvent.click(screen.getByRole("button", { name: "toggle-m-1" }));
-    expect(onUnassign).toHaveBeenCalledWith("m-1");
+  it("flushes the net diff for rapid set/remove toggles of the same mechanic", async () => {
+    vi.useFakeTimers();
+    try {
+      const onAssignLead = vi.fn().mockResolvedValue(undefined);
+      const onAssignHelper = vi.fn().mockResolvedValue(undefined);
+      const onUnassign = vi.fn().mockResolvedValue(undefined);
+      render(
+        <MechanicAssignDrawer
+          trigger={<span>trigger</span>}
+          mechanics={mechanics}
+          leadMechanicId={null}
+          helpers={[]}
+          onAssignLead={onAssignLead}
+          onAssignHelper={onAssignHelper}
+          onUnassign={onUnassign}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "assignMechanic" }));
+      fireEvent.click(screen.getByRole("button", { name: "toggle-m-1" }));
+      fireEvent.click(screen.getByRole("button", { name: "toggle-m-1" }));
+      fireEvent.click(screen.getByRole("button", { name: "toggle-m-1" }));
+      // Every click flips instantly — none are dropped while "in flight".
+      expect(pickerProps?.selectedIds).toEqual(["m-1"]);
+      await act(async () => {
+        await vi.runAllTimersAsync();
+      });
+      // Net diff after the burst: m-1 assigned as lead, no helper mutations.
+      expect(onAssignLead).toHaveBeenCalledWith("m-1");
+      expect(onAssignHelper).not.toHaveBeenCalled();
+      expect(onUnassign).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("collapses an on/off burst of the same mechanic into zero mutations", async () => {
+    vi.useFakeTimers();
+    try {
+      const onAssignLead = vi.fn().mockResolvedValue(undefined);
+      const onAssignHelper = vi.fn().mockResolvedValue(undefined);
+      const onUnassign = vi.fn().mockResolvedValue(undefined);
+      render(
+        <MechanicAssignDrawer
+          trigger={<span>trigger</span>}
+          mechanics={mechanics}
+          leadMechanicId={null}
+          helpers={[]}
+          onAssignLead={onAssignLead}
+          onAssignHelper={onAssignHelper}
+          onUnassign={onUnassign}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "assignMechanic" }));
+      fireEvent.click(screen.getByRole("button", { name: "toggle-m-1" }));
+      fireEvent.click(screen.getByRole("button", { name: "toggle-m-1" }));
+      // Net zero — the picker returns to the initial state instantly.
+      expect(pickerProps?.selectedIds).toEqual([]);
+      await act(async () => {
+        await vi.runAllTimersAsync();
+      });
+      expect(onAssignLead).not.toHaveBeenCalled();
+      expect(onAssignHelper).not.toHaveBeenCalled();
+      expect(onUnassign).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("persists pending changes when the sheet closes before the debounce fires", async () => {
+    vi.useFakeTimers();
+    try {
+      const onAssignLead = vi.fn().mockResolvedValue(undefined);
+      render(
+        <MechanicAssignDrawer
+          trigger={<span>trigger</span>}
+          mechanics={mechanics}
+          leadMechanicId={null}
+          helpers={[]}
+          onAssignLead={onAssignLead}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "assignMechanic" }));
+      fireEvent.click(screen.getByRole("button", { name: "toggle-m-1" }));
+      expect(pickerProps?.selectedIds).toEqual(["m-1"]);
+      // Close immediately — the pending toggle flushes on close.
+      fireEvent.click(screen.getByRole("button", { name: "close-picker" }));
+      await act(async () => {
+        await vi.runAllTimersAsync();
+      });
+      expect(onAssignLead).toHaveBeenCalledWith("m-1");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("unassigns the lead mechanic", async () => {
+    vi.useFakeTimers();
+    try {
+      const onUnassign = vi.fn().mockResolvedValue(undefined);
+      render(
+        <MechanicAssignDrawer
+          trigger={<span>trigger</span>}
+          mechanics={mechanics}
+          leadMechanicId="m-1"
+          helpers={[]}
+          onUnassign={onUnassign}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "changeMechanic" }));
+      fireEvent.click(screen.getByRole("button", { name: "toggle-m-1" }));
+      expect(pickerProps?.selectedIds).toEqual([]);
+      await act(async () => {
+        await vi.runAllTimersAsync();
+      });
+      expect(onUnassign).toHaveBeenCalledWith("m-1");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("disables the trigger while pending", () => {

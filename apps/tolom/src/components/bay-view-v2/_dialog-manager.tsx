@@ -68,6 +68,15 @@ export interface DialogManagerProps {
       customerName?: string | null;
     }) => Promise<void>;
   };
+  addHelperMutation: {
+    mutateAsync: (vars: { woId: string; mechanicId: string }) => Promise<void>;
+  };
+  removeHelperMutation: {
+    mutateAsync: (vars: { woId: string; mechanicId: string }) => Promise<void>;
+  };
+  removeMechanicMutation: {
+    mutateAsync: (vars: { woId: string }) => Promise<void>;
+  };
 }
 
 export function DialogManager({
@@ -89,6 +98,9 @@ export function DialogManager({
   t,
   assignMechanicMutation,
   assignCustomerMutation,
+  addHelperMutation,
+  removeHelperMutation,
+  removeMechanicMutation,
 }: DialogManagerProps) {
   const handleDetailDrawerClose = useCallback(
     (open: boolean) => {
@@ -238,6 +250,9 @@ export function DialogManager({
           branchFilter={branchFilter}
           assignMechanicMutation={assignMechanicMutation}
           assignCustomerMutation={assignCustomerMutation}
+          addHelperMutation={addHelperMutation}
+          removeHelperMutation={removeHelperMutation}
+          removeMechanicMutation={removeMechanicMutation}
         />
       </ErrorBoundary>
 
