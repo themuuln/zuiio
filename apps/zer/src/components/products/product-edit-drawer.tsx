@@ -16,6 +16,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { updateProduct } from "@/app/(dashboard)/products/actions";
+import { ProductImageGallery } from "@/components/products/product-image-gallery";
 import {
   computeCombinations,
   type LocalVariantData,
@@ -69,6 +70,7 @@ export interface ProductEditData {
   sale_price: number | null;
   current_stock: number | null;
   min_stock: number | null;
+  image_url: string | null;
   is_public?: boolean | null;
 }
 
@@ -686,6 +688,11 @@ export function ProductEditDrawer({
             </Link>
           )}
         </div>
+
+        <ProductImageGallery
+          productId={product.id}
+          primaryImageUrl={product.image_url}
+        />
 
         <VariantManagerDrawer
           groups={variantGroups}

@@ -123,6 +123,24 @@ export async function updatePublicProfile(
     "Үнэгүй хүргэлтийн босго",
   );
   if (typeof freeDeliveryThreshold !== "number") return freeDeliveryThreshold;
+
+  // Optional positive integer estimate of delivery time in hours (nullable).
+  const estimatedDeliveryHoursRaw = formData.get("estimated_delivery_hours");
+  let estimatedDeliveryHours: number | null = null;
+  if (
+    estimatedDeliveryHoursRaw !== null &&
+    String(estimatedDeliveryHoursRaw).trim() !== ""
+  ) {
+    const parsed = Number(estimatedDeliveryHoursRaw);
+    if (Number.isNaN(parsed) || parsed < 1 || !Number.isInteger(parsed)) {
+      return {
+        error:
+          "Ойролцоо хүргэлтийн хугацаа 1-ээс багагүй бүхэл тоо байх ёстой.",
+      };
+    }
+    estimatedDeliveryHours = parsed;
+  }
+
   const paymentBankName =
     (formData.get("payment_bank_name") as string)?.trim() || null;
   const paymentBankAccount =
@@ -205,6 +223,7 @@ export async function updatePublicProfile(
       show_stock: showStock,
       delivery_fee_amount: deliveryFeeAmount,
       free_delivery_threshold: freeDeliveryThreshold,
+      estimated_delivery_hours: estimatedDeliveryHours,
       payment_bank_name: paymentBankName,
       payment_bank_account: paymentBankAccount,
       payment_account_name: paymentAccountName,

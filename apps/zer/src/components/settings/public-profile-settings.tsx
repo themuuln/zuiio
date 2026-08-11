@@ -80,6 +80,7 @@ type PublicProfile = {
   social_links: Record<string, string> | null;
   delivery_fee_amount?: string | null;
   free_delivery_threshold?: string | null;
+  estimated_delivery_hours?: number | null;
   delivery_enabled?: boolean;
   pickup_enabled?: boolean;
   show_stock?: boolean;
@@ -780,6 +781,28 @@ export function PublicProfileSettings({
                   хүргэлтгүй
                 </p>
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="estimated_delivery_hours"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                Ойролцоо хүргэлтийн хугацаа (цаг)
+              </label>
+              <Input
+                id="estimated_delivery_hours"
+                name="estimated_delivery_hours"
+                type="number"
+                min={1}
+                step={1}
+                placeholder="24"
+                defaultValue={
+                  initialProfile?.estimated_delivery_hours?.toString() ?? ""
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Худалдан авагчид хүргэлтийн ойролцоо хугацааг харуулна
+              </p>
             </div>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">

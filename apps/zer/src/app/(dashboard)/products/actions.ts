@@ -267,6 +267,148 @@ export async function updateProduct(
   return { success: true as const };
 }
 
+export async function addProductImage(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+) {
+  const ctx = await requireActionContext("products.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
+
+  const productId = formData.get("product_id")?.toString();
+  const url = formData.get("url")?.toString();
+  if (!productId) {
+    return { error: "Бүтээгдэхүүний ID олдсонгүй." };
+  }
+  if (!url?.trim()) {
+    return { error: "Зургийн URL хоосон байна." };
+  }
+
+  // Validate org ownership before writing.
+  const { data: product, error: productError } = await supabase
+    .from("products")
+    .select("id")
+    .eq("id", productId)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  if (productError) {
+    capture(productError, { context: "addProductImage: check product" });
+    return { error: productError.message };
+  }
+  if (!product) {
+    return { error: "Бүтээгдэхүүн олдсонгүй." };
+  }
+
+  // Next sort_order = current max + 1.
+  const { data: images, error: listError } = await supabase
+    .from("product_images")
+    .select("sort_order")
+    .eq("product_id", productId)
+    .eq("organization_id", organizationId)
+    .order("sort_order", { ascending: false })
+    .limit(1);
+  if (listError) {
+    capture(listError, { context: "addProductImage: fetch sort_order" });
+    return { error: listError.message };
+  }
+  const nextSortOrder = (images?.[0]?.sort_order ?? -1) + 1;
+
+  const { error } = await supabase.from("product_images").insert({
+    product_id: productId,
+    organization_id: organizationId,
+    url: url.trim(),
+    sort_order: nextSortOrder,
+  });
+
+  if (error) {
+    capture(error, { context: "addProductImage: insert" });
+    return { error: error.message ?? "Зураг нэмэхэд алдаа гарлаа." };
+  }
+
+  revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
+  return { success: true as const };
+}
+
+export async function removeProductImage(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+) {
+  const ctx = await requireActionContext("products.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
+
+  const id = formData.get("id")?.toString();
+  if (!id) {
+    return { error: "Зургийн ID олдсонгүй." };
+  }
+
+  const { error } = await supabase
+    .from("product_images")
+    .delete()
+    .eq("id", id)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    capture(error, { context: "removeProductImage: delete" });
+    return { error: error.message ?? "Зураг устгахад алдаа гарлаа." };
+  }
+
+  revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
+  return { success: true as const };
+}
+
+export async function reorderProductImages(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+) {
+  const ctx = await requireActionContext("products.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
+
+  const productId = formData.get("product_id")?.toString();
+  const orderedIdsRaw = formData.get("ordered_ids")?.toString();
+  if (!productId) {
+    return { error: "Бүтээгдэхүүний ID олдсонгүй." };
+  }
+  if (!orderedIdsRaw) {
+    return { error: "Зургийн дараалал олдсонгүй." };
+  }
+
+  let orderedIds: unknown;
+  try {
+    orderedIds = JSON.parse(orderedIdsRaw);
+  } catch {
+    return { error: "Зургийн дараалал буруу байна." };
+  }
+  if (!Array.isArray(orderedIds)) {
+    return { error: "Зургийн дараалал буруу байна." };
+  }
+
+  for (let index = 0; index < orderedIds.length; index++) {
+    const id = orderedIds[index];
+    if (typeof id !== "string") continue;
+    const { error } = await supabase
+      .from("product_images")
+      .update({ sort_order: index })
+      .eq("id", id)
+      .eq("organization_id", organizationId)
+      .eq("product_id", productId);
+
+    if (error) {
+      capture(error, { context: "reorderProductImages: update" });
+      return {
+        error: error.message ?? "Зургийн дараалал хадгалахад алдаа гарлаа.",
+      };
+    }
+  }
+
+  revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
+  return { success: true as const };
+}
+
 export async function deleteProduct(
   _prevState: { error?: string } | undefined,
   formData: FormData,

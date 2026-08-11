@@ -74,6 +74,7 @@ function toEditData(product: ProductRow): ProductEditData {
     sale_price: product.sale_price,
     current_stock: product.current_stock,
     min_stock: product.min_stock,
+    image_url: product.image_url,
     is_public: product.is_public,
   };
 }
