@@ -58,6 +58,10 @@ export default defineConfig({
           globals: true,
           css: true,
           setupFiles: ["./src/test/setup-tests.ts"],
+          // v8 coverage instrumentation slows jsdom + user-event suites ~2.5x.
+          // Several form/drawer tests run 4-5s even at idle; the default 5s
+          // boundary flakes the coverage gate under any machine load.
+          testTimeout: 20_000,
         },
       },
     ],

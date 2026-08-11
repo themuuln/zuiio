@@ -213,8 +213,13 @@ describe("NewEstimatePage", () => {
     render(<NewEstimatePage />);
 
     await user.click(screen.getByText("addService"));
-    await user.click(screen.getByText("Oil Change"));
-    expect(screen.getByText("Oil Change")).toBeInTheDocument();
+    // The drawer list renders asynchronously — find, don't assume. Base UI
+    // drawers animate in slowly under jsdom; give the find window room.
+    await user.click(
+      await screen.findByText("Oil Change", {}, { timeout: 3000 }),
+    );
+    // Line items render the description as an input value, not text.
+    expect(screen.getByDisplayValue("Oil Change")).toBeInTheDocument();
 
     await selectCustomerAndVehicle(user);
     await user.click(screen.getByText("createQuote"));
@@ -254,8 +259,13 @@ describe("NewEstimatePage", () => {
     render(<NewEstimatePage />);
 
     await user.click(screen.getByText("addPart"));
-    await user.click(screen.getByText("Oil Filter"));
-    expect(screen.getByText("Oil Filter")).toBeInTheDocument();
+    // The drawer list renders asynchronously — find, don't assume. Base UI
+    // drawers animate in slowly under jsdom; give the find window room.
+    await user.click(
+      await screen.findByText("Oil Filter", {}, { timeout: 3000 }),
+    );
+    // Line items render the description as an input value, not text.
+    expect(screen.getByDisplayValue("Oil Filter")).toBeInTheDocument();
 
     await selectCustomerAndVehicle(user);
     await user.click(screen.getByText("saveAsDraft"));
