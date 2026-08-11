@@ -7,12 +7,81 @@ export type Json =
   | Json[];
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5";
+  };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
+      agent_async_jobs: {
+        Row: {
+          attempts: number;
+          channel: string;
+          created_at: string;
+          id: string;
+          last_error: string | null;
+          organization_id: string;
+          payload: Json;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          attempts?: number;
+          channel: string;
+          created_at?: string;
+          id?: string;
+          last_error?: string | null;
+          organization_id: string;
+          payload: Json;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          attempts?: number;
+          channel?: string;
+          created_at?: string;
+          id?: string;
+          last_error?: string | null;
+          organization_id?: string;
+          payload?: Json;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       agent_audit_log: {
         Row: {
+          channel: string | null;
+          channel_chat_id: string | null;
+          channel_user_id: string | null;
           chat_id: number;
-          created_at: string;
+          created_at: string | null;
           duration_ms: number | null;
           error: string | null;
           id: string;
@@ -24,8 +93,11 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          channel?: string | null;
+          channel_chat_id?: string | null;
+          channel_user_id?: string | null;
           chat_id: number;
-          created_at?: string;
+          created_at?: string | null;
           duration_ms?: number | null;
           error?: string | null;
           id?: string;
@@ -37,8 +109,11 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          channel?: string | null;
+          channel_chat_id?: string | null;
+          channel_user_id?: string | null;
           chat_id?: number;
-          created_at?: string;
+          created_at?: string | null;
           duration_ms?: number | null;
           error?: string | null;
           id?: string;
@@ -49,57 +124,341 @@ export type Database = {
           tool_result?: Json | null;
           user_id?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "agent_audit_log_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
+      };
+      agent_briefing_log: {
+        Row: {
+          admin_chat_id: number;
+          briefing_text: string;
+          delivered_at: string | null;
+          events_summary: Json | null;
+          id: string;
+          organization_id: string;
+          overnight_messages: number | null;
+          overnight_tool_calls: number | null;
+          pending_handoffs: number | null;
+        };
+        Insert: {
+          admin_chat_id: number;
+          briefing_text: string;
+          delivered_at?: string | null;
+          events_summary?: Json | null;
+          id?: string;
+          organization_id: string;
+          overnight_messages?: number | null;
+          overnight_tool_calls?: number | null;
+          pending_handoffs?: number | null;
+        };
+        Update: {
+          admin_chat_id?: number;
+          briefing_text?: string;
+          delivered_at?: string | null;
+          events_summary?: Json | null;
+          id?: string;
+          organization_id?: string;
+          overnight_messages?: number | null;
+          overnight_tool_calls?: number | null;
+          pending_handoffs?: number | null;
+        };
+        Relationships: [];
+      };
+      agent_context_profiles: {
+        Row: {
+          assistant_name: string | null;
+          audience: string;
+          business_hours: Json | null;
+          business_summary: string | null;
+          contact_details: string | null;
+          created_at: string | null;
+          handoff_message: string | null;
+          id: string;
+          is_active: boolean | null;
+          organization_id: string;
+          response_language: string | null;
+          response_rules: string | null;
+          tone: string | null;
+          updated_at: string | null;
+          updated_by: string | null;
+        };
+        Insert: {
+          assistant_name?: string | null;
+          audience: string;
+          business_hours?: Json | null;
+          business_summary?: string | null;
+          contact_details?: string | null;
+          created_at?: string | null;
+          handoff_message?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          organization_id: string;
+          response_language?: string | null;
+          response_rules?: string | null;
+          tone?: string | null;
+          updated_at?: string | null;
+          updated_by?: string | null;
+        };
+        Update: {
+          assistant_name?: string | null;
+          audience?: string;
+          business_hours?: Json | null;
+          business_summary?: string | null;
+          contact_details?: string | null;
+          created_at?: string | null;
+          handoff_message?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          organization_id?: string;
+          response_language?: string | null;
+          response_rules?: string | null;
+          tone?: string | null;
+          updated_at?: string | null;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      agent_customer_memory: {
+        Row: {
+          confidence: number;
+          created_at: string | null;
+          customer_id: string;
+          customer_name: string | null;
+          fact: string;
+          fact_type: string;
+          id: string;
+          is_active: boolean | null;
+          organization_id: string;
+          source_chat_id: number | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          confidence?: number;
+          created_at?: string | null;
+          customer_id: string;
+          customer_name?: string | null;
+          fact: string;
+          fact_type?: string;
+          id?: string;
+          is_active?: boolean | null;
+          organization_id: string;
+          source_chat_id?: number | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          confidence?: number;
+          created_at?: string | null;
+          customer_id?: string;
+          customer_name?: string | null;
+          fact?: string;
+          fact_type?: string;
+          id?: string;
+          is_active?: boolean | null;
+          organization_id?: string;
+          source_chat_id?: number | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
       };
       agent_daily_spend: {
         Row: {
           api_calls: number;
-          created_at: string;
+          created_at: string | null;
           date: string;
           id: string;
           organization_id: string;
           tokens_used: number;
-          updated_at: string;
+          updated_at: string | null;
         };
         Insert: {
           api_calls?: number;
-          created_at?: string;
+          created_at?: string | null;
           date: string;
           id?: string;
           organization_id: string;
           tokens_used?: number;
-          updated_at?: string;
+          updated_at?: string | null;
         };
         Update: {
           api_calls?: number;
-          created_at?: string;
+          created_at?: string | null;
           date?: string;
           id?: string;
           organization_id?: string;
           tokens_used?: number;
-          updated_at?: string;
+          updated_at?: string | null;
         };
-        Relationships: [
-          {
-            foreignKeyName: "agent_daily_spend_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
+      };
+      agent_handoff_config: {
+        Row: {
+          admin_chat_id: number | null;
+          auto_handoff_after_hours: boolean | null;
+          created_at: string | null;
+          id: string;
+          keyword_triggers: string[] | null;
+          low_confidence_threshold: number | null;
+          organization_id: string;
+          sentiment_enabled: boolean | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          admin_chat_id?: number | null;
+          auto_handoff_after_hours?: boolean | null;
+          created_at?: string | null;
+          id?: string;
+          keyword_triggers?: string[] | null;
+          low_confidence_threshold?: number | null;
+          organization_id: string;
+          sentiment_enabled?: boolean | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          admin_chat_id?: number | null;
+          auto_handoff_after_hours?: boolean | null;
+          created_at?: string | null;
+          id?: string;
+          keyword_triggers?: string[] | null;
+          low_confidence_threshold?: number | null;
+          organization_id?: string;
+          sentiment_enabled?: boolean | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      agent_handoff_events: {
+        Row: {
+          admin_chat_id: number | null;
+          admin_user_id: number | null;
+          bot_response: string | null;
+          chat_id: number;
+          created_at: string | null;
+          customer_query: string | null;
+          escalated_by: string | null;
+          id: string;
+          organization_id: string;
+          reason: string | null;
+          resolved_at: string | null;
+          status: Database["public"]["Enums"]["handoff_status"];
+          updated_at: string | null;
+          user_id: number;
+        };
+        Insert: {
+          admin_chat_id?: number | null;
+          admin_user_id?: number | null;
+          bot_response?: string | null;
+          chat_id: number;
+          created_at?: string | null;
+          customer_query?: string | null;
+          escalated_by?: string | null;
+          id?: string;
+          organization_id: string;
+          reason?: string | null;
+          resolved_at?: string | null;
+          status?: Database["public"]["Enums"]["handoff_status"];
+          updated_at?: string | null;
+          user_id: number;
+        };
+        Update: {
+          admin_chat_id?: number | null;
+          admin_user_id?: number | null;
+          bot_response?: string | null;
+          chat_id?: number;
+          created_at?: string | null;
+          customer_query?: string | null;
+          escalated_by?: string | null;
+          id?: string;
+          organization_id?: string;
+          reason?: string | null;
+          resolved_at?: string | null;
+          status?: Database["public"]["Enums"]["handoff_status"];
+          updated_at?: string | null;
+          user_id?: number;
+        };
+        Relationships: [];
+      };
+      agent_knowledge_sources: {
+        Row: {
+          content: string;
+          created_at: string | null;
+          embedding: string | null;
+          id: string;
+          is_active: boolean | null;
+          organization_id: string;
+          source_type: string;
+          title: string | null;
+          updated_at: string | null;
+          url: string | null;
+          visibility: string | null;
+        };
+        Insert: {
+          content: string;
+          created_at?: string | null;
+          embedding?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          organization_id: string;
+          source_type: string;
+          title?: string | null;
+          updated_at?: string | null;
+          url?: string | null;
+          visibility?: string | null;
+        };
+        Update: {
+          content?: string;
+          created_at?: string | null;
+          embedding?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          organization_id?: string;
+          source_type?: string;
+          title?: string | null;
+          updated_at?: string | null;
+          url?: string | null;
+          visibility?: string | null;
+        };
+        Relationships: [];
+      };
+      agent_notification_triggers: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          is_active: boolean | null;
+          last_fired_at: string | null;
+          message_template: string | null;
+          organization_id: string;
+          trigger_config: Json;
+          trigger_type: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          last_fired_at?: string | null;
+          message_template?: string | null;
+          organization_id: string;
+          trigger_config?: Json;
+          trigger_type: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          last_fired_at?: string | null;
+          message_template?: string | null;
+          organization_id?: string;
+          trigger_config?: Json;
+          trigger_type?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [];
       };
       agent_sessions: {
         Row: {
-          created_at: string;
+          channel: string | null;
+          channel_chat_id: string | null;
+          channel_user_id: string | null;
+          created_at: string | null;
           expires_at: string | null;
           id: string;
           messages: Json;
@@ -107,10 +466,13 @@ export type Database = {
           telegram_chat_id: number;
           telegram_user_id: number;
           token_count: number;
-          updated_at: string;
+          updated_at: string | null;
         };
         Insert: {
-          created_at?: string;
+          channel?: string | null;
+          channel_chat_id?: string | null;
+          channel_user_id?: string | null;
+          created_at?: string | null;
           expires_at?: string | null;
           id?: string;
           messages?: Json;
@@ -118,10 +480,13 @@ export type Database = {
           telegram_chat_id: number;
           telegram_user_id: number;
           token_count?: number;
-          updated_at?: string;
+          updated_at?: string | null;
         };
         Update: {
-          created_at?: string;
+          channel?: string | null;
+          channel_chat_id?: string | null;
+          channel_user_id?: string | null;
+          created_at?: string | null;
           expires_at?: string | null;
           id?: string;
           messages?: Json;
@@ -129,11 +494,44 @@ export type Database = {
           telegram_chat_id?: number;
           telegram_user_id?: number;
           token_count?: number;
-          updated_at?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      agent_webchat_widgets: {
+        Row: {
+          created_at: string;
+          display_name: string | null;
+          greeting: string | null;
+          id: string;
+          is_active: boolean;
+          organization_id: string;
+          product_type: string;
+          widget_key: string;
+        };
+        Insert: {
+          created_at?: string;
+          display_name?: string | null;
+          greeting?: string | null;
+          id?: string;
+          is_active?: boolean;
+          organization_id: string;
+          product_type: string;
+          widget_key?: string;
+        };
+        Update: {
+          created_at?: string;
+          display_name?: string | null;
+          greeting?: string | null;
+          id?: string;
+          is_active?: boolean;
+          organization_id?: string;
+          product_type?: string;
+          widget_key?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "agent_sessions_organization_id_fkey";
+            foreignKeyName: "agent_webchat_widgets_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -144,24 +542,21 @@ export type Database = {
       app_config: {
         Row: {
           created_at: string | null;
-          id: string;
           key: string;
           updated_at: string | null;
-          value: Json | null;
+          value: Json;
         };
         Insert: {
           created_at?: string | null;
-          id?: string;
           key: string;
           updated_at?: string | null;
-          value?: Json | null;
+          value?: Json;
         };
         Update: {
           created_at?: string | null;
-          id?: string;
           key?: string;
           updated_at?: string | null;
-          value?: Json | null;
+          value?: Json;
         };
         Relationships: [];
       };
@@ -519,7 +914,6 @@ export type Database = {
           amount: number;
           category: string | null;
           created_at: string;
-          created_by: string | null;
           end_date: string;
           id: string;
           name: string;
@@ -527,14 +921,12 @@ export type Database = {
           period: string;
           spent: number;
           start_date: string;
-          updated_at: string;
         };
         Insert: {
           alert_threshold?: number;
           amount: number;
           category?: string | null;
           created_at?: string;
-          created_by?: string | null;
           end_date: string;
           id?: string;
           name: string;
@@ -542,14 +934,12 @@ export type Database = {
           period?: string;
           spent?: number;
           start_date: string;
-          updated_at?: string;
         };
         Update: {
           alert_threshold?: number;
           amount?: number;
           category?: string | null;
           created_at?: string;
-          created_by?: string | null;
           end_date?: string;
           id?: string;
           name?: string;
@@ -557,16 +947,8 @@ export type Database = {
           period?: string;
           spent?: number;
           start_date?: string;
-          updated_at?: string;
         };
         Relationships: [
-          {
-            foreignKeyName: "budgets_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "budgets_organization_id_fkey";
             columns: ["organization_id"];
@@ -845,6 +1227,83 @@ export type Database = {
           },
         ];
       };
+      channel_connections: {
+        Row: {
+          audience: string;
+          bot_key: string | null;
+          channel: string;
+          channel_chat_id: string;
+          channel_user_id: string;
+          created_at: string | null;
+          id: string;
+          is_active: boolean | null;
+          last_user_message_at: string | null;
+          metadata: Json | null;
+          organization_id: string;
+          page_access_token: string | null;
+          page_id: string | null;
+          page_name: string | null;
+          product_type: string;
+          token_encrypted: boolean | null;
+          token_expires_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+          webhook_subscribed_at: string | null;
+        };
+        Insert: {
+          audience?: string;
+          bot_key?: string | null;
+          channel: string;
+          channel_chat_id: string;
+          channel_user_id: string;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          last_user_message_at?: string | null;
+          metadata?: Json | null;
+          organization_id: string;
+          page_access_token?: string | null;
+          page_id?: string | null;
+          page_name?: string | null;
+          product_type: string;
+          token_encrypted?: boolean | null;
+          token_expires_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+          webhook_subscribed_at?: string | null;
+        };
+        Update: {
+          audience?: string;
+          bot_key?: string | null;
+          channel?: string;
+          channel_chat_id?: string;
+          channel_user_id?: string;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          last_user_message_at?: string | null;
+          metadata?: Json | null;
+          organization_id?: string;
+          page_access_token?: string | null;
+          page_id?: string | null;
+          page_name?: string | null;
+          product_type?: string;
+          token_encrypted?: boolean | null;
+          token_expires_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+          webhook_subscribed_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "channel_connections_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       chart_of_accounts: {
         Row: {
           branch_id: string;
@@ -1080,6 +1539,164 @@ export type Database = {
           },
         ];
       };
+      conversation_runs: {
+        Row: {
+          assignments: Json | null;
+          channel: string;
+          channel_chat_id: string;
+          channel_meta: Json | null;
+          channel_user_id: string;
+          current_node_id: string;
+          expires_at: string | null;
+          fields: Json | null;
+          flow_version_id: string;
+          id: string;
+          organization_id: string;
+          started_at: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          assignments?: Json | null;
+          channel: string;
+          channel_chat_id: string;
+          channel_meta?: Json | null;
+          channel_user_id: string;
+          current_node_id: string;
+          expires_at?: string | null;
+          fields?: Json | null;
+          flow_version_id: string;
+          id?: string;
+          organization_id: string;
+          started_at?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          assignments?: Json | null;
+          channel?: string;
+          channel_chat_id?: string;
+          channel_meta?: Json | null;
+          channel_user_id?: string;
+          current_node_id?: string;
+          expires_at?: string | null;
+          fields?: Json | null;
+          flow_version_id?: string;
+          id?: string;
+          organization_id?: string;
+          started_at?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_runs_flow_version_id_fkey";
+            columns: ["flow_version_id"];
+            isOneToOne: false;
+            referencedRelation: "flow_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_runs_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      coupon_category_scope: {
+        Row: {
+          category_id: string;
+          coupon_id: string;
+          created_at: string | null;
+          id: string;
+          organization_id: string;
+        };
+        Insert: {
+          category_id: string;
+          coupon_id: string;
+          created_at?: string | null;
+          id?: string;
+          organization_id: string;
+        };
+        Update: {
+          category_id?: string;
+          coupon_id?: string;
+          created_at?: string | null;
+          id?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coupon_category_scope_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "coupon_category_scope_coupon_id_fkey";
+            columns: ["coupon_id"];
+            isOneToOne: false;
+            referencedRelation: "coupons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "coupon_category_scope_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      coupon_product_scope: {
+        Row: {
+          coupon_id: string;
+          created_at: string | null;
+          id: string;
+          organization_id: string;
+          product_id: string;
+        };
+        Insert: {
+          coupon_id: string;
+          created_at?: string | null;
+          id?: string;
+          organization_id: string;
+          product_id: string;
+        };
+        Update: {
+          coupon_id?: string;
+          created_at?: string | null;
+          id?: string;
+          organization_id?: string;
+          product_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coupon_product_scope_coupon_id_fkey";
+            columns: ["coupon_id"];
+            isOneToOne: false;
+            referencedRelation: "coupons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "coupon_product_scope_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "coupon_product_scope_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       coupon_usage: {
         Row: {
           contact_id: string | null;
@@ -1201,38 +1818,82 @@ export type Database = {
           },
         ];
       };
+      currencies: {
+        Row: {
+          code: string;
+          created_at: string;
+          exchange_rate: number;
+          id: string;
+          is_default: boolean;
+          last_updated: string | null;
+          name: string;
+          organization_id: string;
+          symbol: string;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          exchange_rate?: number;
+          id?: string;
+          is_default?: boolean;
+          last_updated?: string | null;
+          name: string;
+          organization_id: string;
+          symbol: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          exchange_rate?: number;
+          id?: string;
+          is_default?: boolean;
+          last_updated?: string | null;
+          name?: string;
+          organization_id?: string;
+          symbol?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "currencies_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       custom_bots: {
         Row: {
           bot_token_hash: string;
           bot_username: string;
-          created_at: string;
+          created_at: string | null;
           id: string;
-          is_active: boolean;
+          is_active: boolean | null;
           organization_id: string;
           product_type: string;
-          updated_at: string;
+          updated_at: string | null;
           webhook_set_at: string | null;
         };
         Insert: {
           bot_token_hash: string;
           bot_username: string;
-          created_at?: string;
+          created_at?: string | null;
           id?: string;
-          is_active?: boolean;
+          is_active?: boolean | null;
           organization_id: string;
           product_type: string;
-          updated_at?: string;
+          updated_at?: string | null;
           webhook_set_at?: string | null;
         };
         Update: {
           bot_token_hash?: string;
           bot_username?: string;
-          created_at?: string;
+          created_at?: string | null;
           id?: string;
-          is_active?: boolean;
+          is_active?: boolean | null;
           organization_id?: string;
           product_type?: string;
-          updated_at?: string;
+          updated_at?: string | null;
           webhook_set_at?: string | null;
         };
         Relationships: [
@@ -1940,6 +2601,20 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "expenses_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_currency_id_fkey";
+            columns: ["currency_id"];
+            isOneToOne: false;
+            referencedRelation: "currencies";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "expenses_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
@@ -1995,6 +2670,147 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      flow_outbox: {
+        Row: {
+          channel: string;
+          channel_chat_id: string;
+          created_at: string;
+          error: string | null;
+          id: string;
+          max_retries: number | null;
+          payload: Json;
+          retry_count: number | null;
+          run_id: string;
+          sent_at: string | null;
+          status: string;
+        };
+        Insert: {
+          channel: string;
+          channel_chat_id: string;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          max_retries?: number | null;
+          payload: Json;
+          retry_count?: number | null;
+          run_id: string;
+          sent_at?: string | null;
+          status?: string;
+        };
+        Update: {
+          channel?: string;
+          channel_chat_id?: string;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          max_retries?: number | null;
+          payload?: Json;
+          retry_count?: number | null;
+          run_id?: string;
+          sent_at?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "flow_outbox_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_runs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      flow_versions: {
+        Row: {
+          channel: string | null;
+          created_at: string | null;
+          edges: Json;
+          id: string;
+          is_active: boolean | null;
+          metadata: Json | null;
+          nodes: Json;
+          organization_id: string;
+          product_type: string;
+          trigger_keywords: Json | null;
+          updated_at: string | null;
+          version: number;
+        };
+        Insert: {
+          channel?: string | null;
+          created_at?: string | null;
+          edges?: Json;
+          id?: string;
+          is_active?: boolean | null;
+          metadata?: Json | null;
+          nodes?: Json;
+          organization_id: string;
+          product_type: string;
+          trigger_keywords?: Json | null;
+          updated_at?: string | null;
+          version?: number;
+        };
+        Update: {
+          channel?: string | null;
+          created_at?: string | null;
+          edges?: Json;
+          id?: string;
+          is_active?: boolean | null;
+          metadata?: Json | null;
+          nodes?: Json;
+          organization_id?: string;
+          product_type?: string;
+          trigger_keywords?: Json | null;
+          updated_at?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "flow_versions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      flow_wait_states: {
+        Row: {
+          callback_pattern: string | null;
+          created_at: string;
+          expected_input: string | null;
+          id: string;
+          run_id: string;
+          scheduled_at: string | null;
+          wait_type: string;
+        };
+        Insert: {
+          callback_pattern?: string | null;
+          created_at?: string;
+          expected_input?: string | null;
+          id?: string;
+          run_id: string;
+          scheduled_at?: string | null;
+          wait_type: string;
+        };
+        Update: {
+          callback_pattern?: string | null;
+          created_at?: string;
+          expected_input?: string | null;
+          id?: string;
+          run_id?: string;
+          scheduled_at?: string | null;
+          wait_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "flow_wait_states_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "conversation_runs";
             referencedColumns: ["id"];
           },
         ];
@@ -2551,6 +3367,242 @@ export type Database = {
           },
         ];
       };
+      loyalty_points: {
+        Row: {
+          created_at: string;
+          customer_id: string;
+          expires_at: string | null;
+          id: string;
+          notes: string | null;
+          organization_id: string;
+          points: number;
+          reference_id: string | null;
+          type: string;
+        };
+        Insert: {
+          created_at?: string;
+          customer_id: string;
+          expires_at?: string | null;
+          id?: string;
+          notes?: string | null;
+          organization_id: string;
+          points: number;
+          reference_id?: string | null;
+          type: string;
+        };
+        Update: {
+          created_at?: string;
+          customer_id?: string;
+          expires_at?: string | null;
+          id?: string;
+          notes?: string | null;
+          organization_id?: string;
+          points?: number;
+          reference_id?: string | null;
+          type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_points_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loyalty_points_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      loyalty_rewards: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          discount_type: string | null;
+          discount_value: number | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          organization_id: string;
+          points_cost: number;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          discount_type?: string | null;
+          discount_value?: number | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          organization_id: string;
+          points_cost: number;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          discount_type?: string | null;
+          discount_value?: number | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          organization_id?: string;
+          points_cost?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_rewards_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      loyalty_settings: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_enabled: boolean;
+          min_purchase: number;
+          organization_id: string;
+          points_per_mnt: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_enabled?: boolean;
+          min_purchase?: number;
+          organization_id: string;
+          points_per_mnt?: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_enabled?: boolean;
+          min_purchase?: number;
+          organization_id?: string;
+          points_per_mnt?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_settings_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      message_log: {
+        Row: {
+          channel_id: string | null;
+          created_at: string;
+          error: string | null;
+          id: string;
+          organization_id: string;
+          recipient: string;
+          sent_at: string | null;
+          status: string;
+          template_id: string | null;
+        };
+        Insert: {
+          channel_id?: string | null;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          organization_id: string;
+          recipient: string;
+          sent_at?: string | null;
+          status?: string;
+          template_id?: string | null;
+        };
+        Update: {
+          channel_id?: string | null;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          organization_id?: string;
+          recipient?: string;
+          sent_at?: string | null;
+          status?: string;
+          template_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_log_channel_id_fkey";
+            columns: ["channel_id"];
+            isOneToOne: false;
+            referencedRelation: "notification_channels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_log_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_log_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "message_templates";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      message_templates: {
+        Row: {
+          body: string;
+          channel_id: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          organization_id: string;
+          subject: string | null;
+        };
+        Insert: {
+          body: string;
+          channel_id: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          organization_id: string;
+          subject?: string | null;
+        };
+        Update: {
+          body?: string;
+          channel_id?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          organization_id?: string;
+          subject?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_channel_id_fkey";
+            columns: ["channel_id"];
+            isOneToOne: false;
+            referencedRelation: "notification_channels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_templates_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       messenger_agent_links: {
         Row: {
           created_at: string | null;
@@ -2605,30 +3657,71 @@ export type Database = {
           },
         ];
       };
+      notification_channels: {
+        Row: {
+          config: Json | null;
+          created_at: string;
+          id: string;
+          is_enabled: boolean;
+          organization_id: string;
+          type: string;
+        };
+        Insert: {
+          config?: Json | null;
+          created_at?: string;
+          id?: string;
+          is_enabled?: boolean;
+          organization_id: string;
+          type: string;
+        };
+        Update: {
+          config?: Json | null;
+          created_at?: string;
+          id?: string;
+          is_enabled?: boolean;
+          organization_id?: string;
+          type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_channels_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       notification_configs: {
         Row: {
           channel: string;
+          chat_id: string | null;
           config_data: Json;
           created_at: string | null;
           enabled: boolean | null;
+          event_types: Json | null;
           id: string;
           organization_id: string;
           updated_at: string | null;
         };
         Insert: {
           channel: string;
+          chat_id?: string | null;
           config_data?: Json;
           created_at?: string | null;
           enabled?: boolean | null;
+          event_types?: Json | null;
           id?: string;
           organization_id: string;
           updated_at?: string | null;
         };
         Update: {
           channel?: string;
+          chat_id?: string | null;
           config_data?: Json;
           created_at?: string | null;
           enabled?: boolean | null;
+          event_types?: Json | null;
           id?: string;
           organization_id?: string;
           updated_at?: string | null;
@@ -2692,7 +3785,7 @@ export type Database = {
       };
       one_time_tokens: {
         Row: {
-          created_at: string;
+          created_at: string | null;
           expires_at: string;
           id: string;
           organization_id: string;
@@ -2702,7 +3795,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          created_at?: string;
+          created_at?: string | null;
           expires_at: string;
           id?: string;
           organization_id: string;
@@ -2712,7 +3805,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
-          created_at?: string;
+          created_at?: string | null;
           expires_at?: string;
           id?: string;
           organization_id?: string;
@@ -2721,15 +3814,7 @@ export type Database = {
           used_at?: string | null;
           user_id?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "one_time_tokens_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
       };
       order_template_items: {
         Row: {
@@ -2860,13 +3945,8 @@ export type Database = {
           display_name: string | null;
           domain_verified: boolean;
           free_delivery_threshold: number;
-          ga_measurement_id: string | null;
           id: string;
           logo_url: string | null;
-          meta_description: string | null;
-          meta_pixel_id: string | null;
-          meta_title: string | null;
-          og_image_url: string | null;
           organization_id: string;
           payment_account_name: string | null;
           payment_bank_account: string | null;
@@ -2875,7 +3955,6 @@ export type Database = {
           policies: string | null;
           qpay_qr_url: string | null;
           show_stock: boolean;
-          social_links: Json | null;
           updated_at: string | null;
           website_url: string | null;
         };
@@ -2894,13 +3973,8 @@ export type Database = {
           display_name?: string | null;
           domain_verified?: boolean;
           free_delivery_threshold?: number;
-          ga_measurement_id?: string | null;
           id?: string;
           logo_url?: string | null;
-          meta_description?: string | null;
-          meta_pixel_id?: string | null;
-          meta_title?: string | null;
-          og_image_url?: string | null;
           organization_id: string;
           payment_account_name?: string | null;
           payment_bank_account?: string | null;
@@ -2909,7 +3983,6 @@ export type Database = {
           policies?: string | null;
           qpay_qr_url?: string | null;
           show_stock?: boolean;
-          social_links?: Json | null;
           updated_at?: string | null;
           website_url?: string | null;
         };
@@ -2928,13 +4001,8 @@ export type Database = {
           display_name?: string | null;
           domain_verified?: boolean;
           free_delivery_threshold?: number;
-          ga_measurement_id?: string | null;
           id?: string;
           logo_url?: string | null;
-          meta_description?: string | null;
-          meta_pixel_id?: string | null;
-          meta_title?: string | null;
-          og_image_url?: string | null;
           organization_id?: string;
           payment_account_name?: string | null;
           payment_bank_account?: string | null;
@@ -2943,7 +4011,6 @@ export type Database = {
           policies?: string | null;
           qpay_qr_url?: string | null;
           show_stock?: boolean;
-          social_links?: Json | null;
           updated_at?: string | null;
           website_url?: string | null;
         };
@@ -2976,7 +4043,6 @@ export type Database = {
           has_delivery_tracking: boolean | null;
           has_email_reports: boolean | null;
           has_gift_cards: boolean | null;
-          has_hr: boolean | null;
           has_inventory: boolean | null;
           has_multi_branch: boolean | null;
           has_promotions: boolean | null;
@@ -2988,7 +4054,7 @@ export type Database = {
           has_variants: boolean | null;
           id: string;
           invoice_number_prefix: string | null;
-          je_number_prefix: string | null;
+          je_number_prefix: string;
           name: string;
           onboarding_completed: boolean | null;
           po_number_prefix: string | null;
@@ -3018,7 +4084,6 @@ export type Database = {
           has_delivery_tracking?: boolean | null;
           has_email_reports?: boolean | null;
           has_gift_cards?: boolean | null;
-          has_hr?: boolean | null;
           has_inventory?: boolean | null;
           has_multi_branch?: boolean | null;
           has_promotions?: boolean | null;
@@ -3030,7 +4095,7 @@ export type Database = {
           has_variants?: boolean | null;
           id?: string;
           invoice_number_prefix?: string | null;
-          je_number_prefix?: string | null;
+          je_number_prefix?: string;
           name: string;
           onboarding_completed?: boolean | null;
           po_number_prefix?: string | null;
@@ -3060,7 +4125,6 @@ export type Database = {
           has_delivery_tracking?: boolean | null;
           has_email_reports?: boolean | null;
           has_gift_cards?: boolean | null;
-          has_hr?: boolean | null;
           has_inventory?: boolean | null;
           has_multi_branch?: boolean | null;
           has_promotions?: boolean | null;
@@ -3072,7 +4136,7 @@ export type Database = {
           has_variants?: boolean | null;
           id?: string;
           invoice_number_prefix?: string | null;
-          je_number_prefix?: string | null;
+          je_number_prefix?: string;
           name?: string;
           onboarding_completed?: boolean | null;
           po_number_prefix?: string | null;
@@ -3201,6 +4265,33 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      pending_updates: {
+        Row: {
+          created_at: string | null;
+          id: number;
+          processed: boolean | null;
+          processed_at: string | null;
+          raw_json: Json;
+          update_id: number | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: number;
+          processed?: boolean | null;
+          processed_at?: string | null;
+          raw_json: Json;
+          update_id?: number | null;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: number;
+          processed?: boolean | null;
+          processed_at?: string | null;
+          raw_json?: Json;
+          update_id?: number | null;
+        };
+        Relationships: [];
       };
       price_list_rules: {
         Row: {
@@ -3714,8 +4805,6 @@ export type Database = {
           cost_price: number | null;
           created_at: string | null;
           id: string;
-          image_url: string | null;
-          image_urls: string[] | null;
           min_stock: number | null;
           product_name: string;
           product_sku: string | null;
@@ -3730,8 +4819,6 @@ export type Database = {
           cost_price?: number | null;
           created_at?: string | null;
           id?: string;
-          image_url?: string | null;
-          image_urls?: string[] | null;
           min_stock?: number | null;
           product_name: string;
           product_sku?: string | null;
@@ -3746,8 +4833,6 @@ export type Database = {
           cost_price?: number | null;
           created_at?: string | null;
           id?: string;
-          image_url?: string | null;
-          image_urls?: string[] | null;
           min_stock?: number | null;
           product_name?: string;
           product_sku?: string | null;
@@ -4348,7 +5433,7 @@ export type Database = {
           branch_id?: string | null;
           created_at?: string | null;
           full_name?: string | null;
-          id?: string;
+          id: string;
           organization_id?: string | null;
           role?: string | null;
           role_id?: string | null;
@@ -4601,13 +5686,16 @@ export type Database = {
           branch_id: string;
           created_at: string | null;
           created_by: string | null;
+          currency_id: string | null;
           deleted_at: string | null;
+          exchange_rate: number | null;
           expected_date: string | null;
           id: string;
           notes: string | null;
           order_date: string;
           order_number: string;
           organization_id: string;
+          original_amount: number | null;
           status: string;
           supplier_id: string | null;
           total_amount: number;
@@ -4616,13 +5704,16 @@ export type Database = {
           branch_id: string;
           created_at?: string | null;
           created_by?: string | null;
+          currency_id?: string | null;
           deleted_at?: string | null;
+          exchange_rate?: number | null;
           expected_date?: string | null;
           id?: string;
           notes?: string | null;
           order_date?: string;
           order_number: string;
           organization_id: string;
+          original_amount?: number | null;
           status?: string;
           supplier_id?: string | null;
           total_amount?: number;
@@ -4631,13 +5722,16 @@ export type Database = {
           branch_id?: string;
           created_at?: string | null;
           created_by?: string | null;
+          currency_id?: string | null;
           deleted_at?: string | null;
+          exchange_rate?: number | null;
           expected_date?: string | null;
           id?: string;
           notes?: string | null;
           order_date?: string;
           order_number?: string;
           organization_id?: string;
+          original_amount?: number | null;
           status?: string;
           supplier_id?: string | null;
           total_amount?: number;
@@ -4655,6 +5749,13 @@ export type Database = {
             columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purchase_orders_currency_id_fkey";
+            columns: ["currency_id"];
+            isOneToOne: false;
+            referencedRelation: "currencies";
             referencedColumns: ["id"];
           },
           {
@@ -5510,6 +6611,20 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "sales_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "sales_currency_id_fkey";
+            columns: ["currency_id"];
+            isOneToOne: false;
+            referencedRelation: "currencies";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "sales_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
@@ -5544,7 +6659,7 @@ export type Database = {
           organization_id: string;
           revoked_at: string | null;
           rotated_at: string | null;
-          token: string;
+          token: string | null;
           token_hash: string | null;
         };
         Insert: {
@@ -5558,7 +6673,7 @@ export type Database = {
           organization_id: string;
           revoked_at?: string | null;
           rotated_at?: string | null;
-          token: string;
+          token?: string | null;
           token_hash?: string | null;
         };
         Update: {
@@ -5572,7 +6687,7 @@ export type Database = {
           organization_id?: string;
           revoked_at?: string | null;
           rotated_at?: string | null;
-          token?: string;
+          token?: string | null;
           token_hash?: string | null;
         };
         Relationships: [
@@ -5602,46 +6717,46 @@ export type Database = {
       smtp_configs: {
         Row: {
           created_at: string | null;
-          daily_count: number;
+          daily_count: number | null;
           from_email: string;
           from_name: string | null;
           host: string;
           id: string;
-          is_active: boolean;
+          is_active: boolean | null;
           last_reset_date: string | null;
           password: string;
           port: number;
-          priority: number;
+          priority: number | null;
           updated_at: string | null;
           username: string;
         };
         Insert: {
           created_at?: string | null;
-          daily_count?: number;
+          daily_count?: number | null;
           from_email: string;
           from_name?: string | null;
           host?: string;
           id?: string;
-          is_active?: boolean;
+          is_active?: boolean | null;
           last_reset_date?: string | null;
           password: string;
           port?: number;
-          priority?: number;
+          priority?: number | null;
           updated_at?: string | null;
           username: string;
         };
         Update: {
           created_at?: string | null;
-          daily_count?: number;
+          daily_count?: number | null;
           from_email?: string;
           from_name?: string | null;
           host?: string;
           id?: string;
-          is_active?: boolean;
+          is_active?: boolean | null;
           last_reset_date?: string | null;
           password?: string;
           port?: number;
-          priority?: number;
+          priority?: number | null;
           updated_at?: string | null;
           username?: string;
         };
@@ -5653,7 +6768,6 @@ export type Database = {
           branch_id: string;
           created_at: string | null;
           created_by: string | null;
-          deleted_at: string | null;
           id: string;
           notes: string | null;
           operation_id: string | null;
@@ -5672,7 +6786,6 @@ export type Database = {
           branch_id: string;
           created_at?: string | null;
           created_by?: string | null;
-          deleted_at?: string | null;
           id?: string;
           notes?: string | null;
           operation_id?: string | null;
@@ -5691,7 +6804,6 @@ export type Database = {
           branch_id?: string;
           created_at?: string | null;
           created_by?: string | null;
-          deleted_at?: string | null;
           id?: string;
           notes?: string | null;
           operation_id?: string | null;
@@ -5928,10 +7040,10 @@ export type Database = {
           created_at: string;
           first_name: string | null;
           id: string;
-          is_active: boolean;
-          last_active_at: string;
+          is_active: boolean | null;
+          last_active_at: string | null;
           last_name: string | null;
-          linked_at: string;
+          linked_at: string | null;
           notification_preferences: Json;
           organization_id: string;
           product_type: string;
@@ -5945,13 +7057,13 @@ export type Database = {
           created_at?: string;
           first_name?: string | null;
           id?: string;
-          is_active?: boolean;
-          last_active_at?: string;
+          is_active?: boolean | null;
+          last_active_at?: string | null;
           last_name?: string | null;
-          linked_at?: string;
+          linked_at?: string | null;
           notification_preferences?: Json;
           organization_id: string;
-          product_type?: string;
+          product_type: string;
           telegram_chat_id: number;
           telegram_user_id: number;
           telegram_username?: string | null;
@@ -5962,10 +7074,10 @@ export type Database = {
           created_at?: string;
           first_name?: string | null;
           id?: string;
-          is_active?: boolean;
-          last_active_at?: string;
+          is_active?: boolean | null;
+          last_active_at?: string | null;
           last_name?: string | null;
-          linked_at?: string;
+          linked_at?: string | null;
           notification_preferences?: Json;
           organization_id?: string;
           product_type?: string;
@@ -5975,15 +7087,7 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "telegram_links_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
       };
       uom_conversions: {
         Row: {
@@ -6454,6 +7558,18 @@ export type Database = {
       generate_return_number:
         | { Args: never; Returns: string }
         | { Args: { p_org_id: string }; Returns: string };
+      get_active_handoff: {
+        Args: { p_chat_id: number; p_org_id: string };
+        Returns: {
+          admin_user_id: number;
+          created_at: string;
+          customer_query: string;
+          escalated_by: string;
+          id: string;
+          reason: string;
+          status: Database["public"]["Enums"]["handoff_status"];
+        }[];
+      };
       get_balance_sheet: {
         Args: {
           p_as_of_date?: string;
@@ -6489,6 +7605,17 @@ export type Database = {
           low_stock_count: number;
           product_count: number;
           supplier_count: number;
+        }[];
+      };
+      get_inventory_valuation: {
+        Args: { p_branch_id?: string; p_organization_id: string };
+        Returns: {
+          average_cost: number;
+          product_id: string;
+          product_name: string;
+          sku: string;
+          total_cost: number;
+          total_quantity: number;
         }[];
       };
       get_my_orders: {
@@ -6585,10 +7712,7 @@ export type Database = {
         Args: { p_date: string; p_org_id: string; p_tokens: number };
         Returns: undefined;
       };
-      increment_smtp_count: {
-        Args: { p_config_id: string };
-        Returns: undefined;
-      };
+      increment_smtp_count: { Args: { config_id: string }; Returns: undefined };
       issue_production_materials: {
         Args: {
           p_material_ids: string[];
@@ -6684,6 +7808,28 @@ export type Database = {
         };
         Returns: Json;
       };
+      resolve_org_from_channel: {
+        Args: {
+          p_channel: string;
+          p_channel_chat_id: string;
+          p_channel_user_id: string;
+        };
+        Returns: {
+          org_id: string;
+          page_access_token: string;
+          page_id: string;
+          product_type: string;
+        }[];
+      };
+      resolve_org_from_page: {
+        Args: { p_page_id: string };
+        Returns: {
+          channel: string;
+          org_id: string;
+          page_access_token: string;
+          product_type: string;
+        }[];
+      };
       restore_record: {
         Args: { p_record_id: string; p_table_name: string };
         Returns: Json;
@@ -6709,44 +7855,102 @@ export type Database = {
         Args: { app_url: string };
         Returns: string;
       };
-      search_products: {
-        Args: { p_limit?: number; p_query: string };
-        Returns: {
-          additional_info: string | null;
-          barcode: string | null;
-          brand_id: string | null;
-          care_instructions: string | null;
-          category_id: string | null;
-          cost_price: number | null;
-          created_at: string | null;
-          current_stock: number | null;
-          deleted_at: string | null;
-          description: string | null;
-          has_variants: boolean;
-          id: string;
-          image_url: string | null;
-          image_urls: string[] | null;
-          is_public: boolean;
-          material_type: string | null;
-          min_stock: number | null;
-          name: string;
-          name_norm: string | null;
-          organization_id: string;
-          published_at: string | null;
-          published_by: string | null;
-          sale_price: number | null;
-          search_vector: unknown;
-          sku: string | null;
-          unit: string | null;
-          usage_instructions: string | null;
-        }[];
-        SetofOptions: {
-          from: "*";
-          to: "products";
-          isOneToOne: false;
-          isSetofReturn: true;
+      search_agent_knowledge: {
+        Args: {
+          p_limit?: number;
+          p_org_id: string;
+          p_query_embedding: string;
+          p_similarity_threshold?: number;
         };
+        Returns: {
+          content: string;
+          id: string;
+          similarity: number;
+          source_type: string;
+          title: string;
+        }[];
       };
+      search_products:
+        | {
+            Args: { p_limit?: number; p_query: string };
+            Returns: {
+              additional_info: string | null;
+              barcode: string | null;
+              brand_id: string | null;
+              care_instructions: string | null;
+              category_id: string | null;
+              cost_price: number | null;
+              created_at: string | null;
+              current_stock: number | null;
+              deleted_at: string | null;
+              description: string | null;
+              has_variants: boolean;
+              id: string;
+              image_url: string | null;
+              image_urls: string[] | null;
+              is_public: boolean;
+              material_type: string | null;
+              min_stock: number | null;
+              name: string;
+              name_norm: string | null;
+              organization_id: string;
+              published_at: string | null;
+              published_by: string | null;
+              sale_price: number | null;
+              search_vector: unknown;
+              sku: string | null;
+              unit: string | null;
+              usage_instructions: string | null;
+            }[];
+            SetofOptions: {
+              from: "*";
+              to: "products";
+              isOneToOne: false;
+              isSetofReturn: true;
+            };
+          }
+        | {
+            Args: {
+              p_attribute_filters?: Json;
+              p_limit?: number;
+              p_query: string;
+            };
+            Returns: {
+              additional_info: string | null;
+              barcode: string | null;
+              brand_id: string | null;
+              care_instructions: string | null;
+              category_id: string | null;
+              cost_price: number | null;
+              created_at: string | null;
+              current_stock: number | null;
+              deleted_at: string | null;
+              description: string | null;
+              has_variants: boolean;
+              id: string;
+              image_url: string | null;
+              image_urls: string[] | null;
+              is_public: boolean;
+              material_type: string | null;
+              min_stock: number | null;
+              name: string;
+              name_norm: string | null;
+              organization_id: string;
+              published_at: string | null;
+              published_by: string | null;
+              sale_price: number | null;
+              search_vector: unknown;
+              sku: string | null;
+              unit: string | null;
+              usage_instructions: string | null;
+            }[];
+            SetofOptions: {
+              from: "*";
+              to: "products";
+              isOneToOne: false;
+              isSetofReturn: true;
+            };
+          };
       seed_default_bank_accounts: {
         Args: { p_organization_id: string };
         Returns: undefined;
@@ -6870,47 +8074,31 @@ export type Database = {
         | "members.manage_role"
         | "roles.manage"
         | "settings.manage"
-        | "settings.read"
-        | "settings.update"
         | "reports.manage"
-        | "reports.read"
         | "notifications.manage"
         | "audit_log.read"
-        | "access"
-        | "inventory.create"
-        | "inventory.read"
-        | "inventory.update"
-        | "inventory.delete"
         | "purchases.create"
         | "purchases.read"
         | "purchases.update"
         | "purchases.delete"
-        | "accounting.manage"
-        | "hr.create"
-        | "hr.read"
-        | "hr.update"
-        | "hr.delete"
-        | "manufacturing.create"
-        | "manufacturing.read"
-        | "manufacturing.update"
-        | "manufacturing.delete"
-        | "boms.create"
-        | "boms.delete"
-        | "boms.update"
-        | "discounts.create"
-        | "discounts.delete"
-        | "discounts.read"
-        | "discounts.update"
-        | "emails.manage"
         | "quotations.create"
-        | "quotations.delete"
         | "quotations.read"
         | "quotations.update"
+        | "quotations.delete"
         | "returns.create"
-        | "returns.delete"
         | "returns.read"
         | "returns.update"
+        | "returns.delete"
+        | "accounting.manage"
+        | "discounts.create"
+        | "discounts.read"
+        | "discounts.update"
+        | "discounts.delete"
+        | "emails.manage"
+        | "boms.create"
         | "boms.read"
+        | "boms.update"
+        | "boms.delete"
         | "production_orders.create"
         | "production_orders.read"
         | "production_orders.update"
@@ -6942,6 +8130,462 @@ export type Database = {
         | "webhooks.read"
         | "webhooks.update"
         | "webhooks.delete";
+      handoff_status:
+        | "bot"
+        | "pending_human"
+        | "human_active"
+        | "human_resolved"
+        | "bot_resumed";
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
+  storage: {
+    Tables: {
+      buckets: {
+        Row: {
+          allowed_mime_types: string[] | null;
+          avif_autodetection: boolean | null;
+          created_at: string | null;
+          file_size_limit: number | null;
+          id: string;
+          name: string;
+          owner: string | null;
+          owner_id: string | null;
+          public: boolean | null;
+          type: Database["storage"]["Enums"]["buckettype"];
+          updated_at: string | null;
+        };
+        Insert: {
+          allowed_mime_types?: string[] | null;
+          avif_autodetection?: boolean | null;
+          created_at?: string | null;
+          file_size_limit?: number | null;
+          id: string;
+          name: string;
+          owner?: string | null;
+          owner_id?: string | null;
+          public?: boolean | null;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string | null;
+        };
+        Update: {
+          allowed_mime_types?: string[] | null;
+          avif_autodetection?: boolean | null;
+          created_at?: string | null;
+          file_size_limit?: number | null;
+          id?: string;
+          name?: string;
+          owner?: string | null;
+          owner_id?: string | null;
+          public?: boolean | null;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      buckets_analytics: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          format: string;
+          id: string;
+          name: string;
+          type: Database["storage"]["Enums"]["buckettype"];
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          format?: string;
+          id?: string;
+          name: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          format?: string;
+          id?: string;
+          name?: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      buckets_vectors: {
+        Row: {
+          created_at: string;
+          id: string;
+          type: Database["storage"]["Enums"]["buckettype"];
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      migrations: {
+        Row: {
+          executed_at: string | null;
+          hash: string;
+          id: number;
+          name: string;
+        };
+        Insert: {
+          executed_at?: string | null;
+          hash: string;
+          id: number;
+          name: string;
+        };
+        Update: {
+          executed_at?: string | null;
+          hash?: string;
+          id?: number;
+          name?: string;
+        };
+        Relationships: [];
+      };
+      objects: {
+        Row: {
+          bucket_id: string | null;
+          created_at: string | null;
+          id: string;
+          last_accessed_at: string | null;
+          metadata: Json | null;
+          name: string | null;
+          owner: string | null;
+          owner_id: string | null;
+          path_tokens: string[] | null;
+          updated_at: string | null;
+          user_metadata: Json | null;
+          version: string | null;
+        };
+        Insert: {
+          bucket_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          last_accessed_at?: string | null;
+          metadata?: Json | null;
+          name?: string | null;
+          owner?: string | null;
+          owner_id?: string | null;
+          path_tokens?: string[] | null;
+          updated_at?: string | null;
+          user_metadata?: Json | null;
+          version?: string | null;
+        };
+        Update: {
+          bucket_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          last_accessed_at?: string | null;
+          metadata?: Json | null;
+          name?: string | null;
+          owner?: string | null;
+          owner_id?: string | null;
+          path_tokens?: string[] | null;
+          updated_at?: string | null;
+          user_metadata?: Json | null;
+          version?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "objects_bucketId_fkey";
+            columns: ["bucket_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      s3_multipart_uploads: {
+        Row: {
+          bucket_id: string;
+          created_at: string;
+          id: string;
+          in_progress_size: number;
+          key: string;
+          metadata: Json | null;
+          owner_id: string | null;
+          upload_signature: string;
+          user_metadata: Json | null;
+          version: string;
+        };
+        Insert: {
+          bucket_id: string;
+          created_at?: string;
+          id: string;
+          in_progress_size?: number;
+          key: string;
+          metadata?: Json | null;
+          owner_id?: string | null;
+          upload_signature: string;
+          user_metadata?: Json | null;
+          version: string;
+        };
+        Update: {
+          bucket_id?: string;
+          created_at?: string;
+          id?: string;
+          in_progress_size?: number;
+          key?: string;
+          metadata?: Json | null;
+          owner_id?: string | null;
+          upload_signature?: string;
+          user_metadata?: Json | null;
+          version?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "s3_multipart_uploads_bucket_id_fkey";
+            columns: ["bucket_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      s3_multipart_uploads_parts: {
+        Row: {
+          bucket_id: string;
+          created_at: string;
+          etag: string;
+          id: string;
+          key: string;
+          owner_id: string | null;
+          part_number: number;
+          size: number;
+          upload_id: string;
+          version: string;
+        };
+        Insert: {
+          bucket_id: string;
+          created_at?: string;
+          etag: string;
+          id?: string;
+          key: string;
+          owner_id?: string | null;
+          part_number: number;
+          size?: number;
+          upload_id: string;
+          version: string;
+        };
+        Update: {
+          bucket_id?: string;
+          created_at?: string;
+          etag?: string;
+          id?: string;
+          key?: string;
+          owner_id?: string | null;
+          part_number?: number;
+          size?: number;
+          upload_id?: string;
+          version?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey";
+            columns: ["bucket_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey";
+            columns: ["upload_id"];
+            isOneToOne: false;
+            referencedRelation: "s3_multipart_uploads";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      vector_indexes: {
+        Row: {
+          bucket_id: string;
+          created_at: string;
+          data_type: string;
+          dimension: number;
+          distance_metric: string;
+          id: string;
+          metadata_configuration: Json | null;
+          name: string;
+          updated_at: string;
+        };
+        Insert: {
+          bucket_id: string;
+          created_at?: string;
+          data_type: string;
+          dimension: number;
+          distance_metric: string;
+          id?: string;
+          metadata_configuration?: Json | null;
+          name: string;
+          updated_at?: string;
+        };
+        Update: {
+          bucket_id?: string;
+          created_at?: string;
+          data_type?: string;
+          dimension?: number;
+          distance_metric?: string;
+          id?: string;
+          metadata_configuration?: Json | null;
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vector_indexes_bucket_id_fkey";
+            columns: ["bucket_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets_vectors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      allow_any_operation: {
+        Args: { expected_operations: string[] };
+        Returns: boolean;
+      };
+      allow_only_operation: {
+        Args: { expected_operation: string };
+        Returns: boolean;
+      };
+      can_insert_object: {
+        Args: { bucketid: string; metadata: Json; name: string; owner: string };
+        Returns: undefined;
+      };
+      extension: { Args: { name: string }; Returns: string };
+      filename: { Args: { name: string }; Returns: string };
+      foldername: { Args: { name: string }; Returns: string[] };
+      get_common_prefix: {
+        Args: { p_delimiter: string; p_key: string; p_prefix: string };
+        Returns: string;
+      };
+      get_size_by_bucket: {
+        Args: never;
+        Returns: {
+          bucket_id: string;
+          size: number;
+        }[];
+      };
+      list_multipart_uploads_with_delimiter: {
+        Args: {
+          bucket_id: string;
+          delimiter_param: string;
+          max_keys?: number;
+          next_key_token?: string;
+          next_upload_token?: string;
+          prefix_param: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          key: string;
+        }[];
+      };
+      list_objects_with_delimiter: {
+        Args: {
+          _bucket_id: string;
+          delimiter_param: string;
+          max_keys?: number;
+          next_token?: string;
+          prefix_param: string;
+          sort_order?: string;
+          start_after?: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
+      operation: { Args: never; Returns: string };
+      search: {
+        Args: {
+          bucketname: string;
+          levels?: number;
+          limits?: number;
+          offsets?: number;
+          prefix: string;
+          search?: string;
+          sortcolumn?: string;
+          sortorder?: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
+      search_by_timestamp: {
+        Args: {
+          p_bucket_id: string;
+          p_level: number;
+          p_limit: number;
+          p_prefix: string;
+          p_sort_column: string;
+          p_sort_column_after: string;
+          p_sort_order: string;
+          p_start_after: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          key: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
+      search_v2: {
+        Args: {
+          bucket_name: string;
+          levels?: number;
+          limits?: number;
+          prefix: string;
+          sort_column?: string;
+          sort_column_after?: string;
+          sort_order?: string;
+          start_after?: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          key: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
+    };
+    Enums: {
+      buckettype: "STANDARD" | "ANALYTICS" | "VECTOR";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -7070,6 +8714,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_permission: [
@@ -7119,47 +8766,31 @@ export const Constants = {
         "members.manage_role",
         "roles.manage",
         "settings.manage",
-        "settings.read",
-        "settings.update",
         "reports.manage",
-        "reports.read",
         "notifications.manage",
         "audit_log.read",
-        "access",
-        "inventory.create",
-        "inventory.read",
-        "inventory.update",
-        "inventory.delete",
         "purchases.create",
         "purchases.read",
         "purchases.update",
         "purchases.delete",
-        "accounting.manage",
-        "hr.create",
-        "hr.read",
-        "hr.update",
-        "hr.delete",
-        "manufacturing.create",
-        "manufacturing.read",
-        "manufacturing.update",
-        "manufacturing.delete",
-        "boms.create",
-        "boms.delete",
-        "boms.update",
-        "discounts.create",
-        "discounts.delete",
-        "discounts.read",
-        "discounts.update",
-        "emails.manage",
         "quotations.create",
-        "quotations.delete",
         "quotations.read",
         "quotations.update",
+        "quotations.delete",
         "returns.create",
-        "returns.delete",
         "returns.read",
         "returns.update",
+        "returns.delete",
+        "accounting.manage",
+        "discounts.create",
+        "discounts.read",
+        "discounts.update",
+        "discounts.delete",
+        "emails.manage",
+        "boms.create",
         "boms.read",
+        "boms.update",
+        "boms.delete",
         "production_orders.create",
         "production_orders.read",
         "production_orders.update",
@@ -7192,6 +8823,18 @@ export const Constants = {
         "webhooks.update",
         "webhooks.delete",
       ],
+      handoff_status: [
+        "bot",
+        "pending_human",
+        "human_active",
+        "human_resolved",
+        "bot_resumed",
+      ],
+    },
+  },
+  storage: {
+    Enums: {
+      buckettype: ["STANDARD", "ANALYTICS", "VECTOR"],
     },
   },
 } as const;
