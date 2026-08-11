@@ -79,7 +79,7 @@ export default async function AuthLayout({
           </div>
 
           {/* Form wrapper */}
-          <div className="flex w-full flex-1 flex-col bg-card p-5 sm:p-6">
+          <div className="mx-auto flex w-full max-w-md flex-1 flex-col bg-card p-5 sm:p-6">
             {children}
           </div>
         </div>
