@@ -121,10 +121,10 @@ APP_ORG_IDS=(
     ""
 )
 
-# Pass token paths per Vercel profile
-TOKEN_PATH_ZERONE="personal/vercel/zerone"
-TOKEN_PATH_TOLOM="personal/vercel/tolom"
-TOKEN_PATH_THEMUULN6="personal/vercel/6"
+# Pass token paths per Vercel profile (agent-pass allowlist: zuiio/* only)
+TOKEN_PATH_ZERONE="zuiio/vercel/zerone"
+TOKEN_PATH_TOLOM="zuiio/vercel/tolom"
+TOKEN_PATH_THEMUULN6="zuiio/vercel/themuuln6"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TRAP STATE — tracked globally for cleanup on EXIT
@@ -197,7 +197,7 @@ get_vercel_token() {
     fi
 
     local token
-    token="$(pass "$token_path" 2>/dev/null | head -1)" || {
+    token="$(agent-pass show "$token_path" 2>/dev/null | head -1)" || {
         die "Token not found at pass path '$token_path'. Store: pass insert '$token_path'"
     }
 
@@ -602,10 +602,10 @@ ${BOLD}STRATEGIES${NC}
       vercel pull + vercel build + vercel deploy --prebuilt  CI-style
 
 ${BOLD}TOKENS${NC}
-    Tokens are retrieved from the 'pass' password-store:
-      zerone    → pass ${TOKEN_PATH_ZERONE}
-      tolom     → pass ${TOKEN_PATH_TOLOM}
-      themuuln6 → pass ${TOKEN_PATH_THEMUULN6}
+    Tokens are retrieved from the pass password-store via agent-pass:
+      zerone    → agent-pass show ${TOKEN_PATH_ZERONE}
+      tolom     → agent-pass show ${TOKEN_PATH_TOLOM}
+      themuuln6 → agent-pass show ${TOKEN_PATH_THEMUULN6}
 
     Store a token: pass insert <path>
 EOF
