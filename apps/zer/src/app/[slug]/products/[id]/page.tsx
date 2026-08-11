@@ -165,6 +165,18 @@ async function ProductDetailDataFetcher({
     const attributes = product.attributes ?? [];
     const hasAttributes = attributes.length > 0;
 
+    // Messenger deep link entry — the shop's Facebook page handle comes
+    // from social_links (or the org website URL as fallback).
+    const { data: profileRow } = await supabase
+      .from("organizations")
+      .select("public_profile:organization_public_profiles(social_links)")
+      .eq("slug", slug)
+      .maybeSingle();
+    const socialLinks = Array.isArray(profileRow?.public_profile)
+      ? profileRow.public_profile[0]?.social_links
+      : profileRow?.public_profile?.social_links;
+    const messengerPageHandle = extractFacebookHandle(socialLinks);
+
     // Gallery images: image_url is the primary entry; extra images come from
     // the product_images table (via `images`). Only render the gallery when
     // there is more than one image; otherwise keep the single-image layout.
@@ -281,6 +293,7 @@ async function ProductDetailDataFetcher({
             {/* Price + variants + add to cart */}
             <div className="mb-8">
               <BuyPanel
+                slug={slug}
                 productId={product.id}
                 productName={product.name}
                 basePrice={Number(product.sale_price ?? 0)}
@@ -288,6 +301,7 @@ async function ProductDetailDataFetcher({
                 currency={organization.currency}
                 variants={variants}
                 soldOut={soldOut}
+                messengerPageHandle={messengerPageHandle}
               />
             </div>
 
@@ -452,4 +466,27 @@ function Section({
       </div>
     </div>
   );
+}
+
+/**
+ * Extract a Facebook page handle from organization_public_profiles
+ * social_links ("facebook" key), for m.me deep links. Accepts full URLs
+ * (https://www.facebook.com/<handle>) and bare handles.
+ */
+function extractFacebookHandle(socialLinks: unknown): string | null {
+  const candidate =
+    socialLinks &&
+    typeof socialLinks === "object" &&
+    "facebook" in socialLinks &&
+    typeof socialLinks.facebook === "string"
+      ? socialLinks.facebook
+      : "";
+  if (!candidate) return null;
+
+  const urlMatch = candidate.match(/facebook\.com\/([^/?#]+)/i);
+  const bareMatch = candidate.match(/^@?([a-zA-Z0-9._]+)$/);
+  const handle = (urlMatch?.[1] ?? bareMatch?.[1] ?? "")
+    .replace(/^@/, "")
+    .trim();
+  return handle || null;
 }

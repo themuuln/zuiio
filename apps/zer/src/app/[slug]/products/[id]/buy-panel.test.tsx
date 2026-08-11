@@ -56,6 +56,7 @@ describe("BuyPanel", () => {
   it("renders the base price card without variants", () => {
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={10000}
@@ -73,6 +74,7 @@ describe("BuyPanel", () => {
   it("renders variant buttons with labels and per-variant prices", () => {
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={12000}
@@ -92,6 +94,7 @@ describe("BuyPanel", () => {
   it("defaults to the first variant", () => {
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={12000}
@@ -114,6 +117,7 @@ describe("BuyPanel", () => {
     urlSearchParams.set("variant", "v2");
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={12000}
@@ -131,6 +135,7 @@ describe("BuyPanel", () => {
   it("selecting a variant updates the URL and the selected state", () => {
     const { unmount } = render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={12000}
@@ -150,6 +155,7 @@ describe("BuyPanel", () => {
     unmount();
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={12000}
@@ -169,6 +175,7 @@ describe("BuyPanel", () => {
     urlSearchParams.set("variant", "v2");
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={12000}
@@ -200,6 +207,7 @@ describe("BuyPanel", () => {
     ];
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={9000}
@@ -219,6 +227,7 @@ describe("BuyPanel", () => {
   it("never blocks on stock — public items are unbounded (maxStock Infinity)", () => {
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={10000}
@@ -236,6 +245,7 @@ describe("BuyPanel", () => {
   it("shows a disabled Дууссан state and blocks adding when sold out", () => {
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={10000}
@@ -253,6 +263,7 @@ describe("BuyPanel", () => {
   it("keeps variant selectors functional when sold out", () => {
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={12000}
@@ -276,6 +287,7 @@ describe("BuyPanel", () => {
   it("keeps add-to-cart enabled when stock is unknown (soldOut defaults false)", () => {
     render(
       <BuyPanel
+        slug="storefront-e2e-test"
         productId="p1"
         productName="Цамц"
         basePrice={10000}
@@ -286,5 +298,95 @@ describe("BuyPanel", () => {
     );
     const addButton = screen.getByRole("button", { name: /Сагсанд нэмэх/ });
     expect(addButton).toBeEnabled();
+  });
+
+  it("renders a Telegram order deep link when the bot username is configured", () => {
+    vi.stubEnv("NEXT_PUBLIC_TELEGRAM_BOT_USERNAME", "zuiio_bot");
+
+    render(
+      <BuyPanel
+        slug="storefront-e2e-test"
+        productId="p1"
+        productName="Цамц"
+        basePrice={10000}
+        unit="ширхэг"
+        currency="MNT"
+        variants={[]}
+      />,
+    );
+
+    const link = screen.getByRole("link", {
+      name: /Telegram-ээр захиалах/,
+    });
+    expect(link).toHaveAttribute(
+      "href",
+      "https://t.me/zuiio_bot?start=storefront-e2e-test",
+    );
+    expect(link).toHaveAttribute("target", "_blank");
+
+    vi.unstubAllEnvs();
+  });
+
+  it("hides the Telegram order button when no bot username is configured", () => {
+    vi.stubEnv("NEXT_PUBLIC_TELEGRAM_BOT_USERNAME", "");
+
+    render(
+      <BuyPanel
+        slug="storefront-e2e-test"
+        productId="p1"
+        productName="Цамц"
+        basePrice={10000}
+        unit="ширхэг"
+        currency="MNT"
+        variants={[]}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("link", { name: /Telegram-ээр захиалах/ }),
+    ).toBeNull();
+
+    vi.unstubAllEnvs();
+  });
+
+  it("renders a Messenger order deep link when the page handle is set", () => {
+    render(
+      <BuyPanel
+        slug="storefront-e2e-test"
+        productId="p1"
+        productName="Цамц"
+        basePrice={10000}
+        unit="ширхэг"
+        currency="MNT"
+        variants={[]}
+        messengerPageHandle="Bujinbeauty"
+      />,
+    );
+
+    const link = screen.getByRole("link", {
+      name: /Messenger-ээр захиалах/,
+    });
+    expect(link).toHaveAttribute(
+      "href",
+      "https://m.me/Bujinbeauty?ref=storefront-e2e-test",
+    );
+  });
+
+  it("hides the Messenger order button when no page handle is set", () => {
+    render(
+      <BuyPanel
+        slug="storefront-e2e-test"
+        productId="p1"
+        productName="Цамц"
+        basePrice={10000}
+        unit="ширхэг"
+        currency="MNT"
+        variants={[]}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("link", { name: /Messenger-ээр захиалах/ }),
+    ).toBeNull();
   });
 });
