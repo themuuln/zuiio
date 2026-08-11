@@ -32,6 +32,8 @@ export interface CouponDetailData {
   description: string | null;
   used_count: number;
   created_at: string;
+  product_ids: string[];
+  category_ids: string[];
 }
 
 export function CouponDetailDrawer({
@@ -107,6 +109,18 @@ export function CouponDetailDrawer({
               {APPLIES_TO_LABELS[coupon.applies_to] ?? coupon.applies_to}
             </span>
           </div>
+          {coupon.applies_to === "selected_products" && (
+            <div className="flex items-center justify-between px-4 py-3 text-sm">
+              <span className="text-muted-foreground">Сонгосон бараа</span>
+              <span className="font-medium">{coupon.product_ids.length}</span>
+            </div>
+          )}
+          {coupon.applies_to === "selected_categories" && (
+            <div className="flex items-center justify-between px-4 py-3 text-sm">
+              <span className="text-muted-foreground">Сонгосон ангилал</span>
+              <span className="font-medium">{coupon.category_ids.length}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between px-4 py-3 text-sm">
             <span className="text-muted-foreground">Захиалгын доод дүн</span>
             <span className="font-medium">

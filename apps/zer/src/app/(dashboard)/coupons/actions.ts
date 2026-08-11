@@ -19,6 +19,20 @@ function parseIntSafe(value: FormDataEntryValue | null): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
+/** Parse a JSON string array (product_ids / category_ids) from the form. */
+function getJSONArray(formData: FormData, key: string): string[] {
+  const raw = formData.get(key);
+  if (typeof raw !== "string" || raw === "") return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((v): v is string => typeof v === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 // ─── Create ────────────────────────────────────────────────────────────────
 
 export async function createCoupon(
@@ -78,6 +92,16 @@ export async function createCoupon(
     return { error: "Хүчинтэй эхлэх огноо шаардлагатай." };
   }
 
+  const productIds = getJSONArray(formData, "product_ids");
+  const categoryIds = getJSONArray(formData, "category_ids");
+
+  if (appliesTo === "selected_products" && productIds.length === 0) {
+    return { error: "Дор хаяж нэг бараа сонгоно уу." };
+  }
+  if (appliesTo === "selected_categories" && categoryIds.length === 0) {
+    return { error: "Дор хаяж нэг ангилал сонгоно уу." };
+  }
+
   // Check for duplicate code within organization
   const { data: existing } = await withDbCapture(
     "coupons: check duplicate code",
@@ -122,6 +146,38 @@ export async function createCoupon(
     return {
       error: `Купон үүсгэхэд алдаа гарлаа: ${couponError.message}`,
     };
+  }
+
+  if (appliesTo === "selected_products") {
+    const { error: scopeError } = await withDbCapture(
+      "coupons: insert product scope",
+      supabase.from("coupon_product_scope").insert(
+        productIds.map((productId) => ({
+          organization_id: organizationId,
+          coupon_id: coupon.id,
+          product_id: productId,
+        })),
+      ),
+    );
+    if (scopeError) {
+      capture(scopeError, { context: "createCoupon: insert product scope" });
+      return { error: "Сонгосон бараануудыг хадгалахад алдаа гарлаа." };
+    }
+  } else if (appliesTo === "selected_categories") {
+    const { error: scopeError } = await withDbCapture(
+      "coupons: insert category scope",
+      supabase.from("coupon_category_scope").insert(
+        categoryIds.map((categoryId) => ({
+          organization_id: organizationId,
+          coupon_id: coupon.id,
+          category_id: categoryId,
+        })),
+      ),
+    );
+    if (scopeError) {
+      capture(scopeError, { context: "createCoupon: insert category scope" });
+      return { error: "Сонгосон ангилалуудыг хадгалахад алдаа гарлаа." };
+    }
   }
 
   after(() =>
@@ -205,6 +261,16 @@ export async function updateCoupon(
     return { error: "Хүчинтэй эхлэх огноо шаардлагатай." };
   }
 
+  const productIds = getJSONArray(formData, "product_ids");
+  const categoryIds = getJSONArray(formData, "category_ids");
+
+  if (appliesTo === "selected_products" && productIds.length === 0) {
+    return { error: "Дор хаяж нэг бараа сонгоно уу." };
+  }
+  if (appliesTo === "selected_categories" && categoryIds.length === 0) {
+    return { error: "Дор хаяж нэг ангилал сонгоно уу." };
+  }
+
   // Check for duplicate code within organization (exclude current coupon)
   const { data: existing } = await withDbCapture(
     "coupons: check duplicate code on update",
@@ -249,6 +315,64 @@ export async function updateCoupon(
     return {
       error: `Купон шинэчлэхэд алдаа гарлаа: ${couponError.message}`,
     };
+  }
+
+  // Replace scope rows: applies_to may have changed between all /
+  // selected_products / selected_categories, so clear BOTH scope tables
+  // first (delete + insert like the promotions actions), then persist the
+  // selection for the current scope type.
+  const { error: delProductScopeError } = await withDbCapture(
+    "coupons: delete old product scope",
+    supabase.from("coupon_product_scope").delete().eq("coupon_id", couponId),
+  );
+  if (delProductScopeError) {
+    capture(delProductScopeError, {
+      context: "updateCoupon: delete product scope",
+    });
+    return { error: "Сонгосон бараануудыг шинэчлэхэд алдаа гарлаа." };
+  }
+
+  const { error: delCategoryScopeError } = await withDbCapture(
+    "coupons: delete old category scope",
+    supabase.from("coupon_category_scope").delete().eq("coupon_id", couponId),
+  );
+  if (delCategoryScopeError) {
+    capture(delCategoryScopeError, {
+      context: "updateCoupon: delete category scope",
+    });
+    return { error: "Сонгосон ангилалуудыг шинэчлэхэд алдаа гарлаа." };
+  }
+
+  if (appliesTo === "selected_products" && productIds.length > 0) {
+    const { error: scopeError } = await withDbCapture(
+      "coupons: insert product scope",
+      supabase.from("coupon_product_scope").insert(
+        productIds.map((productId) => ({
+          organization_id: organizationId,
+          coupon_id: couponId,
+          product_id: productId,
+        })),
+      ),
+    );
+    if (scopeError) {
+      capture(scopeError, { context: "updateCoupon: insert product scope" });
+      return { error: "Сонгосон бараануудыг хадгалахад алдаа гарлаа." };
+    }
+  } else if (appliesTo === "selected_categories" && categoryIds.length > 0) {
+    const { error: scopeError } = await withDbCapture(
+      "coupons: insert category scope",
+      supabase.from("coupon_category_scope").insert(
+        categoryIds.map((categoryId) => ({
+          organization_id: organizationId,
+          coupon_id: couponId,
+          category_id: categoryId,
+        })),
+      ),
+    );
+    if (scopeError) {
+      capture(scopeError, { context: "updateCoupon: insert category scope" });
+      return { error: "Сонгосон ангилалуудыг хадгалахад алдаа гарлаа." };
+    }
   }
 
   after(() =>

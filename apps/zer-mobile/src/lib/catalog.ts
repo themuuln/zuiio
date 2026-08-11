@@ -11,6 +11,25 @@ export interface PublicOrgMeta {
   slug: string;
   currency: string;
   company_type: string;
+  /** Organization delivery/pickup + payment config (organization_public_profiles). */
+  delivery_enabled?: boolean | null;
+  pickup_enabled?: boolean | null;
+  delivery_fee_amount?: number | string | null;
+  free_delivery_threshold?: number | string | null;
+  payment_bank_name?: string | null;
+  payment_bank_account?: string | null;
+  payment_account_name?: string | null;
+  qpay_qr_url?: string | null;
+  show_stock?: boolean | null;
+}
+
+/** A pickup branch returned by get_public_branches(p_slug). */
+export interface PublicBranch {
+  id: string;
+  slug: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
 }
 
 export interface PublicProduct {
@@ -120,4 +139,16 @@ export async function fetchPublicProduct(
   if (error || !data || typeof data !== "object") return null;
   const r = data as { product?: PublicProductDetail | null };
   return r.product ?? null;
+}
+
+/** Pickup branches for a store (get_public_branches RPC). */
+export async function fetchPublicBranches(
+  client: RpcClient,
+  slug: string,
+): Promise<PublicBranch[]> {
+  const { data, error } = await client.rpc("get_public_branches", {
+    p_slug: slug,
+  });
+  if (error || !data) return [];
+  return (data as PublicBranch[]) ?? [];
 }

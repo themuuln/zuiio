@@ -54,12 +54,14 @@ function makeCreateCouponSupabase(
     couponId?: string;
     insertError?: { message: string } | null;
     duplicateCode?: boolean;
+    scopeInsertError?: { message: string } | null;
   } = {},
 ) {
   const {
     couponId = "new-coupon-id",
     insertError = null,
     duplicateCode = false,
+    scopeInsertError = null,
   } = opts;
 
   const couponsTable = {
@@ -79,9 +81,19 @@ function makeCreateCouponSupabase(
     })),
   };
 
+  const scopeTable = {
+    insert: mock.fn(() => resolved(null, scopeInsertError)),
+  };
+
   return {
     from: mock.fn((table: string) => {
       if (table === "coupons") return couponsTable;
+      if (
+        table === "coupon_product_scope" ||
+        table === "coupon_category_scope"
+      ) {
+        return scopeTable;
+      }
       return {};
     }),
   };
@@ -214,6 +226,61 @@ function makeDeleteCouponSupabase(
   };
 }
 
+/** Build a supabase mock for updateCoupon: duplicate check + update + scope replacement */
+function makeUpdateCouponSupabase(
+  opts: {
+    updateError?: { message: string } | null;
+    deleteScopeError?: { message: string } | null;
+    scopeInsertError?: { message: string } | null;
+  } = {},
+) {
+  const {
+    updateError = null,
+    deleteScopeError = null,
+    scopeInsertError = null,
+  } = opts;
+
+  const couponsTable = {
+    select: mock.fn(() => ({
+      eq: mock.fn((_col: string, _val: unknown) => ({
+        eq: mock.fn((_col2: string, _val2: unknown) => ({
+          neq: mock.fn(() => ({
+            maybeSingle: mock.fn(() => resolved(null, null)),
+          })),
+        })),
+      })),
+    })),
+    update: mock.fn(() => ({
+      eq: mock.fn((_col: string, _val: unknown) => ({
+        eq: mock.fn((_col2: string, _val2: unknown) =>
+          resolved(null, updateError),
+        ),
+      })),
+    })),
+  };
+
+  const scopeTable = {
+    delete: mock.fn(() => ({
+      eq: mock.fn(() => resolved(null, deleteScopeError)),
+    })),
+    insert: mock.fn(() => resolved(null, scopeInsertError)),
+  };
+
+  return {
+    from: mock.fn((table: string) => {
+      if (table === "coupons") return couponsTable;
+      if (
+        table === "coupon_product_scope" ||
+        table === "coupon_category_scope"
+      ) {
+        return scopeTable;
+      }
+      return {};
+    }),
+    scopeTable,
+  };
+}
+
 // ─── Global mocks ───────────────────────────────────────────────────
 const captureMock = mock.fn(() => {});
 const withDbCaptureMock = mock.fn(
@@ -258,6 +325,10 @@ let createCoupon: (
   prev: { error?: string } | undefined,
   form: FormData,
 ) => Promise<unknown>;
+let updateCoupon: (
+  prev: { error?: string } | undefined,
+  form: FormData,
+) => Promise<unknown>;
 let toggleCouponActive: (
   couponId: string,
   isActive: boolean,
@@ -274,6 +345,7 @@ let validateCouponCode: (
 test.before(async () => {
   const mod = await import("@/app/(dashboard)/coupons/actions");
   createCoupon = mod.createCoupon;
+  updateCoupon = mod.updateCoupon;
   toggleCouponActive = mod.toggleCouponActive;
   deleteCoupon = mod.deleteCoupon;
   validateCouponCode = mod.validateCouponCode;
@@ -813,6 +885,132 @@ test("toggleCouponActive returns error on update failure", async () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
+// updateCoupon tests
+// ═══════════════════════════════════════════════════════════════════
+
+function validUpdateData(overrides: Record<string, string | null> = {}) {
+  return formData({
+    id: "coupon-1",
+    code: "SUMMER20",
+    discount_type: "percentage",
+    discount_value: "20",
+    min_purchase_amount: "0",
+    max_discount_amount: "",
+    valid_from: "2025-01-01",
+    valid_until: "2025-12-31",
+    usage_limit: "",
+    per_customer_limit: "",
+    applies_to: "all",
+    is_active: "true",
+    description: "",
+    ...overrides,
+  });
+}
+
+test("updateCoupon replaces product scope rows (delete old + insert new)", async () => {
+  resetMocks();
+  const supabase = makeUpdateCouponSupabase();
+  mockCtx = mockActionCtx({ supabase });
+
+  const result = await updateCoupon(
+    undefined,
+    validUpdateData({
+      applies_to: "selected_products",
+      product_ids: JSON.stringify(["product-9"]),
+    }),
+  );
+  assert.deepStrictEqual(result, { success: true, error: undefined });
+  assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 1);
+
+  const fromCalls = supabase.from.mock.calls.map((c) => c.arguments[0]);
+  // Both scope tables are cleared, then the product scope is inserted.
+  assert.strictEqual(
+    fromCalls.filter((t) => t === "coupon_product_scope").length,
+    2,
+  );
+  assert.strictEqual(
+    fromCalls.filter((t) => t === "coupon_category_scope").length,
+    1,
+  );
+  const scopeTable = supabase.from("coupon_product_scope") as unknown as {
+    delete: { mock: { callCount: () => number } };
+    insert: { mock: { calls: Array<{ arguments: unknown[] }> } };
+  };
+  assert.strictEqual(scopeTable.delete.mock.callCount(), 2);
+  assert.strictEqual(scopeTable.insert.mock.calls.length, 1);
+  assert.deepStrictEqual(scopeTable.insert.mock.calls[0].arguments[0], [
+    {
+      organization_id: "test-org-id",
+      coupon_id: "coupon-1",
+      product_id: "product-9",
+    },
+  ]);
+});
+
+test("updateCoupon replacing scope clears both tables for an 'all' coupon", async () => {
+  resetMocks();
+  const supabase = makeUpdateCouponSupabase();
+  mockCtx = mockActionCtx({ supabase });
+
+  const result = await updateCoupon(
+    undefined,
+    validUpdateData({ applies_to: "all" }),
+  );
+  assert.deepStrictEqual(result, { success: true, error: undefined });
+  assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 1);
+
+  const fromCalls = supabase.from.mock.calls.map((c) => c.arguments[0]);
+  assert.strictEqual(
+    fromCalls.filter((t) => t === "coupon_product_scope").length,
+    1,
+  );
+  assert.strictEqual(
+    fromCalls.filter((t) => t === "coupon_category_scope").length,
+    1,
+  );
+  const scopeTable = supabase.from("coupon_product_scope") as unknown as {
+    insert: { mock: { calls: Array<{ arguments: unknown[] }> } };
+  };
+  // No re-insert when applies_to = 'all'.
+  assert.strictEqual(scopeTable.insert.mock.calls.length, 0);
+});
+
+test("updateCoupon rejects scoped applies_to without any product", async () => {
+  resetMocks();
+  const supabase = makeUpdateCouponSupabase();
+  mockCtx = mockActionCtx({ supabase });
+
+  const result = await updateCoupon(
+    undefined,
+    validUpdateData({ applies_to: "selected_products" }),
+  );
+  assert.deepStrictEqual(result, {
+    error: "Дор хаяж нэг бараа сонгоно уу.",
+  });
+  assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 0);
+});
+
+test("updateCoupon returns error when scope insert fails", async () => {
+  resetMocks();
+  const supabase = makeUpdateCouponSupabase({
+    scopeInsertError: { message: "FK violation" },
+  });
+  mockCtx = mockActionCtx({ supabase });
+
+  const result = await updateCoupon(
+    undefined,
+    validUpdateData({
+      applies_to: "selected_categories",
+      category_ids: JSON.stringify(["category-1"]),
+    }),
+  );
+  assert.deepStrictEqual(result, {
+    error: "Сонгосон ангилалуудыг хадгалахад алдаа гарлаа.",
+  });
+  assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 0);
+});
+
+// ═══════════════════════════════════════════════════════════════════
 // deleteCoupon tests
 // ═══════════════════════════════════════════════════════════════════
 
@@ -881,10 +1079,32 @@ test("createCoupon with selected_products applies_to", async () => {
 
   const result = await createCoupon(
     undefined,
-    validCreateData({ applies_to: "selected_products" }),
+    validCreateData({
+      applies_to: "selected_products",
+      product_ids: JSON.stringify(["product-1", "product-2"]),
+    }),
   );
   assert.deepStrictEqual(result, { success: true, error: undefined });
   assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 1);
+
+  // Scope rows are persisted for the created coupon (org-scoped).
+  const scopeFrom = supabase.from.mock.calls.map((c) => c.arguments[0]);
+  assert.ok(scopeFrom.includes("coupon_product_scope"));
+  const scopeInsert = supabase.from("coupon_product_scope")
+    .insert as unknown as { mock: { calls: Array<{ arguments: unknown[] }> } };
+  assert.strictEqual(scopeInsert.mock.calls.length, 1);
+  assert.deepStrictEqual(scopeInsert.mock.calls[0].arguments[0], [
+    {
+      organization_id: "test-org-id",
+      coupon_id: "coupon-sel-prod",
+      product_id: "product-1",
+    },
+    {
+      organization_id: "test-org-id",
+      coupon_id: "coupon-sel-prod",
+      product_id: "product-2",
+    },
+  ]);
 });
 
 test("createCoupon with selected_categories applies_to", async () => {
@@ -894,10 +1114,67 @@ test("createCoupon with selected_categories applies_to", async () => {
 
   const result = await createCoupon(
     undefined,
-    validCreateData({ applies_to: "selected_categories" }),
+    validCreateData({
+      applies_to: "selected_categories",
+      category_ids: JSON.stringify(["category-1"]),
+    }),
   );
   assert.deepStrictEqual(result, { success: true, error: undefined });
   assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 1);
+
+  const scopeFrom = supabase.from.mock.calls.map((c) => c.arguments[0]);
+  assert.ok(scopeFrom.includes("coupon_category_scope"));
+});
+
+test("createCoupon rejects scoped applies_to without any product", async () => {
+  resetMocks();
+  const supabase = makeCreateCouponSupabase({ couponId: "coupon-noscope" });
+  mockCtx = mockActionCtx({ supabase });
+
+  const result = await createCoupon(
+    undefined,
+    validCreateData({ applies_to: "selected_products" }),
+  );
+  assert.deepStrictEqual(result, {
+    error: "Дор хаяж нэг бараа сонгоно уу.",
+  });
+  assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 0);
+});
+
+test("createCoupon rejects scoped applies_to without any category", async () => {
+  resetMocks();
+  const supabase = makeCreateCouponSupabase({ couponId: "coupon-noscope2" });
+  mockCtx = mockActionCtx({ supabase });
+
+  const result = await createCoupon(
+    undefined,
+    validCreateData({ applies_to: "selected_categories" }),
+  );
+  assert.deepStrictEqual(result, {
+    error: "Дор хаяж нэг ангилал сонгоно уу.",
+  });
+  assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 0);
+});
+
+test("createCoupon returns error when scope insert fails", async () => {
+  resetMocks();
+  const supabase = makeCreateCouponSupabase({
+    couponId: "coupon-scope-err",
+    scopeInsertError: { message: "FK violation" },
+  });
+  mockCtx = mockActionCtx({ supabase });
+
+  const result = await createCoupon(
+    undefined,
+    validCreateData({
+      applies_to: "selected_products",
+      product_ids: JSON.stringify(["product-1"]),
+    }),
+  );
+  assert.deepStrictEqual(result, {
+    error: "Сонгосон бараануудыг хадгалахад алдаа гарлаа.",
+  });
+  assert.strictEqual(revalidateEntitiesMock.mock.callCount(), 0);
 });
 
 test("createCoupon with max_discount_amount set", async () => {

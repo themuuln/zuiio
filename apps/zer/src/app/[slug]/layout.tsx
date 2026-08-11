@@ -1,12 +1,18 @@
 import Script from "next/script";
+import { StorefrontAiChat } from "@/components/storefront/ai-chat/ai-chat-widget";
 import { createClient } from "@/lib/supabase/server";
 
 /**
  * Public storefront layout.
  *
  * Injects per-organization GA4 + Meta Pixel scripts when the org has
- * configured them in organization settings. Dashboard/admin pages never
- * render this layout, so analytics stay scoped to the public storefront.
+ * configured them in organization settings, and mounts the AI shopping
+ * assistant widget. Dashboard/admin pages never render this layout.
+ *
+ * The analytics columns (ga_measurement_id, meta_pixel_id) were added in a
+ * migration that is not applied on every environment — they are queried in
+ * a separate, tolerant lookup so a missing column never breaks the
+ * storefront shell or the chat widget.
  */
 export default async function StorefrontLayout({
   children,
@@ -21,7 +27,7 @@ export default async function StorefrontLayout({
   const { data: org } = await supabase
     .from("organizations")
     .select(
-      "public_profile:organization_public_profiles(ga_measurement_id, meta_pixel_id)",
+      "id, name, public_profile:organization_public_profiles(display_name)",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -29,19 +35,33 @@ export default async function StorefrontLayout({
   // organization_public_profiles is 1:1 with organizations, but PostgREST
   // may still return an array shape; normalize defensively.
   const profile = Array.isArray(org?.public_profile)
-    ? (
-        org.public_profile as {
-          ga_measurement_id?: string | null;
-          meta_pixel_id?: string | null;
-        }[]
-      )[0]
-    : (org?.public_profile as {
+    ? (org.public_profile as { display_name?: string | null }[])[0]
+    : (org?.public_profile as { display_name?: string | null } | null);
+
+  const orgName = profile?.display_name ?? org?.name ?? null;
+
+  // Analytics ids (ga_measurement_id / meta_pixel_id) were added by
+  // migration 20260730000004, which is not applied on local or remote DBs
+  // and absent from the generated types snapshot. Query them tolerantly so
+  // a missing column never breaks the storefront shell or the chat widget;
+  // analytics simply stay off until the migration lands.
+  let gaId: string | null = null;
+  let pixelId: string | null = null;
+  if (org?.id) {
+    const { data: analytics } = (await supabase
+      .from("organization_public_profiles")
+      .select("ga_measurement_id, meta_pixel_id")
+      .eq("organization_id", org.id)
+      .maybeSingle()) as unknown as {
+      data: {
         ga_measurement_id?: string | null;
         meta_pixel_id?: string | null;
-      } | null);
-
-  const gaId = profile?.ga_measurement_id ?? null;
-  const pixelId = profile?.meta_pixel_id ?? null;
+      } | null;
+      error: unknown;
+    };
+    gaId = analytics?.ga_measurement_id ?? null;
+    pixelId = analytics?.meta_pixel_id ?? null;
+  }
 
   return (
     <>
@@ -54,7 +74,6 @@ export default async function StorefrontLayout({
           <Script
             id={`ga4-${slug}`}
             strategy="afterInteractive"
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: static GA4 snippet with org measurement id
             dangerouslySetInnerHTML={{
               __html: `
                 window.dataLayer = window.dataLayer || [];
@@ -70,7 +89,6 @@ export default async function StorefrontLayout({
         <Script
           id={`meta-pixel-${slug}`}
           strategy="afterInteractive"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: static Meta Pixel snippet with org pixel id
           dangerouslySetInnerHTML={{
             __html: `
               !function(f,b,e,v,n,t,s)
@@ -88,6 +106,7 @@ export default async function StorefrontLayout({
         />
       )}
       {children}
+      {org && <StorefrontAiChat slug={slug} orgName={orgName} />}
     </>
   );
 }

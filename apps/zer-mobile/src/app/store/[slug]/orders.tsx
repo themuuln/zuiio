@@ -12,7 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTime, formatPrice, shortId } from "@/lib/format";
-import { fetchMyOrders, type MyOrder, orderStatusLabel } from "@/lib/orders";
+import {
+  deliveryStatusLabel,
+  fetchMyOrders,
+  type MyOrder,
+  orderStatusLabel,
+} from "@/lib/orders";
 import { listPendingOrders, type PendingOrder } from "@/lib/queue";
 import { appStorage } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
@@ -136,6 +141,24 @@ function ServerOrderCard({ order }: { order: MyOrder }) {
         {order.items && order.items.length > 3 ? (
           <Text className="text-xs text-muted-foreground">
             +{order.items.length - 3} бараа
+          </Text>
+        ) : null}
+        {order.delivery_type ? (
+          <Text className="text-xs text-muted-foreground">
+            {order.delivery_type === "delivery"
+              ? (order.delivery_address ?? "Хүргэлт")
+              : "Дэлгүүрээс авах"}
+            {order.delivery_type === "delivery" && order.delivery_status ? (
+              <Text className="text-xs font-medium text-primary">
+                {" "}
+                · {deliveryStatusLabel(order.delivery_status)}
+              </Text>
+            ) : null}
+          </Text>
+        ) : null}
+        {order.external_tracking_id ? (
+          <Text className="text-xs text-muted-foreground">
+            Ачааны дугаар: {order.external_tracking_id}
           </Text>
         ) : null}
         <Text className="mt-1 text-sm font-bold tabular-nums text-foreground">

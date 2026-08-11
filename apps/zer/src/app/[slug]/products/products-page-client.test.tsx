@@ -50,6 +50,8 @@ function makeProducts(count: number): PublicProduct[] {
     image_url: null,
     description: null,
     attribute_count: 0,
+    images: null,
+    current_stock: null,
   }));
 }
 
@@ -217,5 +219,20 @@ describe("ProductsPageClient", () => {
     renderProducts({ products: [], total: 0 });
     expect(screen.getByText("Бүтээгдэхүүн олдсонгүй.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Фильтр арилгах" })).toBeNull();
+  });
+
+  it("shows a sold-out overlay on cards with zero stock", () => {
+    const products = makeProducts(1).map((p) => ({
+      ...p,
+      current_stock: 0,
+    }));
+    renderProducts({ products, total: 1 });
+    expect(screen.getByText("Дууссан")).toBeInTheDocument();
+  });
+
+  it("hides the stock overlay when stock is unknown (null)", () => {
+    renderProducts();
+    expect(screen.queryByText("Дууссан")).toBeNull();
+    expect(screen.queryByText(/Нөөцөд байна/)).toBeNull();
   });
 });

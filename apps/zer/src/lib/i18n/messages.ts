@@ -237,6 +237,8 @@ const mn = {
   "storeAccount.orders.loginRequired":
     "Захиалгын түүхээ харахын тулд нэвтэрнэ үү.",
   "storeAccount.orders.loginCta": "Нэвтрэх",
+  "storeAccount.orders.detail": "Дэлгэрэнгүй",
+  "storeAccount.orderDetail.backToOrders": "Захиалгын түүх рүү буцах",
   "storeAccount.error.email": "Зөв имэйл хаяг оруулна уу.",
   "storeAccount.error.password": "Нууц үг дор хаяж 8 тэмдэгттэй байх ёстой.",
   "storeAccount.error.name": "Нэр дор хаяж 2 тэмдэгттэй байх ёстой.",
@@ -598,6 +600,8 @@ const en: Record<MessageKey, string> = {
   "storeAccount.orders.items": "Items",
   "storeAccount.orders.loginRequired": "Sign in to view your order history.",
   "storeAccount.orders.loginCta": "Sign in",
+  "storeAccount.orders.detail": "Details",
+  "storeAccount.orderDetail.backToOrders": "Back to orders",
   "storeAccount.error.email": "Enter a valid email address.",
   "storeAccount.error.password": "Password must be at least 8 characters.",
   "storeAccount.error.name": "Name must be at least 2 characters.",

@@ -10,6 +10,7 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { useStoreSession } from "../use-store-session";
+import { DELIVERY_STATUS_LABELS, STATUS_LABELS } from "./order-labels";
 
 export type MyOrder = {
   id: string;
@@ -17,6 +18,9 @@ export type MyOrder = {
   total_amount: number;
   status: string | null;
   created_at: string | null;
+  delivery_type: "delivery" | "pickup" | null;
+  delivery_status: string | null;
+  external_tracking_id: string | null;
   items: Array<{
     product_id: string | null;
     name: string | null;
@@ -24,14 +28,6 @@ export type MyOrder = {
     unit_price: number;
     total_price: number;
   }>;
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  completed: "Гүйцэтгэсэн",
-  pending: "Хүлээгдэж буй",
-  cancelled: "Цуцалсан",
-  refunded: "Буцаагдсан",
-  failed: "Амжилтгүй",
 };
 
 export function OrdersClient({ slug }: { slug: string }) {
@@ -146,6 +142,12 @@ export function OrdersClient({ slug }: { slug: string }) {
               )}
             </div>
             <div className="flex items-center gap-3">
+              {order.delivery_type === "delivery" && order.delivery_status && (
+                <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">
+                  {DELIVERY_STATUS_LABELS[order.delivery_status] ??
+                    order.delivery_status}
+                </span>
+              )}
               {order.status && (
                 <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">
                   {STATUS_LABELS[order.status] ?? order.status}
@@ -154,6 +156,11 @@ export function OrdersClient({ slug }: { slug: string }) {
               <span className="text-sm font-bold tabular-nums">
                 {formatCurrency(Number(order.total_amount ?? 0))}
               </span>
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/${slug}/account/orders/${order.id}`}>
+                  {t("storeAccount.orders.detail")}
+                </Link>
+              </Button>
             </div>
           </div>
           <ul className="divide-y divide-border/60">

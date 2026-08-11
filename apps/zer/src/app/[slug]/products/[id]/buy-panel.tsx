@@ -1,7 +1,9 @@
 "use client";
 
+import { FacebookLogo, TelegramLogo } from "@phosphor-icons/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { PublicVariant } from "./page";
@@ -12,23 +14,33 @@ import type { PublicVariant } from "./page";
  * the selected variant's price drives the add-to-cart unitPrice.
  */
 export function BuyPanel({
+  slug,
   productId,
   productName,
   basePrice,
   unit,
   currency,
   variants,
+  soldOut = false,
+  messengerPageHandle = null,
 }: {
+  slug: string;
   productId: string;
   productName: string;
   basePrice: number;
   unit: string | null;
   currency: string;
   variants: PublicVariant[];
+  soldOut?: boolean;
+  messengerPageHandle?: string | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Read at render time so tests can stub it; Next.js inlines NEXT_PUBLIC_*
+  // vars at build regardless of where they are read.
+  const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
 
   // Default selection = first variant; a ?variant=<id> param overrides it.
   const urlVariantId = searchParams.get("variant");
@@ -108,8 +120,49 @@ export function BuyPanel({
         </div>
       )}
 
-      {/* Add to cart */}
-      <AddToCartButton item={item} size="lg" className="w-full" />
+      {/* Add to cart — variant selectors stay functional; the add action is
+          replaced by a disabled "Дууссан" state when the product is sold out. */}
+      {soldOut ? (
+        <Button disabled size="lg" className="w-full">
+          Дууссан
+        </Button>
+      ) : (
+        <AddToCartButton item={item} size="lg" className="w-full" />
+      )}
+
+      {/* AI chat commerce — order this product over Telegram. The deep link
+          binds the buyer's chat to this shop (t.me/<bot>?start=<slug>). */}
+      {telegramBotUsername && (
+        <a
+          href={`https://t.me/${telegramBotUsername}?start=${slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "w-full",
+          )}
+        >
+          <TelegramLogo />
+          Telegram-ээр захиалах
+        </a>
+      )}
+
+      {/* AI chat commerce via Messenger — the deep link carries the shop
+          slug as the referral ref (m.me/<page>?ref=<slug>). */}
+      {messengerPageHandle && (
+        <a
+          href={`https://m.me/${messengerPageHandle}?ref=${slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "w-full",
+          )}
+        >
+          <FacebookLogo />
+          Messenger-ээр захиалах
+        </a>
+      )}
     </div>
   );
 }

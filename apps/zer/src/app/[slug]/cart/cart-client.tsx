@@ -7,6 +7,7 @@ import {
   Plus,
   Trash,
 } from "@phosphor-icons/react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -27,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/format";
 import { getCartItemKey } from "@/lib/shop-cart";
 import { buildOrderItems, createIdempotencyKey } from "@/lib/storefront-order";
@@ -43,30 +46,66 @@ const STATUS_LABELS: Record<string, string> = {
 const PAYMENT_METHODS = [
   { value: "cash", label: "Бэлэн" },
   { value: "card", label: "Карт" },
+  { value: "qpay", label: "QPay" },
+  { value: "bank_transfer", label: "Банкны шилжүүлэг" },
 ] as const;
 
 export type CartOrg = {
   name: string;
   slug: string;
   currency: string;
+  deliveryEnabled: boolean;
+  pickupEnabled: boolean;
+  deliveryFeeAmount: number | null;
+  freeDeliveryThreshold: number | null;
 };
+
+export type StorefrontBranch = {
+  id: string;
+  slug: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
+};
+
+export type PaymentInstructions = {
+  bank_name?: string | null;
+  bank_account?: string | null;
+  account_name?: string | null;
+  qpay_qr_url?: string | null;
+} | null;
 
 export type SubmittedOrder = {
   order_id: string;
   status: string;
   total_amount: number;
+  delivery_fee?: number | null;
+  discount_amount?: number | null;
+  gift_card_amount?: number | null;
+  payment_instructions?: PaymentInstructions;
 };
+
+type DeliveryType = "delivery" | "pickup" | null;
+
+function defaultDeliveryType(org: CartOrg): DeliveryType {
+  if (org.pickupEnabled && !org.deliveryEnabled) return "pickup";
+  if (org.deliveryEnabled && !org.pickupEnabled) return "delivery";
+  if (org.pickupEnabled) return "pickup";
+  return null;
+}
 
 export function CartClient({
   slug,
   organization,
+  branches = [],
 }: {
   slug: string;
   organization: CartOrg;
+  branches?: StorefrontBranch[];
 }) {
   return (
     <StorefrontCartProvider>
-      <CartView slug={slug} organization={organization} />
+      <CartView slug={slug} organization={organization} branches={branches} />
     </StorefrontCartProvider>
   );
 }
@@ -74,14 +113,25 @@ export function CartClient({
 function CartView({
   slug,
   organization,
+  branches,
 }: {
   slug: string;
   organization: CartOrg;
+  branches: StorefrontBranch[];
 }) {
   const { items, total, removeItem, updateQuantity, clear } =
     useStorefrontCart();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [deliveryType, setDeliveryType] = useState<DeliveryType>(() =>
+    defaultDeliveryType(organization),
+  );
+  const [pickupBranchSlug, setPickupBranchSlug] = useState("");
+  const [address, setAddress] = useState("");
+  const [addressNote, setAddressNote] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [giftCardCode, setGiftCardCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,6 +139,14 @@ function CartView({
   // Created once per checkout session and reused across retries so the RPC
   // returns the same order instead of creating a duplicate.
   const idempotencyKeyRef = useRef<string | null>(null);
+  // The cart is cleared on success, so snapshot the pre-clear subtotal and the
+  // submitted delivery type for the confirmation breakdown.
+  const submittedSubtotalRef = useRef(0);
+  const submittedDeliveryTypeRef = useRef<DeliveryType>(null);
+
+  const showDeliveryChoice =
+    organization.deliveryEnabled || organization.pickupEnabled;
+  const showBranchPicker = deliveryType === "pickup" && branches.length > 1;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +154,9 @@ function CartView({
 
     const trimmedName = name.trim();
     const trimmedPhone = phone.trim();
+    const trimmedEmail = email.trim();
+    const trimmedCoupon = couponCode.trim();
+    const trimmedGiftCard = giftCardCode.trim();
     if (!trimmedName) {
       setError("Нэрээ оруулна уу.");
       return;
@@ -108,6 +169,10 @@ function CartView({
       setError("Сагс хоосон байна.");
       return;
     }
+    if (deliveryType === "delivery" && !address.trim()) {
+      setError("Хүргэлтийн хаягаа оруулна уу.");
+      return;
+    }
 
     if (idempotencyKeyRef.current === null) {
       idempotencyKeyRef.current = createIdempotencyKey();
@@ -115,7 +180,10 @@ function CartView({
 
     setSubmitting(true);
     try {
-      const supabase = createClient();
+      // submit_shop_order's delivery/coupon/gift-card params were added by the
+      // backend migration after the generated types snapshot; call through the
+      // untyped client until types regenerate (repo pattern for new RPC args).
+      const supabase = createClient() as SupabaseClient;
       const { data, error: rpcError } = await supabase.rpc(
         "submit_shop_order",
         {
@@ -126,6 +194,17 @@ function CartView({
           p_contact_phone: trimmedPhone,
           p_currency_code: organization.currency,
           p_idempotency_key: idempotencyKeyRef.current,
+          p_delivery_type: deliveryType,
+          p_address: deliveryType === "delivery" ? address.trim() : null,
+          p_address_note:
+            deliveryType === "delivery" && addressNote.trim()
+              ? addressNote.trim()
+              : null,
+          p_contact_email: trimmedEmail || null,
+          p_coupon_code: trimmedCoupon || null,
+          p_gift_card_code: trimmedGiftCard || null,
+          p_pickup_branch_slug:
+            deliveryType === "pickup" ? pickupBranchSlug || null : null,
         },
       );
       if (rpcError) throw rpcError;
@@ -135,13 +214,24 @@ function CartView({
         throw new Error("submit_shop_order returned no order row");
       }
 
+      submittedSubtotalRef.current = Number(total);
+      submittedDeliveryTypeRef.current = deliveryType;
       clear();
       setOrder(row);
     } catch (err) {
       capture(err, { context: "storefront: submit order" });
       // Keep cart intact; retry uses the same idempotency key.
+      // PostgREST surfaces server-raised, user-facing Mongolian messages
+      // (coupon / gift-card / stock errors) in the RPC error's `message` field
+      // — surface those verbatim instead of the generic fallback. Always
+      // rendered as text content, never dangerouslySetInnerHTML, and never a
+      // stack trace.
+      const message =
+        err && typeof err === "object" && "message" in err ? err.message : null;
       setError(
-        "Захиалга илгээхэд алдаа гарлаа. Холболтоо шалгаад дахин оролдоно уу.",
+        typeof message === "string" && message.trim() !== ""
+          ? message
+          : "Захиалга илгээхэд алдаа гарлаа. Холболтоо шалгаад дахин оролдоно уу.",
       );
     } finally {
       setSubmitting(false);
@@ -149,6 +239,11 @@ function CartView({
   };
 
   if (order) {
+    const subtotal = submittedSubtotalRef.current;
+    const discount = Number(order.discount_amount ?? 0);
+    const deliveryFee = Number(order.delivery_fee ?? 0);
+    const giftCard = Number(order.gift_card_amount ?? 0);
+    const instructions = order.payment_instructions;
     return (
       <div className="min-h-dvh bg-background">
         <div className="mx-auto max-w-3xl p-4 sm:p-6">
@@ -167,6 +262,41 @@ function CartView({
             <CardContent className="space-y-3">
               <Separator />
               <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Барааны дүн</span>
+                <span className="font-medium tabular-nums">
+                  {formatCurrency(subtotal)} {organization.currency}
+                </span>
+              </div>
+              {discount > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Хямдрал</span>
+                  <span className="font-medium tabular-nums text-emerald-600">
+                    −{formatCurrency(discount)} {organization.currency}
+                  </span>
+                </div>
+              )}
+              {deliveryFee > 0 ? (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Хүргэлт</span>
+                  <span className="font-medium tabular-nums">
+                    {formatCurrency(deliveryFee)} {organization.currency}
+                  </span>
+                </div>
+              ) : submittedDeliveryTypeRef.current === "delivery" ? (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Хүргэлт</span>
+                  <span className="font-medium text-emerald-600">Үнэгүй</span>
+                </div>
+              ) : null}
+              {giftCard > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Бэлгийн карт</span>
+                  <span className="font-medium tabular-nums text-emerald-600">
+                    −{formatCurrency(giftCard)} {organization.currency}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Нийт дүн</span>
                 <span className="font-bold tabular-nums">
                   {formatCurrency(Number(order.total_amount ?? 0))}{" "}
@@ -177,6 +307,54 @@ function CartView({
                 <span className="text-muted-foreground">Төлөв</span>
                 <span>{STATUS_LABELS[order.status] ?? order.status}</span>
               </div>
+              {instructions && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3">
+                  <p className="text-sm font-medium">Төлбөрийн мэдээлэл</p>
+                  {instructions.qpay_qr_url ? (
+                    // biome-ignore lint/performance/noImgElement: external QPay QR image
+                    <img
+                      src={instructions.qpay_qr_url}
+                      alt="QPay QR код"
+                      className="mx-auto mt-2 size-40 rounded-lg"
+                    />
+                  ) : (
+                    (instructions.bank_name ||
+                      instructions.bank_account ||
+                      instructions.account_name) && (
+                      <div className="mt-2 space-y-1 text-sm">
+                        {instructions.bank_name && (
+                          <p>
+                            <span className="text-muted-foreground">
+                              Банк:{" "}
+                            </span>
+                            {instructions.bank_name}
+                          </p>
+                        )}
+                        {instructions.bank_account && (
+                          <p>
+                            <span className="text-muted-foreground">
+                              Данс:{" "}
+                            </span>
+                            {instructions.bank_account}
+                          </p>
+                        )}
+                        {instructions.account_name && (
+                          <p>
+                            <span className="text-muted-foreground">
+                              Данс эзэмшигч:{" "}
+                            </span>
+                            {instructions.account_name}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  )}
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Төлбөр хийсний дараа манай ажилтнууд захиалгыг
+                    баталгаажуулна.
+                  </p>
+                </div>
+              )}
               <Separator />
               <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                 <Button asChild>
@@ -323,6 +501,127 @@ function CartView({
                       placeholder="99112233"
                       inputMode="numeric"
                       autoComplete="tel"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="checkout-email">Имэйл</Label>
+                    <Input
+                      id="checkout-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      autoComplete="email"
+                    />
+                  </div>
+                  {showDeliveryChoice && (
+                    <div className="flex flex-col gap-2">
+                      <Label>Хүлээн авах арга</Label>
+                      <RadioGroup
+                        value={deliveryType ?? undefined}
+                        onValueChange={(value) =>
+                          setDeliveryType(
+                            value === "delivery" || value === "pickup"
+                              ? value
+                              : null,
+                          )
+                        }
+                        className="flex flex-col gap-2 sm:flex-row"
+                      >
+                        {organization.pickupEnabled && (
+                          <label
+                            htmlFor="checkout-pickup"
+                            className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm has-[data-checked]:border-primary has-[data-checked]:bg-primary/5"
+                          >
+                            <RadioGroupItem
+                              value="pickup"
+                              id="checkout-pickup"
+                            />
+                            Дэлгүүрээс авах
+                          </label>
+                        )}
+                        {organization.deliveryEnabled && (
+                          <label
+                            htmlFor="checkout-delivery"
+                            className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 text-sm has-[data-checked]:border-primary has-[data-checked]:bg-primary/5"
+                          >
+                            <RadioGroupItem
+                              value="delivery"
+                              id="checkout-delivery"
+                            />
+                            Хүргүүлэх
+                          </label>
+                        )}
+                      </RadioGroup>
+                    </div>
+                  )}
+                  {showBranchPicker && (
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="checkout-branch">Салбар сонгох</Label>
+                      <Select
+                        value={pickupBranchSlug}
+                        onValueChange={(v) => setPickupBranchSlug(v ?? "")}
+                      >
+                        <SelectTrigger id="checkout-branch">
+                          <SelectValue placeholder="Салбар сонгох" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {branches.map((branch) => (
+                            <SelectItem key={branch.slug} value={branch.slug}>
+                              {branch.address
+                                ? `${branch.name} — ${branch.address}`
+                                : branch.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {deliveryType === "delivery" && (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="checkout-address">Хаяг</Label>
+                        <Textarea
+                          id="checkout-address"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="СБД, 1-р хороо, ..."
+                          rows={3}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="checkout-address-note">
+                          Нэмэлт мэдээлэл
+                        </Label>
+                        <Input
+                          id="checkout-address-note"
+                          value={addressNote}
+                          onChange={(e) => setAddressNote(e.target.value)}
+                          placeholder="Орц, давхар, тоот"
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="checkout-coupon">Купон код</Label>
+                    <Input
+                      id="checkout-coupon"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      placeholder="Купон код"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="checkout-gift-card">
+                      Бэлгийн картын код
+                    </Label>
+                    <Input
+                      id="checkout-gift-card"
+                      value={giftCardCode}
+                      onChange={(e) => setGiftCardCode(e.target.value)}
+                      placeholder="Бэлгийн картын код"
+                      autoComplete="off"
                     />
                   </div>
                   <div className="flex flex-col gap-2">

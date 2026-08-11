@@ -3,53 +3,23 @@ import { runWithTools } from "@zuiio/ai-agent";
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 import { createAllAgentTools } from "@/lib/agent-tools";
+import {
+  bindBuyerSession,
+  getBuyerOrg,
+  getBuyerSession,
+  runBuyerAgent,
+  touchBuyerSession,
+} from "@/lib/bot-commerce";
 import { createServiceClient } from "@/lib/supabase/server-service";
 import type { Database } from "@/lib/supabase/types";
 
-type MessengerAgentLinkTable = {
-  Row: {
-    organization_id: string;
-    user_id: string;
-    psid: string;
-    last_active_at: string | null;
-  };
-  Insert: {
-    organization_id: string;
-    user_id: string;
-    psid: string;
-    last_active_at?: string | null;
-  };
-  Update: {
-    organization_id?: string;
-    user_id?: string;
-    psid?: string;
-    last_active_at?: string | null;
-  };
-  Relationships: [];
-};
-
-type MessengerDatabase = Omit<Database, "public"> & {
-  public: Omit<Database["public"], "Tables"> & {
-    Tables: Database["public"]["Tables"] & {
-      messenger_agent_links: MessengerAgentLinkTable;
-    };
-  };
-};
-
 type ServiceSupabaseClient = SupabaseClient<Database>;
 
-const _WELCOME_MESSAGE = `Сайн байна уу! 👋 Би Zer-ийн Facebook Messenger туслах.
+const NOT_BOUND_MESSAGE = `Сайн байна уу! 👋
 
-Би дараах зүйлсийг хийж чадна:
-• Бүтээгдэхүүн хайх, үнэ мэдээлэл авах
-• Захиалга байршуулах
-• Хүргэлтийн статус шалгах
-• Борлуулалтын мэдээлэл авах
+Энэ хуудсаар дэлгүүрээс захиалга хийх боломжтой. Эхлүүлэхийн тулд дэлгүүрийн вэб хуудаснаас "Messenger-ээр захиалах" товчийг дарна уу.`;
 
-Эхлэхийн тулд Zer апп-д нэвтэрч Тохиргоо → Messenger холбох хэсгээс бүртгэлээ холбоно уу.`;
-
-const NO_LINK_MESSAGE =
-  "Таны Facebook бүртгэл холбогдоогүй байна. Zer апп-д нэвтэрч Тохиргоо → Messenger холбох хэсгээс холбоно уу.";
+const UNKNOWN_SHOP_MESSAGE = "Дэлгүүр олдсонгүй. Холбоосыг шалгана уу.";
 
 const SYSTEM_PROMPT =
   "Та Монголын жижиг дунд бизнесийн AI туслах. Хариултаа Монгол хэлээр, товч, ойлгомжтой өгнө үү. Хэрэглэгчийн асуултанд хариулахдаа боломжтой бол багажуудыг ашиглана уу.";
@@ -87,15 +57,22 @@ export async function GET(request: Request) {
 /**
  * POST /api/messenger/webhook
  *
- * Handles incoming messages from Facebook Messenger.
- * Looks up the sender's PSID in messenger_agent_links, runs AI agent,
- * and replies via Facebook Send API.
+ * Handles incoming events from Facebook Messenger with two modes:
+ *
+ * 1. Merchant mode — sender is linked via messenger_agent_links: runs the
+ *    merchant AI tools (inventory/sales) and replies with the answer.
+ * 2. Buyer mode (AI chat commerce) — the buyer deep-links from the
+ *    storefront ("Messenger-ээр захиалах" → m.me/<page>?ref=<slug>), which
+ *    arrives as a `referral` event and binds the PSID to the shop in
+ *    bot_buyer_sessions. Subsequent messages run the buyer agent (public
+ *    catalog + place_order) against that shop.
  *
  * Always returns 200 — Facebook retries on non-200.
  */
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
+    const origin = new URL(request.url).origin;
 
     if (body.object === "page") {
       const entries = (body.entry as Array<Record<string, unknown>>) ?? [];
@@ -106,15 +83,31 @@ export async function POST(request: Request) {
 
         for (const event of messaging) {
           const sender = event.sender as Record<string, unknown> | undefined;
-          const message = event.message as Record<string, unknown> | undefined;
-
-          if (!sender || !message?.text) continue;
-
+          if (!sender) continue;
           const senderPsid = String(sender.id);
-          const messageText = String(message.text);
 
-          // Handle asynchronously — don't block webhook response
-          handleMessage(senderPsid, messageText).catch((e) => {
+          // Deep-link referral (m.me/<page>?ref=<slug>) → bind buyer to shop.
+          const referral = event.referral as
+            | Record<string, unknown>
+            | undefined;
+          const ref =
+            referral && typeof referral.ref === "string"
+              ? referral.ref
+              : undefined;
+
+          if (ref) {
+            // Handle asynchronously — don't block webhook response.
+            handleReferral(senderPsid, ref).catch((e) => {
+              capture(e, { context: "messenger: referral error" });
+            });
+            continue;
+          }
+
+          const message = event.message as Record<string, unknown> | undefined;
+          if (!message || typeof message.text !== "string") continue;
+
+          // Handle asynchronously — don't block webhook response.
+          handleMessage(senderPsid, message.text, origin).catch((e) => {
             capture(e, { context: "messenger: handle message error" });
           });
         }
@@ -130,10 +123,45 @@ export async function POST(request: Request) {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-async function handleMessage(senderPsid: string, messageText: string) {
+/**
+ * Bind the sender to the shop referenced by the deep link and welcome them.
+ */
+async function handleReferral(senderPsid: string, slug: string) {
   const supabase = createServiceClient();
-  const messengerClient =
-    supabase as unknown as SupabaseClient<MessengerDatabase>;
+
+  const pageAccessToken = await getPageAccessToken(supabase);
+  if (!pageAccessToken) return;
+
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("id, name")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!org) {
+    await sendFacebookMessage(
+      senderPsid,
+      UNKNOWN_SHOP_MESSAGE,
+      pageAccessToken,
+    );
+    return;
+  }
+
+  await bindBuyerSession(supabase, "messenger", senderPsid, org.id);
+
+  await sendFacebookMessage(
+    senderPsid,
+    `Сайн байна уу! 👋 Би "${org.name}" дэлгүүрийн AI туслах.\n\nБи бүтээгдэхүүн хайж, үнэ хэлж, захиалга авч чадна. Юу хайж байна вэ?`,
+    pageAccessToken,
+  );
+}
+
+async function handleMessage(
+  senderPsid: string,
+  messageText: string,
+  origin: string,
+) {
+  const supabase = createServiceClient();
 
   const pageAccessToken = await getPageAccessToken(supabase);
   if (!pageAccessToken) {
@@ -141,47 +169,76 @@ async function handleMessage(senderPsid: string, messageText: string) {
     return;
   }
 
-  // Look up messenger_agent_links by PSID
-  const { data: link } = await messengerClient
+  // ── Merchant mode ────────────────────────────────────────────────
+  const { data: link } = await supabase
     .from("messenger_agent_links")
     .select("organization_id, user_id")
     .eq("psid", senderPsid)
     .maybeSingle();
 
-  if (!link) {
-    await sendFacebookMessage(senderPsid, NO_LINK_MESSAGE, pageAccessToken);
+  if (link) {
+    await supabase
+      .from("messenger_agent_links")
+      .update({ last_active_at: new Date().toISOString() })
+      .eq("psid", senderPsid);
+
+    try {
+      const deepseekKey = process.env.DEEPSEEK_API_KEY;
+      if (!deepseekKey) {
+        await sendFacebookMessage(
+          senderPsid,
+          "AI үйлчилгээ түр идэвхгүй байна.",
+          pageAccessToken,
+        );
+        return;
+      }
+
+      const tools = createAllAgentTools(supabase, link.organization_id);
+
+      const response = await runWithTools({
+        apiKey: deepseekKey,
+        systemPrompt: SYSTEM_PROMPT,
+        userMessage: messageText,
+        tools,
+      });
+
+      await sendFacebookMessage(senderPsid, response, pageAccessToken);
+    } catch (e) {
+      capture(e, { context: "messenger: AI agent error" });
+      await sendFacebookMessage(senderPsid, ERROR_MESSAGE, pageAccessToken);
+    }
     return;
   }
 
-  // Update last_active_at
-  await messengerClient
-    .from("messenger_agent_links")
-    .update({ last_active_at: new Date().toISOString() })
-    .eq("psid", senderPsid);
+  // ── Buyer mode ───────────────────────────────────────────────────
+  const session = await getBuyerSession(supabase, "messenger", senderPsid);
+  if (!session) {
+    await sendFacebookMessage(senderPsid, NOT_BOUND_MESSAGE, pageAccessToken);
+    return;
+  }
+
+  const org = await getBuyerOrg(supabase, session.organization_id);
+  if (!org) {
+    await sendFacebookMessage(
+      senderPsid,
+      UNKNOWN_SHOP_MESSAGE,
+      pageAccessToken,
+    );
+    return;
+  }
+
+  await touchBuyerSession(supabase, session.id);
 
   try {
-    const deepseekKey = process.env.DEEPSEEK_API_KEY;
-    if (!deepseekKey) {
-      await sendFacebookMessage(
-        senderPsid,
-        "AI үйлчилгээ түр идэвхгүй байна.",
-        pageAccessToken,
-      );
-      return;
-    }
-
-    const tools = createAllAgentTools(supabase, link.organization_id);
-
-    const response = await runWithTools({
-      apiKey: deepseekKey,
-      systemPrompt: SYSTEM_PROMPT,
-      userMessage: messageText,
-      tools,
+    const reply = await runBuyerAgent({
+      supabase,
+      org,
+      text: messageText,
+      baseUrl: origin,
     });
-
-    await sendFacebookMessage(senderPsid, response, pageAccessToken);
+    await sendFacebookMessage(senderPsid, reply, pageAccessToken);
   } catch (e) {
-    capture(e, { context: "messenger: AI agent error" });
+    capture(e, { context: "messenger: buyer agent error" });
     await sendFacebookMessage(senderPsid, ERROR_MESSAGE, pageAccessToken);
   }
 }
@@ -196,11 +253,13 @@ async function getPageAccessToken(
     .eq("key", "messenger_page_access_token")
     .maybeSingle();
 
-  return (
-    (data?.value as { token?: string })?.token ??
-    process.env.MESSENGER_PAGE_ACCESS_TOKEN ??
-    null
-  );
+  const rawToken = data?.value;
+  const token =
+    rawToken && typeof rawToken === "object" && "token" in rawToken
+      ? String(rawToken.token)
+      : undefined;
+
+  return token ?? process.env.MESSENGER_PAGE_ACCESS_TOKEN ?? null;
 }
 
 async function sendFacebookMessage(

@@ -17,6 +17,11 @@ export type PublicProduct = {
   image_url: string | null;
   description: string | null;
   attribute_count: number;
+  // Extra gallery images (image_url is always the primary/first entry).
+  images: Array<{ url: string | null; sort_order: number | null }> | null;
+  // Only populated when the org opts in to public stock (show_stock=true),
+  // otherwise NULL — privacy default preserved.
+  current_stock: number | null;
 };
 
 export type OrgMeta = {

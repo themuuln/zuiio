@@ -40,6 +40,8 @@ function toEditData(d: CouponRow): CouponEditData {
     applies_to: d.applies_to,
     is_active: d.is_active,
     description: d.description,
+    product_ids: d.product_ids,
+    category_ids: d.category_ids,
   };
 }
 

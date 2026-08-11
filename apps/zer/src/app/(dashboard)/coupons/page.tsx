@@ -40,9 +40,51 @@ async function DataFetcher() {
     is_active: d.is_active,
     description: d.description,
     created_at: d.created_at ?? new Date().toISOString(),
+    product_ids: [],
+    category_ids: [],
   }));
 
-  return <CouponsContent coupons={couponRows} />;
+  // Scope selection for the edit drawer (org-scoped; empty for 'all').
+  const productScopeMap: Record<string, string[]> = {};
+  const categoryScopeMap: Record<string, string[]> = {};
+  if (couponRows.length > 0) {
+    const { data: productScope } = await withDbCapture(
+      "page:coupons product scope",
+      supabase
+        .from("coupon_product_scope")
+        .select("coupon_id, product_id")
+        .eq("organization_id", organizationId),
+    );
+    for (const row of productScope ?? []) {
+      productScopeMap[row.coupon_id] = [
+        ...(productScopeMap[row.coupon_id] ?? []),
+        row.product_id,
+      ];
+    }
+    const { data: categoryScope } = await withDbCapture(
+      "page:coupons category scope",
+      supabase
+        .from("coupon_category_scope")
+        .select("coupon_id, category_id")
+        .eq("organization_id", organizationId),
+    );
+    for (const row of categoryScope ?? []) {
+      categoryScopeMap[row.coupon_id] = [
+        ...(categoryScopeMap[row.coupon_id] ?? []),
+        row.category_id,
+      ];
+    }
+  }
+
+  return (
+    <CouponsContent
+      coupons={couponRows.map((d) => ({
+        ...d,
+        product_ids: productScopeMap[d.id] ?? [],
+        category_ids: categoryScopeMap[d.id] ?? [],
+      }))}
+    />
+  );
 }
 
 export type CouponRow = {
@@ -61,6 +103,8 @@ export type CouponRow = {
   is_active: boolean;
   description: string | null;
   created_at: string;
+  product_ids: string[];
+  category_ids: string[];
 };
 
 export default async function CouponsPage() {

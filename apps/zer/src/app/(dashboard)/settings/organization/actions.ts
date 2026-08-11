@@ -1,6 +1,6 @@
 "use server";
 import { resolveTxt } from "node:dns/promises";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 import { requireActionContext } from "@/lib/action-utils";
 import {
@@ -24,6 +24,22 @@ export type VerifyDomainState = {
 };
 
 const DNS_RESOLVE_TIMEOUT_MS = 8000;
+
+/**
+ * Parse a non-negative NUMERIC(12,2) field from the form. Returns the
+ * number or a user-facing error object (empty/blank → 0).
+ */
+function parseNonNegativeAmount(
+  value: FormDataEntryValue | null,
+  label: string,
+): number | { error: string } {
+  if (value === null || String(value).trim() === "") return 0;
+  const parsed = Number.parseFloat(String(value));
+  if (Number.isNaN(parsed) || parsed < 0) {
+    return { error: `${label} 0-ээс бага байж болохгүй.` };
+  }
+  return Math.round(parsed * 100) / 100;
+}
 
 export async function updateReportEmailSettings(
   _prevState: OrgSettingsState | undefined,
@@ -90,8 +106,30 @@ export async function updatePublicProfile(
   const metaPixelId = (formData.get("meta_pixel_id") as string) || null;
   const metaTitle = (formData.get("meta_title") as string) || null;
   const metaDescription = (formData.get("meta_description") as string) || null;
-  const ogImageUrl = (formData.get("og_image_url") as string) || null;
+  const ogImageUrl = formData.get("og_image_url") as string | null;
   const customDomain = (formData.get("custom_domain") as string) || null;
+
+  // Storefront checkout configuration (public profile).
+  const deliveryEnabled = formData.get("delivery_enabled") === "on";
+  const pickupEnabled = formData.get("pickup_enabled") === "on";
+  const showStock = formData.get("show_stock") === "on";
+  const deliveryFeeAmount = parseNonNegativeAmount(
+    formData.get("delivery_fee_amount"),
+    "Хүргэлтийн төлбөр",
+  );
+  if (typeof deliveryFeeAmount !== "number") return deliveryFeeAmount;
+  const freeDeliveryThreshold = parseNonNegativeAmount(
+    formData.get("free_delivery_threshold"),
+    "Үнэгүй хүргэлтийн босго",
+  );
+  if (typeof freeDeliveryThreshold !== "number") return freeDeliveryThreshold;
+  const paymentBankName =
+    (formData.get("payment_bank_name") as string)?.trim() || null;
+  const paymentBankAccount =
+    (formData.get("payment_bank_account") as string)?.trim() || null;
+  const paymentAccountName =
+    (formData.get("payment_account_name") as string)?.trim() || null;
+  const qpayQrUrl = (formData.get("qpay_qr_url") as string)?.trim() || null;
 
   // Parse business hours from form (JSON string sent by client)
   let businessHours: Record<string, string> | null = null;
@@ -124,11 +162,14 @@ export async function updatePublicProfile(
   // Fetch the current profile so domain_verified is only preserved while
   // the custom domain is unchanged (verification is server-owned now).
   const normalizedCustomDomain = customDomain?.toLowerCase() || null;
-  const { data: existingProfile } = await supabase
-    .from("organization_public_profiles")
-    .select("custom_domain, domain_verified")
-    .eq("organization_id", organizationId)
-    .maybeSingle();
+  const { data: existingProfile } = await withDbCapture(
+    "updatePublicProfile: fetch existing",
+    supabase
+      .from("organization_public_profiles")
+      .select("custom_domain, domain_verified")
+      .eq("organization_id", organizationId)
+      .maybeSingle(),
+  );
   const existingCustomDomain =
     existingProfile?.custom_domain?.toLowerCase() ?? null;
   const domainVerified =
@@ -159,12 +200,24 @@ export async function updatePublicProfile(
       business_hours:
         Object.keys(businessHours ?? {}).length > 0 ? businessHours : null,
       social_links: Object.keys(socialLinks).length > 0 ? socialLinks : null,
+      delivery_enabled: deliveryEnabled,
+      pickup_enabled: pickupEnabled,
+      show_stock: showStock,
+      delivery_fee_amount: deliveryFeeAmount,
+      free_delivery_threshold: freeDeliveryThreshold,
+      payment_bank_name: paymentBankName,
+      payment_bank_account: paymentBankAccount,
+      payment_account_name: paymentAccountName,
+      qpay_qr_url: qpayQrUrl,
       updated_at: new Date().toISOString(),
     };
 
-  const result = await supabase
-    .from("organization_public_profiles")
-    .upsert(payload, { onConflict: "organization_id" });
+  const result = await withDbCapture(
+    "updatePublicProfile: upsert profile",
+    supabase
+      .from("organization_public_profiles")
+      .upsert(payload, { onConflict: "organization_id" }),
+  );
 
   if (result.error) {
     capture(result.error, { context: "updatePublicProfile" });

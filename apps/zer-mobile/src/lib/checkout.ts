@@ -14,7 +14,15 @@ import type { RpcClient } from "@/lib/client";
  * (see src/lib/queue.ts) and submit it later.
  */
 
-export type CheckoutPaymentMethod = "cash" | "card";
+export type CheckoutPaymentMethod = "cash" | "card" | "qpay" | "bank_transfer";
+
+/** Server-side payment instructions returned on a successful order. */
+export interface PaymentInstructions {
+  bank_name?: string | null;
+  bank_account?: string | null;
+  account_name?: string | null;
+  qpay_qr_url?: string | null;
+}
 
 export interface ShopOrderItemInput {
   productId: string;
@@ -35,8 +43,18 @@ export interface ShopOrderInput {
   paymentMethod?: CheckoutPaymentMethod;
   currencyCode?: string;
   currencySymbol?: string;
-  /** Passed through for server-side validation (coupon validation is not public). */
+  /** Server-validated coupon code; invalid codes raise from the RPC. */
   couponCode?: string | null;
+  /** Delivery/pickup choice. When null the order is store pick-up in-store. */
+  deliveryType?: "delivery" | "pickup" | null;
+  /** Required (server- and client-side) when deliveryType === 'delivery'. */
+  address?: string | null;
+  addressNote?: string | null;
+  email?: string | null;
+  /** Gift card code, redeemed server-side against the org's gift cards. */
+  giftCardCode?: string | null;
+  /** Branch selected for pickup; validated against get_public_branches. */
+  pickupBranchSlug?: string | null;
   /**
    * process_shop_sale routing. The public RPCs never expose these ids;
    * supply them only when your backend provides a buyer checkout channel.
@@ -52,7 +70,18 @@ export interface ShopOrderInput {
 }
 
 export type ShopOrderResult =
-  | { ok: true; saleId: string; reference: string; serverOrder: true }
+  | {
+      ok: true;
+      saleId: string;
+      reference: string;
+      serverOrder: true;
+      /** Server-computed totals/discounts surfaced on the success screen. */
+      totalAmount?: number;
+      deliveryFee?: number | null;
+      discountAmount?: number | null;
+      giftCardAmount?: number | null;
+      paymentInstructions?: PaymentInstructions | null;
+    }
   | {
       ok: false;
       code: "VALIDATION_FAILED" | "NETWORK_ERROR" | "RPC_FAILED";
@@ -152,6 +181,9 @@ export function validateCheckoutInput(input: ShopOrderInput): string | null {
       return "Утасны дугаар буруу байна (8–12 орон).";
     }
   }
+  if (input.deliveryType === "delivery" && !input.address?.trim()) {
+    return "Хүргэлтийн хаягаа оруулна уу.";
+  }
   return null;
 }
 
@@ -192,6 +224,13 @@ export async function submitShopOrder(
       p_contact_name: input.customerName,
       p_contact_phone: input.customerPhone ?? null,
       p_idempotency_key: input.idempotencyKey ?? null,
+      p_delivery_type: input.deliveryType ?? null,
+      p_address: input.address ?? null,
+      p_address_note: input.addressNote ?? null,
+      p_contact_email: input.email ?? null,
+      p_coupon_code: input.couponCode ?? null,
+      p_gift_card_code: input.giftCardCode ?? null,
+      p_pickup_branch_slug: input.pickupBranchSlug ?? null,
     } as never);
   } catch (e) {
     // supabase-js throws on network-level failures.
@@ -222,7 +261,17 @@ export async function submitShopOrder(
 
   // TABLE return → array of rows.
   const rows = Array.isArray(data) ? data : data ? [data] : [];
-  const row = rows[0] as { order_id?: string; status?: string } | undefined;
+  const row = rows[0] as
+    | {
+        order_id?: string;
+        status?: string;
+        total_amount?: number | null;
+        delivery_fee?: number | null;
+        discount_amount?: number | null;
+        gift_card_amount?: number | null;
+        payment_instructions?: PaymentInstructions | null;
+      }
+    | undefined;
   if (!row?.order_id) {
     const serverError = (data as { message?: string } | null)?.message;
     return {
@@ -237,6 +286,12 @@ export async function submitShopOrder(
     saleId: row.order_id,
     reference: row.order_id,
     serverOrder: true,
+    totalAmount:
+      typeof row.total_amount === "number" ? row.total_amount : undefined,
+    deliveryFee: row.delivery_fee ?? null,
+    discountAmount: row.discount_amount ?? null,
+    giftCardAmount: row.gift_card_amount ?? null,
+    paymentInstructions: row.payment_instructions ?? null,
   };
 }
 

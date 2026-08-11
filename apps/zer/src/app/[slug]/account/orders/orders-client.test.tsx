@@ -46,6 +46,9 @@ const ORDER: MyOrder = {
   total_amount: 22500,
   status: "completed",
   created_at: "2026-08-01T12:00:00Z",
+  delivery_type: null,
+  delivery_status: null,
+  external_tracking_id: null,
   items: [
     {
       product_id: "p1",
@@ -122,6 +125,29 @@ describe("OrdersClient", () => {
     expect(screen.getByText("Цамц")).toBeInTheDocument();
     expect(screen.getByText("×1")).toBeInTheDocument();
     expect(screen.getByText("₮ 12,500")).toBeInTheDocument();
+  });
+
+  it("shows the delivery status badge and a details link for delivery orders", async () => {
+    hoisted.setState(ACCOUNT_STATE);
+    mockRpc.mockResolvedValue({
+      data: [
+        {
+          ...ORDER,
+          delivery_type: "delivery",
+          delivery_status: "in_transit",
+          external_tracking_id: "TRK-2026-001",
+        },
+      ],
+      error: null,
+    });
+    renderOrders();
+
+    expect(await screen.findByText("INV-2026-001")).toBeInTheDocument();
+    expect(screen.getByText("Хүргэлтэнд")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Дэлгэрэнгүй" })).toHaveAttribute(
+      "href",
+      "/storefront-e2e-test/account/orders/11111111-2222-4333-8444-555555555555",
+    );
   });
 
   it("falls back to the order id prefix when there is no invoice number", async () => {
