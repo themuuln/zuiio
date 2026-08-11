@@ -4,6 +4,13 @@ packages:
   - "!apps/archive/*"
   - "apps/*/packages/*"
 
+# pnpm 11 defaults the experimental "global virtual store" ON for project
+# installs: node_modules/* become symlinks into ~/Library/pnpm/store/v11/links
+# (outside the workspace root), which breaks Next.js Turbopack resolution
+# ("Could not find the Next.js package"). Keep the classic in-project
+# node_modules/.pnpm layout — it is what Turbopack supports.
+enableGlobalVirtualStore: false
+
 catalogMode: strict
 
 catalog:
